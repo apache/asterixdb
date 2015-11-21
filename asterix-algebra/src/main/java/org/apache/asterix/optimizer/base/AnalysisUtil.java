@@ -21,11 +21,9 @@ package org.apache.asterix.optimizer.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -35,8 +33,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 
 public class AnalysisUtil {
     /*
@@ -133,6 +131,7 @@ public class AnalysisUtil {
     }
 
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<FunctionIdentifier>();
+
     static {
         fieldAccessFunctions.add(AsterixBuiltinFunctions.GET_DATA);
         fieldAccessFunctions.add(AsterixBuiltinFunctions.GET_HANDLE);

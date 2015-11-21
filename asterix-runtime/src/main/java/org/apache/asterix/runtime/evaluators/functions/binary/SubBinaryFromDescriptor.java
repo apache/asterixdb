@@ -28,29 +28,33 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override public IFunctionDescriptor createFunctionDescriptor() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
             return new SubBinaryFromDescriptor();
         }
     };
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.SUBBINARY_FROM;
     }
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new SubBinaryFromToDescriptor.AbstractSubBinaryCopyEvaluator(output, args,
                         getIdentifier().getName()) {
-                    @Override protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
                         return Integer.MAX_VALUE;
                     }
                 };

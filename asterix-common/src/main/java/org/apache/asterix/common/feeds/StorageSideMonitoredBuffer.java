@@ -37,10 +37,11 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
     private boolean ackingEnabled;
     private final boolean timeTrackingEnabled;
 
-    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
-            FrameTupleAccessor fta,  RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, FeedRuntimeId runtimeId, IExceptionHandler exceptionHandler,
-            IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
+    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler,
+            IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
+            IFeedMetricCollector metricCollector, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+            IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
+            FeedPolicyAccessor policyAccessor) {
         super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);
         timeTrackingEnabled = policyAccessor.isTimeTrackingEnabled();
@@ -59,6 +60,7 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
         return false;
     }
 
+    @Override
     protected boolean logInflowOutflowRate() {
         return true;
     }
@@ -86,7 +88,6 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
 
             private static final long NORMAL_WINDOW_LIMIT = 400 * 1000;
             private static final long HIGH_WINDOW_LIMIT = 800 * 1000;
-            private static final long LOW_WINDOW_LIMIT = 1200 * 1000;
 
             private long delayNormalWindow = 0;
             private long delayHighWindow = 0;
@@ -104,8 +105,6 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
                     int nTuples = frameAccessor.getTupleCount();
                     long intakeTimestamp;
                     long currentTime = System.currentTimeMillis();
-                    int partition = 0;
-                    int recordId = 0;
                     for (int i = 0; i < nTuples; i++) {
                         int recordStart = frameAccessor.getTupleStartOffset(i) + frameAccessor.getFieldSlotsLength();
                         int openPartOffsetOrig = frame.getInt(recordStart + 6);
@@ -113,11 +112,9 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
 
                         int recordIdOffset = openPartOffsetOrig + 4 + 8 * numOpenFields
                                 + (StatisticsConstants.INTAKE_TUPLEID.length() + 2) + 1;
-                        recordId = frame.getInt(recordStart + recordIdOffset);
 
                         int partitionOffset = recordIdOffset + 4 + (StatisticsConstants.INTAKE_PARTITION.length() + 2)
                                 + 1;
-                        partition = frame.getInt(recordStart + partitionOffset);
 
                         int intakeTimestampValueOffset = partitionOffset + 4
                                 + (StatisticsConstants.INTAKE_TIMESTAMP.length() + 2) + 1;

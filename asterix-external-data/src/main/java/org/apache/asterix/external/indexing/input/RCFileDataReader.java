@@ -21,6 +21,7 @@ package org.apache.asterix.external.indexing.input;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,15 +29,13 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
-
-import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 //Used in two cases:
 //1. building an index over a dataset
 //2. performing full scan over a dataset that has built index (to provide consistent view) with RCFile format
 
-@SuppressWarnings({ "rawtypes", "deprecation" })
+@SuppressWarnings("rawtypes")
 public class RCFileDataReader extends AbstractHDFSReader {
 
     private RecordReader reader;
@@ -121,10 +120,9 @@ public class RCFileDataReader extends AbstractHDFSReader {
 
     private RecordReader getRecordReader(int slitIndex) throws IOException {
         RecordReader reader;
-        try{
-        reader = conf.getInputFormat().getRecordReader(
-                (org.apache.hadoop.mapred.FileSplit) inputSplits[slitIndex], conf, getReporter());
-        } catch(Exception e){
+        try {
+            reader = conf.getInputFormat().getRecordReader(inputSplits[slitIndex], conf, getReporter());
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }

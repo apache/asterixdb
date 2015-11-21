@@ -33,7 +33,6 @@ import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.Input
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Factory class for creating @see{TwitterFirehoseFeedAdapter}. The adapter
@@ -78,8 +77,8 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        String ingestionCardinalityParam = (String) configuration.get(KEY_INGESTION_CARDINALITY);
-        String ingestionLocationParam = (String) configuration.get(KEY_INGESTION_LOCATIONS);
+        String ingestionCardinalityParam = configuration.get(KEY_INGESTION_CARDINALITY);
+        String ingestionLocationParam = configuration.get(KEY_INGESTION_LOCATIONS);
         String[] locations = null;
         if (ingestionLocationParam != null) {
             locations = ingestionLocationParam.split(",");
@@ -90,8 +89,8 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
         }
 
         List<String> chosenLocations = new ArrayList<String>();
-        String[] availableLocations = locations != null ? locations : AsterixClusterProperties.INSTANCE
-                .getParticipantNodes().toArray(new String[] {});
+        String[] availableLocations = locations != null ? locations
+                : AsterixClusterProperties.INSTANCE.getParticipantNodes().toArray(new String[] {});
         for (int i = 0, k = 0; i < count; i++, k = (k + 1) % availableLocations.length) {
             chosenLocations.add(availableLocations[k]);
         }
@@ -113,10 +112,12 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
         return InputDataFormat.ADM;
     }
 
+    @Override
     public boolean isRecordTrackingEnabled() {
         return false;
     }
 
+    @Override
     public IIntakeProgressTracker createIntakeProgressTracker() {
         throw new UnsupportedOperationException("Tracking of ingested records not enabled");
     }

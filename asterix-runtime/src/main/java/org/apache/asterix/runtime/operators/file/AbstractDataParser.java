@@ -112,6 +112,7 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
+    @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABINARY);
     @SuppressWarnings("unchecked")
@@ -229,8 +230,8 @@ public abstract class AbstractDataParser implements IDataParser {
                 }
             }
             chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
-            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length()
-                    - timeOffset - 1);
+            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1,
+                    datetime.length() - timeOffset - 1);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

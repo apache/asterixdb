@@ -27,7 +27,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SocketClientAdapterFactory implements IFeedAdapterFactory {
 
@@ -72,7 +71,7 @@ public class SocketClientAdapterFactory implements IFeedAdapterFactory {
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         Pair<String, Integer> socket = genericSocketAdapterFactory.getSockets().get(partition);
-        return new SocketClientAdapter(socket.second, fileSplits[partition], ctx);
+        return new SocketClientAdapter(socket.second, fileSplits[partition]);
     }
 
     @Override

@@ -162,6 +162,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                             .getStorageTimeTrackingRateTask();
                     sTask.receiveCommitAckResponse(commitResponseMessage);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -222,8 +224,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         FeedId sourceFeedId = endFeedMessage.getSourceFeedId();
         SubscribableFeedRuntimeId subscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
                 FeedRuntimeType.INTAKE, partition);
-        ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
-                subscribableRuntimeId);
+        ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager()
+                .getSubscribableRuntime(subscribableRuntimeId);
         IAdapterRuntimeManager adapterRuntimeManager = ((IngestionRuntime) feedRuntime).getAdapterRuntimeManager();
         adapterRuntimeManager.stop();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -252,8 +254,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
 
             runtimeId = new FeedRuntimeId(runtimeType, partition, FeedRuntimeId.DEFAULT_OPERAND_ID);
-            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager().getFeedRuntime(
-                    connectionId, runtimeId);
+            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager()
+                    .getFeedRuntime(connectionId, runtimeId);
             feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Complete Unsubscription of " + endFeedMessage.getFeedConnectionId());
@@ -268,9 +270,9 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     // feed could be primary or secondary, doesn't matter
                     SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(
                             connectionId.getFeedId(), FeedRuntimeType.COMPUTE, partition);
-                    ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
-                            feedSubscribableRuntimeId);
-                    DistributeFeedFrameWriter dWriter = (DistributeFeedFrameWriter) feedRuntime.getFeedFrameWriter();
+                    ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager()
+                            .getSubscribableRuntime(feedSubscribableRuntimeId);
+                    DistributeFeedFrameWriter dWriter = feedRuntime.getFeedFrameWriter();
                     Map<IFrameWriter, FeedFrameCollector> registeredCollectors = dWriter.getRegisteredReaders();
 
                     IFrameWriter unsubscribingWriter = null;
@@ -286,6 +288,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                             break;
                         }
                     }
+                    break;
+                default:
                     break;
             }
 

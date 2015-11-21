@@ -25,7 +25,6 @@ import java.io.DataInputStream;
 
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.om.base.AString;

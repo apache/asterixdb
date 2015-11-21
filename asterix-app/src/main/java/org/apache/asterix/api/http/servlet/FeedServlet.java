@@ -128,8 +128,8 @@ public class FeedServlet extends HttpServlet {
         String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
         IFeedLoadManager loadManager = CentralFeedManager.getInstance().getFeedLoadManager();
-        FeedConnectionId connectionId = new FeedConnectionId(new FeedId(activity.getDataverseName(),
-                activity.getFeedName()), activity.getDatasetName());
+        FeedConnectionId connectionId = new FeedConnectionId(
+                new FeedId(activity.getDataverseName(), activity.getFeedName()), activity.getDatasetName());
         int intakeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.COLLECT) * intake.split(",").length;
         int storeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.STORE) * store.split(",").length;
 
@@ -158,13 +158,7 @@ public class FeedServlet extends HttpServlet {
         html.append("</tr>");
     }
 
-    private String insertLink(StringBuilder html, String url, String displayText) {
-        return ("<a href=\"" + url + "\">" + displayText + "</a>");
-    }
-
     private String insertColoredText(String s, String color) {
         return "<font color=\"" + color + "\">" + s + "</font>";
     }
 }
-
-

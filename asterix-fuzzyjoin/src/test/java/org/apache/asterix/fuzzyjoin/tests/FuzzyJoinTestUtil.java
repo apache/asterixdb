@@ -29,15 +29,12 @@ import org.junit.Assert;
 
 public class FuzzyJoinTestUtil {
 
-    public static void verifyDirectory(String pathTest, String pathCorrect)
-            throws IOException {
+    public static void verifyDirectory(String pathTest, String pathCorrect) throws IOException {
         verifyDirectory(pathTest, pathCorrect, false);
     }
 
-    public static void verifyDirectory(String pathTest, String pathCorrect,
-            boolean noDup) throws IOException {
-        int countTest = 0, countTestDedup = 0, countCorrect = 0;
-
+    public static void verifyDirectory(String pathTest, String pathCorrect, boolean noDup) throws IOException {
+        int countTestDedup = 0, countCorrect = 0;
         BufferedReader input;
         String line;
         HashSet<String> buffer = new HashSet<String>();
@@ -46,7 +43,6 @@ public class FuzzyJoinTestUtil {
         input = new BufferedReader(new FileReader(pathTest));
         while ((line = input.readLine()) != null) {
             buffer.add(line);
-            countTest++;
         }
         countTestDedup = buffer.size();
 

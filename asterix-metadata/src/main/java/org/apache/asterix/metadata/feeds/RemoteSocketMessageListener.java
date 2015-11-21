@@ -90,7 +90,7 @@ public class RemoteSocketMessageListener {
                 char ch;
                 while (true) {
                     ch = (char) in.read();
-                    if (((int) ch) == -1) {
+                    if ((ch) == -1) {
                         break;
                     }
                     while (ch != EOL) {
@@ -117,54 +117,6 @@ public class RemoteSocketMessageListener {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
-            }
-
-        }
-
-    }
-
-    private static class MessageParser implements Runnable {
-
-        private Socket client;
-        private IMessageAnalyzer messageAnalyzer;
-        private static final char EOL = (char) "\n".getBytes()[0];
-
-        public MessageParser(Socket client, IMessageAnalyzer messageAnalyzer) {
-            this.client = client;
-            this.messageAnalyzer = messageAnalyzer;
-        }
-
-        @Override
-        public void run() {
-            CharBuffer buffer = CharBuffer.allocate(5000);
-            char ch;
-            try {
-                InputStream in = client.getInputStream();
-                while (true) {
-                    ch = (char) in.read();
-                    if (((int) ch) == -1) {
-                        break;
-                    }
-                    while (ch != EOL) {
-                        buffer.put(ch);
-                        ch = (char) in.read();
-                    }
-                    buffer.flip();
-                    String s = new String(buffer.array());
-                    synchronized (messageAnalyzer) {
-                        messageAnalyzer.getMessageQueue().add(s + "\n");
-                    }
-                    buffer.position(0);
-                    buffer.limit(5000);
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    client.close();
-                } catch (IOException ioe) {
-                    // do nothing
                 }
             }
         }

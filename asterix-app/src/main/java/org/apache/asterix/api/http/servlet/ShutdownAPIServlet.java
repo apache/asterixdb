@@ -30,11 +30,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.result.ResultUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 
 public class ShutdownAPIServlet extends HttpServlet {
@@ -42,23 +40,14 @@ public class ShutdownAPIServlet extends HttpServlet {
 
     private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
 
-    private static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
-
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
-            IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-        OutputFormat format = OutputFormat.LOSSLESS_JSON;
-        String accept = request.getHeader("Accept");
-        if ((accept == null) || (accept.contains("application/x-adm"))) {
-            format = OutputFormat.ADM;
-        } else if (accept.contains("application/json")) {
-            format = OutputFormat.LOSSLESS_JSON;
-        }
         StringWriter sw = new StringWriter();
         IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());
 

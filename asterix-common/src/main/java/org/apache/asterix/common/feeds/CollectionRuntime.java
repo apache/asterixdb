@@ -24,7 +24,6 @@ import org.apache.asterix.common.feeds.FeedFrameCollector.State;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Represents the feed runtime that collects feed tuples from another feed.
@@ -40,8 +39,8 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
     private FeedFrameCollector frameCollector;
 
     public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter,
-            ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy) {
+            FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter, ISubscribableRuntime sourceRuntime,
+            Map<String, String> feedPolicy) {
         super(runtimeId, inputSideHandler, outputSideWriter);
         this.connectionId = connectionId;
         this.sourceRuntime = sourceRuntime;
@@ -64,6 +63,7 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
                 || frameCollector.getState().equals(FeedFrameCollector.State.HANDOVER);
     }
 
+    @Override
     public void setMode(Mode mode) {
         getInputHandler().setMode(mode);
     }
@@ -85,6 +85,7 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
         this.frameCollector = frameCollector;
     }
 
+    @Override
     public FeedFrameCollector getFrameCollector() {
         return frameCollector;
     }

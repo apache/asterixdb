@@ -21,7 +21,7 @@ package org.apache.asterix.common.annotations;
 import java.io.Serializable;
 
 public class RecordDataGenAnnotation implements IRecordTypeAnnotation, Serializable {
-
+    private static final long serialVersionUID = 1L;
     private final IRecordFieldDataGen[] declaredFieldsDatagen;
     private final UndeclaredFieldsDataGen undeclaredFieldsDataGen;
 

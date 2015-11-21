@@ -62,7 +62,7 @@ public final class MetadataRecordTypes {
 
     /**
      * Create all metadata record types.
-     * 
+     *
      * @throws HyracksDataException
      */
     public static void init() throws MetadataException, HyracksDataException {
@@ -150,9 +150,10 @@ public final class MetadataRecordTypes {
 
     private static final ARecordType createDataverseRecordType() throws AsterixException {
         try {
-            return new ARecordType("DataverseRecordType", new String[] { "DataverseName", "DataFormat", "Timestamp",
-                    "PendingOp" }, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    BuiltinType.AINT32 }, true);
+            return new ARecordType("DataverseRecordType",
+                    new String[] { "DataverseName", "DataFormat", "Timestamp", "PendingOp" },
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
+                    true);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }
@@ -203,12 +204,10 @@ public final class MetadataRecordTypes {
     public static final int EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX = 3;
 
     private static final ARecordType createExternalDetailsRecordType() throws AsterixException {
-
         AOrderedListType orderedPropertyListType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
-        AOrderedListType compactionPolicyPropertyListType = new AOrderedListType(
-                COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null);
         String[] fieldNames = { "DatasourceAdapter", "Properties", "LastRefreshTime", "TransactionState", };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType, BuiltinType.ADATETIME, BuiltinType.AINT32 };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType, BuiltinType.ADATETIME,
+                BuiltinType.AINT32 };
         try {
             return new ARecordType(null, fieldNames, fieldTypes, true);
         } catch (HyracksDataException e) {
@@ -388,8 +387,8 @@ public final class MetadataRecordTypes {
     private static final ARecordType createIndexRecordType() throws AsterixException {
         AOrderedListType olType = new AOrderedListType(BuiltinType.ASTRING, null);
         AOrderedListType ololType = new AOrderedListType(olType, null);
-        String[] fieldNames = { "DataverseName", "DatasetName", "IndexName", "IndexStructure", "SearchKey",
-                "IsPrimary", "Timestamp", "PendingOp" };
+        String[] fieldNames = { "DataverseName", "DatasetName", "IndexName", "IndexStructure", "SearchKey", "IsPrimary",
+                "Timestamp", "PendingOp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                 ololType, BuiltinType.ABOOLEAN, BuiltinType.ASTRING, BuiltinType.AINT32 };
         try {
@@ -518,7 +517,8 @@ public final class MetadataRecordTypes {
     public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_NAME_FIELD_INDEX = 0;
     public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX = 1;
 
-    private static final ARecordType createPrimaryFeedDetailsRecordType() throws AsterixException, HyracksDataException {
+    private static final ARecordType createPrimaryFeedDetailsRecordType()
+            throws AsterixException, HyracksDataException {
         AUnorderedListType unorderedAdaptorPropertyListType = new AUnorderedListType(
                 DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
 
@@ -529,8 +529,8 @@ public final class MetadataRecordTypes {
 
     public static final int FEED_TYPE_SECONDARY_ARECORD_SOURCE_FEED_NAME_FIELD_INDEX = 0;
 
-    private static final ARecordType createSecondaryFeedDetailsRecordType() throws AsterixException,
-            HyracksDataException {
+    private static final ARecordType createSecondaryFeedDetailsRecordType()
+            throws AsterixException, HyracksDataException {
         String[] fieldNames = { "SourceFeedName" };
         IAType[] fieldTypes = { BuiltinType.ASTRING };
         return new ARecordType(null, fieldNames, fieldTypes, true);

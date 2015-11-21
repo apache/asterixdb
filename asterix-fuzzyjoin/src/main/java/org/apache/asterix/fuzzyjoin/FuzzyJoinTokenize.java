@@ -39,7 +39,7 @@ import org.apache.asterix.fuzzyjoin.tokenorder.TokenRank;
 import org.apache.asterix.fuzzyjoin.tokenorder.TokenRankFrequency;
 
 public class FuzzyJoinTokenize {
-    public static class TokenCount implements Comparable {
+    public static class TokenCount implements Comparable<Object> {
         public String token;
         public MutableInteger count;
 
@@ -111,14 +111,14 @@ public class FuzzyJoinTokenize {
         tokenLoad.loadTokenRank();
 
         input = new BufferedReader(new FileReader(inputFileName));
-        LittleEndianIntOutputStream outputTokenized = new LittleEndianIntOutputStream(new BufferedOutputStream(
-                new FileOutputStream(tokenizedFileName)));
+        LittleEndianIntOutputStream outputTokenized = new LittleEndianIntOutputStream(
+                new BufferedOutputStream(new FileOutputStream(tokenizedFileName)));
         while ((line = input.readLine()) != null) {
             String splits[] = line.split(FuzzyJoinConfig.RECORD_SEPARATOR_REGEX);
             int rid = Integer.parseInt(splits[FuzzyJoinConfig.RECORD_KEY]);
             outputTokenized.writeInt(rid);
-            Collection<String> tokens = tokenizer.tokenize(FuzzyJoinUtil.getData(splits, dataColumns,
-                    FuzzyJoinConfig.TOKEN_SEPARATOR));
+            Collection<String> tokens = tokenizer
+                    .tokenize(FuzzyJoinUtil.getData(splits, dataColumns, FuzzyJoinConfig.TOKEN_SEPARATOR));
             Collection<Integer> tokensRanked = tokenRank.getTokenRanks(tokens);
             outputTokenized.writeInt(tokensRanked.size());
             for (Integer token : tokensRanked) {

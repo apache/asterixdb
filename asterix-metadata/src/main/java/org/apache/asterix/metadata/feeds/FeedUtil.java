@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
@@ -59,6 +57,7 @@ import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -233,10 +232,10 @@ public class FeedUtil {
             Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
             Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
 
-            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
-            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(rightOp.getLeft().getOperatorId()));
 
             altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
         }
@@ -268,6 +267,8 @@ public class FeedUtil {
                     lc.location = location;
                     lc.partition = ((PartitionLocationExpression) lexpr).getPartition();
                     locations.add(lc);
+                    break;
+                default:
                     break;
             }
         }
@@ -416,7 +417,8 @@ public class FeedUtil {
                             locations.add(lc);
                         }
                     }
-
+                    break;
+                default:
                     break;
             }
         }
@@ -444,8 +446,8 @@ public class FeedUtil {
         try {
             MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getFeedId().getDataverse(), connectionId
-                    .getFeedId().getFeedName());
+            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getFeedId().getDataverse(),
+                    connectionId.getFeedId().getFeedName());
             preProcessingRequired = feed.getAppliedFunction() != null;
             MetadataManager.INSTANCE.commitTransaction(ctx);
         } catch (Exception e) {
@@ -463,9 +465,8 @@ public class FeedUtil {
         return preProcessingRequired;
     }
 
-    public static Triple<IFeedAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(
-            PrimaryFeed feed, FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException {
+    public static Triple<IFeedAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(PrimaryFeed feed,
+            FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
@@ -580,8 +581,8 @@ public class FeedUtil {
                     outputType = function.getReturnType();
                 }
             } else {
-                throw new IllegalArgumentException("Function " + appliedFunction
-                        + " associated with source feed not found in Metadata.");
+                throw new IllegalArgumentException(
+                        "Function " + appliedFunction + " associated with source feed not found in Metadata.");
             }
         }
         return outputType;

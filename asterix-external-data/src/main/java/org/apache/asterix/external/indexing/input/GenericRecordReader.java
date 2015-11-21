@@ -19,6 +19,7 @@
 package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
+
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
@@ -28,7 +29,7 @@ import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
  * This class can be used by any input format to perform full scan operations
  */
 
-@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GenericRecordReader extends AbstractHDFSReader {
 
     protected RecordReader reader;
@@ -86,8 +87,7 @@ public class GenericRecordReader extends AbstractHDFSReader {
     }
 
     protected RecordReader getRecordReader(int slitIndex) throws IOException {
-        RecordReader reader = conf.getInputFormat().getRecordReader(
-                (org.apache.hadoop.mapred.FileSplit) inputSplits[slitIndex], conf, getReporter());
+        RecordReader reader = conf.getInputFormat().getRecordReader(inputSplits[slitIndex], conf, getReporter());
         return reader;
     }
 

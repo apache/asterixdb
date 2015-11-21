@@ -81,8 +81,8 @@ public class MetadataBuiltinFunctions {
                 }
                 Dataset dataset = metadata.findDataset(dataverseName, datasetName);
                 if (dataset == null) {
-                    throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse "
-                            + dataverseName);
+                    throw new AlgebricksException(
+                            "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
                 String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(dataverseName, tn);
@@ -162,8 +162,8 @@ public class MetadataBuiltinFunctions {
                 }
                 Dataset dataset = metadata.findDataset(dataverseName, datasetName);
                 if (dataset == null) {
-                    throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse "
-                            + dataverseName);
+                    throw new AlgebricksException(
+                            "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
                 String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(dataverseName, tn);
@@ -186,6 +186,6 @@ public class MetadataBuiltinFunctions {
             first = nameComponents[0];
             second = nameComponents[1];
         }
-        return new Pair(first, second);
+        return new Pair<String, String>(first, second);
     }
 }

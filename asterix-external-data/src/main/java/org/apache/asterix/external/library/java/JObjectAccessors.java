@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.external.library.java;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
@@ -81,13 +86,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 public class JObjectAccessors {
 
@@ -135,6 +133,8 @@ public class JObjectAccessors {
                 break;
             case DURATION:
                 accessor = new JDurationAccessor();
+                break;
+            default:
                 break;
         }
         return accessor;
@@ -236,8 +236,8 @@ public class JObjectAccessors {
             int l = pointable.getLength();
 
             String v = null;
-            v = aStringSerDer.deserialize(
-                    new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1))).getStringValue();
+            v = aStringSerDer.deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)))
+                    .getStringValue();
             JObjectUtil.getNormalizedString(v);
 
             IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
@@ -296,8 +296,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            ADuration duration = ADurationSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
-                    new ByteArrayInputStream(b, s, l)));
+            ADuration duration = ADurationSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             IJObject jObject = objectPool.allocate(BuiltinType.ADURATION);
             ((JDuration) jObject).setValue(duration.getMonths(), duration.getMilliseconds());
             return jObject;
@@ -348,8 +348,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            ACircle v = ACircleSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
-                    new ByteArrayInputStream(b, s, l)));
+            ACircle v = ACircleSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JPoint jpoint = (JPoint) objectPool.allocate(BuiltinType.APOINT);
             jpoint.setValue(v.getP().getX(), v.getP().getY());
             IJObject jObject = objectPool.allocate(BuiltinType.ACIRCLE);
@@ -366,8 +366,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            APoint v = APointSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(new ByteArrayInputStream(
-                    b, s, l)));
+            APoint v = APointSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JPoint jObject = (JPoint) objectPool.allocate(BuiltinType.APOINT);
             jObject.setValue(v.getX(), v.getY());
             return jObject;
@@ -382,8 +382,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            APoint3D v = APoint3DSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
-                    new ByteArrayInputStream(b, s, l)));
+            APoint3D v = APoint3DSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JPoint3D jObject = (JPoint3D) objectPool.allocate(BuiltinType.APOINT3D);
             jObject.setValue(v.getX(), v.getY(), v.getZ());
             return jObject;
@@ -398,8 +398,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            ALine v = ALineSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(new ByteArrayInputStream(b,
-                    s, l)));
+            ALine v = ALineSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JLine jObject = (JLine) objectPool.allocate(BuiltinType.ALINE);
             jObject.setValue(v.getP1(), v.getP2());
             return jObject;
@@ -414,8 +414,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            APolygon v = APolygonSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
-                    new ByteArrayInputStream(b, s, l)));
+            APolygon v = APolygonSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JPolygon jObject = (JPolygon) objectPool.allocate(BuiltinType.APOLYGON);
             jObject.setValue(v.getPoints());
             return jObject;
@@ -430,8 +430,8 @@ public class JObjectAccessors {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
-            ARectangle v = ARectangleSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
-                    new ByteArrayInputStream(b, s, l)));
+            ARectangle v = ARectangleSerializerDeserializer.INSTANCE
+                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s, l)));
             JRectangle jObject = (JRectangle) objectPool.allocate(BuiltinType.ARECTANGLE);
             jObject.setValue(v.getP1(), v.getP2());
             return jObject;
@@ -461,7 +461,7 @@ public class JObjectAccessors {
             } catch (AlgebricksException e) {
                 throw new HyracksDataException(e);
             }
-            ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) pointable;
+            ARecordVisitablePointable recordPointable = pointable;
             List<IVisitablePointable> fieldPointables = recordPointable.getFieldValues();
             List<IVisitablePointable> fieldTypeTags = recordPointable.getFieldTypeTags();
             List<IVisitablePointable> fieldNames = recordPointable.getFieldNames();
@@ -473,8 +473,8 @@ public class JObjectAccessors {
                     closedPart = index < recordType.getFieldTypes().length;
                     IVisitablePointable tt = fieldTypeTags.get(index);
                     IAType fieldType = closedPart ? recordType.getFieldTypes()[index] : null;
-                    ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tt.getByteArray()[tt
-                            .getStartOffset()]);
+                    ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            .deserialize(tt.getByteArray()[tt.getStartOffset()]);
                     IVisitablePointable fieldName = fieldNames.get(index);
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
@@ -487,8 +487,8 @@ public class JObjectAccessors {
                                 // value is null
                                 fieldObject = null;
                             } else {
-                                fieldObject = pointableVisitor
-                                        .visit((AListVisitablePointable) fieldPointable, typeInfo);
+                                fieldObject = pointableVisitor.visit((AListVisitablePointable) fieldPointable,
+                                        typeInfo);
                             }
                             break;
                         case ANY:
@@ -502,8 +502,9 @@ public class JObjectAccessors {
                         byte[] b = fieldName.getByteArray();
                         int s = fieldName.getStartOffset();
                         int l = fieldName.getLength();
-                        String v = aStringSerDer.deserialize(
-                                new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1))).getStringValue();
+                        String v = aStringSerDer
+                                .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)))
+                                .getStringValue();
                         openFields.put(v, fieldObject);
                     }
                     index++;
@@ -538,8 +539,7 @@ public class JObjectAccessors {
 
         @Override
         public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
-                IAType listType,
-                JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
+                IAType listType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
             List<IVisitablePointable> itemTags = pointable.getItemTags();
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
@@ -549,8 +549,8 @@ public class JObjectAccessors {
 
                 for (IVisitablePointable itemPointable : items) {
                     IVisitablePointable itemTagPointable = itemTags.get(index);
-                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTagPointable
-                            .getByteArray()[itemTagPointable.getStartOffset()]);
+                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
                     typeInfo.reset(listType.getType(), listType.getTypeTag());
                     switch (itemTypeTag) {
                         case RECORD:
@@ -561,17 +561,14 @@ public class JObjectAccessors {
                             listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
                             break;
                         case ANY:
-                            throw new IllegalArgumentException("Cannot parse list item of type "
-                                    + listType.getTypeTag());
+                            throw new IllegalArgumentException(
+                                    "Cannot parse list item of type " + listType.getTypeTag());
                         default:
                             IAType itemType = ((AbstractCollectionType) listType).getItemType();
                             typeInfo.reset(itemType, itemType.getTypeTag());
                             listItem = pointableVisitor.visit((AFlatValuePointable) itemPointable, typeInfo);
 
                     }
-                    ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(itemPointable.getByteArray()[itemPointable.getStartOffset()]);
-
                     list.add(listItem);
                 }
             } catch (AsterixException exception) {

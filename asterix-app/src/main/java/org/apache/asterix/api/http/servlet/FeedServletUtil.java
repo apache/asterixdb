@@ -59,6 +59,8 @@ public class FeedServletUtil {
             ch = (char) in.read();
         }
         buffer.flip();
+        sc.close();
+
         String s = new String(buffer.array());
         int feedSubscriptionPort = Integer.parseInt(s.trim());
         if (LOGGER.isLoggable(Level.INFO)) {

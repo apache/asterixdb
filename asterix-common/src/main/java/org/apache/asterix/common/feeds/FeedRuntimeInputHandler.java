@@ -68,8 +68,8 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
 
     private FrameEventCallback frameEventCallback;
 
-    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId, IFrameWriter coreOperator,
-            FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
+    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+            IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
             RecordDescriptor recordDesc, IFeedManager feedManager, int nPartitions) throws IOException {
         this.connectionId = connectionId;
         this.runtimeId = runtimeId;
@@ -77,17 +77,17 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         this.bufferingEnabled = bufferingEnabled;
         this.feedPolicyAccessor = fpa;
         this.spiller = new FeedFrameSpiller(ctx, connectionId, runtimeId, fpa);
-        this.discarder = new FeedFrameDiscarder(ctx, connectionId, runtimeId, fpa, this);
+        this.discarder = new FeedFrameDiscarder(connectionId, runtimeId, fpa, this);
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta, recordDesc, feedManager, connectionId);
         this.mode = Mode.PROCESS;
         this.lastMode = Mode.PROCESS;
         this.finished = false;
         this.fpa = fpa;
         this.feedManager = feedManager;
-        this.pool = (DataBucketPool) feedManager.getFeedMemoryManager().getMemoryComponent(
-                IFeedMemoryComponent.Type.POOL);
-        this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager().getMemoryComponent(
-                IFeedMemoryComponent.Type.COLLECTION);
+        this.pool = (DataBucketPool) feedManager.getFeedMemoryManager()
+                .getMemoryComponent(IFeedMemoryComponent.Type.POOL);
+        this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager()
+                .getMemoryComponent(IFeedMemoryComponent.Type.COLLECTION);
         this.frameEventCallback = new FrameEventCallback(fpa, this, coreOperator);
         this.mBuffer = MonitoredBuffer.getMonitoredBuffer(ctx, this, coreOperator, fta, recordDesc,
                 feedManager.getFeedMetricCollector(), connectionId, runtimeId, exceptionHandler, frameEventCallback,
@@ -96,6 +96,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         this.throttlingEnabled = false;
     }
 
+    @Override
     public synchronized void nextFrame(ByteBuffer frame) throws HyracksDataException {
         try {
             switch (mode) {
@@ -159,8 +160,8 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
             LOGGER.info("Bufferring data until recovery is complete " + this.runtimeId);
         }
         if (frameCollection == null) {
-            this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager().getMemoryComponent(
-                    IFeedMemoryComponent.Type.COLLECTION);
+            this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager()
+                    .getMemoryComponent(IFeedMemoryComponent.Type.COLLECTION);
         }
         if (frameCollection == null) {
             discarder.processMessage(frame);
@@ -338,6 +339,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         }
     }
 
+    @Override
     public void close() {
         if (mBuffer != null) {
             boolean disableMonitoring = !this.mode.equals(Mode.STALL);

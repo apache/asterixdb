@@ -46,10 +46,9 @@ public class ExternalFunctionDescriptorProvider {
 }
 
 class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDescriptor implements IFunctionDescriptor {
-
+    private static final long serialVersionUID = 1L;
     private final IFunctionInfo finfo;
     private ICopyEvaluatorFactory evaluatorFactory;
-    private ICopyEvaluatorFactory[] args;
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) throws AlgebricksException {

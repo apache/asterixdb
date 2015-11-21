@@ -29,7 +29,6 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -156,8 +155,8 @@ public class ADMDataParser extends AbstractDataParser {
         }
     }
 
-    protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out) throws AsterixException,
-            IOException, AdmLexerException {
+    protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out)
+            throws AsterixException, IOException, AdmLexerException {
         int token = admLexer.next();
         if (token == AdmLexer.TOKEN_EOF) {
             return false;
@@ -525,8 +524,8 @@ public class ADMDataParser extends AbstractDataParser {
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 
-    private void parseRecord(ARecordType recType, DataOutput out, Boolean datasetRec) throws IOException,
-            AsterixException, AdmLexerException {
+    private void parseRecord(ARecordType recType, DataOutput out, Boolean datasetRec)
+            throws IOException, AsterixException, AdmLexerException {
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
@@ -592,8 +591,8 @@ public class ADMDataParser extends AbstractDataParser {
                             openRecordField = false;
                         }
                     } else {
-                        aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
-                                admLexer.getLastTokenImage().length() - 1));
+                        aStringFieldName.setValue(
+                                admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1));
                         stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
                         openRecordField = true;
                         fieldType = null;
@@ -674,8 +673,8 @@ public class ADMDataParser extends AbstractDataParser {
         return -1;
     }
 
-    private void parseOrderedList(AOrderedListType oltype, DataOutput out) throws IOException, AsterixException,
-            AdmLexerException {
+    private void parseOrderedList(AOrderedListType oltype, DataOutput out)
+            throws IOException, AsterixException, AdmLexerException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         OrderedListBuilder orderedListBuilder = (OrderedListBuilder) getOrderedListBuilder();
 
@@ -716,8 +715,8 @@ public class ADMDataParser extends AbstractDataParser {
         orderedListBuilder.write(out, true);
     }
 
-    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out) throws IOException, AsterixException,
-            AdmLexerException {
+    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out)
+            throws IOException, AsterixException, AdmLexerException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) getUnorderedListBuilder();
 
@@ -779,8 +778,8 @@ public class ADMDataParser extends AbstractDataParser {
         return (ArrayBackedValueStorage) abvsBuilderPool.allocate(ATypeTag.BINARY);
     }
 
-    private void parseToBinaryTarget(int lexerToken, String tokenImage, DataOutput out) throws ParseException,
-            HyracksDataException {
+    private void parseToBinaryTarget(int lexerToken, String tokenImage, DataOutput out)
+            throws ParseException, HyracksDataException {
         switch (lexerToken) {
             case AdmLexer.TOKEN_HEX_CONS: {
                 parseHexBinaryString(tokenImage.toCharArray(), 1, tokenImage.length() - 2, out);
@@ -793,16 +792,16 @@ public class ADMDataParser extends AbstractDataParser {
         }
     }
 
-    private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
-            IOException {
+    private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out)
+            throws AsterixException, IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
             throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
     }
 
-    private void parseAndCastNumeric(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
-            IOException {
+    private void parseAndCastNumeric(ATypeTag typeTag, IAType objectType, DataOutput out)
+            throws AsterixException, IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         DataOutput dataOutput = out;
         if (targetTypeTag != typeTag) {
@@ -820,7 +819,8 @@ public class ADMDataParser extends AbstractDataParser {
                 // can promote typeTag to targetTypeTag
                 ITypeConvertComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag, targetTypeTag);
                 if (promoteComputer == null) {
-                    throw new AsterixException("Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
+                    throw new AsterixException(
+                            "Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
                 }
                 // do the promotion; note that the type tag field should be skipped
                 promoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
@@ -829,7 +829,8 @@ public class ADMDataParser extends AbstractDataParser {
                 //can demote source type to the target type
                 ITypeConvertComputer demoteComputer = ATypeHierarchy.getTypeDemoteComputer(typeTag, targetTypeTag);
                 if (demoteComputer == null) {
-                    throw new AsterixException("Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
+                    throw new AsterixException(
+                            "Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
                 }
                 // do the demotion; note that the type tag field should be skipped
                 demoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
@@ -838,8 +839,8 @@ public class ADMDataParser extends AbstractDataParser {
         }
     }
 
-    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
-            AdmLexerException, IOException {
+    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out)
+            throws AsterixException, AdmLexerException, IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag != null) {
             DataOutput dataOutput = out;
@@ -876,8 +877,8 @@ public class ADMDataParser extends AbstractDataParser {
         throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
     }
 
-    private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out) throws AsterixException,
-            HyracksDataException, IOException {
+    private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out)
+            throws AsterixException, HyracksDataException, IOException {
         switch (typeTag) {
             case BOOLEAN:
                 parseBoolean(unquoted, out);
@@ -1008,8 +1009,8 @@ public class ADMDataParser extends AbstractDataParser {
         for (; offset < int16.length(); offset++) {
             if (int16.charAt(offset) >= '0' && int16.charAt(offset) <= '9') {
                 value = (short) (value * 10 + int16.charAt(offset) - '0');
-            } else if (int16.charAt(offset) == 'i' && int16.charAt(offset + 1) == '1'
-                    && int16.charAt(offset + 2) == '6' && offset + 3 == int16.length()) {
+            } else if (int16.charAt(offset) == 'i' && int16.charAt(offset + 1) == '1' && int16.charAt(offset + 2) == '6'
+                    && offset + 3 == int16.length()) {
                 break;
             } else {
                 throw new ParseException(errorMessage);
@@ -1040,8 +1041,8 @@ public class ADMDataParser extends AbstractDataParser {
         for (; offset < int32.length(); offset++) {
             if (int32.charAt(offset) >= '0' && int32.charAt(offset) <= '9') {
                 value = (value * 10 + int32.charAt(offset) - '0');
-            } else if (int32.charAt(offset) == 'i' && int32.charAt(offset + 1) == '3'
-                    && int32.charAt(offset + 2) == '2' && offset + 3 == int32.length()) {
+            } else if (int32.charAt(offset) == 'i' && int32.charAt(offset + 1) == '3' && int32.charAt(offset + 2) == '2'
+                    && offset + 3 == int32.length()) {
                 break;
             } else {
                 throw new ParseException(errorMessage);
@@ -1073,8 +1074,8 @@ public class ADMDataParser extends AbstractDataParser {
         for (; offset < int64.length(); offset++) {
             if (int64.charAt(offset) >= '0' && int64.charAt(offset) <= '9') {
                 value = (value * 10 + int64.charAt(offset) - '0');
-            } else if (int64.charAt(offset) == 'i' && int64.charAt(offset + 1) == '6'
-                    && int64.charAt(offset + 2) == '4' && offset + 3 == int64.length()) {
+            } else if (int64.charAt(offset) == 'i' && int64.charAt(offset + 1) == '6' && int64.charAt(offset + 2) == '4'
+                    && offset + 3 == int64.length()) {
                 break;
             } else {
                 throw new ParseException(errorMessage);

@@ -32,14 +32,12 @@ public class FeedMetricCollector implements IFeedMetricCollector {
 
     private static final int UNKNOWN = -1;
 
-    private final String nodeId;
     private final AtomicInteger globalSenderId = new AtomicInteger(1);
     private final Map<Integer, Sender> senders = new HashMap<Integer, Sender>();
     private final Map<Integer, Series> statHistory = new HashMap<Integer, Series>();
     private final Map<String, Sender> sendersByName = new HashMap<String, Sender>();
 
     public FeedMetricCollector(String nodeId) {
-        this.nodeId = nodeId;
     }
 
     @Override

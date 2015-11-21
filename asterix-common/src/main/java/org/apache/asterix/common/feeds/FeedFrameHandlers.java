@@ -128,7 +128,8 @@ public class FeedFrameHandlers {
 
         private final Collection<FeedFrameCollector> frameCollectors;
 
-        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, FeedRuntimeType runtimeType, int partition) {
+        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, FeedRuntimeType runtimeType,
+                int partition) {
             this.frameCollectors = frameCollectors;
         }
 
@@ -162,13 +163,11 @@ public class FeedFrameHandlers {
 
     public static class DiskSpiller implements IFeedFrameHandler {
 
-        private final FeedId feedId;
         private FrameSpiller<ByteBuffer> receiver;
         private Iterator<ByteBuffer> iterator;
 
         public DiskSpiller(FrameDistributor distributor, FeedId feedId, FeedRuntimeType runtimeType, int partition,
                 int frameSize) throws IOException {
-            this.feedId = feedId;
             receiver = new FrameSpiller<ByteBuffer>(distributor, feedId, frameSize);
         }
 
@@ -179,7 +178,6 @@ public class FeedFrameHandlers {
 
         private static class FrameSpiller<T> extends MessageReceiver<ByteBuffer> {
 
-            private final int frameSize;
             private final FeedId feedId;
             private BufferedOutputStream bos;
             private final ByteBuffer reusableLengthBuffer;
@@ -191,7 +189,6 @@ public class FeedFrameHandlers {
 
             public FrameSpiller(FrameDistributor distributor, FeedId feedId, int frameSize) throws IOException {
                 this.feedId = feedId;
-                this.frameSize = frameSize;
                 this.frameDistributor = distributor;
                 reusableLengthBuffer = ByteBuffer.allocate(4);
                 reusableDataBuffer = ByteBuffer.allocate(frameSize);

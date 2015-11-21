@@ -29,18 +29,14 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.kohsuke.args4j.CmdLineParser;
-
-import org.apache.asterix.event.management.DefaultOutputHandler;
 import org.apache.asterix.event.management.EventUtil;
-import org.apache.asterix.event.management.AsterixEventServiceClient;
-import org.apache.asterix.event.management.IOutputHandler;
 import org.apache.asterix.event.management.Randomizer;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.event.schema.cluster.Property;
 import org.apache.asterix.event.schema.event.Events;
 import org.apache.asterix.event.schema.pattern.Patterns;
+import org.kohsuke.args4j.CmdLineParser;
 
 public class EventDriver {
 
@@ -108,7 +104,6 @@ public class EventDriver {
                 Randomizer.getInstance(eventConfig.seed);
             }
             Cluster cluster = initializeCluster(eventConfig.clusterPath);
-            Patterns patterns = initializePatterns(eventConfig.patternPath);
             initialize(eventConfig);
 
             if (!eventConfig.dryRun) {

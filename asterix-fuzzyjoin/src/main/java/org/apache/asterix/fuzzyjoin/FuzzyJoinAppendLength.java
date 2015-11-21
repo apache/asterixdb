@@ -25,7 +25,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 
 import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.asterix.fuzzyjoin.tokenizer.TokenizerFactory;
@@ -44,11 +43,10 @@ public class FuzzyJoinAppendLength {
         int[] dataColumns = FuzzyJoinUtil.getDataColumns("2,3");
 
         String line;
-        HashMap<String, MutableInteger> tokenCount = new HashMap<String, MutableInteger>();
         while ((line = input.readLine()) != null) {
             String[] splits = line.split(FuzzyJoinConfig.RECORD_SEPARATOR_REGEX);
-            Collection<String> tokens = tokenizer.tokenize(FuzzyJoinUtil.getData(splits, dataColumns,
-                    FuzzyJoinConfig.TOKEN_SEPARATOR));
+            Collection<String> tokens = tokenizer
+                    .tokenize(FuzzyJoinUtil.getData(splits, dataColumns, FuzzyJoinConfig.TOKEN_SEPARATOR));
             output.write(splits[0] + FuzzyJoinConfig.RECORD_SEPARATOR + splits[1] + FuzzyJoinConfig.RECORD_SEPARATOR
                     + splits[2] + FuzzyJoinConfig.RECORD_SEPARATOR + splits[3] + FuzzyJoinConfig.RECORD_SEPARATOR
                     + tokens.size() + "\n");

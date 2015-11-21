@@ -100,8 +100,8 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                         }
                     }
                     if (unsubstitutedNodes.size() > 0) {
-                        String[] participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes().toArray(
-                                new String[] {});
+                        String[] participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes()
+                                .toArray(new String[] {});
                         nodeIndex = 0;
                         for (String unsubstitutedNode : unsubstitutedNodes) {
                             nodeSubstitution.put(unsubstitutedNode, participantNodes[nodeIndex]);
@@ -225,6 +225,8 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                             clist.add(constraint);
                         }
                     }
+                    break;
+                default:
                     break;
             }
         }

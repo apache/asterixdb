@@ -19,9 +19,7 @@
 
 package org.apache.asterix.transaction.management.service.locking;
 
-import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants;
-
-import static org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 /**
  * Creates a JSON serialization of the lock table of the ConcurrentLockManager organized by resource. I.e. the
@@ -36,16 +34,15 @@ public class ResourceTablePrinter implements TablePrinter {
     private RequestArenaManager reqArenaMgr;
     private JobArenaManager jobArenaMgr;
 
-    ResourceTablePrinter(ResourceGroupTable table,
-                         ResourceArenaManager resArenaMgr,
-                         RequestArenaManager reqArenaMgr,
-                         JobArenaManager jobArenaMgr) {
+    ResourceTablePrinter(ResourceGroupTable table, ResourceArenaManager resArenaMgr, RequestArenaManager reqArenaMgr,
+            JobArenaManager jobArenaMgr) {
         this.table = table;
         this.resArenaMgr = resArenaMgr;
         this.reqArenaMgr = reqArenaMgr;
         this.jobArenaMgr = jobArenaMgr;
     }
 
+    @Override
     public StringBuilder append(StringBuilder sb) {
         table.getAllLatches();
         sb.append("[\n");

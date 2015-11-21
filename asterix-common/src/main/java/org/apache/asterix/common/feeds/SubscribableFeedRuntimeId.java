@@ -21,7 +21,7 @@ package org.apache.asterix.common.feeds;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 
 public class SubscribableFeedRuntimeId extends FeedRuntimeId {
-
+    private static final long serialVersionUID = 1L;
     private final FeedId feedId;
 
     public SubscribableFeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition) {

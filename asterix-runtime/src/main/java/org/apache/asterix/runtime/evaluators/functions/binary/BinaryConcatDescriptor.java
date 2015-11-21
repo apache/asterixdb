@@ -39,6 +39,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 1L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -52,12 +54,12 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
@@ -69,8 +71,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         ATypeTag typeTag = evaluateTuple(tuple, 0);
                         if (typeTag != ATypeTag.UNORDEREDLIST && typeTag != ATypeTag.ORDEREDLIST) {
                             throw new AlgebricksException(getIdentifier().getName()
-                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
-                                    + typeTag);
+                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got " + typeTag);
                         }
                         try {
                             listAccessor.reset(storages[0].getByteArray(), 0);

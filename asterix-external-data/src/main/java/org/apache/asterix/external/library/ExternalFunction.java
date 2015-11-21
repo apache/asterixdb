@@ -63,7 +63,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         String dataverse = finfo.getFunctionIdentifier().getNamespace();
         ClassLoader libraryClassLoader = ExternalLibraryManager.getLibraryClassLoader(dataverse, functionLibary);
         String classname = finfo.getFunctionBody().trim();
-        Class clazz;
+        Class<?> clazz;
         try {
             clazz = Class.forName(classname, true, libraryClassLoader);
             externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
@@ -88,8 +88,8 @@ public abstract class ExternalFunction implements IExternalFunction {
 
             // Type-cast the source array based on the input type that this function wants to receive.
             ATypeTag targetTypeTag = finfo.getParamList().get(i).getTypeTag();
-            ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal
-                    .getStartOffset()]);
+            ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
             if (sourceTypeTag != targetTypeTag) {
                 castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(inputVal.getByteArray(), inputVal.getStartOffset(),

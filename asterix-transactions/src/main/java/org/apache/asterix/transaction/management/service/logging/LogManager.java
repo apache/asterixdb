@@ -69,7 +69,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private FileChannel appendChannel;
     protected LogBuffer appendPage;
     private LogFlusher logFlusher;
-    private Future<Object> futureLogFlusher;
+    private Future<? extends Object> futureLogFlusher;
     private static final long SMALLEST_LOG_FILE_ID = 0;
     private final String nodeId;
     protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
@@ -190,7 +190,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendChannel = getFileChannel(appendLSN.get(), true);
         appendPage.isLastPage(true);
         //[Notice]
-        //the current log file channel is closed if 
+        //the current log file channel is closed if
         //LogBuffer.flush() completely flush the last page of the file.
     }
 
@@ -313,6 +313,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         initializeLogManager(lastMaxLogFileId + 1);
     }
 
+    @Override
     public void deleteOldLogFiles(long checkpointLSN) {
 
         Long checkpointLSNLogFileID = getLogFileId(checkpointLSN);
@@ -376,6 +377,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         List<Long> logFileIds = null;
         if (fileLogDir.exists()) {
             logFileNames = fileLogDir.list(new FilenameFilter() {
+                @Override
                 public boolean accept(File dir, String name) {
                     if (name.startsWith(logFilePrefix)) {
                         return true;
@@ -448,6 +450,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return newFileChannel;
     }
 
+    @Override
     public long getReadableSmallestLSN() {
         List<Long> logFileIds = getLogFileIds();
         if (logFileIds != null) {

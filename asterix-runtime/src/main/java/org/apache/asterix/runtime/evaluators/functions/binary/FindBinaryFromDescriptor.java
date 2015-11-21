@@ -22,7 +22,6 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -34,6 +33,7 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -50,13 +50,15 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
+                return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(output, args,
+                        getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
-                        ATypeTag offsetTag = evaluateTuple(tuple, 2);
-
+                        evaluateTuple(tuple, 2);
                         int getFrom = 0;
                         try {
                             getFrom = ATypeHierarchy.getIntegerValue(storages[2].getByteArray(), 0);

@@ -35,6 +35,7 @@ public class OutputHandler implements IOutputHandler {
 
     }
 
+    @Override
     public OutputAnalysis reportEventOutput(Event event, String output) {
 
         EventType eventType = EventType.valueOf(event.getType().toUpperCase());
@@ -82,6 +83,8 @@ public class OutputHandler implements IOutputHandler {
                             + event.getNodeid().getValue().getAbsvalue() + "\n");
                     ignore = false;
                 }
+                break;
+            default:
                 break;
         }
         if (ignore) {

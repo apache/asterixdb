@@ -110,7 +110,7 @@ public class ReplicationManager implements IReplicationManager {
     private final AtomicBoolean replicationSuspended;
     private AtomicBoolean terminateJobsReplication;
     private AtomicBoolean jobsReplicationSuspended;
-    private final static int INITIAL_BUFFER_SIZE = 4000; //4KB 
+    private final static int INITIAL_BUFFER_SIZE = 4000; //4KB
     private final Set<String> shuttingDownReplicaIds;
     //replication threads
     private ReplicationJobsProccessor replicationJobsProcessor;
@@ -125,7 +125,7 @@ public class ReplicationManager implements IReplicationManager {
     private LinkedBlockingQueue<ReplicationLogBuffer> pendingFlushLogBuffersQ;
     protected ReplicationLogBuffer currentTxnLogBuffer;
     private ReplicationLogFlusher txnlogsReplicator;
-    private Future<Object> txnLogReplicatorTask;
+    private Future<? extends Object> txnLogReplicatorTask;
     private Map<String, SocketChannel> logsReplicaSockets = null;
 
     public ReplicationManager(String nodeId, AsterixReplicationProperties replicationProperties,
@@ -240,7 +240,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Processes the replication job based on its specifications
-     * 
+     *
      * @param job
      *            The replication job
      * @param replicasSockets
@@ -376,7 +376,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Waits and reads a response from a remote replica
-     * 
+     *
      * @param socketChannel
      *            The socket to read the response from
      * @param responseBuffer
@@ -425,7 +425,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Suspends proccessing replication jobs.
-     * 
+     *
      * @param force
      *            a flag indicates if replication should be suspended right away or when the pending jobs are completed.
      */
@@ -523,7 +523,7 @@ public class ReplicationManager implements IReplicationManager {
     /**
      * Sends a shutdown event to remote replicas notifying them
      * no more logs/files will be sent from this local replica.
-     * 
+     *
      * @throws IOException
      */
     private void sendShutdownNotifiction() throws IOException {
@@ -540,7 +540,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Sends a request to remote replicas
-     * 
+     *
      * @param replicaSockets
      *            The sockets to send the request to.
      * @param requestBuffer
@@ -571,7 +571,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Closes the passed replication sockets by sending GOODBYE request to remote replicas.
-     * 
+     *
      * @param replicaSockets
      */
     private void closeReplicaSockets(Map<String, SocketChannel> replicaSockets) {
@@ -602,7 +602,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Checks the state of a remote replica by trying to ping it.
-     * 
+     *
      * @param replicaId
      *            The replica to check the state for.
      * @param async
@@ -615,7 +615,7 @@ public class ReplicationManager implements IReplicationManager {
 
         ReplicaStateChecker connector = new ReplicaStateChecker(replica, replicationProperties.getReplicationTimeOut(),
                 this, replicationProperties, suspendReplication);
-        Future<Object> ft = asterixAppRuntimeContextProvider.getThreadExecutor().submit(connector);
+        Future<? extends Object> ft = asterixAppRuntimeContextProvider.getThreadExecutor().submit(connector);
 
         if (!async) {
             //wait until task is done
@@ -631,7 +631,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Updates the state of a remote replica.
-     * 
+     *
      * @param replicaId
      *            The replica id to update.
      * @param newState
@@ -686,7 +686,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * When an ACK for a JOB_COMMIT is received, it is added to the corresponding job.
-     * 
+     *
      * @param jobId
      * @param replicaId
      *            The remote replica id the ACK received from.
@@ -763,7 +763,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Establishes a connection with a remote replica.
-     * 
+     *
      * @param replicaId
      *            The replica to connect to.
      * @return The socket of the remote replica
@@ -855,7 +855,7 @@ public class ReplicationManager implements IReplicationManager {
 
     /**
      * Suspends replications and sends a remote replica failure event to ReplicasEventsMonitor.
-     * 
+     *
      * @param replicaId
      *            the failed replica id.
      */
@@ -1071,7 +1071,7 @@ public class ReplicationManager implements IReplicationManager {
                 logRecord.deserialize(dataBuffer, true, nodeId);
 
                 if (logRecord.getNodeId().equals(nodeId)) {
-                    //store log in memory to replay it for recovery 
+                    //store log in memory to replay it for recovery
                     recoveryLogs.add(logRecord);
                     //this needs to be a new log object so that it is passed to recovery manager as a different object
                     logRecord = new LogRecord();

@@ -19,7 +19,7 @@
 
 package org.apache.asterix.fuzzyjoin;
 
-public class MutableInteger implements Comparable {
+public class MutableInteger implements Comparable<Object> {
     private int v;
 
     public MutableInteger(int v) {

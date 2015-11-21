@@ -51,6 +51,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
     private final static byte SER_FLOAT_TYPE_TAG = ATypeTag.FLOAT.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new PrefixLenJaccardDescriptor();
         }
@@ -71,7 +72,6 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private final ICopyEvaluator evalLen = args[0].createEvaluator(inputVal);
                     private final ICopyEvaluator evalThreshold = args[1].createEvaluator(inputVal);
-                    private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
                     private float similarityThresholdCache;
                     private SimilarityFiltersJaccard similarityFilters;
@@ -102,8 +102,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                                     + ": expects type FLOAT the first argument but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
                         }
-                        float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(
-                                inputVal.getByteArray(), 1);
+                        float similarityThreshold = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
 
                         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {
                             similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);

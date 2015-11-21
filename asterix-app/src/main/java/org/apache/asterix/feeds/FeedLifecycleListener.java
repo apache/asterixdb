@@ -146,7 +146,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     }
 
     /*
-     * Traverse job specification to categorize job as a feed intake job or a feed collection job 
+     * Traverse job specification to categorize job as a feed intake job or a feed collection job
      */
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
@@ -333,6 +333,8 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
                     }
                 }
                 break;
+            default:
+                break;
         }
 
     }
@@ -473,10 +475,12 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.getFeedJoint(feedJointKey);
     }
 
+    @Override
     public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
         feedJobNotificationHandler.registerFeedEventSubscriber(connectionId, subscriber);
     }
 
+    @Override
     public void deregisterFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
         feedJobNotificationHandler.deregisterFeedEventSubscriber(connectionId, subscriber);
 

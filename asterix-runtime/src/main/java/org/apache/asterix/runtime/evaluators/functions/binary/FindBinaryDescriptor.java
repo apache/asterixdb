@@ -39,7 +39,7 @@ import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -55,12 +55,12 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractFindBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
@@ -98,15 +98,13 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
                 if (serializeNullIfAnyNull(textTag, wordTag)) {
                     return;
                 }
-                checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag,
-                        wordTag);
+                checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag, wordTag);
 
                 textPtr.set(storages[0].getByteArray(), 1, storages[0].getLength() - 1);
                 wordPtr.set(storages[1].getByteArray(), 1, storages[1].getLength() - 1);
-                result.setValue(
-                        1 + indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(), textPtr.getContentLength(),
-                                wordPtr.getByteArray(), wordPtr.getContentStartOffset(), wordPtr.getContentLength(),
-                                fromOffset));
+                result.setValue(1 + indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(),
+                        textPtr.getContentLength(), wordPtr.getByteArray(), wordPtr.getContentStartOffset(),
+                        wordPtr.getContentLength(), fromOffset));
                 intSerde.serialize(result, dataOutput);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
@@ -117,9 +115,8 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
     }
 
     // copy from String.indexOf(String)
-    static int indexOf(byte[] source, int sourceOffset, int sourceCount,
-            byte[] target, int targetOffset, int targetCount,
-            int fromIndex) {
+    static int indexOf(byte[] source, int sourceOffset, int sourceCount, byte[] target, int targetOffset,
+            int targetCount, int fromIndex) {
         if (fromIndex >= sourceCount) {
             return (targetCount == 0 ? sourceCount : -1);
         }
@@ -136,17 +133,14 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
         for (int i = sourceOffset + fromIndex; i <= max; i++) {
             /* Look for first character. */
             if (source[i] != first) {
-                while (++i <= max && source[i] != first)
-                    ;
+                while (++i <= max && source[i] != first);
             }
 
             /* Found first character, now look at the rest of v2 */
             if (i <= max) {
                 int j = i + 1;
                 int end = j + targetCount - 1;
-                for (int k = targetOffset + 1; j < end && source[j]
-                        == target[k]; j++, k++)
-                    ;
+                for (int k = targetOffset + 1; j < end && source[j] == target[k]; j++, k++);
 
                 if (j == end) {
                     /* Found whole string. */

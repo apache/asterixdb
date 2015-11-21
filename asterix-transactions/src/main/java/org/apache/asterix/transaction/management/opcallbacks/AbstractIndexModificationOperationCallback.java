@@ -22,11 +22,10 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.common.transactions.LogRecord;
-import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
@@ -59,8 +58,7 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setNodeId(txnSubsystem.getId());
     }
 
-    protected void log(int PKHash, ITupleReference newValue)
-            throws ACIDException {
+    protected void log(int PKHash, ITupleReference newValue) throws ACIDException {
         logRecord.setPKHashValue(PKHash);
         logRecord.setPKFields(primaryKeyFields);
         logRecord.setPKValue(newValue);

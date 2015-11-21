@@ -38,7 +38,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -54,12 +54,14 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractSubBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
-                        ATypeTag tagSubLength = evaluateTuple(tuple, 2);
+                        evaluateTuple(tuple, 2);
                         int subLength = 0;
                         try {
                             subLength = ATypeHierarchy.getIntegerValue(storages[2].getByteArray(), 0);

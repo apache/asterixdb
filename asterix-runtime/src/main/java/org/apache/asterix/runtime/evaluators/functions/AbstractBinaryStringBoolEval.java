@@ -19,12 +19,10 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.util.Arrays;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;

@@ -18,6 +18,18 @@
  */
 package org.apache.asterix.external.library.java;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
@@ -44,7 +56,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeseriali
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;
-import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
@@ -82,18 +93,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class JObjects {
 
@@ -200,11 +199,11 @@ public class JObjects {
         }
 
         public void setValue(byte v) {
-            ((AMutableInt16) value).setValue(v);
+            value.setValue(v);
         }
 
         public short getValue() {
-            return ((AMutableInt16) value).getShortValue();
+            return value.getShortValue();
         }
 
         @Override
@@ -216,12 +215,12 @@ public class JObjects {
                     throw new HyracksDataException(e);
                 }
             }
-            AInt16SerializerDeserializer.INSTANCE.serialize((AInt16) value, dataOutput);
+            AInt16SerializerDeserializer.INSTANCE.serialize(value, dataOutput);
         }
 
         @Override
         public void reset() {
-            ((AMutableInt16) value).setValue((short) 0);
+            value.setValue((short) 0);
         }
 
     }
@@ -930,6 +929,7 @@ public class JObjects {
             this.jObjects = new ArrayList<IJObject>();
         }
 
+        @Override
         public void add(IJObject jObject) {
             jObjects.add(jObject);
         }
@@ -980,7 +980,6 @@ public class JObjects {
         private Map<String, IJObject> openFields;
         private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
 
-
         public JRecord(ARecordType recordType, IJObject[] fields) {
             this.recordType = recordType;
             this.fields = fields;
@@ -991,21 +990,6 @@ public class JObjects {
             this.recordType = recordType;
             this.fields = fields;
             this.openFields = openFields;
-        }
-
-        private ARecordType getARecordType(String[] fieldNames, IJObject[] fields) throws AsterixException {
-            IAType[] fieldTypes = new IAType[fields.length];
-            int index = 0;
-            for (IJObject jObj : fields) {
-                fieldTypes[index++] = jObj.getIAObject().getType();
-            }
-            ARecordType recordType;
-            try {
-                recordType = new ARecordType(null, fieldNames, fieldTypes, false);
-            } catch (HyracksDataException e) {
-                throw new AsterixException(e);
-            }
-            return recordType;
         }
 
         public void addField(String fieldName, IJObject fieldValue) throws AsterixException {
@@ -1086,6 +1070,7 @@ public class JObjects {
             return recordBuilder;
         }
 
+        @Override
         public void serialize(DataOutput output, boolean writeTypeTag) throws HyracksDataException {
             RecordBuilder recordBuilder = new RecordBuilder();
             recordBuilder.reset(recordType);
@@ -1128,6 +1113,7 @@ public class JObjects {
             return value;
         }
 
+        @Override
         public void reset() throws AlgebricksException {
             if (openFields != null && !openFields.isEmpty()) {
                 openFields.clear();

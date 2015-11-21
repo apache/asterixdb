@@ -18,21 +18,21 @@
  */
 package org.apache.asterix.external.dataset.adapter;
 
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.external.util.TweetProcessor;
 import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+
 import twitter4j.FilterQuery;
-import twitter4j.Query;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
 import twitter4j.TwitterStream;
-
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * An implementation of @see {PullBasedFeedClient} for the Twitter service. The
@@ -41,14 +41,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class PushBasedTwitterFeedClient extends FeedClient {
 
-    private String keywords;
-    private Query query;
-
     private ARecordType recordType;
     private TweetProcessor tweetProcessor;
     private LinkedBlockingQueue<Status> inputQ;
 
-    public PushBasedTwitterFeedClient(IHyracksTaskContext ctx, ARecordType recordType, PushBasedTwitterAdapter adapter) throws AsterixException {
+    public PushBasedTwitterFeedClient(IHyracksTaskContext ctx, ARecordType recordType, PushBasedTwitterAdapter adapter)
+            throws AsterixException {
         this.recordType = recordType;
         this.tweetProcessor = new TweetProcessor(recordType);
         this.recordSerDe = new ARecordSerializerDeserializer(recordType);

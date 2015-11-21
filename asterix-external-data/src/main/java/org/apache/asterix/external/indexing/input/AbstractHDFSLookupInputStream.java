@@ -22,19 +22,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 
-import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
-
 /*
  * This class is used for seek and read of external data of format adm or delimited text in sequence of text input format
  */
-@SuppressWarnings("deprecation")
 public abstract class AbstractHDFSLookupInputStream extends InputStream {
 
     protected String pendingValue = null;
@@ -45,7 +43,8 @@ public abstract class AbstractHDFSLookupInputStream extends InputStream {
     protected ExternalFile file = new ExternalFile(null, null, 0, null, null, 0, ExternalFilePendingOp.PENDING_NO_OP);
     protected ExternalFileIndexAccessor filesIndexAccessor;
 
-    public AbstractHDFSLookupInputStream(ExternalFileIndexAccessor filesIndexAccessor, JobConf conf) throws IOException {
+    public AbstractHDFSLookupInputStream(ExternalFileIndexAccessor filesIndexAccessor, JobConf conf)
+            throws IOException {
         this.filesIndexAccessor = filesIndexAccessor;
         fs = FileSystem.get(conf);
     }

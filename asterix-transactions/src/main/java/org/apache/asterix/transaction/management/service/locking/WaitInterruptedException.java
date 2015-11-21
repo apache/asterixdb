@@ -22,6 +22,8 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ITransactionContext;
 
 public class WaitInterruptedException extends ACIDException {
+    private static final long serialVersionUID = 1L;
+
     public WaitInterruptedException(ITransactionContext txnContext, String message, Throwable cause) {
         super(txnContext, message, cause);
     }

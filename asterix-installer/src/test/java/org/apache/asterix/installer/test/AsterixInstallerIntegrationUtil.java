@@ -25,7 +25,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -53,10 +52,7 @@ public class AsterixInstallerIntegrationUtil {
     private static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     private static final int zookeeperClientPort = 2900;
     private static final int zookeeperTestClientPort = 3945;
-
     private static IHyracksClientConnection hcc;
-
-    private static final Logger LOGGER = Logger.getLogger(AsterixInstallerIntegrationUtil.class.getName());
 
     public static void deinit() throws Exception {
         deleteInstance();
@@ -76,12 +72,12 @@ public class AsterixInstallerIntegrationUtil {
 
         })[0];
         managixHome = new File(installerTargetDir, managixHomeDirName).getAbsolutePath();
-        System.setProperty("log4j.configuration", managixHome + File.separator + "conf" + File.separator
-                + "log4j.properties");
+        System.setProperty("log4j.configuration",
+                managixHome + File.separator + "conf" + File.separator + "log4j.properties");
 
         managixHome = AsterixInstallerIntegrationUtil.getManagixHome();
-        clusterConfigurationPath = managixHome + File.separator + "clusters" + File.separator + "local"
-                + File.separator + "local.xml";
+        clusterConfigurationPath = managixHome + File.separator + "clusters" + File.separator + "local" + File.separator
+                + "local.xml";
 
         InstallerDriver.setManagixHome(managixHome);
 
@@ -206,7 +202,8 @@ public class AsterixInstallerIntegrationUtil {
         return managixHome;
     }
 
-    public static void installLibrary(String libraryName, String libraryDataverse, String libraryPath) throws Exception {
+    public static void installLibrary(String libraryName, String libraryDataverse, String libraryPath)
+            throws Exception {
         transformIntoRequiredState(State.INACTIVE);
         String command = "install -n " + ASTERIX_INSTANCE_NAME + " -d " + libraryDataverse + " -l " + libraryName
                 + " -p " + libraryPath;

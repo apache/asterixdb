@@ -30,15 +30,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.ParseException;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -46,6 +42,9 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ResultUtils {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
@@ -92,8 +91,7 @@ public class ResultUtils {
 
     public static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
 
-    public static void displayResults(ResultReader resultReader, SessionConfig conf)
-            throws HyracksDataException {
+    public static void displayResults(ResultReader resultReader, SessionConfig conf) throws HyracksDataException {
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
         IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
@@ -107,8 +105,8 @@ public class ResultUtils {
 
         // If we're outputting CSV with a header, the HTML header was already
         // output by displayCSVHeader(), so skip it here
-        if (conf.is(SessionConfig.FORMAT_HTML) &&
-            ! (conf.fmt() == OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER))) {
+        if (conf.is(SessionConfig.FORMAT_HTML)
+                && !(conf.fmt() == OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER))) {
             conf.out().println("<h4>Results:</h4>");
             conf.out().println("<pre>");
         }
@@ -125,6 +123,8 @@ public class ResultUtils {
                     wrap_array = true;
                 }
                 break;
+            default:
+                break;
         }
 
         if (bytesRead > 0) {
@@ -140,7 +140,7 @@ public class ResultUtils {
                         byte[] recordBytes = new byte[length];
                         int numread = bbis.read(recordBytes, 0, length);
                         if (conf.fmt() == OutputFormat.CSV) {
-                            if ( (numread > 0) && (recordBytes[numread-1] == '\n') ) {
+                            if ((numread > 0) && (recordBytes[numread - 1] == '\n')) {
                                 numread--;
                             }
                         }
@@ -270,7 +270,7 @@ public class ResultUtils {
         //try returning the class without package qualification
         String exceptionClassName = hierarchySplits[hierarchySplits.length - 1];
         String localizedMessage = cause.getLocalizedMessage();
-        if(localizedMessage == null){
+        if (localizedMessage == null) {
             localizedMessage = "Internal error. Please check instance logs for further details.";
         }
         return localizedMessage + " [" + exceptionClassName + "]";

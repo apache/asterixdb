@@ -38,7 +38,6 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -47,6 +46,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringLengthDescriptor();
         }
@@ -82,7 +82,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 int len = UTF8StringUtil.getUTFLength(outInput.getByteArray(), 1);
-                                result.setValue((long) len);
+                                result.setValue(len);
                                 int64Serde.serialize(result, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);

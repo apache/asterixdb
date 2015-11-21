@@ -57,7 +57,6 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     protected final FeedRuntimeInputHandler inputHandler;
     protected final IFrameEventCallback callback;
     protected final Timer timer;
-    private final RecordDescriptor recordDesc;
     private final IExceptionHandler exceptionHandler;
     protected final FeedPolicyAccessor policyAccessor;
     protected int nPartitions;
@@ -122,7 +121,6 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
         this.callback = callback;
         this.inputHandler = inputHandler;
         this.timer = new Timer();
-        this.recordDesc = recordDesc;
         this.policyAccessor = policyAccessor;
         this.nPartitions = nPartitions;
         this.active = true;
@@ -156,9 +154,8 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
             this.timer.scheduleAtFixedRate(processingRateTask, 0, PROCESSING_RATE_MEASURE_FREQUENCY);
         }
 
-        if (monitorInputQueueLength
-                && (policyAccessor.isElastic() || policyAccessor.throttlingEnabled()
-                        || policyAccessor.spillToDiskOnCongestion() || policyAccessor.discardOnCongestion())) {
+        if (monitorInputQueueLength && (policyAccessor.isElastic() || policyAccessor.throttlingEnabled()
+                || policyAccessor.spillToDiskOnCongestion() || policyAccessor.discardOnCongestion())) {
             this.monitorInputQueueLengthTask = new MonitorInputQueueLengthTimerTask(this, callback);
             this.timer.scheduleAtFixedRate(monitorInputQueueLengthTask, 0, INPUT_QUEUE_MEASURE_FREQUENCY);
         }
@@ -237,9 +234,8 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     }
 
     public void sendReport(ByteBuffer frame) {
-        if ((logInflowOutflowRate || reportInflowRate)
-                && !(inputHandler.getMode().equals(Mode.PROCESS_BACKLOG) || inputHandler.getMode().equals(
-                        Mode.PROCESS_SPILL))) {
+        if ((logInflowOutflowRate || reportInflowRate) && !(inputHandler.getMode().equals(Mode.PROCESS_BACKLOG)
+                || inputHandler.getMode().equals(Mode.PROCESS_SPILL))) {
             inflowFta.reset(frame);
             metricCollector.sendReport(inflowReportSenderId, inflowFta.getTupleCount());
         }

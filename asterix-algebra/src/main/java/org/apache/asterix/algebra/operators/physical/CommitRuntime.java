@@ -42,7 +42,6 @@ public class CommitRuntime implements IPushRuntime {
 
     private final static long SEED = 0L;
 
-    private final IHyracksTaskContext hyracksTaskCtx;
     private final ITransactionManager transactionManager;
     private final ILogManager logMgr;
     private final JobId jobId;
@@ -59,7 +58,6 @@ public class CommitRuntime implements IPushRuntime {
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction) {
-        this.hyracksTaskCtx = ctx;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();

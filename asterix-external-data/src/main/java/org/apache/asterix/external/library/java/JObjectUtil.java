@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.library.java;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
@@ -56,20 +60,16 @@ import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class JObjectUtil {
 
     /**
-     *  Normalize an input string by removing linebreaks, and replace them with space
-     *  Also remove non-readable special characters
+     * Normalize an input string by removing linebreaks, and replace them with space
+     * Also remove non-readable special characters
      *
      * @param originalString
-     *      The input String
+     *            The input String
      * @return
-     *      String - the normalized string
+     *         String - the normalized string
      */
     public static String getNormalizedString(String originalString) {
         int len = originalString.length();
@@ -221,7 +221,7 @@ public class JObjectUtil {
                     p1.setValue(dis.readDouble(), dis.readDouble());
                     points.add(p1);
                 }
-                ((JPolygon) jObject).setValue(points.toArray(new APoint[]{}));
+                ((JPolygon) jObject).setValue(points.toArray(new APoint[] {}));
                 break;
             }
 
@@ -267,7 +267,7 @@ public class JObjectUtil {
                             dis.readInt();
                     }
                     for (int i = 0; i < numberOfitems; i++) {
-                        IJObject v = (IJObject) getJType(elementType.getTypeTag(), elementType, dis, objectPool);
+                        IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
                         ((JUnorderedList) jObject).add(v);
                     }
                 }
@@ -302,7 +302,7 @@ public class JObjectUtil {
                             dis.readInt();
                     }
                     for (int i = 0; i < numberOfitems; i++) {
-                        IJObject v = (IJObject) getJType(elementType.getTypeTag(), elementType, dis, objectPool);
+                        IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
                         ((JOrderedList) jObject).add(v);
                     }
                 }

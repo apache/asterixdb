@@ -58,10 +58,11 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer, FeedRuntimeType feedRuntimeType,
-            int partition, FrameTupleAccessor fta, IFeedManager feedManager) throws IOException {
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer,
+            FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IFeedManager feedManager)
+                    throws IOException {
         this.feedId = feedId;
-        this.frameDistributor = new FrameDistributor(ctx, feedId, feedRuntimeType, partition, true,
+        this.frameDistributor = new FrameDistributor(feedId, feedRuntimeType, partition, true,
                 feedManager.getFeedMemoryManager(), fta);
         this.feedRuntimeType = feedRuntimeType;
         this.partition = partition;
@@ -86,8 +87,8 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     public void unsubscribeFeed(IFrameWriter recipientFeedFrameWriter) throws Exception {
         boolean success = frameDistributor.deregisterFrameCollector(recipientFeedFrameWriter);
         if (!success) {
-            throw new IllegalStateException("Invalid attempt to unregister FeedFrameWriter " + recipientFeedFrameWriter
-                    + " not registered.");
+            throw new IllegalStateException(
+                    "Invalid attempt to unregister FeedFrameWriter " + recipientFeedFrameWriter + " not registered.");
         }
     }
 

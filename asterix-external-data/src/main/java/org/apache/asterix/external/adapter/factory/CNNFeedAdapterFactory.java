@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.external.dataset.adapter.RSSFeedAdapter;
@@ -44,8 +43,6 @@ public class CNNFeedAdapterFactory implements IFeedAdapterFactory {
     private List<String> feedURLs = new ArrayList<String>();
     private static Map<String, String> topicFeeds = new HashMap<String, String>();
     private ARecordType recordType;
-    private FeedPolicyAccessor policyAccessor;
-
     public static final String KEY_RSS_URL = "topic";
     public static final String KEY_INTERVAL = "interval";
     public static final String TOP_STORIES = "topstories";
@@ -98,7 +95,7 @@ public class CNNFeedAdapterFactory implements IFeedAdapterFactory {
     @Override
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
-        String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
+        String rssURLProperty = configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
             throw new IllegalArgumentException("no rss url provided");
         }
@@ -113,8 +110,8 @@ public class CNNFeedAdapterFactory implements IFeedAdapterFactory {
         for (String topic : rssTopics) {
             String feedURL = topicFeeds.get(topic);
             if (feedURL == null) {
-                throw new IllegalArgumentException(" unknown topic :" + topic + " please choose from the following "
-                        + getValidTopics());
+                throw new IllegalArgumentException(
+                        " unknown topic :" + topic + " please choose from the following " + getValidTopics());
             }
             feedURLs.add(feedURL);
         }

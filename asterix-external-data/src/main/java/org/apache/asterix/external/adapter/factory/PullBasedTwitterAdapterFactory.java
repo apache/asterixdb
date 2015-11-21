@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.external.dataset.adapter.PullBasedTwitterAdapter;
@@ -47,7 +46,7 @@ public class PullBasedTwitterAdapterFactory implements IFeedAdapterFactory {
     public static final String PULL_BASED_TWITTER_ADAPTER_NAME = "pull_twitter";
 
     private static final String DEFAULT_INTERVAL = "10"; // 10 seconds
-    private static final int INTAKE_CARDINALITY = 1; // degree of parallelism at intake stage 
+    private static final int INTAKE_CARDINALITY = 1; // degree of parallelism at intake stage
 
     private ARecordType outputType;
 
@@ -75,8 +74,8 @@ public class PullBasedTwitterAdapterFactory implements IFeedAdapterFactory {
         TwitterUtil.initializeConfigurationWithAuthInfo(configuration);
 
         if (configuration.get(SearchAPIConstants.QUERY) == null) {
-            throw new AsterixException("parameter " + SearchAPIConstants.QUERY
-                    + " not specified as part of adaptor configuration");
+            throw new AsterixException(
+                    "parameter " + SearchAPIConstants.QUERY + " not specified as part of adaptor configuration");
         }
 
         String interval = configuration.get(SearchAPIConstants.INTERVAL);
@@ -84,8 +83,8 @@ public class PullBasedTwitterAdapterFactory implements IFeedAdapterFactory {
             try {
                 Integer.parseInt(interval);
             } catch (NumberFormatException nfe) {
-                throw new IllegalArgumentException("parameter " + SearchAPIConstants.INTERVAL
-                        + " is defined incorrectly, expecting a number");
+                throw new IllegalArgumentException(
+                        "parameter " + SearchAPIConstants.INTERVAL + " is defined incorrectly, expecting a number");
             }
         } else {
             configuration.put(SearchAPIConstants.INTERVAL, DEFAULT_INTERVAL);

@@ -19,7 +19,6 @@
 package org.apache.asterix.common.feeds.api;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 
 public interface IFeedLifecycleEventSubscriber {
 

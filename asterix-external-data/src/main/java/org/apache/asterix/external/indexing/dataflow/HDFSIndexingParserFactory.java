@@ -20,16 +20,13 @@ package org.apache.asterix.external.indexing.dataflow;
 
 import java.util.Map;
 
-import org.apache.hadoop.mapred.JobConf;
-
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
 import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
-import org.apache.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.operators.file.ADMDataParser;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.DelimitedDataParser;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
@@ -38,7 +35,6 @@ import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 /**
  * This is the parser factory for parsers used to do indexing
  */
-@SuppressWarnings("deprecation")
 public class HDFSIndexingParserFactory implements ITupleParserFactory {
 
     private static final long serialVersionUID = 1L;
@@ -59,8 +55,8 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
     // adapter arguments
     private Map<String, String> arguments;
 
-    public HDFSIndexingParserFactory(ARecordType atype, String inputFormat, String format, char delimiter,
-                                     char quote, String parserClassName) {
+    public HDFSIndexingParserFactory(ARecordType atype, String inputFormat, String format, char delimiter, char quote,
+            String parserClassName) {
         this.inputFormat = inputFormat;
         this.format = format;
         this.parserClassName = parserClassName;
@@ -95,8 +91,7 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
         } else if (format.equalsIgnoreCase(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
             // choice 3 with delimited data parser
-            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser(atype,
-                delimiter, quote); 
+            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser(atype, delimiter, quote);
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
         }
 

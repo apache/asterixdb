@@ -21,8 +21,11 @@ package org.apache.asterix.aoya.test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.util.logging.Logger;
 
+import org.apache.asterix.aoya.AsterixYARNClient;
+import org.apache.asterix.aoya.Utils;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.Node;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -30,11 +33,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.junit.Assert;
-
-import org.apache.asterix.aoya.AsterixYARNClient;
-import org.apache.asterix.aoya.Utils;
-import org.apache.asterix.event.schema.yarnCluster.Cluster;
-import org.apache.asterix.event.schema.yarnCluster.Node;
 
 public class AsterixYARNInstanceUtil {
     private static final String PATH_ACTUAL = "ittest/";
