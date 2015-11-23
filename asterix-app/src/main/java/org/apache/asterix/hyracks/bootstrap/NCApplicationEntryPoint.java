@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +39,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.SubstituteNodes;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -295,11 +297,20 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
             Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            if (cluster == null) {
+                throw new IllegalStateException("No cluster configuration found for this instance");
+            }
             String asterixInstanceName = cluster.getInstanceName();
             AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
                     .getTransactionProperties();
             Node self = null;
-            for (Node node : cluster.getSubstituteNodes().getNode()) {
+            List<Node> nodes;
+            if (cluster.getSubstituteNodes() != null) {
+                nodes = cluster.getSubstituteNodes().getNode();
+            } else {
+                throw new IllegalStateException("Unknown node joining the cluster");
+            }
+            for (Node node : nodes) {
                 String ncId = asterixInstanceName + "_" + node.getId();
                 if (ncId.equalsIgnoreCase(nodeId)) {
                     String storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
