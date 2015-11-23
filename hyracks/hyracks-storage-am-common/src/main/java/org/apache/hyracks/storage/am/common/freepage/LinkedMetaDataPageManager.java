@@ -273,7 +273,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         try {
             metaFrame.setPage(metaNode);
             metaFrame.initBuffer(META_PAGE_LEVEL_INDICATOR);
-            metaFrame.setMaxPage(0);
+            metaFrame.setMaxPage(-1);
         } finally {
             confiscatedMetaNode = metaNode;
             appendOnly = true;
