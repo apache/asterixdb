@@ -28,7 +28,7 @@
 
   <parent>
     <groupId>org.apache.hyracks</groupId>
-    <artifactId>fullstack</artifactId>
+    <artifactId>apache-asterixdb-hyracks</artifactId>
     <version>0.2.17-SNAPSHOT</version>
   </parent>
 
