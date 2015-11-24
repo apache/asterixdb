@@ -793,7 +793,7 @@ The following examples illustrate uses of the drop statement.
 
     drop dataset FacebookUsers if exists;
 
-    drop index fbSenderLocIndex;
+    drop index FacebookUsers.fbSenderLocIndex;
 
     drop type FacebookUserType;
 
