@@ -34,17 +34,20 @@ public class UpdateAPIServlet extends RESTAPIServlet {
         super(compilationProvider);
     }
 
+    @Override
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("statements");
     }
 
+    @Override
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPDATE, Kind.DML_CMD_LIST,
                 Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
-                Kind.EXTERNAL_DATASET_REFRESH };
+                Kind.EXTERNAL_DATASET_REFRESH, Kind.RUN };
         return Arrays.asList(statementsArray);
     }
 
+    @Override
     protected String getErrorMessage() {
         return "Invalid statement: Non-Update statement %s to the Update API.";
     }

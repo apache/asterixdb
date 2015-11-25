@@ -21,9 +21,9 @@ package org.apache.asterix.aql.translator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,10 +40,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.APIFramework;
-import org.apache.asterix.api.common.Job;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -149,13 +148,11 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import org.apache.asterix.result.ResultReader;
 import org.apache.asterix.result.ResultUtils;
-import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.operators.std.FlushDatasetOperatorDescriptor;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
-import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledConnectFeedStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
@@ -169,32 +166,25 @@ import org.apache.asterix.translator.CompiledStatements.CompiledSubscribeFeedSta
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.TypeTranslator;
 import org.apache.asterix.translator.util.ValidateUtil;
+import org.apache.asterix.util.FlushDatasetUtils;
+import org.apache.asterix.util.JobUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
-import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -641,7 +631,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
                 //#. runJob
-                runJob(hcc, jobSpec, true);
+                JobUtils.runJob(hcc, jobSpec, true);
 
                 //#. begin new metadataTxn
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -674,8 +664,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                     JobSpecification jobSpec = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
-
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
                     if (bActiveTxn) {
@@ -954,7 +943,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                                 "Failed to create job spec for replicating Files Index For external dataset");
                     }
                     filesIndexReplicated = true;
-                    runJob(hcc, spec, true);
+                    JobUtils.runJob(hcc, spec, true);
                 }
             }
 
@@ -997,7 +986,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
             //#. create the index artifact in NC.
-            runJob(hcc, spec, true);
+            JobUtils.runJob(hcc, spec, true);
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
@@ -1011,7 +1000,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            runJob(hcc, spec, true);
+            JobUtils.runJob(hcc, spec, true);
 
             //#. begin new metadataTxn
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1050,7 +1039,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                             metadataProvider, ds);
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
                     if (bActiveTxn) {
@@ -1072,7 +1061,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
                     if (bActiveTxn) {
@@ -1270,7 +1259,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec, true);
+                JobUtils.runJob(hcc, jobSpec, true);
             }
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1297,7 +1286,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //   remove the all indexes in NC
                 try {
                     for (JobSpecification jobSpec : jobsToExecute) {
-                        runJob(hcc, jobSpec, true);
+                        JobUtils.runJob(hcc, jobSpec, true);
                     }
                 } catch (Exception e2) {
                     //do no throw exception since still the metadata needs to be compensated.
@@ -1391,12 +1380,12 @@ public class QueryTranslator extends AbstractLangTranslator {
 
                 //# disconnect the feeds
                 for (Pair<JobSpecification, Boolean> p : disconnectJobList.values()) {
-                    runJob(hcc, p.first, true);
+                    JobUtils.runJob(hcc, p.first, true);
                 }
 
                 //#. run the jobs
                 for (JobSpecification jobSpec : jobsToExecute) {
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 }
 
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1434,7 +1423,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
                 //#. run the jobs
                 for (JobSpecification jobSpec : jobsToExecute) {
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 }
                 if (indexes.size() > 0) {
                     ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(ds);
@@ -1463,7 +1452,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //   remove the all indexes in NC
                 try {
                     for (JobSpecification jobSpec : jobsToExecute) {
-                        runJob(hcc, jobSpec, true);
+                        JobUtils.runJob(hcc, jobSpec, true);
                     }
                 } catch (Exception e2) {
                     //do no throw exception since still the metadata needs to be compensated.
@@ -1561,7 +1550,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
                 for (JobSpecification jobSpec : jobsToExecute) {
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 }
 
                 //#. begin a new transaction
@@ -1624,7 +1613,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
                 for (JobSpecification jobSpec : jobsToExecute) {
-                    runJob(hcc, jobSpec, true);
+                    JobUtils.runJob(hcc, jobSpec, true);
                 }
 
                 //#. begin a new transaction
@@ -1654,7 +1643,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //   remove the all indexes in NC
                 try {
                     for (JobSpecification jobSpec : jobsToExecute) {
-                        runJob(hcc, jobSpec, true);
+                        JobUtils.runJob(hcc, jobSpec, true);
                     }
                 } catch (Exception e2) {
                     //do no throw exception since still the metadata needs to be compensated.
@@ -1810,7 +1799,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             if (spec != null) {
-                runJob(hcc, spec, true);
+                JobUtils.runJob(hcc, spec, true);
             }
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1844,7 +1833,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             bActiveTxn = false;
 
             if (compiled != null) {
-                runJob(hcc, compiled, true);
+                JobUtils.runJob(hcc, compiled, true);
             }
 
         } catch (Exception e) {
@@ -1880,7 +1869,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             bActiveTxn = false;
 
             if (compiled != null) {
-                runJob(hcc, compiled, true);
+                JobUtils.runJob(hcc, compiled, true);
             }
 
         } catch (Exception e) {
@@ -2152,7 +2141,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 for (IFeedJoint fj : triple.third) {
                     FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
                 }
-                runJob(hcc, pair.first, false);
+                JobUtils.runJob(hcc, pair.first, false);
                 IFeedAdapterFactory adapterFactory = pair.second;
                 if (adapterFactory.isRecordTrackingEnabled()) {
                     FeedLifecycleListener.INSTANCE.registerFeedIntakeProgressTracker(feedConnId,
@@ -2323,7 +2312,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             JobSpecification jobSpec = specDisconnectType.first;
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-            runJob(hcc, jobSpec, true);
+            JobUtils.runJob(hcc, jobSpec, true);
 
             if (!specDisconnectType.second) {
                 CentralFeedManager.getInstance().getFeedLoadManager().removeFeedActivity(connectionId);
@@ -2378,7 +2367,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             bActiveTxn = false;
 
             if (compiled != null) {
-                runJob(hcc, alteredJobSpec, false);
+                JobUtils.runJob(hcc, alteredJobSpec, false);
             }
 
         } catch (Exception e) {
@@ -2429,7 +2418,6 @@ public class QueryTranslator extends AbstractLangTranslator {
                                 .getDataverse(metadataProvider.getMetadataTxnContext(), dataverseName);
                         jobsToExecute
                                 .add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
-
                     }
                 }
             } else {
@@ -2458,7 +2446,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             //#. run the jobs
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec, true);
+                JobUtils.runJob(hcc, jobSpec, true);
             }
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -2486,7 +2474,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             if (sessionConfig.isExecuteQuery() && compiled != null) {
                 GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
-                JobId jobId = runJob(hcc, compiled, false);
+                JobId jobId = JobUtils.runJob(hcc, compiled, false);
 
                 JSONObject response = new JSONObject();
                 switch (resultDelivery) {
@@ -2664,14 +2652,14 @@ public class QueryTranslator extends AbstractLangTranslator {
             transactionState = ExternalDatasetTransactionState.BEGIN;
 
             //run the files update job
-            runJob(hcc, spec, true);
+            JobUtils.runJob(hcc, spec, true);
 
             for (Index index : indexes) {
                 if (!ExternalIndexingOperations.isFileIndex(index)) {
                     spec = ExternalIndexingOperations.buildIndexUpdateOp(ds, index, metadataFiles, deletedFiles,
                             addedFiles, appendedFiles, metadataProvider);
                     //run the files update job
-                    runJob(hcc, spec, true);
+                    JobUtils.runJob(hcc, spec, true);
                 }
             }
 
@@ -2690,7 +2678,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             bActiveTxn = false;
             transactionState = ExternalDatasetTransactionState.READY_TO_COMMIT;
             // We don't release the latch since this job is expected to be quick
-            runJob(hcc, spec, true);
+            JobUtils.runJob(hcc, spec, true);
             // Start a new metadata transaction to record the final state of the transaction
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2760,7 +2748,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
                 try {
-                    runJob(hcc, spec, true);
+                    JobUtils.runJob(hcc, spec, true);
                 } catch (Exception e2) {
                     // This should never happen -- fix throw illegal
                     e.addSuppressed(e2);
@@ -2812,179 +2800,53 @@ public class QueryTranslator extends AbstractLangTranslator {
     }
 
     private void handlePregelixStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws AsterixException, Exception {
-
+            IHyracksClientConnection hcc) throws Exception {
         RunStatement pregelixStmt = (RunStatement) stmt;
         boolean bActiveTxn = true;
-
         String dataverseNameFrom = getActiveDataverse(pregelixStmt.getDataverseNameFrom());
         String dataverseNameTo = getActiveDataverse(pregelixStmt.getDataverseNameTo());
         String datasetNameFrom = pregelixStmt.getDatasetNameFrom().getValue();
         String datasetNameTo = pregelixStmt.getDatasetNameTo().getValue();
 
-        if (dataverseNameFrom != dataverseNameTo) {
-            throw new AlgebricksException("Pregelix statements across different dataverses are not supported.");
-        }
-
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-
-        MetadataLockManager.INSTANCE.pregelixBegin(dataverseNameFrom, datasetNameFrom, datasetNameTo);
-
+        List<String> readDataverses = new ArrayList<String>();
+        readDataverses.add(dataverseNameFrom);
+        List<String> readDatasets = new ArrayList<String>();
+        readDatasets.add(datasetNameFrom);
+        MetadataLockManager.INSTANCE.insertDeleteBegin(dataverseNameTo, datasetNameTo, readDataverses, readDatasets);
         try {
+            prepareRunExternalRuntime(metadataProvider, hcc, pregelixStmt, dataverseNameFrom, dataverseNameTo,
+                    datasetNameFrom, datasetNameTo, mdTxnCtx);
 
-            // construct input paths
-            Index fromIndex = null;
-            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseNameFrom,
-                    pregelixStmt.getDatasetNameFrom().getValue());
-            for (Index ind : indexes) {
-                if (ind.isPrimaryIndex())
-                    fromIndex = ind;
+            String pregelixHomeKey = "PREGELIX_HOME";
+            // Finds PREGELIX_HOME in system environment variables.
+            String pregelixHome = System.getenv(pregelixHomeKey);
+            // Finds PREGELIX_HOME in Java properties.
+            if (pregelixHome == null) {
+                pregelixHome = System.getProperty(pregelixHomeKey);
+            }
+            // Finds PREGELIX_HOME in AsterixDB configuration.
+            if (pregelixHome == null) {
+                // Since there is a default value for PREGELIX_HOME in AsterixCompilerProperties, pregelixHome can never be null.
+                pregelixHome = AsterixAppContextInfo.getInstance().getCompilerProperties().getPregelixHome();
             }
 
-            if (fromIndex == null) {
-                throw new AlgebricksException("Tried to access non-existing dataset: " + datasetNameFrom);
-            }
-
-            Dataset datasetFrom = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseNameFrom, datasetNameFrom);
-            IFileSplitProvider fromSplits = metadataProvider.splitProviderAndPartitionConstraintsForDataset(
-                    dataverseNameFrom, datasetNameFrom, fromIndex.getIndexName(),
-                    datasetFrom.getDatasetDetails().isTemp()).first;
-            StringBuilder fromSplitsPaths = new StringBuilder();
-
-            for (FileSplit f : fromSplits.getFileSplits()) {
-                fromSplitsPaths.append("asterix://" + f.getNodeName() + f.getLocalFile().getFile().getAbsolutePath());
-                fromSplitsPaths.append(",");
-            }
-            fromSplitsPaths.setLength(fromSplitsPaths.length() - 1);
-
-            // Construct output paths
-            Index toIndex = null;
-            indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseNameTo,
-                    pregelixStmt.getDatasetNameTo().getValue());
-            for (Index ind : indexes) {
-                if (ind.isPrimaryIndex())
-                    toIndex = ind;
-            }
-
-            if (toIndex == null) {
-                throw new AlgebricksException("Tried to access non-existing dataset: " + datasetNameTo);
-            }
-
-            Dataset datasetTo = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseNameTo, datasetNameTo);
-            IFileSplitProvider toSplits = metadataProvider.splitProviderAndPartitionConstraintsForDataset(
-                    dataverseNameTo, datasetNameTo, toIndex.getIndexName(),
-                    datasetTo.getDatasetDetails().isTemp()).first;
-            StringBuilder toSplitsPaths = new StringBuilder();
-
-            for (FileSplit f : toSplits.getFileSplits()) {
-                toSplitsPaths.append("asterix://" + f.getNodeName() + f.getLocalFile().getFile().getAbsolutePath());
-                toSplitsPaths.append(",");
-            }
-            toSplitsPaths.setLength(toSplitsPaths.length() - 1);
-
-            try {
-                Dataset toDataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseNameTo, datasetNameTo);
-                DropStatement dropStmt = new DropStatement(new Identifier(dataverseNameTo),
-                        pregelixStmt.getDatasetNameTo(), true);
-                this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc);
-
-                IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(), false, null,
-                        toDataset.getDatasetDetails().isTemp());
-                DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
-                        pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeName()),
-                        new Identifier(toDataset.getNodeGroupName()), toDataset.getCompactionPolicy(),
-                        toDataset.getCompactionPolicyProperties(), toDataset.getHints(), toDataset.getDatasetType(),
-                        idd, false);
-                this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new AlgebricksException("Error cleaning the result dataset. This should not happen.");
-            }
-
-            // Flush source dataset
-            flushDataset(hcc, metadataProvider, mdTxnCtx, dataverseNameFrom, datasetNameFrom, fromIndex.getIndexName());
-
-            // call Pregelix
-            String pregelix_home = System.getenv("PREGELIX_HOME");
-            if (pregelix_home == null) {
-                throw new AlgebricksException("PREGELIX_HOME is not defined!");
-            }
-
-            // construct command
-            ArrayList<String> cmd = new ArrayList<String>();
-            cmd.add("bin/pregelix");
-            cmd.add(pregelixStmt.getParameters().get(0)); // jar
-            cmd.add(pregelixStmt.getParameters().get(1)); // class
-            for (String s : pregelixStmt.getParameters().get(2).split(" ")) {
-                cmd.add(s);
-            }
-            cmd.add("-inputpaths");
-            cmd.add(fromSplitsPaths.toString());
-            cmd.add("-outputpath");
-            cmd.add(toSplitsPaths.toString());
-
-            StringBuilder command = new StringBuilder();
-            for (String s : cmd) {
-                command.append(s);
-                command.append(" ");
-            }
-            LOGGER.info("Running Pregelix Command: " + command.toString());
-
+            // Constructs the pregelix command line.
+            List<String> cmd = constructPregelixCommand(pregelixStmt, dataverseNameFrom, datasetNameFrom,
+                    dataverseNameTo, datasetNameTo);
             ProcessBuilder pb = new ProcessBuilder(cmd);
-            pb.directory(new File(pregelix_home));
+            pb.directory(new File(pregelixHome));
             pb.redirectErrorStream(true);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-
-            Process pr = pb.start();
-
-            int resultState = 0;
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-            String line;
-            while ((line = in.readLine()) != null) {
-                System.out.println(line);
-                if (line.contains("job finished")) {
-                    resultState = 1;
-                }
-                if (line.contains("Exception") || line.contains("Error")) {
-
-                    if (line.contains("Connection refused")) {
-                        throw new AlgebricksException(
-                                "The connection to your Pregelix cluster was refused. Is it running? Is the port in the query correct?");
-                    }
-
-                    if (line.contains("Could not find or load main class")) {
-                        throw new AlgebricksException(
-                                "The main class of your Pregelix query was not found. Is the path to your .jar file correct?");
-                    }
-
-                    if (line.contains("ClassNotFoundException")) {
-                        throw new AlgebricksException(
-                                "The vertex class of your Pregelix query was not found. Does it exist? Is the spelling correct?");
-                    }
-
-                    if (line.contains("HyracksException")) {
-                        throw new AlgebricksException(
-                                "Something went wrong executing your Pregelix Job (HyracksException). Check the configuration of STORAGE_BUFFERCACHE_PAGESIZE and STORAGE_MEMORYCOMPONENT_PAGESIZE."
-                                        + "It must match the one of Asterix. You can use managix describe -admin to find out the right configuration. "
-                                        + "Check also if your datatypes in Pregelix and Asterix are matching.");
-                    }
-
-                    throw new AlgebricksException(
-                            "Something went wrong executing your Pregelix Job. Perhaps the Pregelix cluster needs to be restartet. "
-                                    + "Check the following things: Are the datatypes of Asterix and Pregelix matching? "
-                                    + "Is the server configuration correct (node names, buffer sizes, framesize)? Check the logfiles for more details.");
-                }
-            }
-            pr.waitFor();
-            in.close();
-
-            if (resultState != 1) {
+            // Executes the Pregelix command.
+            int resultState = executeExternalShellProgram(pb);
+            // Checks the return state of the external Pregelix command.
+            if (resultState != 0) {
                 throw new AlgebricksException(
-                        "Something went wrong executing your Pregelix Job. Perhaps the Pregelix cluster needs to be restartet. "
+                        "Something went wrong executing your Pregelix Job. Perhaps the Pregelix cluster needs to be restarted. "
                                 + "Check the following things: Are the datatypes of Asterix and Pregelix matching? "
                                 + "Is the server configuration correct (node names, buffer sizes, framesize)? Check the logfiles for more details.");
             }
@@ -2994,60 +2856,156 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.pregelixEnd(dataverseNameFrom, datasetNameFrom, datasetNameTo);
+            MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseNameTo, datasetNameTo, readDataverses, readDatasets);
         }
     }
 
-    private void flushDataset(IHyracksClientConnection hcc, AqlMetadataProvider metadataProvider,
-            MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName, String indexName)
-                    throws Exception {
-        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
-        int frameSize = compilerProperties.getFrameSize();
-        JobSpecification spec = new JobSpecification(frameSize);
+    // Prepares to run a program on external runtime.
+    private void prepareRunExternalRuntime(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,
+            RunStatement pregelixStmt, String dataverseNameFrom, String dataverseNameTo, String datasetNameFrom,
+            String datasetNameTo, MetadataTransactionContext mdTxnCtx)
+                    throws AlgebricksException, AsterixException, Exception {
+        // Validates the source/sink dataverses and datasets.
+        Dataset fromDataset = metadataProvider.findDataset(dataverseNameFrom, datasetNameFrom);
+        if (fromDataset == null) {
+            throw new AsterixException("The source dataset " + datasetNameFrom + " in dataverse " + dataverseNameFrom
+                    + " could not be found for the Run command");
+        }
+        Dataset toDataset = metadataProvider.findDataset(dataverseNameTo, datasetNameTo);
+        if (toDataset == null) {
+            throw new AsterixException("The sink dataset " + datasetNameTo + " in dataverse " + dataverseNameTo
+                    + " could not be found for the Run command");
+        }
 
-        RecordDescriptor[] rDescs = new RecordDescriptor[] { new RecordDescriptor(new ISerializerDeserializer[] {}) };
-        AlgebricksMetaOperatorDescriptor emptySource = new AlgebricksMetaOperatorDescriptor(spec, 0, 1,
-                new IPushRuntimeFactory[] { new EmptyTupleSourceRuntimeFactory() }, rDescs);
+        try {
+            // Find the primary index of the sink dataset.
+            Index toIndex = null;
+            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseNameTo,
+                    pregelixStmt.getDatasetNameTo().getValue());
+            for (Index index : indexes) {
+                if (index.isPrimaryIndex()) {
+                    toIndex = index;
+                    break;
+                }
+            }
+            if (toIndex == null) {
+                throw new AlgebricksException("Tried to access non-existing dataset: " + datasetNameTo);
+            }
+            // Cleans up the sink dataset -- Drop and then Create.
+            DropStatement dropStmt = new DropStatement(new Identifier(dataverseNameTo), pregelixStmt.getDatasetNameTo(),
+                    true);
+            this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc);
+            IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(), false, null,
+                    toDataset.getDatasetDetails().isTemp());
+            DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
+                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeName()),
+                    new Identifier(toDataset.getNodeGroupName()), toDataset.getCompactionPolicy(),
+                    toDataset.getCompactionPolicyProperties(), toDataset.getHints(), toDataset.getDatasetType(), idd,
+                    false);
+            this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new AlgebricksException("Error cleaning the result dataset. This should not happen.");
+        }
 
-        org.apache.asterix.common.transactions.JobId jobId = JobIdFactory.generateJobId();
-        Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-        FlushDatasetOperatorDescriptor flushOperator = new FlushDatasetOperatorDescriptor(spec, jobId,
-                dataset.getDatasetId());
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), emptySource, 0, flushOperator, 0);
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, indexName,
-                        dataset.getDatasetDetails().isTemp());
-        AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
-
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,
-                primaryPartitionConstraint);
-
-        JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(jobId, true);
-        spec.setJobletEventListenerFactory(jobEventListenerFactory);
-        runJob(hcc, spec, true);
+        // Flushes source dataset.
+        FlushDatasetUtils.flushDataset(hcc, metadataProvider, mdTxnCtx, dataverseNameFrom, datasetNameFrom,
+                datasetNameFrom);
     }
 
-    private JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
-            throws Exception {
-        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, sessionConfig.out(), waitForCompletion);
-        return jobIds[0];
+    // Executes external shell commands.
+    private int executeExternalShellProgram(ProcessBuilder pb)
+            throws IOException, AlgebricksException, InterruptedException {
+        Process process = pb.start();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                LOGGER.info(line);
+                if (line.contains("Exception") || line.contains("Error")) {
+                    LOGGER.severe(line);
+                    if (line.contains("Connection refused")) {
+                        throw new AlgebricksException(
+                                "The connection to your Pregelix cluster was refused. Is it running? Is the port in the query correct?");
+                    }
+                    if (line.contains("Could not find or load main class")) {
+                        throw new AlgebricksException(
+                                "The main class of your Pregelix query was not found. Is the path to your .jar file correct?");
+                    }
+                    if (line.contains("ClassNotFoundException")) {
+                        throw new AlgebricksException(
+                                "The vertex class of your Pregelix query was not found. Does it exist? Is the spelling correct?");
+                    }
+                }
+            }
+            process.waitFor();
+        }
+        // Gets the exit value of the program.
+        int resultState = process.exitValue();
+        return resultState;
     }
 
-    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, boolean waitForCompletion)
-            throws Exception {
-        JobId[] startedJobIds = new JobId[jobs.length];
-        for (int i = 0; i < jobs.length; i++) {
-            JobSpecification spec = jobs[i].getJobSpec();
-            spec.setMaxReattempts(0);
-            JobId jobId = hcc.startJob(spec);
-            startedJobIds[i] = jobId;
-            if (waitForCompletion) {
-                hcc.waitForCompletion(jobId);
+    // Constructs a Pregelix command line.
+    private List<String> constructPregelixCommand(RunStatement pregelixStmt, String fromDataverseName,
+            String fromDatasetName, String toDataverseName, String toDatasetName) {
+        // Constructs AsterixDB parameters, e.g., URL, source dataset and sink dataset.
+        AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
+        AsterixClusterProperties clusterProperties = AsterixClusterProperties.INSTANCE;
+        String clientIP = clusterProperties.getCluster().getMasterNode().getClientIp();
+        StringBuilder asterixdbParameterBuilder = new StringBuilder();
+        asterixdbParameterBuilder.append(
+                "pregelix.asterixdb.url=" + "http://" + clientIP + ":" + externalProperties.getAPIServerPort() + ",");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.source=true,");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.sink=true,");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.input.dataverse=" + fromDataverseName + ",");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.input.dataset=" + fromDatasetName + ",");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.output.dataverse=" + toDataverseName + ",");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.output.dataset=" + toDatasetName + ",");
+        asterixdbParameterBuilder.append("pregelix.asterixdb.output.cleanup=false,");
+
+        // construct command
+        List<String> cmds = new ArrayList<String>();
+        cmds.add("bin/pregelix");
+        cmds.add(pregelixStmt.getParameters().get(0)); // jar
+        cmds.add(pregelixStmt.getParameters().get(1)); // class
+
+        String customizedPregelixProperty = "-cust-prop";
+        String inputConverterClassKey = "pregelix.asterixdb.input.converterclass";
+        String inputConverterClassValue = "=org.apache.pregelix.example.converter.VLongIdInputVertexConverter,";
+        String outputConverterClassKey = "pregelix.asterixdb.output.converterclass";
+        String outputConverterClassValue = "=org.apache.pregelix.example.converter.VLongIdOutputVertexConverter,";
+        boolean custPropAdded = false;
+        boolean meetCustProp = false;
+        // User parameters.
+        for (String s : pregelixStmt.getParameters().get(2).split(" ")) {
+            if (meetCustProp) {
+                if (!s.contains(inputConverterClassKey)) {
+                    asterixdbParameterBuilder.append(inputConverterClassKey + inputConverterClassValue);
+                }
+                if (!s.contains(outputConverterClassKey)) {
+                    asterixdbParameterBuilder.append(outputConverterClassKey + outputConverterClassValue);
+                }
+                cmds.add(asterixdbParameterBuilder.toString() + s);
+                meetCustProp = false;
+                custPropAdded = true;
+                continue;
+            }
+            cmds.add(s);
+            if (s.equals(customizedPregelixProperty)) {
+                meetCustProp = true;
             }
         }
-        return startedJobIds;
+
+        if (!custPropAdded) {
+            cmds.add(customizedPregelixProperty);
+            // Appends default converter classes to asterixdbParameterBuilder.
+            asterixdbParameterBuilder.append(inputConverterClassKey + inputConverterClassValue);
+            asterixdbParameterBuilder.append(outputConverterClassKey + outputConverterClassValue);
+            // Remove the last comma.
+            asterixdbParameterBuilder.delete(asterixdbParameterBuilder.length() - 1,
+                    asterixdbParameterBuilder.length());
+            cmds.add(asterixdbParameterBuilder.toString());
+        }
+        return cmds;
     }
 
     private String getActiveDataverseName(String dataverse) throws AlgebricksException {

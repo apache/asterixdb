@@ -117,7 +117,6 @@ public class DatasetOperations {
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
 
-        // The index drop operation should be persistent regardless of temp datasets or permanent dataset
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
@@ -125,7 +124,7 @@ public class DatasetOperations {
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
-                        filterCmpFactories, btreeFields, filterFields, true));
+                        filterCmpFactories, btreeFields, filterFields, !temp));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -180,7 +179,6 @@ public class DatasetOperations {
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
-        // The index create operation should be persistent regardless of temp datasets or permanent dataset
         TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
@@ -189,7 +187,7 @@ public class DatasetOperations {
                                 .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
                                 .getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
-                        btreeFields, filterFields, true), localResourceFactoryProvider,
+                        btreeFields, filterFields, !temp), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);

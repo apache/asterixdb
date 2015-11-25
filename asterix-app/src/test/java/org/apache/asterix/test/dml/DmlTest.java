@@ -54,7 +54,7 @@ public class DmlTest {
         }
         outdir.mkdirs();
 
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(true);
         Reader loadReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
         AsterixJavaClient asterixLoad = new AsterixJavaClient(
@@ -69,7 +69,7 @@ public class DmlTest {
         }
         asterixLoad.execute();
 
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(true);
         for (String d : ASTERIX_DATA_DIRS) {
             testExecutor.deleteRec(new File(d));
         }

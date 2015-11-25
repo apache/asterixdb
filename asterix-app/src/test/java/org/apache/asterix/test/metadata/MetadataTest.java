@@ -23,12 +23,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -50,7 +47,6 @@ public class MetadataTest {
             .join(new String[] { "src", "test", "resources", "metadata" + File.separator }, File.separator);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
-    private static AsterixTransactionProperties txnProperties;
     private static final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
@@ -58,18 +54,12 @@ public class MetadataTest {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
-
-        deleteTransactionLogs();
-
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(true);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(true);
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
@@ -79,15 +69,6 @@ public class MetadataTest {
         // clean up the files written by the ASTERIX storage manager
         for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
             testExecutor.deleteRec(new File(d));
-        }
-    }
-
-    private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
-            if (log.exists()) {
-                FileUtils.deleteDirectory(log);
-            }
         }
     }
 

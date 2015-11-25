@@ -25,14 +25,11 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 
@@ -44,8 +41,6 @@ public class ExecutionTestUtil {
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
-    protected static AsterixTransactionProperties txnProperties;
-
     protected static TestGroup FailedGroup;
 
     public static void setUp() throws Exception {
@@ -55,15 +50,10 @@ public class ExecutionTestUtil {
         }
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
 
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
-
-        deleteTransactionLogs();
-
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
         }
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(true);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing HDFS");
@@ -81,19 +71,11 @@ public class ExecutionTestUtil {
         FailedGroup.setName("failed");
     }
 
-    private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
-            if (log.exists()) {
-                FileUtils.deleteDirectory(log);
-            }
-        }
-    }
-
     private static void validateBufferCacheState() {
-        for(NodeControllerService nc: AsterixHyracksIntegrationUtil.ncs){
-            IAsterixAppRuntimeContext appCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext().getApplicationObject();
-            if(!((BufferCache)appCtx.getBufferCache()).isClean()){
+        for (NodeControllerService nc : AsterixHyracksIntegrationUtil.ncs) {
+            IAsterixAppRuntimeContext appCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
+                    .getApplicationObject();
+            if (!((BufferCache) appCtx.getBufferCache()).isClean()) {
                 throw new IllegalStateException();
             }
         }
@@ -101,7 +83,7 @@ public class ExecutionTestUtil {
 
     public static void tearDown() throws Exception {
         validateBufferCacheState();
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(true);
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {

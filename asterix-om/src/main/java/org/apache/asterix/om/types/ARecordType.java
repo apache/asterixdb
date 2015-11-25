@@ -94,6 +94,7 @@ public class ARecordType extends AbstractComplexType {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append(typeName + ": ");
         if (isOpen) {
             sb.append("open ");
         } else {
@@ -290,6 +291,8 @@ public class ARecordType extends AbstractComplexType {
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();
+        type.put("type", ARecordType.class.getName());
+        type.put("name", typeName);
         if (isOpen) {
             type.put("open", true);
         } else {

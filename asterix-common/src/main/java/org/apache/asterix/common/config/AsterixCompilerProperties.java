@@ -31,6 +31,9 @@ public class AsterixCompilerProperties extends AbstractAsterixProperties {
     private static final String COMPILER_FRAMESIZE_KEY = "compiler.framesize";
     private static int COMPILER_FRAMESIZE_DEFAULT = (32 << 10); // 32KB
 
+    private static final String COMPILER_PREGELIX_HOME = "compiler.pregelix.home";
+    private static final String COMPILER_PREGELIX_HOME_DEFAULT = "~/pregelix";
+
     public AsterixCompilerProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -55,4 +58,8 @@ public class AsterixCompilerProperties extends AbstractAsterixProperties {
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    public String getPregelixHome() {
+        return accessor.getProperty(COMPILER_PREGELIX_HOME, COMPILER_PREGELIX_HOME_DEFAULT,
+                PropertyInterpreters.getStringPropertyInterpreter());
+    }
 }

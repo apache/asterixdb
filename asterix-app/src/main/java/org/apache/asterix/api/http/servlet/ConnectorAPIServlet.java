@@ -40,6 +40,7 @@ import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.util.FlushDatasetUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
@@ -108,7 +109,12 @@ public class ConnectorAPIServlet extends HttpServlet {
             pkStrBuf.delete(pkStrBuf.length() - 1, pkStrBuf.length());
 
             // Constructs the returned json object.
-            formResponseObject(jsonResponse, fileSplits, recordType, pkStrBuf.toString(), hcc.getNodeControllerInfos());
+            formResponseObject(jsonResponse, fileSplits, recordType, pkStrBuf.toString(), temp,
+                    hcc.getNodeControllerInfos());
+
+            // Flush the cached contents of the dataset to file system.
+            FlushDatasetUtils.flushDataset(hcc, metadataProvider, mdTxnCtx, dataverseName, datasetName, datasetName);
+
             // Metadata transaction commits.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             // Writes file splits.
@@ -123,8 +129,10 @@ public class ConnectorAPIServlet extends HttpServlet {
     }
 
     private void formResponseObject(JSONObject jsonResponse, FileSplit[] fileSplits, ARecordType recordType,
-            String primaryKeys, Map<String, NodeControllerInfo> nodeMap) throws Exception {
+            String primaryKeys, boolean temp, Map<String, NodeControllerInfo> nodeMap) throws Exception {
         JSONArray partititons = new JSONArray();
+        // Whether the dataset is temp or not
+        jsonResponse.put("temp", temp);
         // Adds a primary key.
         jsonResponse.put("keys", primaryKeys);
         // Adds record type.
@@ -133,7 +141,7 @@ public class ConnectorAPIServlet extends HttpServlet {
         for (FileSplit split : fileSplits) {
             String ipAddress = nodeMap.get(split.getNodeName()).getNetworkAddress().getAddress().toString();
             String path = split.getLocalFile().getFile().getAbsolutePath();
-            FilePartition partition = new FilePartition(ipAddress, path);
+            FilePartition partition = new FilePartition(ipAddress, path, split.getIODeviceId());
             partititons.put(partition.toJSONObject());
         }
         // Generates the response object which contains the splits.
@@ -144,10 +152,12 @@ public class ConnectorAPIServlet extends HttpServlet {
 class FilePartition {
     private final String ipAddress;
     private final String path;
+    private final int ioDeviceId;
 
-    public FilePartition(String ipAddress, String path) {
+    public FilePartition(String ipAddress, String path, int ioDeviceId) {
         this.ipAddress = ipAddress;
         this.path = path;
+        this.ioDeviceId = ioDeviceId;
     }
 
     public String getIPAddress() {
@@ -156,6 +166,10 @@ class FilePartition {
 
     public String getPath() {
         return path;
+    }
+
+    public int getIODeviceId() {
+        return ioDeviceId;
     }
 
     @Override
@@ -167,6 +181,7 @@ class FilePartition {
         JSONObject partition = new JSONObject();
         partition.put("ip", ipAddress);
         partition.put("path", path);
+        partition.put("ioDeviceId", ioDeviceId);
         return partition;
     }
 }

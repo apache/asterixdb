@@ -96,13 +96,12 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     secondaryBTreeFields, secondaryFilterFields);
             localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(localResourceMetadata,
                     LocalResource.LSMBTreeResource);
-            // The index create operation should be persistent regardless of temp datasets or permanent dataset.
             indexDataflowHelperFactory = new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                     dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                     new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                     storageProperties.getBloomFilterFalsePositiveRate(), false, filterTypeTraits, filterCmpFactories,
-                    secondaryBTreeFields, secondaryFilterFields, true);
+                    secondaryBTreeFields, secondaryFilterFields, !dataset.getDatasetDetails().isTemp());
         } else {
             // External dataset local resource and dataflow helper
             int[] buddyBreeFields = new int[] { numSecondaryKeys };
@@ -197,7 +196,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
             spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
             return spec;
         } else {
-            // Create dummy key provider for feeding the primary index scan. 
+            // Create dummy key provider for feeding the primary index scan.
             AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
 
             // Create primary index scan op.

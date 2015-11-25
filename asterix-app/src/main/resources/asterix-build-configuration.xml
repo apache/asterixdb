@@ -66,6 +66,10 @@
 		<name>compiler.joinmemory</name>
 		<value>163840</value>
 	</property>
+        <property>
+               <name>compiler.pregelix.home</name>
+               <value>~/pregelix</value>
+        </property>
 	<property>
 		<name>storage.buffercache.pagesize</name>
 		<value>32768</value>

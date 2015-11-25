@@ -30,8 +30,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
@@ -40,7 +38,6 @@ import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -71,8 +68,6 @@ public class OptimizerTest {
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
-    private static AsterixTransactionProperties txnProperties;
-
     @BeforeClass
     public static void setUp() throws Exception {
         // File outdir = new File(PATH_ACTUAL);
@@ -82,25 +77,11 @@ public class OptimizerTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
-
-        deleteTransactionLogs();
-
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(true);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
-    }
-
-    private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
-            if (log.exists()) {
-                FileUtils.deleteDirectory(log);
-            }
-        }
     }
 
     @AfterClass
@@ -111,7 +92,7 @@ public class OptimizerTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(true);
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {

@@ -225,7 +225,7 @@ public class MetadataLockManager {
     public void releaseFeedWriteLock(String feedName) {
         feedsLocks.get(feedName).writeLock().unlock();
     }
-    
+
     public void acquireFeedPolicyWriteLock(String policyName) {
         ReentrantReadWriteLock fLock = feedPolicyLocks.get(policyName);
         if (fLock == null) {
@@ -444,7 +444,7 @@ public class MetadataLockManager {
         releaseFeedWriteLock(feedFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
-    
+
     public void dropFeedPolicyBegin(String dataverseName, String policyName) {
         releaseFeedWriteLock(policyName);
         releaseDataverseReadLock(dataverseName);
@@ -486,7 +486,7 @@ public class MetadataLockManager {
         releaseFeedPolicyWriteLock(policyName);
         releaseDataverseReadLock(dataverseName);
     }
-    
+
     public void disconnectFeedBegin(String dataverseName, String datasetFullyQualifiedName,
             String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
@@ -499,14 +499,13 @@ public class MetadataLockManager {
         releaseDatasetReadLock(datasetFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
-    
-    public void subscribeFeedBegin(String dataverseName, String datasetFullyQualifiedName,
-            String feedFullyQualifiedName) {
+
+    public void subscribeFeedBegin(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
         acquireDatasetReadLock(datasetFullyQualifiedName);
         acquireFeedReadLock(feedFullyQualifiedName);
     }
-    
+
     public void subscribeFeedEnd(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
         releaseFeedReadLock(feedFullyQualifiedName);
         releaseDatasetReadLock(datasetFullyQualifiedName);
@@ -573,27 +572,6 @@ public class MetadataLockManager {
 
     public void refreshDatasetEnd(String dataverseName, String datasetFullyQualifiedName) {
         releaseExternalDatasetRefreshLock(datasetFullyQualifiedName);
-        releaseDataverseReadLock(dataverseName);
-    }
-
-    public void pregelixBegin(String dataverseName, String datasetFullyQualifiedNameFrom,
-            String datasetFullyQualifiedNameTo) {
-        acquireDataverseReadLock(dataverseName);
-
-        if (datasetFullyQualifiedNameFrom.compareTo(datasetFullyQualifiedNameTo) < 0) {
-            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
-            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
-        } else {
-            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
-            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
-        }
-    }
-
-    public void pregelixEnd(String dataverseName, String datasetFullyQualifiedNameFrom,
-            String datasetFullyQualifiedNameTo) {
-
-        releaseDatasetReadLock(datasetFullyQualifiedNameFrom);
-        releaseDatasetWriteLock(datasetFullyQualifiedNameTo);
         releaseDataverseReadLock(dataverseName);
     }
 }

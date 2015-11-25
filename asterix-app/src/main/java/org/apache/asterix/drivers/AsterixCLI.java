@@ -80,11 +80,11 @@ public class AsterixCLI {
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
 
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(false);
     }
 
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(false);
     }
 
 }
