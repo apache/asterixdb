@@ -38,6 +38,9 @@
     </license>
   </licenses>
 
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
 
   <modules>
     <module>tpch-example</module>

@@ -29,6 +29,10 @@
     <version>0.2.17-SNAPSHOT</version>
   </parent>
 
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
+
   <modules>
     <module>texthelper</module>
     <module>textclient</module>

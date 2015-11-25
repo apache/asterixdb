@@ -29,6 +29,11 @@
     <version>0.2.17-SNAPSHOT</version>
   </parent>
 
+
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
+
   <modules>
     <module>tpchclient</module>
     <module>tpchserver</module>

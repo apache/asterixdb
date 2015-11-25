@@ -38,6 +38,10 @@
     </license>
   </licenses>
 
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
+
   <modules>
     <module>hyracks-storage-common-test</module>
     <module>hyracks-storage-am-btree-test</module>

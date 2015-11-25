@@ -51,6 +51,9 @@
       </plugin>
     </plugins>
   </build>
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
   <dependencies>
     <dependency>
       <!-- Dependency management inherited from top-level hyracks -->

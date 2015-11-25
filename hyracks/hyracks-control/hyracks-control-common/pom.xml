@@ -42,6 +42,9 @@
       </plugin>
     </plugins>
   </build>
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
   <dependencies>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
