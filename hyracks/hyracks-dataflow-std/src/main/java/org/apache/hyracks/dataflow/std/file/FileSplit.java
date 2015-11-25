@@ -42,6 +42,12 @@ public class FileSplit implements Serializable {
         this.ioDeviceId = ioDeviceId;
     }
 
+    public FileSplit(String nodeName, String path, int ioDeviceId) {
+        this.nodeName = nodeName;
+        this.file = new FileReference(new File(path));
+        this.ioDeviceId = ioDeviceId;
+    }
+
     public FileSplit(String nodeName, String path) {
         this.nodeName = nodeName;
         this.file = new FileReference(new File(path));
