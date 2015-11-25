@@ -35,6 +35,10 @@
 
 	<artifactId>asterix-external-data</artifactId>
 
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -76,6 +80,10 @@
 					<includes>
 						<include>**/*.class</include>
 						<include>**/*.txt</include>
+						<include>**/DISCLAIMER</include>
+						<include>**/NOTICE</include>
+						<include>**/LICENSE</include>
+						<include>**/DEPENDENCIES</include>
 					</includes>
 				</configuration>
 				<executions>

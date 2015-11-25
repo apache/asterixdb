@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<supplementalDataModels>
+  <supplement>
+    <project>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <name>Sun JAXB Reference Implementation Runtime</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-xjc</artifactId>
+      <name>Sun JAXB Reference Implementation Tools</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <name>Sun SAAJ Reference Implementation</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.xml.soap</groupId>
+      <artifactId>saaj-api</artifactId>
+      <name>Sun SAAJ API</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.apache.neethi</groupId>
+      <artifactId>neethi</artifactId>
+      <name>Neethi</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <name>Java API for XML-Based Web Services (JAX-WS API)</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <name>Java Architecture for XML Binding (JAXB API)</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.xml</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <name>Java Architecture for XML Binding (JAXB API)</name>
+      <organization>
+        <name>Sun Microsystems</name>
+        <url>http://www.sun.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <name>Apache Xalan-Java</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>net.java.dev.stax-utils</groupId>
+      <artifactId>stax-utils</artifactId>
+      <name>StAX Utilities</name>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>wss4j</groupId>
+      <artifactId>wss4j</artifactId>
+      <name>Apache WSS4J</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>jdom</groupId>
+      <artifactId>jdom</artifactId>
+      <name>JDOM</name>
+      <organization>
+        <name>jdom.org</name>
+        <url>http://www.jdom.org</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>Modified Apache Software License</name>
+          <url>licenses/jdom.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>xml-security</groupId>
+      <artifactId>xmlsec</artifactId>
+      <name>XML Security</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+      <name>XML APIs</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>ant</groupId>
+      <artifactId>ant</artifactId>
+      <name>Apache Ant</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>ant</groupId>
+      <artifactId>ant-nodeps</artifactId>
+      <name>Apache Ant (nodeps)</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <name>Jettison</name>
+      <organization>
+        <name>Envoi Solutions LLC</name>
+        <url>http://www.envoisolutions.com</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://jettison.codehaus.org/License</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <name>Apache Commons Codec</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <name>Apache Commons Collections</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <name>Apache Commons BeanUtils</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-jexl</groupId>
+      <artifactId>commons-jexl</artifactId>
+      <name>Apache Commons JEXL</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <name>Apache Commons Logging</name>
+      <url>http://commons.apache.org/logging</url>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging-api</artifactId>
+      <name>Apache Commons Logging Api</name>
+      <url>http://commons.apache.org/logging</url>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+      <name>Apache Commons Pool</name>
+      <url>http://commons.apache.org/pool</url>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-vfs</groupId>
+      <artifactId>commons-vfs</artifactId>
+      <name>Apache Commons VFS</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <name>Apache Commons Codec</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.apache.aries.blueprint</groupId>
+      <artifactId>org.apache.aries.blueprint</artifactId>
+      <name>Apache Aries Blueprint</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <name>ActiveMQ :: Core</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <name>Camel :: Core</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-classloader</artifactId>
+      <name>XBean :: Classloader</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <name>SLF4J API Module</name>
+      <organization>
+        <name>QOS.ch</name>
+        <url>http://www.qos.ch</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>MIT style</name>
+          <url>http://www.slf4j.org/license.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <name>SLF4J JDK14 Binding</name>
+      <organization>
+        <name>QOS.ch</name>
+        <url>http://www.qos.ch</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>MIT style</name>
+          <url>http://www.slf4j.org/license.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <name>Log4j</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-classworlds</artifactId>
+      <name>Plexus Classworlds</name>
+      <url>http://plexus.codehaus.org/plexus-classworlds/</url>
+      <organization>
+        <name>Codehaus</name>
+        <url>http://www.codehaus.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>jline</groupId>
+      <artifactId>jline</artifactId>
+      <name>JLine</name>
+      <url>http://jline.sourceforge.net</url>
+      <organization>
+        <name>JLine</name>
+        <url>http://jline.sourceforge.net</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The BSD License</name>
+          <url>http://jline.sourceforge.net/license.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty</artifactId>
+      <name>Jetty Server</name>
+      <url>http://jetty.mortbay.org/</url>
+      <organization>
+	    <name>Mort Bay Consulting</name>
+	    <url>http://www.mortbay.com</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <name>Jetty Utilities</name>
+      <url>http://jetty.mortbay.org/</url>
+      <organization>
+	    <name>Mort Bay Consulting</name>
+	    <url>http://www.mortbay.com</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
+      <name>XML Pull Parsing API</name>
+      <organization>
+        <name>AOP Alliance</name>
+        <url>http://aopalliance.sourceforge.net/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>Public Domain</name>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <name>Java Servlet API</name>
+      <organization>
+        <name>Oracle Corporation</name>
+        <url>http://www.oracle.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jsp-api</artifactId>
+      <name>Java Servlet API</name>
+      <organization>
+        <name>Oracle Corporation</name>
+        <url>http://www.oracle.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>javax.transaction</groupId>
+      <artifactId>jta</artifactId>
+      <name>Java Transaction API</name>
+      <organization>
+        <name>Oracle Corporation</name>
+        <url>http://www.oracle.com/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
+          <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr-runtime</artifactId>
+      <licenses>
+        <license>
+          <name>MIT style</name>
+          <url>http://www.slf4j.org/license.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>rome</groupId>
+      <artifactId>rome</artifactId>
+      <name>ROME</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>oro</groupId>
+      <artifactId>oro</artifactId>
+      <name>Jakarta ORO</name>
+      <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+      </organization>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+</supplementalDataModels>

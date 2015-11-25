@@ -37,9 +37,9 @@
     </license>
   </licenses>
 
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
 	</properties>
 
 	<build>

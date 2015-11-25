@@ -70,6 +70,16 @@
 			</includes>
 		</fileSet>
 		<fileSet>
+			<directory>target/classes/META-INF</directory>
+			<outputDirectory>.</outputDirectory>
+			<includes>
+				<include>LICENSE*</include>
+				<include>NOTICE*</include>
+				<include>DISCLAIMER*</include>
+				<include>DEPENDENCIES*</include>
+			</includes>
+		</fileSet>
+		<fileSet>
 			<directory>../asterix-events/src/main/resources/events</directory>
 			<outputDirectory>.installer/events</outputDirectory>
 			<fileMode>0755</fileMode>

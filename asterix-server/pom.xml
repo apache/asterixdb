@@ -35,6 +35,10 @@
     </license>
   </licenses>
 
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
+
   <build>
     <plugins>
       <plugin>

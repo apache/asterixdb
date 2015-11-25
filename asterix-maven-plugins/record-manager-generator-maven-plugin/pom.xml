@@ -29,6 +29,10 @@
   <packaging>maven-plugin</packaging>
   <name>record-manager-generator-maven-plugin</name>
 
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
+
   <build>
     <plugins>
       <plugin>

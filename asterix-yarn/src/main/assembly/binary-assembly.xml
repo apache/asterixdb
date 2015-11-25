@@ -17,13 +17,23 @@
  ! under the License.
  !-->
 <assembly>
-	<id>binary-assembly</id>
-	<formats>
+    <id>binary-assembly</id>
+    <formats>
         <format>dir</format>
         <format>zip</format>
-	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
-	<fileSets>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>target/classes/META-INF</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>LICENSE*</include>
+                <include>NOTICE*</include>
+                <include>DISCLAIMER*</include>
+                <include>DEPENDENCIES*</include>
+            </includes>
+        </fileSet>
         <fileSet>
             <directory>src/main/resources/scripts</directory>
             <fileMode>0755</fileMode>
@@ -64,7 +74,7 @@
             </includes>
             <outputDirectory>conf</outputDirectory>
         </fileSet>
-	</fileSets>
+    </fileSets>
     <dependencySets>
         <dependencySet>
             <includes>

@@ -49,6 +49,10 @@
 		</plugins>
 	</build>
 
+    <properties>
+        <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>

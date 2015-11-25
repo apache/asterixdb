@@ -28,6 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
         <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
+        <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
 	</properties>
 
   <licenses>
