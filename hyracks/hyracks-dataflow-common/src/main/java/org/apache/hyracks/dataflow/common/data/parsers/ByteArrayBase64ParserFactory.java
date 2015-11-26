@@ -28,6 +28,7 @@ import org.apache.hyracks.util.bytes.Base64Parser;
 
 public class ByteArrayBase64ParserFactory implements IValueParserFactory {
 
+    private static final long serialVersionUID = 1L;
     public static final ByteArrayBase64ParserFactory INSTANCE = new ByteArrayBase64ParserFactory();
 
     private ByteArrayBase64ParserFactory() {
@@ -37,11 +38,10 @@ public class ByteArrayBase64ParserFactory implements IValueParserFactory {
     public IValueParser createValueParser() {
         return new IValueParser() {
             Base64Parser parser = new Base64Parser();
-            ByteArraySerializerDeserializer serializer = new ByteArraySerializerDeserializer();
+            ByteArraySerializerDeserializer serializer = ByteArraySerializerDeserializer.INSTANCE;
 
             @Override
-            public void parse(char[] input, int start, int length, DataOutput out)
-                    throws HyracksDataException {
+            public void parse(char[] input, int start, int length, DataOutput out) throws HyracksDataException {
 
                 parser.generatePureByteArrayFromBase64String(input, start, length);
                 try {

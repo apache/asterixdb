@@ -27,6 +27,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDe
 import org.apache.hyracks.util.bytes.HexParser;
 
 public class ByteArrayHexParserFactory implements IValueParserFactory {
+    private static final long serialVersionUID = 1L;
     public static ByteArrayHexParserFactory INSTANCE = new ByteArrayHexParserFactory();
 
     private ByteArrayHexParserFactory() {
@@ -36,11 +37,10 @@ public class ByteArrayHexParserFactory implements IValueParserFactory {
     public IValueParser createValueParser() {
         return new IValueParser() {
             HexParser parser = new HexParser();
-            ByteArraySerializerDeserializer serializer = new ByteArraySerializerDeserializer();
+            ByteArraySerializerDeserializer serializer = ByteArraySerializerDeserializer.INSTANCE;
 
             @Override
-            public void parse(char[] input, int start, int length, DataOutput out)
-                    throws HyracksDataException {
+            public void parse(char[] input, int start, int length, DataOutput out) throws HyracksDataException {
                 try {
                     parser.generateByteArrayFromHexString(input, start, length);
                     serializer.serialize(parser.getByteArray(), 0, parser.getLength(), out);

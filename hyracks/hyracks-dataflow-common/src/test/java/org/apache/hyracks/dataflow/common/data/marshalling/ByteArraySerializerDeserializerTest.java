@@ -35,7 +35,7 @@ import org.junit.Test;
 public class ByteArraySerializerDeserializerTest {
 
     ByteArrayPointable bytePtr = new ByteArrayPointable();
-    ByteArraySerializerDeserializer serder = new ByteArraySerializerDeserializer();
+    ByteArraySerializerDeserializer serder = ByteArraySerializerDeserializer.INSTANCE;
 
     @Test
     public void testSerializeDeserializeRandomBytes() throws Exception {

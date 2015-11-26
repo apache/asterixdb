@@ -18,10 +18,13 @@
 package org.apache.hyracks.util.string;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UTFDataFormatException;
 
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
@@ -149,26 +152,22 @@ public class UTF8StringUtil {
             return b[s];
         } else if ((b[s] & 0xe0) == 0xc0) { /*0xe0 = 0b1110000*/
             // 2 bytes
-            return ((int) (b[s] & 0x1f)) << 6 | /*0x3f = 0b00111111*/
-                    ((int) (b[s + 1] & 0x3f));
+            return (b[s] & 0x1f) << 6 | /*0x3f = 0b00111111*/
+                    (b[s + 1] & 0x3f);
         } else if ((b[s] & 0xf0) == 0xe0) {
             // 3bytes
-            return ((int) (b[s] & 0xf)) << 12 | ((int) (b[s + 1] & 0x3f)) << 6
-                    | ((int) (b[s + 2] & 0x3f));
+            return (b[s] & 0xf) << 12 | (b[s + 1] & 0x3f) << 6 | (b[s + 2] & 0x3f);
         } else if ((b[s] & 0xf8) == 0xf0) {
             // 4bytes
-            return ((int) (b[s] & 0x7)) << 18 | ((int) (b[s + 1] & 0x3f)) << 12
-                    | ((int) (b[s + 2] & 0x3f)) << 6 | ((int) (b[s + 3] & 0x3f));
+            return (b[s] & 0x7) << 18 | (b[s + 1] & 0x3f) << 12 | (b[s + 2] & 0x3f) << 6 | (b[s + 3] & 0x3f);
         } else if ((b[s] & 0xfc) == 0xf8) {
             // 5bytes
-            return ((int) (b[s] & 0x3)) << 24 | ((int) (b[s + 1] & 0x3f)) << 18
-                    | ((int) (b[s + 2] & 0x3f)) << 12 | ((int) (b[s + 3] & 0x3f)) << 6
-                    | ((int) (b[s + 4] & 0x3f));
+            return (b[s] & 0x3) << 24 | (b[s + 1] & 0x3f) << 18 | (b[s + 2] & 0x3f) << 12 | (b[s + 3] & 0x3f) << 6
+                    | (b[s + 4] & 0x3f);
         } else if ((b[s] & 0xfe) == 0xfc) {
             // 6bytes
-            return ((int) (b[s] & 0x1)) << 30 | ((int) (b[s + 1] & 0x3f)) << 24
-                    | ((int) (b[s + 2] & 0x3f)) << 18 | ((int) (b[s + 3] & 0x3f)) << 12
-                    | ((int) (b[s + 4] & 0x3f)) << 6 | ((int) (b[s + 5] & 0x3f));
+            return (b[s] & 0x1) << 30 | (b[s + 1] & 0x3f) << 24 | (b[s + 2] & 0x3f) << 18 | (b[s + 3] & 0x3f) << 12
+                    | (b[s + 4] & 0x3f) << 6 | (b[s + 5] & 0x3f);
         }
         return 0;
     }
@@ -226,7 +225,7 @@ public class UTF8StringUtil {
         for (int i = 0; i < 2; ++i) {
             nk <<= 16;
             if (i < len) {
-                nk += ((int) charAt(bytes, offset)) & 0xffff;
+                nk += (charAt(bytes, offset)) & 0xffff;
                 offset += charSize(bytes, offset);
             }
         }
@@ -351,8 +350,8 @@ public class UTF8StringUtil {
         }
     }
 
-    private static int compareTo(byte[] thisBytes, int thisStart, byte[] thatBytes, int thatStart,
-            boolean useLowerCase, boolean useRawByte) {
+    private static int compareTo(byte[] thisBytes, int thisStart, byte[] thatBytes, int thatStart, boolean useLowerCase,
+            boolean useRawByte) {
         int utflen1 = getUTFLength(thisBytes, thisStart);
         int utflen2 = getUTFLength(thatBytes, thatStart);
 
@@ -418,5 +417,212 @@ public class UTF8StringUtil {
             throw new RuntimeException(e);
         }
         return bos.toByteArray();
+    }
+
+    /**
+     * Reads from the
+     * stream <code>in</code> a representation
+     * of a Unicode character string encoded in
+     * <a href="DataInput.html#modified-utf-8">modified UTF-8</a> format;
+     * this string of characters is then returned as a <code>String</code>.
+     * The details of the modified UTF-8 representation
+     * are exactly the same as for the <code>readUTF</code>
+     * method of <code>DataInput</code>.
+     *
+     * @param in
+     *            a data input stream.
+     * @return a Unicode string.
+     * @throws EOFException
+     *             if the input stream reaches the end
+     *             before all the bytes.
+     * @throws IOException
+     *             the stream has been closed and the contained
+     *             input stream does not support reading after close, or
+     *             another I/O error occurs.
+     * @throws UTFDataFormatException
+     *             if the bytes do not represent a
+     *             valid modified UTF-8 encoding of a Unicode string.
+     * @see java.io.DataInputStream#readUnsignedShort()
+     */
+    public static String readUTF8(DataInput in) throws IOException {
+        return readUTF8(in, null);
+    }
+
+    static String readUTF8(DataInput in, UTF8StringReader reader) throws IOException {
+        int utflen = VarLenIntEncoderDecoder.decode(in);
+        byte[] bytearr;
+        char[] chararr;
+
+        if (reader == null) {
+            bytearr = new byte[utflen * 2];
+            chararr = new char[utflen * 2];
+        } else {
+            if (reader.bytearr == null || reader.bytearr.length < utflen) {
+                reader.bytearr = new byte[utflen * 2];
+                reader.chararr = new char[utflen * 2];
+            }
+            bytearr = reader.bytearr;
+            chararr = reader.chararr;
+        }
+
+        int c, char2, char3;
+        int count = 0;
+        int chararr_count = 0;
+
+        in.readFully(bytearr, 0, utflen);
+
+        while (count < utflen) {
+            c = bytearr[count] & 0xff;
+            if (c > 127)
+                break;
+            count++;
+            chararr[chararr_count++] = (char) c;
+        }
+
+        while (count < utflen) {
+            c = bytearr[count] & 0xff;
+            switch (c >> 4) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    /* 0xxxxxxx*/
+                    count++;
+                    chararr[chararr_count++] = (char) c;
+                    break;
+                case 12:
+                case 13:
+                    /* 110x xxxx   10xx xxxx*/
+                    count += 2;
+                    if (count > utflen)
+                        throw new UTFDataFormatException("malformed input: partial character at end");
+                    char2 = bytearr[count - 1];
+                    if ((char2 & 0xC0) != 0x80)
+                        throw new UTFDataFormatException("malformed input around byte " + count);
+                    chararr[chararr_count++] = (char) (((c & 0x1F) << 6) | (char2 & 0x3F));
+                    break;
+                case 14:
+                    /* 1110 xxxx  10xx xxxx  10xx xxxx */
+                    count += 3;
+                    if (count > utflen)
+                        throw new UTFDataFormatException("malformed input: partial character at end");
+                    char2 = bytearr[count - 2];
+                    char3 = bytearr[count - 1];
+                    if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
+                        throw new UTFDataFormatException("malformed input around byte " + (count - 1));
+                    chararr[chararr_count++] = (char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6)
+                            | ((char3 & 0x3F) << 0));
+                    break;
+                default:
+                    /* 10xx xxxx,  1111 xxxx */
+                    throw new UTFDataFormatException("malformed input around byte " + count);
+            }
+        }
+        // The number of chars produced may be less than utflen
+        return new String(chararr, 0, chararr_count);
+    }
+
+    /**
+     * Write a UTF8 String <code>str</code> into the DataOutput <code>out</code>
+     *
+     * @param str,
+     *            a Unicode string;
+     * @param out,
+     *            a Data output stream.
+     * @throws IOException
+     */
+    public static void writeUTF8(CharSequence str, DataOutput out) throws IOException {
+        writeUTF8(str, out, null);
+    }
+
+    static void writeUTF8(CharSequence str, DataOutput out, UTF8StringWriter writer) throws IOException {
+        int strlen = str.length();
+        int utflen = 0;
+        char c;
+        int count = 0;
+
+        for (int i = 0; i < strlen; i++) {
+            c = str.charAt(i);
+            utflen += UTF8StringUtil.getModifiedUTF8Len(c);
+        }
+
+        byte[] tempBytes = getTempBytes(writer, utflen);
+        count += VarLenIntEncoderDecoder.encode(utflen, tempBytes, count);
+        int i = 0;
+        for (; i < strlen; i++) {
+            c = str.charAt(i);
+            if (!((c >= 0x0001) && (c <= 0x007F))) {
+                break;
+            }
+            tempBytes[count++] = (byte) c;
+        }
+
+        for (; i < strlen; i++) {
+            c = str.charAt(i);
+            count += writeToBytes(tempBytes, count, c);
+        }
+        out.write(tempBytes, 0, count);
+    }
+
+    static void writeUTF8(char[] buffer, int start, int length, DataOutput out, UTF8StringWriter writer)
+            throws IOException {
+        int utflen = 0;
+        int count = 0;
+        char c;
+
+        for (int i = 0; i < length; i++) {
+            c = buffer[i + start];
+            utflen += UTF8StringUtil.getModifiedUTF8Len(c);
+        }
+
+        byte[] tempBytes = getTempBytes(writer, utflen);
+        count += VarLenIntEncoderDecoder.encode(utflen, tempBytes, count);
+
+        int i = 0;
+        for (; i < length; i++) {
+            c = buffer[i + start];
+            if (!((c >= 0x0001) && (c <= 0x007F))) {
+                break;
+            }
+            tempBytes[count++] = (byte) c;
+        }
+
+        for (; i < length; i++) {
+            c = buffer[i + start];
+            count += writeToBytes(tempBytes, count, c);
+        }
+        out.write(tempBytes, 0, count);
+    }
+
+    private static int writeToBytes(byte[] tempBytes, int count, char c) {
+        int orig = count;
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+            tempBytes[count++] = (byte) c;
+        } else if (c > 0x07FF) {
+            tempBytes[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
+            tempBytes[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
+            tempBytes[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+        } else {
+            tempBytes[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
+            tempBytes[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+        }
+        return count - orig;
+    }
+
+    private static byte[] getTempBytes(UTF8StringWriter writer, int utflen) {
+        byte[] tempBytes;
+        if (writer == null) {
+            tempBytes = new byte[utflen + 5];
+        } else {
+            if (writer.tempBytes == null || writer.tempBytes.length < utflen + 5) {
+                writer.tempBytes = new byte[utflen + 5];
+            }
+            tempBytes = writer.tempBytes;
+        }
+        return tempBytes;
     }
 }
