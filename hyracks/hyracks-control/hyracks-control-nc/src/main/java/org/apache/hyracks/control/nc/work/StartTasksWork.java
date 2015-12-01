@@ -129,7 +129,7 @@ public class StartTasksWork extends AbstractWork {
                 }
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
-                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
+                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutorService(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
@@ -201,7 +201,7 @@ public class StartTasksWork extends AbstractWork {
                 td.getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
             return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector,
-                    task.getTaskAttemptId(), ncs.getExecutor());
+                    task.getTaskAttemptId(), ncs.getExecutorService());
         } else {
             return collector;
         }
@@ -217,7 +217,7 @@ public class StartTasksWork extends AbstractWork {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                         return new MaterializedPartitionWriter(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
-                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
+                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutorService());
                     }
                 };
             } else {
@@ -225,7 +225,7 @@ public class StartTasksWork extends AbstractWork {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                         return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(
-                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
+                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutorService());
                     }
                 };
             }

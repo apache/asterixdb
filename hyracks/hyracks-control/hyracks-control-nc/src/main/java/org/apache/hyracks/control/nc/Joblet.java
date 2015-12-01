@@ -218,7 +218,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             LOGGER.warning("Freeing leaked " + stillAllocated + " bytes");
             appCtx.getMemoryManager().deallocate(stillAllocated);
         }
-        nodeController.getExecutor().execute(new Runnable() {
+        nodeController.getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 deallocatableRegistry.close();

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.context;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -26,13 +28,15 @@ import org.apache.hyracks.api.job.IOperatorEnvironment;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
-public interface IHyracksTaskContext extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry,
-        IOperatorEnvironment {
+public interface IHyracksTaskContext
+        extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry, IOperatorEnvironment {
     public IHyracksJobletContext getJobletContext();
 
     public TaskAttemptId getTaskAttemptId();
 
     public ICounterContext getCounterContext();
+
+    public ExecutorService getExecutorService();
 
     public IDatasetPartitionManager getDatasetPartitionManager();
 

@@ -26,9 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
@@ -42,12 +43,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 /**
  * The runtime of a SuperActivity, which internally executes a DAG of one-to-one
  * connected activities in a single thread.
- * 
+ *
  * @author yingyib
  */
 public class SuperActivityOperatorNodePushable implements IOperatorNodePushable {
     private final Map<ActivityId, IOperatorNodePushable> operatorNodePushables = new HashMap<ActivityId, IOperatorNodePushable>();
-    private final List<IOperatorNodePushable> operatprNodePushablesBFSOrder = new ArrayList<IOperatorNodePushable>();
+    private final List<IOperatorNodePushable> operatorNodePushablesBFSOrder = new ArrayList<IOperatorNodePushable>();
     private final Map<ActivityId, IActivity> startActivities;
     private final SuperActivity parent;
     private final IHyracksTaskContext ctx;
@@ -78,12 +79,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        /**
-         * initialize operator node pushables in the BFS order
-         */
-        for (IOperatorNodePushable op : operatprNodePushablesBFSOrder) {
-            op.initialize();
-        }
+        // Initializes all OperatorNodePushables in parallel.
+        runInParallel(op -> op.initialize());
     }
 
     public void init() throws HyracksDataException {
@@ -98,7 +95,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             IOperatorNodePushable opPushable = entry.getValue().createPushRuntime(ctx, recordDescProvider, partition,
                     nPartitions);
             startOperatorNodePushables.put(entry.getKey(), opPushable);
-            operatprNodePushablesBFSOrder.add(opPushable);
+            operatorNodePushablesBFSOrder.add(opPushable);
             operatorNodePushables.put(entry.getKey(), opPushable);
             inputArity += opPushable.getInputArity();
             outputConnectors = parent.getActivityOutputMap().get(entry.getKey());
@@ -136,9 +133,9 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             IOperatorNodePushable sourceOp = operatorNodePushables.get(sourceId);
             IOperatorNodePushable destOp = operatorNodePushables.get(destId);
             if (destOp == null) {
-                destOp = channel.getRight().getLeft()
-                        .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
-                operatprNodePushablesBFSOrder.add(destOp);
+                destOp = channel.getRight().getLeft().createPushRuntime(ctx, recordDescProvider, partition,
+                        nPartitions);
+                operatorNodePushablesBFSOrder.add(destOp);
                 operatorNodePushables.put(destId, destOp);
             }
 
@@ -157,12 +154,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        /**
-         * de-initialize operator node pushables
-         */
-        for (IOperatorNodePushable op : operatprNodePushablesBFSOrder) {
-            op.deinitialize();
-        }
+        // De-initialize all OperatorNodePushables in parallel.
+        runInParallel(op -> op.deinitialize());
     }
 
     @Override
@@ -197,4 +190,30 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         return "Super Activity " + parent.getActivityMap().values().toString();
     }
 
+    interface OperatorNodePushableAction {
+        public void runAction(IOperatorNodePushable op) throws HyracksDataException;
+    }
+
+    private void runInParallel(OperatorNodePushableAction opAction) throws HyracksDataException {
+        List<Future<Void>> initializationTasks = new ArrayList<Future<Void>>();
+        // Run one action for all OperatorNodePushables in parallel through a thread pool.
+        for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
+            initializationTasks.add(ctx.getExecutorService().submit(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    opAction.runAction(op);
+                    return null;
+                }
+            }));
+        }
+
+        // Waits until all parallel actions to finish.
+        for (Future<Void> initializationTask : initializationTasks) {
+            try {
+                initializationTask.get();
+            } catch (Exception e) {
+                throw new HyracksDataException(e);
+            }
+        }
+    }
 }

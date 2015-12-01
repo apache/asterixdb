@@ -53,7 +53,7 @@ public class CleanupJobletWork extends AbstractWork {
         }
         final List<IPartition> unregisteredPartitions = new ArrayList<IPartition>();
         ncs.getPartitionManager().unregisterPartitions(jobId, unregisteredPartitions);
-        ncs.getExecutor().execute(new Runnable() {
+        ncs.getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 for (IPartition p : unregisteredPartitions) {
