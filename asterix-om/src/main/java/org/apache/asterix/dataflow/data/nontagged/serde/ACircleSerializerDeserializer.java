@@ -23,12 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ACircle;
-import org.apache.asterix.om.base.AMutableCircle;
-import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,12 +33,6 @@ public class ACircleSerializerDeserializer implements ISerializerDeserializer<AC
     private static final long serialVersionUID = 1L;
 
     public static final ACircleSerializerDeserializer INSTANCE = new ACircleSerializerDeserializer();
-
-    @SuppressWarnings("unchecked")
-    private final static ISerializerDeserializer<ACircle> circleSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ACIRCLE);
-    private final static AMutableCircle aCircle = new AMutableCircle(null, 0);
-    private final static AMutablePoint aPoint = new AMutablePoint(0, 0);
 
     private ACircleSerializerDeserializer() {
     }
@@ -82,16 +72,5 @@ public class ACircleSerializerDeserializer implements ISerializerDeserializer<AC
 
     public final static int getRadiusOffset() throws HyracksDataException {
         return 17;
-    }
-
-    public static void parse(String circle, DataOutput out) throws HyracksDataException {
-        try {
-            String[] parts = circle.split(" ");
-            aPoint.setValue(Double.parseDouble(parts[0].split(",")[0]), Double.parseDouble(parts[0].split(",")[1]));
-            aCircle.setValue(aPoint, Double.parseDouble(parts[1].substring(0, parts[1].length())));
-            circleSerde.serialize(aCircle, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(circle + " can not be an instance of circle");
-        }
     }
 }

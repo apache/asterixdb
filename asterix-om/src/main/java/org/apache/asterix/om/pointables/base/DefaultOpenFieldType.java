@@ -19,15 +19,12 @@
 
 package org.apache.asterix.om.pointables.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class serves as the repository for the default record type and list type
@@ -41,11 +38,7 @@ public class DefaultOpenFieldType {
     public static ARecordType NESTED_OPEN_RECORD_TYPE;
 
     static {
-        try {
-            NESTED_OPEN_RECORD_TYPE = new ARecordType("nested-open", new String[] {}, new IAType[] {}, true);
-        } catch (AsterixException | HyracksDataException e) {
-            throw new AsterixRuntimeException();
-        }
+        NESTED_OPEN_RECORD_TYPE = new ARecordType("nested-open", new String[] {}, new IAType[] {}, true);
     }
 
     // nested open list type

@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
@@ -31,8 +30,10 @@ import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,25 +45,24 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
 
     public static final AUnorderedListSerializerDeserializer SCHEMALESS_INSTANCE = new AUnorderedListSerializerDeserializer();
 
-    private IAType itemType;
-    private AUnorderedListType unorderedlistType;
+    private final IAType itemType;
+    private final AUnorderedListType unorderedlistType;
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer nontaggedSerDes;
+    private final ISerializerDeserializer deserializer;
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer taggedSerDes;
+    private final ISerializerDeserializer serializer;
 
     private AUnorderedListSerializerDeserializer() {
-        this.itemType = null;
-        this.unorderedlistType = null;
+        this(new AUnorderedListType(BuiltinType.ANY, "unorderedlist"));
     }
 
     public AUnorderedListSerializerDeserializer(AUnorderedListType unorderedlistType) {
-        this.itemType = unorderedlistType.getItemType();
         this.unorderedlistType = unorderedlistType;
-        nontaggedSerDes = itemType.getTypeTag() == ATypeTag.ANY
+        this.itemType = unorderedlistType.getItemType();
+        serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        deserializer = itemType.getTypeTag() == ATypeTag.ANY
                 ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
                 : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
-        taggedSerDes = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
     }
 
     @Override
@@ -84,6 +84,16 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
                     fixedSize = true;
                     break;
             }
+
+            IAType currentItemType = itemType;
+            @SuppressWarnings("rawtypes")
+            ISerializerDeserializer currentDeserializer = deserializer;
+            if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY) {
+                currentItemType = TypeTagUtil.getBuiltinTypeByTag(typeTag);
+                currentDeserializer = AqlSerializerDeserializerProvider.INSTANCE
+                        .getNonTaggedSerializerDeserializer(currentItemType);
+            }
+
             in.readInt(); // list size
             int numberOfitems;
             numberOfitems = in.readInt();
@@ -94,13 +104,12 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
                         in.readInt();
                 }
                 for (int i = 0; i < numberOfitems; i++) {
-                    items.add((IAObject) nontaggedSerDes.deserialize(in));
+                    items.add((IAObject) currentDeserializer.deserialize(in));
                 }
             }
-            AUnorderedListType type = new AUnorderedListType(itemType, "orderedlist");
+            AUnorderedListType type = new AUnorderedListType(currentItemType, "unorderedlist");
             return new AUnorderedList(type, items);
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }
@@ -115,7 +124,7 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
         IACursor cursor = instance.getCursor();
         while (cursor.next()) {
             itemValue.reset();
-            taggedSerDes.serialize(cursor.get(), itemValue.getDataOutput());
+            serializer.serialize(cursor.get(), itemValue.getDataOutput());
             listBuilder.addItem(itemValue);
         }
         listBuilder.write(out, false);

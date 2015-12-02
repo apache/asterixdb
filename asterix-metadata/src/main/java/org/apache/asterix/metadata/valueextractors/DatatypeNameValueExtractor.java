@@ -22,16 +22,15 @@ package org.apache.asterix.metadata.valueextractors;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.rmi.RemoteException;
+import java.io.IOException;
 
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
-import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.util.string.UTF8StringReader;
 
 /**
  * Extracts the value of field 'DataypeName' from an ITupleReference that
@@ -40,7 +39,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class DatatypeNameValueExtractor implements IValueExtractor<String> {
     private final String dataverseName;
     private final MetadataNode metadataNode;
-    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+    private final UTF8StringReader reader = new UTF8StringReader();
 
     public DatatypeNameValueExtractor(String dataverseName, MetadataNode metadataNode) {
         this.dataverseName = dataverseName;
@@ -54,16 +53,16 @@ public class DatatypeNameValueExtractor implements IValueExtractor<String> {
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        String typeName = ((AString) aObjSerDer.deserialize(in)).getStringValue();
         try {
+            String typeName = reader.readUTF(in);
             if (metadataNode.getDatatype(jobId, dataverseName, typeName).getIsAnonymous()) {
                 // Get index 0 because it is anonymous type, and it is used in
                 // only one non-anonymous type.
                 typeName = metadataNode.getDatatypeNamesUsingThisDatatype(jobId, dataverseName, typeName).get(0);
             }
-        } catch (RemoteException e) {
+            return typeName;
+        } catch (IOException e) {
             throw new MetadataException(e);
         }
-        return typeName;
     }
 }

@@ -58,7 +58,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class JObjectUtil {
 
@@ -392,7 +391,7 @@ public class JObjectUtil {
                         dis.readInt();
                     }
                     for (int i = 0; i < numberOfOpenFields; i++) {
-                        fieldNames[i] = new AStringSerializerDeserializer().deserialize(dis).getStringValue();
+                        fieldNames[i] = AStringSerializerDeserializer.INSTANCE.deserialize(dis).getStringValue();
                         ATypeTag openFieldTypeTag = SerializerDeserializerUtil.deserializeTag(dis);
                         openFields[i] = getJType(openFieldTypeTag, null, dis, objectPool);
                         fieldTypes[i] = openFields[i].getIAObject().getType();
@@ -443,10 +442,6 @@ public class JObjectUtil {
             fieldNames[i] = recType2.getFieldNames()[j];
             fieldTypes[i] = recType2.getFieldTypes()[j];
         }
-        try {
-            return new ARecordType(null, fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
+        return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 }

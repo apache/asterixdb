@@ -20,6 +20,7 @@ package org.apache.asterix.external.library.java;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -41,7 +42,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeseri
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.external.library.TypeInfo;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
@@ -86,6 +86,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringReader;
 
 public class JObjectAccessors {
 
@@ -226,7 +227,7 @@ public class JObjectAccessors {
     }
 
     public static class JStringAccessor implements IJObjectAccessor {
-        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+        private final UTF8StringReader reader = new UTF8StringReader();
 
         @Override
         public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
@@ -236,8 +237,11 @@ public class JObjectAccessors {
             int l = pointable.getLength();
 
             String v = null;
-            v = aStringSerDer.deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)))
-                    .getStringValue();
+            try {
+                v = reader.readUTF(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
             JObjectUtil.getNormalizedString(v);
 
             IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
@@ -444,7 +448,7 @@ public class JObjectAccessors {
         private final JRecord jRecord;
         private final IJObject[] jObjects;
         private final LinkedHashMap<String, IJObject> openFields;
-        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+        private final UTF8StringReader reader = new UTF8StringReader();
 
         public JRecordAccessor(ARecordType recordType, IObjectPool<IJObject, IAType> objectPool) {
             this.typeInfo = new TypeInfo(objectPool, null, null);
@@ -502,9 +506,7 @@ public class JObjectAccessors {
                         byte[] b = fieldName.getByteArray();
                         int s = fieldName.getStartOffset();
                         int l = fieldName.getLength();
-                        String v = aStringSerDer
-                                .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)))
-                                .getStringValue();
+                        String v = reader.readUTF(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
                         openFields.put(v, fieldObject);
                     }
                     index++;

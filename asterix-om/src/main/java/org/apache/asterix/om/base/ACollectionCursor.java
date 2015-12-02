@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ACollectionCursor implements IACursor {
 
-    private ArrayList<IAObject> values;
+    private List<IAObject> values;
     private int pos;
     private int size;
     private IAObject object = null;

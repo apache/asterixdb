@@ -23,7 +23,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -51,7 +50,6 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
@@ -96,15 +94,8 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
         eval = args[0].createEvaluator(inputVal);
         out = output.getDataOutput();
 
-        ARecordType tmpRecType;
-        try {
-            tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] { BuiltinType.ADOUBLE,
-                    BuiltinType.AINT64 }, false);
-        } catch (AsterixException | HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
-
-        recType = tmpRecType;
+        recType = new ARecordType(null, new String[] { "sum", "count" },
+                new IAType[] { BuiltinType.ADOUBLE, BuiltinType.AINT64 }, false);
         recordEval = new ClosedRecordConstructorEval(recType, new ICopyEvaluator[] { evalSum, evalCount }, avgBytes,
                 out);
     }
@@ -116,10 +107,13 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
         count = 0;
     }
 
+    @Override
     public abstract void step(IFrameTupleReference tuple) throws AlgebricksException;
 
+    @Override
     public abstract void finish() throws AlgebricksException;
 
+    @Override
     public abstract void finishPartial() throws AlgebricksException;
 
     protected abstract void processNull();
@@ -137,8 +131,8 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
-                    + aggType + ".");
+            throw new AlgebricksException(
+                    "Unexpected type " + typeTag + " in aggregation input stream. Expected type " + aggType + ".");
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -229,8 +223,8 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
                 int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, SUM_FIELD_ID, nullBitmapSize,
                         false);
                 sum += ADoubleSerializerDeserializer.getDouble(serBytes, offset1);
-                int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, COUNT_FIELD_ID,
-                        nullBitmapSize, false);
+                int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, COUNT_FIELD_ID, nullBitmapSize,
+                        false);
                 count += AInt64SerializerDeserializer.getLong(serBytes, offset2);
                 break;
             }

@@ -42,6 +42,7 @@ public class IsSystemNullDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     private final static byte SER_SYSTEM_NULL_TYPE_TAG = ATypeTag.SYSTEM_NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new IsSystemNullDescriptor();
         }
@@ -60,13 +61,14 @@ public class IsSystemNullDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
-                    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+                    private final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         eval.evaluate(tuple);
-                        boolean isSystemNull = argOut.getByteArray()[argOut.getStartOffset()] == SER_SYSTEM_NULL_TYPE_TAG;
+                        boolean isSystemNull = argOut.getByteArray()[argOut
+                                .getStartOffset()] == SER_SYSTEM_NULL_TYPE_TAG;
                         ABoolean res = isSystemNull ? ABoolean.TRUE : ABoolean.FALSE;
                         try {
                             aObjSerDer.serialize(res, out);

@@ -50,7 +50,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -505,9 +504,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     }
                 }
 
-            } catch (AsterixException e) {
-                throw new AlgebricksException(
-                        "Cannot enforce typed fields " + StringUtils.join(index.getKeyFieldNames()), e);
             } catch (IOException e) {
                 throw new AsterixException(e);
             }

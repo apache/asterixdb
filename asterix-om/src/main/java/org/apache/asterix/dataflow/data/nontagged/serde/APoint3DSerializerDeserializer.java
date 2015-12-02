@@ -23,11 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutablePoint3D;
 import org.apache.asterix.om.base.APoint3D;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -36,10 +33,6 @@ public class APoint3DSerializerDeserializer implements ISerializerDeserializer<A
     private static final long serialVersionUID = 1L;
 
     public static final APoint3DSerializerDeserializer INSTANCE = new APoint3DSerializerDeserializer();
-    @SuppressWarnings("unchecked")
-    private final static ISerializerDeserializer<APoint3D> point3DSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.APOINT3D);
-    private final static AMutablePoint3D aPoint3D = new AMutablePoint3D(0, 0, 0);
 
     private APoint3DSerializerDeserializer() {
     }
@@ -90,16 +83,4 @@ public class APoint3DSerializerDeserializer implements ISerializerDeserializer<A
         }
     }
 
-    public static void parse(String point3d, DataOutput out) throws HyracksDataException {
-        try {
-            int firstCommaIndex = point3d.indexOf(',');
-            int secondCommaIndex = point3d.indexOf(',', firstCommaIndex + 1);
-            aPoint3D.setValue(Double.parseDouble(point3d.substring(0, firstCommaIndex)),
-                    Double.parseDouble(point3d.substring(firstCommaIndex + 1, secondCommaIndex)),
-                    Double.parseDouble(point3d.substring(secondCommaIndex + 1, point3d.length())));
-            point3DSerde.serialize(aPoint3D, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(point3d + " can not be an instance of point3d");
-        }
-    }
 }

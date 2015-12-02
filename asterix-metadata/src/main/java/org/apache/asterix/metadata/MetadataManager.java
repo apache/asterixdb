@@ -27,7 +27,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -48,7 +47,6 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Provides access to Asterix metadata via remote methods to the metadata node.
@@ -428,18 +426,14 @@ public class MetadataManager implements IMetadataManager {
         datatype = cache.getDatatype(dataverseName, datatypeName);
         if (datatype != null) {
             // Datatype is already in the cache, don't add it again.
-            try {
-                //create a new Datatype object with a new ARecordType object in order to avoid
-                //concurrent access to UTF8StringPointable comparator in ARecordType object.
-                //see issue 510
-                ARecordType aRecType = (ARecordType) datatype.getDatatype();
-                return new Datatype(
-                        datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
-                                aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
-                        datatype.getIsAnonymous());
-            } catch (AsterixException | HyracksDataException e) {
-                throw new MetadataException(e);
-            }
+            //create a new Datatype object with a new ARecordType object in order to avoid
+            //concurrent access to UTF8StringPointable comparator in ARecordType object.
+            //see issue 510
+            ARecordType aRecType = (ARecordType) datatype.getDatatype();
+            return new Datatype(
+                    datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
+                            aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
+                    datatype.getIsAnonymous());
         }
         try {
             datatype = metadataNode.getDatatype(ctx.getJobId(), dataverseName, datatypeName);

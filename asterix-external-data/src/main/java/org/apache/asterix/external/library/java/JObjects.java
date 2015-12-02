@@ -366,7 +366,7 @@ public class JObjects {
 
     public static final class JString extends JObject {
 
-        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+        private final AStringSerializerDeserializer aStringSerDer = AStringSerializerDeserializer.INSTANCE;
 
         public JString(String v) {
             super(new AMutableString(v));
@@ -978,7 +978,7 @@ public class JObjects {
         private ARecordType recordType;
         private IJObject[] fields;
         private Map<String, IJObject> openFields;
-        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+        private final AStringSerializerDeserializer aStringSerDer = AStringSerializerDeserializer.INSTANCE;
 
         public JRecord(ARecordType recordType, IJObject[] fields) {
             this.recordType = recordType;

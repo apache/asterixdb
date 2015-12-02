@@ -42,6 +42,7 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new IsNullDescriptor();
         }
@@ -60,7 +61,7 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
-                    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+                    private final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

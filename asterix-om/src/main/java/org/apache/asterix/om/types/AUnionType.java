@@ -22,19 +22,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.visitors.IOMVisitor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.visitors.IOMVisitor;
-
 public class AUnionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
-    private List<IAType> unionList;
     public static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 1;
+    private final List<IAType> unionList;
 
     public AUnionType(List<IAType> unionList, String typeName) {
         super(typeName);

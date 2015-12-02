@@ -30,10 +30,10 @@ import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
-import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -49,7 +49,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TypeTranslator {
 
@@ -323,14 +322,8 @@ public class TypeTranslator {
             fldNames[i++] = s;
         }
         boolean isOpen = rtd.getRecordKind() == RecordKind.OPEN;
-        ARecordType recType;
-        try {
-            recType = new ARecordType(typeSignature == null ? null : typeSignature.getName(), fldNames, fldTypes,
-                    isOpen);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-
+        ARecordType recType = new ARecordType(typeSignature == null ? null : typeSignature.getName(), fldNames,
+                fldTypes, isOpen);
         List<IRecordFieldDataGen> fieldDataGen = rtd.getFieldDataGen();
         if (fieldDataGen.size() == n) {
             IRecordFieldDataGen[] rfdg = new IRecordFieldDataGen[n];

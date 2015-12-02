@@ -34,6 +34,9 @@ public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUI
 
     public static final AUUIDSerializerDeserializer INSTANCE = new AUUIDSerializerDeserializer();
 
+    private AUUIDSerializerDeserializer() {
+    }
+
     @Override
     public AUUID deserialize(DataInput in) throws HyracksDataException {
         long msb = Integer64SerializerDeserializer.INSTANCE.deserialize(in);

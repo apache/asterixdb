@@ -21,19 +21,18 @@ package org.apache.asterix.om.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AOrderedList implements IACollection {
 
-    protected ArrayList<IAObject> values;
+    protected List<IAObject> values;
     protected AOrderedListType type;
 
     public AOrderedList(AOrderedListType type) {
@@ -41,7 +40,7 @@ public class AOrderedList implements IACollection {
         this.type = type;
     }
 
-    public AOrderedList(AOrderedListType type, ArrayList<IAObject> sequence) {
+    public AOrderedList(AOrderedListType type, List<IAObject> sequence) {
         values = sequence;
         this.type = type;
     }

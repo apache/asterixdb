@@ -877,32 +877,4 @@ public abstract class BuiltinType implements IAType {
         return getType().getTypeTag().serialize();
     }
 
-    public static BuiltinType builtinTypeFromString(String str) throws AsterixException {
-        if (str.equals(BuiltinType.AINT32.getTypeName())) {
-            return BuiltinType.AINT32;
-        } else if (str.equals(BuiltinType.ASTRING.getTypeName())) {
-            return BuiltinType.ASTRING;
-        } else if (str.equals(BuiltinType.ADOUBLE.getTypeName())) {
-            return BuiltinType.ADOUBLE;
-        } else if (str.equals(BuiltinType.AFLOAT.getTypeName())) {
-            return BuiltinType.AFLOAT;
-        } else if (str.equals(BuiltinType.ANY.getTypeName())) {
-            return BuiltinType.ANY;
-        }
-        throw new AsterixException("No string translation for type: " + str + " .");
-    }
-
-    public static ATypeTag builtinTypeTagFromString(String str) throws AsterixException {
-        if (str.equals("int32")) {
-            return ATypeTag.INT32;
-        } else if (str.equals("string")) {
-            return ATypeTag.STRING;
-        } else if (str.equals("double")) {
-            return ATypeTag.DOUBLE;
-        } else if (str.equals("float")) {
-            return ATypeTag.FLOAT;
-        }
-        throw new AsterixException("No string translation for type: " + str + " .");
-    }
-
 }

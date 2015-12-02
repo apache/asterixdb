@@ -24,19 +24,18 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
-import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.util.string.UTF8StringReader;
 
 /**
  * Extracts the value of field 'DatasetName' from an ITupleReference that
  * contains a serialized representation of a Dataset metadata entity.
  */
 public class DatasetNameValueExtractor implements IValueExtractor<String> {
-    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+    private final UTF8StringReader reader = new UTF8StringReader();
 
     @Override
     public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
@@ -45,6 +44,10 @@ public class DatasetNameValueExtractor implements IValueExtractor<String> {
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        return (((AString) aObjSerDer.deserialize(in)).getStringValue());
+        try {
+            return reader.readUTF(in);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

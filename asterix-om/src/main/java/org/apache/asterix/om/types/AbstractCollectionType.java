@@ -62,8 +62,5 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
             nestedType.generateNestedDerivedTypeNames();
         }
     }
-    // public void serialize(DataOutput out) throws IOException {
-    // out.writeBoolean(isTyped());
-    // }
 
 }

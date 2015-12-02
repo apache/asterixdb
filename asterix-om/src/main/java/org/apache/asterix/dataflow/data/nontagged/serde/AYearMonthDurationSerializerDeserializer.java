@@ -22,12 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableYearMonthDuration;
 import org.apache.asterix.om.base.AYearMonthDuration;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,10 +32,8 @@ public class AYearMonthDurationSerializerDeserializer implements ISerializerDese
 
     public static final AYearMonthDurationSerializerDeserializer INSTANCE = new AYearMonthDurationSerializerDeserializer();
 
-    @SuppressWarnings("unchecked")
-    private static final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
-    private static final AMutableYearMonthDuration aYearMonthDuration = new AMutableYearMonthDuration(0);
+    private AYearMonthDurationSerializerDeserializer() {
+    }
 
     @Override
     public AYearMonthDuration deserialize(DataInput in) throws HyracksDataException {
@@ -57,16 +50,6 @@ public class AYearMonthDurationSerializerDeserializer implements ISerializerDese
             out.writeInt(instance.getMonths());
         } catch (IOException e) {
             throw new HyracksDataException();
-        }
-    }
-
-    public void parse(String durationString, DataOutput out) throws HyracksDataException {
-        try {
-            ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aYearMonthDuration,
-                    ADurationParseOption.All);
-            yearMonthDurationSerde.serialize(aYearMonthDuration, out);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
         }
     }
 

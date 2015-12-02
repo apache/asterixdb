@@ -20,8 +20,8 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -33,6 +33,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -43,30 +44,24 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     private static final long serialVersionUID = 1L;
     public static final AOrderedListSerializerDeserializer SCHEMALESS_INSTANCE = new AOrderedListSerializerDeserializer();
 
-    private IAType itemType;
+    private final IAType itemType;
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer serializer;
+    private final ISerializerDeserializer serializer;
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer deserializer;
-    private AOrderedListType orderedlistType;
+    private final ISerializerDeserializer deserializer;
+    private final AOrderedListType orderedlistType;
 
     private AOrderedListSerializerDeserializer() {
-        this.itemType = null;
-        this.orderedlistType = null;
-        initSerializerDeserializer(BuiltinType.ANY);
+        this(new AOrderedListType(BuiltinType.ANY, "orderedlist"));
     }
 
     public AOrderedListSerializerDeserializer(AOrderedListType orderedlistType) {
         this.orderedlistType = orderedlistType;
-        initSerializerDeserializer(orderedlistType.getItemType());
-    }
-
-    private void initSerializerDeserializer(IAType itemType) {
-        this.itemType = itemType;
+        this.itemType = orderedlistType.getItemType();
         serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
-        deserializer = itemType.getTypeTag() == ATypeTag.ANY ? AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(itemType) : AqlSerializerDeserializerProvider.INSTANCE
-                .getNonTaggedSerializerDeserializer(itemType);
+        deserializer = itemType.getTypeTag() == ATypeTag.ANY
+                ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
+                : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
     }
 
     @Override
@@ -87,33 +82,33 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
                     fixedSize = true;
                     break;
             }
-            
-            if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY)   
-            try {   
-                initSerializerDeserializer(BuiltinType.builtinTypeFromString(typeTag.name().toLowerCase()));    
-            } catch (AsterixException e) {  
-                throw new HyracksDataException(e);  
-            }
-            
 
+            IAType currentItemType = itemType;
+            @SuppressWarnings("rawtypes")
+            ISerializerDeserializer currentDeserializer = deserializer;
+            if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY) {
+                currentItemType = TypeTagUtil.getBuiltinTypeByTag(typeTag);
+                currentDeserializer = AqlSerializerDeserializerProvider.INSTANCE
+                        .getNonTaggedSerializerDeserializer(currentItemType);
+            }
+
+            List<IAObject> items = new ArrayList<IAObject>();
             in.readInt(); // list size
             int numberOfitems;
             numberOfitems = in.readInt();
-            ArrayList<IAObject> items = new ArrayList<IAObject>();
             if (numberOfitems > 0) {
                 if (!fixedSize) {
                     for (int i = 0; i < numberOfitems; i++)
                         in.readInt();
                 }
                 for (int i = 0; i < numberOfitems; i++) {
-                    IAObject v = (IAObject) deserializer.deserialize(in);
+                    IAObject v = (IAObject) currentDeserializer.deserialize(in);
                     items.add(v);
                 }
             }
-            AOrderedListType type = new AOrderedListType(itemType, "orderedlist");
+            AOrderedListType type = new AOrderedListType(currentItemType, "orderedlist");
             return new AOrderedList(type, items);
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }

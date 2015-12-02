@@ -32,7 +32,6 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
@@ -302,8 +301,7 @@ public class ADMDataParser extends AbstractDataParser {
                 if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
-
+                            parseDateInterval(admLexer.getLastTokenImage(), out);
                             if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
                                 break;
                             }
@@ -316,8 +314,7 @@ public class ADMDataParser extends AbstractDataParser {
                 if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
-
+                            parseTimeInterval(admLexer.getLastTokenImage(), out);
                             if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
                                 break;
                             }
@@ -330,8 +327,7 @@ public class ADMDataParser extends AbstractDataParser {
                 if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
-
+                            parseDateTimeInterval(admLexer.getLastTokenImage(), out);
                             if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
                                 break;
                             }

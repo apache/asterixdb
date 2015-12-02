@@ -33,7 +33,6 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,8 +65,7 @@ public class ARecordType extends AbstractComplexType {
      *             if there are duplicate field names or if there is an error serializing the field names
      * @throws HyracksDataException
      */
-    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen)
-            throws AsterixException, HyracksDataException {
+    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         super(typeName);
         this.fieldNames = fieldNames;
         this.fieldTypes = fieldTypes;
@@ -232,11 +230,7 @@ public class ARecordType extends AbstractComplexType {
                 newTypes[i] = type.fieldTypes[i];
             }
         }
-        try {
-            return new ARecordType(type.typeName, type.fieldNames, newTypes, type.isOpen);
-        } catch (AsterixException | HyracksException e) {
-            throw new AlgebricksException(e);
-        }
+        return new ARecordType(type.typeName, type.fieldNames, newTypes, type.isOpen);
     }
 
     @Override

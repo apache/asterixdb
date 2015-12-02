@@ -84,7 +84,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
         switch (aqlType.getTypeTag()) {
             case ANY:
             case UNION: { // we could do smth better for nullable fields
-                return new AObjectSerializerDeserializer();
+                return AObjectSerializerDeserializer.INSTANCE;
             }
             default: {
                 return addTag(getNonTaggedSerializerDeserializer(aqlType), aqlType.getTypeTag());
@@ -132,10 +132,10 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
                 return ANullSerializerDeserializer.INSTANCE;
             }
             case STRING: {
-                return new AStringSerializerDeserializer();
+                return AStringSerializerDeserializer.INSTANCE;
             }
             case BINARY: {
-                return new ABinarySerializerDeserializer();
+                return ABinarySerializerDeserializer.INSTANCE;
             }
             case TIME: {
                 return ATimeSerializerDeserializer.INSTANCE;
@@ -183,8 +183,8 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
                 return ShortSerializerDeserializer.INSTANCE;
             }
             default: {
-                throw new NotImplementedException("No serializer/deserializer implemented for type "
-                        + aqlType.getTypeTag() + " .");
+                throw new NotImplementedException(
+                        "No serializer/deserializer implemented for type " + aqlType.getTypeTag() + " .");
             }
         }
     }

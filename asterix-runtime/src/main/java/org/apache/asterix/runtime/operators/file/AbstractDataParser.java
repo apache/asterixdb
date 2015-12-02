@@ -34,6 +34,7 @@ import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.ALine;
 import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.base.AMutableCircle;
@@ -47,6 +48,7 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
+import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.AMutableLine;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutablePoint3D;
@@ -68,6 +70,7 @@ import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -104,6 +107,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutablePoint aPoint2 = new AMutablePoint(0, 0);
     protected AMutableLine aLine = new AMutableLine(null, null);
     protected AMutableDate aDate = new AMutableDate(0);
+    protected final AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
 
     // Serializers
     @SuppressWarnings("unchecked")
@@ -182,6 +186,9 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ALINE);
+    @SuppressWarnings("unchecked")
+    private static final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
     protected String filename;
 
@@ -351,5 +358,164 @@ public abstract class AbstractDataParser implements IDataParser {
         base64Parser.generatePureByteArrayFromBase64String(input, start, length);
         aBinary.setValue(base64Parser.getByteArray(), 0, base64Parser.getLength());
         binarySerde.serialize(aBinary, out);
+    }
+
+    protected void parseDateTimeInterval(String interval, DataOutput out) throws HyracksDataException {
+        long chrononTimeInMsStart = 0;
+        long chrononTimeInMsEnd = 0;
+        try {
+            // the starting point for parsing (so for the accessor)
+            int startOffset = 0;
+            int endOffset, timeSeperatorOffsetInDatetimeString;
+
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 1) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            endOffset = commaIndex - 1;
+            timeSeperatorOffsetInDatetimeString = interval.indexOf('T');
+
+            if (timeSeperatorOffsetInDatetimeString < 0) {
+                throw new AlgebricksException(
+                        "This can not be an instance of interval: missing T for a datetime value.");
+            }
+
+            chrononTimeInMsStart = parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString - 1);
+
+            chrononTimeInMsStart += parseTimePart(interval, timeSeperatorOffsetInDatetimeString + 1, endOffset);
+
+            // Interval End
+            startOffset = commaIndex + 1;
+            endOffset = interval.length() - 1;
+
+            timeSeperatorOffsetInDatetimeString = interval.indexOf('T', startOffset);
+
+            if (timeSeperatorOffsetInDatetimeString < 0) {
+                throw new AlgebricksException(
+                        "This can not be an instance of interval: missing T for a datetime value.");
+            }
+
+            chrononTimeInMsEnd = parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString - 1);
+
+            chrononTimeInMsEnd += parseTimePart(interval, timeSeperatorOffsetInDatetimeString + 1, endOffset);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+
+        try {
+            aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.DATETIME.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
+
+        intervalSerde.serialize(aInterval, out);
+    }
+
+    protected void parseTimeInterval(String interval, DataOutput out) throws HyracksDataException {
+        long chrononTimeInMsStart = 0;
+        long chrononTimeInMsEnd = 0;
+        try {
+            int startOffset = 0;
+            int endOffset;
+
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 0) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            endOffset = commaIndex - 1;
+            // Interval Start
+            chrononTimeInMsStart = parseTimePart(interval, startOffset, endOffset);
+
+            if (chrononTimeInMsStart < 0) {
+                chrononTimeInMsStart += GregorianCalendarSystem.CHRONON_OF_DAY;
+            }
+
+            // Interval End
+            startOffset = commaIndex + 1;
+            endOffset = interval.length() - 1;
+
+            chrononTimeInMsEnd = parseTimePart(interval, startOffset, endOffset);
+            if (chrononTimeInMsEnd < 0) {
+                chrononTimeInMsEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
+            }
+
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+
+        try {
+            aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.TIME.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
+        intervalSerde.serialize(aInterval, out);
+    }
+
+    protected void parseDateInterval(String interval, DataOutput out) throws HyracksDataException {
+        long chrononTimeInMsStart = 0;
+        long chrononTimeInMsEnd = 0;
+        try {
+            // the starting point for parsing (so for the accessor)
+            int startOffset = 0;
+            int endOffset;
+
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 1) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            endOffset = commaIndex - 1;
+            chrononTimeInMsStart = parseDatePart(interval, startOffset, endOffset);
+
+            // Interval End
+            startOffset = commaIndex + 1;
+            endOffset = interval.length() - 1;
+
+            chrononTimeInMsEnd = parseDatePart(interval, startOffset, endOffset);
+
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+
+        try {
+            aInterval.setValue((chrononTimeInMsStart / GregorianCalendarSystem.CHRONON_OF_DAY),
+                    (chrononTimeInMsEnd / GregorianCalendarSystem.CHRONON_OF_DAY), ATypeTag.DATE.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
+        intervalSerde.serialize(aInterval, out);
+    }
+
+    private long parseDatePart(String interval, int startOffset, int endOffset)
+            throws AlgebricksException, HyracksDataException {
+
+        while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
+            endOffset--;
+        }
+
+        while (interval.charAt(startOffset) == '"' || interval.charAt(startOffset) == ' ') {
+            startOffset++;
+        }
+
+        return ADateParserFactory.parseDatePart(interval, startOffset, endOffset - startOffset + 1);
+    }
+
+    private int parseTimePart(String interval, int startOffset, int endOffset)
+            throws AlgebricksException, HyracksDataException {
+
+        while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
+            endOffset--;
+        }
+
+        while (interval.charAt(startOffset) == '"' || interval.charAt(startOffset) == ' ') {
+            startOffset++;
+        }
+
+        return ATimeParserFactory.parseTimePart(interval, startOffset, endOffset - startOffset + 1);
     }
 }

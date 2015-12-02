@@ -95,7 +95,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         int recordLength = frameTuple.getFieldLength(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord datatypeRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord datatypeRecord = recordSerDes.deserialize(in);
         return createDataTypeFromARecord(datatypeRecord);
     }
 
@@ -109,8 +109,9 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             // Derived Type
             ARecord derivedTypeRecord = (ARecord) datatypeRecord
                     .getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX);
-            DerivedTypeTag tag = DerivedTypeTag.valueOf(((AString) derivedTypeRecord
-                    .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_TAG_FIELD_INDEX)).getStringValue());
+            DerivedTypeTag tag = DerivedTypeTag.valueOf(
+                    ((AString) derivedTypeRecord.getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_TAG_FIELD_INDEX))
+                            .getStringValue());
             boolean isAnonymous = ((ABoolean) derivedTypeRecord
                     .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ISANONYMOUS_FIELD_INDEX)).getBoolean();
             switch (tag) {
@@ -119,7 +120,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_RECORD_FIELD_INDEX);
                     boolean isOpen = ((ABoolean) recordType
                             .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX)).getBoolean()
-                            .booleanValue();
+                                    .booleanValue();
                     int numberOfFields = ((AOrderedList) recordType
                             .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_FIELDS_FIELD_INDEX)).size();
                     IACursor cursor = ((AOrderedList) recordType
@@ -132,39 +133,37 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         ARecord field = (ARecord) cursor.get();
                         fieldNames[fieldId] = ((AString) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDNAME_FIELD_INDEX))
-                                .getStringValue();
+                                        .getStringValue();
                         fieldTypeName = ((AString) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
-                                .getStringValue();
+                                        .getStringValue();
                         boolean isNullable = ((ABoolean) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()
-                                .booleanValue();
+                                        .booleanValue();
                         fieldTypes[fieldId] = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
                                 dataverseName, fieldTypeName, isNullable);
                         fieldId++;
                     }
-                    try {
-                        return new Datatype(dataverseName, datatypeName, new ARecordType(datatypeName, fieldNames,
-                                fieldTypes, isOpen), isAnonymous);
-                    } catch (AsterixException | HyracksDataException e) {
-                        throw new MetadataException(e);
-                    }
+                    return new Datatype(dataverseName, datatypeName,
+                            new ARecordType(datatypeName, fieldNames, fieldTypes, isOpen), isAnonymous);
                 }
                 case UNORDEREDLIST: {
                     String unorderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
-                            .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AUnorderedListType(
-                            AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
-                                    unorderedlistTypeName, false), datatypeName), isAnonymous);
+                                    .getStringValue();
+                    return new Datatype(dataverseName, datatypeName,
+                            new AUnorderedListType(AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                                    dataverseName, unorderedlistTypeName, false), datatypeName),
+                            isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
-                            .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(
-                            AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
-                                    orderedlistTypeName, false), datatypeName), isAnonymous);
+                                    .getStringValue();
+                    return new Datatype(dataverseName, datatypeName,
+                            new AOrderedListType(AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                                    dataverseName, orderedlistTypeName, false), datatypeName),
+                            isAnonymous);
                 }
                 default:
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
@@ -250,8 +249,8 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                 tag = DerivedTypeTag.RECORD;
                 break;
             default:
-                throw new UnsupportedOperationException("No metadata record Type for "
-                        + derivedDatatype.getDisplayName());
+                throw new UnsupportedOperationException(
+                        "No metadata record Type for " + derivedDatatype.getDisplayName());
         }
 
         derivedRecordBuilder.reset(MetadataRecordTypes.DERIVEDTYPE_RECORDTYPE);
@@ -300,8 +299,8 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         stringSerde.serialize(aString, out);
     }
 
-    private void writeRecordType(Datatype instance, AbstractComplexType type, DataOutput out) throws IOException,
-            AsterixException {
+    private void writeRecordType(Datatype instance, AbstractComplexType type, DataOutput out)
+            throws IOException, AsterixException {
 
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();

@@ -57,105 +57,69 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
 
     private static final long serialVersionUID = 1L;
 
-    private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
-    private final ABinarySerializerDeserializer aBinarySerDer = new ABinarySerializerDeserializer();
-    private ARecordSerializerDeserializer aRecordSerDer = null;
+    public static final AObjectSerializerDeserializer INSTANCE = new AObjectSerializerDeserializer();
 
-    private ARecordSerializerDeserializer getRecordSerDer() {
-        if (aRecordSerDer == null) {
-            aRecordSerDer = ARecordSerializerDeserializer.CREATE_SCHEMALESS_INSTANCE();
-        }
-        return aRecordSerDer;
-    }
-
-    public AObjectSerializerDeserializer() {
+    private AObjectSerializerDeserializer() {
     }
 
     @Override
     public IAObject deserialize(DataInput in) throws HyracksDataException {
         ATypeTag typeTag = SerializerDeserializerUtil.deserializeTag(in);
         switch (typeTag) {
-            case NULL: {
+            case NULL:
                 return ANullSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case BOOLEAN: {
+            case BOOLEAN:
                 return ABooleanSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case INT8: {
+            case INT8:
                 return AInt8SerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case INT16: {
+            case INT16:
                 return AInt16SerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case INT32: {
+            case INT32:
                 return AInt32SerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case INT64: {
+            case INT64:
                 return AInt64SerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case FLOAT: {
+            case FLOAT:
                 return AFloatSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case DOUBLE: {
+            case DOUBLE:
                 return ADoubleSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case STRING: {
-                return aStringSerDer.deserialize(in);
-            }
-            case BINARY: {
-                return aBinarySerDer.deserialize(in);
-            }
-            case DATE: {
+            case STRING:
+                return AStringSerializerDeserializer.INSTANCE.deserialize(in);
+            case BINARY:
+                return ABinarySerializerDeserializer.INSTANCE.deserialize(in);
+            case DATE:
                 return ADateSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case TIME: {
+            case TIME:
                 return ATimeSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case DATETIME: {
+            case DATETIME:
                 return ADateTimeSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case DURATION: {
+            case DURATION:
                 return ADurationSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case YEARMONTHDURATION: {
+            case YEARMONTHDURATION:
                 return AYearMonthDurationSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case DAYTIMEDURATION: {
+            case DAYTIMEDURATION:
                 return ADayTimeDurationSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case INTERVAL: {
+            case INTERVAL:
                 return AIntervalSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case POINT: {
+            case POINT:
                 return APointSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case POINT3D: {
+            case POINT3D:
                 return APoint3DSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case LINE: {
+            case LINE:
                 return ALineSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case RECTANGLE: {
+            case RECTANGLE:
                 return ARectangleSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case POLYGON: {
+            case POLYGON:
                 return APolygonSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case CIRCLE: {
+            case CIRCLE:
                 return ACircleSerializerDeserializer.INSTANCE.deserialize(in);
-            }
-            case RECORD: {
-                return getRecordSerDer().deserialize(in);
-            }
-            case ORDEREDLIST: {
+            case RECORD:
+                return ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
+            case ORDEREDLIST:
                 return AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
-            }
-            case UNORDEREDLIST: {
+            case UNORDEREDLIST:
                 return AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
-            }
-            default: {
+            default:
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + typeTag + " .");
-            }
         }
     }
 
@@ -169,110 +133,84 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             throw new HyracksDataException(e);
         }
         switch (tag) {
-            case NULL: {
+            case NULL:
                 ANullSerializerDeserializer.INSTANCE.serialize((ANull) instance, out);
                 break;
-            }
-            case BOOLEAN: {
+            case BOOLEAN:
                 ABooleanSerializerDeserializer.INSTANCE.serialize((ABoolean) instance, out);
                 break;
-            }
-            case INT8: {
+            case INT8:
                 AInt8SerializerDeserializer.INSTANCE.serialize((AInt8) instance, out);
                 break;
-            }
-            case INT16: {
+            case INT16:
                 AInt16SerializerDeserializer.INSTANCE.serialize((AInt16) instance, out);
                 break;
-            }
-            case INT32: {
+            case INT32:
                 AInt32SerializerDeserializer.INSTANCE.serialize((AInt32) instance, out);
                 break;
-            }
-            case INT64: {
+            case INT64:
                 AInt64SerializerDeserializer.INSTANCE.serialize((AInt64) instance, out);
                 break;
-            }
-            case FLOAT: {
+            case FLOAT:
                 AFloatSerializerDeserializer.INSTANCE.serialize((AFloat) instance, out);
                 break;
-            }
-            case DOUBLE: {
+            case DOUBLE:
                 ADoubleSerializerDeserializer.INSTANCE.serialize((ADouble) instance, out);
                 break;
-            }
-            case STRING: {
-                aStringSerDer.serialize((AString) instance, out);
+            case STRING:
+                AStringSerializerDeserializer.INSTANCE.serialize((AString) instance, out);
                 break;
-            }
-            case BINARY: {
-                aBinarySerDer.serialize((ABinary) instance, out);
+            case BINARY:
+                ABinarySerializerDeserializer.INSTANCE.serialize((ABinary) instance, out);
                 break;
-            }
-            case DATE: {
+            case DATE:
                 ADateSerializerDeserializer.INSTANCE.serialize((ADate) instance, out);
                 break;
-            }
-            case TIME: {
+            case TIME:
                 ATimeSerializerDeserializer.INSTANCE.serialize((ATime) instance, out);
                 break;
-            }
-            case DATETIME: {
+            case DATETIME:
                 ADateTimeSerializerDeserializer.INSTANCE.serialize((ADateTime) instance, out);
                 break;
-            }
-            case DURATION: {
+            case DURATION:
                 ADurationSerializerDeserializer.INSTANCE.serialize((ADuration) instance, out);
                 break;
-            }
-            case INTERVAL: {
+            case INTERVAL:
                 AIntervalSerializerDeserializer.INSTANCE.serialize((AInterval) instance, out);
                 break;
-            }
-            case POINT: {
+            case POINT:
                 APointSerializerDeserializer.INSTANCE.serialize((APoint) instance, out);
                 break;
-            }
-            case POINT3D: {
+            case POINT3D:
                 APoint3DSerializerDeserializer.INSTANCE.serialize((APoint3D) instance, out);
                 break;
-            }
-            case LINE: {
+            case LINE:
                 ALineSerializerDeserializer.INSTANCE.serialize((ALine) instance, out);
                 break;
-            }
-            case RECTANGLE: {
+            case RECTANGLE:
                 ARectangleSerializerDeserializer.INSTANCE.serialize((ARectangle) instance, out);
                 break;
-            }
-            case POLYGON: {
+            case POLYGON:
                 APolygonSerializerDeserializer.INSTANCE.serialize((APolygon) instance, out);
                 break;
-            }
-            case CIRCLE: {
+            case CIRCLE:
                 ACircleSerializerDeserializer.INSTANCE.serialize((ACircle) instance, out);
                 break;
-            }
-            case RECORD: {
-                getRecordSerDer().serialize((ARecord) instance, out);
+            case RECORD:
+                ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((ARecord) instance, out);
                 break;
-            }
-            case ORDEREDLIST: {
+            case ORDEREDLIST:
                 AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AOrderedList) instance, out);
                 break;
-            }
-            case UNORDEREDLIST: {
+            case UNORDEREDLIST:
                 AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AUnorderedList) instance, out);
                 break;
-            }
-            case TYPE: {
+            case TYPE:
                 ATypeSerializerDeserializer.INSTANCE.serialize((IAType) instance, out);
                 break;
-            }
-            default: {
+            default:
                 throw new NotImplementedException(
                         "No serializer/deserializer implemented for type " + t.getTypeTag() + " .");
-            }
         }
     }
 }

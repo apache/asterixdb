@@ -48,34 +48,23 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class ARecordSerializerDeserializer implements ISerializerDeserializer<ARecord> {
     private static final long serialVersionUID = 1L;
 
-    public static final ARecordSerializerDeserializer CREATE_SCHEMALESS_INSTANCE() {
-        return new ARecordSerializerDeserializer();
-    }
+    public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
 
-    private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
-    private AObjectSerializerDeserializer aObjSerDer = null;
-
-    private AObjectSerializerDeserializer getObjSerDer() {
-        if (aObjSerDer == null) {
-            aObjSerDer = new AObjectSerializerDeserializer();
-        }
-        return aObjSerDer;
-    }
-
-    private ARecordType recordType;
-    private int numberOfSchemaFields = 0;
+    private final ARecordType recordType;
+    private final int numberOfSchemaFields;
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer serializers[];
+    private final ISerializerDeserializer serializers[];
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer deserializers[];
+    private final ISerializerDeserializer deserializers[];
 
     private ARecordSerializerDeserializer() {
+        this(null);
     }
 
     public ARecordSerializerDeserializer(ARecordType recordType) {
-        this.recordType = recordType;
         if (recordType != null) {
+            this.recordType = recordType;
             this.numberOfSchemaFields = recordType.getFieldNames().length;
             serializers = new ISerializerDeserializer[numberOfSchemaFields];
             deserializers = new ISerializerDeserializer[numberOfSchemaFields];
@@ -97,6 +86,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2);
                 deserializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
             }
+        } else {
+            this.recordType = null;
+            this.numberOfSchemaFields = 0;
+            this.serializers = null;
+            this.deserializers = null;
         }
     }
 
@@ -137,7 +131,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     }
                     closedFields[fieldId] = (IAObject) deserializers[fieldId].deserialize(in);
                 }
-
             }
 
             if (isExpanded) {
@@ -150,8 +143,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     in.readInt();
                 }
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    fieldNames[i] = aStringSerDer.deserialize(in).getStringValue();
-                    openFields[i] = getObjSerDer().deserialize(in);
+                    fieldNames[i] = AStringSerializerDeserializer.INSTANCE.deserialize(in).getStringValue();
+                    openFields[i] = AObjectSerializerDeserializer.INSTANCE.deserialize(in);
                     fieldTypes[i] = openFields[i].getType();
                 }
                 ARecordType openPartRecType = new ARecordType(null, fieldNames, fieldTypes, true);
@@ -167,6 +160,35 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             }
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
+        this.serialize(instance, out, false);
+    }
+
+    // This serialize method will NOT work if <code>recordType</code> is not equal to the type of the instance.
+    @SuppressWarnings("unchecked")
+    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
+        IARecordBuilder recordBuilder = new RecordBuilder();
+        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+        recordBuilder.reset(recordType);
+        recordBuilder.init();
+        if (recordType != null) {
+            int fieldIndex = 0;
+            for (; fieldIndex < recordType.getFieldNames().length; ++fieldIndex) {
+                fieldValue.reset();
+                serializers[fieldIndex].serialize(instance.getValueByPos(fieldIndex), fieldValue.getDataOutput());
+                recordBuilder.addField(fieldIndex, fieldValue);
+            }
+            try {
+                recordBuilder.write(out, writeTypeTag);
+            } catch (IOException | AsterixException e) {
+                throw new HyracksDataException(e);
+            }
+        } else {
+            throw new NotImplementedException("Serializer for schemaless records is not implemented.");
         }
     }
 
@@ -197,39 +219,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             fieldNames[i] = recType2.getFieldNames()[j];
             fieldTypes[i] = recType2.getFieldTypes()[j];
         }
-        try {
-            return new ARecordType(null, fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    @Override
-    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
-        this.serialize(instance, out, false);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
-        IARecordBuilder recordBuilder = new RecordBuilder();
-        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-
-        recordBuilder.reset(recordType);
-        recordBuilder.init();
-        if (recordType != null) {
-            for (int i = 0; i < recordType.getFieldNames().length; i++) {
-                fieldValue.reset();
-                serializers[i].serialize(instance.getValueByPos(i), fieldValue.getDataOutput());
-                recordBuilder.addField(i, fieldValue);
-            }
-            try {
-                recordBuilder.write(out, writeTypeTag);
-            } catch (IOException | AsterixException e) {
-                throw new HyracksDataException(e);
-            }
-        } else {
-            throw new NotImplementedException("Serializer for schemaless records is not implemented.");
-        }
+        return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
     public static final int getRecordLength(byte[] serRecord, int offset) {
