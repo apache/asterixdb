@@ -132,6 +132,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
         AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
+        AOrderedListType heterogeneousList = new AOrderedListType(BuiltinType.ANY, null);
         internalRecordBuilder.reset(MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         @SuppressWarnings("unchecked")
@@ -156,8 +157,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
                 fieldValue);
 
         // write field 2
-        primaryKeyListBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX]);
+        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX]);
         for (List<String> field : partitioningKeys) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -176,8 +177,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
                 fieldValue);
 
         // write field 3
-        primaryKeyListBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX]);
+        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX]);
         for (List<String> field : primaryKeys) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -203,7 +204,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
         List<String> filterField = getFilterField();
         if (filterField != null) {
-            listBuilder.reset(stringList);
+            listBuilder.reset(heterogeneousList);
             ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(FILTER_FIELD_NAME);

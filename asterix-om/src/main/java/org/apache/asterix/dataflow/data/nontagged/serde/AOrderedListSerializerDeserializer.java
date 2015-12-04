@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.asterix.builders.OrderedListBuilder;
@@ -64,9 +63,9 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     private void initSerializerDeserializer(IAType itemType) {
         this.itemType = itemType;
         serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
-        deserializer = itemType.getTypeTag() == ATypeTag.ANY ? AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(itemType) : AqlSerializerDeserializerProvider.INSTANCE
-                .getNonTaggedSerializerDeserializer(itemType);
+        deserializer = itemType.getTypeTag() == ATypeTag.ANY
+                ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
+                : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
     }
 
     @Override
@@ -87,14 +86,6 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
                     fixedSize = true;
                     break;
             }
-            
-            if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY)   
-            try {   
-                initSerializerDeserializer(BuiltinType.builtinTypeFromString(typeTag.name().toLowerCase()));    
-            } catch (AsterixException e) {  
-                throw new HyracksDataException(e);  
-            }
-            
 
             in.readInt(); // list size
             int numberOfitems;
@@ -112,8 +103,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             }
             AOrderedListType type = new AOrderedListType(itemType, "orderedlist");
             return new AOrderedList(type, items);
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }

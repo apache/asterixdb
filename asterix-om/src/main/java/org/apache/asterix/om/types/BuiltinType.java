@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.om.types;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class BuiltinType implements IAType {
 
@@ -742,8 +741,8 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
-    // AUUID_STRING is used when converting between the string representation of        
-    // UUID and corresponding a UUID instance       
+    // AUUID_STRING is used when converting between the string representation of
+    // UUID and corresponding a UUID instance
     public static final BuiltinType AUUID_STRING = new LowerCaseConstructorType() {
         private static final long serialVersionUID = 1L;
 
@@ -875,34 +874,6 @@ public abstract class BuiltinType implements IAType {
     @Override
     public int hash() {
         return getType().getTypeTag().serialize();
-    }
-
-    public static BuiltinType builtinTypeFromString(String str) throws AsterixException {
-        if (str.equals(BuiltinType.AINT32.getTypeName())) {
-            return BuiltinType.AINT32;
-        } else if (str.equals(BuiltinType.ASTRING.getTypeName())) {
-            return BuiltinType.ASTRING;
-        } else if (str.equals(BuiltinType.ADOUBLE.getTypeName())) {
-            return BuiltinType.ADOUBLE;
-        } else if (str.equals(BuiltinType.AFLOAT.getTypeName())) {
-            return BuiltinType.AFLOAT;
-        } else if (str.equals(BuiltinType.ANY.getTypeName())) {
-            return BuiltinType.ANY;
-        }
-        throw new AsterixException("No string translation for type: " + str + " .");
-    }
-
-    public static ATypeTag builtinTypeTagFromString(String str) throws AsterixException {
-        if (str.equals("int32")) {
-            return ATypeTag.INT32;
-        } else if (str.equals("string")) {
-            return ATypeTag.STRING;
-        } else if (str.equals("double")) {
-            return ATypeTag.DOUBLE;
-        } else if (str.equals("float")) {
-            return ATypeTag.FLOAT;
-        }
-        throw new AsterixException("No string translation for type: " + str + " .");
     }
 
 }

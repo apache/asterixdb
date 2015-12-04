@@ -107,8 +107,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 .getStringValue();
         String indexName = ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX))
                 .getStringValue();
-        IndexType indexStructure = IndexType.valueOf(((AString) rec
-                .getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX)).getStringValue());
+        IndexType indexStructure = IndexType
+                .valueOf(((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
+                        .getStringValue());
         IACursor fieldNameCursor = ((AOrderedList) rec
                 .getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX)).getCursor();
         List<List<String>> searchKey = new ArrayList<List<String>>();
@@ -200,8 +201,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX, fieldValue);
 
         // write field 4
-        primaryKeyListBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.INDEX_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX]);
+        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INDEX_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX]);
         this.searchKey = instance.getKeyFieldNames();
         for (List<String> field : this.searchKey) {
             listBuilder.reset(stringList);
@@ -239,7 +240,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         intSerde.serialize(new AInt32(instance.getPendingOp()), fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
 
-        // write optional field 8        
+        // write optional field 8
         if (instance.getGramLength() > 0) {
             fieldValue.reset();
             nameValue.reset();
@@ -256,7 +257,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (instance.isEnforcingKeyFileds()) {
             // write optional field 9
             OrderedListBuilder typeListBuilder = new OrderedListBuilder();
-            typeListBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
+            typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));
             ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
