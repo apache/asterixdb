@@ -92,6 +92,8 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private final MutableLong tempResourceIdForRegister;
     private final LogRecord logRecord;
 
+    private final AtomicInteger transactorNumActiveOperations;
+
     // TODO: implement transactionContext pool in order to avoid object
     // creations.
     // also, the pool can throttle the number of concurrent active jobs at every
@@ -109,6 +111,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         tempResourceIdForRegister = new MutableLong();
         logRecord = new LogRecord();
         logRecord.setNodeId(transactionSubsystem.getId());
+        transactorNumActiveOperations = new AtomicInteger(0);
     }
 
     @Override
@@ -233,7 +236,17 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     public void cleanupForAbort() {
         if (primaryIndexOpTracker != null) {
-            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(primaryIndexCallback);
+            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(transactorNumActiveOperations.get());
         }
+    }
+
+    @Override
+    public void incrementNumActiveOperations() {
+        transactorNumActiveOperations.incrementAndGet();
+    }
+
+    @Override
+    public void decrementNumActiveOperations() {
+        transactorNumActiveOperations.decrementAndGet();
     }
 }

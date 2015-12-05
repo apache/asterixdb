@@ -19,8 +19,6 @@
 
 package org.apache.asterix.common.transactions;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
@@ -33,7 +31,6 @@ public abstract class AbstractOperationCallback {
     protected final ITransactionContext txnCtx;
     protected final ILockManager lockManager;
     protected final long[] longHashes;
-    protected final AtomicInteger transactorLocalNumActiveOperations;
 
     public AbstractOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager) {
@@ -41,7 +38,6 @@ public abstract class AbstractOperationCallback {
         this.primaryKeyFields = primaryKeyFields;
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
-        this.transactorLocalNumActiveOperations = new AtomicInteger(0);
         this.longHashes = new long[2];
     }
 
@@ -50,20 +46,12 @@ public abstract class AbstractOperationCallback {
         return Math.abs((int) longHashes[0]);
     }
 
-    public void resetLocalNumActiveOperations() {
-        transactorLocalNumActiveOperations.set(0);
-    }
-
-    public int getLocalNumActiveOperations() {
-        return transactorLocalNumActiveOperations.get();
-    }
-
     public void incrementLocalNumActiveOperations() {
-        transactorLocalNumActiveOperations.incrementAndGet();
+        txnCtx.incrementNumActiveOperations();
     }
 
     public void decrementLocalNumActiveOperations() {
-        transactorLocalNumActiveOperations.decrementAndGet();
+        txnCtx.decrementNumActiveOperations();
     }
 
 }
