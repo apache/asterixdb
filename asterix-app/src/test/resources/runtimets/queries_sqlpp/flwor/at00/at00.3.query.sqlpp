@@ -27,10 +27,9 @@ use test;
 
 select element {'partkey':gen0.partkey,'pid':p,'shipdate':j.l_shipdate}
 from
-    ( select element {'partkey':partkey,'i':i}
-      from  LineItem as i
+    ( select element {'partkey':partkey, 'i':i}
+      from  (select element l from LineItem l order by l.l_partkey, l.l_shipdate) as i
       group by i.l_partkey as partkey
     ) as gen0,
     gen0.i as j at p
-where (p < 4)
-;
+where p < 4;

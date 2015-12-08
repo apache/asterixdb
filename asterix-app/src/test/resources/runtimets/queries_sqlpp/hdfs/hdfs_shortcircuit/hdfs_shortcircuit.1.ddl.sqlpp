@@ -18,6 +18,11 @@
  */
 /*
 * Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Perform a word-count over the data in the dataset.
+                 The external dataset is set to perform local reads (but this is not checked)
+* Expected Res : Success
+* Date         : 6th Mar 2015
+*/
 
 drop  database test if exists;
 create  database test;

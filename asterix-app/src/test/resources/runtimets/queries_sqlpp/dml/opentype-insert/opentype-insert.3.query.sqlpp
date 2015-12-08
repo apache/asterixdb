@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : opentype-insert.aql
  * Description     : verify static type casting
  * Expected Result : Success

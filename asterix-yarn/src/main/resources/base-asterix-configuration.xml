@@ -219,6 +219,11 @@
 		</description>
 	</property>
 
+        <property>
+                <name>compiler.pregelix.home</name>
+                <value>~/pregelix</value>
+        </property>
+
 	<property>
 		<name>web.port</name>
 		<value>19001</value>

@@ -20,11 +20,11 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -48,7 +48,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceUnnestForCollectionToSequenceRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -85,9 +86,9 @@ public class IntroduceUnnestForCollectionToSequenceRule implements IAlgebraicRew
         /** change the assign operator to an unnest operator */
         LogicalVariable var = assign.getVariables().get(0);
         @SuppressWarnings("unchecked")
-        UnnestOperator unnest = new UnnestOperator(var, new MutableObject<ILogicalExpression>(
-                new UnnestingFunctionCallExpression(
-                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+        UnnestOperator unnest = new UnnestOperator(var,
+                new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
                         new MutableObject<ILogicalExpression>(argExpr))));
         unnest.getInputs().addAll(assign.getInputs());
         opRef.setValue(unnest);

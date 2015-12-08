@@ -359,28 +359,26 @@ FROM [  (
         Where
           OperatorExpr [
             OperatorExpr [
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=ns ]
-                  Field=s_suppkey
-                ]
-                =
-                FieldAccessor [
-                  Variable [ Name=l ]
-                  Field=l_suppkey
-                ]
+              FieldAccessor [
+                Variable [ Name=ns ]
+                Field=s_suppkey
               ]
-              and
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=l ]
-                  Field=l_receiptdate
-                ]
-                >
-                FieldAccessor [
-                  Variable [ Name=l ]
-                  Field=l_commitdate
-                ]
+              =
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_suppkey
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_receiptdate
+              ]
+              >
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_commitdate
               ]
             ]
             and

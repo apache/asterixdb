@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset that uses the feed simulator adapter. 
+ * Description  : Create a feed dataset that uses the feed simulator adapter.
 
 use feeds_12;
 

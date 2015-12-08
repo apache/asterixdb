@@ -79,6 +79,7 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
 }
 
 class TypeTrait implements ITypeTraits {
+    private static final long serialVersionUID = 1L;
 
     @Override
     public boolean isFixedLength() {

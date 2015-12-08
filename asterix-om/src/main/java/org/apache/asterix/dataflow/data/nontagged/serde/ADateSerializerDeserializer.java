@@ -22,12 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
-import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.temporal.ADateParserFactory;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -36,9 +31,6 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
     private static final long serialVersionUID = 1L;
 
     public static final ADateSerializerDeserializer INSTANCE = new ADateSerializerDeserializer();
-    @SuppressWarnings("unchecked")
-    private static final ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADATE);
 
     private ADateSerializerDeserializer() {
     }
@@ -59,25 +51,6 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-    }
-
-    public static void parse(String date, DataOutput out) throws HyracksDataException {
-        AMutableDate aDate = new AMutableDate(0);
-
-        long chrononTimeInMs = 0;
-        try {
-            chrononTimeInMs = ADateParserFactory.parseDatePart(date, 0, date.length());
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
-
-        short temp = 0;
-        if (chrononTimeInMs < 0 && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-            temp = 1;
-        }
-        aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
-
-        dateSerde.serialize(aDate, out);
     }
 
     public static int getChronon(byte[] byteArray, int offset) {

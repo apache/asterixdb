@@ -21,9 +21,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -31,6 +29,8 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -53,7 +53,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -106,8 +107,8 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        List<String> pkFieldName = ((InternalDatasetDetails) dds.getDataset().getDatasetDetails()).getPrimaryKey().get(
-                0);
+        List<String> pkFieldName = ((InternalDatasetDetails) dds.getDataset().getDatasetDetails()).getPrimaryKey()
+                .get(0);
         ILogicalExpression rec0 = new VariableReferenceExpression(inputRecord);
         ILogicalExpression rec1 = createPrimaryKeyRecordExpression(pkFieldName);
         ILogicalExpression mergedRec = createRecordMergeFunction(rec0, rec1);
@@ -129,14 +130,14 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(new MutableObject<ILogicalExpression>(mergedRec));
         AbstractFunctionCallExpression notNullFn = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL), args);
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL), args);
         return notNullFn;
     }
 
     private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(List<String> pkFieldName) {
         //Create lowest level of nested uuid
         AbstractFunctionCallExpression uuidFn = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CREATE_UUID));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_UUID));
         List<Mutable<ILogicalExpression>> openRecordConsArgs = new ArrayList<>();
         Mutable<ILogicalExpression> pkFieldNameExpression = new MutableObject<ILogicalExpression>(
                 new ConstantExpression(new AsterixConstantValue(new AString(pkFieldName.get(pkFieldName.size() - 1)))));
@@ -144,17 +145,17 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalExpression> pkFieldValueExpression = new MutableObject<ILogicalExpression>(uuidFn);
         openRecordConsArgs.add(pkFieldValueExpression);
         AbstractFunctionCallExpression openRecFn = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
 
         //Create higher levels
         for (int i = pkFieldName.size() - 2; i > -1; i--) {
             AString fieldName = new AString(pkFieldName.get(i));
             openRecordConsArgs = new ArrayList<>();
-            openRecordConsArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(
-                    new AsterixConstantValue(fieldName))));
+            openRecordConsArgs.add(
+                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(fieldName))));
             openRecordConsArgs.add(new MutableObject<ILogicalExpression>(openRecFn));
             openRecFn = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
         }
 
         return openRecFn;
@@ -165,7 +166,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         recordMergeFnArgs.add(new MutableObject<>(rec0));
         recordMergeFnArgs.add(new MutableObject<>(rec1));
         AbstractFunctionCallExpression recordMergeFn = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
         return recordMergeFn;
     }
 }

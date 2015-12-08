@@ -37,7 +37,6 @@ import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedPolicy;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -66,13 +65,11 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.FEED_POLICY_RECORDTYPE);
-    private AMutableInt32 aInt32;
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
     public FeedPolicyTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FEED_POLICY_DATASET.getFieldCount());
-        aInt32 = new AMutableInt32(-1);
         aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
@@ -83,7 +80,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         int recordLength = frameTuple.getFieldLength(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord feedPolicyRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord feedPolicyRecord = recordSerDes.deserialize(in);
         return createFeedPolicyFromARecord(feedPolicyRecord);
     }
 
@@ -150,8 +147,8 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         // write field 3 (properties)
         Map<String, String> properties = feedPolicy.getProperties();
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
-        listBuilder
-                .reset((AUnorderedListType) MetadataRecordTypes.FEED_POLICY_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX]);
+        listBuilder.reset((AUnorderedListType) MetadataRecordTypes.FEED_POLICY_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX]);
         for (Map.Entry<String, String> property : properties.entrySet()) {
             String name = property.getKey();
             String value = property.getValue();

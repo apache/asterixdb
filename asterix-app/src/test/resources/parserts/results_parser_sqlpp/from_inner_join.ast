@@ -28,6 +28,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     ]
     AS
     Variable [ Name=m ]
+    ON
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=s ]

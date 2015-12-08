@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : scan-insert-inverted-index-word-secondary-index.aql
- * Description     : This test is intended to test insertion from secondary keyword inverted index. 
+ * Description     : This test is intended to test insertion from secondary keyword inverted index.
  * Expected Result : Success
  * Date            : March 31 2013
  */

@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ARecord implements IAObject {
 
@@ -61,6 +60,11 @@ public class ARecord implements IAObject {
 
     @Override
     public boolean deepEqual(IAObject obj) {
+        return equals(obj);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
         if (!(obj instanceof ARecord)) {
             return false;
         }

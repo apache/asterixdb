@@ -29,8 +29,6 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class AUUIDTypeComputer implements IResultTypeComputer {
 
-    private static final long serialVersionUID = 1L;
-
     public static final AUUIDTypeComputer INSTANCE = new AUUIDTypeComputer();
 
     private AUUIDTypeComputer() {

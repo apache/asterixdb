@@ -19,11 +19,15 @@
 package org.apache.asterix.api.common;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.EnumSet;
 
+import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
 import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
@@ -36,6 +40,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class AsterixHyracksIntegrationUtil {
 
+    private static final String IO_DIR_KEY = "java.io.tmpdir";
     public static final int NODES = 2;
     public static final int PARTITONS = 2;
 
@@ -43,11 +48,20 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
-    private static ClusterControllerService cc;
-    private static NodeControllerService[] ncs = new NodeControllerService[NODES];
-    private static IHyracksClientConnection hcc;
+    public static ClusterControllerService cc;
+    public static NodeControllerService[] ncs = new NodeControllerService[NODES];
+    public static IHyracksClientConnection hcc;
 
-    public static void init() throws Exception {
+    protected static AsterixTransactionProperties txnProperties;
+
+    public static void init(boolean deleteOldInstanceData) throws Exception {
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+        if (deleteOldInstanceData) {
+            deleteTransactionLogs();
+            removeTestStorageFiles();
+        }
+
         CCConfig ccConfig = new CCConfig();
         ccConfig.clusterNetIpAddress = "127.0.0.1";
         ccConfig.clientNetIpAddress = "127.0.0.1";
@@ -61,6 +75,7 @@ public class AsterixHyracksIntegrationUtil {
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
+        // Starts ncs.
         int n = 0;
         for (String ncName : getNcNames()) {
             NCConfig ncConfig1 = new NCConfig();
@@ -86,7 +101,6 @@ public class AsterixHyracksIntegrationUtil {
             ncs[n].start();
             ++n;
         }
-
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
     }
 
@@ -110,14 +124,20 @@ public class AsterixHyracksIntegrationUtil {
         return hcc;
     }
 
-    public static void deinit() throws Exception {
+    public static void deinit(boolean deleteOldInstanceData) throws Exception {
         for (int n = 0; n < ncs.length; ++n) {
             if (ncs[n] != null)
                 ncs[n].stop();
 
         }
-        if (cc != null)
+        if (cc != null) {
             cc.stop();
+        }
+
+        if (deleteOldInstanceData) {
+            deleteTransactionLogs();
+            removeTestStorageFiles();
+        }
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
@@ -125,6 +145,23 @@ public class AsterixHyracksIntegrationUtil {
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
+    }
+
+    private static void removeTestStorageFiles() throws IOException {
+        File dir = new File(System.getProperty(IO_DIR_KEY));
+        for (String ncName : AsterixHyracksIntegrationUtil.getNcNames()) {
+            File ncDir = new File(dir, ncName);
+            FileUtils.deleteQuietly(ncDir);
+        }
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
+        }
     }
 
     /**
@@ -136,9 +173,10 @@ public class AsterixHyracksIntegrationUtil {
      */
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void run() {
                 try {
-                    deinit();
+                    deinit(false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -147,7 +185,7 @@ public class AsterixHyracksIntegrationUtil {
         try {
             System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
 
-            init();
+            init(false);
             while (true) {
                 Thread.sleep(10000);
             }

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
@@ -55,6 +55,8 @@ import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedLifecycleListener;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
@@ -89,6 +91,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     private static final Logger LOGGER = Logger.getLogger(ActiveJobLifecycleListener.class.getName());
 
     public static ActiveJobLifecycleListener INSTANCE = new ActiveJobLifecycleListener();
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     private final LinkedBlockingQueue<Message> jobEventInbox;
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
@@ -153,7 +156,11 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     }
 
     /*
-     * Traverse job specification to categorize job 
+    <<<<<<< HEAD:asterix-app/src/main/java/org/apache/asterix/feeds/ActiveJobLifecycleListener.java
+     * Traverse job specification to categorize job
+    =======
+     * Traverse job specification to categorize job as a feed intake job or a feed collection job
+    >>>>>>> master:asterix-app/src/main/java/org/apache/asterix/feeds/FeedLifecycleListener.java
      */
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
@@ -169,8 +176,8 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
                         feedPolicy);
                 break;
             } else if (opDesc instanceof FeedIntakeOperatorDescriptor) {
-                jobNotificationHandler.registerFeedIntakeJob(((FeedIntakeOperatorDescriptor) opDesc).getFeedId(),
-                        jobId, spec);
+                jobNotificationHandler.registerFeedIntakeJob(((FeedIntakeOperatorDescriptor) opDesc).getFeedId(), jobId,
+                        spec);
                 break;
             } else if (opDesc instanceof ChannelMetaOperatorDescriptor) {
                 ActiveJobId channelJobId = null;
@@ -236,7 +243,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
 
             for (FeedConnectJobInfo jInfo : connectJobInfos) {
                 if (jInfo instanceof FeedConnectJobInfo) {
-                    FeedConnectJobInfo connectInfo = (FeedConnectJobInfo) jInfo;
+                    FeedConnectJobInfo connectInfo = jInfo;
                     if (connectInfo.getStorageLocations().contains(deadNode)) {
                         continue;
                     }
@@ -377,6 +384,8 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
                     }
                 }
                 break;
+            default:
+                break;
         }
 
     }
@@ -411,9 +420,9 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
                 DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(feedId.getDataverse()));
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, pc);
+                QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
-                        AqlTranslator.ResultDelivery.SYNC);
+                        QueryTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("End irrecoverable feed: " + cInfo.getConnectionId());
                 }
@@ -526,10 +535,12 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
         return jobNotificationHandler.getFeedJoint(feedJointKey);
     }
 
+    @Override
     public void registerFeedEventSubscriber(FeedConnectionId connectionId, IActiveLifecycleEventSubscriber subscriber) {
         jobNotificationHandler.registerEventSubscriber(connectionId, subscriber);
     }
 
+    @Override
     public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IActiveLifecycleEventSubscriber subscriber) {
         jobNotificationHandler.deregisterEventSubscriber(connectionId, subscriber);
 

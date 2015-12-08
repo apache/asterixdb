@@ -11,9 +11,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -25,9 +23,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       >=
       LiteralExpr [STRING] [AA]
@@ -43,9 +39,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -57,9 +51,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       <=
       LiteralExpr [STRING] [AA]
@@ -75,9 +67,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -89,9 +79,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       !=
       LiteralExpr [STRING] [AA]

@@ -1,0 +1,11 @@
+DataverseUse test
+TypeDecl TypeOpen [
+  open RecordType {
+    id : int64,
+    int_m : int64,
+    int_o : int64?,
+    string_m : string,
+    string_o : string?
+  }
+]
+DatasetDecl DataOpen(TypeOpen) partitioned by [[id]]

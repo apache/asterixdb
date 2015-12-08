@@ -144,6 +144,8 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                     }
                 }
                 return retValue = itemObject;
+            default:
+                break;
         }
         return retValue;
     }

@@ -19,7 +19,7 @@
 /*
  * Test case Name : strconcat01.aql
  * Description    : Test string-concat([string]) function.
- *                : Pass the strings(which are in internal dataset) to string-concat function for concatenation. 
+ *                : Pass the strings(which are in internal dataset) to string-concat function for concatenation.
  * Success        : Yes
  * Date           : 16th April 2012
  */

@@ -41,14 +41,12 @@ public class SocketMessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(SocketMessageListener.class.getName());
 
-    private final int port;
     private final IMessageReceiver<String> messageReceiver;
     private final MessageListenerServer listenerServer;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     public SocketMessageListener(int port, IMessageReceiver<String> messageReceiver) {
-        this.port = port;
         this.messageReceiver = messageReceiver;
         this.listenerServer = new MessageListenerServer(port, messageReceiver);
     }
@@ -128,7 +126,7 @@ public class SocketMessageListener {
                     char ch;
                     while (true) {
                         ch = (char) in.read();
-                        if (((int) ch) == -1) {
+                        if ((ch) == -1) {
                             break;
                         }
                         while (ch != EOL) {

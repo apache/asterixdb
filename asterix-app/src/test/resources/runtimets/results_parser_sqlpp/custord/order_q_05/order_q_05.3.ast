@@ -33,7 +33,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c1 ]
-      Index:       Variable [ Name=c1 ]
+      Index:       LiteralExpr [LONG] [0]
     ]
   )
   (
@@ -41,7 +41,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c1 ]
-      Index:       Variable [ Name=c1 ]
+      Index:       LiteralExpr [LONG] [4]
     ]
   )
   (

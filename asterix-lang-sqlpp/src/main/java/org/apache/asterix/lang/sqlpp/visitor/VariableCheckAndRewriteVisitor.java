@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -69,10 +70,27 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppFormatPrintUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
 public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpressionVisitor<Expression, Void> {
 
     private final ScopeChecker scopeChecker = new ScopeChecker();
+    private final LangRewritingContext context;
+    private final boolean overwrite;
+
+    /**
+     * @param context,
+     *            manages ids of variables and guarantees uniqueness of variables.
+     * @param overwrite,
+     *            whether rewrite unbounded variables to dataset function calls.
+     *            This flag can only be true for rewriting a top-level query.
+     *            It should be false for rewriting the body expression of a user-defined function.
+     */
+    public VariableCheckAndRewriteVisitor(LangRewritingContext context, boolean overwrite) {
+        this.context = context;
+        scopeChecker.setVarCounter(new Counter(context.getVarCounter()));
+        this.overwrite = overwrite;
+    }
 
     @Override
     public Expression visit(FromClause fromClause, Void arg) throws AsterixException {
@@ -88,7 +106,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(fromTerm.getLeftExpression().accept(this, arg));
 
-        // Registers the data item variable
+        // Registers the data item variable.
         VariableExpr leftVar = fromTerm.getLeftVariable();
         scopeChecker.getCurrentScope().addNewVarSymbolToScope(leftVar.getVar());
 
@@ -249,6 +267,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     @Override
     public Expression visit(Query q, Void arg) throws AsterixException {
         q.setBody(q.getBody().accept(this, arg));
+        q.setVarCounter(scopeChecker.getVarCounter());
+        context.setVarCounter(scopeChecker.getVarCounter());
         return null;
     }
 
@@ -316,8 +336,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     @Override
     public Expression visit(LetClause letClause, Void arg) throws AsterixException {
         scopeChecker.extendCurrentScope();
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(letClause.getVarExpr().getVar());
         letClause.setBindingExpr(letClause.getBindingExpr().accept(this, arg));
+        scopeChecker.getCurrentScope().addNewVarSymbolToScope(letClause.getVarExpr().getVar());
         return null;
     }
 
@@ -449,7 +469,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     public Expression visit(IndexAccessor ia, Void arg) throws AsterixException {
         ia.setExpr(ia.getExpr().accept(this, arg));
         if (ia.getIndexExpr() != null) {
-            ia.setIndexExpr(ia.getExpr());
+            ia.setIndexExpr(ia.getIndexExpr());
         }
         return ia;
     }
@@ -471,6 +491,9 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
 
     // Rewrites for global variable (e.g., dataset) references.
     private Expression datasetRewrite(Expression expr) throws AsterixException {
+        if (!overwrite) {
+            return expr;
+        }
         String funcName = "dataset";
         String dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
         FunctionSignature signature = new FunctionSignature(dataverse, funcName, 1);

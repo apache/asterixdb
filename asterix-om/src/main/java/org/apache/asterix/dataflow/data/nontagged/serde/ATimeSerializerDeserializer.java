@@ -22,11 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
-import org.apache.asterix.om.base.temporal.ATimeParserFactory;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -35,11 +31,6 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     private static final long serialVersionUID = 1L;
 
     public static final ATimeSerializerDeserializer INSTANCE = new ATimeSerializerDeserializer();
-
-    @SuppressWarnings("unchecked")
-    private static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ATIME);
-    private static final AMutableTime aTime = new AMutableTime(0);
 
     private ATimeSerializerDeserializer() {
     }
@@ -62,20 +53,6 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-    }
-
-    public static void parse(String time, DataOutput out) throws HyracksDataException {
-        int chrononTimeInMs;
-
-        try {
-            chrononTimeInMs = ATimeParserFactory.parseTimePart(time, 0, time.length());
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
-
-        aTime.setValue(chrononTimeInMs);
-
-        timeSerde.serialize(aTime, out);
     }
 
     public static int getChronon(byte[] byteArray, int offset) {

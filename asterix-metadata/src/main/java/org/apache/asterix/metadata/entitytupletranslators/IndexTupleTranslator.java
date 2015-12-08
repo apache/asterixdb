@@ -122,7 +122,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
             searchKey.add(nestedFieldName);
         }
-        int indexKeyTypeFieldPos = rec.getType().findFieldPosition(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
+        int indexKeyTypeFieldPos = rec.getType().getFieldIndex(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
         IACursor fieldTypeCursor = new ACollectionCursor();
         if (indexKeyTypeFieldPos > 0)
             fieldTypeCursor = ((AOrderedList) rec.getValueByPos(indexKeyTypeFieldPos)).getCursor();
@@ -141,7 +141,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 searchKeyType.add(fieldType);
             }
         }
-        int isEnforcedFieldPos = rec.getType().findFieldPosition(INDEX_ISENFORCED_FIELD_NAME);
+        int isEnforcedFieldPos = rec.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
         Boolean isEnforcingKeys = false;
         if (isEnforcedFieldPos > 0)
             isEnforcingKeys = ((ABoolean) rec.getValueByPos(isEnforcedFieldPos)).getBoolean();
@@ -151,7 +151,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 .getIntegerValue();
         // Check if there is a gram length as well.
         int gramLength = -1;
-        int gramLenPos = rec.getType().findFieldPosition(GRAM_LENGTH_FIELD_NAME);
+        int gramLenPos = rec.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
         if (gramLenPos >= 0) {
             gramLength = ((AInt32) rec.getValueByPos(gramLenPos)).getIntegerValue();
         }

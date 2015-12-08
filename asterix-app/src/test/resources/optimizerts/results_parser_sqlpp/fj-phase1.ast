@@ -79,9 +79,6 @@ LetVariable [ Name=tokens ]
           With
           Variable [ Name=lottery_number ]
           Variable [ Name=user ]
-          Variable [ Name=lottery_number ]
-          Variable [ Name=tokens ]
-          Variable [ Name=user ]
 
         LetVariable [ Name=count ]
           :=

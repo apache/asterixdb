@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-and-scan-dataset-with-index.aql
  * Description     : This test is intended to test inserting into a dataset that has a secondary index and scan
  * the data at the same time where we insert a materializing to prevent the possibility of deadlatch.

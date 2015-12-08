@@ -25,7 +25,6 @@ import java.util.Stack;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -50,6 +49,7 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringReader;
 
 //The record merge evaluator is used to combine two records with no matching fieldnames
 //If both records have the same fieldname for a non-record field anywhere in the schema, the merge will fail
@@ -66,6 +66,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RecordMergeDescriptor();
         }
@@ -87,20 +88,10 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
             private static final long serialVersionUID = 1L;
 
-            @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
-            private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
-
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                final ARecordType recType;
-                try {
-                    recType = new ARecordType(outRecType.getTypeName(), outRecType.getFieldNames(),
-                            outRecType.getFieldTypes(), outRecType.isOpen());
-                } catch (AsterixException | HyracksDataException e) {
-                    throw new IllegalStateException();
-                }
+                final ARecordType recType = new ARecordType(outRecType.getTypeName(), outRecType.getFieldNames(),
+                        outRecType.getFieldTypes(), outRecType.isOpen());
 
                 final PointableAllocator pa = new PointableAllocator();
                 final IVisitablePointable vp0 = pa.allocateRecordValue(inRecType0);
@@ -112,15 +103,18 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                 final ICopyEvaluator eval0 = args[0].createEvaluator(abvs0);
                 final ICopyEvaluator eval1 = args[1].createEvaluator(abvs1);
 
-                final Stack<RecordBuilder> rbStack = new Stack<RecordBuilder>();
-
-                final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
-
-                final ByteArrayAccessibleOutputStream nameOutputStream = new ByteArrayAccessibleOutputStream();
-                final ByteArrayInputStream namebais = new ByteArrayInputStream(nameOutputStream.getByteArray());
-                final DataInputStream namedis = new DataInputStream(namebais);
-
                 return new ICopyEvaluator() {
+                    @SuppressWarnings("unchecked")
+                    final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    final UTF8StringReader reader = new UTF8StringReader();
+
+                    private final Stack<RecordBuilder> rbStack = new Stack<RecordBuilder>();
+                    private final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
+                    private final ByteArrayAccessibleOutputStream nameOutputStream = new ByteArrayAccessibleOutputStream();
+                    private final ByteArrayInputStream namebais = new ByteArrayInputStream(
+                            nameOutputStream.getByteArray());
+                    private final DataInputStream namedis = new DataInputStream(namebais);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -156,8 +150,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                     }
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
-                            ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel) throws IOException,
-                            AsterixException, AlgebricksException {
+                            ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel)
+                                    throws IOException, AsterixException, AlgebricksException {
                         if (rbStack.size() < (nestedLevel + 1)) {
                             rbStack.push(new RecordBuilder());
                         }
@@ -221,17 +215,17 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         nameOutputStream.write(fieldNamePointable.getByteArray(),
                                 fieldNamePointable.getStartOffset() + 1, fieldNamePointable.getLength());
                         namedis.reset();
-                        String fieldName = aStringSerDer.deserialize(namedis).getStringValue();
+                        String fieldName = reader.readUTF(namedis);
 
                         //Add the merged field
                         if (combinedType.isClosedField(fieldName)) {
-                            int pos = combinedType.findFieldPosition(fieldName);
+                            int pos = combinedType.getFieldIndex(fieldName);
                             if (rightValue == null) {
                                 rbStack.get(nestedLevel).addField(pos, leftValue);
                             } else {
                                 mergeFields((ARecordType) combinedType.getFieldType(fieldName),
-                                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue, false,
-                                        nestedLevel + 1);
+                                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue,
+                                        false, nestedLevel + 1);
                                 tabvs.reset();
                                 rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
                                 rbStack.get(nestedLevel).addField(pos, tabvs);
@@ -241,8 +235,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                                 rbStack.get(nestedLevel).addField(fieldNamePointable, leftValue);
                             } else {
                                 mergeFields((ARecordType) combinedType.getFieldType(fieldName),
-                                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue, false,
-                                        nestedLevel + 1);
+                                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue,
+                                        false, nestedLevel + 1);
                                 tabvs.reset();
                                 rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
                                 rbStack.get(nestedLevel).addField(fieldNamePointable, tabvs);

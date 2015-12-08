@@ -22,7 +22,7 @@ use tpch;
 
 select element {'s_name':t4.s_name,'s_address':t4.s_address}
 from  (
-    select element {'ps_suppkey':pst1.ps_suppkey}
+    select distinct element {'ps_suppkey':pst1.ps_suppkey}
     from  (
         select element {'l_partkey':l_partkey,'l_suppkey':l_suppkey,'sum_quantity':(0.5 * tpch.sum((
                   select element i.l_quantity
@@ -35,7 +35,7 @@ from  (
         select element {'ps_suppkey':ps.ps_suppkey,'ps_partkey':ps.ps_partkey,'ps_availqty':ps.ps_availqty}
         from  Partsupp as ps,
               (
-            select element {'p_partkey':p.p_partkey}
+            select distinct element {'p_partkey':p.p_partkey}
             from  Part as p
         ) as t1
         where (ps.ps_partkey = t1.p_partkey)

@@ -38,7 +38,7 @@ import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
-import org.apache.asterix.jobgen.AqlLogicalExpressionJobGen;
+import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -116,7 +116,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             AqlBinaryHashFunctionFamilyProvider.INSTANCE, AqlBinaryComparatorFactoryProvider.INSTANCE,
             AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
             AqlADMPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
-            new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(AqlLogicalExpressionJobGen.INSTANCE),
+            new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE),
             AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null, null,
             GlobalConfig.DEFAULT_FRAME_SIZE, null);
 
@@ -196,7 +196,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         .getValue()).getValue()).getObject()).getStringValue();
                 int k;
                 try {
-                    k = rt.findFieldPosition(str);
+                    k = rt.getFieldIndex(str);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

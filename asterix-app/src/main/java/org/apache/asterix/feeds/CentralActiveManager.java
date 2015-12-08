@@ -25,12 +25,16 @@ import java.util.List;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.ICentralActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveLoadManager;
+import org.apache.asterix.common.feeds.api.ICentralActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.feeds.SocketMessageListener;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
@@ -41,6 +45,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 public class CentralActiveManager implements ICentralActiveManager {
 
     private static final ICentralActiveManager centralFeedManager = new CentralActiveManager();
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     public static ICentralActiveManager getInstance() {
         return centralFeedManager;
@@ -90,15 +95,15 @@ public class CentralActiveManager implements ICentralActiveManager {
     public static class AQLExecutor {
 
         private static final PrintWriter out = new PrintWriter(System.out, true);
+        private static final IParserFactory parserFactory = new AQLParserFactory();
 
         public static void executeAQL(String aql) throws Exception {
-            AQLParser parser = new AQLParser(new StringReader(aql));
-            List<Statement> statements;
-            statements = parser.Statement();
+            IParser parser = parserFactory.createParser(new StringReader(aql));
+            List<Statement> statements = parser.parse();
             SessionConfig pc = new SessionConfig(out, OutputFormat.ADM);
-            AqlTranslator translator = new AqlTranslator(statements, pc);
+            QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
             translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
-                    AqlTranslator.ResultDelivery.SYNC);
+                    QueryTranslator.ResultDelivery.SYNC);
         }
     }
 

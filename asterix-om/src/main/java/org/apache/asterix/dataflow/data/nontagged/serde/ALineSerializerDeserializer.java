@@ -23,12 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ALine;
-import org.apache.asterix.om.base.AMutableLine;
-import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -38,12 +34,8 @@ public class ALineSerializerDeserializer implements ISerializerDeserializer<ALin
 
     public static final ALineSerializerDeserializer INSTANCE = new ALineSerializerDeserializer();
 
-    @SuppressWarnings("unchecked")
-    private final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ALINE);
-    private final static AMutableLine aLine = new AMutableLine(null, null);
-    private final static AMutablePoint aLinePoint1 = new AMutablePoint(0, 0);
-    private final static AMutablePoint aLinePoint2 = new AMutablePoint(0, 0);
+    private ALineSerializerDeserializer() {
+    }
 
     @Override
     public ALine deserialize(DataInput in) throws HyracksDataException {
@@ -92,19 +84,4 @@ public class ALineSerializerDeserializer implements ISerializerDeserializer<ALin
         }
     }
 
-    public static void parse(String line, DataOutput out) throws HyracksDataException {
-        try {
-            String[] points = line.split(" ");
-            if (points.length != 2)
-                throw new HyracksDataException("line consists of only 2 points.");
-            aLinePoint1.setValue(Double.parseDouble(points[0].split(",")[0]),
-                    Double.parseDouble(points[0].split(",")[1]));
-            aLinePoint2.setValue(Double.parseDouble(points[1].split(",")[0]),
-                    Double.parseDouble(points[1].split(",")[1]));
-            aLine.setValue(aLinePoint1, aLinePoint2);
-            lineSerde.serialize(aLine, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(line + " can not be an instance of line");
-        }
-    }
 }

@@ -25,26 +25,26 @@ use test;
 
 
 insert into tsdata
-select element {'id':1,'timestamp':test.datetime('-1987-11-19T23:49:23.938')};
+{'id':1,'timestamp':test.datetime('-1987-11-19T23:49:23.938')};
 insert into tsdata
-select element {'id':2,'timestamp':test.datetime('-1987-11-20T00:27:13.432')};
+{'id':2,'timestamp':test.datetime('-1987-11-20T00:27:13.432')};
 insert into tsdata
-select element {'id':3,'timestamp':test.datetime('-1987-11-18T18:00:00')};
+{'id':3,'timestamp':test.datetime('-1987-11-18T18:00:00')};
 insert into tsdata
-select element {'id':4,'timestamp':test.datetime('19871119T234923938')};
+{'id':4,'timestamp':test.datetime('19871119T234923938')};
 insert into tsdata
-select element {'id':5,'timestamp':test.datetime('1987-11-19T23:58:17.038')};
+{'id':5,'timestamp':test.datetime('1987-11-19T23:58:17.038')};
 insert into tsdata
-select element {'id':6,'timestamp':test.datetime('1987-11-19T23:30:00')};
+{'id':6,'timestamp':test.datetime('1987-11-19T23:30:00')};
 insert into tsdata
-select element {'id':7,'timestamp':test.datetime('1987-11-19T23:22:38')};
+{'id':7,'timestamp':test.datetime('1987-11-19T23:22:38')};
 insert into tsdata
-select element {'id':8,'timestamp':test.datetime('1988-01-21T17:28:13.900')};
+{'id':8,'timestamp':test.datetime('1988-01-21T17:28:13.900')};
 insert into tsdata
-select element {'id':9,'timestamp':test.datetime('-1987-11-19T23:49:23.938')};
+{'id':9,'timestamp':test.datetime('-1987-11-19T23:49:23.938')};
 insert into tsdata
-select element {'id':10,'timestamp':test.datetime('-0987-07-01T09:35:28.039')};
+{'id':10,'timestamp':test.datetime('-0987-07-01T09:35:28.039')};
 insert into tsdata
-select element {'id':11,'timestamp':test.datetime('2012-11-19T23:49:23.938')};
+{'id':11,'timestamp':test.datetime('2012-11-19T23:49:23.938')};
 insert into tsdata
-select element {'id':12,'timestamp':test.datetime('2013-11-19T23:49:23.938')};
+{'id':12,'timestamp':test.datetime('2013-11-19T23:49:23.938')};

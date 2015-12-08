@@ -23,9 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixRuntimeException;
@@ -44,6 +41,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -138,10 +137,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         ConstantExpression ce = (ConstantExpression) e1;
         IAObject obj = ((AsterixConstantValue) ce.getValue()).getObject();
-        String fldName;
-        if (obj.getType().getTypeTag() == ATypeTag.STRING) {
-            fldName = ((AString) obj).getStringValue();
-        } else {
+        if (obj.getType().getTypeTag() != ATypeTag.STRING) {
             int pos = ((AInt32) obj).getIntegerValue();
             String tName = dataset.getItemTypeName();
             IAType t = mp.findType(dataset.getDataverseName(), tName);
@@ -152,7 +148,6 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             if (pos >= rt.getFieldNames().length) {
                 return false;
             }
-            fldName = rt.getFieldNames()[pos];
         }
 
         List<Index> datasetIndexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
@@ -171,8 +166,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (op2.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
-        ILogicalExpression e1 = (ILogicalExpression) access.getAnnotations().get(
-                AsterixOperatorAnnotations.FIELD_ACCESS);
+        ILogicalExpression e1 = (ILogicalExpression) access.getAnnotations()
+                .get(AsterixOperatorAnnotations.FIELD_ACCESS);
         if (e1 == null) {
             return false;
         }
@@ -204,6 +199,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         List<LogicalVariable> usedInAccess = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(access, usedInAccess);
+
         List<LogicalVariable> produced2 = new LinkedList<LogicalVariable>();
         if (op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
             VariableUtilities.getLiveVariables(op2, produced2);
@@ -237,9 +233,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 for (Pair<LogicalVariable, LogicalVariable> m : varMappings) {
                     LogicalVariable v2 = context.newVar();
                     LogicalVariable oldVar = access.getVariables().get(0);
-                    g.getDecorList().add(
-                            new Pair<LogicalVariable, Mutable<ILogicalExpression>>(oldVar,
-                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v2))));
+                    g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(oldVar,
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v2))));
                     changed = true;
                     access.getVariables().set(0, v2);
                     VariableUtilities.substituteVariables(access, m.first, m.second, context);
@@ -375,7 +370,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
     // indirect recursivity with propagateFieldAccessRec
     private void pushAccessDown(Mutable<ILogicalOperator> fldAccessOpRef, ILogicalOperator op2,
             Mutable<ILogicalOperator> inputOfOp2, IOptimizationContext context, String finalAnnot)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         ILogicalOperator fieldAccessOp = fldAccessOpRef.getValue();
         fldAccessOpRef.setValue(op2);
         List<Mutable<ILogicalOperator>> faInpList = fieldAccessOp.getInputs();

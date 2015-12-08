@@ -23,18 +23,24 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    public QueryAPIServlet(ILangCompilationProvider compilationProvider) {
+        super(compilationProvider);
+    }
+
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("query");
     }
 
     protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.FUNCTION_DECL, Kind.QUERY, Kind.SET, Kind.WRITE, Kind.RUN };
+        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.FUNCTION_DECL, Kind.QUERY, Kind.SET, Kind.WRITE,
+                Kind.RUN };
         return Arrays.asList(statementsArray);
     }
 

@@ -20,7 +20,4 @@
 use test;
 
 
-select element (x and y)
-from  ['true'] as x,
-      ['false'] as y
-;
+(test.boolean('true') and test.boolean('false'));

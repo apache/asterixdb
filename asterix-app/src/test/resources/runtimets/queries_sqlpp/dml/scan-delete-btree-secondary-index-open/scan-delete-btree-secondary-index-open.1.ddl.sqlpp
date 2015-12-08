@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : scan-delete-btree-secondary-index-open.aql
- * Description     : This test is intended to test deletion from secondary btree indexes that are built on open fields 
+ * Description     : This test is intended to test deletion from secondary btree indexes that are built on open fields
  * Expected Result : Success
  * Date            : Feb 13 2014
  */

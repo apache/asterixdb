@@ -1,0 +1,74 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_custkey]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=c_custkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_orderkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [len_c_comment]
+    :
+    FunctionCall test.string-length@1[
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_comment
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [len_o_comment]
+    :
+    FunctionCall test.string-length@1[
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_comment
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c_comment]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=c_comment
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customer]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Order]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=c_custkey
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_custkey
+    ]
+  ]

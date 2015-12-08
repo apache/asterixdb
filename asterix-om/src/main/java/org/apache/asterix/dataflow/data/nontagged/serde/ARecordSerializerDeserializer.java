@@ -48,33 +48,23 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class ARecordSerializerDeserializer implements ISerializerDeserializer<ARecord> {
     private static final long serialVersionUID = 1L;
 
-    public static final ARecordSerializerDeserializer CREATE_SCHEMALESS_INSTANCE() {
-        return new ARecordSerializerDeserializer();
-    }
+    public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
 
-    private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
-    private AObjectSerializerDeserializer aObjSerDer = null;
-    private AObjectSerializerDeserializer getObjSerDer() {
-        if (aObjSerDer == null){
-            aObjSerDer = new AObjectSerializerDeserializer();
-        }
-        return aObjSerDer;
-    }
-
-    private ARecordType recordType;
-    private int numberOfSchemaFields = 0;
+    private final ARecordType recordType;
+    private final int numberOfSchemaFields;
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer serializers[];
+    private final ISerializerDeserializer serializers[];
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer deserializers[];
+    private final ISerializerDeserializer deserializers[];
 
     private ARecordSerializerDeserializer() {
+        this(null);
     }
 
     public ARecordSerializerDeserializer(ARecordType recordType) {
-        this.recordType = recordType;
         if (recordType != null) {
+            this.recordType = recordType;
             this.numberOfSchemaFields = recordType.getFieldNames().length;
             serializers = new ISerializerDeserializer[numberOfSchemaFields];
             deserializers = new ISerializerDeserializer[numberOfSchemaFields];
@@ -84,9 +74,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 if (t.getTypeTag() == ATypeTag.UNION) {
                     if (((AUnionType) t).isNullableType()) {
                         t2 = ((AUnionType) recordType.getFieldTypes()[i]).getNullableType();
-                        serializers[i] = AqlSerializerDeserializerProvider.INSTANCE
-                                .getSerializerDeserializer(((AUnionType) recordType.getFieldTypes()[i])
-                                        .getNullableType());
+                        serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                ((AUnionType) recordType.getFieldTypes()[i]).getNullableType());
                     } else {
                         // union .. the general case
                         throw new NotImplementedException();
@@ -97,6 +86,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2);
                 deserializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
             }
+        } else {
+            this.recordType = null;
+            this.numberOfSchemaFields = 0;
+            this.serializers = null;
+            this.deserializers = null;
         }
     }
 
@@ -132,12 +126,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 }
                 for (int fieldId = 0; fieldId < numberOfSchemaFields; fieldId++) {
                     if (hasNullableFields && ((nullBitMap[fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)) {
-                        closedFields[fieldId] = (IAObject) ANull.NULL;
+                        closedFields[fieldId] = ANull.NULL;
                         continue;
                     }
                     closedFields[fieldId] = (IAObject) deserializers[fieldId].deserialize(in);
                 }
-
             }
 
             if (isExpanded) {
@@ -150,8 +143,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     in.readInt();
                 }
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    fieldNames[i] = aStringSerDer.deserialize(in).getStringValue();
-                    openFields[i] = getObjSerDer().deserialize(in);
+                    fieldNames[i] = AStringSerializerDeserializer.INSTANCE.deserialize(in).getStringValue();
+                    openFields[i] = AObjectSerializerDeserializer.INSTANCE.deserialize(in);
                     fieldTypes[i] = openFields[i].getType();
                 }
                 ARecordType openPartRecType = new ARecordType(null, fieldNames, fieldTypes, true);
@@ -167,6 +160,35 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             }
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
+        this.serialize(instance, out, false);
+    }
+
+    // This serialize method will NOT work if <code>recordType</code> is not equal to the type of the instance.
+    @SuppressWarnings("unchecked")
+    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
+        IARecordBuilder recordBuilder = new RecordBuilder();
+        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+        recordBuilder.reset(recordType);
+        recordBuilder.init();
+        if (recordType != null) {
+            int fieldIndex = 0;
+            for (; fieldIndex < recordType.getFieldNames().length; ++fieldIndex) {
+                fieldValue.reset();
+                serializers[fieldIndex].serialize(instance.getValueByPos(fieldIndex), fieldValue.getDataOutput());
+                recordBuilder.addField(fieldIndex, fieldValue);
+            }
+            try {
+                recordBuilder.write(out, writeTypeTag);
+            } catch (IOException | AsterixException e) {
+                throw new HyracksDataException(e);
+            }
+        } else {
+            throw new NotImplementedException("Serializer for schemaless records is not implemented.");
         }
     }
 
@@ -197,39 +219,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             fieldNames[i] = recType2.getFieldNames()[j];
             fieldTypes[i] = recType2.getFieldTypes()[j];
         }
-        try {
-            return new ARecordType(null, fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    @Override
-    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
-        this.serialize(instance, out, false);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
-        IARecordBuilder recordBuilder = new RecordBuilder();
-        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-
-        recordBuilder.reset(recordType);
-        recordBuilder.init();
-        if (recordType != null) {
-            for (int i = 0; i < recordType.getFieldNames().length; i++) {
-                fieldValue.reset();
-                serializers[i].serialize(instance.getValueByPos(i), fieldValue.getDataOutput());
-                recordBuilder.addField(i, fieldValue);
-            }
-            try {
-                recordBuilder.write(out, writeTypeTag);
-            } catch (IOException | AsterixException e) {
-                throw new HyracksDataException(e);
-            }
-        } else {
-            throw new NotImplementedException("Serializer for schemaless records is not implemented.");
-        }
+        return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
     public static final int getRecordLength(byte[] serRecord, int offset) {
@@ -250,8 +240,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                             // the field value is null
                             return 0;
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord,
-                            (int) (14 + offset + nullBitmapSize + (4 * fieldId)));
+                    return AInt32SerializerDeserializer.getInt(serRecord, 14 + offset + nullBitmapSize + (4 * fieldId));
                 } else {
                     if (nullBitmapSize > 0) {
                         // 9 = tag (1) + record Size (4) + isExpanded (1) +
@@ -260,8 +249,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                             // the field value is null
                             return 0;
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord,
-                            (int) (10 + offset + nullBitmapSize + (4 * fieldId)));
+                    return AInt32SerializerDeserializer.getInt(serRecord, 10 + offset + nullBitmapSize + (4 * fieldId));
                 }
             } else
                 return -1;
@@ -273,8 +261,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     if ((serRecord[9 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)
                         // the field value is null
                         return 0;
-                return AInt32SerializerDeserializer.getInt(serRecord,
-                        (int) (9 + offset + nullBitmapSize + (4 * fieldId)));
+                return AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
             } else
                 return -1;
         }
@@ -322,9 +309,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             if (h == fieldNameHashCode) {
                 fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
                 // the utf8 comparator do not require to put the precise length, we can just pass a estimated limit.
-                if (utf8BinaryComparator
-                        .compare(serRecord, fieldOffset, serRecord.length,
-                                fieldName, 1, fieldUtflength + fieldUtfMetaLen) == 0)
+                if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
+                        fieldUtflength + fieldUtfMetaLen) == 0)
                     // since they are equal, we can directly use the meta length and the utf length.
                     return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                 else { // this else part has not been tested yet
@@ -332,8 +318,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                         h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j));
                         if (h == fieldNameHashCode) {
                             fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
-                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName,
-                                    1, fieldUtflength) == 0)
+                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
+                                    fieldUtflength) == 0)
                                 return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                         } else
                             break;

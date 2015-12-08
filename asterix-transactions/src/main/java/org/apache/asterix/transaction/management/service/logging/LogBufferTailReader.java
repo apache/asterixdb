@@ -20,7 +20,6 @@ package org.apache.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ILogRecord.RECORD_STATUS;
 import org.apache.asterix.common.transactions.LogRecord;
 

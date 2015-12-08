@@ -1,0 +1,32 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl AllType [
+  open RecordType {
+    id : int64,
+    name : string,
+    age : float,
+    salary : double,
+    married : boolean,
+    interests : UnorderedList <string>
+,
+    children : OrderedList [string]
+,
+    address : AddressType,
+    dob : date,
+    time : time,
+    datetime : datetime,
+    duration : duration,
+    location2d : point,
+    location3d : point3d,
+    line : line,
+    polygon : polygon,
+    circle : circle
+  }
+]
+DatasetDecl All(AllType) partitioned by [[id]]

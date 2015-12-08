@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
@@ -61,7 +60,6 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         }
     }
 
-   
     @Override
     public String getFilename(int partition) {
         final FileSplit fileSplit = fileSplits[partition];

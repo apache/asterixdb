@@ -25,8 +25,8 @@ import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 
 public class SqlppSubstituteVariablesVisitor extends SqlppCloneAndSubstituteVariablesVisitor {
 
-    public SqlppSubstituteVariablesVisitor(LangRewritingContext context) {
-        super(context);
+    public SqlppSubstituteVariablesVisitor() {
+        super(null);
     }
 
     @Override

@@ -43,7 +43,7 @@ import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     private static final byte SER_STRING_BYTE = ATypeTag.STRING.serialize();
 
     @Override
@@ -61,12 +61,12 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
     public final static ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.STRING };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     private StringBuilder stringBuilder = new StringBuilder();

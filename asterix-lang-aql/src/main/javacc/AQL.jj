@@ -140,7 +140,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpre
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 
-public class AQLParser extends ScopeChecker implements IParser {
+class AQLParser extends ScopeChecker implements IParser {
 
     // optimizer hints
     private static final String AUTO_HINT = "auto";

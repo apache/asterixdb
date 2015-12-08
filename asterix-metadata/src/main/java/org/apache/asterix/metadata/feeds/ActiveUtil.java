@@ -271,6 +271,8 @@ public class ActiveUtil {
                     lc.partition = ((PartitionLocationExpression) lexpr).getPartition();
                     locations.add(lc);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -705,7 +707,8 @@ public class ActiveUtil {
                             locations.add(lc);
                         }
                     }
-
+                    break;
+                default:
                     break;
             }
         }

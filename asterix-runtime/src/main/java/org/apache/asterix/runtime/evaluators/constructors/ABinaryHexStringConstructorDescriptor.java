@@ -46,18 +46,19 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ABinaryHexStringConstructorDescriptor();
         }
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ABinaryConstructorEvaluator(output, args[0], ByteArrayHexParserFactory.INSTANCE);
             }
         };
@@ -80,8 +81,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                 .getSerializerDeserializer(BuiltinType.ANULL);
 
         public ABinaryConstructorEvaluator(final IDataOutputProvider output, ICopyEvaluatorFactory copyEvaluatorFactory,
-                IValueParserFactory valueParserFactory)
-                throws AlgebricksException {
+                IValueParserFactory valueParserFactory) throws AlgebricksException {
             out = output.getDataOutput();
             outInput = new ArrayBackedValueStorage();
             eval = copyEvaluatorFactory.createEvaluator(outInput);

@@ -23,4 +23,5 @@ use TinySocial;
 select element c
 from  TweetMessages as c
 where (c.user.statuses_count < 473)
+order by c.tweetid
 ;

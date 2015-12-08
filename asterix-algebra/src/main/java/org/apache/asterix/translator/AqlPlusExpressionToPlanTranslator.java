@@ -37,7 +37,6 @@ import org.apache.asterix.lang.aql.clause.MetaVariableClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.MetaVariableExpr;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
@@ -106,6 +105,7 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.FileSplitDataSink;
 import org.apache.asterix.metadata.declared.FileSplitSinkId;
@@ -175,7 +175,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
  * source for the current subtree.
  */
 
-public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
+public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
         implements IAQLPlusVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
 
     private static final Logger LOGGER = Logger.getLogger(AqlPlusExpressionToPlanTranslator.class.getName());
@@ -416,7 +416,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(fa.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression fldAccess = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME));
         fldAccess.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
         ILogicalExpression faExpr = new ConstantExpression(
                 new AsterixConstantValue(new AString(fa.getIdent().getValue())));
@@ -435,12 +435,12 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
         AbstractFunctionCallExpression f;
         if (ia.isAny()) {
             f = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER));
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
         } else {
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = aqlExprToAlgExpression(ia.getIndexExpr(),
                     tupSource);
-            f = new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM));
+            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
             f.getArguments().add(new MutableObject<ILogicalExpression>(indexPair.first));
         }
@@ -499,12 +499,12 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {
             f = AsterixBuiltinFunctions.makeAggregateFunctionExpression(fi, args);
         } else if (AsterixBuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
-            UnnestingFunctionCallExpression ufce = new UnnestingFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(fi), args);
+            UnnestingFunctionCallExpression ufce = new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(fi),
+                    args);
             ufce.setReturnsUniqueValues(AsterixBuiltinFunctions.returnsUniqueValues(fi));
             f = ufce;
         } else {
-            f = new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(fi), args);
+            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
         }
         AssignOperator op = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
         if (topOp != null) {
@@ -601,7 +601,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
 
         Pair<ILogicalOperator, LogicalVariable> pElse = ifexpr.getElseExpr().accept(this, nestedSource);
         AbstractFunctionCallExpression notVarCond = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.NOT),
+                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT),
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)));
         SelectOperator sel2 = new SelectOperator(new MutableObject<ILogicalExpression>(notVarCond), false, null);
         sel2.getInputs().add(new MutableObject<ILogicalOperator>(pElse.first));
@@ -616,7 +616,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
 
         LogicalVariable resV = context.newVar();
         AbstractFunctionCallExpression concatNonNull = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CONCAT_NON_NULL),
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CONCAT_NON_NULL),
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(pThen.second)),
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(pElse.second)));
         AssignOperator a = new AssignOperator(resV, new MutableObject<ILogicalExpression>(concatNonNull));
@@ -781,7 +781,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
             List<Mutable<ILogicalExpression>> satExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             satExprList.add(new MutableObject<ILogicalExpression>(eo2.first));
             s = new SelectOperator(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), satExprList)), false, null);
+                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), satExprList)), false, null);
             s.getInputs().add(eo2.second);
             fAgg = AsterixBuiltinFunctions.makeAggregateFunctionExpression(AsterixBuiltinFunctions.EMPTY_STREAM,
                     new ArrayList<Mutable<ILogicalExpression>>());
@@ -803,7 +803,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(RecordConstructor rc, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
         LogicalVariable v1 = context.newVar();
         AssignOperator a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(f));
         Mutable<ILogicalOperator> topOp = tupSource;
@@ -824,7 +824,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
             throws AsterixException {
         FunctionIdentifier fid = (lc.getType() == Type.ORDERED_LIST_CONSTRUCTOR)
                 ? AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR : AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR;
-        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(fid));
+        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
         LogicalVariable v1 = context.newVar();
         AssignOperator a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(f));
         Mutable<ILogicalOperator> topOp = tupSource;
@@ -848,7 +848,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
             a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(eo.first));
         } else {
             AbstractFunctionCallExpression m = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NUMERIC_UNARY_MINUS));
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NUMERIC_UNARY_MINUS));
             m.getArguments().add(new MutableObject<ILogicalExpression>(eo.first));
             a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(m));
         }
@@ -964,7 +964,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
 
     private AbstractFunctionCallExpression createComparisonExpression(OperatorType t) {
         FunctionIdentifier fi = operatorTypeToFunctionIdentifier(t);
-        IFunctionInfo finfo = FunctionUtils.getFunctionInfo(fi);
+        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
         return new ScalarFunctionCallExpression(finfo);
     }
 
@@ -1044,7 +1044,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
                 throw new NotImplementedException("Operator " + t + " is not yet implemented");
             }
         }
-        return new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(fid));
+        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
     }
 
     private static boolean hasOnlyChild(ILogicalOperator parent, Mutable<ILogicalOperator> childCandidate) {
@@ -1320,7 +1320,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
         switch (expr.getExpressionTag()) {
             case VARIABLE: {
                 return new UnnestingFunctionCallExpression(
-                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
                         new MutableObject<ILogicalExpression>(expr));
             }
             case FUNCTION_CALL: {
@@ -1329,7 +1329,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator
                     return expr;
                 } else {
                     return new UnnestingFunctionCallExpression(
-                            FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
                             new MutableObject<ILogicalExpression>(expr));
                 }
             }

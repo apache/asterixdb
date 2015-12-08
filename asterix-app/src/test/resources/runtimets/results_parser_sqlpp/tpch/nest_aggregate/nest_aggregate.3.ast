@@ -137,3 +137,10 @@ Where
       Field=n_nationkey
     ]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=nation ]
+    Field=n_nationkey
+  ]
+  ASC
+

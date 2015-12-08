@@ -63,7 +63,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         :
         IndexAccessor [
           Variable [ Name=sim ]
-          Index:           Variable [ Name=sim ]
+          Index:           LiteralExpr [LONG] [0]
         ]
       )
     ]
@@ -162,14 +162,11 @@ FROM [  FunctionCall Metadata.dataset@1[
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensLeft ]
               Variable [ Name=lenLeft ]
               Variable [ Name=paperLeft ]
               Variable [ Name=paperRight ]
               Variable [ Name=prefixTokenRight ]
               Variable [ Name=prefixTokenLeft ]
-              Variable [ Name=paperLeft ]
-              Variable [ Name=paperRight ]
 
             Orderby
               FunctionCall fuzzyjoin.count@1[
@@ -248,7 +245,6 @@ FROM [  FunctionCall Metadata.dataset@1[
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensRight ]
               Variable [ Name=lenRight ]
               Variable [ Name=tokensLeft ]
               Variable [ Name=lenLeft ]
@@ -256,8 +252,6 @@ FROM [  FunctionCall Metadata.dataset@1[
               Variable [ Name=paperRight ]
               Variable [ Name=prefixTokenRight ]
               Variable [ Name=prefixTokenLeft ]
-              Variable [ Name=paperLeft ]
-              Variable [ Name=paperRight ]
 
             Orderby
               FunctionCall fuzzyjoin.count@1[
@@ -345,8 +339,6 @@ FROM [  FunctionCall Metadata.dataset@1[
       Variable [ Name=paperRight ]
       Variable [ Name=prefixTokenRight ]
       Variable [ Name=prefixTokenLeft ]
-      Variable [ Name=paperLeft ]
-      Variable [ Name=paperRight ]
 
   )
   AS

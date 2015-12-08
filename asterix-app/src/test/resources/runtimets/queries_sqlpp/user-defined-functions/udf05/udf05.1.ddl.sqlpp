@@ -22,3 +22,11 @@
  * Date         : Sep 4th 2012
  */
 
+
+drop database test if exists;
+create database test;
+use test;
+
+create function test.echo(a){
+a
+}

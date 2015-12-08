@@ -53,8 +53,10 @@ import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.ParseException;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -725,11 +727,12 @@ public class AdmDataGen {
                                 ctx.getFileToLoadedDataMap().put(lvf.getFile(), a);
                             }
                             if (ti.getTypeTag() != ATypeTag.ORDEREDLIST && ti.getTypeTag() != ATypeTag.UNORDEREDLIST) {
-                                throw new Exception("list-val-file annotation cannot be used for field of type "
-                                        + ti.getTypeTag());
+                                throw new Exception(
+                                        "list-val-file annotation cannot be used for field of type " + ti.getTypeTag());
                             }
                             AbstractCollectionType act = (AbstractCollectionType) ti;
-                            declaredFieldsGenerators[i] = new ListFromArrayGenerator(act, a, lvf.getMin(), lvf.getMax());
+                            declaredFieldsGenerators[i] = new ListFromArrayGenerator(act, a, lvf.getMin(),
+                                    lvf.getMax());
                             break;
                         }
                         case VALFILESAMEINDEX: {
@@ -746,11 +749,9 @@ public class AdmDataGen {
                                         sfag = (StringFromArrayGenerator) declaredFieldsGenerators[j];
                                         break;
                                     } else {
-                                        throw new Exception(
-                                                "Data generator for field "
-                                                        + recType.getFieldNames()[j]
-                                                        + " is not based on values from a text file, as required by generator for field "
-                                                        + recType.getFieldNames()[i]);
+                                        throw new Exception("Data generator for field " + recType.getFieldNames()[j]
+                                                + " is not based on values from a text file, as required by generator for field "
+                                                + recType.getFieldNames()[i]);
                                     }
                                 }
                             }
@@ -783,13 +784,14 @@ public class AdmDataGen {
                                     break;
                                 }
                                 case LONG: {
-                                    declaredFieldsGenerators[i] = new LongIntervalGenerator(
-                                            Long.parseLong(fi.getMin()), Long.parseLong(fi.getMax()), prefix, suffix);
+                                    declaredFieldsGenerators[i] = new LongIntervalGenerator(Long.parseLong(fi.getMin()),
+                                            Long.parseLong(fi.getMax()), prefix, suffix);
                                     break;
                                 }
                                 case DOUBLE: {
-                                    declaredFieldsGenerators[i] = new DoubleIntervalGenerator(Double.parseDouble(fi
-                                            .getMin()), Double.parseDouble(fi.getMax()), prefix, suffix);
+                                    declaredFieldsGenerators[i] = new DoubleIntervalGenerator(
+                                            Double.parseDouble(fi.getMin()), Double.parseDouble(fi.getMax()), prefix,
+                                            suffix);
                                     break;
                                 }
                                 default: {
@@ -806,8 +808,8 @@ public class AdmDataGen {
                         case LIST: {
                             ListDataGen l = (ListDataGen) rfdg;
                             if (ti.getTypeTag() != ATypeTag.ORDEREDLIST && ti.getTypeTag() != ATypeTag.UNORDEREDLIST) {
-                                throw new Exception("list-val-file annotation cannot be used for field of type "
-                                        + ti.getTypeTag());
+                                throw new Exception(
+                                        "list-val-file annotation cannot be used for field of type " + ti.getTypeTag());
                             }
                             AbstractCollectionType act = (AbstractCollectionType) ti;
                             declaredFieldsGenerators[i] = new ListDataGenerator(act, l.getMin(), l.getMax());
@@ -834,11 +836,9 @@ public class AdmDataGen {
                                         adtg = (AccessibleDatetimeGenerator) declaredFieldsGenerators[j];
                                         break;
                                     } else {
-                                        throw new Exception(
-                                                "Data generator for field "
-                                                        + recType.getFieldNames()[j]
-                                                        + " is not based on accessible datetime values, as required by generator for field "
-                                                        + recType.getFieldNames()[i]);
+                                        throw new Exception("Data generator for field " + recType.getFieldNames()[j]
+                                                + " is not based on accessible datetime values, as required by generator for field "
+                                                + recType.getFieldNames()[i]);
                                     }
                                 }
                             }
@@ -854,13 +854,13 @@ public class AdmDataGen {
                             AutoDataGen auto = (AutoDataGen) rfdg;
                             switch (ti.getTypeTag()) {
                                 case INT32: {
-                                    declaredFieldsGenerators[i] = new IntAutoGenerator(Integer.parseInt(auto
-                                            .getInitValueStr()));
+                                    declaredFieldsGenerators[i] = new IntAutoGenerator(
+                                            Integer.parseInt(auto.getInitValueStr()));
                                     break;
                                 }
                                 case INT64: {
-                                    declaredFieldsGenerators[i] = new LongAutoGenerator(Long.parseLong(auto
-                                            .getInitValueStr()));
+                                    declaredFieldsGenerators[i] = new LongAutoGenerator(
+                                            Long.parseLong(auto.getInitValueStr()));
                                     break;
                                 }
                                 default: {
@@ -934,6 +934,7 @@ public class AdmDataGen {
     private Map<TypeSignature, IAType> typeMap;
     private Map<TypeSignature, TypeDataGen> typeAnnotMap;
     private DataGeneratorContext dgCtx;
+    private final IParserFactory parserFactory = new AQLParserFactory();
 
     public AdmDataGen(File schemaFile, File outputDir) {
         this.schemaFile = schemaFile;
@@ -943,7 +944,7 @@ public class AdmDataGen {
     public void init() throws IOException, ParseException, AsterixException, ACIDException, MetadataException,
             AlgebricksException {
         FileReader aql = new FileReader(schemaFile);
-        AQLParser parser = new AQLParser(aql);
+        IParser parser = parserFactory.createParser(aql);
         List<Statement> statements = parser.parse();
         aql.close();
         // TODO: Need to fix how to use transactions here.

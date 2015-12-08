@@ -54,14 +54,12 @@ FROM [  FunctionCall Metadata.dataset@1[
   ]
   AS
   Variable [ Name=o ]
-,
-  FunctionCall tpch.tmp@0[
-  ]
-  AS
-  Variable [ Name=t ]
-]
-Where
-  OperatorExpr [
+  INNER JOIN
+    FunctionCall tpch.tmp@0[
+    ]
+    AS
+    Variable [ Name=t ]
+    ON
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=o ]
@@ -73,7 +71,9 @@ Where
         Field=o_orderkey
       ]
     ]
-    and
+]
+Where
+  OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=o ]

@@ -18,4 +18,26 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue244
+                 : https://code.google.com/p/asterixdb/issues/detail?id=244
+ * Expected Res : Success
+ * Date         : 4th June 2013
+ */
 
+
+drop database test if exists;
+create database test;
+
+use test;
+
+create type TypeA as open {
+    id : int64,
+    name : string
+}
+
+create table t1(TypeA) primary key id;
+
+create table t2(TypeA) primary key id;
+
+create function f1(){
+(from t1 as m select element m)
+};

@@ -24,15 +24,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.sqlpp.visitor.SqlppPrintVisitor;
+import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppAstPrintVisitorFactory;
 
 public class SqlppAstPrintUtil {
 
+    private static final IAstPrintVisitorFactory astPrintVisitor = new SqlppAstPrintVisitorFactory();
+
     /**
      * Prints the AST (abstract syntax tree) of an ILangExpression.
-     * 
+     *
      * @param expr
      *            the language expression.
      * @param output
@@ -40,13 +44,14 @@ public class SqlppAstPrintUtil {
      * @throws AsterixException
      */
     public static void print(ILangExpression expr, PrintWriter output) throws AsterixException {
-        SqlppPrintVisitor visitor = new SqlppPrintVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
         expr.accept(visitor, 0);
+        output.flush();
     }
 
     /**
      * Prints the AST of a list of top-level language statements.
-     * 
+     *
      * @param statements
      *            a list of statements of a query
      * @param output
@@ -54,10 +59,11 @@ public class SqlppAstPrintUtil {
      * @throws AsterixException
      */
     public static void print(List<Statement> statements, PrintWriter output) throws AsterixException {
-        SqlppPrintVisitor visitor = new SqlppPrintVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
         for (Statement statement : statements) {
             statement.accept(visitor, 0);
         }
+        output.flush();
     }
 
     /**
@@ -81,7 +87,7 @@ public class SqlppAstPrintUtil {
     public static String toString(List<ILangExpression> exprs) throws AsterixException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
-        SqlppPrintVisitor visitor = new SqlppPrintVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
         for (ILangExpression expr : exprs) {
             expr.accept(visitor, 0);
         }

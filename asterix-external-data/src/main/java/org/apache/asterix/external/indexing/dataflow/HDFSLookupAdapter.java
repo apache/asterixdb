@@ -23,12 +23,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobConf;
-
 import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
 import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
-import org.apache.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import org.apache.asterix.external.indexing.input.RCFileLookupReader;
 import org.apache.asterix.external.indexing.input.SequenceFileLookupInputStream;
 import org.apache.asterix.external.indexing.input.SequenceFileLookupReader;
@@ -41,6 +37,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.ADMDataParser;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.DelimitedDataParser;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
@@ -86,7 +84,8 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
         // Create the lookup reader and the controlled parser
         if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_RC)) {
             configureRCFile(jobConf, iNullWriterFactory);
-        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT).equals(AsterixTupleParserFactory.FORMAT_ADM)) {
+        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT)
+                .equals(AsterixTupleParserFactory.FORMAT_ADM)) {
             // create an adm parser
             ADMDataParser dataParser = new ADMDataParser();
             if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT)) {
@@ -100,7 +99,8 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
                 parser = new AdmOrDelimitedControlledTupleParser(ctx, (ARecordType) atype, in, propagateInput,
                         inRecDesc, dataParser, propagatedFields, ridFields, retainNull, iNullWriterFactory);
             }
-        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT).equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
+        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT)
+                .equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
             // create a delimited text parser
             char delimiter = AsterixTupleParserFactory.getDelimiter(configuration);
             char quote = AsterixTupleParserFactory.getQuote(configuration, delimiter);
@@ -152,8 +152,8 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
         // Do nothing
     }
 
-    private void configureRCFile(Configuration jobConf, INullWriterFactory iNullWriterFactory) throws IOException,
-            Exception {
+    private void configureRCFile(Configuration jobConf, INullWriterFactory iNullWriterFactory)
+            throws IOException, Exception {
         // RCFileLookupReader
         RCFileLookupReader reader = new RCFileLookupReader(fileIndexAccessor,
                 HDFSAdapterFactory.configureJobConf(configuration));
@@ -169,8 +169,8 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
             objectParser = new HiveObjectParser();
         } else {
             try {
-                objectParser = (IAsterixHDFSRecordParser) Class.forName(
-                        configuration.get(HDFSAdapterFactory.KEY_PARSER)).newInstance();
+                objectParser = (IAsterixHDFSRecordParser) Class
+                        .forName(configuration.get(HDFSAdapterFactory.KEY_PARSER)).newInstance();
             } catch (Exception e) {
                 throw new HyracksDataException("Unable to create object parser", e);
             }

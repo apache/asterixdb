@@ -37,12 +37,10 @@ public class NodeLoadReportService implements IFeedService {
     private static final float CPU_CHANGE_THRESHOLD = 0.2f;
     private static final float HEAP_CHANGE_THRESHOLD = 0.4f;
 
-    private final String nodeId;
     private final NodeLoadReportTask task;
     private final Timer timer;
 
     public NodeLoadReportService(String nodeId, IActiveManager feedManager) {
-        this.nodeId = nodeId;
         this.task = new NodeLoadReportTask(nodeId, feedManager);
         this.timer = new Timer();
     }
@@ -59,8 +57,8 @@ public class NodeLoadReportService implements IFeedService {
 
     private static class NodeLoadReportTask extends TimerTask {
 
-        private final String nodeId;
         private final IActiveManager feedManager;
+
         private final NodeReportMessage message;
         private final IFeedMessageService messageService;
 
@@ -68,7 +66,6 @@ public class NodeLoadReportService implements IFeedService {
         private static MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
 
         public NodeLoadReportTask(String nodeId, IActiveManager feedManager) {
-            this.nodeId = nodeId;
             this.feedManager = feedManager;
             this.message = new NodeReportMessage(0.0f, 0L, 0);
             this.messageService = feedManager.getFeedMessageService();
@@ -91,8 +88,10 @@ public class NodeLoadReportService implements IFeedService {
                 return true;
             }
 
-            boolean changeInCpu = (Math.abs(cpuLoad - message.getCpuLoad()) / message.getCpuLoad()) > CPU_CHANGE_THRESHOLD;
-            boolean changeInUsedHeap = (Math.abs(usedHeap - message.getUsedHeap()) / message.getUsedHeap()) > HEAP_CHANGE_THRESHOLD;
+            boolean changeInCpu = (Math.abs(cpuLoad - message.getCpuLoad())
+                    / message.getCpuLoad()) > CPU_CHANGE_THRESHOLD;
+            boolean changeInUsedHeap = (Math.abs(usedHeap - message.getUsedHeap())
+                    / message.getUsedHeap()) > HEAP_CHANGE_THRESHOLD;
             boolean changeInRuntimeSize = nRuntimes != message.getnRuntimes();
             return changeInCpu || changeInUsedHeap || changeInRuntimeSize;
         }

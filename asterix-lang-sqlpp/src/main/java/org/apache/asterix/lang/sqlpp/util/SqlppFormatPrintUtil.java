@@ -32,7 +32,7 @@ public class SqlppFormatPrintUtil {
 
     /**
      * Prints the formatted output of an ILangExpression.
-     * 
+     *
      * @param expr
      *            the language expression.
      * @param output
@@ -46,7 +46,7 @@ public class SqlppFormatPrintUtil {
 
     /**
      * Prints the formatted output of a list of top-level language statements.
-     * 
+     *
      * @param statements
      *            a list of statements of a query
      * @param output

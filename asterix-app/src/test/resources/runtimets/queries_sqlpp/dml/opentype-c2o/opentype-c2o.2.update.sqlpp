@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : opentype-c2o.aql
  * Description     : read data from a closed type dataset into a open type dataset and verify if
- *					records can be casted to the target open type 
+ *                    records can be casted to the target open type
  * Expected Result : Success
  */
 

@@ -21,11 +21,11 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -85,7 +85,7 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
         LogicalVariable t = context.newVar();
 
         AbstractFunctionCallExpression typeOf = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TYPE_OF));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TYPE_OF));
         typeOf.getArguments().add(new MutableObject<ILogicalExpression>(x));
         AssignOperator typAssign = new AssignOperator(t, new MutableObject<ILogicalExpression>(typeOf));
         typAssign.getInputs().add(opUnder);
@@ -93,7 +93,7 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
         // let $w := get-handle($t, path-expression)
         LogicalVariable w = context.newVar();
         AbstractFunctionCallExpression getHandle = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.GET_HANDLE));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_HANDLE));
         getHandle.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(t)));
         // the accessed field
         getHandle.getArguments().add(new MutableObject<ILogicalExpression>(fce.getArguments().get(1).getValue()));
@@ -102,7 +102,7 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
 
         // let $y := get-data(x, $w)
         AbstractFunctionCallExpression getData = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.GET_DATA));
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_DATA));
         VariableReferenceExpression ref2 = new VariableReferenceExpression(x.getVariableReference());
         getData.getArguments().add(new MutableObject<ILogicalExpression>(ref2));
         getData.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(w)));

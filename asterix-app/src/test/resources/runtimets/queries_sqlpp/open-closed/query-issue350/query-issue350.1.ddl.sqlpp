@@ -18,6 +18,10 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue350
+                 : https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Expected Res : Success
+ * Date         : 28th April 2013
+ */
 
 drop  database TinySocial if exists;
 create  database TinySocial;

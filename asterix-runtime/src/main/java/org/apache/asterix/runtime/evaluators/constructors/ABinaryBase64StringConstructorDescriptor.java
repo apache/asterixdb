@@ -30,24 +30,29 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayBase64ParserFactory;
 
 public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override public IFunctionDescriptor createFunctionDescriptor() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
             return new ABinaryBase64StringConstructorDescriptor();
         }
     };
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
                 return new ABinaryHexStringConstructorDescriptor.ABinaryConstructorEvaluator(output, args[0],
                         ByteArrayBase64ParserFactory.INSTANCE);
             }
         };
     }
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
     }
 }

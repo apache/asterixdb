@@ -31,17 +31,16 @@ public class FeedFrameDiscarder {
 
     private static final Logger LOGGER = Logger.getLogger(FeedFrameSpiller.class.getName());
 
-    private final IHyracksTaskContext ctx;
     private final ActiveRuntimeInputHandler inputHandler;
     private final ActiveJobId connectionId;
     private final ActiveRuntimeId runtimeId;
+
     private final FeedPolicyAccessor policyAccessor;
     private final float maxFractionDiscard;
     private int nDiscarded;
 
-    public FeedFrameDiscarder(IHyracksTaskContext ctx, ActiveJobId connectionId, ActiveRuntimeId runtimeId, 
+    public FeedFrameDiscarder(IHyracksTaskContext ctx, ActiveJobId connectionId, ActiveRuntimeId runtimeId,
             FeedPolicyAccessor policyAccessor, ActiveRuntimeInputHandler inputHandler) throws IOException {
-        this.ctx = ctx;
         this.connectionId = connectionId;
         this.runtimeId = runtimeId;
         this.policyAccessor = policyAccessor;

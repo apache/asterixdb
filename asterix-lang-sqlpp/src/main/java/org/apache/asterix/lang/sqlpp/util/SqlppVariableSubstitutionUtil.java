@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -33,39 +31,59 @@ import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteVariablesVisitor;
 
 public class SqlppVariableSubstitutionUtil {
 
-    public static List<ILangExpression> substituteVariable(List<ILangExpression> expressions,
+    /**
+     * Substitute variables with corresponding expressions according to the varExprMap.
+     * The substitution should be done BEFORE unique ids are assigned to variables.
+     * In other words, when we call this method, ids of all variables are zero.
+     *
+     * @param expression,
+     *            the expression for substituting variables.
+     * @param varExprMap
+     *            a map that maps variables to their corresponding expressions.
+     * @return a new expression in which variables are substituted.
+     * @throws AsterixException
+     */
+    public static ILangExpression substituteVariableWithoutContext(ILangExpression expression,
+            Map<VariableExpr, Expression> varExprMap) throws AsterixException {
+        VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
+        return substituteVariableWithoutContext(expression, env);
+    }
+
+    /**
+     * Substitute variables with corresponding expressions according to the varExprMap.
+     * The substitution should be done BEFORE unique ids are assigned to variables.
+     * In other words, when we call this method, ids of all variables are zero.
+     *
+     * @param expression,
+     *            the expression for substituting variables.
+     * @param env,
+     *            internally contains a map that maps variables to their corresponding expressions.
+     * @return a new expression in which variables are substituted.
+     * @throws AsterixException
+     */
+    public static ILangExpression substituteVariableWithoutContext(ILangExpression expression,
             VariableSubstitutionEnvironment env) throws AsterixException {
-        SqlppCloneAndSubstituteVariablesVisitor visitor = new SqlppSubstituteVariablesVisitor(
-                new LangRewritingContext(0));
-        List<ILangExpression> newExprs = new ArrayList<ILangExpression>();
-        for (ILangExpression expression : expressions) {
-            newExprs.add(expression.accept(visitor, env).first);
-        }
-        return newExprs;
-    }
-
-    public static ILangExpression substituteVariable(ILangExpression expression, VariableSubstitutionEnvironment env)
-            throws AsterixException {
-        SqlppSubstituteVariablesVisitor visitor = new SqlppSubstituteVariablesVisitor(new LangRewritingContext(0));
+        SqlppSubstituteVariablesVisitor visitor = new SqlppSubstituteVariablesVisitor();
         return expression.accept(visitor, env).first;
     }
 
-    public static List<ILangExpression> substituteVariable(List<ILangExpression> expressions,
-            Map<VariableExpr, Expression> varExprMap) throws AsterixException {
-        SqlppSubstituteVariablesVisitor visitor = new SqlppSubstituteVariablesVisitor(new LangRewritingContext(0));
-        VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
-        List<ILangExpression> newExprs = new ArrayList<ILangExpression>();
-        for (ILangExpression expression : expressions) {
-            newExprs.add(expression.accept(visitor, env).first);
-        }
-        return newExprs;
-    }
-
-    public static ILangExpression substituteVariable(ILangExpression expression,
-            Map<VariableExpr, Expression> varExprMap) throws AsterixException {
-        SqlppSubstituteVariablesVisitor visitor = new SqlppSubstituteVariablesVisitor(new LangRewritingContext(0));
+    /**
+     * Substitute variables with corresponding expressions according to the varExprMap.
+     * The substitution should be done AFTER unique ids are assigned to different variables.
+     *
+     * @param expression,
+     *            the expression for substituting variables.
+     * @param varExprMap,
+     *            a map that maps variables to their corresponding expressions.
+     * @param context,
+     *            manages the ids of variables so as to guarantee the uniqueness of ids for different variables (even with the same name).
+     * @return a cloned new expression in which variables are substituted, and its bounded variables have new unique ids.
+     * @throws AsterixException
+     */
+    public static ILangExpression cloneAndSubstituteVariable(ILangExpression expression,
+            Map<VariableExpr, Expression> varExprMap, LangRewritingContext context) throws AsterixException {
+        SqlppCloneAndSubstituteVariablesVisitor visitor = new SqlppCloneAndSubstituteVariablesVisitor(context);
         VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
         return expression.accept(visitor, env).first;
     }
-
 }

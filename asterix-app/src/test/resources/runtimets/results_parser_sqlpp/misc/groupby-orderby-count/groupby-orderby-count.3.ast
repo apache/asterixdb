@@ -22,26 +22,20 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS
   Variable [ Name=t ]
 ,
-  FunctionCall Metadata.dataset@1[
-    LiteralExpr [STRING] [tokens]
-  ]
-  AS
-  Variable [ Name=token ]
-]
-LetVariable [ Name=tokens ]
-  :=
   FunctionCall twitter.word-tokens@1[
     FieldAccessor [
       Variable [ Name=t ]
       Field=text
     ]
   ]
+  AS
+  Variable [ Name=token ]
+]
 Groupby
   Variable [ Name=tok ]
   :=
   Variable [ Name=token ]
   With
-  Variable [ Name=tokens ]
   Variable [ Name=t ]
   Variable [ Name=token ]
 

@@ -44,7 +44,6 @@ public class ExternalFunctionProvider {
 }
 
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, ICopyEvaluator {
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public ExternalScalarFunction(IExternalFunctionInfo finfo, ICopyEvaluatorFactory args[],
@@ -69,6 +68,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         }
     }
 
+    @Override
     public void evaluate(IFunctionHelper argumentProvider) throws Exception {
         ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
         /*
@@ -81,6 +81,5 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             out.getDataOutput().writeByte(SER_NULL_TYPE_TAG);
         }
     }
-
 
 }

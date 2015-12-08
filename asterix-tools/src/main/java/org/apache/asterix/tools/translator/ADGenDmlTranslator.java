@@ -31,11 +31,11 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
-import org.apache.asterix.translator.AbstractAqlTranslator;
+import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.TypeTranslator;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-public class ADGenDmlTranslator extends AbstractAqlTranslator {
+public class ADGenDmlTranslator extends AbstractLangTranslator {
 
     private final MetadataTransactionContext mdTxnCtx;
     private final List<Statement> aqlStatements;

@@ -23,10 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -35,10 +32,6 @@ public class APointSerializerDeserializer implements ISerializerDeserializer<APo
     private static final long serialVersionUID = 1L;
 
     public static final APointSerializerDeserializer INSTANCE = new APointSerializerDeserializer();
-    @SuppressWarnings("unchecked")
-    private final static ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.APOINT);
-    private final static AMutablePoint aPoint = new AMutablePoint(0, 0);
 
     private APointSerializerDeserializer() {
     }
@@ -82,16 +75,6 @@ public class APointSerializerDeserializer implements ISerializerDeserializer<APo
                 throw new HyracksDataException("Wrong coordinate");
         }
 
-    }
-
-    public static void parse(String point, DataOutput out) throws HyracksDataException {
-        try {
-            aPoint.setValue(Double.parseDouble(point.substring(0, point.indexOf(','))),
-                    Double.parseDouble(point.substring(point.indexOf(',') + 1, point.length())));
-            pointSerde.serialize(aPoint, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(point + " can not be an instance of point");
-        }
     }
 
 }

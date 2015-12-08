@@ -176,8 +176,8 @@ public class RecordFieldsUtil {
         orderedListBuilder.write(out, true);
     }
 
-    public void addNameField(IValueReference nameArg, IARecordBuilder fieldRecordBuilder) throws HyracksDataException,
-            AsterixException {
+    public void addNameField(IValueReference nameArg, IARecordBuilder fieldRecordBuilder)
+            throws HyracksDataException, AsterixException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
 
         fieldAbvs.reset();
@@ -185,8 +185,8 @@ public class RecordFieldsUtil {
         fieldRecordBuilder.addField(fieldAbvs, nameArg);
     }
 
-    public void addFieldType(byte tagId, IARecordBuilder fieldRecordBuilder) throws HyracksDataException,
-            AsterixException {
+    public void addFieldType(byte tagId, IARecordBuilder fieldRecordBuilder)
+            throws HyracksDataException, AsterixException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -202,8 +202,8 @@ public class RecordFieldsUtil {
         fieldRecordBuilder.addField(fieldAbvs, valueAbvs);
     }
 
-    public void addIsOpenField(boolean isOpen, IARecordBuilder fieldRecordBuilder) throws HyracksDataException,
-            AsterixException {
+    public void addIsOpenField(boolean isOpen, IARecordBuilder fieldRecordBuilder)
+            throws HyracksDataException, AsterixException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -246,9 +246,9 @@ public class RecordFieldsUtil {
         valueAbvs.reset();
         ARecordType newType;
         if (fieldType == null) {
-            newType = openType.deepCopy(openType);
+            newType = openType;
         } else {
-            newType = ((ARecordType) fieldType).deepCopy((ARecordType) fieldType);
+            newType = (ARecordType) fieldType;
         }
         ARecordPointable recordP = getRecordPointable();
         recordP.set(recordArg);

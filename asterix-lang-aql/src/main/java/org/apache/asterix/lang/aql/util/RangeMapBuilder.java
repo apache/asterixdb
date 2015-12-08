@@ -24,9 +24,11 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.ListConstructor;
@@ -54,13 +56,14 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public abstract class RangeMapBuilder {
+    private static final IParserFactory parserFactory = new AQLParserFactory();
 
     public static IRangeMap parseHint(Object hint) throws AsterixException {
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         DataOutput out = abvs.getDataOutput();;
         abvs.reset();
 
-        AQLParser parser = new AQLParser((String) hint);
+        IParser parser = parserFactory.createParser((String) hint);
         List<Statement> hintStatements = parser.parse();
         if (hintStatements.size() != 1) {
             throw new AsterixException("Only one range statement is allowed for the range hint.");

@@ -20,7 +20,7 @@
  * Description     : Test that BTree enforced open index is used in query plan
  *                 : define the BTree enforced open index on a composite key (fname,lanme)
  *                 : predicate => where $l.fname > "Julio" and $l.lname > "Mattocks" and
- *					 $l.fname <= "Micco" and $l.lname < "Vangieson"
+ *                     $l.fname <= "Micco" and $l.lname < "Vangieson"
  * Expected Result : Success
  * Issue           : Issue 174
  * Date            : 27th March, 2014

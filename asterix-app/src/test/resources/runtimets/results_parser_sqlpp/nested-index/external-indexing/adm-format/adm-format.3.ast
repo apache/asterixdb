@@ -1,0 +1,123 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=point
+    ]
+  )
+  (
+    LiteralExpr [STRING] [kwds]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=kwds
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line1]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=line1
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=line2
+    ]
+  )
+  (
+    LiteralExpr [STRING] [poly1]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=poly1
+    ]
+  )
+  (
+    LiteralExpr [STRING] [poly2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=poly2
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rec]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=rec
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=circle
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData]
+  ]
+  AS
+  Variable [ Name=d ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=nested
+      ]
+      Field=id
+    ]
+    =
+    LiteralExpr [LONG] [10]
+  ]

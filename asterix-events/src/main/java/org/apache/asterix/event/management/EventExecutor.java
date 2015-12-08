@@ -25,15 +25,13 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-
-import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.event.driver.EventDriver;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.event.schema.cluster.Property;
 import org.apache.asterix.event.schema.pattern.Pattern;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.commons.io.IOUtils;
 
 public class EventExecutor {
 
@@ -70,8 +68,9 @@ public class EventExecutor {
                         if (node.getDebugPort() != null) {
                             int debugPort = node.getDebugPort().intValue();
                             if (!javaOpts.contains("-Xdebug")) {
-                                builder.append((" "
-                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                                builder.append(
+                                        (" " + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="
+                                                + debugPort));
                             }
                         }
                         builder.append("\"");
@@ -88,8 +87,9 @@ public class EventExecutor {
                         if (node.getDebugPort() != null) {
                             int debugPort = node.getDebugPort().intValue();
                             if (!javaOpts.contains("-Xdebug")) {
-                                builder.append((" "
-                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                                builder.append(
+                                        (" " + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="
+                                                + debugPort));
                             }
                         }
                         builder.append("\"");

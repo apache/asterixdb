@@ -41,7 +41,7 @@ import org.apache.hyracks.util.bytes.Base64Parser;
 import org.apache.hyracks.util.bytes.HexParser;
 
 public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    private static final long serialVersionUID = 1L;
     static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");
     static final UTF8StringPointable BASE64_FORMAT = UTF8StringPointable.generateUTF8Pointable("base64");
 
@@ -60,12 +60,12 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     @SuppressWarnings("unchecked")

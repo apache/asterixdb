@@ -130,26 +130,24 @@ Where
     ]
     and
     OperatorExpr [
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=o ]
-          Field=o_orderkey
-        ]
-        =
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=l_orderkey
-        ]
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderkey
       ]
-      and
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=t_sum_quantity
-        ]
-        >
-        LiteralExpr [LONG] [30]
+      =
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=l_orderkey
       ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=t_sum_quantity
+      ]
+      >
+      LiteralExpr [LONG] [30]
     ]
     and
     OperatorExpr [
@@ -159,8 +157,8 @@ Where
       ]
       =
       FieldAccessor [
-        Variable [ Name=o ]
-        Field=o_orderkey
+        Variable [ Name=t ]
+        Field=l_orderkey
       ]
     ]
   ]

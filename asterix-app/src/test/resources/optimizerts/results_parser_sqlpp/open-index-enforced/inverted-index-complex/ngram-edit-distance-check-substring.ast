@@ -50,16 +50,5 @@ Where
       LiteralExpr [STRING] [datbase]
       LiteralExpr [LONG] [1]
     ]
-    Index:     FunctionCall test.edit-distance-check@3[
-      FunctionCall test.substring@3[
-        FieldAccessor [
-          Variable [ Name=paper ]
-          Field=title
-        ]
-        LiteralExpr [LONG] [0]
-        LiteralExpr [LONG] [8]
-      ]
-      LiteralExpr [STRING] [datbase]
-      LiteralExpr [LONG] [1]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

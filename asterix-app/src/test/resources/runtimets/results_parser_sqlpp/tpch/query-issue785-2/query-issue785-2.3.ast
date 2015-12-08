@@ -129,7 +129,6 @@ LetVariable [ Name=X ]
       Variable [ Name=orders ]
       Variable [ Name=n ]
       Variable [ Name=customer ]
-      Variable [ Name=X ]
       Variable [ Name=t ]
 
     LetVariable [ Name=sum ]

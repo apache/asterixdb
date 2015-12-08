@@ -22,12 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
-import org.apache.asterix.om.base.AMutableDayTimeDuration;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,10 +32,8 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
 
     public static final ADayTimeDurationSerializerDeserializer INSTANCE = new ADayTimeDurationSerializerDeserializer();
 
-    @SuppressWarnings("unchecked")
-    private static final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
-    private static final AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
+    private ADayTimeDurationSerializerDeserializer() {
+    }
 
     @Override
     public ADayTimeDuration deserialize(DataInput in) throws HyracksDataException {
@@ -57,16 +50,6 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
             out.writeLong(instance.getMilliseconds());
         } catch (IOException e) {
             throw new HyracksDataException();
-        }
-    }
-
-    public void parse(String durationString, DataOutput out) throws HyracksDataException {
-        try {
-            ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aDayTimeDuration,
-                    ADurationParseOption.All);
-            dayTimeDurationSerde.serialize(aDayTimeDuration, out);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
         }
     }
 

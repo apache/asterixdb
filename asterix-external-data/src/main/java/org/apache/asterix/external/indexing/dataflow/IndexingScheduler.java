@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -41,7 +40,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
-@SuppressWarnings("deprecation")
 public class IndexingScheduler {
     private static final Logger LOGGER = Logger.getLogger(Scheduler.class.getName());
 
@@ -59,7 +57,7 @@ public class IndexingScheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
@@ -77,7 +75,7 @@ public class IndexingScheduler {
      * Set location constraints for a file scan operator with a list of file
      * splits. It tries to assign splits to their local machines fairly
      * Locality is more important than fairness
-     * 
+     *
      * @throws HyracksDataException
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
@@ -125,17 +123,16 @@ public class IndexingScheduler {
              * push non-data-local upper-bounds slots to each machine
              */
             locationToNumOfAssignement.clear();
-            for(String nc: NCs){
+            for (String nc : NCs) {
                 locationToNumOfAssignement.put(nc, 0);
             }
-            for(int i=0; i< scheduled.length;i++){
-                if(scheduled[i])
-                {
-                    locationToNumOfAssignement.put(locations[i], locationToNumOfAssignement.get(locations[i])+1);
+            for (int i = 0; i < scheduled.length; i++) {
+                if (scheduled[i]) {
+                    locationToNumOfAssignement.put(locations[i], locationToNumOfAssignement.get(locations[i]) + 1);
                 }
             }
-            
-            scheduleNonLocalSlots(splits, workloads, locations, upperBoundSlots, scheduled,locationToNumOfAssignement);
+
+            scheduleNonLocalSlots(splits, workloads, locations, upperBoundSlots, scheduled, locationToNumOfAssignement);
             return locations;
         } catch (IOException e) {
             throw new HyracksException(e);
@@ -144,7 +141,7 @@ public class IndexingScheduler {
 
     /**
      * Schedule non-local slots to each machine
-     * 
+     *
      * @param splits
      *            The HDFS file splits.
      * @param workloads
@@ -155,11 +152,12 @@ public class IndexingScheduler {
      *            The maximum slots of each machine.
      * @param scheduled
      *            Indicate which slot is scheduled.
-     * @param locationToNumOfAssignement 
+     * @param locationToNumOfAssignement
      */
     private void scheduleNonLocalSlots(InputSplit[] splits, final int[] workloads, String[] locations, int slotLimit,
-            boolean[] scheduled, final HashMap<String,Integer> locationToNumOfAssignement) throws IOException, UnknownHostException {
-        
+            boolean[] scheduled, final HashMap<String, Integer> locationToNumOfAssignement)
+                    throws IOException, UnknownHostException {
+
         PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(NCs.length, new Comparator<String>() {
             @Override
             public int compare(String s1, String s2) {
@@ -168,8 +166,7 @@ public class IndexingScheduler {
 
         });
 
-        
-        for(String nc:NCs){
+        for (String nc : NCs) {
             scheduleCadndiates.add(nc);
         }
         /**
@@ -193,7 +190,7 @@ public class IndexingScheduler {
 
     /**
      * Schedule data-local slots to each machine.
-     * 
+     *
      * @param splits
      *            The HDFS file splits.
      * @param workloads
@@ -216,8 +213,8 @@ public class IndexingScheduler {
         PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
             @Override
             public int compare(String s1, String s2) {
-                int assignmentDifference = locationToNumOfAssignement.get(s1).compareTo(
-                        locationToNumOfAssignement.get(s2));
+                int assignmentDifference = locationToNumOfAssignement.get(s1)
+                        .compareTo(locationToNumOfAssignement.get(s2));
                 if (assignmentDifference != 0) {
                     return assignmentDifference;
                 }
@@ -267,8 +264,8 @@ public class IndexingScheduler {
                                 locations[i] = nc;
                                 workloads[pos]++;
                                 scheduled[i] = true;
-                                locationToNumOfAssignement
-                                        .put(candidate, locationToNumOfAssignement.get(candidate) + 1);
+                                locationToNumOfAssignement.put(candidate,
+                                        locationToNumOfAssignement.get(candidate) + 1);
                                 break;
                             }
                         }
@@ -287,7 +284,7 @@ public class IndexingScheduler {
 
     /**
      * Scan the splits once and build a popularity map
-     * 
+     *
      * @param splits
      *            the split array
      * @param locationToNumOfSplits
@@ -311,7 +308,7 @@ public class IndexingScheduler {
 
     /**
      * Load the IP-address-to-NC map from the NCNameToNCInfoMap
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */

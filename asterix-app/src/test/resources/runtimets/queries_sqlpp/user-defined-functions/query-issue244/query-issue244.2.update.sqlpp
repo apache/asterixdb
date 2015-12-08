@@ -18,19 +18,28 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue244
+                 : https://code.google.com/p/asterixdb/issues/detail?id=244
+ * Expected Res : Success
+ * Date         : 4th June 2013
+ */
 
 use test;
 
 
 insert into t1
-select element {'id':21,'name':'John'};
+({'id':21,'name':'John'});
+
 insert into t1
-select element {'id':34,'name':'Bill'};
+({'id':34,'name':'Bill'});
+
 insert into t1
-select element {'id':41,'name':'Joy'};
+{'id':41,'name':'Joy'};
+
 insert into t1
-select element {'id':16,'name':'Sam'};
+{'id':16,'name':'Sam'};
+
 insert into t1
-select element {'id':67,'name':'Ravi'};
+{'id':67,'name':'Ravi'};
+
 insert into t2
-select element test.f1();
+test.f1();

@@ -23,9 +23,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -33,6 +30,7 @@ import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -40,7 +38,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class OpenRecordConstructorResultType implements IResultTypeComputer {
 
@@ -78,10 +75,6 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         IAType[] fieldTypes = new IAType[n];
         fieldNames = namesList.toArray(fieldNames);
         fieldTypes = typesList.toArray(fieldTypes);
-        try {
-            return new ARecordType(null, fieldNames, fieldTypes, true);
-        } catch (AsterixException | HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+        return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 }

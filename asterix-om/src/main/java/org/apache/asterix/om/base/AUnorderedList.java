@@ -19,19 +19,19 @@
 package org.apache.asterix.om.base;
 
 import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AUnorderedList implements IACollection {
 
-    protected ArrayList<IAObject> values;
+    protected List<IAObject> values;
     protected AUnorderedListType type;
 
     public AUnorderedList(AUnorderedListType type) {
@@ -39,7 +39,7 @@ public class AUnorderedList implements IACollection {
         this.type = type;
     }
 
-    public AUnorderedList(AUnorderedListType type, ArrayList<IAObject> sequence) {
+    public AUnorderedList(AUnorderedListType type, List<IAObject> sequence) {
         values = sequence;
         this.type = type;
     }

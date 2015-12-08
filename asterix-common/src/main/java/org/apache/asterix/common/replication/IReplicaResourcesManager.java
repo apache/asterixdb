@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.replication;
 
-import java.io.IOException;
 import java.util.Set;
 
 public interface IReplicaResourcesManager {
@@ -28,7 +27,5 @@ public interface IReplicaResourcesManager {
     public String getLocalStorageFolder();
 
     public long getMinRemoteLSN(Set<String> remoteNodes);
-
-    public void deleteAsterixStorageData() throws IOException;
 
 }

@@ -41,6 +41,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new BinaryLengthDescriptor();
         }
@@ -48,11 +49,13 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     private static final ATypeTag[] EXPECTED_TAGS = { ATypeTag.BINARY };
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
-                    throws AlgebricksException {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     private AMutableInt64 result = new AMutableInt64(0);
@@ -60,7 +63,8 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
-                    @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         ATypeTag tag = evaluateTuple(tuple, 0);
                         try {
                             if (serializeNullIfAnyNull(tag)) {
@@ -80,7 +84,8 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
         };
     }
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.BINARY_LENGTH;
     }
 }

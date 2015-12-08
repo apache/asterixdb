@@ -23,14 +23,15 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.util.List;
 
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.api.java.AsterixJavaClient;
-import org.apache.asterix.common.config.GlobalConfig;
 
 public class AsterixCLI {
     private static class Options {
@@ -48,13 +49,13 @@ public class AsterixCLI {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-
+        ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         setUp(options);
         try {
             for (String queryFile : options.args) {
                 Reader in = new FileReader(queryFile);
                 AsterixJavaClient ajc = new AsterixJavaClient(
-                        AsterixHyracksIntegrationUtil.getHyracksClientConnection(), in);
+                        AsterixHyracksIntegrationUtil.getHyracksClientConnection(), in, compilationProvider);
                 try {
                     ajc.compile(true, false, false, false, false, true, false);
                 } finally {
@@ -79,11 +80,11 @@ public class AsterixCLI {
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
 
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(false);
     }
 
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(false);
     }
 
 }

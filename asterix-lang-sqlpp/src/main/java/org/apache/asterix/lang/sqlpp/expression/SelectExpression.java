@@ -88,4 +88,8 @@ public class SelectExpression implements Expression {
         return subquery;
     }
 
+    public void setSubquery(boolean setSubquery) {
+        subquery = setSubquery;
+    }
+
 }

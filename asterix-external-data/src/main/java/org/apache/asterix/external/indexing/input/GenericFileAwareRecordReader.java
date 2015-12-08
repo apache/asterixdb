@@ -21,6 +21,7 @@ package org.apache.asterix.external.indexing.input;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,17 +29,15 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import org.apache.asterix.metadata.entities.ExternalFile;
 /**
  * This is a generic reader used for indexing external dataset or for performing full scan for external dataset with
  * a stored snapshot
- * @author alamouda
  *
+ * @author alamouda
  */
 
-@SuppressWarnings("deprecation")
-public class GenericFileAwareRecordReader extends GenericRecordReader{
-    
+public class GenericFileAwareRecordReader extends GenericRecordReader {
+
     private List<ExternalFile> files;
     private FileSystem hadoopFS;
     private long recordOffset = 0L;
@@ -71,16 +70,15 @@ public class GenericFileAwareRecordReader extends GenericRecordReader{
                 /**
                  * read the split
                  */
-                try{
-                    String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath()
-                            .toUri().getPath();
+                try {
+                    String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath().toUri().getPath();
                     FileStatus fileStatus = hadoopFS.getFileStatus(new Path(fileName));
                     //skip if not the same file stored in the files snapshot
-                    if(fileStatus.getModificationTime() != files.get(currentSplitIndex).getLastModefiedTime().getTime())
+                    if (fileStatus.getModificationTime() != files.get(currentSplitIndex).getLastModefiedTime()
+                            .getTime())
                         continue;
                     reader = getRecordReader(currentSplitIndex);
-                }
-                catch(Exception e){
+                } catch (Exception e) {
                     continue;
                 }
                 key = reader.createKey();
@@ -90,7 +88,7 @@ public class GenericFileAwareRecordReader extends GenericRecordReader{
         }
         return false;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public Object readNext() throws IOException {
@@ -125,5 +123,5 @@ public class GenericFileAwareRecordReader extends GenericRecordReader{
     public int getFileNumber() throws Exception {
         return files.get(currentSplitIndex).getFileNumber();
     }
-    
+
 }

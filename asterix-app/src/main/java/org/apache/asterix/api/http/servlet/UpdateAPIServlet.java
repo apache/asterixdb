@@ -23,22 +23,31 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class UpdateAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    public UpdateAPIServlet(ILangCompilationProvider compilationProvider) {
+        super(compilationProvider);
+    }
+
+    @Override
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("statements");
     }
 
+    @Override
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPDATE, Kind.DML_CMD_LIST,
-                Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT, Kind.EXTERNAL_DATASET_REFRESH };
+                Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
+                Kind.EXTERNAL_DATASET_REFRESH, Kind.RUN };
         return Arrays.asList(statementsArray);
     }
 
+    @Override
     protected String getErrorMessage() {
         return "Invalid statement: Non-Update statement %s to the Update API.";
     }

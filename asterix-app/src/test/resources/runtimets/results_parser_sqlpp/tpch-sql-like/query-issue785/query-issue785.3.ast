@@ -39,6 +39,7 @@ RecordConstructor [
         With
         Variable [ Name=i ]
         Variable [ Name=x ]
+        Variable [ Name=nation_key ]
 
       LetVariable [ Name=sum ]
         :=

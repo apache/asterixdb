@@ -22,15 +22,15 @@ use tpch;
 
 declare function tmp() {
 (
-    select element {'o_orderkey':l.l_orderkey}
+    select distinct element {'o_orderkey':l.l_orderkey}
     from  LineItem as l
     where (l.l_commitdate < l.l_receiptdate)
 )
 };
-select element {'order_priority':o_orderpriority,'count':tpch.count(o)}
-from  Orders as o,
-      tpch.tmp() as t
-where ((o.o_orderkey = t.o_orderkey) and (o.o_orderdate >= '1993-07-01') and (o.o_orderdate < '1993-10-01'))
+select element {'order_priority':o_orderpriority,'count':count(o)}
+from  Orders as o join
+      tpch.tmp() as t on o.o_orderkey = t.o_orderkey
+where o.o_orderdate >= '1993-07-01' and o.o_orderdate < '1993-10-01'
 group by o.o_orderpriority as o_orderpriority
 order by o_orderpriority
 ;

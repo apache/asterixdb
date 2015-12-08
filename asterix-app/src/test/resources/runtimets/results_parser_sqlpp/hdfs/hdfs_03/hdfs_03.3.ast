@@ -1,0 +1,45 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [word]
+    :
+    Variable [ Name=tok ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      Variable [ Name=token ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TextDataset]
+  ]
+  AS
+  Variable [ Name=line ]
+,
+  FunctionCall test.word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=line ]
+      Field=content
+    ]
+  ]
+  AS
+  Variable [ Name=token ]
+]
+Groupby
+  Variable [ Name=tok ]
+  :=
+  Variable [ Name=token ]
+  With
+  Variable [ Name=line ]
+  Variable [ Name=token ]
+
+Orderby
+  Variable [ Name=tok ]
+  ASC
+

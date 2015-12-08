@@ -29,10 +29,10 @@ from  (
     from  Orders as o,
           (
         select element {'l_extendedprice':l2.l_extendedprice,'l_discount':l2.l_discount,'l_quantity':l2.l_quantity,'l_orderkey':l2.l_orderkey,'n_name':l2.n_name,'ps_supplycost':l2.ps_supplycost}
-        from  Part as p,
+        from  Part as p join
               (
             select element {'l_extendedprice':l1.l_extendedprice,'l_discount':l1.l_discount,'l_quantity':l1.l_quantity,'l_partkey':l1.l_partkey,'l_orderkey':l1.l_orderkey,'n_name':l1.n_name,'ps_supplycost':ps.ps_supplycost}
-            from  Partsupp as ps,
+            from  Partsupp as ps join
                   (
                 select element {'l_suppkey':l.l_suppkey,'l_extendedprice':l.l_extendedprice,'l_discount':l.l_discount,'l_quantity':l.l_quantity,'l_partkey':l.l_partkey,'l_orderkey':l.l_orderkey,'n_name':s1.n_name}
                 from  (
@@ -40,13 +40,13 @@ from  (
                     from  Supplier as s,
                           Nation as n
                     where (n.n_nationkey = s.s_nationkey)
-                ) as s1,
+                ) as s1 join
                       LineItem as l
-                where (s1.s_suppkey = l.l_suppkey)
+                on (s1.s_suppkey = l.l_suppkey)
             ) as l1
-            where ((ps.ps_suppkey = l1.l_suppkey) and (ps.ps_partkey = l1.l_partkey))
+            on ((ps.ps_suppkey = l1.l_suppkey) and (ps.ps_partkey = l1.l_partkey))
         ) as l2
-        where (tpch.contains(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
+         on (tpch.contains(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
     ) as l3
     with  amount as ((l3.l_extendedprice * (1 - l3.l_discount)) - (l3.ps_supplycost * l3.l_quantity)),
           o_year as tpch."get-year"(o.o_orderdate)

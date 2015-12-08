@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SocketClientAdapter implements IFeedAdapter {
 
@@ -43,14 +42,11 @@ public class SocketClientAdapter implements IFeedAdapter {
 
     private final int port;
 
-    private final IHyracksTaskContext ctx;
-
     private boolean continueStreaming = true;
 
-    public SocketClientAdapter(Integer port, String localFile, IHyracksTaskContext ctx) {
+    public SocketClientAdapter(Integer port, String localFile) {
         this.localFile = localFile;
         this.port = port;
-        this.ctx = ctx;
     }
 
     @Override

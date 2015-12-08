@@ -1,0 +1,38 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+Variable [ Name=tm ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=tm ]
+]
+Where
+  QuantifiedExpression EVERY [
+    [Variable [ Name=h ]
+    In
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=tm ]
+          Field=user
+        ]
+        Field=hobbies
+      ]
+    ]
+    Satifies [
+      OperatorExpr [
+        Variable [ Name=h ]
+        =
+        LiteralExpr [STRING] [basket weaving]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=tm ]
+    Field=tweetid
+  ]
+  ASC
+

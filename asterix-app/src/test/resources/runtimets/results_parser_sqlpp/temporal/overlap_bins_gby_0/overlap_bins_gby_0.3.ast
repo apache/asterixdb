@@ -32,20 +32,35 @@ FROM [  (
     SELECT ELEMENT [
     RecordConstructor [
       (
-        LiteralExpr [STRING] [i]
-        :
-        Variable [ Name=i ]
-      )
-      (
         LiteralExpr [STRING] [bin]
         :
         Variable [ Name=bin ]
       )
+      (
+        LiteralExpr [STRING] [i]
+        :
+        Variable [ Name=i ]
+      )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
-        LiteralExpr [STRING] [tsdata]
-      ]
+    FROM [      (
+        SELECT ELEMENT [
+        Variable [ Name=i ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [tsdata]
+          ]
+          AS
+          Variable [ Name=i ]
+        ]
+        Orderby
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=time
+          ]
+          ASC
+
+      )
       AS
       Variable [ Name=i ]
 ,
@@ -107,3 +122,12 @@ LetVariable [ Name=itv ]
       Field=duration
     ]
   ]
+Orderby
+  FunctionCall test.get-interval-start@1[
+    FieldAccessor [
+      Variable [ Name=gen0 ]
+      Field=bin
+    ]
+  ]
+  ASC
+

@@ -41,5 +41,6 @@ select element {'nation_key':nation.n_nationkey,'name':nation.n_name,'aggregates
     )}
 from  Nation as nation,
       SelectedNation as sn
-where (nation.n_nationkey = sn.n_nationkey)
+where (nation.n_nationkey /*+ indexnl */ = sn.n_nationkey)
+order by nation.n_nationkey
 ;

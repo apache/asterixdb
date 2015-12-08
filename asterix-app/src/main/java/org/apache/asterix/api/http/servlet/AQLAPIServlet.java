@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class AQLAPIServlet extends RESTAPIServlet {
@@ -32,6 +33,10 @@ public class AQLAPIServlet extends RESTAPIServlet {
     private static final String AQL_STMT_PARAM_NAME = "aql";
 
     private static final List<Kind> allowedStatements = new ArrayList<>();
+
+    public AQLAPIServlet(ILangCompilationProvider compilationProvider) {
+        super(compilationProvider);
+    }
 
     static {
         for (Kind k : Kind.values()) {

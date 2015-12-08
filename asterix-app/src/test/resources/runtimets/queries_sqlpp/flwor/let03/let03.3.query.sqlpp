@@ -19,7 +19,7 @@
 /*
  * Description     :  Test let clause
  * Expected Result :  Success
- * Date            :  6th July 2012 
+ * Date            :  6th July 2012
  */
 
 (int64('92233720368547758') + 1);

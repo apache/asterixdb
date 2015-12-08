@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.aggregates.stream;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -44,6 +43,7 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
 
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.EMPTY_STREAM;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EmptyStreamAggregateDescriptor();
         }

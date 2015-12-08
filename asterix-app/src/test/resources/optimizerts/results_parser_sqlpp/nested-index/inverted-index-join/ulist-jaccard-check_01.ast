@@ -77,23 +77,7 @@ Where
         ]
         LiteralExpr [FLOAT] [0.7]
       ]
-      Index:       FunctionCall test.similarity-jaccard-check@3[
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=a ]
-            Field=nested
-          ]
-          Field=interests
-        ]
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=b ]
-            Field=nested
-          ]
-          Field=interests
-        ]
-        LiteralExpr [FLOAT] [0.7]
-      ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [

@@ -32,5 +32,5 @@ LetVariable [ Name=ed ]
 Where
   IndexAccessor [
     Variable [ Name=ed ]
-    Index:     Variable [ Name=ed ]
+    Index:     LiteralExpr [LONG] [0]
   ]

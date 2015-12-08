@@ -18,7 +18,7 @@
  */
 /*
  * Test case Name : toLowerCas03.aql
- * Description    : Test lowercase(string) function 
+ * Description    : Test lowercase(string) function
  *                : This test case covers Positive tests
  * Success        : Yes
  * Date           : 19th April 2012

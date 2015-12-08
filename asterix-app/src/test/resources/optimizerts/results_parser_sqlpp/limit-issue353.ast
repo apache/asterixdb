@@ -1,0 +1,60 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+WriteOutputTo nc1:/tmp/push_limit.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_returnflag]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_returnflag
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_linestatus]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_linestatus
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_shipmode]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_shipmode
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Limit
+  LiteralExpr [LONG] [2]

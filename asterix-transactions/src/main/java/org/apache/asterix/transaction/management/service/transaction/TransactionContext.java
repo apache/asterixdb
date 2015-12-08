@@ -43,12 +43,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
  * An object of TransactionContext is created and accessed(read/written) by multiple threads which work for
  * a single job identified by a jobId. Thus, the member variables in the object can be read/written
  * concurrently. Please see each variable declaration to know which one is accessed concurrently and
- * which one is not. 
+ * which one is not.
  */
 public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
-    private final TransactionSubsystem transactionSubsystem;
 
     // jobId is set once and read concurrently.
     private final JobId jobId;
@@ -93,13 +92,14 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private final MutableLong tempResourceIdForRegister;
     private final LogRecord logRecord;
 
+    private final AtomicInteger transactorNumActiveOperations;
+
     // TODO: implement transactionContext pool in order to avoid object
     // creations.
     // also, the pool can throttle the number of concurrent active jobs at every
     // moment.
     public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
         this.jobId = jobId;
-        this.transactionSubsystem = transactionSubsystem;
         firstLSN = new AtomicLong(-1);
         lastLSN = new AtomicLong(-1);
         txnState = new AtomicInteger(ITransactionManager.ACTIVE);
@@ -111,6 +111,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         tempResourceIdForRegister = new MutableLong();
         logRecord = new LogRecord();
         logRecord.setNodeId(transactionSubsystem.getId());
+        transactorNumActiveOperations = new AtomicInteger(0);
     }
 
     @Override
@@ -235,7 +236,17 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     public void cleanupForAbort() {
         if (primaryIndexOpTracker != null) {
-            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(primaryIndexCallback);
+            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(transactorNumActiveOperations.get());
         }
+    }
+
+    @Override
+    public void incrementNumActiveOperations() {
+        transactorNumActiveOperations.incrementAndGet();
+    }
+
+    @Override
+    public void decrementNumActiveOperations() {
+        transactorNumActiveOperations.decrementAndGet();
     }
 }

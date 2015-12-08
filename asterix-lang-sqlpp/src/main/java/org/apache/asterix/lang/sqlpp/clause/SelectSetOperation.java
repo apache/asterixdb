@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -35,7 +36,7 @@ public class SelectSetOperation implements Clause {
 
     public SelectSetOperation(SetOperationInput leftInput, List<SetOperationRight> rightInputs) {
         this.leftInput = leftInput;
-        this.rightInputs = rightInputs;
+        this.rightInputs = rightInputs == null ? new ArrayList<SetOperationRight>() : rightInputs;
     }
 
     @Override

@@ -59,5 +59,11 @@
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
+		<dependency>
+        <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.10</version>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 </project>

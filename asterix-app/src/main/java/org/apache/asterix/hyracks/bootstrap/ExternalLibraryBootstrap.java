@@ -100,8 +100,8 @@ public class ExternalLibraryBootstrap {
         return uninstalledLibs;
     }
 
-    private static boolean uninstallLibrary(String dataverse, String libraryName) throws AsterixException,
-            RemoteException, ACIDException {
+    private static boolean uninstallLibrary(String dataverse, String libraryName)
+            throws AsterixException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = null;
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -120,8 +120,8 @@ public class ExternalLibraryBootstrap {
                     .getDataverseFunctions(mdTxnCtx, dataverse);
             for (org.apache.asterix.metadata.entities.Function function : functions) {
                 if (function.getName().startsWith(libraryName + "#")) {
-                    MetadataManager.INSTANCE.dropFunction(mdTxnCtx, new FunctionSignature(dataverse,
-                            function.getName(), function.getArity()));
+                    MetadataManager.INSTANCE.dropFunction(mdTxnCtx,
+                            new FunctionSignature(dataverse, function.getName(), function.getArity()));
                 }
             }
 
@@ -156,8 +156,8 @@ public class ExternalLibraryBootstrap {
         MetadataManager.INSTANCE.acquireWriteLatch();
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            org.apache.asterix.metadata.entities.Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(
-                    mdTxnCtx, dataverse, libraryName);
+            org.apache.asterix.metadata.entities.Library libraryInMetadata = MetadataManager.INSTANCE
+                    .getLibrary(mdTxnCtx, dataverse, libraryName);
             if (libraryInMetadata != null && !wasUninstalled) {
                 return;
             }
@@ -190,9 +190,9 @@ public class ExternalLibraryBootstrap {
                         args.add(arg);
                     }
                     org.apache.asterix.metadata.entities.Function f = new org.apache.asterix.metadata.entities.Function(
-                            dataverse, libraryName + "#" + function.getName().trim(), args.size(), args, function
-                                    .getReturnType().trim(), function.getDefinition().trim(), library.getLanguage()
-                                    .trim(), function.getFunctionType().trim());
+                            dataverse, libraryName + "#" + function.getName().trim(), args.size(), args,
+                            function.getReturnType().trim(), function.getDefinition().trim(),
+                            library.getLanguage().trim(), function.getFunctionType().trim());
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Installed function: " + libraryName + "#" + function.getName().trim());
@@ -221,8 +221,8 @@ public class ExternalLibraryBootstrap {
                 LOGGER.info("Installed adapters contain in library :" + libraryName);
             }
 
-            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new org.apache.asterix.metadata.entities.Library(dataverse,
-                    libraryName));
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx,
+                    new org.apache.asterix.metadata.entities.Library(dataverse, libraryName));
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Added library " + libraryName + "to Metadata");
@@ -240,8 +240,8 @@ public class ExternalLibraryBootstrap {
         }
     }
 
-    private static void registerLibrary(String dataverse, String libraryName, boolean isMetadataNode, File installLibDir)
-            throws Exception {
+    private static void registerLibrary(String dataverse, String libraryName, boolean isMetadataNode,
+            File installLibDir) throws Exception {
         ClassLoader classLoader = getLibraryClassLoader(dataverse, libraryName);
         ExternalLibraryManager.registerLibraryClassLoader(dataverse, libraryName, classLoader);
     }
@@ -261,8 +261,10 @@ public class ExternalLibraryBootstrap {
                     + " Install Directory: " + installDir.getAbsolutePath());
         }
 
-        File libDir = new File(installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
+        File libDir = new File(
+                installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
         FilenameFilter jarFileFilter = new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return name.endsWith(".jar");
             }
@@ -288,12 +290,12 @@ public class ExternalLibraryBootstrap {
         ClassLoader parentClassLoader = ExternalLibraryBootstrap.class.getClassLoader();
         URL[] urls = new URL[numDependencies];
         int count = 0;
-        urls[count++] = libJar.toURL();
+        urls[count++] = libJar.toURI().toURL();
 
         if (libraryDependencies != null && libraryDependencies.length > 0) {
             for (String dependency : libraryDependencies) {
                 File file = new File(libDependencyDir + File.separator + dependency);
-                urls[count++] = file.toURL();
+                urls[count++] = file.toURI().toURL();
             }
         }
 

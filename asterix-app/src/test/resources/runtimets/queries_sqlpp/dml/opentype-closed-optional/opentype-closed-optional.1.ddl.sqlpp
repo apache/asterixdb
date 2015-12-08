@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : opentype-closed-optional.aql
  * Description     : verify that closed type can have optional fields
  * Expected Result : Success

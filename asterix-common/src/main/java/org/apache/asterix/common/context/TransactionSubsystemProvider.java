@@ -29,6 +29,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
  * while at the same time the AsterixAppRuntimeContext depends on asterix-transactions for the TransactionSubsystem.
  */
 public class TransactionSubsystemProvider implements ITransactionSubsystemProvider {
+    private static final long serialVersionUID = 1L;
+
     @Override
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()

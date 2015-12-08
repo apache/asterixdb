@@ -29,7 +29,7 @@ import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -324,7 +324,7 @@ public class AccessMethodUtils {
      * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query then this method returns
      * the a ConstantExpression from the first constant value in the optimizable function expression.
      * If we are optimizing a join, then this method returns the VariableReferenceExpression that should feed the secondary index probe.
-     * 
+     *
      * @throws AlgebricksException
      */
     public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
@@ -428,7 +428,7 @@ public class AccessMethodUtils {
                 secondaryIndexUnnestVars);
         appendSecondaryIndexTypes(dataset, recordType, index, outputPrimaryKeysOnly, secondaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
-        IFunctionInfo secondaryIndexSearch = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+        IFunctionInfo secondaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
         UnnestingFunctionCallExpression secondaryIndexSearchFunc = new UnnestingFunctionCallExpression(
                 secondaryIndexSearch, secondaryIndexFuncArgs);
         secondaryIndexSearchFunc.setReturnsUniqueValues(true);
@@ -486,7 +486,7 @@ public class AccessMethodUtils {
             throw new AlgebricksException(e);
         }
         // An index search is expressed as an unnest over an index-search function.
-        IFunctionInfo primaryIndexSearch = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+        IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
         AbstractFunctionCallExpression primaryIndexSearchFunc = new ScalarFunctionCallExpression(primaryIndexSearch,
                 primaryIndexFuncArgs);
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
@@ -621,7 +621,7 @@ public class AccessMethodUtils {
         externalAccessByRIDVars.addAll(dataSourceOp.getVariables());
         appendExternalRecTypes(dataset, recordType, externalAccessOutputTypes);
 
-        IFunctionInfo externalAccessByRID = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EXTERNAL_LOOKUP);
+        IFunctionInfo externalAccessByRID = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.EXTERNAL_LOOKUP);
         AbstractFunctionCallExpression externalAccessFunc = new ScalarFunctionCallExpression(externalAccessByRID,
                 externalRIDAccessFuncArgs);
 

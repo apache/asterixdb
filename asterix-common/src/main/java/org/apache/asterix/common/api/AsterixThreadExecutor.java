@@ -37,7 +37,7 @@ public class AsterixThreadExecutor implements Executor {
         executorService.execute(command);
     }
 
-    public Future<Object> submit(Callable command) {
-        return (Future<Object>) executorService.submit(command);
+    public Future<? extends Object> submit(Callable<? extends Object> command) {
+        return executorService.submit(command);
     }
 }

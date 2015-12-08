@@ -30,19 +30,20 @@ import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDe
 public class ABinarySerializerDeserializer implements ISerializerDeserializer<ABinary> {
 
     private static final long serialVersionUID = 1L;
+    public static final ABinarySerializerDeserializer INSTANCE = new ABinarySerializerDeserializer();
 
-    public ABinarySerializerDeserializer() {}
-
-    private ByteArraySerializerDeserializer byteArrayPtrSerDer = new ByteArraySerializerDeserializer();
+    private ABinarySerializerDeserializer() {
+    }
 
     @Override
     public ABinary deserialize(DataInput in) throws HyracksDataException {
-        return new ABinary(byteArrayPtrSerDer.deserialize(in));
+        return new ABinary(ByteArraySerializerDeserializer.INSTANCE.deserialize(in));
     }
 
     @Override
     public void serialize(ABinary binary, DataOutput out) throws HyracksDataException {
-        byteArrayPtrSerDer.serialize(binary.getBytes(), binary.getStart(), binary.getLength(), out);
+        ByteArraySerializerDeserializer.INSTANCE.serialize(binary.getBytes(), binary.getStart(), binary.getLength(),
+                out);
     }
 
 }

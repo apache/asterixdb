@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : This test case is to verify the fix for issue400
 
-"sql-count"(select element i
+"sql-count"((select element i
 from  [[1,2,3,4,5],[6,7,8,9]] as i
-);
+));

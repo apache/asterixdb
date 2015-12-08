@@ -119,7 +119,7 @@ RecordConstructor [
         OperatorExpr [
           IndexAccessor [
             Variable [ Name=sim ]
-            Index:             Variable [ Name=sim ]
+            Index:             LiteralExpr [LONG] [0]
           ]
           and
           OperatorExpr [

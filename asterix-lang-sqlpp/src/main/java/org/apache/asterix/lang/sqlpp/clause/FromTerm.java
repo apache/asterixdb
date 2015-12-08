@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -39,7 +40,8 @@ public class FromTerm implements Clause {
         this.leftExpr = leftExpr;
         this.leftVar = leftVar;
         this.posVar = posVar;
-        this.correlateClauses = correlateClauses;
+        this.correlateClauses = correlateClauses == null ? new ArrayList<AbstractBinaryCorrelateClause>()
+                : correlateClauses;
     }
 
     @Override

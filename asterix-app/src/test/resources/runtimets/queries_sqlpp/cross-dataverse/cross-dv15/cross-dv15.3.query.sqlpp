@@ -23,7 +23,13 @@
  * Date         : 30th Aug 2012
  */
 
-select element l
+select element {
+'DataverseName': l.DataverseName,
+'Name': l.Name,
+'Arity': l.Arity,
+'ReturnType': l.ReturnType,
+'Language': l.Language
+}
 from  "Metadata.Function" as l
 where (l.DataverseName = 'testdv1')
 ;

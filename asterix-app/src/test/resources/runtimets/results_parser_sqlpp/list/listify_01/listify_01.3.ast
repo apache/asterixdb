@@ -1,13 +1,20 @@
 DataverseUse test
 Query:
+LetVariable [ Name=token_list ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=token ]
+    ]
+    FROM [      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [2]
+        LiteralExpr [LONG] [3]
+      ]
+      AS
+      Variable [ Name=token ]
+    ]
+  )
 SELECT ELEMENT [
-Variable [ Name=token ]
-]
-FROM [  OrderedListConstructor [
-    LiteralExpr [LONG] [1]
-    LiteralExpr [LONG] [2]
-    LiteralExpr [LONG] [3]
-  ]
-  AS
-  Variable [ Name=token ]
+Variable [ Name=token_list ]
 ]

@@ -49,5 +49,5 @@ LetVariable [ Name=jacc ]
 Where
   IndexAccessor [
     Variable [ Name=jacc ]
-    Index:     Variable [ Name=jacc ]
+    Index:     LiteralExpr [LONG] [0]
   ]

@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : scan-insert-inverted-index-word-secondary-index-nullable.aql
- * Description     : This test is intended to test insertion from secondary keyword inverted index that are built on nullable fields.  
+ * Description     : This test is intended to test insertion from secondary keyword inverted index that are built on nullable fields.
  * Expected Result : Success
  * Date            : March 31 2013
  */

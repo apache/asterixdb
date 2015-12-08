@@ -30,7 +30,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AFloat;
@@ -653,14 +653,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(surrogateSubTreePKs.get(i))));
             args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));
             ILogicalExpression eqFunc = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
+                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
             eqExprs.add(new MutableObject<ILogicalExpression>(eqFunc));
         }
         if (eqExprs.size() == 1) {
             return eqExprs.get(0);
         } else {
             ILogicalExpression andFunc = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.AND), eqExprs);
+                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND), eqExprs);
             return new MutableObject<ILogicalExpression>(andFunc);
         }
     }
@@ -742,7 +742,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 isFilterableArgs.add(
                         new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(usePrePost)));
                 isFilterableExpr = new ScalarFunctionCallExpression(
-                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE),
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE),
                         isFilterableArgs);
                 break;
             }
@@ -754,7 +754,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantAtRuntimeExpr(0)));
                 isFilterableExpr = new ScalarFunctionCallExpression(
-                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE),
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE),
                         isFilterableArgs);
                 break;
             }
@@ -773,7 +773,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         List<Mutable<ILogicalExpression>> isNotFilterableArgs = new ArrayList<Mutable<ILogicalExpression>>();
         isNotFilterableArgs.add(new MutableObject<ILogicalExpression>(isFilterableExpr));
         ILogicalExpression isNotFilterableExpr = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT), isNotFilterableArgs);
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), isNotFilterableArgs);
         SelectOperator isNotFilterableSelectOp = new SelectOperator(
                 new MutableObject<ILogicalExpression>(isNotFilterableExpr), false, null);
         isNotFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));

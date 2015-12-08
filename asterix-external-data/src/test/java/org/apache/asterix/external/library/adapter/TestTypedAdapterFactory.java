@@ -20,28 +20,19 @@ package org.apache.asterix.external.library.adapter;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
-import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
-import org.apache.asterix.metadata.external.IAdapterFactory.SupportedOperation;
 import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class TestTypedAdapterFactory implements IFeedAdapterFactory {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     public static final String NAME = "test_typed_adapter";
@@ -55,18 +46,6 @@ public class TestTypedAdapterFactory implements IFeedAdapterFactory {
     @Override
     public SupportedOperation getSupportedOperations() {
         return SupportedOperation.READ;
-    }
-
-    private static ARecordType initOutputType() {
-        String[] fieldNames = new String[] { "id", "message-text" };
-        IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, BuiltinType.ASTRING };
-        ARecordType outputType = null;
-        try {
-            outputType = new ARecordType("TestTypedAdapterOutputType", fieldNames, fieldTypes, false);
-        } catch (AsterixException | HyracksDataException exception) {
-            throw new IllegalStateException("Unable to create output type for adapter " + NAME);
-        }
-        return outputType;
     }
 
     @Override

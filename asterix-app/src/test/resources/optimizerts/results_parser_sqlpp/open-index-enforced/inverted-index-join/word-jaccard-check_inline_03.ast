@@ -27,7 +27,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=jacc ]
-      Index:       Variable [ Name=jacc ]
+      Index:       LiteralExpr [LONG] [1]
     ]
   )
 ]
@@ -65,7 +65,7 @@ Where
   OperatorExpr [
     IndexAccessor [
       Variable [ Name=jacc ]
-      Index:       Variable [ Name=jacc ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [

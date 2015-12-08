@@ -75,23 +75,7 @@ Where
         ]
         LiteralExpr [LONG] [3]
       ]
-      Index:       FunctionCall test.edit-distance-check@3[
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=a ]
-            Field=nested
-          ]
-          Field=authors
-        ]
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=b ]
-            Field=nested
-          ]
-          Field=authors
-        ]
-        LiteralExpr [LONG] [3]
-      ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [

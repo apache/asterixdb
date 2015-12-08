@@ -30,10 +30,11 @@ declare function tmp() {
     group by l.l_partkey as l_partkey
 )
 };
+
 select element (tpch.sum((
       select element l.l_extendedprice
-      from  LineItem as l,
-            Part as p,
-            tpch.tmp() as t
-      where (((p.p_partkey = l.l_partkey) and (p.p_container = 'MED BOX')) and ((l.l_partkey = t.t_partkey) and (l.l_quantity < t.t_avg_quantity)))
+      from  tpch.tmp() as t,
+            LineItem as l,
+            Part as p
+      where p.p_partkey = l.l_partkey and p.p_container = 'MED BOX' and l.l_partkey = t.t_partkey and l.l_quantity < t.t_avg_quantity
   )) / 7.0);

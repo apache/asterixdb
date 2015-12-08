@@ -40,7 +40,7 @@ create type test.DBLPType as
   misc : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     nc1,
     nc2
 ;

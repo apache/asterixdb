@@ -19,50 +19,24 @@
 package org.apache.asterix.aoya.test;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.yarn.api.ApplicationConstants;
-import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.server.MiniYARNCluster;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
-
 import org.apache.asterix.aoya.AsterixYARNClient;
 import org.apache.asterix.aoya.Utils;
-import org.apache.asterix.event.error.VerificationUtil;
-import org.apache.asterix.event.model.AsterixInstance;
-import org.apache.asterix.event.model.AsterixInstance.State;
-import org.apache.asterix.event.model.AsterixRuntimeState;
-import org.apache.asterix.event.schema.yarnCluster.Cluster;
-import org.apache.asterix.event.schema.yarnCluster.Node;
-import org.apache.asterix.event.service.ServiceProvider;
-import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.aoya.test.YARNCluster;
-import org.apache.asterix.common.configuration.AsterixConfiguration;
-import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.junit.runners.Parameterized.Parameters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AsterixYARNLifecycleIT {
 
-    private static final String PATH_ACTUAL = "ittest/";
     private static final Logger LOGGER = Logger.getLogger(AsterixYARNLifecycleIT.class.getName());
     private static final String INSTANCE_NAME = "asterix-integration-test";
     private static YarnConfiguration appConf;
@@ -141,7 +115,8 @@ public class AsterixYARNLifecycleIT {
 
     @Test
     public void test_8_DeleteActiveInstance() throws Exception {
-        String command = "-n " + INSTANCE_NAME + " -zip " + aoyaServerPath + " -f" + " -bc " + parameterPath + " destroy";
+        String command = "-n " + INSTANCE_NAME + " -zip " + aoyaServerPath + " -f" + " -bc " + parameterPath
+                + " destroy";
         executeAoyaCommand(command);
     }
 

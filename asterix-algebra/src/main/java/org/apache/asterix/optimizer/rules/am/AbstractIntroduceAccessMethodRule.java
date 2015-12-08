@@ -174,7 +174,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * only require a match on a prefix of fields to be applicable. This methods
      * removes all index candidates indexExprs that are definitely not
      * applicable according to the expressions involved.
-     * 
+     *
      * @throws AlgebricksException
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx,
@@ -333,7 +333,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Analyzes the given selection condition, filling analyzedAMs with
      * applicable access method types. At this point we are not yet consulting
      * the metadata whether an actual index exists or not.
-     * 
+     *
      * @throws AlgebricksException
      */
     protected boolean analyzeCondition(ILogicalExpression cond, List<AbstractLogicalOperator> assignsAndUnnests,
@@ -364,7 +364,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds applicable access methods for the given function expression based
      * on the function identifier, and an analysis of the function's arguments.
      * Updates the analyzedAMs accordingly.
-     * 
+     *
      * @throws AlgebricksException
      */
     protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr,
@@ -411,7 +411,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds secondary indexes whose keys include fieldName, and adds a mapping
      * in analysisCtx.indexEsprs from that index to the a corresponding
      * optimizable function expression.
-     * 
+     *
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
      * @throws AlgebricksException

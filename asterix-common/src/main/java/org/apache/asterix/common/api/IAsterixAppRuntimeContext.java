@@ -69,7 +69,7 @@ public interface IAsterixAppRuntimeContext {
 
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
-    public void initialize() throws IOException, ACIDException, AsterixException;
+    public void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException;
 
     public void setShuttingdown(boolean b);
 

@@ -181,10 +181,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
-    public void cleanupNumActiveOperationsForAbortedJob(AbstractOperationCallback callback) {
-        int delta = callback.getLocalNumActiveOperations() * -1;
-        numActiveOperations.getAndAdd(delta);
-        callback.resetLocalNumActiveOperations();
+    public void cleanupNumActiveOperationsForAbortedJob(int numberOfActiveOperations) {
+        numberOfActiveOperations *= -1;
+        numActiveOperations.getAndAdd(numberOfActiveOperations);
     }
 
     public boolean isFlushOnExit() {

@@ -103,7 +103,9 @@ public class ConnectorAPIServletTest {
                 new ByteArrayInputStream(outputStream.toByteArray())));
         JSONObject actualResponse = new JSONObject(tokener);
 
-        // Checks the data type of the dataset.
+        // Checks the temp-or-not, primary key, data type of the dataset.
+        boolean temp = actualResponse.getBoolean("temp");
+        Assert.assertFalse(temp);
         String primaryKey = actualResponse.getString("keys");
         Assert.assertEquals("DataverseName,DatasetName", primaryKey);
         ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON((JSONObject) actualResponse
@@ -144,20 +146,23 @@ public class ConnectorAPIServletTest {
         nodeMap.put("nc2", mockInfo2);
         PA.invokeMethod(servlet,
                 "formResponseObject(org.json.JSONObject, org.apache.hyracks.dataflow.std.file.FileSplit[], "
-                        + "org.apache.asterix.om.types.ARecordType, java.lang.String, java.util.Map)", actualResponse,
-                splits, recordType, primaryKey, nodeMap);
+                        + "org.apache.asterix.om.types.ARecordType, java.lang.String, boolean, java.util.Map)",
+                actualResponse, splits, recordType, primaryKey, true, nodeMap);
 
         // Constructs expected response.
         JSONObject expectedResponse = new JSONObject();
+        expectedResponse.put("temp", true);
         expectedResponse.put("keys", primaryKey);
         expectedResponse.put("type", recordType.toJSON());
         JSONArray splitsArray = new JSONArray();
         JSONObject element1 = new JSONObject();
         element1.put("ip", "127.0.0.1");
         element1.put("path", splits[0].getLocalFile().getFile().getAbsolutePath());
+        element1.put("ioDeviceId", 0);
         JSONObject element2 = new JSONObject();
         element2.put("ip", "127.0.0.2");
         element2.put("path", splits[1].getLocalFile().getFile().getAbsolutePath());
+        element2.put("ioDeviceId", 0);
         splitsArray.put(element1);
         splitsArray.put(element2);
         expectedResponse.put("splits", splitsArray);

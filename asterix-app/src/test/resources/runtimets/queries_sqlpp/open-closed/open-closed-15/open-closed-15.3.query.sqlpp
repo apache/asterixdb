@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Testcase Name  : open-closed-15.aql  
+ * Testcase Name  : open-closed-15.aql
  * Description    : Test closed type dataset (with primitives).
  *                : Create Index on int 32 field
  *                : Insert data into primitives and retrieve data.

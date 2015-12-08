@@ -19,7 +19,7 @@
 /*
  * Test case Name : cpttostr01.aql
  * Description    : Test codepoint-to-string(codepoint) function.
- *                : Pass the codepoints which are in the internal dataset to the function. 
+ *                : Pass the codepoints which are in the internal dataset to the function.
  * Success        : Yes
  * Date           : 16th April 2012
  */

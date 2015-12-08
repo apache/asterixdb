@@ -19,6 +19,8 @@
 package org.apache.asterix.translator;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
@@ -27,7 +29,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 public final class TranslationContext {
 
     private Counter varCounter;
-    private HashMap<Integer, LogicalVariable> varEnv = new HashMap<Integer, LogicalVariable>();
+
+    /** The stack is the used to manage the scope of variables for group-by rebindings. */
+    private Stack<Map<Integer, LogicalVariable>> stack = new Stack<Map<Integer, LogicalVariable>>();
+    private Map<Integer, LogicalVariable> currentVarMap = new HashMap<Integer, LogicalVariable>();
     private boolean topFlwor = true;
 
     public TranslationContext(Counter varCounter) {
@@ -47,11 +52,11 @@ public final class TranslationContext {
     }
 
     public LogicalVariable getVar(Integer varId) {
-        return varEnv.get(varId);
+        return currentVarMap.get(varId);
     }
 
     public LogicalVariable getVar(VariableExpr v) {
-        return varEnv.get(v.getVar().getId());
+        return currentVarMap.get(v.getVar().getId());
     }
 
     public LogicalVariable newVar(VariableExpr v) {
@@ -60,18 +65,52 @@ public final class TranslationContext {
             varCounter.set(i);
         }
         LogicalVariable var = new LogicalVariable(i);
-        varEnv.put(i, var);
+        currentVarMap.put(i, var);
         return var;
     }
 
     public void setVar(VariableExpr v, LogicalVariable var) {
-        varEnv.put(v.getVar().getId(), var);
+        currentVarMap.put(v.getVar().getId(), var);
     }
 
     public LogicalVariable newVar() {
         varCounter.inc();
         LogicalVariable var = new LogicalVariable(varCounter.get());
-        varEnv.put(varCounter.get(), var);
+        currentVarMap.put(varCounter.get(), var);
         return var;
+    }
+
+    /**
+     * Within a subplan, an unbounded variable can be rebound in
+     * the group-by operator. But the rebinding only exists
+     * in the subplan.
+     * This method marks that the translation enters a subplan.
+     */
+    public void enterSubplan() {
+        Map<Integer, LogicalVariable> varMap = new HashMap<Integer, LogicalVariable>();
+        varMap.putAll(currentVarMap);
+        stack.push(currentVarMap);
+        currentVarMap = varMap;
+    }
+
+    /***
+     * This method marks that the translation exits a subplan.
+     */
+    public void existSubplan() {
+        if (!stack.isEmpty()) {
+            currentVarMap = stack.pop();
+        }
+    }
+
+    /**
+     * @return the variables produced by the top operator in a subplan.
+     */
+    public LogicalVariable newSubplanOutputVar() {
+        LogicalVariable newVar = newVar();
+        if (!stack.isEmpty()) {
+            Map<Integer, LogicalVariable> varMap = stack.peek();
+            varMap.put(varCounter.get(), newVar);
+        }
+        return newVar;
     }
 }

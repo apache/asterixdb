@@ -33,9 +33,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.ActiveActivity;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
@@ -137,8 +137,9 @@ public class FeedServlet extends HttpServlet {
         String store = activity.getActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
         IActiveLoadManager loadManager = CentralActiveManager.getInstance().getLoadManager();
-        ActiveJobId connectionId = new FeedConnectionId(new ActiveObjectId(activity.getDataverseName(),
-                activity.getObjectName(), ActiveObjectType.FEED), activity.getDatasetName());
+        ActiveJobId connectionId = new FeedConnectionId(
+                new ActiveObjectId(activity.getDataverseName(), activity.getObjectName(), ActiveObjectType.FEED),
+                activity.getDatasetName());
         int intakeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.COLLECT) * intake.split(",").length;
         int storeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.STORE) * store.split(",").length;
 
@@ -165,10 +166,6 @@ public class FeedServlet extends HttpServlet {
             html.append("<td>" + insertColoredText("" + storeRate, color) + " rec/sec" + "</td>");
         }
         html.append("</tr>");
-    }
-
-    private String insertLink(StringBuilder html, String url, String displayText) {
-        return ("<a href=\"" + url + "\">" + displayText + "</a>");
     }
 
     private String insertColoredText(String s, String color) {

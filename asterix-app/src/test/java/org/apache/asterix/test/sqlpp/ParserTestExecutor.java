@@ -21,27 +21,28 @@ package org.apache.asterix.test.sqlpp;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.sqlpp.parser.SQLPPParser;
-import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriter;
-import org.apache.asterix.lang.sqlpp.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
+import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.test.aql.TestExecutor;
@@ -53,6 +54,9 @@ import org.apache.asterix.testframework.xml.TestGroup;
 import junit.extensions.PA;
 
 public class ParserTestExecutor extends TestExecutor {
+
+    private IParserFactory sqlppParserFactory = new SqlppParserFactory();
+    private IRewriterFactory sqlppRewriterFactory = new SqlppRewriterFactory();
 
     @Override
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
@@ -102,10 +106,9 @@ public class ParserTestExecutor extends TestExecutor {
 
     // Tests the SQL++ parser.
     public void testSQLPPParser(File queryFile, File actualResultFile, File expectedFile) throws Exception {
-        Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
         actualResultFile.getParentFile().mkdirs();
         PrintWriter writer = new PrintWriter(new FileOutputStream(actualResultFile));
-        SQLPPParser parser = new SQLPPParser(reader);
+        IParser parser = sqlppParserFactory.createParser(readTestFile(queryFile));
         GlobalConfig.ASTERIX_LOGGER.info(queryFile.toString());
         try {
             List<Statement> statements = parser.parse();
@@ -117,13 +120,14 @@ public class ParserTestExecutor extends TestExecutor {
             Map<String, String> config = mock(Map.class);
             when(aqlMetadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(aqlMetadataProvider.getConfig()).thenReturn(config);
-            when(config.get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
+            when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
 
             for (Statement st : statements) {
                 if (st.getKind() == Kind.QUERY) {
                     Query query = (Query) st;
-                    SqlppRewriter rewriter = new SqlppRewriter(functions, query, aqlMetadataProvider);
-                    rewrite(rewriter);
+                    IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
+                    rewrite(rewriter, functions, query, aqlMetadataProvider,
+                            new LangRewritingContext(query.getVarCounter()));
                 }
                 SqlppAstPrintUtil.print(st, writer);
             }
@@ -131,10 +135,9 @@ public class ParserTestExecutor extends TestExecutor {
             // Compares the actual result and the expected result.
             runScriptAndCompareWithResult(queryFile, new PrintWriter(System.err), expectedFile, actualResultFile);
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + reader);
+            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + queryFile);
             throw e;
         } finally {
-            reader.close();
             writer.close();
         }
     }
@@ -164,9 +167,14 @@ public class ParserTestExecutor extends TestExecutor {
     // Rewrite queries.
     // Note: we do not do inline function rewriting here because this needs real
     // metadata access.
-    private void rewrite(SqlppRewriter rewriter) throws AsterixException {
+    private void rewrite(IQueryRewriter rewriter, List<FunctionDecl> declaredFunctions, Query topExpr,
+            AqlMetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+        PA.invokeMethod(rewriter,
+                "setup(java.util.List, org.apache.asterix.lang.common.statement.Query, org.apache.asterix.metadata.declared.AqlMetadataProvider, "
+                        + "org.apache.asterix.lang.common.rewrites.LangRewritingContext)",
+                declaredFunctions, topExpr, metadataProvider, context);
         PA.invokeMethod(rewriter, "inlineColumnAlias()");
-        PA.invokeMethod(rewriter, "variableCheckAndRewrite()");
+        PA.invokeMethod(rewriter, "variableCheckAndRewrite(boolean)", Boolean.TRUE);
     }
 
 }

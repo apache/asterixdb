@@ -30,4 +30,5 @@ for $i in dataset tsdata
     order by get-interval-start($bin)
     for $x in $i
       let $itv := interval-start-from-time($x.time, $x.duration)
+      order by get-interval-start($bin)
       return { "tbin": $bin, "interval": $itv, "overlap": get-overlapping-interval($bin, $itv) }

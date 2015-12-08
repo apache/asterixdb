@@ -18,8 +18,12 @@
  */
 package org.apache.asterix.lang.common.base;
 
+import java.io.Reader;
+
 public interface IParserFactory {
 
-    public IParser createParser();
+    public IParser createParser(String query);
+
+    public IParser createParser(Reader reader);
 
 }

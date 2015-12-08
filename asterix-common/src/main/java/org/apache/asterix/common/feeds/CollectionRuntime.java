@@ -26,7 +26,6 @@ import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Represents the feed runtime that collects feed tuples from another feed.
@@ -66,6 +65,7 @@ public class CollectionRuntime extends ActiveRuntime implements ISubscriberRunti
                 || frameCollector.getState().equals(FeedFrameCollector.State.HANDOVER);
     }
 
+    @Override
     public void setMode(Mode mode) {
         getInputHandler().setMode(mode);
     }
@@ -87,6 +87,7 @@ public class CollectionRuntime extends ActiveRuntime implements ISubscriberRunti
         this.frameCollector = frameCollector;
     }
 
+    @Override
     public FeedFrameCollector getFrameCollector() {
         return frameCollector;
     }

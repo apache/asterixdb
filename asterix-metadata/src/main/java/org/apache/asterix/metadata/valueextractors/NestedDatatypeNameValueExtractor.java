@@ -22,14 +22,14 @@ package org.apache.asterix.metadata.valueextractors;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.IOException;
 
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
-import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.util.string.UTF8StringReader;
 
 /**
  * Extracts the value of field 'DataypeName' of the first nested type from an
@@ -43,7 +43,8 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
     public NestedDatatypeNameValueExtractor(String datatypeName) {
         this.datatypeName = datatypeName;
     }
-    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+
+    private final UTF8StringReader reader = new UTF8StringReader();
 
     @Override
     public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
@@ -52,14 +53,18 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        String nestedType = ((AString) aObjSerDer.deserialize(in)).getStringValue();
-        if (nestedType.equals(datatypeName)) {
-            recordStartOffset = tuple.getFieldStart(1);
-            recordLength = tuple.getFieldLength(1);
-            stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-            in = new DataInputStream(stream);
-            return ((AString) aObjSerDer.deserialize(in)).getStringValue();
+        try {
+            String nestedType = reader.readUTF(in);
+            if (nestedType.equals(datatypeName)) {
+                recordStartOffset = tuple.getFieldStart(1);
+                recordLength = tuple.getFieldLength(1);
+                stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
+                in = new DataInputStream(stream);
+                return reader.readUTF(in);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        return null;
     }
 }

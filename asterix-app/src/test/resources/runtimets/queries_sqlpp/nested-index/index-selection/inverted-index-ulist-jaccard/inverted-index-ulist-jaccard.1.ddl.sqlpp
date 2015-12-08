@@ -49,7 +49,7 @@ create type test.CustomerType as
   nested : CustomerTypetmp
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     nc1
 ;
 create  table Customerstmp(CustomerTypetmp) primary key cid on group1;

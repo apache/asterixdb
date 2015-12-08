@@ -227,7 +227,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
         if (rewrite) {
             Expression newBindExpr = (Expression) SqlppVariableSubstitutionUtil
-                    .substituteVariable(letClause.getBindingExpr(), env);
+                    .substituteVariableWithoutContext(letClause.getBindingExpr(), env);
             letClause.setBindingExpr(newBindExpr);
         }
         letClause.getBindingExpr().accept(this, false);
@@ -241,7 +241,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
         List<Expression> orderExprs = new ArrayList<Expression>();
         for (Expression orderExpr : oc.getOrderbyList()) {
-            orderExprs.add((Expression) SqlppVariableSubstitutionUtil.substituteVariable(orderExpr, env));
+            orderExprs.add((Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(orderExpr, env));
             orderExpr.accept(this, arg);
         }
         oc.setOrderbyList(orderExprs);
@@ -252,7 +252,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     public Void visit(GroupbyClause gc, Boolean arg) throws AsterixException {
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            Expression newExpr = (Expression) SqlppVariableSubstitutionUtil.substituteVariable(gbyVarExpr.getExpr(),
+            Expression newExpr = (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(gbyVarExpr.getExpr(),
                     env);
             newExpr.accept(this, arg);
             gbyVarExpr.setExpr(newExpr);
@@ -274,7 +274,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     public Void visit(HavingClause havingClause, Boolean arg) throws AsterixException {
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
         Expression newFilterExpr = (Expression) SqlppVariableSubstitutionUtil
-                .substituteVariable(havingClause.getFilterExpression(), env);
+                .substituteVariableWithoutContext(havingClause.getFilterExpression(), env);
         newFilterExpr.accept(this, arg);
         havingClause.setFilterExpression(newFilterExpr);
         return null;

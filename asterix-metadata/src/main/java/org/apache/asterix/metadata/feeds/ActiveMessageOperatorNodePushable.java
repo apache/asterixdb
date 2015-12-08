@@ -55,7 +55,6 @@ import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.feeds.message.EndFeedMessage;
 import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
-import org.apache.asterix.common.feeds.message.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -201,6 +200,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
                             .getStorageTimeTrackingRateTask();
                     sTask.receiveCommitAckResponse(commitResponseMessage);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -327,6 +328,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
                             break;
                         }
                     }
+                    break;
+                default:
                     break;
             }
 

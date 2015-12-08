@@ -44,23 +44,21 @@ public class JSONDeserializerForTypes {
      * @throws Exception
      */
     public static IAType convertFromJSON(JSONObject typeInJSON) throws Exception {
-        boolean typeNameExists = typeInJSON.has("type");
-        String typeName = typeNameExists ? typeInJSON.getString("type") : null;
-
+        String typeName = typeInJSON.getString("type");
         // Deals with ordered list.
-        if (typeNameExists && typeName.equals(AOrderedListType.class.getName())) {
+        if (typeName.equals(AOrderedListType.class.getName())) {
             IAType itemType = convertFromJSON((JSONObject) typeInJSON.get("item-type"));
             return new AOrderedListType(itemType, "ordered-list");
         }
 
         // Deals with unordered list.
-        if (typeNameExists && typeName.equals(AUnorderedListType.class.getName())) {
+        if (typeName.equals(AUnorderedListType.class.getName())) {
             IAType itemType = convertFromJSON((JSONObject) typeInJSON.get("item-type"));
             return new AUnorderedListType(itemType, "unordered-list");
         }
 
         // Deals with Union Type.
-        if (typeNameExists && typeName.equals(AUnionType.class.getName())) {
+        if (typeName.equals(AUnionType.class.getName())) {
             List<IAType> unionTypes = new ArrayList<IAType>();
             JSONArray fields = (JSONArray) typeInJSON.get("fields");
             for (int i = 0; i < fields.length(); i++) {
@@ -70,26 +68,26 @@ public class JSONDeserializerForTypes {
             return new AUnionType(unionTypes, "union");
         }
 
-        // Deals with primitive types.
-        if (typeNameExists) {
-            Class<?> cl = BuiltinType.class;
-            Field typeField = cl.getDeclaredField(typeName.toUpperCase());
-            return (IAType) typeField.get(null);
-        }
-
         // Deals with record types.
-        boolean openType = typeInJSON.getBoolean("open");
-        JSONArray fields = typeInJSON.getJSONArray("fields");
-        String[] fieldNames = new String[fields.length()];
-        IAType[] fieldTypes = new IAType[fields.length()];
-        for (int i = 0; i < fields.length(); ++i) {
-            JSONObject field = (JSONObject) fields.get(i);
-            JSONArray names = field.names();
-            String fieldName = names.getString(0);
-            fieldNames[i] = fieldName;
-            fieldTypes[i] = convertFromJSON((JSONObject) field.get(fieldName));
+        if (typeName.equals(ARecordType.class.getName())) {
+            String name = typeInJSON.getString("name");
+            boolean openType = typeInJSON.getBoolean("open");
+            JSONArray fields = typeInJSON.getJSONArray("fields");
+            String[] fieldNames = new String[fields.length()];
+            IAType[] fieldTypes = new IAType[fields.length()];
+            for (int i = 0; i < fields.length(); ++i) {
+                JSONObject field = (JSONObject) fields.get(i);
+                JSONArray names = field.names();
+                String fieldName = names.getString(0);
+                fieldNames[i] = fieldName;
+                fieldTypes[i] = convertFromJSON((JSONObject) field.get(fieldName));
+            }
+            return new ARecordType(name, fieldNames, fieldTypes, openType);
         }
-        return new ARecordType("record", fieldNames, fieldTypes, openType);
-    }
 
+        // Deals with primitive types.
+        Class<?> cl = BuiltinType.class;
+        Field typeField = cl.getDeclaredField(typeName.toUpperCase());
+        return (IAType) typeField.get(null);
+    }
 }

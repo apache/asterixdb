@@ -23,6 +23,6 @@
  * Date         : 22th May 2013
  */
 
-select element a
-from  [{'f':19,'g':1},{'f':12,'g':2},{'f':10,'g':1},{'f':17,'g':1},{'f':12,'g':4}] as a
+select distinct element a
+from  [{'f':19,'g':1},{'f':12,'g':4},{'f':10,'g':1},{'f':17,'g':1},{'f':12,'g':4}] as a
 ;

@@ -69,12 +69,12 @@ Where
   OperatorExpr [
     IndexAccessor [
       Variable [ Name=jacca ]
-      Index:       Variable [ Name=jacca ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     IndexAccessor [
       Variable [ Name=jaccb ]
-      Index:       Variable [ Name=jaccb ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [

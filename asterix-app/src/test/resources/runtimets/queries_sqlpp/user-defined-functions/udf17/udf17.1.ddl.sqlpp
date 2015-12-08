@@ -17,9 +17,22 @@
  * under the License.
  */
 /*
- * Description  : Create UDF and invoke it from another UDF and 
+ * Description  : Create UDF and invoke it from another UDF and
  *              : child UDF returns a string to the parent.
  * Expected Res : Success
  * Date         : Sep 5th 2012
  */
 
+
+drop database test if exists;
+create database test;
+
+use test;
+
+create function test.parent(){
+test.child()
+}
+
+create function test.child() {
+'This data is from the child function'
+}

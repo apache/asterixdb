@@ -19,28 +19,22 @@
 package org.apache.asterix.test.runtime;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.aql.TestsUtils;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestGroup;
-import org.apache.asterix.testframework.xml.TestSuite;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.control.nc.application.NCApplicationContext;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -66,78 +60,17 @@ public class ExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        System.out.println("Starting setup");
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting setup");
-        }
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
-
-        deleteTransactionLogs();
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("initializing pseudo cluster");
-        }
-        AsterixHyracksIntegrationUtil.init();
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("initializing HDFS");
-        }
-
-        HDFSCluster.getInstance().setup();
-
-        // Set the node resolver to be the identity resolver that expects node
-        // names
-        // to be node controller ids; a valid assumption in test environment.
-        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
-                IdentitiyResolverFactory.class.getName());
-
-        FailedGroup = new TestGroup();
-        FailedGroup.setName("failed");
+        ExecutionTestUtil.setUp();
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit();
-        File outdir = new File(PATH_ACTUAL);
-        File[] files = outdir.listFiles();
-        if (files == null || files.length == 0) {
-            outdir.delete();
-        }
+        ExecutionTestUtil.tearDown();
         // clean up the files written by the ASTERIX storage manager
         for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
             testExecutor.deleteRec(new File(d));
-        }
-        HDFSCluster.getInstance().cleanup();
-
-        if (FailedGroup != null && FailedGroup.getTestCase().size() > 0) {
-            File temp = File.createTempFile("failed", ".xml");
-            javax.xml.bind.JAXBContext jaxbCtx = null;
-            jaxbCtx = javax.xml.bind.JAXBContext.newInstance(TestSuite.class.getPackage().getName());
-            javax.xml.bind.Marshaller marshaller = null;
-            marshaller = jaxbCtx.createMarshaller();
-            marshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            TestSuite failedSuite = new TestSuite();
-            failedSuite.setResultOffsetPath("results");
-            failedSuite.setQueryOffsetPath("queries");
-            failedSuite.getTestGroup().add(FailedGroup);
-            marshaller.marshal(failedSuite, temp);
-            System.err.println("The failed.xml is written to :" + temp.getAbsolutePath()
-                    + ". You can copy it to only.xml by the following cmd:" + "\rcp " + temp.getAbsolutePath() + " "
-                    + Paths.get("./src/test/resources/runtimets/only.xml").toAbsolutePath());
-        }
-    }
-
-    private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
-            if (log.exists()) {
-                FileUtils.deleteDirectory(log);
-            }
         }
     }
 
@@ -168,6 +101,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false, FailedGroup);
+        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, FailedGroup);
     }
 }

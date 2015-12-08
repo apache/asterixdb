@@ -32,8 +32,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IFeedFrameHandler;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedFrameHandler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
@@ -74,8 +74,8 @@ public class FeedFrameHandlers {
         private final int partition;
         private final FrameDistributor distributor;
 
-        public DiscardRouter(FrameDistributor distributor, ActiveObjectId feedId, ActiveRuntimeType runtimeType, int partition)
-                throws HyracksDataException {
+        public DiscardRouter(FrameDistributor distributor, ActiveObjectId feedId, ActiveRuntimeType runtimeType,
+                int partition) throws HyracksDataException {
             this.distributor = distributor;
             this.feedId = feedId;
             this.nDiscarded = 0;
@@ -129,7 +129,8 @@ public class FeedFrameHandlers {
 
         private final Collection<FeedFrameCollector> frameCollectors;
 
-        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, ActiveRuntimeType runtimeType, int partition) {
+        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, ActiveRuntimeType runtimeType,
+                int partition) {
             this.frameCollectors = frameCollectors;
         }
 
@@ -163,13 +164,11 @@ public class FeedFrameHandlers {
 
     public static class DiskSpiller implements IFeedFrameHandler {
 
-        private final ActiveObjectId feedId;
         private FrameSpiller<ByteBuffer> receiver;
         private Iterator<ByteBuffer> iterator;
 
-        public DiskSpiller(FrameDistributor distributor, ActiveObjectId feedId, ActiveRuntimeType runtimeType, int partition,
-                int frameSize) throws IOException {
-            this.feedId = feedId;
+        public DiskSpiller(FrameDistributor distributor, ActiveObjectId feedId, ActiveRuntimeType runtimeType,
+                int partition, int frameSize) throws IOException {
             receiver = new FrameSpiller<ByteBuffer>(distributor, feedId, frameSize);
         }
 
@@ -180,7 +179,6 @@ public class FeedFrameHandlers {
 
         private static class FrameSpiller<T> extends MessageReceiver<ByteBuffer> {
 
-            private final int frameSize;
             private final ActiveObjectId feedId;
             private BufferedOutputStream bos;
             private final ByteBuffer reusableLengthBuffer;
@@ -192,7 +190,6 @@ public class FeedFrameHandlers {
 
             public FrameSpiller(FrameDistributor distributor, ActiveObjectId feedId, int frameSize) throws IOException {
                 this.feedId = feedId;
-                this.frameSize = frameSize;
                 this.frameDistributor = distributor;
                 reusableLengthBuffer = ByteBuffer.allocate(4);
                 reusableDataBuffer = ByteBuffer.allocate(frameSize);

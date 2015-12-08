@@ -78,8 +78,6 @@ LetVariable [ Name=tokensDBLP ]
           With
           Variable [ Name=paper ]
           Variable [ Name=token ]
-          Variable [ Name=token ]
-          Variable [ Name=tokensDBLP ]
           Variable [ Name=unrankedTokensDBLP ]
           Variable [ Name=paperDBLP ]
 

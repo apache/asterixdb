@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : scan-insert-inverted-index-ngram-secondary-index.aql
- * Description     : This test is intended to test insertion from secondary ngram inverted index. 
+ * Description     : This test is intended to test insertion from secondary ngram inverted index.
  * Expected Result : Success
  * Date            : March 31 2013
  */

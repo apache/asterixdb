@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.om.types;
 
-import java.io.Serializable;
-
-public class TypeSignature implements Serializable {
+public class TypeSignature {
 
     private final String dataverse;
     private final String name;
@@ -32,6 +30,7 @@ public class TypeSignature implements Serializable {
         this.alias = dataverse + "@" + name;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof TypeSignature)) {
             return false;
@@ -41,10 +40,12 @@ public class TypeSignature implements Serializable {
         }
     }
 
+    @Override
     public String toString() {
         return alias;
     }
 
+    @Override
     public int hashCode() {
         return alias.hashCode();
     }

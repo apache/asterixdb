@@ -19,7 +19,6 @@
 package org.apache.asterix.external.library;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -42,7 +41,6 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 public class ResultCollector implements IResultCollector {
 
     private IAObject reusableResultObjectHolder;
-    private ByteBuffer reusableResultBinaryHolder;
     private IDataOutputProvider outputProvider;
     private IExternalFunctionInfo finfo;
 
@@ -50,7 +48,6 @@ public class ResultCollector implements IResultCollector {
         this.finfo = finfo;
         IAType returnType = finfo.getReturnType();
         reusableResultObjectHolder = allocateResultObjectHolder(returnType);
-        reusableResultBinaryHolder = allocateResultBinaryHolder(returnType);
         this.outputProvider = outputProvider;
     }
 
@@ -73,24 +70,8 @@ public class ResultCollector implements IResultCollector {
                     fieldObjects[i] = allocateResultObjectHolder(fieldType[i]);
                 }
                 return new AMutableRecord((ARecordType) type, fieldObjects);
-        }
-        return null;
-    }
-
-    private ByteBuffer allocateResultBinaryHolder(IAType type) {
-        switch (type.getTypeTag()) {
-            case INT32:
-                return ByteBuffer.allocate(4);
-            case FLOAT:
-                return ByteBuffer.allocate(4);
-            case DOUBLE:
-                return ByteBuffer.allocate(8);
-            case STRING:
-                return ByteBuffer.allocate(32 * 1024);
-            case ORDEREDLIST:
-                return ByteBuffer.allocate(32 * 1024);
-            case RECORD:
-                return ByteBuffer.allocate(32 * 1024);
+            default:
+                break;
         }
         return null;
     }
@@ -130,14 +111,15 @@ public class ResultCollector implements IResultCollector {
         serializeResult(list);
     }
 
+    @Override
     public IAObject getComplexTypeResultHolder() {
         return reusableResultObjectHolder;
     }
 
     private void serializeResult(IAObject object) throws AsterixException {
         try {
-            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(finfo.getReturnType()).serialize(
-                    reusableResultObjectHolder, outputProvider.getDataOutput());
+            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(finfo.getReturnType())
+                    .serialize(reusableResultObjectHolder, outputProvider.getDataOutput());
         } catch (HyracksDataException hde) {
             throw new AsterixException(hde);
         }

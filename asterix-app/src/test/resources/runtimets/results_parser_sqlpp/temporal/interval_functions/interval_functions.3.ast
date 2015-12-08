@@ -1,398 +1,409 @@
 DataverseUse test
 Query:
+LetVariable [ Name=itv1 ]
+  :=
+  FunctionCall test.interval-from-date@2[
+    LiteralExpr [STRING] [2010-10-30]
+    LiteralExpr [STRING] [2010-12-21]
+  ]
+LetVariable [ Name=itv2 ]
+  :=
+  FunctionCall test.interval-from-date@2[
+    LiteralExpr [STRING] [2011-10-30]
+    LiteralExpr [STRING] [2012-10-21]
+  ]
+LetVariable [ Name=itv3 ]
+  :=
+  FunctionCall test.interval-from-date@2[
+    LiteralExpr [STRING] [2010-12-21]
+    LiteralExpr [STRING] [2013-01-01]
+  ]
+LetVariable [ Name=blnBefore1 ]
+  :=
+  FunctionCall test.interval-before@2[
+    Variable [ Name=itv1 ]
+    Variable [ Name=itv2 ]
+  ]
+LetVariable [ Name=blnAfter1 ]
+  :=
+  FunctionCall test.interval-after@2[
+    Variable [ Name=itv2 ]
+    Variable [ Name=itv1 ]
+  ]
+LetVariable [ Name=blnBefore2 ]
+  :=
+  FunctionCall test.interval-before@2[
+    Variable [ Name=itv1 ]
+    Variable [ Name=itv3 ]
+  ]
+LetVariable [ Name=blnAfter2 ]
+  :=
+  FunctionCall test.interval-after@2[
+    Variable [ Name=itv3 ]
+    Variable [ Name=itv1 ]
+  ]
+LetVariable [ Name=itv4 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+    LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+  ]
+LetVariable [ Name=itv5 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [20120727T020202222]
+    LiteralExpr [STRING] [2013-08-08T03:03:03.333]
+  ]
+LetVariable [ Name=itv6 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [19000707T020202222]
+    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  ]
+LetVariable [ Name=blnMeet1 ]
+  :=
+  FunctionCall test.interval-meets@2[
+    Variable [ Name=itv4 ]
+    Variable [ Name=itv5 ]
+  ]
+LetVariable [ Name=blnMetBy1 ]
+  :=
+  FunctionCall test.interval-met-by@2[
+    Variable [ Name=itv5 ]
+    Variable [ Name=itv4 ]
+  ]
+LetVariable [ Name=blnMeet2 ]
+  :=
+  FunctionCall test.interval-meets@2[
+    Variable [ Name=itv6 ]
+    Variable [ Name=itv4 ]
+  ]
+LetVariable [ Name=blnMetBy2 ]
+  :=
+  FunctionCall test.interval-met-by@2[
+    Variable [ Name=itv6 ]
+    Variable [ Name=itv4 ]
+  ]
+LetVariable [ Name=itv7 ]
+  :=
+  FunctionCall test.interval-from-time@2[
+    LiteralExpr [STRING] [12:32:38]
+    LiteralExpr [STRING] [20:29:20]
+  ]
+LetVariable [ Name=itv8 ]
+  :=
+  FunctionCall test.interval-from-time@2[
+    LiteralExpr [STRING] [17:48:19]
+    LiteralExpr [STRING] [22:19:49]
+  ]
+LetVariable [ Name=itv9 ]
+  :=
+  FunctionCall test.interval-from-time@2[
+    LiteralExpr [STRING] [01:32:49]
+    LiteralExpr [STRING] [17:48:19]
+  ]
+LetVariable [ Name=blnOverlaps1 ]
+  :=
+  FunctionCall test.interval-overlaps@2[
+    Variable [ Name=itv7 ]
+    Variable [ Name=itv8 ]
+  ]
+LetVariable [ Name=blnOverlapped1 ]
+  :=
+  FunctionCall test.interval-overlapped-by@2[
+    Variable [ Name=itv8 ]
+    Variable [ Name=itv7 ]
+  ]
+LetVariable [ Name=blnOverlaps2 ]
+  :=
+  FunctionCall test.interval-overlaps@2[
+    Variable [ Name=itv9 ]
+    Variable [ Name=itv8 ]
+  ]
+LetVariable [ Name=blnOverlapped2 ]
+  :=
+  FunctionCall test.interval-overlapped-by@2[
+    Variable [ Name=itv8 ]
+    Variable [ Name=itv9 ]
+  ]
+LetVariable [ Name=blnOverlap1 ]
+  :=
+  FunctionCall test.interval-overlapping@2[
+    Variable [ Name=itv9 ]
+    Variable [ Name=itv7 ]
+  ]
+LetVariable [ Name=blnOverlap2 ]
+  :=
+  FunctionCall test.interval-overlapping@2[
+    Variable [ Name=itv9 ]
+    Variable [ Name=itv8 ]
+  ]
+LetVariable [ Name=itv10 ]
+  :=
+  FunctionCall test.interval-from-date@2[
+    LiteralExpr [STRING] [2010-10-30]
+    LiteralExpr [STRING] [2010-11-30]
+  ]
+LetVariable [ Name=blnStarts1 ]
+  :=
+  FunctionCall test.interval-starts@2[
+    Variable [ Name=itv10 ]
+    Variable [ Name=itv1 ]
+  ]
+LetVariable [ Name=blnStarts2 ]
+  :=
+  FunctionCall test.interval-starts@2[
+    Variable [ Name=itv10 ]
+    Variable [ Name=itv2 ]
+  ]
+LetVariable [ Name=blnStartedBy1 ]
+  :=
+  FunctionCall test.interval-started-by@2[
+    Variable [ Name=itv1 ]
+    Variable [ Name=itv10 ]
+  ]
+LetVariable [ Name=blnStartedBy2 ]
+  :=
+  FunctionCall test.interval-started-by@2[
+    Variable [ Name=itv10 ]
+    Variable [ Name=itv2 ]
+  ]
+LetVariable [ Name=itv10 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [19000707T020202222]
+    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  ]
+LetVariable [ Name=itv11 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [19990707T020202222]
+    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  ]
+LetVariable [ Name=itv12 ]
+  :=
+  FunctionCall test.interval-from-datetime@2[
+    LiteralExpr [STRING] [-19990707T020202222]
+    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  ]
+LetVariable [ Name=blnCovers1 ]
+  :=
+  FunctionCall test.interval-covers@2[
+    Variable [ Name=itv10 ]
+    Variable [ Name=itv11 ]
+  ]
+LetVariable [ Name=blnCovers2 ]
+  :=
+  FunctionCall test.interval-covers@2[
+    Variable [ Name=itv10 ]
+    Variable [ Name=itv12 ]
+  ]
+LetVariable [ Name=blnCoveredBy1 ]
+  :=
+  FunctionCall test.interval-covered-by@2[
+    Variable [ Name=itv11 ]
+    Variable [ Name=itv10 ]
+  ]
+LetVariable [ Name=blnCoveredBy2 ]
+  :=
+  FunctionCall test.interval-covered-by@2[
+    Variable [ Name=itv12 ]
+    Variable [ Name=itv10 ]
+  ]
+LetVariable [ Name=itv11 ]
+  :=
+  FunctionCall test.interval-from-time@2[
+    LiteralExpr [STRING] [19:00:00.009]
+    LiteralExpr [STRING] [20:29:20.000]
+  ]
+LetVariable [ Name=blnEnds1 ]
+  :=
+  FunctionCall test.interval-ends@2[
+    Variable [ Name=itv11 ]
+    Variable [ Name=itv7 ]
+  ]
+LetVariable [ Name=blnEnds2 ]
+  :=
+  FunctionCall test.interval-ends@2[
+    Variable [ Name=itv11 ]
+    Variable [ Name=itv8 ]
+  ]
+LetVariable [ Name=blnEndedBy1 ]
+  :=
+  FunctionCall test.interval-ended-by@2[
+    Variable [ Name=itv7 ]
+    Variable [ Name=itv11 ]
+  ]
+LetVariable [ Name=blnEndedBy2 ]
+  :=
+  FunctionCall test.interval-ended-by@2[
+    Variable [ Name=itv8 ]
+    Variable [ Name=itv11 ]
+  ]
+LetVariable [ Name=null1 ]
+  :=
+  FunctionCall test.interval-before@2[
+    LiteralExpr [NULL]
+    Variable [ Name=itv2 ]
+  ]
+LetVariable [ Name=null2 ]
+  :=
+  FunctionCall test.interval-covered-by@2[
+    Variable [ Name=itv11 ]
+    LiteralExpr [NULL]
+  ]
+LetVariable [ Name=null3 ]
+  :=
+  FunctionCall test.interval-overlapping@2[
+    LiteralExpr [NULL]
+    LiteralExpr [NULL]
+  ]
+SELECT ELEMENT [
 RecordConstructor [
   (
     LiteralExpr [STRING] [before1]
     :
-    FunctionCall test.interval-before@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2011-10-30]
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
+    Variable [ Name=blnBefore1 ]
   )
   (
     LiteralExpr [STRING] [before2]
     :
-    FunctionCall test.interval-before@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-12-21]
-        LiteralExpr [STRING] [2013-01-01]
-      ]
-    ]
+    Variable [ Name=blnBefore2 ]
   )
   (
     LiteralExpr [STRING] [after1]
     :
-    FunctionCall test.interval-after@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2011-10-30]
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-    ]
+    Variable [ Name=blnAfter1 ]
   )
   (
     LiteralExpr [STRING] [after2]
     :
-    FunctionCall test.interval-after@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-12-21]
-        LiteralExpr [STRING] [2013-01-01]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-    ]
+    Variable [ Name=blnAfter2 ]
   )
   (
     LiteralExpr [STRING] [meet1]
     :
-    FunctionCall test.interval-meets@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
-        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [20120727T020202222]
-        LiteralExpr [STRING] [2013-08-08T03:03:03.333]
-      ]
-    ]
+    Variable [ Name=blnMeet1 ]
   )
   (
     LiteralExpr [STRING] [meet2]
     :
-    FunctionCall test.interval-meets@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19000707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
-        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
-      ]
-    ]
+    Variable [ Name=blnMeet2 ]
   )
   (
     LiteralExpr [STRING] [metby1]
     :
-    FunctionCall test.interval-met-by@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [20120727T020202222]
-        LiteralExpr [STRING] [2013-08-08T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
-        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
-      ]
-    ]
+    Variable [ Name=blnMetBy1 ]
   )
   (
     LiteralExpr [STRING] [metby2]
     :
-    FunctionCall test.interval-met-by@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19000707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
-        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
-      ]
-    ]
+    Variable [ Name=blnMetBy2 ]
   )
   (
     LiteralExpr [STRING] [overlaps1]
     :
-    FunctionCall test.interval-overlaps@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [12:32:38]
-        LiteralExpr [STRING] [20:29:20]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-    ]
+    Variable [ Name=blnOverlaps1 ]
   )
   (
     LiteralExpr [STRING] [overlaps2]
     :
-    FunctionCall test.interval-overlaps@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [01:32:49]
-        LiteralExpr [STRING] [17:48:19]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-    ]
+    Variable [ Name=blnOverlaps2 ]
   )
   (
     LiteralExpr [STRING] [overlapped1]
     :
-    FunctionCall test.interval-overlapped-by@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [12:32:38]
-        LiteralExpr [STRING] [20:29:20]
-      ]
-    ]
+    Variable [ Name=blnOverlapped1 ]
   )
   (
     LiteralExpr [STRING] [overlapped2]
     :
-    FunctionCall test.interval-overlapped-by@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [01:32:49]
-        LiteralExpr [STRING] [17:48:19]
-      ]
-    ]
+    Variable [ Name=blnOverlapped2 ]
   )
   (
     LiteralExpr [STRING] [overlap1]
     :
-    FunctionCall test.interval-overlapping@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [01:32:49]
-        LiteralExpr [STRING] [17:48:19]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [12:32:38]
-        LiteralExpr [STRING] [20:29:20]
-      ]
-    ]
+    Variable [ Name=blnOverlap1 ]
   )
   (
     LiteralExpr [STRING] [overlap2]
     :
-    FunctionCall test.interval-overlapping@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [01:32:49]
-        LiteralExpr [STRING] [17:48:19]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-    ]
+    Variable [ Name=blnOverlap2 ]
   )
   (
     LiteralExpr [STRING] [starts1]
     :
-    FunctionCall test.interval-starts@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-    ]
+    Variable [ Name=blnStarts1 ]
   )
   (
     LiteralExpr [STRING] [starts2]
     :
-    FunctionCall test.interval-starts@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2011-10-30]
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
+    Variable [ Name=blnStarts2 ]
   )
   (
     LiteralExpr [STRING] [startedby1]
     :
-    FunctionCall test.interval-started-by@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-12-21]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-    ]
+    Variable [ Name=blnStartedBy1 ]
   )
   (
     LiteralExpr [STRING] [startedby2]
     :
-    FunctionCall test.interval-started-by@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2011-10-30]
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
+    Variable [ Name=blnStartedBy2 ]
   )
   (
     LiteralExpr [STRING] [covers1]
     :
-    FunctionCall test.interval-covers@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-    ]
+    Variable [ Name=blnCovers1 ]
   )
   (
     LiteralExpr [STRING] [covers2]
     :
-    FunctionCall test.interval-covers@2[
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [-19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-    ]
+    Variable [ Name=blnCovers2 ]
   )
   (
     LiteralExpr [STRING] [coveredby1]
     :
-    FunctionCall test.interval-covered-by@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-    ]
+    Variable [ Name=blnCoveredBy1 ]
   )
   (
     LiteralExpr [STRING] [coveredby2]
     :
-    FunctionCall test.interval-covered-by@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [-19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2010-10-30]
-        LiteralExpr [STRING] [2010-11-30]
-      ]
-    ]
+    Variable [ Name=blnCoveredBy2 ]
   )
   (
     LiteralExpr [STRING] [ends1]
     :
-    FunctionCall test.interval-ends@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [12:32:38]
-        LiteralExpr [STRING] [20:29:20]
-      ]
-    ]
+    Variable [ Name=blnEnds1 ]
   )
   (
     LiteralExpr [STRING] [ends2]
     :
-    FunctionCall test.interval-ends@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-    ]
+    Variable [ Name=blnEnds2 ]
   )
   (
     LiteralExpr [STRING] [endedby1]
     :
-    FunctionCall test.interval-ended-by@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [12:32:38]
-        LiteralExpr [STRING] [20:29:20]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-    ]
+    Variable [ Name=blnEndedBy1 ]
   )
   (
     LiteralExpr [STRING] [endedby2]
     :
-    FunctionCall test.interval-ended-by@2[
-      FunctionCall test.interval-from-time@2[
-        LiteralExpr [STRING] [17:48:19]
-        LiteralExpr [STRING] [22:19:49]
-      ]
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-    ]
+    Variable [ Name=blnEndedBy2 ]
   )
   (
     LiteralExpr [STRING] [null1]
     :
-    FunctionCall test.interval-before@2[
-      LiteralExpr [NULL]
-      FunctionCall test.interval-from-date@2[
-        LiteralExpr [STRING] [2011-10-30]
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
+    Variable [ Name=null1 ]
   )
   (
     LiteralExpr [STRING] [null2]
     :
-    FunctionCall test.interval-covered-by@2[
-      FunctionCall test.interval-from-datetime@2[
-        LiteralExpr [STRING] [19990707T020202222]
-        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
-      ]
-      LiteralExpr [NULL]
-    ]
+    Variable [ Name=null2 ]
   )
   (
     LiteralExpr [STRING] [null3]
     :
-    FunctionCall test.interval-overlapping@2[
-      LiteralExpr [NULL]
-      LiteralExpr [NULL]
-    ]
+    Variable [ Name=null3 ]
   )
+]
 ]

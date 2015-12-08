@@ -1,0 +1,7 @@
+DataverseUse test
+TypeDecl LineType [
+  closed RecordType {
+    content : string
+  }
+]
+DatasetDecl TextDataset(LineType)is an external dataset

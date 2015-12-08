@@ -18,6 +18,12 @@
  */
 /*
 * Description  : Create a highly nested datastructure that uses opened and closed datasets
+                at different levels. Use open-nested indexes at every level
+                to copy from one data set upwards
+                check the final result to see if copies were successful all the way up
+* Expected Res : Success
+* Date         : 20 Oct 2014
+*/
 
 drop  database test if exists;
 create  database test;

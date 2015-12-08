@@ -28,7 +28,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c3 ]
-      Index:       Variable [ Name=c3 ]
+      Index:       LiteralExpr [LONG] [0]
     ]
   )
   (
@@ -36,7 +36,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c3 ]
-      Index:       Variable [ Name=c3 ]
+      Index:       LiteralExpr [LONG] [1]
     ]
   )
   (
@@ -44,7 +44,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c3 ]
-      Index:       Variable [ Name=c3 ]
+      Index:       LiteralExpr [LONG] [5]
     ]
   )
   (
@@ -52,7 +52,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=c3 ]
-      Index:       Variable [ Name=c3 ]
+      Index:       LiteralExpr [LONG] [10]
     ]
   )
 ]

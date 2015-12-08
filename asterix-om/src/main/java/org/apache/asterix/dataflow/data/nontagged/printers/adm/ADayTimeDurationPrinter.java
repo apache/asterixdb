@@ -21,7 +21,6 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 

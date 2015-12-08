@@ -20,7 +20,6 @@
 package org.apache.asterix.common.config;
 
 import java.util.Map;
-import java.util.Properties;
 
 public class AsterixBuildProperties extends AbstractAsterixProperties {
 
@@ -49,7 +48,8 @@ public class AsterixBuildProperties extends AbstractAsterixProperties {
     }
 
     public String getCommitIdDescribeShort() {
-        return accessor.getProperty("git.commit.id.describe-short", "", PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getProperty("git.commit.id.describe-short", "",
+                PropertyInterpreters.getStringPropertyInterpreter());
     }
 
     public String getCommitUserEmail() {
@@ -69,7 +69,8 @@ public class AsterixBuildProperties extends AbstractAsterixProperties {
     }
 
     public String getCommitMessageShort() {
-        return accessor.getProperty("git.commit.message.short", "", PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getProperty("git.commit.message.short", "",
+                PropertyInterpreters.getStringPropertyInterpreter());
     }
 
     public String getShortCommitId() {
@@ -85,7 +86,8 @@ public class AsterixBuildProperties extends AbstractAsterixProperties {
     }
 
     public String getClosestTagCommitCount() {
-        return accessor.getProperty("git.closest.tag.commit.count", "", PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getProperty("git.closest.tag.commit.count", "",
+                PropertyInterpreters.getStringPropertyInterpreter());
     }
 
     public String getCommitIdDescribe() {
@@ -107,7 +109,8 @@ public class AsterixBuildProperties extends AbstractAsterixProperties {
     public String getCommitUserName() {
         return accessor.getProperty("git.commit.user.name", "", PropertyInterpreters.getStringPropertyInterpreter());
     }
-    public Map<String, String> getAllProps(){
+
+    public Map<String, String> getAllProps() {
         return accessor.getBuildProperties();
     }
 

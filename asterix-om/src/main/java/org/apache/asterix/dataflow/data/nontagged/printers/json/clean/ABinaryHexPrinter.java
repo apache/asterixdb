@@ -19,15 +19,13 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
+import java.io.IOException;
+import java.io.PrintStream;
+
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.util.bytes.HexPrinter;
-
-import java.io.IOException;
-import java.io.PrintStream;
 
 public class ABinaryHexPrinter implements IPrinter {
     private ABinaryHexPrinter() {
@@ -35,11 +33,13 @@ public class ABinaryHexPrinter implements IPrinter {
 
     public static final ABinaryHexPrinter INSTANCE = new ABinaryHexPrinter();
 
-    @Override public void init() throws AlgebricksException {
+    @Override
+    public void init() throws AlgebricksException {
 
     }
 
-    @Override public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    @Override
+    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
 
         int validLength = ByteArrayPointable.getContentLength(b, s + 1);
         int start = s + 1 + ByteArrayPointable.getNumberBytesToStoreMeta(validLength);

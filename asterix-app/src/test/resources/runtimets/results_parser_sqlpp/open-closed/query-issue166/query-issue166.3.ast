@@ -1,0 +1,17 @@
+Query:
+IndexAccessor [
+  OrderedListConstructor [
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [6]
+      LiteralExpr [LONG] [7]
+    ]
+  ]
+  Index:   LiteralExpr [LONG] [1]
+]

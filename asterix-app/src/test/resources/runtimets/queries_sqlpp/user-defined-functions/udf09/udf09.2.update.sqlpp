@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create UDF to read from internal dataset 
+ * Description  : Create UDF to read from internal dataset
  * Expected Res : Success
  * Date         : Sep 4th 2012
  */

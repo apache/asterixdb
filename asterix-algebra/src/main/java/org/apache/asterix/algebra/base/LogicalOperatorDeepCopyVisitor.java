@@ -53,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -472,6 +473,18 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     public ILogicalOperator visitExternalDataLookupOperator(ExternalDataLookupOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ILogicalOperator visitOuterUnnestOperator(OuterUnnestOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        OuterUnnestOperator opCopy = new OuterUnnestOperator(deepCopyVariable(op.getVariable()),
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
+        deepCopyInputs(op, opCopy, arg);
+        copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
+        return opCopy;
     }
 
 }

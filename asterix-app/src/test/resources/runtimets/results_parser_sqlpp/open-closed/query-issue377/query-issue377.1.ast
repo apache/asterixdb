@@ -1,0 +1,25 @@
+DataverseUse TinySocial
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : string
+  }
+]
+TypeDecl FacebookUserType [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl FacebookMessageType [
+  open RecordType {
+    message-id : int64
+  }
+]
+DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[id]]
+DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[message-id]]
+DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen-name]]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]

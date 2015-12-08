@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : nestrecord.aql
- * Description     : verify the static casting of nest record constants 
+ * Description     : verify the static casting of nest record constants
  * Expected Result : Success
  */
 

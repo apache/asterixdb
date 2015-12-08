@@ -22,3 +22,16 @@
  * Date         : Sep 6th 2012
  */
 
+// this test is not giving expected results.
+// issue 194 reported to track this
+
+drop database test if exists;
+create database test;
+
+use test;
+
+create function test.f1(){
+100
+}
+
+

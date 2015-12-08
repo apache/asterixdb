@@ -19,40 +19,28 @@
 
 package org.apache.asterix.aoya.test;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 
-import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
-
 /**
  * Manages a Mini (local VM) YARN cluster with a configured number of NodeManager(s).
- *
  */
-@SuppressWarnings("deprecation")
 public class YARNCluster {
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-    private static final int nameNodePort = 31888;
-    private static final String DATA_PATH = "data/hdfs";
-    private static final String HDFS_PATH = "/asterix";
     private static final YARNCluster INSTANCE = new YARNCluster();
 
     private MiniYARNCluster miniCluster;
     private int numDataNodes = 2;
     private Configuration conf = new YarnConfiguration();
-    private FileSystem dfs;
 
     public static YARNCluster getInstance() {
         return INSTANCE;
@@ -75,14 +63,13 @@ public class YARNCluster {
         conf.setClass(YarnConfiguration.RM_SCHEDULER, FifoScheduler.class, ResourceScheduler.class);
         conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, "target/integrationts/data");
         cleanupLocal();
-        //this constructor is deprecated in hadoop 2x 
+        //this constructor is deprecated in hadoop 2x
         //dfsCluster = new MiniDFSCluster(nameNodePort, conf, numDataNodes, true, true, StartupOption.REGULAR, null);
         miniCluster = new MiniYARNCluster("Asterix_testing", numDataNodes, 1, 1);
         miniCluster.init(conf);
-        dfs = FileSystem.get(conf);
     }
-    
-    public MiniYARNCluster getCluster(){
+
+    public MiniYARNCluster getCluster() {
         return miniCluster;
     }
 

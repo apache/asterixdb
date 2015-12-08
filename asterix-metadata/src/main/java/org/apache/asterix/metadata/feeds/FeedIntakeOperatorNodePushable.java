@@ -31,11 +31,11 @@ import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
-import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
@@ -59,15 +59,15 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private final IActiveManager feedManager;
     private final IHyracksTaskContext ctx;
     private final IFeedAdapterFactory adapterFactory;
-    private final FeedPolicyAccessor policyAccessor;
 
     private IngestionRuntime ingestionRuntime;
     private IFeedAdapter adapter;
     private IIntakeProgressTracker tracker;
     private DistributeFeedFrameWriter feedFrameWriter;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, ActiveObjectId feedId, IFeedAdapterFactory adapterFactory,
-            int partition, IngestionRuntime ingestionRuntime, FeedPolicyAccessor policyAccessor) {
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, ActiveObjectId feedId,
+            IFeedAdapterFactory adapterFactory, int partition, IngestionRuntime ingestionRuntime,
+            FeedPolicyAccessor policyAccessor) {
         this.ctx = ctx;
         this.feedId = feedId;
         this.partition = partition;
@@ -77,7 +77,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 .getApplicationContext().getApplicationObject();
         this.feedSubscriptionManager = runtimeCtx.getActiveManager().getFeedSubscriptionManager();
         this.feedManager = runtimeCtx.getActiveManager();
-        this.policyAccessor = policyAccessor;
+
     }
 
     @Override
@@ -96,8 +96,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     throw new HyracksDataException(e);
                 }
                 FrameTupleAccessor fta = new FrameTupleAccessor(recordDesc);
-                feedFrameWriter = new DistributeFeedFrameWriter(ctx, feedId, writer, ActiveRuntimeType.INTAKE, partition, fta,
-                        feedManager);
+                feedFrameWriter = new DistributeFeedFrameWriter(ctx, feedId, writer, ActiveRuntimeType.INTAKE,
+                        partition, fta, feedManager);
                 adapterRuntimeManager = new AdapterRuntimeManager(feedId, adapter, tracker, feedFrameWriter, partition);
                 SubscribableFeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(feedId, ActiveRuntimeType.INTAKE,
                         partition);
@@ -115,7 +115,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                         LOGGER.info(" Adaptor " + adapter.getClass().getName() + "[" + partition + "]"
                                 + " connected to backend for feed " + feedId);
                     }
-                    feedFrameWriter = (DistributeFeedFrameWriter) ingestionRuntime.getActiveFrameWriter();
+                    feedFrameWriter = ingestionRuntime.getActiveFrameWriter();
+
                 } else {
                     String message = "Feed Ingestion Runtime for feed " + feedId
                             + " is already registered and is active!.";
@@ -125,17 +126,17 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
             }
 
             waitTillIngestionIsOver(adapterRuntimeManager);
-            feedSubscriptionManager.deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime
-                    .getRuntimeId());
+            feedSubscriptionManager
+                    .deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime.getRuntimeId());
             if (adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FAILED_INGESTION)) {
                 throw new HyracksDataException("Unable to ingest data");
             }
 
         } catch (InterruptedException ie) {
             /*
-             * An Interrupted Exception is thrown if the Intake job cannot progress further due to failure of another node involved in the Hyracks job.  
+             * An Interrupted Exception is thrown if the Intake job cannot progress further due to failure of another node involved in the Hyracks job.
              * As the Intake job involves only the intake operator, the exception is indicative of a failure at the sibling intake operator location.
-             * The surviving intake partitions must continue to live and receive data from the external source. 
+             * The surviving intake partitions must continue to live and receive data from the external source.
              */
             List<ISubscriberRuntime> subscribers = ingestionRuntime.getSubscribers();
             FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(new HashMap<String, String>());
@@ -155,7 +156,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     ingestionRuntime.unsubscribeFeed((CollectionRuntime) failingSubscriber);
                 } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Excpetion in unsubscribing " + failingSubscriber + " message " + e.getMessage());
+                        LOGGER.warning(
+                                "Excpetion in unsubscribing " + failingSubscriber + " message " + e.getMessage());
                     }
                 }
             }
@@ -167,10 +169,11 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 }
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Interrupted Exception. None of the subscribers need to handle failures. Shutting down feed ingestion");
+                    LOGGER.info(
+                            "Interrupted Exception. None of the subscribers need to handle failures. Shutting down feed ingestion");
                 }
-                feedSubscriptionManager.deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime
-                        .getRuntimeId());
+                feedSubscriptionManager
+                        .deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime.getRuntimeId());
                 throw new HyracksDataException(ie);
             }
         } catch (Exception e) {
@@ -199,8 +202,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
             LOGGER.info("Waiting for adaptor [" + partition + "]" + "to be done with ingestion of feed " + feedId);
         }
         synchronized (adapterRuntimeManager) {
-            while (!(adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FINISHED_INGESTION) || (adapterRuntimeManager
-                    .getState().equals(IAdapterRuntimeManager.State.FAILED_INGESTION)))) {
+            while (!(adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FINISHED_INGESTION)
+                    || (adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FAILED_INGESTION)))) {
                 adapterRuntimeManager.wait();
             }
         }

@@ -23,3 +23,10 @@
  * Date         : Apr 10th 2013
  */
 
+declare function abc(y) {
+ 3
+};
+
+let z =y
+select element z
+

@@ -36,14 +36,7 @@ Where
       LiteralExpr [STRING] [Multmedia]
       LiteralExpr [LONG] [1]
     ]
-    Index:     FunctionCall test.edit-distance-contains@3[
-      FieldAccessor [
-        Variable [ Name=paper ]
-        Field=title
-      ]
-      LiteralExpr [STRING] [Multmedia]
-      LiteralExpr [LONG] [1]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]
 Orderby
   FieldAccessor [

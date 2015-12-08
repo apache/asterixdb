@@ -18,6 +18,11 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue423
+                   (Specifically for HHJ case)
+                 : https://code.google.com/p/asterixdb/issues/detail?id=423
+ * Expected Res : Success
+ * Date         : 29th May 2013
+ */
 
 drop  database test if exists;
 create  database test;

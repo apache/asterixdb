@@ -392,7 +392,6 @@ class LockRequestController implements Runnable {
 class LockRequestWorker implements Runnable {
 
     String threadName;
-    TransactionSubsystem txnProvider;
     ILockManager lockMgr;
     WorkerReadyQueue workerReadyQueue;
     LockRequest lockRequest;
@@ -401,7 +400,6 @@ class LockRequestWorker implements Runnable {
     boolean isDone;
 
     public LockRequestWorker(TransactionSubsystem txnProvider, WorkerReadyQueue workerReadyQueue, String threadName) {
-        this.txnProvider = txnProvider;
         this.lockMgr = txnProvider.getLockManager();
         this.workerReadyQueue = workerReadyQueue;
         this.threadName = new String(threadName);

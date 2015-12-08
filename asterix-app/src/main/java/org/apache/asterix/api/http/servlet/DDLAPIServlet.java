@@ -23,16 +23,23 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    public DDLAPIServlet(ILangCompilationProvider compilationProvider) {
+        super(compilationProvider);
+    }
+
+    @Override
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("ddl");
     }
 
+    @Override
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DATAVERSE_DROP, Kind.DATASET_DECL, Kind.NODEGROUP_DECL,
                 Kind.NODEGROUP_DROP, Kind.TYPE_DECL, Kind.TYPE_DROP, Kind.CREATE_INDEX, Kind.INDEX_DECL,
@@ -42,6 +49,7 @@ public class DDLAPIServlet extends RESTAPIServlet {
         return Arrays.asList(statementsArray);
     }
 
+    @Override
     protected String getErrorMessage() {
         return "Invalid statement: Non-DDL statement %s to the DDL API.";
     }

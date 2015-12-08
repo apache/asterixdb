@@ -54,7 +54,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.id = id;
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
-        this.lockManager = new ConcurrentLockManager(this);
+        this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
 
         AsterixReplicationProperties asterixReplicationProperties = null;
         if (asterixAppRuntimeContextProvider != null) {

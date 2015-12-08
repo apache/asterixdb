@@ -19,7 +19,7 @@
 /*
  * Test case Name  : opentype-insert2.aql
  * Description     : verify that the case where SetClosedRecordRule should not rewrite
- *					the plan to use closed-record-descriptor
+ *                    the plan to use closed-record-descriptor
  * Expected Result : Success
  */
 

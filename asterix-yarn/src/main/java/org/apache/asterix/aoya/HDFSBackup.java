@@ -46,14 +46,14 @@ public class HDFSBackup {
 
         HDFSBackup back = new HDFSBackup();
         Map<String, String> envs = System.getenv();
-        if(envs.containsKey("HADOOP_CONF_DIR")){
+        if (envs.containsKey("HADOOP_CONF_DIR")) {
             File hadoopConfDir = new File(envs.get("HADOOP_CONF_DIR"));
-            if(hadoopConfDir.isDirectory()){
-               for(File config: hadoopConfDir.listFiles()){
-                   if(config.getName().matches("^.*(xml)$")){
-                       back.conf.addResource(new Path(config.getAbsolutePath()));
-                   }
-               }
+            if (hadoopConfDir.isDirectory()) {
+                for (File config : hadoopConfDir.listFiles()) {
+                    if (config.getName().matches("^.*(xml)$")) {
+                        back.conf.addResource(new Path(config.getAbsolutePath()));
+                    }
+                }
             }
         }
         Options opts = new Options();
@@ -67,7 +67,7 @@ public class HDFSBackup {
             back.backup = true;
         }
         @SuppressWarnings("unchecked")
-        List<String> pairs = (List<String>) cliParser.getArgList();
+        List<String> pairs = cliParser.getArgList();
 
         List<Path[]> sources = new ArrayList<Path[]>(10);
         for (String p : pairs) {
@@ -83,7 +83,7 @@ public class HDFSBackup {
                 back.performRestore(sources);
             }
         } catch (IOException e) {
-            back.LOG.fatal("Backup/restoration unsuccessful: " + e.getMessage());
+            LOG.fatal("Backup/restoration unsuccessful: " + e.getMessage());
             throw e;
         }
     }

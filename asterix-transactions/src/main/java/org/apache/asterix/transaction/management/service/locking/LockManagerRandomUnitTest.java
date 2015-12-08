@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.apache.commons.io.FileUtils;
-
-import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -39,6 +36,7 @@ import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.transaction.TransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import org.apache.commons.io.FileUtils;
 
 /**
  * LockManagerUnitTest: unit test of LockManager
@@ -60,7 +58,8 @@ public class LockManagerRandomUnitTest {
         //prepare configuration file
         File cwd = new File(System.getProperty("user.dir"));
         File asterixdbDir = cwd.getParentFile();
-        File srcFile = new File(asterixdbDir.getAbsoluteFile(), "asterix-app/src/main/resources/asterix-build-configuration.xml");
+        File srcFile = new File(asterixdbDir.getAbsoluteFile(),
+                "asterix-app/src/main/resources/asterix-build-configuration.xml");
         File destFile = new File(cwd, "target/classes/asterix-configuration.xml");
         FileUtils.copyFile(srcFile, destFile);
 
@@ -384,8 +383,8 @@ class LockRequestProducer implements Runnable {
             int datasetId = lockRequest.datasetIdObj.getId();
             int entityHashValue = lockRequest.entityHashValue;
             byte lockMode = LockMode.X;
-            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, new DatasetId(
-                    datasetId), entityHashValue, lockMode, txnContext);
+            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType,
+                    new DatasetId(datasetId), entityHashValue, lockMode, txnContext);
             request.isUpgrade = true;
             requestQueue.add(request);
             requestHistory.append(request.prettyPrint());
@@ -417,8 +416,8 @@ class LockRequestProducer implements Runnable {
             int datasetId = lockRequest.datasetIdObj.getId();
             int entityHashValue = lockRequest.entityHashValue;
             byte lockMode = lockRequest.lockMode;
-            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, new DatasetId(
-                    datasetId), entityHashValue, lockMode, txnContext);
+            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType,
+                    new DatasetId(datasetId), entityHashValue, lockMode, txnContext);
             requestQueue.add(request);
             requestHistory.append(request.prettyPrint());
             sendRequest(request);
@@ -449,8 +448,8 @@ class LockRequestProducer implements Runnable {
             int datasetId = lockRequest.datasetIdObj.getId();
             int entityHashValue = lockRequest.entityHashValue;
             byte lockMode = lockRequest.lockMode;
-            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, new DatasetId(
-                    datasetId), entityHashValue, lockMode, txnContext);
+            LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType,
+                    new DatasetId(datasetId), entityHashValue, lockMode, txnContext);
             requestQueue.add(request);
             requestHistory.append(request.prettyPrint());
             sendRequest(request);
@@ -523,7 +522,7 @@ class LockRequestProducer implements Runnable {
                 throw new UnsupportedOperationException("Unsupported lock method");
         }
         try {
-            Thread.sleep((long) 0);
+            Thread.sleep(0);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -577,7 +576,7 @@ class LockRequest {
     public String toString() {
         return prettyPrint();
     }
-    
+
     public String prettyPrint() {
         StringBuilder s = new StringBuilder();
         //s.append(threadName.charAt(7)).append("\t").append("\t");

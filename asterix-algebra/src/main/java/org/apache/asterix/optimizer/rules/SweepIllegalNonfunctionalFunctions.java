@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -234,6 +235,11 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
 
         @Override
         public Void visitUnnestOperator(UnnestOperator op, Void arg) throws AlgebricksException {
+            return null;
+        }
+
+        @Override
+        public Void visitOuterUnnestOperator(OuterUnnestOperator op, Void arg) throws AlgebricksException {
             return null;
         }
 

@@ -32,6 +32,9 @@ public class AInt16SerializerDeserializer implements ISerializerDeserializer<AIn
 
     public static final AInt16SerializerDeserializer INSTANCE = new AInt16SerializerDeserializer();
 
+    private AInt16SerializerDeserializer() {
+    }
+
     @Override
     public AInt16 deserialize(DataInput in) throws HyracksDataException {
         try {

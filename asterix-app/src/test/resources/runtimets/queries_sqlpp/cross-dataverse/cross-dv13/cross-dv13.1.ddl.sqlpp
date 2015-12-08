@@ -16,11 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
- * Description  : Create UDFs in different dataverses
+/*
+ * Description  : Create UDFs in different databases
  *              : Test for recursion in those UDFs
  * Expected Res : Failure - Recursion is not allowed!
  * Date         : 31st Aug 2012
- * Ignored      : This test is currently not part of the test build, because it being a negative test case expectedly throws an exception. 
+ * Ignored      : This test is currently not part of the test build, because it being a negative test case expectedly throws an exception.
  */
 
+drop database testdv1 if exists;
+drop database testdv2 if exists;
+create database testdv1;
+create database testdv2;
+
+create function testdv1.fun01(){
+testdv2.fun02()
+}
+
+create function testdv2.fun02(){
+testdv2.fun03()
+}
+
+create function testdv2.fun03(){
+testdv1.fun01()
+}

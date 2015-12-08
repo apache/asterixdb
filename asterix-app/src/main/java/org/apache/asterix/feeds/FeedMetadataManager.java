@@ -103,6 +103,8 @@ public class FeedMetadataManager implements IFeedMetadataManager {
                 case STRING:
                     sb.append("\"" + ((AString) record.getValueByPos(i)).getStringValue() + "\"");
                     break;
+                default:
+                    break;
             }
         }
         sb.append(" }");

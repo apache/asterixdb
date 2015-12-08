@@ -18,24 +18,20 @@
  */
 package org.apache.asterix.api.http.servlet;
 
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.common.config.AsterixBuildProperties;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.hadoop.http.HttpServer;
-import org.json.JSONObject;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
+
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.json.JSONObject;
 
 public class VersionAPIServlet extends HttpServlet {
-
+    private static final long serialVersionUID = 1L;
     public static final String ASTERIX_BUILD_PROP_ATTR = "org.apache.asterix.PROPS";
 
     @Override
@@ -45,7 +41,7 @@ public class VersionAPIServlet extends HttpServlet {
         Map<String, String> buildProperties = props.getBuildProperties().getAllProps();
         JSONObject responseObject = new JSONObject(buildProperties);
         response.setCharacterEncoding("utf-8");
-        PrintWriter responseWriter =  response.getWriter();
+        PrintWriter responseWriter = response.getWriter();
         responseWriter.write(responseObject.toString());
         response.setStatus(HttpServletResponse.SC_OK);
         responseWriter.flush();

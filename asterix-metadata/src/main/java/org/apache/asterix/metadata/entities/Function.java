@@ -24,7 +24,7 @@ import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class Function implements IMetadataEntity {
-
+    private static final long serialVersionUID = 1L;
     public static final String LANGUAGE_AQL = "AQL";
     public static final String LANGUAGE_JAVA = "JAVA";
 

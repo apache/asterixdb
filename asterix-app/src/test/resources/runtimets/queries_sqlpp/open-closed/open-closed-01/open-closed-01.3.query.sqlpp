@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : open-closed-01.aql
- * Description     : This test is intended to test insertion of additional data into an open type 
+ * Description     : This test is intended to test insertion of additional data into an open type
  * Expected Result : Success
  * Date            : April 2 2012
  */

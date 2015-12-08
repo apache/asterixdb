@@ -90,7 +90,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             :
             IndexAccessor [
               Variable [ Name=sim ]
-              Index:               Variable [ Name=sim ]
+              Index:               LiteralExpr [LONG] [0]
             ]
           )
         ]
@@ -204,15 +204,12 @@ FROM [  FunctionCall Metadata.dataset@1[
                   Variable [ Name=paper ]
                   Variable [ Name=token ]
                   Variable [ Name=tokenUnranked ]
-                  Variable [ Name=tokensDBLP ]
                   Variable [ Name=lenDBLP ]
                   Variable [ Name=tokensUnrankedDBLP ]
                   Variable [ Name=idDBLP ]
                   Variable [ Name=paperDBLP ]
                   Variable [ Name=prefixTokenDBLP ]
                   Variable [ Name=prefixTokenCSX ]
-                  Variable [ Name=paperCSX ]
-                  Variable [ Name=paperDBLP ]
                   Variable [ Name=paperCSX ]
 
                 Orderby
@@ -303,7 +300,6 @@ FROM [  FunctionCall Metadata.dataset@1[
                   Variable [ Name=paper ]
                   Variable [ Name=token ]
                   Variable [ Name=tokenUnranked ]
-                  Variable [ Name=tokensCSX ]
                   Variable [ Name=lenCSX ]
                   Variable [ Name=tokensUnrankedCSX ]
                   Variable [ Name=idCSX ]
@@ -314,8 +310,6 @@ FROM [  FunctionCall Metadata.dataset@1[
                   Variable [ Name=paperDBLP ]
                   Variable [ Name=prefixTokenDBLP ]
                   Variable [ Name=prefixTokenCSX ]
-                  Variable [ Name=paperCSX ]
-                  Variable [ Name=paperDBLP ]
                   Variable [ Name=paperCSX ]
 
                 Orderby
@@ -387,8 +381,6 @@ FROM [  FunctionCall Metadata.dataset@1[
           Variable [ Name=paperDBLP ]
           Variable [ Name=prefixTokenDBLP ]
           Variable [ Name=prefixTokenCSX ]
-          Variable [ Name=paperCSX ]
-          Variable [ Name=paperDBLP ]
           Variable [ Name=paperCSX ]
 
       )

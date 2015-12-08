@@ -1,0 +1,49 @@
+DataverseUse test
+TypeDecl LineType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+DatasetDecl Line(LineType)is an external dataset
+DatasetDecl Order(OrderType)is an external dataset
+DatasetDecl Customer(CustomerType)is an external dataset

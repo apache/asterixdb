@@ -18,9 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -28,6 +27,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -76,8 +76,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
         return res;
     }
 
-    private static class SettingClosedRecordVisitor extends AbstractConstVarFunVisitor<ClosedDataInfo, Void> implements
-            ILogicalExpressionReferenceTransform {
+    private static class SettingClosedRecordVisitor extends AbstractConstVarFunVisitor<ClosedDataInfo, Void>
+            implements ILogicalExpressionReferenceTransform {
 
         private IOptimizationContext context;
         private IVariableTypeEnvironment env;
@@ -132,8 +132,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                         }
                     }
                     if (allClosed) {
-                        expr.setFunctionInfo(FunctionUtils
-                                .getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
+                        expr.setFunctionInfo(
+                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
                         GlobalConfig.ASTERIX_LOGGER.finest("Switching to CLOSED record constructor in " + expr + ".\n");
                         changed = true;
                     }
@@ -169,8 +169,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throws AlgebricksException {
             Object varType = env.getVarType(expr.getVariableReference());
             if (varType == null) {
-                throw new AlgebricksException("Could not infer type for variable '" + expr.getVariableReference()
-                        + "'.");
+                throw new AlgebricksException(
+                        "Could not infer type for variable '" + expr.getVariableReference() + "'.");
             }
             boolean dataIsClosed = isClosedRec((IAType) varType);
             return new ClosedDataInfo(false, dataIsClosed, expr);

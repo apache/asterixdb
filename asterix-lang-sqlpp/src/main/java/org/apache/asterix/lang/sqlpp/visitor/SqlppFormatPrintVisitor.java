@@ -196,7 +196,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         selectSetOperation.getLeftInput().accept(this, step);
         if (selectSetOperation.hasRightInputs()) {
             for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-                String all = right.setSemantics() ? " " : " all ";
+                String all = right.isSetSemantics() ? " " : " all ";
                 out.print(right.getSetOpType() + all);
                 right.getSetOperationRightInput().accept(this, step);
             }

@@ -23,12 +23,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.TextInputFormat;
-
-import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
 import org.apache.asterix.external.indexing.input.GenericFileAwareRecordReader;
 import org.apache.asterix.external.indexing.input.GenericRecordReader;
 import org.apache.asterix.external.indexing.input.TextualDataReader;
@@ -36,6 +30,10 @@ import org.apache.asterix.external.indexing.input.TextualFullScanDataReader;
 import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -76,10 +74,12 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
      */
     @Override
     public InputStream getInputStream(int partition) throws IOException {
-        if ((conf.getInputFormat() instanceof TextInputFormat || conf.getInputFormat() instanceof SequenceFileInputFormat)
-                && (AsterixTupleParserFactory.FORMAT_ADM.equalsIgnoreCase((String) configuration
-                        .get(AsterixTupleParserFactory.KEY_FORMAT)) || AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT
-                        .equalsIgnoreCase((String) configuration.get(AsterixTupleParserFactory.KEY_FORMAT)))) {
+        if ((conf.getInputFormat() instanceof TextInputFormat
+                || conf.getInputFormat() instanceof SequenceFileInputFormat)
+                && (AsterixTupleParserFactory.FORMAT_ADM
+                        .equalsIgnoreCase(configuration.get(AsterixTupleParserFactory.KEY_FORMAT))
+                        || AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT
+                                .equalsIgnoreCase(configuration.get(AsterixTupleParserFactory.KEY_FORMAT)))) {
             if (files != null) {
                 return new TextualDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
             } else {

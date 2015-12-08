@@ -30,6 +30,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -39,7 +40,6 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.DoubleArray;
 import org.apache.asterix.runtime.evaluators.common.SpatialUtils;
-import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -56,6 +56,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialIntersectDescriptor();
         }
@@ -84,12 +85,12 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     private final DoubleArray trianglesY0 = new DoubleArray();
                     private final DoubleArray trianglesX1 = new DoubleArray();
                     private final DoubleArray trianglesY1 = new DoubleArray();
-                    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+                    private final AObjectSerializerDeserializer aBooleanSerDer = AObjectSerializerDeserializer.INSTANCE;
 
                     private boolean pointOnLine(double pX, double pY, double startX, double startY, double endX,
                             double endY) throws HyracksDataException {
-                        double crossProduct = SpatialUtils.crossProduct(pY - startY, pX - startX, endY - startY, endX
-                                - startX);
+                        double crossProduct = SpatialUtils.crossProduct(pY - startY, pX - startX, endY - startY,
+                                endX - startX);
                         if (Math.abs(crossProduct) > SpatialUtils.doubleEpsilon()) { // crossProduct != 0
                             return false;
                         }
@@ -257,7 +258,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         return false;
                     }
 
-                    private boolean lineRectangleIntersection(byte[] bytes0, byte[] bytes1) throws HyracksDataException {
+                    private boolean lineRectangleIntersection(byte[] bytes0, byte[] bytes1)
+                            throws HyracksDataException {
                         double startX1 = ADoubleSerializerDeserializer.getDouble(bytes0,
                                 ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X));
                         double startY1 = ADoubleSerializerDeserializer.getDouble(bytes0,
@@ -434,7 +436,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
 
                     private boolean triangleTriangleIntersection(DoubleArray trianglesX0, DoubleArray trianglesY0,
                             int triangleId0, DoubleArray trianglesX1, DoubleArray trianglesY1, int triangleId1)
-                            throws HyracksDataException { // separating axis theorem
+                                    throws HyracksDataException { // separating axis theorem
 
                         for (int side = 0; side < 3; side++) {
                             spatialUtils.findNormals(trianglesX0, trianglesY0, triangleId0, side);
@@ -763,15 +765,21 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 case POINT:
                                     switch (tag1) {
                                         case POINT:
-                                            if (ascDoubleComp.compare(outInput0.getByteArray(),
-                                                    APointSerializerDeserializer.getCoordinateOffset(Coordinate.X), 8,
-                                                    outInput1.getByteArray(),
-                                                    APointSerializerDeserializer.getCoordinateOffset(Coordinate.X), 8) == 0) {
-                                                if (ascDoubleComp.compare(outInput0.getByteArray(),
-                                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y),
-                                                        8, outInput1.getByteArray(),
-                                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y),
-                                                        8) == 0) {
+                                            if (ascDoubleComp
+                                                    .compare(outInput0.getByteArray(),
+                                                            APointSerializerDeserializer.getCoordinateOffset(
+                                                                    Coordinate.X),
+                                                            8, outInput1.getByteArray(), APointSerializerDeserializer
+                                                                    .getCoordinateOffset(Coordinate.X),
+                                                            8) == 0) {
+                                                if (ascDoubleComp
+                                                        .compare(outInput0.getByteArray(),
+                                                                APointSerializerDeserializer.getCoordinateOffset(
+                                                                        Coordinate.Y),
+                                                                8, outInput1.getByteArray(),
+                                                                APointSerializerDeserializer
+                                                                        .getCoordinateOffset(Coordinate.Y),
+                                                                8) == 0) {
                                                     res = true;
                                                 }
                                             }
@@ -784,18 +792,18 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                     outInput0.getByteArray(),
                                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                            double startX = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.Y));
+                                            double startX = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.X));
+                                            double startY = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.Y));
+                                            double endX = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.X));
+                                            double endY = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.Y));
 
                                             res = pointOnLine(pX, pY, startX, startY, endX, endY);
                                             break;
@@ -812,11 +820,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = false;
                                             break;
                                         default:
-                                            throw new NotImplementedException(
-                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                            + ": does not support the type: "
-                                                            + tag1
-                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                                    .getName() + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case LINE:
@@ -829,49 +835,49 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                     outInput1.getByteArray(),
                                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                            double startX = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.Y));
+                                            double startX = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.X));
+                                            double startY = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.Y));
+                                            double endX = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.X));
+                                            double endY = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.Y));
 
                                             res = pointOnLine(pX, pY, startX, startY, endX, endY);
                                             break;
                                         case LINE:
-                                            double startX1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.Y));
+                                            double startX1 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.X));
+                                            double startY1 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.Y));
+                                            double endX1 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.X));
+                                            double endY1 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.Y));
 
-                                            double startX2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getByteArray(), ALineSerializerDeserializer
-                                                    .getEndPointCoordinateOffset(Coordinate.Y));
-                                            res = lineLineIntersection(startX1, startY1, endX1, endY1, startX2,
-                                                    startY2, endX2, endY2);
+                                            double startX2 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.X));
+                                            double startY2 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getStartPointCoordinateOffset(Coordinate.Y));
+                                            double endX2 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.X));
+                                            double endY2 = ADoubleSerializerDeserializer
+                                                    .getDouble(outInput1.getByteArray(), ALineSerializerDeserializer
+                                                            .getEndPointCoordinateOffset(Coordinate.Y));
+                                            res = lineLineIntersection(startX1, startY1, endX1, endY1, startX2, startY2,
+                                                    endX2, endY2);
                                             break;
                                         case POLYGON:
                                             res = linePolygonIntersection(outInput0.getByteArray(),
@@ -889,11 +895,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = false;
                                             break;
                                         default:
-                                            throw new NotImplementedException(
-                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                            + ": does not support the type: "
-                                                            + tag1
-                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                                    .getName() + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case POLYGON:
@@ -991,11 +995,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = false;
                                             break;
                                         default:
-                                            throw new NotImplementedException(
-                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                            + ": does not support the type: "
-                                                            + tag1
-                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                                    .getName() + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case CIRCLE:
@@ -1023,11 +1025,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = false;
                                             break;
                                         default:
-                                            throw new NotImplementedException(
-                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                            + ": does not support the type: "
-                                                            + tag1
-                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                                    .getName() + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case RECTANGLE:
@@ -1078,25 +1078,22 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = false;
                                             break;
                                         default:
-                                            throw new NotImplementedException(
-                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                            + ": does not support the type: "
-                                                            + tag1
-                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                                    .getName() + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case NULL:
                                     res = false;
                                     break;
                                 default:
-                                    throw new NotImplementedException(
-                                            AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                                    + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
+                                            .getName() + ": does not support the type: " + tag1
+                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                             }
 
                             ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
-                            aObjSerDer.serialize(aResult, out);
+                            aBooleanSerDer.serialize(aResult, out);
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         }

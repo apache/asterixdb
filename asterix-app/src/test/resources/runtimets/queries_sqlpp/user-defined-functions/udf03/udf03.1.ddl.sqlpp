@@ -23,3 +23,14 @@
  * Ignored      : Not part of test build due to Issue 200
  */
 
+
+// This test is returning NPE... Issue 200
+
+drop database test if exists;
+create database test;
+
+use test;
+
+create function test.echo(list){
+list
+}

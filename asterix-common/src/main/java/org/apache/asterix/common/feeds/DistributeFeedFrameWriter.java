@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -60,18 +60,19 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveObjectId feedId, IFrameWriter writer, ActiveRuntimeType feedRuntimeType,
-            int partition, FrameTupleAccessor fta, IActiveManager feedManager) throws IOException {
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveObjectId feedId, IFrameWriter writer,
+            ActiveRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IActiveManager feedManager)
+                    throws IOException {
         this.feedId = feedId;
-        this.frameDistributor = new FrameDistributor(ctx, feedId, feedRuntimeType, partition, true,
+        this.frameDistributor = new FrameDistributor(feedId, feedRuntimeType, partition, true,
                 feedManager.getFeedMemoryManager(), fta);
         this.feedRuntimeType = feedRuntimeType;
         this.partition = partition;
         this.writer = writer;
     }
 
-    public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter,
-            ActiveJobId connectionId) throws Exception {
+    public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter, ActiveJobId connectionId)
+            throws Exception {
         FeedFrameCollector collector = null;
         if (!frameDistributor.isRegistered(frameWriter)) {
             collector = new FeedFrameCollector(frameDistributor, fpa, frameWriter, connectionId);
@@ -88,8 +89,8 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     public void unsubscribeFeed(IFrameWriter recipientFeedFrameWriter) throws Exception {
         boolean success = frameDistributor.deregisterFrameCollector(recipientFeedFrameWriter);
         if (!success) {
-            throw new IllegalStateException("Invalid attempt to unregister FeedFrameWriter " + recipientFeedFrameWriter
-                    + " not registered.");
+            throw new IllegalStateException(
+                    "Invalid attempt to unregister FeedFrameWriter " + recipientFeedFrameWriter + " not registered.");
         }
     }
 

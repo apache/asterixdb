@@ -637,25 +637,4 @@ public class MetadataLockManager {
         releaseExternalDatasetRefreshLock(datasetFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
-
-    public void pregelixBegin(String dataverseName, String datasetFullyQualifiedNameFrom,
-            String datasetFullyQualifiedNameTo) {
-        acquireDataverseReadLock(dataverseName);
-
-        if (datasetFullyQualifiedNameFrom.compareTo(datasetFullyQualifiedNameTo) < 0) {
-            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
-            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
-        } else {
-            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
-            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
-        }
-    }
-
-    public void pregelixEnd(String dataverseName, String datasetFullyQualifiedNameFrom,
-            String datasetFullyQualifiedNameTo) {
-
-        releaseDatasetReadLock(datasetFullyQualifiedNameFrom);
-        releaseDatasetWriteLock(datasetFullyQualifiedNameTo);
-        releaseDataverseReadLock(dataverseName);
-    }
 }

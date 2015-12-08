@@ -34,6 +34,10 @@ public final class LangRewritingContext {
         return varCounter;
     }
 
+    public void setVarCounter(int varCounter) {
+        this.varCounter = varCounter;
+    }
+
     /**
      * Generate a new variable with the same identifier (varValue) but a different Id.
      *

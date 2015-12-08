@@ -27,12 +27,11 @@ import org.apache.hadoop.mapred.Reporter;
 /***
  * an abstract class to be used for reading hdfs based datasets one record at a time <- used for indexing->
  */
-@SuppressWarnings("deprecation")
 public abstract class AbstractHDFSReader extends InputStream {
 
     /***
      * This function should be called once to do initial setup before starting to read records
-     * 
+     *
      * @return true if ready for reading
      */
     abstract public boolean initialize() throws Exception;
@@ -96,6 +95,7 @@ public abstract class AbstractHDFSReader extends InputStream {
             public void progress() {
             }
 
+            @Override
             public float getProgress() {
                 return 0.0f;
             }

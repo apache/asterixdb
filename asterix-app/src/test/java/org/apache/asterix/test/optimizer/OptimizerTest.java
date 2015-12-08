@@ -28,7 +28,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.common.TestHelper;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -37,17 +46,6 @@ import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.api.java.AsterixJavaClient;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.test.base.AsterixTestHelper;
-import org.apache.asterix.test.common.TestHelper;
 
 @RunWith(Parameterized.class)
 public class OptimizerTest {
@@ -68,8 +66,7 @@ public class OptimizerTest {
     private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
-
-    private static AsterixTransactionProperties txnProperties;
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -80,25 +77,11 @@ public class OptimizerTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
-
-        deleteTransactionLogs();
-
-        AsterixHyracksIntegrationUtil.init();
+        AsterixHyracksIntegrationUtil.init(true);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
-    }
-
-    private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
-            if (log.exists()) {
-                FileUtils.deleteDirectory(log);
-            }
-        }
     }
 
     @AfterClass
@@ -109,7 +92,7 @@ public class OptimizerTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-        AsterixHyracksIntegrationUtil.deinit();
+        AsterixHyracksIntegrationUtil.deinit(true);
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
@@ -148,8 +131,8 @@ public class OptimizerTest {
     @Test
     public void test() throws Exception {
         try {
-            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length())
-                    .replace(SEPARATOR.charAt(0), '/');
+            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0),
+                    '/');
             if (!only.isEmpty()) {
                 boolean toRun = TestHelper.isInPrefixList(only, queryFileShort);
                 if (!toRun) {
@@ -168,7 +151,7 @@ public class OptimizerTest {
             Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
             PrintWriter plan = new PrintWriter(actualFile);
             AsterixJavaClient asterix = new AsterixJavaClient(
-                    AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan);
+                    AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan, compilationProvider);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {
@@ -179,10 +162,10 @@ public class OptimizerTest {
             plan.close();
             query.close();
 
-            BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
-                    "UTF-8"));
-            BufferedReader readerActual = new BufferedReader(new InputStreamReader(new FileInputStream(actualFile),
-                    "UTF-8"));
+            BufferedReader readerExpected = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
+            BufferedReader readerActual = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
 
             String lineExpected, lineActual;
             int num = 1;
@@ -203,8 +186,8 @@ public class OptimizerTest {
                 lineActual = readerActual.readLine();
                 // Assert.assertEquals(null, lineActual);
                 if (lineActual != null) {
-                    throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< \n> "
-                            + lineActual);
+                    throw new Exception(
+                            "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + lineActual);
                 }
                 LOGGER.info("Test \"" + queryFile.getPath() + "\" PASSED!");
                 actualFile.delete();

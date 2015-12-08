@@ -1,0 +1,67 @@
+DataverseUse test
+TypeDecl S [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl GS [
+  closed RecordType {
+    id : int64,
+    Genus : string,
+    lower : S
+  }
+]
+TypeDecl FGS [
+  open RecordType {
+    id : int64,
+    Family : string
+  }
+]
+TypeDecl OFGS [
+  closed RecordType {
+    id : int64,
+    Order : string,
+    lower : FGS
+  }
+]
+TypeDecl COFGS [
+  closed RecordType {
+    id : int64,
+    Class : string,
+    lower : OFGS
+  }
+]
+TypeDecl PCOFGS [
+  closed RecordType {
+    id : int64,
+    Phylum : string,
+    lower : COFGS
+  }
+]
+TypeDecl KPCOFGS [
+  open RecordType {
+    id : int64,
+    Kingdom : string
+  }
+]
+TypeDecl Classification [
+  closed RecordType {
+    id : int64,
+    fullClassification : KPCOFGS
+  }
+]
+TypeDecl Animal [
+  closed RecordType {
+    id : int64,
+    class : Classification
+  }
+]
+DatasetDecl Animals(Animal) partitioned by [[id]]
+DatasetDecl Classifications(Classification) partitioned by [[id]]
+DatasetDecl KPCOFGSs(KPCOFGS) partitioned by [[id]]
+DatasetDecl Ss(S) partitioned by [[id]]
+DatasetDecl GSs(GS) partitioned by [[id]]
+DatasetDecl FGSs(FGS) partitioned by [[id]]
+DatasetDecl OFGSs(OFGS) partitioned by [[id]]
+DatasetDecl COFGSs(COFGS) partitioned by [[id]]
+DatasetDecl PCOFGSs(PCOFGS) partitioned by [[id]]

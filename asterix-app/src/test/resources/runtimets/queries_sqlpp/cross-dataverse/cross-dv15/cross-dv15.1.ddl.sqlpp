@@ -18,8 +18,25 @@
  */
 /*
  * Description  : Create user defined functions using fully qualified names
- *              : verify their details in Function dataset in Metadata dataverse.
+ *              : verify their details in Function dataset in Metadata database.
  * Expected Res :
  * Date         : 30th Aug 2012
  */
 
+drop database testdv1 if exists;
+create database testdv1;
+
+// UDF with no inputs
+create function testdv1.fun01(){
+100
+}
+
+// UDF with one input
+create function testdv1.fun02(a){
+"function 02"
+}
+
+// UDF with two inputs
+create function testdv1.fun03(b,c){
+b+c
+}

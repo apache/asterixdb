@@ -25,6 +25,7 @@ import org.apache.asterix.installer.schema.conf.Backup;
 import org.apache.asterix.installer.schema.conf.Hdfs;
 
 public class BackupInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public static enum BackupType {
         LOCAL,

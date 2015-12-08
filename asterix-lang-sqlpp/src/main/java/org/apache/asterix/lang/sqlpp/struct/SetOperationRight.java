@@ -36,7 +36,7 @@ public class SetOperationRight {
         return opType;
     }
 
-    public boolean setSemantics() {
+    public boolean isSetSemantics() {
         return setSemantics;
     }
 

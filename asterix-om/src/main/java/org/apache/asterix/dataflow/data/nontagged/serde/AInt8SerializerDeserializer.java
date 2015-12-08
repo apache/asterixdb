@@ -32,6 +32,9 @@ public class AInt8SerializerDeserializer implements ISerializerDeserializer<AInt
 
     public static final AInt8SerializerDeserializer INSTANCE = new AInt8SerializerDeserializer();
 
+    private AInt8SerializerDeserializer() {
+    }
+
     @Override
     public AInt8 deserialize(DataInput in) throws HyracksDataException {
         try {

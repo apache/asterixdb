@@ -18,6 +18,10 @@
  */
 /*
 * Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
+                 This will trigger into the VSizeFrame path
+* Expected Res : Success
+* Date         : Jun 16 2015
+*/
 
 use test;
 
@@ -25,5 +29,5 @@ use test;
 select element {'id':id,'length':test."string-length"(comment),'comment':comment}
 from  Line as i
 group by i.l_comment as comment,i.l_orderkey as id
-order by id
+order by id,test."string-length"(comment),comment
 ;
