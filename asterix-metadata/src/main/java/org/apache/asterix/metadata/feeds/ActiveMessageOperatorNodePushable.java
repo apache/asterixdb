@@ -65,7 +65,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNod
 /**
  * Runtime for the FeedMessageOpertorDescriptor. This operator is responsible for communicating
  * a feed message to the local feed manager on the host node controller.
- * 
+ *
  * @see ActiveMessageOperatorDescriptor
  *      IFeedMessage
  *      IFeedManager
@@ -79,8 +79,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
     private final IActiveManager activeManager;
     private final int partition;
 
-    public ActiveMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId,
-            IFeedMessage feedMessage, int partition) {
+    public ActiveMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId, IFeedMessage feedMessage,
+            int partition) {
         this.activeJobId = activeJobId;
         this.message = feedMessage;
         this.partition = partition;
@@ -143,11 +143,12 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
     }
 
     private void handleExecuteProcedureMessage(ExecuteProcedureMessage message) throws IOException {
-        ProcedureRuntimeId procedureRuntimeId = message.getProcedureRuntimeId();
-        ProcedureRuntime runtime = (ProcedureRuntime) activeManager.getConnectionManager().getActiveRuntime(
-                activeJobId, procedureRuntimeId);
-        runtime.execute();
-        activeManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, procedureRuntimeId);
+        ProcedureRuntimeId procedureRuntimeId = new ProcedureRuntimeId(message.getProcedureId(), partition,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
+        ProcedureRuntime runtime = (ProcedureRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
+                procedureRuntimeId);
+        //TODO: this will only be the operator registered as a procedure (currently the ets)
+        runtime.drop();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Executed Procedure " + message.getProcedureId());
         }
@@ -262,8 +263,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
         ActiveObjectId sourceFeedId = endFeedMessage.getSourceFeedId();
         SubscribableFeedRuntimeId subscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
                 ActiveRuntimeType.INTAKE, partition);
-        ISubscribableRuntime feedRuntime = activeManager.getFeedSubscriptionManager().getSubscribableRuntime(
-                subscribableRuntimeId);
+        ISubscribableRuntime feedRuntime = activeManager.getFeedSubscriptionManager()
+                .getSubscribableRuntime(subscribableRuntimeId);
         IAdapterRuntimeManager adapterRuntimeManager = ((IngestionRuntime) feedRuntime).getAdapterRuntimeManager();
         adapterRuntimeManager.stop();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -292,8 +293,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
             }
 
             runtimeId = new ActiveRuntimeId(runtimeType, partition, ActiveRuntimeId.DEFAULT_OPERAND_ID);
-            CollectionRuntime feedRuntime = (CollectionRuntime) activeManager.getConnectionManager().getActiveRuntime(
-                    activeJobId, runtimeId);
+            CollectionRuntime feedRuntime = (CollectionRuntime) activeManager.getConnectionManager()
+                    .getActiveRuntime(activeJobId, runtimeId);
             feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Complete Unsubscription of " + endFeedMessage.getFeedConnectionId());
@@ -310,7 +311,7 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
                             activeJobId.getActiveId(), ActiveRuntimeType.COMPUTE, partition);
                     ISubscribableRuntime feedRuntime = activeManager.getFeedSubscriptionManager()
                             .getSubscribableRuntime(feedSubscribableRuntimeId);
-                    DistributeFeedFrameWriter dWriter = (DistributeFeedFrameWriter) feedRuntime.getActiveFrameWriter();
+                    DistributeFeedFrameWriter dWriter = feedRuntime.getActiveFrameWriter();
                     Map<IFrameWriter, FeedFrameCollector> registeredCollectors = dWriter.getRegisteredReaders();
 
                     IFrameWriter unsubscribingWriter = null;

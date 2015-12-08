@@ -96,13 +96,14 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
             FunctionSignature function, String duration, String subscriptionsName, String resultsName)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         this.ctx = ctx;
         this.activeJobId = channelJobId;
         this.operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
         this.runtimeType = ActiveRuntimeType.REPETITIVE;
         this.policyEnforcer = new FeedPolicyEnforcer(activeJobId, new HashMap<String, String>());
-        this.channelRuntimeId = new ProcedureRuntimeId(channelJobId.getActiveId());
+        this.channelRuntimeId = new ProcedureRuntimeId(channelJobId.getActiveId(), 0,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
         this.duration = findPeriod(duration);
         this.query = produceQuery(function, subscriptionsName, resultsName);
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
@@ -175,7 +176,8 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     @Override
     public void initialize() throws HyracksDataException {
-        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
         try {
             activeRuntime = (ChannelRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
                     runtimeId);
@@ -222,7 +224,8 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         this.setOutputFrameWriter(0, writer, recordDesc);
-        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
         activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query);
         activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }

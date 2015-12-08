@@ -235,10 +235,10 @@ public class ActiveUtil {
             Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
             Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
 
-            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
-            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(rightOp.getLeft().getOperatorId()));
 
             altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
         }
@@ -364,10 +364,10 @@ public class ActiveUtil {
             Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
             Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
 
-            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
-            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(rightOp.getLeft().getOperatorId()));
 
             altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
         }
@@ -480,9 +480,13 @@ public class ActiveUtil {
                 if (runtimeFactory instanceof AssignRuntimeFactory) {
                     IConnectorDescriptor connectorDesc = spec.getOperatorInputMap().get(opDesc.getOperatorId()).get(0);
                     IOperatorDescriptor sourceOp = spec.getProducer(connectorDesc);
-                }
-                if (runtimeFactory instanceof EmptyTupleSourceRuntimeFactory) {
+                    runtimeType = ActiveRuntimeType.OTHER;
+                } else if (runtimeFactory instanceof EmptyTupleSourceRuntimeFactory) {
                     runtimeType = ActiveRuntimeType.ETS;
+                    createMetaOp = false;
+                    metaOp = new ProcedureMetaOperatorDescriptor(altered, activeJobId, opDesc, feedPolicyProperties,
+                            runtimeType, operandId);
+                    opId = metaOp.getOperatorId();
                 } else {
                     runtimeType = ActiveRuntimeType.OTHER;
                 }
@@ -495,7 +499,7 @@ public class ActiveUtil {
                 }
             }
             if (createMetaOp) {
-                metaOp = new ProcedureMetaOperatorDescriptor(altered, activeJobId, opDesc, feedPolicyProperties,
+                metaOp = new ActiveMetaOperatorDescriptor(altered, activeJobId, opDesc, feedPolicyProperties,
                         runtimeType, operandId);
                 opId = metaOp.getOperatorId();
             }
@@ -518,10 +522,10 @@ public class ActiveUtil {
             Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
             Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
 
-            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
-            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
-                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap()
+                    .get(oldNewOID.get(rightOp.getLeft().getOperatorId()));
 
             altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
         }
@@ -634,9 +638,8 @@ public class ActiveUtil {
             sourceOp = entry.getValue().getKey().getKey();
             if (sourceOp instanceof FeedCollectOperatorDescriptor) {
                 targetOp = entry.getValue().getValue().getKey();
-                if (targetOp instanceof ActiveMetaOperatorDescriptor
-                        && (((ActiveMetaOperatorDescriptor) targetOp).getRuntimeType()
-                                .equals(ActiveRuntimeType.COMPUTE))) {
+                if (targetOp instanceof ActiveMetaOperatorDescriptor && (((ActiveMetaOperatorDescriptor) targetOp)
+                        .getRuntimeType().equals(ActiveRuntimeType.COMPUTE))) {
                     connDesc = connectors.get(cid);
                     break;
                 } else {
@@ -748,9 +751,8 @@ public class ActiveUtil {
         return preProcessingRequired;
     }
 
-    public static Triple<IFeedAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(
-            PrimaryFeed feed, FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException {
+    public static Triple<IFeedAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(PrimaryFeed feed,
+            FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
@@ -820,8 +822,9 @@ public class ActiveUtil {
         } else if (dataverseAndType.length == 2) {
             dataverseName = dataverseAndType[0];
             datatypeName = dataverseAndType[1];
-        } else
+        } else {
             throw new IllegalArgumentException("Invalid value for the parameter " + IAdapterFactory.KEY_TYPE_NAME);
+        }
 
         MetadataTransactionContext ctx = null;
         MetadataManager.INSTANCE.acquireReadLatch();
@@ -865,8 +868,8 @@ public class ActiveUtil {
                     outputType = function.getReturnType();
                 }
             } else {
-                throw new IllegalArgumentException("Function " + appliedFunction
-                        + " associated with source feed not found in Metadata.");
+                throw new IllegalArgumentException(
+                        "Function " + appliedFunction + " associated with source feed not found in Metadata.");
             }
         }
         return outputType;

@@ -23,7 +23,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.channels.ProcedureRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.feeds.ProcedureRuntime;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -38,7 +42,7 @@ public class ProcedureMetaNodePushable extends ActiveMetaNodePushable {
             Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
         super(ctx, recordDescProvider, partition, nPartitions, coreOperator, activeJobId, feedPolicyProperties,
                 operationId);
-        //TODO: should runtimetype be set to procedure???
+        this.runtimeType = ActiveRuntimeType.PROCEDURE;
     }
 
     public void runProcedure() throws HyracksDataException {
@@ -52,6 +56,7 @@ public class ProcedureMetaNodePushable extends ActiveMetaNodePushable {
 
     @Override
     public void open() throws HyracksDataException {
+
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         try {
             activeRuntime = activeManager.getConnectionManager().getActiveRuntime(activeJobId, runtimeId);
@@ -65,11 +70,35 @@ public class ProcedureMetaNodePushable extends ActiveMetaNodePushable {
             e.printStackTrace();
             throw new HyracksDataException(e);
         }
+
+        boolean complete = ((ProcedureRuntime) activeRuntime).waitForCompletion();
+
+        writer.open();
+        coreOperator.open();
+
+        //activeManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, activeRuntime.getRuntimeId());
+        //  writer.close();
+        //  inputSideHandler.close();
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Ending Procedure Operator:" + activeRuntime.getRuntimeId());
+        }
+
+    }
+
+    @Override
+    protected void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
+        coreOperator.setOutputFrameWriter(0, writer, recordDesc);
+        ActiveRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getActiveId(), partition, operandId);
+        activeRuntime = new ProcedureRuntime(runtimeId, inputHandler, writer);
+        //TODO: registered as type procedure (only the ets is currently registered this way)
+        activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }
 
     @Override
     public void close() throws HyracksDataException {
         try {
+            coreOperator.close();
         } catch (Exception e) {
             e.printStackTrace();
             // ignore
@@ -81,6 +110,11 @@ public class ProcedureMetaNodePushable extends ActiveMetaNodePushable {
                 LOGGER.info("Ending Operator  " + this.activeRuntime.getRuntimeId());
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ActiveMetaProcedureHead [" + coreOperator + " ]";
     }
 
 }

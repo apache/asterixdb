@@ -33,6 +33,7 @@ public interface IActiveRuntime {
         ETS,
         REPETITIVE,
         CONTINUOUS,
+        PROCEDURE,
         JOIN
     }
 

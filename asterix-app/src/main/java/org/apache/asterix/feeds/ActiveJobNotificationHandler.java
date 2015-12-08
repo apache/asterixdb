@@ -56,12 +56,12 @@ import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener.Message;
 import org.apache.asterix.metadata.channels.ChannelMetaOperatorDescriptor;
-import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.ActiveMetaOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedWorkManager;
+import org.apache.asterix.metadata.feeds.ProcedureMetaOperatorDescriptor;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -128,11 +128,11 @@ public class ActiveJobNotificationHandler implements Runnable {
     public void registerFeedIntakeProgressTracker(FeedConnectionId connectionId,
             IIntakeProgressTracker feedIntakeProgressTracker) {
         if (feedIntakeProgressTrackers.get(connectionId) == null) {
-            this.feedIntakeProgressTrackers.put(connectionId, new Pair<IIntakeProgressTracker, Long>(
-                    feedIntakeProgressTracker, 0L));
+            this.feedIntakeProgressTrackers.put(connectionId,
+                    new Pair<IIntakeProgressTracker, Long>(feedIntakeProgressTracker, 0L));
         } else {
-            throw new IllegalStateException(" Progress tracker for connection " + connectionId
-                    + " is alreader registered");
+            throw new IllegalStateException(
+                    " Progress tracker for connection " + connectionId + " is alreader registered");
         }
     }
 
@@ -175,7 +175,8 @@ public class ActiveJobNotificationHandler implements Runnable {
         }
     }
 
-    public void registerActiveJob(ActiveJobId activeJobId, JobId jobId, ActiveJopType jobType, JobSpecification jobSpec) {
+    public void registerActiveJob(ActiveJobId activeJobId, JobId jobId, ActiveJopType jobType,
+            JobSpecification jobSpec) {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Active job already registered");
         }
@@ -213,8 +214,8 @@ public class ActiveJobNotificationHandler implements Runnable {
                 LOGGER.info("Registered feed intake [" + jobId + "]" + " for feed " + feedId);
             }
         } else {
-            throw new HyracksDataException("Could not register feed intake job [" + jobId + "]" + " for feed  "
-                    + feedId);
+            throw new HyracksDataException(
+                    "Could not register feed intake job [" + jobId + "]" + " for feed  " + feedId);
         }
     }
 
@@ -326,7 +327,7 @@ public class ActiveJobNotificationHandler implements Runnable {
                 break;
             case FEED_CONNECT:
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Collect Job finished for  " + (FeedConnectJobInfo) jobInfo);
+                    LOGGER.info("Collect Job finished for  " + jobInfo);
                 }
                 handleFeedCollectJobFinishMessage((FeedConnectJobInfo) jobInfo);
                 break;
@@ -345,7 +346,7 @@ public class ActiveJobNotificationHandler implements Runnable {
     private synchronized void handleActiveJobStartMessage(ActiveJobInfo jobInfo) throws Exception {
         setLocations((ProcedureJobInfo) jobInfo);
         jobInfo.setState(JobState.ACTIVE);
-        // notify event listeners 
+        // notify event listeners
         notifyActiveEventSubscribers(jobInfo, ActiveLifecycleEvent.ACTIVE_JOB_STARTED);
     }
 
@@ -374,7 +375,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         intakeJobInfo.getIntakeFeedJoint().setState(State.ACTIVE);
         intakeJobInfo.setState(JobState.ACTIVE);
 
-        // notify event listeners 
+        // notify event listeners
         notifyFeedEventSubscribers(intakeJobInfo, ActiveLifecycleEvent.FEED_INTAKE_STARTED);
     }
 
@@ -512,7 +513,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         deregisterActiveJob(message.jobId);
 
-        // notify event listeners 
+        // notify event listeners
         JobStatus status = info.getStatus();
         ActiveLifecycleEvent event;
         event = status.equals(JobStatus.FAILURE) ? ActiveLifecycleEvent.ACTIVE_JOB_FAILURE
@@ -532,7 +533,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         // remove feed joints
         deregisterFeedIntakeJob(message.jobId);
 
-        // notify event listeners 
+        // notify event listeners
         notifyFeedEventSubscribers(intakeInfo, event);
 
     }
@@ -554,7 +555,8 @@ public class ActiveJobNotificationHandler implements Runnable {
             IFeedJoint feedJoint = cInfo.getSourceFeedJoint();
             feedJoint.removeReceiver(connectionId);
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Subscription " + cInfo.getConnectionId() + " completed successfully. Removed subscription");
+                LOGGER.info(
+                        "Subscription " + cInfo.getConnectionId() + " completed successfully. Removed subscription");
             }
             removeFeedJointsPostPipelineTermination(cInfo.getConnectionId());
         }
@@ -566,7 +568,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         }
         deregisterActivity(cInfo);
 
-        // notify event listeners 
+        // notify event listeners
         ActiveLifecycleEvent event = failure ? ActiveLifecycleEvent.FEED_COLLECT_FAILURE
                 : ActiveLifecycleEvent.FEED_ENDED;
         notifyFeedEventSubscribers(cInfo, event);
@@ -595,8 +597,8 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_CONNECT_TIMESTAMP, (new Date()).toString());
         try {
-            FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getDataverse(), cInfo
-                    .getConnectionId().getName(), cInfo.getConnectionId().getDatasetName(), feedActivityDetails);
+            FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getDataverse(),
+                    cInfo.getConnectionId().getName(), cInfo.getConnectionId().getDatasetName(), feedActivityDetails);
             CentralActiveManager.getInstance().getLoadManager().reportActivity(cInfo.getConnectionId(), feedActivity);
 
         } catch (Exception e) {
@@ -620,8 +622,8 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         channelActivityDetails.put(ChannelActivity.ChannelActivityDetails.CHANNEL_TIMESTAMP, (new Date()).toString());
         try {
-            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getDataverse(), cInfo
-                    .getActiveJobId().getName(), channelActivityDetails);
+            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getDataverse(),
+                    cInfo.getActiveJobId().getName(), channelActivityDetails);
             CentralActiveManager.getInstance().getLoadManager().reportActivity(cInfo.getActiveJobId(), channelActivity);
 
         } catch (Exception e) {
@@ -809,13 +811,16 @@ public class ActiveJobNotificationHandler implements Runnable {
             IOperatorDescriptor actualOp = null;
             if (opDesc instanceof ChannelMetaOperatorDescriptor) {
                 actualOp = ((ChannelMetaOperatorDescriptor) opDesc).getCoreOperator();
+            } else if (opDesc instanceof ProcedureMetaOperatorDescriptor) {
+                actualOp = ((ProcedureMetaOperatorDescriptor) opDesc).getCoreOperator();
             } else {
                 actualOp = opDesc;
             }
 
-            if (actualOp instanceof RepetitiveChannelOperatorDescriptor) {
+            /*if (actualOp instanceof RepetitiveChannelOperatorDescriptor) {
                 OperatorIds.add(entry.getKey());
-            }
+            }*/
+            OperatorIds.add(entry.getKey());
         }
 
         try {
@@ -824,9 +829,11 @@ public class ActiveJobNotificationHandler implements Runnable {
             List<String> locations = new ArrayList<String>();
             for (OperatorDescriptorId opId : OperatorIds) {
                 Map<Integer, String> operatorLocations = info.getOperatorLocations().get(opId);
-                int nOperatorInstances = operatorLocations.size();
-                for (int i = 0; i < nOperatorInstances; i++) {
-                    locations.add(operatorLocations.get(i));
+                if (operatorLocations != null) {
+                    int nOperatorInstances = operatorLocations.size();
+                    for (int i = 0; i < nOperatorInstances; i++) {
+                        locations.add(operatorLocations.get(i));
+                    }
                 }
             }
 

@@ -649,6 +649,7 @@ CreateFunctionStatement FunctionSpecification(boolean isProcedure) throws ParseE
   String functionBody;
   VarIdentifier var = null;
   Expression functionBodyExpr;
+  Statement functionBodyStmnt;
   Token beginPos;
   Token endPos;
   FunctionName fctName = null;
@@ -663,7 +664,8 @@ CreateFunctionStatement FunctionSpecification(boolean isProcedure) throws ParseE
   {
      beginPos = token;
   }
-  functionBodyExpr = Expression() <RIGHTBRACE>
+ (functionBodyStmnt = DeleteStatement() | functionBodyStmnt = InsertStatement() |functionBodyExpr = Expression() )
+  <RIGHTBRACE>
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);

@@ -20,23 +20,40 @@ package org.apache.asterix.common.feeds;
 
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * @author stevenjacobs
  */
 public class ProcedureRuntime extends ActiveRuntime {
 
+    private boolean complete = false;
+
     /**
      * @param runtimeId
      * @param inputHandlerat
      * @param frameWriter
      */
-    public ProcedureRuntime(ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter) {
+    public ProcedureRuntime(ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler,
+            IFrameWriter frameWriter) {
         super(runtimeId, inputHandler, frameWriter);
     }
 
     public void execute() {
 
+    }
+
+    public boolean waitForCompletion() {
+        while (!complete) {
+
+        }
+        return true;
+
+    }
+
+    //TODO: I don't think that this actually gets rid of the operator. Not sure
+    public void drop() throws HyracksDataException {
+        complete = true;
     }
 
 }

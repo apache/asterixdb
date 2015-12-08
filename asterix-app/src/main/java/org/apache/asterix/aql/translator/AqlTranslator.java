@@ -62,6 +62,7 @@ import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
@@ -1890,7 +1891,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             ActiveObjectId procedureId = new ActiveObjectId(dataverse, functionName, ActiveObjectType.PROCEDURE);
-            ProcedureRuntimeId procedureRuntimeId = new ProcedureRuntimeId(procedureId);
+            ProcedureRuntimeId procedureRuntimeId = new ProcedureRuntimeId(procedureId, 0,
+                    ActiveRuntimeId.DEFAULT_OPERAND_ID);
             ExecuteProcedureMessage executeProcedureMessage = new ExecuteProcedureMessage(procedureId,
                     procedureRuntimeId);
             JobSpecification messageJobSpec = ProcedureOperations
@@ -1901,7 +1903,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             abort(e, e, mdTxnCtx);
             throw e;
         } finally {
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            //          MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
 
         }
     }
@@ -2731,7 +2733,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         } finally {
             MetadataLockManager.INSTANCE.dropChannelEnd(dataverseName, dataverseName + "." + channelName);
             ActiveObjectId channelId = new ActiveObjectId(dataverseName, channelName, ActiveObjectType.CHANNEL);
-            ProcedureRuntimeId channelRuntimeId = new ProcedureRuntimeId(channelId);
+            ProcedureRuntimeId channelRuntimeId = new ProcedureRuntimeId(channelId, 0,
+                    ActiveRuntimeId.DEFAULT_OPERAND_ID);
             DropChannelMessage dropChannelMessage = new DropChannelMessage(channelId, channelRuntimeId);
             JobSpecification messageJobSpec = ProcedureOperations.buildDropChannelMessageJob(dropChannelMessage);
             runJob(hcc, messageJobSpec, true);

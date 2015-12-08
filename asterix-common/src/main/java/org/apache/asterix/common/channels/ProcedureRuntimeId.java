@@ -33,14 +33,20 @@ public class ProcedureRuntimeId extends ActiveRuntimeId {
     public static final long serialVersionUID = 1L;
     protected final ActiveObjectId activeId;
 
+    /*
     public ProcedureRuntimeId(ActiveObjectId activeId) {
-        super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
+        super(ActiveRuntimeType.PROCEDURE, 0, DEFAULT_OPERAND_ID);
         this.activeId = activeId;
     }
+    */
+    public ProcedureRuntimeId(String dataverse, String name, int partition, String operandId) {
+        super(ActiveRuntimeType.PROCEDURE, partition, operandId);
+        this.activeId = new ActiveObjectId(dataverse, name, ActiveObjectType.PROCEDURE);
+    }
 
-    public ProcedureRuntimeId(String dataverse, String name) {
-        super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
-        this.activeId = new ActiveObjectId(dataverse, name, ActiveObjectType.CHANNEL);
+    public ProcedureRuntimeId(ActiveObjectId activeId, int partition, String operandId) {
+        super(ActiveRuntimeType.PROCEDURE, partition, operandId);
+        this.activeId = activeId;
     }
 
     public ActiveObjectId getActiveId() {

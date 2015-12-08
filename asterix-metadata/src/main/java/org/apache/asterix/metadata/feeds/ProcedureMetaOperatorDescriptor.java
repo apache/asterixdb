@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
-import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -33,7 +32,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 public class ProcedureMetaOperatorDescriptor extends ActiveMetaOperatorDescriptor {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 
@@ -48,13 +47,9 @@ public class ProcedureMetaOperatorDescriptor extends ActiveMetaOperatorDescripto
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IOperatorNodePushable nodePushable = null;
         switch (runtimeType) {
-            case OTHER:
+            case ETS:
                 nodePushable = new ProcedureMetaNodePushable(ctx, recordDescProvider, partition, nPartitions,
                         coreOperator, activeJobId, feedPolicyProperties, operandId);
-                break;
-            case ETS:
-                nodePushable = ((AlgebricksMetaOperatorDescriptor) coreOperator).createPushRuntime(ctx,
-                        recordDescProvider, partition, nPartitions);
                 break;
             case JOIN:
                 break;

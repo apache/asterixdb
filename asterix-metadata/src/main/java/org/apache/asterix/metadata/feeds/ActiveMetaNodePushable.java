@@ -125,8 +125,7 @@ public class ActiveMetaNodePushable extends AbstractUnaryInputUnaryOutputOperato
 
     protected void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.fta = new FrameTupleAccessor(recordDesc);
-        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, activeJobId, runtimeId,
-                (AbstractUnaryInputUnaryOutputOperatorNodePushable) coreOperator,
+        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, activeJobId, runtimeId, coreOperator,
                 policyEnforcer.getFeedPolicyAccessor(), false, fta, recordDesc, activeManager, nPartitions);
 
         setupBasicRuntime(inputSideHandler);
@@ -142,10 +141,13 @@ public class ActiveMetaNodePushable extends AbstractUnaryInputUnaryOutputOperato
         }
     }
 
-    private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
+    protected void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         activeRuntime = new ActiveRuntime(runtimeId, inputHandler, writer);
+        //TODO: registering as type "other" which is a problem since ALL of the runtimes in this active pipeline will be other (indistinguishable and might be overwridden)
+        activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
+
     }
 
     public ActiveJobId getActiveJobId() {
