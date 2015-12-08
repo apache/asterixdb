@@ -289,8 +289,8 @@ public final class RuleCollections {
         //Turned off the following rule for now not to change OptimizerTest results.
         //physicalRewritesAllLevels.add(new IntroduceTransactionCommitByAssignOpRule());
         physicalRewritesAllLevels.add(new ReplaceSinkOpWithCommitOpRule());
-        physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new IntroduceInstantLockSearchCallbackRule());
         physicalRewritesAllLevels.add(new AddEquivalenceClassForRecordConstructorRule());
         physicalRewritesAllLevels.add(new EnforceStructuralPropertiesRule());

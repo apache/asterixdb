@@ -35,6 +35,9 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialB
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalProjectBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalReplicateBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalSplitBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -51,6 +54,7 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.RawUTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
+import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
@@ -77,6 +81,30 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             ByteArrayPointable.FACTORY);
 
     private AqlBinaryComparatorFactoryProvider() {
+    }
+
+    // This method adds the option of range range
+    public IBinaryComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
+            RangePartitioningType rangeType) {
+        if (type == null) {
+            return anyBinaryComparatorFactory(ascending);
+        }
+        IAType aqlType = (IAType) type;
+        switch (aqlType.getTypeTag()) {
+            case INTERVAL: {
+                switch (rangeType) {
+                    case PROJECT:
+                        return addOffset(RangeIntervalProjectBinaryComparatorFactory.INSTANCE, ascending);
+                    case REPLICATE:
+                        return addOffset(RangeIntervalReplicateBinaryComparatorFactory.INSTANCE, ascending);
+                    case SPLIT:
+                        return addOffset(RangeIntervalSplitBinaryComparatorFactory.INSTANCE, ascending);
+                }
+            }
+            default: {
+                return getBinaryComparatorFactory(type, ascending);
+            }
+        }
     }
 
     // This method add the option of ignoring the case in string comparisons.

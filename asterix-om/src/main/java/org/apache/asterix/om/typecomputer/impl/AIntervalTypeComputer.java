@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class AIntervalTypeComputer implements IResultTypeComputer {
-
+    private static final long serialVersionUID = 1L;
     public static final AIntervalTypeComputer INSTANCE = new AIntervalTypeComputer();
 
     private AIntervalTypeComputer() {

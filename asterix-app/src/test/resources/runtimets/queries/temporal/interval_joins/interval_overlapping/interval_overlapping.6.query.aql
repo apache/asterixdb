@@ -17,10 +17,16 @@
  * under the License.
  */
 /*
- * Description      :   Check temporal functions for interval
+ * Description      :   Check temporal join functionality for interval
  * Expected Result  :   Success
- * Date             :   2nd Nov, 2012
+ * Date             :   26th Jun, 2015
  */
 
-drop dataverse test if exists;
-create dataverse test;
+use dataverse TinyCollege;
+
+for $d in dataset Students
+for $f in dataset Staff
+where /*+ interval-merge-join [11000, 12000, 14000] */ interval-overlapping($f.employment, $d.attendance)
+/*+ range ["F", "L", "R"] */
+order by $f.name, $d.name
+return { "staff" : $f.name, "student" : $d.name }

@@ -303,7 +303,7 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalStartsDe
 import org.apache.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.OverlapBinsDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalOverlappingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.ParseTimeDescriptor;
@@ -651,7 +651,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(IntervalMetByDescriptor.FACTORY);
         temp.add(IntervalOverlapsDescriptor.FACTORY);
         temp.add(IntervalOverlappedByDescriptor.FACTORY);
-        temp.add(OverlapDescriptor.FACTORY);
+        temp.add(IntervalOverlappingDescriptor.FACTORY);
         temp.add(IntervalStartsDescriptor.FACTORY);
         temp.add(IntervalStartedByDescriptor.FACTORY);
         temp.add(IntervalCoversDescriptor.FACTORY);

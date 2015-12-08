@@ -36,6 +36,7 @@ import org.apache.asterix.common.annotations.FieldValFileDataGen;
 import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.InsertRandIntDataGen;
+import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.ListDataGen;
 import org.apache.asterix.common.annotations.ListValFileDataGen;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
@@ -146,7 +147,7 @@ class AQLParser extends ScopeChecker implements IParser {
     private static final String DATETIME_ADD_RAND_HOURS_HINT = "datetime-add-rand-hours";
     private static final String DATETIME_BETWEEN_YEARS_HINT = "datetime-between-years";
     private static final String HASH_GROUP_BY_HINT = "hash";
-    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
+    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = IndexedNLJoinExpressionAnnotation.HINT_STRING;
     private static final String INMEMORY_HINT = "inmem";
     private static final String INSERT_RAND_INT_HINT = "insert-rand-int";
     private static final String INTERVAL_HINT = "interval";
@@ -683,7 +684,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   FunctionSignature appliedFunction = null;
   CreateFeedStatement cfs = null;
   Pair<Identifier,Identifier> sourceNameComponents = null;
-  
+
 }
 {
   (
@@ -695,7 +696,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
       }
      |
      ("primary")? "feed" nameComponents = QualifiedName() ifNotExists = IfNotExists()
-      "using" adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?  
+      "using" adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?
        {
         cfs = new CreatePrimaryFeedStatement(nameComponents,
                                     adapterName, properties, appliedFunction, ifNotExists);
@@ -708,8 +709,8 @@ CreateFeedStatement FeedSpecification() throws ParseException:
 
 CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
-  String policyName = null;  
-  String basePolicyName = null; 
+  String policyName = null;
+  String basePolicyName = null;
   String sourcePolicyFile = null;
   String definition = null;
   boolean ifNotExists = false;
@@ -719,18 +720,18 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
   (
     "ingestion" "policy"  policyName = Identifier() ifNotExists = IfNotExists()
-      <FROM> 
-      ("policy" basePolicyName = Identifier() properties = Configuration() ("definition" definition = StringLiteral())?  
+      <FROM>
+      ("policy" basePolicyName = Identifier() properties = Configuration() ("definition" definition = StringLiteral())?
       {
         cfps = new CreateFeedPolicyStatement(policyName,
                                    basePolicyName, properties, definition, ifNotExists);
       }
-     | "path" sourcePolicyFile = Identifier() ("definition" definition = StringLiteral())?  
+     | "path" sourcePolicyFile = Identifier() ("definition" definition = StringLiteral())?
        {
         cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
        }
-     ) 
-       
+     )
+
   )
     {
       return cfps;
@@ -1321,11 +1322,11 @@ FunctionName FunctionName() throws ParseException:
   boolean secondAfterDot = false;
 }
 {
-  first = Identifier() 
+  first = Identifier()
   {
     FunctionName result = new FunctionName();
     result.hint = getHint(token);
-  } 
+  }
   ( <DOT> second = Identifier()
     {
       secondAfterDot = true;
@@ -2103,7 +2104,17 @@ Expression FunctionCallExpr() throws ParseException:
       }
       callExpr = new CallExpr(signature,argList);
       if (hint != null) {
-        if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+        if (IntervalJoinExpressionAnnotation.isIntervalJoinHint(hint)) {
+          IntervalJoinExpressionAnnotation ijea = IntervalJoinExpressionAnnotation.INSTANCE;
+          ijea.setObject(hint);
+          ijea.setJoinType(hint);
+          try {
+            ijea.setRangeMap(RangeMapBuilder.parseHint(hint.substring(IntervalJoinExpressionAnnotation.getHintLength(hint))));
+          } catch (AsterixException e) {
+            {if (true) throw new ParseException(e.getMessage());}
+          }
+          callExpr.addHint(ijea);
+        } else if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
           callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
         } else if (hint.startsWith(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
           callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);

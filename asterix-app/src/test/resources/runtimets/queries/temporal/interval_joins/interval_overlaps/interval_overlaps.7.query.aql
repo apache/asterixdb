@@ -16,7 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * overlap_bins test case: test the overlap_bins
- * Expected result: success
- **/
+/*
+ * Description      :   Check temporal join functionality for interval
+ * Expected Result  :   Success
+ * Date             :   26th Jun, 2015
+ */
+
+use dataverse TinyCollege;
+
+for $f in dataset Staff
+for $d in dataset Students
+where /*+ interval-merge-join [11000, 12000, 14000] */ interval-overlapped-by($f.employment, $d.attendance)
+/*+ range ["F", "L", "R"] */
+order by $f.name, $d.name
+return { "staff" : $f.name, "student" : $d.name }

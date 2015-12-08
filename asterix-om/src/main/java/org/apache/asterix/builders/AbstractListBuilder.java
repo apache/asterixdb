@@ -29,7 +29,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.GrowableArray;
-import org.apache.hyracks.storage.am.common.ophelpers.IntArrayList;
+import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 
 public abstract class AbstractListBuilder implements IAsterixListBuilder {
     protected final GrowableArray outputStorage;

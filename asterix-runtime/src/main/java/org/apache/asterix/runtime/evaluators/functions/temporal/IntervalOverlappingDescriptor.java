@@ -23,7 +23,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
+public class IntervalOverlappingDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_OVERLAPPING;
@@ -32,7 +32,7 @@ public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new OverlapDescriptor();
+            return new IntervalOverlappingDescriptor();
         }
     };
 
@@ -49,7 +49,7 @@ public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
      */
     @Override
     protected boolean compareIntervals(long s1, long e1, long s2, long e2) {
-        return IntervalLogic.overlap(s1, e1, s2, e2);
+        return IntervalLogic.overlapping(s1, e1, s2, e2);
     }
 
 }
