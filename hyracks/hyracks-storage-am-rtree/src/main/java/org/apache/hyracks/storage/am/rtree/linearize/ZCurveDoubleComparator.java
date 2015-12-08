@@ -20,10 +20,9 @@ package org.apache.hyracks.storage.am.rtree.linearize;
 
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import org.apache.hyracks.storage.am.common.ophelpers.DoubleArrayList;
 import org.apache.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.common.arraylist.DoubleArrayList;
 
 /*
  * This compares two points based on the z curve. For doubles, we cannot use

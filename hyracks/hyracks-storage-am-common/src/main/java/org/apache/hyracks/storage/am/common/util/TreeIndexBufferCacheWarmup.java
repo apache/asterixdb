@@ -24,22 +24,24 @@ import java.util.Random;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.MathUtil;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.api.storage.IGrowableIntArray;
+import org.apache.hyracks.storage.am.common.api.IFreePageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import org.apache.hyracks.storage.am.common.ophelpers.IntArrayList;
+import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class TreeIndexBufferCacheWarmup {
 	private final IBufferCache bufferCache;
-	private final IMetaDataPageManager freePageManager;
+	private final IFreePageManager freePageManager;
 	private final int fileId;
 	private final ArrayList<IntArrayList> pagesByLevel = new ArrayList<IntArrayList>();
 	private final Random rnd = new Random();
 
 	public TreeIndexBufferCacheWarmup(IBufferCache bufferCache,
-			IMetaDataPageManager freePageManager, int fileId) {
+			IFreePageManager freePageManager, int fileId) {
 		this.bufferCache = bufferCache;
 		this.freePageManager = freePageManager;
 		this.fileId = fileId;
@@ -76,7 +78,7 @@ public class TreeIndexBufferCacheWarmup {
 		for (int i = 0; i < warmupTreeLevels.length; i++) {
 			if (warmupTreeLevels[i] < pagesByLevel.size()) {
 				int repeats = warmupRepeats[i];
-				IntArrayList pageIds = pagesByLevel.get(warmupTreeLevels[i]);
+				IGrowableIntArray pageIds = pagesByLevel.get(warmupTreeLevels[i]);
 				int[] remainingPageIds = new int[pageIds.size()];
 				for (int r = 0; r < repeats; r++) {
 					for (int j = 0; j < pageIds.size(); j++) {

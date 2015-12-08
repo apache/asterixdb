@@ -28,6 +28,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
  * The first split value for each field followed by the second split value for each field, etc.
  */
 public class RangeMap implements IRangeMap, Serializable {
+    private static final long serialVersionUID = 1L;
     private final int fields;
     private final byte[] bytes;
     private final int[] offsets;

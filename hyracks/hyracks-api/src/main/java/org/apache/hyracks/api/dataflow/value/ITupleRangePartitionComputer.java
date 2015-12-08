@@ -16,16 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
+package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.storage.IGrowableIntArray;
 
-public interface IBinaryComparatorFactoryProvider {
-    public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending)
-            throws AlgebricksException;
-
-    public IBinaryComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
-            RangePartitioningType rangeType) throws AlgebricksException;
+public interface ITupleRangePartitionComputer {
+    public void partition(IFrameTupleAccessor accessor, int tIndex, int nParts, IGrowableIntArray map)
+            throws HyracksDataException;
 }

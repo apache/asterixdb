@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.common.ophelpers;
+package org.apache.hyracks.storage.common.arraylist;
 
 public class DoubleArrayList {
     private double[] data;

@@ -16,34 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.expressions;
+package org.apache.hyracks.dataflow.common.data.partition.range;
 
-public class IndexedNLJoinExpressionAnnotation implements IExpressionAnnotation {
-
-    public static final String HINT_STRING = "indexnl";
-    public static final IndexedNLJoinExpressionAnnotation INSTANCE = new IndexedNLJoinExpressionAnnotation();
-
-    private Object object;
-
-    @Override
-    public Object getObject() {
-        return object;
-    }
-
-    @Override
-    public void setObject(Object object) {
-        this.object = object;
-    }
-
-    @Override
-    public IExpressionAnnotation copy() {
-        IndexedNLJoinExpressionAnnotation clone = new IndexedNLJoinExpressionAnnotation();
-        clone.setObject(object);
-        return clone;
-    }
-
-    @Override
-    public String toString() {
-        return INDEXED_NL_JOIN_ANNOTATION_KEY;
+public interface IRangePartitionType {
+    public enum RangePartitioningType {
+        /**
+         * Partitioning is determined by finding the range partition where the first data point lies.
+         */
+        PROJECT,
+        /**
+         * Partitioning is determined by finding all the range partitions where the data has a point.
+         */
+        SPLIT,
+        /**
+         * Partitioning is determined by finding all the range partitions where the data has a point
+         * or comes after the data point.
+         */
+        REPLICATE
     }
 }

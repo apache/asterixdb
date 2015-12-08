@@ -39,11 +39,11 @@ import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.RandomPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 
-public class RandomPartitionPOperator extends AbstractExchangePOperator {
+public class RandomPartitionExchangePOperator extends AbstractExchangePOperator {
 
     private final INodeDomain domain;
 
-    public RandomPartitionPOperator(INodeDomain domain) {
+    public RandomPartitionExchangePOperator(INodeDomain domain) {
         this.domain = domain;
     }
 

@@ -16,16 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
+package org.apache.hyracks.dataflow.std.join;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import java.io.Serializable;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
-public interface IBinaryComparatorFactoryProvider {
-    public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending)
-            throws AlgebricksException;
+public interface IMergeJoinCheckerFactory extends Serializable {
 
-    public IBinaryComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
-            RangePartitioningType rangeType) throws AlgebricksException;
+    IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) throws HyracksDataException;
+
+    RangePartitioningType getLeftPartitioningType();
+
+    RangePartitioningType getRightPartitioningType();
+
 }

@@ -43,7 +43,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
-import org.apache.hyracks.dataflow.std.connectors.MToNReplicatingConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -189,7 +189,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
 
-        IConnectorDescriptor custJoinConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor custJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 1);
 
         IConnectorDescriptor joinPrinterConn = new OneToOneConnectorDescriptor(spec);
@@ -266,10 +266,10 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
 
-        IConnectorDescriptor custJoinConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor custJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 1);
 
-        IConnectorDescriptor joinPrinterConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor joinPrinterConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(joinPrinterConn, join, 0, printer, 0);
 
         spec.addRoot(printer);
@@ -343,10 +343,10 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
 
-        IConnectorDescriptor custJoinConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor custJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 1);
 
-        IConnectorDescriptor joinPrinterConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor joinPrinterConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(joinPrinterConn, join, 0, printer, 0);
 
         spec.addRoot(printer);
@@ -425,10 +425,10 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
 
-        IConnectorDescriptor custJoinConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor custJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 1);
 
-        IConnectorDescriptor joinPrinterConn = new MToNReplicatingConnectorDescriptor(spec);
+        IConnectorDescriptor joinPrinterConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(joinPrinterConn, join, 0, printer, 0);
 
         spec.addRoot(printer);
