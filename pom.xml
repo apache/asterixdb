@@ -44,6 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.8</jdk.version>
         <jvm.extraargs/>
         <!-- Definition of tests in various categories which may be excluded -->
         <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
@@ -279,24 +280,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-        <id>java6</id>
-        <activation>
-            <jdk>1.6</jdk>
-        </activation>
-         <properties>
-            <jdk.version>1.6</jdk.version>
-         </properties>
-    </profile>
-    <profile>
-        <id>java7</id>
-        <activation>
-            <jdk>1.7</jdk>
-        </activation>
-         <properties>
-            <jdk.version>1.7</jdk.version>
-         </properties>
     </profile>
     <profile>
         <id>java8</id>
