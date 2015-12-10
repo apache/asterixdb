@@ -24,9 +24,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.IngestionRuntime;
-import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 

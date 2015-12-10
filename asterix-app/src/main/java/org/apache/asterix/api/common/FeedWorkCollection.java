@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.FeedCollectInfo;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -32,7 +33,6 @@ import org.apache.asterix.common.feeds.api.IFeedWork;
 import org.apache.asterix.common.feeds.api.IFeedWorkEventListener;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.feeds.FeedCollectInfo;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;

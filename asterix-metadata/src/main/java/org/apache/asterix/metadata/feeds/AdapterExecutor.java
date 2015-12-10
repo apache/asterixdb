@@ -21,9 +21,9 @@ package org.apache.asterix.metadata.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.api.IAdapterRuntimeManager;
+import org.apache.asterix.common.active.api.IAdapterRuntimeManager.State;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
-import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
-import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
 
 public class AdapterExecutor implements Runnable {

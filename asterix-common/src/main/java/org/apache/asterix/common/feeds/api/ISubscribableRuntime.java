@@ -20,6 +20,7 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.api.IActiveRuntime;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;

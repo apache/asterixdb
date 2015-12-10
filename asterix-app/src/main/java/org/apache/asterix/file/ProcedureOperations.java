@@ -14,17 +14,17 @@
  */
 package org.apache.asterix.file;
 
+import org.apache.asterix.active.ActiveJobLifecycleListener;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.message.DropChannelMessage;
+import org.apache.asterix.common.active.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.message.DropChannelMessage;
-import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.feeds.ActiveJobLifecycleListener;
+import org.apache.asterix.metadata.active.ActiveMessageOperatorDescriptor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.feeds.ActiveMessageOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;

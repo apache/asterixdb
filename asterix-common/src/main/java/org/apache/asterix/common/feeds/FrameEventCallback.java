@@ -21,7 +21,8 @@ package org.apache.asterix.common.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

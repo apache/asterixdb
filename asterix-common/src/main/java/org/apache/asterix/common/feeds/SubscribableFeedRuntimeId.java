@@ -19,8 +19,8 @@
 package org.apache.asterix.common.feeds;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 
 public class SubscribableFeedRuntimeId extends ActiveRuntimeId {
 

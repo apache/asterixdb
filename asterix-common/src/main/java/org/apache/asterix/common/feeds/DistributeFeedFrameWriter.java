@@ -26,8 +26,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveManager;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
 import org.apache.hyracks.api.comm.IFrameWriter;

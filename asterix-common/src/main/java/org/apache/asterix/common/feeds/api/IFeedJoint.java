@@ -21,11 +21,11 @@ package org.apache.asterix.common.feeds.api;
 import java.util.List;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedJointKey;
-import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 
 public interface IFeedJoint {
 

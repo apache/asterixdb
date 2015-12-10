@@ -23,11 +23,11 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.functions.ExternalLibraryManager;

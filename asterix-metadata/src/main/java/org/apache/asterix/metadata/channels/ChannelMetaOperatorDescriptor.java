@@ -15,7 +15,7 @@
 package org.apache.asterix.metadata.channels;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;

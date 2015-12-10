@@ -26,8 +26,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveJobLifecycleListener;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.feeds.RemoteSocketMessageListener;
 
 public class FeedServletUtil {

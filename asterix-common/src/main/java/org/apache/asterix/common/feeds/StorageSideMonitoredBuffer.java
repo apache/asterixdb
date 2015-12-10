@@ -21,8 +21,9 @@ package org.apache.asterix.common.feeds;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.FeedConstants.StatisticsConstants;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;

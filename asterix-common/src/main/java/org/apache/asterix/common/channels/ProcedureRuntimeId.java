@@ -19,9 +19,9 @@
 package org.apache.asterix.common.channels;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 
 /*
  * Since there is a single runtime for the procedure/channel,

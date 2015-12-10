@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedMemoryComponent.Type;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
 import org.apache.hyracks.api.comm.IFrameWriter;

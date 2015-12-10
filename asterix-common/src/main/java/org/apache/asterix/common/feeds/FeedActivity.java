@@ -21,6 +21,8 @@ package org.apache.asterix.common.feeds;
 
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveActivity;
+
 public class FeedActivity extends ActiveActivity {
 
     private final String datasetName;

@@ -33,7 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;

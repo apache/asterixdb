@@ -19,7 +19,7 @@
 package org.apache.asterix.metadata.declared;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Feed;

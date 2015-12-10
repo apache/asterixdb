@@ -17,7 +17,7 @@ package org.apache.asterix.common.channels;
 
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.ActiveActivity;
+import org.apache.asterix.common.active.ActiveActivity;
 
 public class ChannelActivity extends ActiveActivity {
 

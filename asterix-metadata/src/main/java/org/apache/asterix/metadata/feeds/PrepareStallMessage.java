@@ -21,9 +21,9 @@ package org.apache.asterix.metadata.feeds;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.message.ActiveMessage;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.message.ActiveMessage;
 
 /**
  * A feed control message indicating the need to end the feed. This message is dispatched

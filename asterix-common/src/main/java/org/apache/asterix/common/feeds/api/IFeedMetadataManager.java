@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
+import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 

@@ -33,16 +33,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.active.CentralActiveManager;
+import org.apache.asterix.common.active.ActiveActivity;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.feeds.ActiveActivity;
+import org.apache.asterix.common.active.api.IActiveLoadManager;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.api.IActiveLoadManager;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
-import org.apache.asterix.feeds.CentralActiveManager;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;

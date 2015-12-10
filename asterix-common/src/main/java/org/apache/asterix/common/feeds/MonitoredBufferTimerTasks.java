@@ -29,19 +29,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.api.IActiveManager;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.active.message.FeedReportMessage;
+import org.apache.asterix.common.active.message.FeedTupleCommitAckMessage;
+import org.apache.asterix.common.active.message.FeedTupleCommitResponseMessage;
+import org.apache.asterix.common.active.message.ScaleInReportMessage;
+import org.apache.asterix.common.active.message.StorageReportFeedMessage;
 import org.apache.asterix.common.config.AsterixFeedProperties;
-import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
-import org.apache.asterix.common.feeds.message.FeedReportMessage;
-import org.apache.asterix.common.feeds.message.FeedTupleCommitAckMessage;
-import org.apache.asterix.common.feeds.message.FeedTupleCommitResponseMessage;
-import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
-import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 
 public class MonitoredBufferTimerTasks {
 

@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 
 /**
  * A request for connecting a feed to a dataset.

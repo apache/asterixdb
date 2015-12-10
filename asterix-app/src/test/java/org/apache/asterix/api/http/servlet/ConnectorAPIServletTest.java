@@ -43,8 +43,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
-
-import org.apache.asterix.feeds.CentralActiveManager;
+import org.apache.asterix.active.CentralActiveManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;

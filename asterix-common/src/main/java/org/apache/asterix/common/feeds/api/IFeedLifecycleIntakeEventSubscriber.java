@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
+import org.apache.asterix.common.active.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 

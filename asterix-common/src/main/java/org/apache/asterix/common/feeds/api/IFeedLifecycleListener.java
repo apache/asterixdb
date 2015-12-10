@@ -21,6 +21,7 @@ package org.apache.asterix.common.feeds.api;
 import java.util.List;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.feeds.FeedConnectionId;

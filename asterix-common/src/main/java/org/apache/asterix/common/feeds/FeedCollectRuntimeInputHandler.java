@@ -21,8 +21,9 @@ package org.apache.asterix.common.feeds;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;

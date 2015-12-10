@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import org.apache.asterix.feeds.CentralActiveManager;
+import org.apache.asterix.active.CentralActiveManager;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;

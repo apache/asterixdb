@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
-import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;

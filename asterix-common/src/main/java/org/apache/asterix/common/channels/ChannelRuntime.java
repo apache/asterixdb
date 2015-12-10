@@ -24,11 +24,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.ActiveRuntime;
-import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.message.RepetitiveChannelXAQLMessage;
+import org.apache.asterix.common.active.ActiveRuntime;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.active.api.IActiveManager;
+import org.apache.asterix.common.active.message.RepetitiveChannelXAQLMessage;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.json.JSONException;

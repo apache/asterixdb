@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds;
 
-import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 
 public class NodeLoad implements Comparable<NodeLoad> {
 
