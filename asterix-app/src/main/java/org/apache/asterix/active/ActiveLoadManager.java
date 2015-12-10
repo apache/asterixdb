@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.active.ActiveActivity;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
-import org.apache.asterix.common.active.api.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.api.IActiveLoadManager;
 import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.active.message.FeedCongestionMessage;
@@ -84,10 +84,9 @@ public class ActiveLoadManager implements IActiveLoadManager {
     public void reportCongestion(FeedCongestionMessage message) throws AsterixException {
         ActiveRuntimeId runtimeId = message.getRuntimeId();
         JobState jobState = ActiveJobLifecycleListener.INSTANCE.getJobState(message.getConnectionId());
-        if (jobState == null
-                || (jobState.equals(JobState.UNDER_RECOVERY))
-                || (message.getConnectionId().equals(lastModified) && System.currentTimeMillis()
-                        - lastModifiedTimestamp < MIN_MODIFICATION_INTERVAL)) {
+        if (jobState == null || (jobState.equals(JobState.UNDER_RECOVERY))
+                || (message.getConnectionId().equals(lastModified)
+                        && System.currentTimeMillis() - lastModifiedTimestamp < MIN_MODIFICATION_INTERVAL)) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ignoring congestion report from " + runtimeId);
             }
@@ -98,11 +97,10 @@ public class ActiveLoadManager implements IActiveLoadManager {
                 int inflowRate = message.getInflowRate();
                 int outflowRate = message.getOutflowRate();
                 List<String> currentComputeLocations = new ArrayList<String>();
-                currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
-                        .getConnectionId().getActiveId()));
+                currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE
+                        .getComputeLocations(message.getConnectionId().getActiveId()));
                 int computeCardinality = currentComputeLocations.size();
-                int requiredCardinality = (int) Math
-                        .ceil((double) ((computeCardinality * inflowRate) / (double) outflowRate)) + 5;
+                int requiredCardinality = (int) Math.ceil((computeCardinality * inflowRate) / (double) outflowRate) + 5;
                 int additionalComputeNodes = requiredCardinality - computeCardinality;
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("INCREASING COMPUTE CARDINALITY from " + computeCardinality + " by "
@@ -112,8 +110,8 @@ public class ActiveLoadManager implements IActiveLoadManager {
                 List<String> helperComputeNodes = getNodeForSubstitution(additionalComputeNodes);
 
                 // Step 1) Alter the original feed job to adjust the cardinality
-                JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE.getCollectJobSpecification(message
-                        .getConnectionId());
+                JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE
+                        .getCollectJobSpecification(message.getConnectionId());
                 helperComputeNodes.addAll(currentComputeLocations);
                 List<String> newLocations = new ArrayList<String>();
                 newLocations.addAll(currentComputeLocations);
@@ -123,7 +121,7 @@ public class ActiveLoadManager implements IActiveLoadManager {
                 // Step 2) send prepare to  stall message
                 gracefullyTerminateDataFlow(message.getConnectionId(), Integer.MAX_VALUE);
 
-                // Step 3) run the altered job specification 
+                // Step 3) run the altered job specification
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("New Job after adjusting to the workload " + jobSpec);
                 }
@@ -156,12 +154,12 @@ public class ActiveLoadManager implements IActiveLoadManager {
                 LOGGER.info("Processing scale-in message " + message);
             }
             ActiveJobLifecycleListener.INSTANCE.setJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
-            JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE.getCollectJobSpecification(message
-                    .getConnectionId());
+            JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE
+                    .getCollectJobSpecification(message.getConnectionId());
             int reducedCardinality = message.getReducedCardinaliy();
             List<String> currentComputeLocations = new ArrayList<String>();
-            currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
-                    .getConnectionId().getActiveId()));
+            currentComputeLocations.addAll(
+                    ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message.getConnectionId().getActiveId()));
             ActiveUtil.decreaseComputeCardinality(jobSpec, ActiveRuntimeType.COMPUTE, reducedCardinality,
                     currentComputeLocations);
 
@@ -180,8 +178,8 @@ public class ActiveLoadManager implements IActiveLoadManager {
         // Step 1) send prepare to  stall message
         PrepareStallMessage stallMessage = new PrepareStallMessage(connectionId, computePartitionRetainLimit);
         List<String> intakeLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
-        List<String> computeLocations = ActiveJobLifecycleListener.INSTANCE.getComputeLocations(connectionId
-                .getActiveId());
+        List<String> computeLocations = ActiveJobLifecycleListener.INSTANCE
+                .getComputeLocations(connectionId.getActiveId());
         List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
 
         Set<String> operatorLocations = new HashSet<String>();
