@@ -64,7 +64,7 @@ primary key message-id;
 
 create index fbmIdxAutId if not exists on FacebookMessages(author-id-copy);
 
-write output to nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
 
 for $user in dataset('FacebookUsers')
 for $message in dataset('FacebookMessages')

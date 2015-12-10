@@ -20,7 +20,7 @@
 use test;
 
 
-load  table User using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/adm-load/usermd5.adm"),("format"="adm"));
+load  table User using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/adm-load/usermd5.adm"),("format"="adm"));
 
-load  table UserCopy using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/adm-load/usermd5copy.adm"),("format"="adm"));
+load  table UserCopy using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/adm-load/usermd5copy.adm"),("format"="adm"));
 

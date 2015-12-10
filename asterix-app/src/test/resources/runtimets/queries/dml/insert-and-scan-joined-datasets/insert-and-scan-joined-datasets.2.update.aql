@@ -29,11 +29,11 @@ use dataverse test;
 
 load dataset myData 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
+(("path"="asterix_nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
 
 load dataset myData2 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/odd-numbers-2.adm"),("format"="adm"))pre-sorted;
+(("path"="asterix_nc1://data/odd-numbers-2.adm"),("format"="adm"))pre-sorted;
 
 insert into dataset myData (
 for $x in dataset myData2

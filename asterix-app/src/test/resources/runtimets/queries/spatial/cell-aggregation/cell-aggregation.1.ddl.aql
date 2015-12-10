@@ -27,4 +27,4 @@ create type MyRecord as open {
 
 create external dataset MyData(MyRecord)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/spatial/spatialDataAggregation.json"),("format"="adm"));
+(("path"="asterix_nc1://data/spatial/spatialDataAggregation.json"),("format"="adm"));

@@ -44,12 +44,12 @@ create type custlimit.CustomerType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Customers(CustomerType) primary key cid on group1;
 
-write output to nc1:"/tmp/custlimit.adm"
+write output to asterix_nc1:"/tmp/custlimit.adm"
 select element {'custname':c.name,'custage':c.age}
 from  Customers as c
 order by c.age

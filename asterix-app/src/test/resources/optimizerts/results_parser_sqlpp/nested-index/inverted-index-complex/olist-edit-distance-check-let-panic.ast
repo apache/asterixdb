@@ -29,7 +29,7 @@ TypeDecl CustomerType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
 DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
-WriteOutputTo nc1:rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm
 Query:
 SELECT ELEMENT [
 Variable [ Name=c ]

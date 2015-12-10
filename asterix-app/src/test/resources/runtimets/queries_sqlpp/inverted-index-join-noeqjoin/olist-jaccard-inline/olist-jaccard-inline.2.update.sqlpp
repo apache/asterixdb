@@ -27,7 +27,7 @@
 use test;
 
 
-load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
+load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
 
-load  table Customers2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
+load  table Customers2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
 

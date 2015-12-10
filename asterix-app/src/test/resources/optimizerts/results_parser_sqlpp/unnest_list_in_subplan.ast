@@ -16,7 +16,7 @@ TypeDecl TOKENSRANKEDADMType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 DatasetDecl TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by [[rank]]
-WriteOutputTo nc1:rttest/unnest_list_in_subplan.adm
+WriteOutputTo asterix_nc1:rttest/unnest_list_in_subplan.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

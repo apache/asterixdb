@@ -25,7 +25,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
-WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join_06.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-equi-join_06.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

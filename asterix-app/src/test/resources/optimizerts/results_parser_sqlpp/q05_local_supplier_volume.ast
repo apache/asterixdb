@@ -76,7 +76,7 @@ DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
 DatasetDecl Suppliers(SupplierType) partitioned by [[s_suppkey]]
 DatasetDecl Nations(NationType) partitioned by [[n_nationkey]]
 DatasetDecl Regions(RegionType) partitioned by [[r_regionkey]]
-WriteOutputTo nc1:/tmp/q5_local_supplier.adm
+WriteOutputTo asterix_nc1:/tmp/q5_local_supplier.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

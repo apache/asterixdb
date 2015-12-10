@@ -103,7 +103,7 @@ declare type PartSuppType as closed {
   ps_comment: string 
 }
 
-declare nodegroup group1 on nc1;
+declare nodegroup group1 on asterix_nc1;
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
@@ -124,32 +124,32 @@ declare dataset PartSupp(PartSuppType)
 
 load dataset LineItems 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/lineitem.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/lineitem.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/orders.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/orders.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Customers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/region.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/region.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/part.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/part.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/onegig/partsupp.tbl"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/onegig/partsupp.tbl"),("delimiter"="|")) pre-sorted;

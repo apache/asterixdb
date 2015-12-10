@@ -60,7 +60,7 @@ create index msgCountAIx on TweetMessages(nested.countA) type btree;
 create index msgCountBIx on TweetMessages(nested.countB) type btree;
 create index msgTextIx on TweetMessages(nested.message-text) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm";
 
 for $t1 in dataset('TweetMessages')
 for $t2 in dataset('TweetMessages')

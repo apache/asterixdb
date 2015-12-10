@@ -33,14 +33,14 @@ declare type EmpType as open {
 
 
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Emp(EmpType) 
   primary key cid on group1;
 
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_emp_3.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_emp_3.adm";
 
 for $c in dataset('Emp')
 return $c

@@ -20,7 +20,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:rttest/gby-using-orderby-desc.adm
+WriteOutputTo asterix_nc1:rttest/gby-using-orderby-desc.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

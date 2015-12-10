@@ -25,11 +25,11 @@ create type TOKENSRANKEDADMType as closed {
   rank: int32
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
 
-write output to nc1:'rttest/introhashpartitionmerge.adm';
+write output to asterix_nc1:'rttest/introhashpartitionmerge.adm';
 
         for $token1 in dataset('TOKENSRANKEDADM')
         for $token2 in

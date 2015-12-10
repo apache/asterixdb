@@ -25,5 +25,5 @@
 use test;
 
 
-load  table mydataset using "localfs" (("path"="nc1://data/duplicateKeys.adm"),("format"="adm"));
+load  table mydataset using "localfs" (("path"="asterix_nc1://data/duplicateKeys.adm"),("format"="adm"));
 

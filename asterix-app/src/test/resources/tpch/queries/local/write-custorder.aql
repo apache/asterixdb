@@ -65,7 +65,7 @@ declare type CustOrderType as closed {
   co_orderkey: int32
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;

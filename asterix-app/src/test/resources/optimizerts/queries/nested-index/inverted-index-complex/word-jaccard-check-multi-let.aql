@@ -43,7 +43,7 @@ create dataset DBLP(DBLPType) primary key nested.id;
 
 create index keyword_index on DBLP(nested.title) type keyword;
 
-write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm";
+write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm";
 
 // This test is complex because we have three assigns to drill into.
 for $paper in dataset('DBLP')

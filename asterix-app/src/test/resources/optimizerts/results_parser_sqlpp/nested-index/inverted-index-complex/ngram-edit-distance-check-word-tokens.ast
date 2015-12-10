@@ -14,7 +14,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
-WriteOutputTo nc1:rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -32,11 +32,11 @@ create type OrderType as closed {
   o_comment: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 create dataset Orders(OrderType)
   primary key o_orderkey on group1;
 
-write output to nc1:"/tmp/push_limit.adm";
+write output to asterix_nc1:"/tmp/push_limit.adm";
 
 for $o in dataset('Orders')
 where $o.o_totalprice > 100

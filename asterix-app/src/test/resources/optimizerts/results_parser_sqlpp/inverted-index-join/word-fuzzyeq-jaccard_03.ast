@@ -9,7 +9,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/inverted-index-join_word-fuzzyeq-jaccard_03.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_word-fuzzyeq-jaccard_03.adm
 Set simfunction=jaccard
 Set simthreshold=0.5f
 Query:

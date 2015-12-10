@@ -54,7 +54,7 @@ create  table Customers(CustomerType) primary key cid;
 
 create  index interests_index  on Customers (interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm"
 select element c
 from  Customers as c
 with  ed as test."edit-distance-check"(c.interests,['computers','wine','walking'],3)

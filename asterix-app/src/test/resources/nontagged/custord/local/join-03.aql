@@ -47,7 +47,7 @@ declare type OrderType as open {
   hoList: [int32]
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
@@ -56,7 +56,7 @@ declare dataset Customers(CustomerType)
 declare dataset Orders(OrderType)
   primary key oid on group1;
 
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_join_3.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_join_3.adm";
 
 for $c in dataset('Customers')
 for $o in dataset('Orders')

@@ -39,12 +39,12 @@ create type AddressType as closed {
   city: string
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
+create nodegroup group1  if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType) 
   primary key cid on group1;
 
 load dataset Customers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///tmp/customerData.json"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///tmp/customerData.json"),("format"="adm")) pre-sorted;
 

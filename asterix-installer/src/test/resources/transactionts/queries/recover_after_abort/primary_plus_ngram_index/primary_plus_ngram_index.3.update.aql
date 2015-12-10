@@ -26,4 +26,4 @@
 use dataverse recovery;
 
 load dataset Fragile_raw using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="127.0.0.1://../../../../../../asterix-app/data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://../../../../../../asterix-app/data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;

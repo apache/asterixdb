@@ -56,7 +56,7 @@ primary key nested.tweetid;
 
 create index topicKeywordIx on TweetMessages(nested.referred-topics) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm";
 
 for $t1 in dataset('TweetMessages')
 where $t1.nested.tweetid > int64("240")

@@ -83,7 +83,7 @@ declare type RegionType as closed {
   r_comment: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
@@ -100,7 +100,7 @@ declare dataset Nations(NationType)
 declare dataset Regions(RegionType)
   primary key r_regionkey on group1;
   
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_5.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_5.adm";
 
 
 for $c in dataset('Customers')

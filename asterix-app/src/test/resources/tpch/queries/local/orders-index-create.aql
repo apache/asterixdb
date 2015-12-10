@@ -32,7 +32,7 @@ declare type OrderType as closed {
 }
 
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Orders(OrderType)
   primary key o_orderkey on group1;

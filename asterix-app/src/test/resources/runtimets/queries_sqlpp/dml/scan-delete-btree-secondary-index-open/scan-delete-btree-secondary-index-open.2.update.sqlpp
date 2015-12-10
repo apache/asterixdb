@@ -26,7 +26,7 @@
 use test;
 
 
-load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
+load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
 
 insert into test.CustomersOpen
 select element {'cid':x.cid,'name':x.name,'age':x.age,'address':x.address,'interests':x.interests,'children':x.children}

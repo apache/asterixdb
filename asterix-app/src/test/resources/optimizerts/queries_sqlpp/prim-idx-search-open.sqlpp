@@ -37,12 +37,12 @@ create type prim_index_search.OrderType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Orders(OrderType) primary key o_orderkey on group1;
 
-write output to nc1:"/tmp/prim_index_search.adm"
+write output to asterix_nc1:"/tmp/prim_index_search.adm"
 select element {'o_orderkey':o.o_orderkey,'o_custkey':o.o_custkey}
 from  Orders as o
 where (o.o_orderkey = 34)

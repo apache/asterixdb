@@ -28,4 +28,4 @@ use dataverse temp;
 
 load dataset testds
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/csv/sample_05_space_error_1.csv"),("format"="delimited-text"),("delimiter"=","),("quote"="\""));
+(("path"="asterix_nc1://data/csv/sample_05_space_error_1.csv"),("format"="delimited-text"),("delimiter"=","),("quote"="\""));

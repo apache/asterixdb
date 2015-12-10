@@ -26,5 +26,5 @@
 use test;
 
 
-load  table t1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table t1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 

@@ -13,7 +13,7 @@ TypeDecl OrderType [
   }
 ]
 DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
-WriteOutputTo nc1:/tmp/push_limit.adm
+WriteOutputTo asterix_nc1:/tmp/push_limit.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

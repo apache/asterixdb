@@ -42,7 +42,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (authors) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-join_ngram-edit-distance_03.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_03.adm"
 select element {'arec':a,'brec':b,'ed':ed}
 from  DBLP as a,
       DBLP as b

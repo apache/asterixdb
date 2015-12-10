@@ -20,5 +20,5 @@
 use fuzzyjoin;
 
 
-load  table User using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/events/tiny/user.adm"),("format"="adm"));
+load  table User using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_asterix_nc1://data/events/tiny/user.adm"),("format"="adm"));
 

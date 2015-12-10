@@ -72,13 +72,13 @@ create type CustomerType as closed {
 
 create external dataset Line(LineType)
 using localfs
-(("path"="nc1://data/big-object/lineitem.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/big-object/lineitem.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 
 create external dataset Order(OrderType)
 using localfs
-(("path"="nc1://data/big-object/order.tbl.verylong.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/big-object/order.tbl.verylong.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 
 create external dataset Customer(CustomerType)
 using localfs
-(("path"="nc1://data/big-object/customer.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/big-object/customer.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 

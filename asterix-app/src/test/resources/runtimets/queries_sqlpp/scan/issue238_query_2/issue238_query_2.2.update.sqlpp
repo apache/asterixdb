@@ -29,5 +29,5 @@
 use test;
 
 
-load  table DBLPadm using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/dblp-small/part-00000.adm, \n nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
+load  table DBLPadm using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/dblp-small/part-00000.adm, \n asterix_nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
 

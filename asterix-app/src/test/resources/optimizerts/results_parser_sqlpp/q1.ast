@@ -24,7 +24,7 @@ TypeDecl UserType [
   }
 ]
 DatasetDecl User(UserType) partitioned by [[name]]
-WriteOutputTo nc1:/tmp/q1.adm
+WriteOutputTo asterix_nc1:/tmp/q1.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

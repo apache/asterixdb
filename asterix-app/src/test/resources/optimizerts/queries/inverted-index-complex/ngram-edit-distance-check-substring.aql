@@ -39,7 +39,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index ngram_index on DBLP(title) type ngram(3);
 
-write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-substring.adm";
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-substring.adm";
 
 for $paper in dataset('DBLP')
 where edit-distance-check(substring($paper.title, 0, 8), "datbase", 1)[0]

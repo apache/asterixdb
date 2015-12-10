@@ -26,5 +26,5 @@
 use test;
 
 
-load  table MyData using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+load  table MyData using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 

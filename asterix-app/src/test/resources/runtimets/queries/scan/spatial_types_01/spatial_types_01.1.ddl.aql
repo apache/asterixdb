@@ -32,4 +32,4 @@ create type SpatialType as open {
 
 create external dataset Spatial(SpatialType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/spatialData.json"),("format"="adm"));
+(("path"="asterix_nc1://data/nontagged/spatialData.json"),("format"="adm"));

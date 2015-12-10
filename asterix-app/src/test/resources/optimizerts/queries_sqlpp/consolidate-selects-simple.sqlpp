@@ -36,12 +36,12 @@ create type test.CustomerType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Customers(CustomerType) primary key c_custkey on group1;
 
-write output to nc1:"rttest/consolidate-selects-simple.aql"
+write output to asterix_nc1:"rttest/consolidate-selects-simple.aql"
 select element c
 from  Customers as c
 where ((c.c_name = 'testname') and (c.c_address = 'testaddr') and (c.c_nationkey = 1) and (c.c_phone = '123456789'))

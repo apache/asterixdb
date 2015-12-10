@@ -60,7 +60,7 @@ create  index msgCountAIx  on TweetMessages (nested.countA:int32) type btree enf
 
 create  index msgCountBIx  on TweetMessages (nested.countB:int32) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
+write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
 select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':(
         select element {'tweetid2':t2.nested.tweetid,'count2':t2.nested.countB}
         from  TweetMessages as t2

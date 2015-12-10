@@ -73,9 +73,9 @@ create type test.CustomerType as
   c_comment : string
 }
 
-create external  table Line(LineType) using "localfs"(("path"="nc1://data/big-object/lineitem.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Line(LineType) using "localfs"(("path"="asterix_nc1://data/big-object/lineitem.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table "Order"(OrderType) using "localfs"(("path"="nc1://data/big-object/order.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+create external  table "Order"(OrderType) using "localfs"(("path"="asterix_nc1://data/big-object/order.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Customer(CustomerType) using "localfs"(("path"="nc1://data/big-object/customer.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Customer(CustomerType) using "localfs"(("path"="asterix_nc1://data/big-object/customer.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
 

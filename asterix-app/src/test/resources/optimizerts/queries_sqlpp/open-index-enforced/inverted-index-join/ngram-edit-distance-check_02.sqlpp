@@ -51,7 +51,7 @@ create  table CSX(CSXType) primary key id;
 
 create  index ngram_index  on CSX (authors:string) type ngram (3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_ngram-edit-distance-check_02.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance-check_02.adm"
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b

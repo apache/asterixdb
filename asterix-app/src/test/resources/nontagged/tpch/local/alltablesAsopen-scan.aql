@@ -92,7 +92,7 @@ declare type PartSuppType as closed {
   ps_comment: string 
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
@@ -113,7 +113,7 @@ declare dataset Parts(PartType)
 declare dataset PartSupp(PartSuppType)
   primary key ps_partkey, ps_suppkey on group1;  
 
-write output to nc1:"/home/yasser/Desktop/result_scan.adm";
+write output to asterix_nc1:"/home/yasser/Desktop/result_scan.adm";
 
 //for $c in dataset('LineItems')
 //return $c

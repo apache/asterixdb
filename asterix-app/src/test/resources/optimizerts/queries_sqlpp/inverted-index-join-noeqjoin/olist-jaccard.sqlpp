@@ -56,7 +56,7 @@ create  table Customers2(CustomerType) primary key cid;
 
 create  index interests_index  on Customers (interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_olist-jaccard.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_olist-jaccard.adm"
 select element {'ainterests':a.interests,'binterests':b.interests}
 from  Customers as a,
       Customers2 as b

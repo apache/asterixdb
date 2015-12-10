@@ -20,5 +20,5 @@
 use TestDataverse;
 
 
-load  table TestSet using "localfs" (("path"="nc1://data/escapes01.adm"),("format"="adm"));
+load  table TestSet using "localfs" (("path"="asterix_nc1://data/escapes01.adm"),("format"="adm"));
 

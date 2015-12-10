@@ -40,5 +40,5 @@ create type testdvt.testtype as
   dayTimeDurationField : "day-time-duration"?
 }
 
-create external  table testds(testtype) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/temporal/temporalData.json"),("format"="adm"));
+create external  table testds(testtype) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/temporal/temporalData.json"),("format"="adm"));
 

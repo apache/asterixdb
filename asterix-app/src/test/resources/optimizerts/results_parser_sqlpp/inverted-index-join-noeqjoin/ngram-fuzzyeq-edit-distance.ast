@@ -19,7 +19,7 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 DatasetDecl CSX(CSXType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm
 Set simfunction=edit-distance
 Set simthreshold=3
 Query:

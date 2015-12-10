@@ -30,11 +30,11 @@ declare type AddressType as closed {
   city: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Customers(CustomerType) 
   primary key cid on group1;
 
 load dataset Customers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/spj01/cust1.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://data/spj01/cust1.adm"),("format"="adm")) pre-sorted;

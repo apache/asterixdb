@@ -94,8 +94,8 @@ public class ConnectorAPIServletTest {
         when(mockInfo2.getNetworkAddress()).thenReturn(new NetworkAddress("127.0.0.2", 3099));
 
         // Calls ConnectorAPIServlet.formResponseObject.
-        nodeMap.put("nc1", mockInfo1);
-        nodeMap.put("nc2", mockInfo2);
+        nodeMap.put("asterix_nc1", mockInfo1);
+        nodeMap.put("asterix_nc2", mockInfo2);
         servlet.doGet(mockRequest, mockResponse);
 
         // Constructs the actual response.
@@ -126,8 +126,8 @@ public class ConnectorAPIServletTest {
         ConnectorAPIServlet servlet = new ConnectorAPIServlet();
         JSONObject actualResponse = new JSONObject();
         FileSplit[] splits = new FileSplit[2];
-        splits[0] = new FileSplit("nc1", "foo1");
-        splits[1] = new FileSplit("nc2", "foo2");
+        splits[0] = new FileSplit("asterix_nc1", "foo1");
+        splits[1] = new FileSplit("asterix_nc2", "foo2");
         Map<String, NodeControllerInfo> nodeMap = new HashMap<String, NodeControllerInfo>();
         NodeControllerInfo mockInfo1 = mock(NodeControllerInfo.class);
         NodeControllerInfo mockInfo2 = mock(NodeControllerInfo.class);
@@ -142,8 +142,8 @@ public class ConnectorAPIServletTest {
         String primaryKey = "a1";
 
         // Calls ConnectorAPIServlet.formResponseObject.
-        nodeMap.put("nc1", mockInfo1);
-        nodeMap.put("nc2", mockInfo2);
+        nodeMap.put("asterix_nc1", mockInfo1);
+        nodeMap.put("asterix_nc2", mockInfo2);
         PA.invokeMethod(servlet,
                 "formResponseObject(org.json.JSONObject, org.apache.hyracks.dataflow.std.file.FileSplit[], "
                         + "org.apache.asterix.om.types.ARecordType, java.lang.String, boolean, java.util.Map)",

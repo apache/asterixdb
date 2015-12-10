@@ -25,7 +25,7 @@
 use test;
 
 
-load  table FacebookUsers using "localfs" (("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));
+load  table FacebookUsers using "localfs" (("path"="asterix_nc1://data/tinysocial/fbu.adm"),("format"="adm"));
 
-load  table FacebookMessages using "localfs" (("path"="nc1://data/tinysocial/fbm.adm"),("format"="adm"));
+load  table FacebookMessages using "localfs" (("path"="asterix_nc1://data/tinysocial/fbm.adm"),("format"="adm"));
 

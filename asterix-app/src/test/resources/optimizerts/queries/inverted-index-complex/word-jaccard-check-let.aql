@@ -39,7 +39,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index keyword_index on DBLP(title) type keyword;
 
-write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm";
+write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm";
 
 for $o in dataset('DBLP')
 let $jacc := similarity-jaccard-check(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments"), 0.5f)

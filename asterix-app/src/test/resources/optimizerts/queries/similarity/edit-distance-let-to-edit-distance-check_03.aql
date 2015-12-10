@@ -38,7 +38,7 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) primary key id;
 
-write output to nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_03.adm";
+write output to asterix_nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_03.adm";
 
 for $o in dataset('DBLP')
 let $ed := edit-distance($o.authors, "Michael J. Carey")

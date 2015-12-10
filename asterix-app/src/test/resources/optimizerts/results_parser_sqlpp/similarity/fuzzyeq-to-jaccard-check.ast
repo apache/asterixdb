@@ -9,7 +9,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/similarity_fuzzyeq-to-jaccard-check.adm
+WriteOutputTo asterix_nc1:rttest/similarity_fuzzyeq-to-jaccard-check.adm
 Set simfunction=jaccard
 Set simthreshold=0.8f
 Query:

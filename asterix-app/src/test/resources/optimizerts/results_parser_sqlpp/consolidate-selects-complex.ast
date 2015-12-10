@@ -9,7 +9,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/consolidate-complex-selects.aql
+WriteOutputTo asterix_nc1:rttest/consolidate-complex-selects.aql
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -53,7 +53,7 @@ create  table CSX(CSXType) primary key id;
 
 create  index ngram_index  on DBLP (authors) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_ngram-edit-distance.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ngram-edit-distance.adm"
 select element {'aauthors':a.authors,'bauthors':b.authors}
 from  DBLP as a,
       CSX as b

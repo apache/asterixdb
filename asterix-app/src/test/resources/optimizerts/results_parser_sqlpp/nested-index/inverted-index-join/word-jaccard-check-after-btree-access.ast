@@ -28,7 +28,7 @@ TypeDecl TweetMessageType [
   }
 ]
 DatasetDecl TweetMessages(TweetMessageType) partitioned by [[nested, tweetid]]
-WriteOutputTo nc1:rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

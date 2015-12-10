@@ -34,7 +34,7 @@ create type Name as open {
 create dataset Names(Name) primary key id;
 create index Name_idx on Names(fname: string,lname: string) enforced;
 
-write output to nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_05.adm";
+write output to asterix_nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_05.adm";
 
 for $emp1 in dataset('Names') 
 for $emp2 in dataset('Names') 

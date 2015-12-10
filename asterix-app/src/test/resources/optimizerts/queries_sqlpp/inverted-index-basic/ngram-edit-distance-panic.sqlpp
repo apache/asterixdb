@@ -41,7 +41,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (authors) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-basic_ngram-edit-distance-panic.adm"
+write output to asterix_nc1:"rttest/inverted-index-basic_ngram-edit-distance-panic.adm"
 select element o
 from  DBLP as o
 where (test."edit-distance"(o.authors,'Amihay Motro') <= 5)

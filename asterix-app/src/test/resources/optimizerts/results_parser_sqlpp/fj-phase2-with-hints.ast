@@ -9,7 +9,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP_fuzzyjoin_078(DBLPType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/fuzzyjoin_078.adm
+WriteOutputTo asterix_nc1:rttest/fuzzyjoin_078.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

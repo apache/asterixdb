@@ -26,4 +26,4 @@ use dataverse test;
 
 load dataset Orders 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/orders-part1.tbl,nc2://data/tpch0.001/orders-part2.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/orders-part1.tbl,asterix_nc2://data/tpch0.001/orders-part2.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

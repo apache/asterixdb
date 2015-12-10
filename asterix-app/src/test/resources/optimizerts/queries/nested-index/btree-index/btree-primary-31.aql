@@ -30,7 +30,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/btree-index_btree-primary-31.adm";
+write output to asterix_nc1:"rttest/btree-index_btree-primary-31.adm";
 
 create type TestTypetmp as open {
     fname : string,

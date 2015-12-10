@@ -1,5 +1,5 @@
 DataverseUse test
-WriteOutputTo nc1:/tmp/rec_access.adm
+WriteOutputTo asterix_nc1:/tmp/rec_access.adm
 Query:
 FieldAccessor [
   RecordConstructor [

@@ -29,5 +29,5 @@ create type test.MyRecord as
   loc : point
 }
 
-create external  table MyData(MyRecord) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/spatial/spatialDataAggregation.json"),("format"="adm"));
+create external  table MyData(MyRecord) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/spatial/spatialDataAggregation.json"),("format"="adm"));
 

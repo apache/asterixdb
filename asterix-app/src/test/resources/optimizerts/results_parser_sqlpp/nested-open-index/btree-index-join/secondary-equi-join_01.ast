@@ -28,7 +28,7 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
 DatasetDecl CSX(CSXType) partitioned by [[nested, id]]
-WriteOutputTo nc1:rttest/btree-index-join_title-secondary-equi-join_01.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_title-secondary-equi-join_01.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -23,7 +23,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:rttest/inverted-index-basic_ulist-fuzzyeq-jaccard.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-basic_ulist-fuzzyeq-jaccard.adm
 Set simfunction=jaccard
 Set simthreshold=0.8f
 Query:

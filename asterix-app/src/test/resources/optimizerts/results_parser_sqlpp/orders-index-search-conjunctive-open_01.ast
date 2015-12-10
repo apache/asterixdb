@@ -13,7 +13,7 @@ TypeDecl OrderType [
   }
 ]
 DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
-WriteOutputTo nc1:/tmp/index_search-conjunctive.adm
+WriteOutputTo asterix_nc1:/tmp/index_search-conjunctive.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

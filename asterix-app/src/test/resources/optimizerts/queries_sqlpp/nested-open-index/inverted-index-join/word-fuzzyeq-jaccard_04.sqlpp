@@ -62,7 +62,7 @@ create  index keyword_index_DBLP  on DBLP (nested.title:string) type keyword enf
 
 create  index keyword_index_CSX  on CSX (nested.title:string) type keyword enforced;
 
-write output to nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.adm"
 set "simfunction" "jaccard";
 
 set "simthreshold" "0.5f";

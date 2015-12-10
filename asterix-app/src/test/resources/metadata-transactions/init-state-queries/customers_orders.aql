@@ -59,7 +59,7 @@ create type OrderType as open {
        } ]
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType)
   primary key cid, name on group1;

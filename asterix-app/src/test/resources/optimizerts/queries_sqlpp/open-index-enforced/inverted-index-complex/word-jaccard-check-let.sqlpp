@@ -41,7 +41,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title:string) type keyword enforced;
 
-write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm"
 select element o
 from  DBLP as o
 with  jacc as test."similarity-jaccard-check"(test."word-tokens"(o.title),test."word-tokens"('Transactions for Cooperative Environments'),0.500000f)

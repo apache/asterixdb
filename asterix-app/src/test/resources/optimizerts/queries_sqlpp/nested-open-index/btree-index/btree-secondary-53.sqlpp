@@ -30,7 +30,7 @@ create  database test;
 use test;
 
 
-write output to nc1:"rttest/btree-index_btree-secondary-51.adm"
+write output to asterix_nc1:"rttest/btree-index_btree-secondary-51.adm"
 create type test.TestTypetmp as
 {
   id : int32

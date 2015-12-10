@@ -43,7 +43,7 @@ create dataset DBLP(DBLPType) primary key nested.id;
 
 create index ngram_index on DBLP(nested.title) type ngram(3);
 
-write output to nc1:"rttest/inverted-index-basic_ngram-jaccard.adm";
+write output to asterix_nc1:"rttest/inverted-index-basic_ngram-jaccard.adm";
 
 for $o in dataset('DBLP')
 where similarity-jaccard(gram-tokens($o.nested.title, 3, false), gram-tokens("Transactions for Cooperative Environments", 3, false)) >= 0.5f

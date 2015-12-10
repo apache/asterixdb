@@ -30,13 +30,13 @@ create type DBLPType as open {
   misc: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset DBLP(DBLPType) 
   primary key id on group1;
 
 
-write output to nc1:'rttest/fuzzyjoin_080.adm';
+write output to asterix_nc1:'rttest/fuzzyjoin_080.adm';
 
     for $paperDBLP in dataset('DBLP')
     let $matches :=

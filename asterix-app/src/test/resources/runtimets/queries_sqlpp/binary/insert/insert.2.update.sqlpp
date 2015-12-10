@@ -20,9 +20,9 @@
 use test;
 
 
-load  table UserOpen using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/adm-load/usermd5.adm"),("format"="adm"));
+load  table UserOpen using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/adm-load/usermd5.adm"),("format"="adm"));
 
-load  table UserCopyClose using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/adm-load/usermd5copy.adm"),("format"="adm"));
+load  table UserCopyClose using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/adm-load/usermd5copy.adm"),("format"="adm"));
 
 insert into UserOpen
 select element {'id':l.id,'name':l.name,'md5':l.md5}

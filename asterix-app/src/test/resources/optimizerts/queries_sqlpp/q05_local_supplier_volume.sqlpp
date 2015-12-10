@@ -95,8 +95,8 @@ create type q5_local_supplier.RegionType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table LineItems(LineItemType) primary key l_orderkey,l_linenumber on group1;
 
@@ -110,7 +110,7 @@ create  table Nations(NationType) primary key n_nationkey on group1;
 
 create  table Regions(RegionType) primary key r_regionkey on group1;
 
-write output to nc1:"/tmp/q5_local_supplier.adm"
+write output to asterix_nc1:"/tmp/q5_local_supplier.adm"
 select element {'n_name':n_name,'revenue':revenue}
 from  Customers as c,
       (

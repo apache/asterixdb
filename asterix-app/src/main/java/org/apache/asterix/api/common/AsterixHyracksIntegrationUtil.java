@@ -107,7 +107,7 @@ public class AsterixHyracksIntegrationUtil {
     public static String[] getNcNames() {
         String[] names = new String[NODES];
         for (int n = 0; n < NODES; ++n) {
-            names[n] = "nc" + (n + 1);
+            names[n] = "asterix_nc" + (n + 1);
         }
         return names;
     }
@@ -115,7 +115,7 @@ public class AsterixHyracksIntegrationUtil {
     public static String[] getDataDirs() {
         String[] names = new String[NODES];
         for (int n = 0; n < NODES; ++n) {
-            names[n] = "nc" + (n + 1) + "data";
+            names[n] = "asterix_nc" + (n + 1) + "data";
         }
         return names;
     }

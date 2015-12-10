@@ -18,7 +18,7 @@
  */
 use dataverse Metadata;
 
-write output to nc1:"rttest/check_datatype.adm";
+write output to asterix_nc1:"rttest/check_datatype.adm";
      
 for $c in dataset('Datatype')
 return $c

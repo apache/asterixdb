@@ -36,7 +36,7 @@ create dataset Orders(OrderType) primary key o_orderkey;
 
 create index idx_Custkey_Orderstatus on Orders(o_custkey, o_orderstatus);
 
-write output to nc1:"/tmp/index_search.adm";
+write output to asterix_nc1:"/tmp/index_search.adm";
 
 for $o in dataset('Orders')
 where

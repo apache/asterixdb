@@ -34,7 +34,7 @@ name:string
 create dataset t1(TestType) primary key id;
 create dataset t2(TestType) primary key id;
 
-write output to nc1:"rttest/hahsjoin-with-unnest.adm";
+write output to asterix_nc1:"rttest/hahsjoin-with-unnest.adm";
 
 for $m in dataset('t1')
 for $n in dataset('t2')

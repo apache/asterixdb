@@ -22,7 +22,7 @@ TypeDecl TweetMessageType [
   }
 ]
 DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
-WriteOutputTo nc1:rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

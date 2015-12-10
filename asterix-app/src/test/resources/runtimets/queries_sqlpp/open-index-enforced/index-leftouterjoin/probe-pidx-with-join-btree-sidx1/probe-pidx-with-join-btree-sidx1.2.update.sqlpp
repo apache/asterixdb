@@ -26,7 +26,7 @@
 use test;
 
 
-load  table TweetMessagesTmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));
+load  table TweetMessagesTmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));
 
 insert into TweetMessages
 select element c

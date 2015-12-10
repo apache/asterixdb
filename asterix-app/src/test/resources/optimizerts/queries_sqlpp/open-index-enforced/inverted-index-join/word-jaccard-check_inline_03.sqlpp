@@ -41,7 +41,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title:string) type keyword enforced;
 
-write output to nc1:"rttest/inverted-index-join_word-jaccard-check_04.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_04.adm"
 select element {'arec':a,'brec':b,'jacc':jacc[1]}
 from  DBLP as a,
       DBLP as b

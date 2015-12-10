@@ -30,9 +30,9 @@ create type Tweet as open {
 
 create external dataset TwitterData(Tweet)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm"));
+(("path"="asterix_nc1://data/twitter/smalltweets.txt"),("format"="adm"));
 
-write output to nc1:"/tmp/count-tweets.adm";
+write output to asterix_nc1:"/tmp/count-tweets.adm";
 
 for $t in dataset('TwitterData')
 let $tokens := word-tokens($t.text)

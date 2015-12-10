@@ -47,7 +47,7 @@ create dataset MyData2(MyRecord) primary key id;
 
 create index rtree_index on MyData1(nested.point) type rtree;
 
-write output to nc1:"rttest/index-join_rtree-spatial-intersect-point.adm";
+write output to asterix_nc1:"rttest/index-join_rtree-spatial-intersect-point.adm";
 
 for $a in dataset('MyData1')
 for $b in dataset('MyData2')

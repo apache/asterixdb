@@ -73,7 +73,7 @@ create  table Customers(CustomerType) primary key nested.cid;
 
 create  table Orders(OrderType) primary key nested.oid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_04.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_04.adm"
 select element {'customer':c.nested,'order':o.nested}
 from  Customers as c,
       Orders as o

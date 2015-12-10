@@ -63,5 +63,5 @@ create dataset test2.t4(testtype) primary key id;
 
 create external dataset test1.TwitterData(Tweet)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
+(("path"="asterix_nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
 

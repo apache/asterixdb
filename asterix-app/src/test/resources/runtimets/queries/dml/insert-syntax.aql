@@ -46,7 +46,7 @@ create dataset testds(testtype) primary key id;
  
  insert into dataset testds { "id": 4, "name": "Person Four", "hobbies": {{"Metal", "Jazz"}}}
 
-write output to nc1:"rttest/dml_insert-syntax.adm";
+write output to asterix_nc1:"rttest/dml_insert-syntax.adm";
 
 for $d in dataset("testds")
 order by $d.id

@@ -27,7 +27,7 @@ declare type ExampleType as open {
 }
 
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 

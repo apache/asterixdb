@@ -28,6 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
         <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
+		<cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
 	</properties>
 
   <licenses>
@@ -121,6 +122,7 @@
 					<excludes>
 						<exclude>${failsafe.test.excludes}</exclude>
                         <exclude>${cluster.test.excludes}</exclude>
+					    <exclude>${cluster.extest.excludes}</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -255,6 +257,13 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-app</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
 			<version>0.8.8-SNAPSHOT</version>
 			<type>zip</type>
@@ -271,6 +280,12 @@
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
 			<version>0.8.8-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>${hadoop.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

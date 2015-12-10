@@ -51,7 +51,7 @@ create  index ngram_index_DBLP  on DBLP (title:string) type ngram (3) enforced;
 
 create  index ngram_index_CSX  on CSX (title:string) type ngram (3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_ngram-contains-04.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-04.adm"
 select element {'title1':o1.title,'title2':o2.title}
 from  DBLP as o1,
       CSX as o2

@@ -20,7 +20,7 @@ use dataverse test;
 
 load dataset LineItem
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into dataset test.LineItemOpen (
 	for $x in dataset test.LineItem

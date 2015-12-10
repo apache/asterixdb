@@ -20,33 +20,33 @@ use dataverse tpch;
 
 load dataset LineItem 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Orders 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Supplier 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Region 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Nation 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Part 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Partsupp 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
 load dataset Customer 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
 

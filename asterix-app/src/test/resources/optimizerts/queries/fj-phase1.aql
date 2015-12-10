@@ -34,7 +34,7 @@ create type VisitorType as open {
   lottery_numbers: {{int32}}
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Users(UserType) 
   primary key uid on group1;
@@ -46,7 +46,7 @@ create dataset Visitors(VisitorType)
 // set simfunction "jaccard";
 // set simthreshold ".8";
 
-write output to nc1:"/tmp/rares03.adm";
+write output to asterix_nc1:"/tmp/rares03.adm";
 
 for $user in dataset('Users')
 let $tokens := 
