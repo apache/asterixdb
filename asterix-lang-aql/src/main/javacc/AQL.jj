@@ -961,7 +961,7 @@ InsertStatement InsertStatement() throws ParseException:
 {
     "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query() (<RETURN> "records"{returnRecord = true;} | "returning" returnField = NestedField())?
     {
-      query.setTopLevel(false);
+      query.setTopLevel(true);
       return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), returnRecord, returnField);
     }
 }
