@@ -55,6 +55,8 @@ public final class MetadataRecordTypes {
     public static ARecordType SECONDARY_FEED_DETAILS_RECORDTYPE;
     public static ARecordType FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
     public static ARecordType CHANNEL_RECORDTYPE;
+    public static ARecordType CHANNEL_SUBSCRIPTIONS_RECORDTYPE;
+    public static ARecordType CHANNEL_RESULTS_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
     public static ARecordType LIBRARY_RECORDTYPE;
@@ -101,6 +103,8 @@ public final class MetadataRecordTypes {
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
             LIBRARY_RECORDTYPE = createLibraryRecordType();
             CHANNEL_RECORDTYPE = createChannelRecordType();
+            CHANNEL_SUBSCRIPTIONS_RECORDTYPE = createChannelSubscriptionsRecordType();
+            CHANNEL_RESULTS_RECORDTYPE = createChannelResultsRecordType();
 
             COMPACTION_POLICY_RECORDTYPE = createCompactionPolicyRecordType();
 
@@ -423,12 +427,29 @@ public final class MetadataRecordTypes {
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                 BuiltinType.ASTRING, BuiltinType.ASTRING };
 
-        try {
-            return new ARecordType("ChannelRecordType", fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
+        return new ARecordType("ChannelRecordType", fieldNames, fieldTypes, true);
+    }
 
+    public static final int CHANNEL_SUBSCRIPTION_ARECORD_SUBSCRIPTION_ID_FIELD_INDEX = 0;
+
+    private static ARecordType createChannelSubscriptionsRecordType() throws AsterixException {
+
+        String[] fieldNames = { "subscription-id" };
+        IAType[] fieldTypes = { BuiltinType.AUUID };
+
+        return new ARecordType("ChannelSubscriptionRecordType", fieldNames, fieldTypes, true);
+    }
+
+    public static final int CHANNEL_RESULT_ARECORD_RESULT_ID_FIELD_INDEX = 0;
+    public static final int CHANNEL_RESULT_ARECORD_SUBSCRIPTION_ID_FIELD_INDEX = 1;
+    public static final int CHANNEL_RESULT_ARECORD_DELIVERY_FIELD_INDEX = 2;
+
+    private static ARecordType createChannelResultsRecordType() throws AsterixException {
+
+        String[] fieldNames = { "rid", "subscription-id", "moment-of-delivery", "ResultsDatasetName" };
+        IAType[] fieldTypes = { BuiltinType.AUUID, BuiltinType.AUUID, BuiltinType.ADATETIME };
+
+        return new ARecordType("ChannelResultRecordType", fieldNames, fieldTypes, true);
     }
 
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;

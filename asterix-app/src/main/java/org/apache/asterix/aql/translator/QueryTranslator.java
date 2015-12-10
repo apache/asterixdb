@@ -70,6 +70,7 @@ import org.apache.asterix.common.feeds.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.feeds.CentralActiveManager;
@@ -83,6 +84,7 @@ import org.apache.asterix.file.ProcedureOperations;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.lang.aql.parser.AQLParser;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
+import org.apache.asterix.lang.aql.visitor.AqlDeleteRewriteVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
@@ -2596,36 +2598,24 @@ public class QueryTranslator extends AbstractLangTranslator {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
 
-            //Set up the datatype for the subscriptions dataset
+            //TODO: datatypes are actually the same for all subscriptions and results set
+            //It would be nice if we could have a type in metadata to be shared by all channels
             RecordTypeDefinition subscriptionsTypeExpression = new RecordTypeDefinition();
             subscriptionsTypeExpression.addField("subscription-id", new TypeReferenceExpression(new Identifier("uuid")),
                     false);
             subscriptionsTypeExpression.setRecordKind(RecordTypeDefinition.RecordKind.OPEN);
             TypeDecl subscriptionsTypeDecl = new TypeDecl(dataverseIdentifier, subscriptionsTypeName,
                     subscriptionsTypeExpression, null, true);
-            //Create the datatype for the subscriptions
-            this.handleCreateTypeStatement(metadataProvider, subscriptionsTypeDecl);
-            //we need a new transaction now
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
             //Setup the subscriptions dataset
             List<List<String>> partitionFields = new ArrayList<List<String>>();
             List<String> fieldNames = new ArrayList<String>();
             fieldNames.add("subscription-id");
             partitionFields.add(fieldNames);
-            Datatype subscriptionsType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName,
-                    subscriptionsTypeName.getValue());
             IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, true, null, false);
             DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseIdentifier, subscriptionsName,
-                    new Identifier(subscriptionsType.getDatatypeName()), null, null, new HashMap<String, String>(),
-                    new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
-
-            //Create the dataset for the subscriptions
-            this.handleCreateDatasetStatement(metadataProvider, createSubscriptionsDataset, hcc);
-            //New transaction
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                    subscriptionsTypeName, null, null, new HashMap<String, String>(), new HashMap<String, String>(),
+                    DatasetType.INTERNAL, idd, true);
 
             //Set up the datatype for the results dataset
             RecordTypeDefinition resultsTypeExpression = new RecordTypeDefinition();
@@ -2637,30 +2627,31 @@ public class QueryTranslator extends AbstractLangTranslator {
             resultsTypeExpression.setRecordKind(RecordTypeDefinition.RecordKind.OPEN);
             TypeDecl resultsTypeDecl = new TypeDecl(dataverseIdentifier, resultsTypeName, resultsTypeExpression, null,
                     true);
-            //Create the datatype for the results
-            this.handleCreateTypeStatement(metadataProvider, resultsTypeDecl);
-            //new transaction
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
             //Setup the results dataset
             partitionFields = new ArrayList<List<String>>();
             fieldNames = new ArrayList<String>();
             fieldNames.add("rid");
             partitionFields.add(fieldNames);
-            Datatype resultsType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName,
-                    resultsTypeName.getValue());
-
             idd = new InternalDetailsDecl(partitionFields, false, null, false);
-            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName,
-                    new Identifier(resultsType.getDatatypeName()), null, null, new HashMap<String, String>(),
-                    new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
-            //Create the dataset for the results
-            this.handleCreateDatasetStatement(metadataProvider, createResultsDataset, hcc);
+            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName, resultsTypeName, null,
+                    null, new HashMap<String, String>(), new HashMap<String, String>(), DatasetType.INTERNAL, idd,
+                    true);
+
+            //Run all four statements together to create datasets
+            List<Statement> statements = new ArrayList<Statement>();
+            statements.add(subscriptionsTypeDecl);
+            statements.add(createSubscriptionsDataset);
+            statements.add(resultsTypeDecl);
+            statements.add(createResultsDataset);
+            QueryTranslator translator = new QueryTranslator(statements, this.sessionConfig,
+                    new AqlCompilationProvider());
+            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    QueryTranslator.ResultDelivery.SYNC);
 
             //Channel Transaction Begin
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            //mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            //metadataProvider.setMetadataTxnContext(mdTxnCtx);
             MetadataLockManager.INSTANCE.createChannelBegin(dataverseName, dataverseName + "." + channelName,
                     ccs.getFunction().getName(), subscriptionsTypeName.getValue(), subscriptionsName.getValue(),
                     resultsTypeName.getValue(), resultsName.getValue());
@@ -2820,6 +2811,8 @@ public class QueryTranslator extends AbstractLangTranslator {
         DeleteStatement delete = new DeleteStatement(vars, new Identifier(dataverseName), subscriptionsDatasetName,
                 condition, stmtChannelSub.getVarCounter(), stmtChannelSub.getDataverses(),
                 stmtChannelSub.getDatasets());
+        AqlDeleteRewriteVisitor visitor = new AqlDeleteRewriteVisitor();
+        delete.accept(visitor, null);
 
         handleDeleteStatement(metadataProvider, delete, hcc, false);
 
