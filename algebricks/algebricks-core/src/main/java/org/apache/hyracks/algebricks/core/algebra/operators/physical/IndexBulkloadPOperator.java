@@ -59,7 +59,7 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> primaryKeys;
     private final List<LogicalVariable> secondaryKeys;
     private final List<LogicalVariable> additionalFilteringKeys;
-    private final Mutable<ILogicalExpression> filterExpr;
+    private final ILogicalExpression filterExpr;
     private final IDataSourceIndex<?, ?> dataSourceIndex;
 
     public IndexBulkloadPOperator(List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
@@ -68,7 +68,11 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         this.primaryKeys = primaryKeys;
         this.secondaryKeys = secondaryKeys;
         this.additionalFilteringKeys = additionalFilteringKeys;
-        this.filterExpr = filterExpr;
+        if (filterExpr != null) {
+            this.filterExpr = filterExpr.getValue();
+        } else {
+            this.filterExpr = null;
+        }
         this.dataSourceIndex = dataSourceIndex;
     }
 
@@ -124,7 +128,7 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getIndexInsertRuntime(
                 dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys, secondaryKeys,
-                additionalFilteringKeys, null, inputDesc, context, spec, true);
+                additionalFilteringKeys, filterExpr, inputDesc, context, spec, true);
         builder.contributeHyracksOperator(indexInsertDeleteOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
         ILogicalOperator src = indexInsertDeleteOp.getInputs().get(0).getValue();
