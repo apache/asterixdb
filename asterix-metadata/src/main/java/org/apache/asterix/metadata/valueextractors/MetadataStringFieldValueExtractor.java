@@ -31,17 +31,24 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.string.UTF8StringReader;
 
 /**
- * Extracts the value of field 'DatasetName' from an ITupleReference that
+ * Extracts the value of a particular String Field from an ITupleReference that
  * contains a serialized representation of a Dataset metadata entity.
  */
-public class DatasetNameValueExtractor implements IValueExtractor<String> {
+public class MetadataStringFieldValueExtractor implements IValueExtractor<String> {
     private final UTF8StringReader reader = new UTF8StringReader();
+    private final int fieldIndex;
+
+    public MetadataStringFieldValueExtractor(int fieldIndex) {
+        super();
+        this.fieldIndex = fieldIndex;
+
+    }
 
     @Override
     public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
-        byte[] serRecord = tuple.getFieldData(2);
-        int recordStartOffset = tuple.getFieldStart(2);
-        int recordLength = tuple.getFieldLength(2);
+        byte[] serRecord = tuple.getFieldData(fieldIndex);
+        int recordStartOffset = tuple.getFieldStart(fieldIndex);
+        int recordLength = tuple.getFieldLength(fieldIndex);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
         try {

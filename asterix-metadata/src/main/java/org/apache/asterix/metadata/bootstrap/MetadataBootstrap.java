@@ -241,10 +241,11 @@ public class MetadataBootstrap {
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
                     primaryIndexes[i].getPartitioningExprType(), false, null, false);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
-                    primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
-                    primaryIndexes[i].getNodeGroupName(), GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<String, String>(),
-                    DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(), IMetadataEntity.PENDING_NO_OP));
+                    primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getDataverseName(),
+                    primaryIndexes[i].getPayloadRecordType().getTypeName(), primaryIndexes[i].getNodeGroupName(),
+                    GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME, GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id,
+                    new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
+                    IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datasets.");
@@ -254,13 +255,15 @@ public class MetadataBootstrap {
     public static void getBuiltinTypes(ArrayList<IAType> types) throws Exception {
         Collection<BuiltinType> builtinTypes = AsterixBuiltinTypeMap.getBuiltinTypes().values();
         Iterator<BuiltinType> iter = builtinTypes.iterator();
-        while (iter.hasNext())
+        while (iter.hasNext()) {
             types.add(iter.next());
+        }
     }
 
     public static void getMetadataTypes(ArrayList<IAType> types) throws Exception {
-        for (int i = 0; i < primaryIndexes.length; i++)
+        for (int i = 0; i < primaryIndexes.length; i++) {
             types.add(primaryIndexes[i].getPayloadRecordType());
+        }
     }
 
     public static void insertInitialDatatypes(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -444,7 +447,7 @@ public class MetadataBootstrap {
     }
 
     public static void startDDLRecovery() throws RemoteException, ACIDException, MetadataException {
-        //#. clean up any record which has pendingAdd/DelOp flag 
+        //#. clean up any record which has pendingAdd/DelOp flag
         //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
         String dataverseName = null;
         String datasetName = null;

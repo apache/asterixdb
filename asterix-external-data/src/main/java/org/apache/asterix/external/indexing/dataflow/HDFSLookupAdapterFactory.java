@@ -105,8 +105,9 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
                         break;
                     }
                 }
-                if (!skip)
+                if (!skip) {
                     propagatedFields[i - ptr] = i;
+                }
             } else {
                 propagatedFields[i - ptr] = i;
             }
@@ -119,13 +120,14 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
             JobSpecification jobSpec, Dataset dataset, Index secondaryIndex, int[] ridIndexes, boolean retainInput,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> outputVars, IOperatorSchema opSchema,
-            JobGenContext context, AqlMetadataProvider metadataProvider, boolean retainNull) throws AlgebricksException {
+            JobGenContext context, AqlMetadataProvider metadataProvider, boolean retainNull)
+                    throws AlgebricksException {
 
         // Get data type
         IAType itemType = null;
         try {
             itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
-                    dataset.getDataverseName(), dataset.getItemTypeName()).getDatatype();
+                    dataset.getItemTypeDataverseName(), dataset.getItemTypeName()).getDatatype();
         } catch (MetadataException e) {
             e.printStackTrace();
             throw new AlgebricksException("Unable to get item type from metadata " + e);
@@ -149,11 +151,11 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
         boolean temp = dataset.getDatasetDetails().isTemp();
         // Create the file index data flow helper
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
-                compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
-                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                LSMBTreeIOOperationCallbackFactory.INSTANCE, metadataProvider.getStorageProperties()
-                        .getBloomFilterFalsePositiveRate(), ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(
-                        dataset, metadataProvider), !temp);
+                compactionInfo.first, compactionInfo.second,
+                new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                metadataProvider.getStorageProperties().getBloomFilterFalsePositiveRate(),
+                ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, metadataProvider), !temp);
 
         // Create the out record descriptor, appContext and fileSplitProvider for the files index
         RecordDescriptor outRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -172,9 +174,9 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
         // Create the operator
         ExternalLoopkupOperatorDiscriptor op = new ExternalLoopkupOperatorDiscriptor(jobSpec, adapterFactory,
                 outRecDesc, indexDataflowHelperFactory, retainInput, appContext.getIndexLifecycleManagerProvider(),
-                appContext.getStorageManagerInterface(), spPc.first, dataset.getDatasetId(), metadataProvider
-                        .getStorageProperties().getBloomFilterFalsePositiveRate(), searchOpCallbackFactory, retainNull,
-                context.getNullWriterFactory());
+                appContext.getStorageManagerInterface(), spPc.first, dataset.getDatasetId(),
+                metadataProvider.getStorageProperties().getBloomFilterFalsePositiveRate(), searchOpCallbackFactory,
+                retainNull, context.getNullWriterFactory());
 
         // Return value
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, spPc.second);

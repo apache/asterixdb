@@ -21,8 +21,6 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -31,6 +29,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -256,7 +255,7 @@ public class OptimizableOperatorSubTree {
                 throw new AlgebricksException("No metadata for dataset " + datasetName);
             }
             // Get the record type for that dataset.
-            IAType itemType = metadataProvider.findType(dataverseName, ds.getItemTypeName());
+            IAType itemType = metadataProvider.findType(ds.getItemTypeDataverseName(), ds.getItemTypeName());
             if (itemType.getTypeTag() != ATypeTag.RECORD) {
                 if (i == 0) {
                     return false;

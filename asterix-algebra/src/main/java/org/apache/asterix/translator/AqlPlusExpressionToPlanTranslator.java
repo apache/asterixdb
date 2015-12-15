@@ -269,7 +269,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
             if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
                 throw new AlgebricksException("Cannot write output to an external dataset.");
             }
-            ARecordType itemType = (ARecordType) metadata.findType(dataset.getDataverseName(),
+            ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName());
             List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
