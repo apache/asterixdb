@@ -45,12 +45,11 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
     // We override this method to specify the searched version of the index
     @Override
     public void open() throws HyracksDataException {
-        accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
+        accessor = new FrameTupleAccessor(inputRecDesc);
         indexHelper.open();
         ExternalRTreeDataflowHelper rTreeDataflowHelper = (ExternalRTreeDataflowHelper) indexHelper;
         index = indexHelper.getIndexInstance();
-
         if (retainNull) {
             int fieldCount = getFieldCount();
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
@@ -66,7 +65,6 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
         } else {
             nullTupleBuild = null;
         }
-
         ExternalRTree rTreeIndex = (ExternalRTree) index;
         try {
             searchPred = createSearchPredicate();
@@ -82,7 +80,6 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            indexHelper.close();
             throw new HyracksDataException(e);
         }
     }
