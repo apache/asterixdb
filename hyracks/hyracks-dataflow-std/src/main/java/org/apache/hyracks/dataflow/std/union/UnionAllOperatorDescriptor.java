@@ -34,7 +34,8 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePushable;
 
 public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
-    public UnionAllOperatorDescriptor(IOperatorDescriptorRegistry spec, int nInputs, RecordDescriptor recordDescriptor) {
+    public UnionAllOperatorDescriptor(IOperatorDescriptorRegistry spec, int nInputs,
+            RecordDescriptor recordDescriptor) {
         super(spec, nInputs, 1);
         recordDescriptors[0] = recordDescriptor;
     }
@@ -61,7 +62,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                throws HyracksDataException {
+                        throws HyracksDataException {
             RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             return new UnionOperator(ctx, inRecordDesc);
         }
@@ -69,9 +70,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private class UnionOperator extends AbstractUnaryOutputOperatorNodePushable {
         private int nOpened;
-
         private int nClosed;
-
         private boolean failed;
 
         public UnionOperator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc) {
@@ -106,7 +105,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void fail() throws HyracksDataException {
                     synchronized (UnionOperator.this) {
-                        if (failed) {
+                        if (!failed) {
                             writer.fail();
                         }
                         failed = true;
@@ -117,6 +116,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void close() throws HyracksDataException {
                     synchronized (UnionOperator.this) {
                         if (++nClosed == inputArity) {
+                            // a single close
                             writer.close();
                         }
                     }

@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     private final IFrameWriter[] pWriters;
+    private final boolean[] isWriterOpen;
     private final IFrameTupleAppender[] appenders;
     private final FrameTupleAccessor tupleAccessor;
     private final ITuplePartitionComputer tpc;
@@ -46,6 +47,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
         int[] consumerPartitions = localityMap.getConsumers(senderIndex, nConsumerPartitions);
         pWriters = new IFrameWriter[consumerPartitions.length];
         appenders = new IFrameTupleAppender[consumerPartitions.length];
+        isWriterOpen = new boolean[consumerPartitions.length];
         for (int i = 0; i < consumerPartitions.length; ++i) {
             try {
                 pWriters[i] = pwFactory.createFrameWriter(consumerPartitions[i]);
@@ -67,6 +69,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
     @Override
     public void open() throws HyracksDataException {
         for (int i = 0; i < pWriters.length; ++i) {
+            isWriterOpen[i] = true;
             pWriters[i].open();
         }
     }
@@ -94,8 +97,22 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
      */
     @Override
     public void fail() throws HyracksDataException {
+        HyracksDataException failException = null;
         for (int i = 0; i < appenders.length; ++i) {
-            pWriters[i].fail();
+            if (isWriterOpen[i]) {
+                try {
+                    pWriters[i].fail();
+                } catch (Throwable th) {
+                    if (failException == null) {
+                        failException = new HyracksDataException(th);
+                    } else {
+                        failException.addSuppressed(th);
+                    }
+                }
+            }
+        }
+        if (failException != null) {
+            throw failException;
         }
     }
 
@@ -106,10 +123,32 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
      */
     @Override
     public void close() throws HyracksDataException {
+        HyracksDataException closeException = null;
         for (int i = 0; i < pWriters.length; ++i) {
-            appenders[i].flush(pWriters[i], true);
-            pWriters[i].close();
+            if (isWriterOpen[i]) {
+                try {
+                    appenders[i].flush(pWriters[i], true);
+                } catch (Throwable th) {
+                    if (closeException == null) {
+                        closeException = new HyracksDataException(th);
+                    } else {
+                        closeException.addSuppressed(th);
+                    }
+                } finally {
+                    try {
+                        pWriters[i].close();
+                    } catch (Throwable th) {
+                        if (closeException == null) {
+                            closeException = new HyracksDataException(th);
+                        } else {
+                            closeException.addSuppressed(th);
+                        }
+                    }
+                }
+            }
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
-
 }

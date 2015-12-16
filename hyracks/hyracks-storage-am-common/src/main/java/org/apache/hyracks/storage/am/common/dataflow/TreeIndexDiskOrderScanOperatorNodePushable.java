@@ -56,12 +56,12 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
         try {
             ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
-            ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory().createSearchOperationCallback(
-                    treeIndexHelper.getResourceID(), ctx);
-            ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor(
-                    NoOpOperationCallback.INSTANCE, searchCallback);
-            writer.open();
+            ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
+                    .createSearchOperationCallback(treeIndexHelper.getResourceID(), ctx);
+            ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex
+                    .createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
             try {
+                writer.open();
                 indexAccessor.diskOrderScan(cursor);
                 int fieldCount = treeIndex.getFieldCount();
                 FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
@@ -83,16 +83,21 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                             tb.getSize());
                 }
                 appender.flush(writer, true);
-            } catch (Exception e) {
+            } catch (Throwable th) {
                 writer.fail();
-                throw new HyracksDataException(e);
+                throw new HyracksDataException(th);
             } finally {
-                cursor.close();
-                writer.close();
+                try {
+                    cursor.close();
+                } catch (Exception cursorCloseException) {
+                    throw new IllegalStateException(cursorCloseException);
+                } finally {
+                    writer.close();
+                }
             }
-        } catch (Exception e) {
+        } catch (Throwable th) {
             treeIndexHelper.close();
-            throw new HyracksDataException(e);
+            throw new HyracksDataException(th);
         }
     }
 

@@ -69,6 +69,7 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(aggregs.length);
 
             private boolean first = true;
+            private boolean isOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -86,7 +87,7 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
                 } catch (AlgebricksException e) {
                     throw new HyracksDataException(e);
                 }
-
+                isOpen = true;
                 writer.open();
             }
 
@@ -103,9 +104,14 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
 
             @Override
             public void close() throws HyracksDataException {
-                computeAggregate();
-                appendToFrameFromTupleBuilder(tupleBuilder);
-                super.close();
+                if (isOpen) {
+                    try {
+                        computeAggregate();
+                        appendToFrameFromTupleBuilder(tupleBuilder);
+                    } finally {
+                        super.close();
+                    }
+                }
             }
 
             private void computeAggregate() throws HyracksDataException {
@@ -132,7 +138,9 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
 
             @Override
             public void fail() throws HyracksDataException {
-                writer.fail();
+                if (isOpen) {
+                    writer.fail();
+                }
             }
         };
     }

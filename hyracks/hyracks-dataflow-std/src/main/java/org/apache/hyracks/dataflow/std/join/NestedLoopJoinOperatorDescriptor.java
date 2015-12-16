@@ -132,9 +132,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
-            final IPredicateEvaluator predEvaluator = ((predEvaluatorFactory != null) ?
-                    predEvaluatorFactory.createPredicateEvaluator() :
-                    null);
+            final IPredicateEvaluator predEvaluator = ((predEvaluatorFactory != null)
+                    ? predEvaluatorFactory.createPredicateEvaluator() : null);
 
             final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
             if (isLeftOuter) {
@@ -148,12 +147,11 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new JoinCacheTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
-                            partition));
+                    state = new JoinCacheTaskState(ctx.getJobletContext().getJobId(),
+                            new TaskId(getActivityId(), partition));
 
-                    state.joiner = new NestedLoopJoin(ctx, new FrameTupleAccessor(rd0),
-                            new FrameTupleAccessor(rd1), comparator, memSize, predEvaluator, isLeftOuter,
-                            nullWriters1);
+                    state.joiner = new NestedLoopJoin(ctx, new FrameTupleAccessor(rd0), new FrameTupleAccessor(rd1),
+                            comparator, memSize, predEvaluator, isLeftOuter, nullWriters1);
 
                 }
 
@@ -194,9 +192,9 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (JoinCacheTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
-                            JOIN_CACHE_ACTIVITY_ID), partition));
                     writer.open();
+                    state = (JoinCacheTaskState) ctx.getStateObject(
+                            new TaskId(new ActivityId(getOperatorId(), JOIN_CACHE_ACTIVITY_ID), partition));
                 }
 
                 @Override
@@ -206,8 +204,11 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.joiner.closeJoin(writer);
-                    writer.close();
+                    try {
+                        state.joiner.closeJoin(writer);
+                    } finally {
+                        writer.close();
+                    }
                 }
 
                 @Override

@@ -122,8 +122,8 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     public void initialize() throws HyracksDataException {
         aggState = (ExternalGroupState) ctx.getStateObject(stateId);
         runs = aggState.getRuns();
-        writer.open();
         try {
+            writer.open();
             if (runs.size() <= 0) {
                 ISpillableTable gTable = aggState.getSpillableTable();
                 if (gTable != null) {

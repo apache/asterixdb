@@ -32,16 +32,16 @@ public class ConnectorSenderProfilingFrameWriter implements IFrameWriter {
     private final ICounter closeCounter;
     private final ICounter frameCounter;
 
-    public ConnectorSenderProfilingFrameWriter(IHyracksTaskContext ctx, IFrameWriter writer,
-            ConnectorDescriptorId cdId, int senderIndex, int receiverIndex) {
+    public ConnectorSenderProfilingFrameWriter(IHyracksTaskContext ctx, IFrameWriter writer, ConnectorDescriptorId cdId,
+            int senderIndex, int receiverIndex) {
         this.writer = writer;
         int attempt = ctx.getTaskAttemptId().getAttempt();
-        this.openCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".open", true);
-        this.closeCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".close", true);
-        this.frameCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".nextFrame", true);
+        this.openCounter = ctx.getCounterContext()
+                .getCounter(cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".open", true);
+        this.closeCounter = ctx.getCounterContext()
+                .getCounter(cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".close", true);
+        this.frameCounter = ctx.getCounterContext()
+                .getCounter(cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".nextFrame", true);
     }
 
     @Override
@@ -58,8 +58,11 @@ public class ConnectorSenderProfilingFrameWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        closeCounter.update(1);
-        writer.close();
+        try {
+            closeCounter.update(1);
+        } finally {
+            writer.close();
+        }
     }
 
     @Override

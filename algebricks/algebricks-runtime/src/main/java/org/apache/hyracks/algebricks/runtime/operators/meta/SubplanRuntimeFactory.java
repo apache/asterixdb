@@ -116,6 +116,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                         appendNullsToTuple();
                         appendToFrameFromTupleBuilder(tb);
                     }
+
                 }
 
                 @Override
@@ -146,11 +147,11 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
             @Override
             public void open() throws HyracksDataException {
+                writer.open();
                 if (first) {
                     first = false;
                     initAccessAppendRef(ctx);
                 }
-                writer.open();
             }
 
             @Override
@@ -164,6 +165,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     startOfPipeline.close();
                 }
             }
+
         };
     }
 }

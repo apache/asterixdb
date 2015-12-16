@@ -87,9 +87,6 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private static class SortTaskState extends AbstractStateObject {
         private FrameSorterMergeSort frameSorter;
 
-        public SortTaskState() {
-        }
-
         private SortTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
         }
@@ -165,14 +162,14 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    writer.open();
                     try {
-                        SortTaskState state = (SortTaskState) ctx.getStateObject(new TaskId(new ActivityId(
-                                getOperatorId(), SORT_ACTIVITY_ID), partition));
+                        writer.open();
+                        SortTaskState state = (SortTaskState) ctx.getStateObject(
+                                new TaskId(new ActivityId(getOperatorId(), SORT_ACTIVITY_ID), partition));
                         state.frameSorter.flush(writer);
-                    } catch (Exception e) {
+                    } catch (Throwable th) {
                         writer.fail();
-                        throw new HyracksDataException(e);
+                        throw new HyracksDataException(th);
                     } finally {
                         writer.close();
                     }

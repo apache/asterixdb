@@ -107,11 +107,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     @Override
     public void open() throws HyracksDataException {
-        accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
-
+        accessor = new FrameTupleAccessor(inputRecDesc);
         if (retainNull) {
             int fieldCount = getFieldCount();
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
@@ -141,7 +140,6 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            indexHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -164,13 +162,12 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
-            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
-                    tb.getSize());
+            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
 
         if (!matched && retainInput && retainNull) {
-            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex,
-                    nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize());
+            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex, nullTupleBuild.getFieldEndOffsets(),
+                    nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize());
         }
     }
 
@@ -192,16 +189,46 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            appender.flush(writer, true);
+        HyracksDataException closeException = null;
+        if (index != null) {
+            // if index == null, then the index open was not successful
+            try {
+                appender.flush(writer, true);
+            } catch (Throwable th) {
+                closeException = new HyracksDataException(th);
+            }
+
             try {
                 cursor.close();
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
+            } catch (Throwable th) {
+                if (closeException == null) {
+                    closeException = new HyracksDataException(th);
+                } else {
+                    closeException.addSuppressed(th);
+                }
             }
+            try {
+                indexHelper.close();
+            } catch (Throwable th) {
+                if (closeException == null) {
+                    closeException = new HyracksDataException(th);
+                } else {
+                    closeException.addSuppressed(th);
+                }
+            }
+        }
+        try {
+            // will definitely be called regardless of exceptions
             writer.close();
-        } finally {
-            indexHelper.close();
+        } catch (Throwable th) {
+            if (closeException == null) {
+                closeException = new HyracksDataException(th);
+            } else {
+                closeException.addSuppressed(th);
+            }
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
 

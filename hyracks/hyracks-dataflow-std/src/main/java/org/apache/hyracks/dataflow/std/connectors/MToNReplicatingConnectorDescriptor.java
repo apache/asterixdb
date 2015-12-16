@@ -43,8 +43,9 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
+        final boolean[] isOpen = new boolean[nConsumerPartitions];
         for (int i = 0; i < nConsumerPartitions; ++i) {
             epWriters[i] = edwFactory.createFrameWriter(i);
         }
@@ -62,21 +63,50 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
 
             @Override
             public void fail() throws HyracksDataException {
+                HyracksDataException failException = null;
                 for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].fail();
+                    if (isOpen[i]) {
+                        try {
+                            epWriters[i].fail();
+                        } catch (Throwable th) {
+                            if (failException == null) {
+                                failException = new HyracksDataException(th);
+                            } else {
+                                failException.addSuppressed(th);
+                            }
+                        }
+                    }
+                }
+                if (failException != null) {
+                    throw failException;
                 }
             }
 
             @Override
             public void close() throws HyracksDataException {
+                HyracksDataException closeException = null;
                 for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].close();
+                    if (isOpen[i]) {
+                        try {
+                            epWriters[i].close();
+                        } catch (Throwable th) {
+                            if (closeException == null) {
+                                closeException = new HyracksDataException(th);
+                            } else {
+                                closeException.addSuppressed(th);
+                            }
+                        }
+                    }
+                }
+                if (closeException != null) {
+                    throw closeException;
                 }
             }
 
             @Override
             public void open() throws HyracksDataException {
                 for (int i = 0; i < epWriters.length; ++i) {
+                    isOpen[i] = true;
                     epWriters[i].open();
                 }
             }
@@ -84,8 +114,8 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
     }
 
     @Override
-    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
-            int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
+    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc, int index,
+            int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(0, nProducerPartitions);
         NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,

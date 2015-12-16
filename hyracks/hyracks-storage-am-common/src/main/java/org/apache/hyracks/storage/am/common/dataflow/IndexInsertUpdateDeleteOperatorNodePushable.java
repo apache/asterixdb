@@ -55,6 +55,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected IIndexAccessor indexAccessor;
     protected ITupleFilter tupleFilter;
     protected IModificationOperationCallback modCallback;
+    protected IIndex index;
 
     public IndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op) {
@@ -71,12 +72,12 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
-        writer.open();
         indexHelper.open();
-        IIndex index = indexHelper.getIndexInstance();
+        index = indexHelper.getIndexInstance();
         try {
-            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(indexHelper.getResourceName(),
-                    indexHelper.getResourceID(), index, ctx);
+            writer.open();
+            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
+                    indexHelper.getResourceName(), indexHelper.getResourceID(), index, ctx);
             indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
@@ -84,7 +85,6 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            indexHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -129,8 +129,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                         break;
                     }
                     default: {
-                        throw new HyracksDataException("Unsupported operation " + op
-                                + " in tree index InsertUpdateDelete operator");
+                        throw new HyracksDataException(
+                                "Unsupported operation " + op + " in tree index InsertUpdateDelete operator");
                     }
                 }
             } catch (HyracksDataException e) {
@@ -147,15 +147,19 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            writer.close();
-        } finally {
-            indexHelper.close();
+        if (index != null) {
+            try {
+                writer.close();
+            } finally {
+                indexHelper.close();
+            }
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        writer.fail();
+        if (index != null) {
+            writer.fail();
+        }
     }
 }

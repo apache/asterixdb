@@ -90,6 +90,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
             private final IRunningAggregateEvaluator[] raggs = new IRunningAggregateEvaluator[runningAggregates.length];
             private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
+            private boolean isOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -112,7 +113,22 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                         throw new HyracksDataException(ae);
                     }
                 }
+                isOpen = true;
                 writer.open();
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                if (isOpen) {
+                    super.close();
+                }
+            }
+
+            @Override
+            public void fail() throws HyracksDataException {
+                if (isOpen) {
+                    super.fail();
+                }
             }
 
             @Override

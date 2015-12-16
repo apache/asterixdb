@@ -71,8 +71,8 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        SplitterMaterializerActivityNode sma = new SplitterMaterializerActivityNode(new ActivityId(odId,
-                SPLITTER_MATERIALIZER_ACTIVITY_ID));
+        SplitterMaterializerActivityNode sma = new SplitterMaterializerActivityNode(
+                new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
         builder.addActivity(this, sma);
         builder.addSourceEdge(0, sma, 0);
         int taskOutputIndex = 0;
@@ -88,8 +88,8 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             int activityId = MATERIALIZE_READER_ACTIVITY_ID;
             for (int i = 0; i < outputArity; i++) {
                 if (outputMaterializationFlags[i]) {
-                    MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(new ActivityId(odId,
-                            activityId));
+                    MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(
+                            new ActivityId(odId, activityId));
                     builder.addActivity(this, mra);
                     builder.addTargetEdge(i, mra, 0);
                     builder.addBlockingEdge(sma, mra);
@@ -113,15 +113,17 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             return new AbstractUnaryInputOperatorNodePushable() {
                 private MaterializerTaskState state;
                 private final IFrameWriter[] writers = new IFrameWriter[numberOfNonMaterializedOutputs];
+                private final boolean[] isOpen = new boolean[numberOfNonMaterializedOutputs];
 
                 @Override
                 public void open() throws HyracksDataException {
                     if (requiresMaterialization) {
-                        state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(
-                                getActivityId(), partition));
+                        state = new MaterializerTaskState(ctx.getJobletContext().getJobId(),
+                                new TaskId(getActivityId(), partition));
                         state.open(ctx);
                     }
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                        isOpen[i] = true;
                         writers[i].open();
                     }
                 }
@@ -138,19 +140,50 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void close() throws HyracksDataException {
-                    if (requiresMaterialization) {
-                        state.close();
-                        ctx.setStateObject(state);
+                    HyracksDataException hde = null;
+                    try {
+                        if (requiresMaterialization) {
+                            state.close();
+                            ctx.setStateObject(state);
+                        }
+                    } finally {
+                        for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                            if (isOpen[i]) {
+                                try {
+                                    writers[i].close();
+                                } catch (Throwable th) {
+                                    if (hde == null) {
+                                        hde = new HyracksDataException(th);
+                                    } else {
+                                        hde.addSuppressed(th);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        writers[i].close();
+                    if (hde != null) {
+                        throw hde;
                     }
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    HyracksDataException hde = null;
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        writers[i].fail();
+                        if (isOpen[i]) {
+                            try {
+                                writers[i].fail();
+                            } catch (Throwable th) {
+                                if (hde == null) {
+                                    hde = new HyracksDataException(th);
+                                } else {
+                                    hde.addSuppressed(th);
+                                }
+                            }
+                        }
+                    }
+                    if (hde != null) {
+                        throw hde;
                     }
                 }
 
@@ -172,21 +205,21 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                throws HyracksDataException {
+                        throws HyracksDataException {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
                 @Override
                 public void initialize() throws HyracksDataException {
-                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(new TaskId(new ActivityId(
-                            getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
+                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(
+                            new TaskId(new ActivityId(getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
                     state.writeOut(writer, new VSizeFrame(ctx));
                 }
 
                 @Override
                 public void deinitialize() throws HyracksDataException {
                     numberOfActiveMaterializeReaders--;
-                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(new TaskId(new ActivityId(
-                            getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
+                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(
+                            new TaskId(new ActivityId(getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
                     if (numberOfActiveMaterializeReaders == 0) {
                         state.deleteFile();
                     }

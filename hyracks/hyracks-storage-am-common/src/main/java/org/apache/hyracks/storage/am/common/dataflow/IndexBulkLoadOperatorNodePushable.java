@@ -33,8 +33,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
-public class IndexBulkLoadOperatorNodePushable extends
-        AbstractUnaryInputUnaryOutputOperatorNodePushable {
+public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final float fillFactor;
@@ -48,15 +47,12 @@ public class IndexBulkLoadOperatorNodePushable extends
     protected IRecordDescriptorProvider recDescProvider;
     protected PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
-            float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex,
-            IRecordDescriptorProvider recordDescProvider) {
+    public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.indexHelper = opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition);
+        this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;
@@ -68,19 +64,16 @@ public class IndexBulkLoadOperatorNodePushable extends
 
     @Override
     public void open() throws HyracksDataException {
-        RecordDescriptor recDesc = recDescProvider.getInputRecordDescriptor(
-                opDesc.getActivityId(), 0);
+        RecordDescriptor recDesc = recDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(recDesc);
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {
-            bulkLoader = index.createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint, checkIfEmptyIndex);
+            writer.open();
+            bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (Exception e) {
-            indexHelper.close();
             throw new HyracksDataException(e);
         }
-        writer.open();
     }
 
     @Override
@@ -105,15 +98,24 @@ public class IndexBulkLoadOperatorNodePushable extends
     public void close() throws HyracksDataException {
         try {
             bulkLoader.end();
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+        } catch (Throwable th) {
+            throw new HyracksDataException(th);
         } finally {
-            indexHelper.close();
+            if (index != null) {
+                // If index was opened!
+                try {
+                    indexHelper.close();
+                } finally {
+                    writer.close();
+                }
+            }
         }
-        writer.close();
     }
 
     @Override
     public void fail() throws HyracksDataException {
+        if (index != null) {
+            writer.fail();
+        }
     }
 }

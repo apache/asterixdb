@@ -52,8 +52,8 @@ public class MaterializerTaskState extends AbstractStateObject {
     }
 
     public void open(IHyracksTaskContext ctx) throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                MaterializerTaskState.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(MaterializerTaskState.class.getSimpleName());
         out = new RunFileWriter(file, ctx.getIOManager());
         out.open();
     }
@@ -68,16 +68,19 @@ public class MaterializerTaskState extends AbstractStateObject {
 
     public void writeOut(IFrameWriter writer, IFrame frame) throws HyracksDataException {
         RunFileReader in = out.createDeleteOnCloseReader();
-        writer.open();
         try {
-            in.open();
-            while (in.nextFrame(frame)) {
-                writer.nextFrame(frame.getBuffer());
+            writer.open();
+            try {
+                in.open();
+                while (in.nextFrame(frame)) {
+                    writer.nextFrame(frame.getBuffer());
+                }
+            } finally {
+                in.close();
             }
-            in.close();
-        } catch (Exception e) {
+        } catch (Throwable th) {
             writer.fail();
-            throw new HyracksDataException(e);
+            throw new HyracksDataException(th);
         } finally {
             writer.close();
         }

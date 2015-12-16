@@ -66,11 +66,11 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     @Override
     public void open() throws HyracksDataException {
+        writer.open();
         accessor = new FrameTupleAccessor(inputRecDesc);
         builder = new ArrayTupleBuilder(outputRecDesc.getFieldCount());
         builderData = builder.getFieldData();
         appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
-        writer.open();
     }
 
     @Override
@@ -81,10 +81,9 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         for (int i = 0; i < tupleCount; i++) {
             short numTokens = 0;
 
-            tokenizer.reset(
-                    accessor.getBuffer().array(),
-                    accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
-                            + accessor.getFieldStartOffset(i, docField), accessor.getFieldLength(i, docField));
+            tokenizer.reset(accessor.getBuffer().array(), accessor.getTupleStartOffset(i)
+                    + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(i, docField),
+                    accessor.getFieldLength(i, docField));
 
             if (addNumTokensKey) {
                 // Get the total number of tokens.
@@ -154,8 +153,11 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     @Override
     public void close() throws HyracksDataException {
-        appender.flush(writer, true);
-        writer.close();
+        try {
+            appender.flush(writer, true);
+        } finally {
+            writer.close();
+        }
     }
 
     @Override

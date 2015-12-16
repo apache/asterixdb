@@ -104,11 +104,8 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                 nullWriters1[i] = nullWriterFactories[i].createNullWriter();
             }
         }
-
-        writer.open();// open for probe
-
         try {
-
+            writer.open();// open for probe
             IFrame buffer = new VSizeFrame(ctx);
             // buffer
             int tableSize = (int) (numPartitions * recordsPerFrame * factor);
@@ -148,9 +145,9 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                 probeReader.close();
                 joiner.closeJoin(writer);
             }
-        } catch (Exception e) {
+        } catch (Throwable th) {
             writer.fail();
-            throw new HyracksDataException(e);
+            throw new HyracksDataException(th);
         } finally {
             writer.close();
         }

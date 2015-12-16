@@ -96,6 +96,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private IScalarEvaluator[] eval = new IScalarEvaluator[evalFactories.length];
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
+            private boolean isOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -111,7 +112,15 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         }
                     }
                 }
+                isOpen = true;
                 writer.open();
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                if (isOpen) {
+                    super.close();
+                }
             }
 
             @Override
@@ -158,7 +167,9 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             @Override
             public void fail() throws HyracksDataException {
-                writer.fail();
+                if (isOpen) {
+                    writer.fail();
+                }
             }
         };
     }

@@ -66,9 +66,10 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         return new AbstractUnaryInputOperatorNodePushable() {
             private final IFrameWriter[] writers = new IFrameWriter[outputArity];
+            private final boolean[] isOpen = new boolean[outputArity];
             private final IFrame[] writeBuffers = new IFrame[outputArity];
             private final ICopyEvaluator[] evals = new ICopyEvaluator[outputArity];
             private final ArrayBackedValueStorage evalBuf = new ArrayBackedValueStorage();
@@ -83,19 +84,52 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
 
             @Override
             public void close() throws HyracksDataException {
-                // Flush (possibly not full) buffers that have data, and close writers.
+                HyracksDataException hde = null;
                 for (int i = 0; i < outputArity; i++) {
-                    tupleAppender.reset(writeBuffers[i], false);
-                    // ? by JF why didn't clear the buffer ?
-                    tupleAppender.flush(writers[i], false);
-                    writers[i].close();
+                    if (isOpen[i]) {
+                        try {
+                            tupleAppender.reset(writeBuffers[i], false);
+                            // ? by JF why didn't clear the buffer ?
+                            tupleAppender.flush(writers[i], false);
+                        } catch (Throwable th) {
+                            if (hde == null) {
+                                hde = new HyracksDataException();
+                            }
+                            hde.addSuppressed(th);
+                        } finally {
+                            try {
+                                writers[i].close();
+                            } catch (Throwable th) {
+                                if (hde == null) {
+                                    hde = new HyracksDataException();
+                                }
+                                hde.addSuppressed(th);
+                            }
+                        }
+                    }
+                }
+                if (hde != null) {
+                    throw hde;
                 }
             }
 
             @Override
             public void fail() throws HyracksDataException {
-                for (IFrameWriter writer : writers) {
-                    writer.fail();
+                HyracksDataException hde = null;
+                for (int i = 0; i < outputArity; i++) {
+                    if (isOpen[i]) {
+                        try {
+                            writers[i].fail();
+                        } catch (Throwable th) {
+                            if (hde == null) {
+                                hde = new HyracksDataException();
+                            }
+                            hde.addSuppressed(th);
+                        }
+                    }
+                }
+                if (hde != null) {
+                    throw hde;
                 }
             }
 
@@ -144,8 +178,9 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
 
             @Override
             public void open() throws HyracksDataException {
-                for (IFrameWriter writer : writers) {
-                    writer.open();
+                for (int i = 0; i < writers.length; i++) {
+                    isOpen[i] = true;
+                    writers[i].open();
                 }
                 // Create write buffers.
                 for (int i = 0; i < outputArity; i++) {

@@ -30,7 +30,6 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -104,7 +103,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         final List<FileSplit> inputSplits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
@@ -116,11 +115,11 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             public void initialize() throws HyracksDataException {
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
+                    writer.open();
                     Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
                     Job job = confFactory.getConf();
                     job.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
-                    writer.open();
                     InputFormat inputFormat = ReflectionUtils.newInstance(job.getInputFormatClass(),
                             job.getConfiguration());
                     int size = inputSplits.size();
@@ -155,10 +154,11 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                         }
                     }
                     parser.close(writer);
-                    writer.close();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                } catch (Throwable th) {
+                    writer.fail();
+                    throw new HyracksDataException(th);
                 } finally {
+                    writer.close();
                     Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }

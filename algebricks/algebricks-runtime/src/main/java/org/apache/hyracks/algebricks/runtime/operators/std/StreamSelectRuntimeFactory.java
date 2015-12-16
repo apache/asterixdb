@@ -53,7 +53,8 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     /**
      * @param cond
-     * @param projectionList               if projectionList is null, then no projection is performed
+     * @param projectionList
+     *            if projectionList is null, then no projection is performed
      * @param retainNull
      * @param nullPlaceholderVariableIndex
      * @param nullWriterFactory
@@ -83,6 +84,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
             private IScalarEvaluator eval;
             private INullWriter nullWriter = null;
             private ArrayTupleBuilder nullTupleBuilder = null;
+            private boolean isOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -94,6 +96,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                         throw new HyracksDataException(ae);
                     }
                 }
+                isOpen = true;
                 writer.open();
 
                 //prepare nullTupleBuilder
@@ -103,6 +106,24 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     DataOutput out = nullTupleBuilder.getDataOutput();
                     nullWriter.writeNull(out);
                     nullTupleBuilder.addFieldEndOffset();
+                }
+            }
+
+            @Override
+            public void fail() throws HyracksDataException {
+                if (isOpen) {
+                    super.fail();
+                }
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                if (isOpen) {
+                    try {
+                        flushIfNotFailed();
+                    } finally {
+                        writer.close();
+                    }
                 }
             }
 

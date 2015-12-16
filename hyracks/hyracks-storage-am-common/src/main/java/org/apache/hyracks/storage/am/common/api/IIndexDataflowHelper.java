@@ -25,8 +25,14 @@ import org.apache.hyracks.api.io.FileReference;
 public interface IIndexDataflowHelper {
     public void create() throws HyracksDataException;
 
+    /*
+     * If close throws an exception, it means that the index was not closed successfully.
+     */
     public void close() throws HyracksDataException;
 
+    /*
+     * If open throws an exception, it means that the index was not opened successfully.
+     */
     public void open() throws HyracksDataException;
 
     public void destroy() throws HyracksDataException;

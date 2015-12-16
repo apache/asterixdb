@@ -32,7 +32,6 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -70,10 +69,11 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
         recordDescriptors[0] = helper.getMapOutputRecordDescriptor();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         final HadoopHelper helper = new HadoopHelper(config);
         final Configuration conf = helper.getConfiguration();
         final Mapper<K1, V1, K2, V2> mapper = helper.getMapper();
@@ -219,18 +219,19 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                 for (int i = 0; i < comparatorFactories.length; ++i) {
                     comparators[i] = comparatorFactories[i].createBinaryComparator();
                 }
-                ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, runGen.getSorter(),
-                        runGen.getRuns(), new int[] { 0 }, comparators, null,
-                        helper.getMapOutputRecordDescriptorWithoutExtraFields(), framesLimit, delegatingWriter);
+                ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, runGen.getSorter(), runGen.getRuns(),
+                        new int[] { 0 }, comparators, null, helper.getMapOutputRecordDescriptorWithoutExtraFields(),
+                        framesLimit, delegatingWriter);
                 merger.process();
             }
         }
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
+            @SuppressWarnings("unchecked")
             @Override
             public void initialize() throws HyracksDataException {
-                writer.open();
                 try {
+                    writer.open();
                     SortingRecordWriter recordWriter = new SortingRecordWriter();
                     InputSplit split = null;
                     int blockId = 0;
@@ -246,9 +247,8 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                                 Thread.currentThread().setContextClassLoader(ctxCL);
                             }
                             recordWriter.initBlock(blockId);
-                            Mapper<K1, V1, K2, V2>.Context mCtx = new MRContextUtil()
-                                    .createMapContext(conf, taId, recordReader,
-                                            recordWriter, null, null, split);
+                            Mapper<K1, V1, K2, V2>.Context mCtx = new MRContextUtil().createMapContext(conf, taId,
+                                    recordReader, recordWriter, null, null, split);
                             mapper.run(mCtx);
                             recordReader.close();
                             recordWriter.sortAndFlushBlock(writer);
@@ -259,6 +259,9 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                             throw new HyracksDataException(e);
                         }
                     }
+                } catch (Throwable th) {
+                    writer.fail();
+                    throw th;
                 } finally {
                     writer.close();
                 }

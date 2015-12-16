@@ -35,6 +35,7 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 public class PartitionDataWriter implements IFrameWriter {
     private final int consumerPartitionCount;
     private final IFrameWriter[] pWriters;
+    private final boolean[] isOpen;
     private final FrameTupleAppender[] appenders;
     private final FrameTupleAccessor tupleAccessor;
     private final ITuplePartitionComputer tpc;
@@ -45,6 +46,7 @@ public class PartitionDataWriter implements IFrameWriter {
             RecordDescriptor recordDescriptor, ITuplePartitionComputer tpc) throws HyracksDataException {
         this.consumerPartitionCount = consumerPartitionCount;
         pWriters = new IFrameWriter[consumerPartitionCount];
+        isOpen = new boolean[consumerPartitionCount];
         appenders = new FrameTupleAppender[consumerPartitionCount];
         for (int i = 0; i < consumerPartitionCount; ++i) {
             try {
@@ -61,17 +63,40 @@ public class PartitionDataWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
+        HyracksDataException closeException = null;
         for (int i = 0; i < pWriters.length; ++i) {
-            if (allocatedFrame) {
-                appenders[i].flush(pWriters[i], true);
+            if (isOpen[i]) {
+                if (allocatedFrame) {
+                    try {
+                        appenders[i].flush(pWriters[i], true);
+                    } catch (Throwable th) {
+                        if (closeException == null) {
+                            closeException = new HyracksDataException(th);
+                        } else {
+                            closeException.addSuppressed(th);
+                        }
+                    }
+                }
+                try {
+                    pWriters[i].close();
+                } catch (Throwable th) {
+                    if (closeException == null) {
+                        closeException = new HyracksDataException(th);
+                    } else {
+                        closeException.addSuppressed(th);
+                    }
+                }
             }
-            pWriters[i].close();
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
 
     @Override
     public void open() throws HyracksDataException {
         for (int i = 0; i < pWriters.length; ++i) {
+            isOpen[i] = true;
             pWriters[i].open();
         }
     }
@@ -99,8 +124,22 @@ public class PartitionDataWriter implements IFrameWriter {
 
     @Override
     public void fail() throws HyracksDataException {
+        HyracksDataException failException = null;
         for (int i = 0; i < appenders.length; ++i) {
-            pWriters[i].fail();
+            if (isOpen[i]) {
+                try {
+                    pWriters[i].fail();
+                } catch (Throwable th) {
+                    if (failException == null) {
+                        failException = new HyracksDataException(th);
+                    } else {
+                        failException.addSuppressed(th);
+                    }
+                }
+            }
+        }
+        if (failException != null) {
+            throw failException;
         }
     }
 }

@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -44,7 +43,7 @@ import org.apache.hyracks.hdfs.api.IKeyValueParserFactory;
  * To use this operator, a user need to provide an IKeyValueParserFactory implementation which convert
  * key-value pairs into tuples.
  */
-@SuppressWarnings({ "deprecation", "rawtypes" })
+@SuppressWarnings({ "rawtypes" })
 public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -91,7 +90,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         final InputSplit[] inputSplits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
@@ -102,46 +101,50 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             public void initialize() throws HyracksDataException {
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
+                    writer.open();
                     Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
                     JobConf conf = confFactory.getConf();
                     conf.setClassLoader(ctx.getJobletContext().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
-                    writer.open();
-                    parser.open(writer);
-                    InputFormat inputFormat = conf.getInputFormat();
-                    for (int i = 0; i < inputSplits.length; i++) {
-                        /**
-                         * read all the partitions scheduled to the current node
-                         */
-                        if (scheduledLocations[i].equals(nodeName)) {
+                    try {
+                        parser.open(writer);
+                        InputFormat inputFormat = conf.getInputFormat();
+                        for (int i = 0; i < inputSplits.length; i++) {
                             /**
-                             * pick an unread split to read
-                             * synchronize among simultaneous partitions in the same machine
+                             * read all the partitions scheduled to the current node
                              */
-                            synchronized (executed) {
-                                if (executed[i] == false) {
-                                    executed[i] = true;
-                                } else {
-                                    continue;
+                            if (scheduledLocations[i].equals(nodeName)) {
+                                /**
+                                 * pick an unread split to read
+                                 * synchronize among simultaneous partitions in the same machine
+                                 */
+                                synchronized (executed) {
+                                    if (executed[i] == false) {
+                                        executed[i] = true;
+                                    } else {
+                                        continue;
+                                    }
+                                }
+
+                                /**
+                                 * read the split
+                                 */
+                                RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, Reporter.NULL);
+                                Object key = reader.createKey();
+                                Object value = reader.createValue();
+                                while (reader.next(key, value) == true) {
+                                    parser.parse(key, value, writer, inputSplits[i].toString());
                                 }
                             }
-
-                            /**
-                             * read the split
-                             */
-                            RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, Reporter.NULL);
-                            Object key = reader.createKey();
-                            Object value = reader.createValue();
-                            while (reader.next(key, value) == true) {
-                                parser.parse(key, value, writer, inputSplits[i].toString());
-                            }
                         }
+                    } finally {
+                        parser.close(writer);
                     }
-                    parser.close(writer);
-                    writer.close();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                } catch (Throwable th) {
+                    writer.fail();
+                    throw new HyracksDataException(th);
                 } finally {
+                    writer.close();
                     Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }

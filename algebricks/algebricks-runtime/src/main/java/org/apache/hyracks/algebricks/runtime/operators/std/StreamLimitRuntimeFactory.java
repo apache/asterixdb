@@ -73,7 +73,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
             @Override
             public void open() throws HyracksDataException {
-                // if (first) {
+                writer.open();
                 if (evalMaxObjects == null) {
                     initAccessAppendRef(ctx);
                     try {
@@ -85,14 +85,12 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                         throw new HyracksDataException(ae);
                     }
                 }
-                writer.open();
                 afterLastTuple = false;
             }
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 if (afterLastTuple) {
-                    // ignore the data
                     return;
                 }
                 tAccess.reset(buffer);
@@ -123,7 +121,6 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                             appendTupleToFrame(t);
                         }
                     } else {
-                        // close();
                         afterLastTuple = true;
                         break;
                     }
@@ -136,9 +133,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 toSkip = 0; // how many tuples still to skip
                 firstTuple = true;
                 afterLastTuple = false;
-                // if (!afterLastTuple) {
                 super.close();
-                // }
             }
 
             private int evaluateInteger(IScalarEvaluator eval, int tIdx) throws HyracksDataException {
@@ -154,5 +149,4 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
         };
     }
-
 }

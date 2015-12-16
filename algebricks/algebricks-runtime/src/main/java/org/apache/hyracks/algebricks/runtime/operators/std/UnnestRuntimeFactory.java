@@ -36,7 +36,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
@@ -96,6 +95,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             @Override
             public void open() throws HyracksDataException {
+                writer.open();
                 initAccessAppendRef(ctx);
                 try {
                     agg = unnestingFactory.createUnnestingEvaluator(ctx);
@@ -103,7 +103,6 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     throw new HyracksDataException(ae);
                 }
                 tupleBuilder = new ArrayTupleBuilder(projectionList.length);
-                writer.open();
             }
 
             @Override
@@ -112,16 +111,12 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 int nTuple = tAccess.getTupleCount();
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
-
                     try {
                         offsetEval.evaluate(tRef, p);
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);
                     }
-
-                    @SuppressWarnings("static-access")
                     int offset = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
-
                     try {
                         agg.init(tRef);
                         // assume that when unnesting the tuple, each step() call for each element

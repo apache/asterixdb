@@ -79,8 +79,8 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
 
             @Override
             public void initialize() throws HyracksDataException {
-                writer.open();
                 try {
+                    writer.open();
                     for (int i = 0; i < numRecords; i++) {
                         tb.reset();
                         for (int j = 0; j < recDesc.getFieldCount(); j++) {
@@ -90,14 +90,15 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                             appender.flush(writer, true);
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
+                                throw new HyracksDataException("Record size (" + tb.getSize()
+                                        + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                             }
                         }
                     }
                     appender.flush(writer, true);
-                } catch (Exception e) {
+                } catch (Throwable th) {
                     writer.fail();
-                    throw new HyracksDataException(e);
+                    throw new HyracksDataException(th);
                 } finally {
                     writer.close();
                 }

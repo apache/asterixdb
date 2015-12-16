@@ -56,8 +56,8 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
             @Override
             public void initialize() throws HyracksDataException {
                 File f = split.getLocalFile().getFile();
-                writer.open();
                 try {
+                    writer.open();
                     InputStream in;
                     try {
                         in = new FileInputStream(f);
@@ -66,9 +66,9 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
                         throw new HyracksDataException(e);
                     }
                     tp.parse(in, writer);
-                } catch (Exception e) {
+                } catch (Throwable th) {
                     writer.fail();
-                    throw new HyracksDataException(e);
+                    throw new HyracksDataException(th);
                 } finally {
                     writer.close();
                 }
