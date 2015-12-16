@@ -27,7 +27,7 @@ public class PhysicalOptimizationConfig {
     private static final String MAX_FRAMES_EXTERNAL_SORT = "MAX_FRAMES_EXTERNAL_SORT";
     private static final String MAX_FRAMES_EXTERNAL_GROUP_BY = "MAX_FRAMES_EXTERNAL_GROUP_BY";
     private static final String MAX_FRAMES_LEFT_INPUT_HYBRID_HASH = "MAX_FRAMES_LEFT_INPUT_HYBRID_HASH";
-    private static final String MAX_FRAMES_HYBRID_HASH = "MAX_FRAMES_HYBRID_HASH";
+    private static final String MAX_FRAMES_FOR_JOIN = "MAX_FRAMES_HYBRID_HASH";
     private static final String FUDGE_FACTOR = "FUDGE_FACTOR";
     private static final String MAX_RECORDS_PER_FRAME = "MAX_RECORDS_PER_FRAME";
 
@@ -82,13 +82,13 @@ public class PhysicalOptimizationConfig {
         setInt(MAX_FRAMES_LEFT_INPUT_HYBRID_HASH, frameLimit);
     }
 
-    public int getMaxFramesHybridHash() {
+    public int getMaxFramesForJoin() {
         int frameSize = getFrameSize();
-        return getInt(MAX_FRAMES_HYBRID_HASH, (int) (64L * MB / frameSize));
+        return getInt(MAX_FRAMES_FOR_JOIN, (int) (64L * MB / frameSize));
     }
 
-    public void setMaxFramesHybridHash(int frameLimit) {
-        setInt(MAX_FRAMES_HYBRID_HASH, frameLimit);
+    public void setMaxFramesForJoin(int frameLimit) {
+        setInt(MAX_FRAMES_FOR_JOIN, frameLimit);
     }
 
     public int getMaxFramesExternalGroupBy() {

@@ -20,7 +20,7 @@ package org.apache.hyracks.dataflow.std.join;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
+import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class NaturalMergeJoinChecker implements IMergeJoinChecker {
     private static final long serialVersionUID = 1L;

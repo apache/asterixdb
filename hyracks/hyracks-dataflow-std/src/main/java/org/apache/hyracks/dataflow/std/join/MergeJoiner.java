@@ -34,17 +34,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
+import org.apache.hyracks.dataflow.std.buffermanager.DeletableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeletableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferAccessor;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
 import org.apache.hyracks.dataflow.std.join.MergeStatus.BranchStatus;
 import org.apache.hyracks.dataflow.std.join.MergeStatus.RunFileStatus;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.IFramePool;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.IFrameTupleBufferAccessor;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.ITupleBufferManager;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.VariableFramePool;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.VariableTupleMemoryManager;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
@@ -57,8 +56,6 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  * @author prestonc
  */
 public class MergeJoiner {
-
-    private static final int MEMORY_INDEX = -1;
 
     private final FrameTupleAccessor accessorLeft;
     private FrameTupleAccessor accessorRight;
@@ -74,9 +71,9 @@ public class MergeJoiner {
 
     private final TuplePointer tp;
     private final List<TuplePointer> memoryTuples;
-    private final IFramePool framePool;
-    private ITupleBufferManager bufferManager;
-    private IFrameTupleBufferAccessor memoryAccessor;
+    private final IDeletableFramePool framePool;
+    private IDeletableTupleBufferManager bufferManager;
+    private ITupleBufferAccessor memoryAccessor;
 
     private final IFrame runFileBuffer;
     private final FrameTupleAppender runFileAppender;
@@ -103,7 +100,7 @@ public class MergeJoiner {
         rightBufferTupleIndex = -1;
 
         // Memory (right buffer)
-        framePool = new VariableFramePool(ctx, (memorySize - 1) * ctx.getInitialFrameSize());
+        framePool = new DeletableFramePool(ctx, (memorySize - 1) * ctx.getInitialFrameSize());
         memoryTuples = new ArrayList<TuplePointer>();
         tp = new TuplePointer();
 
@@ -285,11 +282,11 @@ public class MergeJoiner {
                 while (memoryIterator.hasNext()) {
                     tp.reset(memoryIterator.next());
                     memoryAccessor.reset(tp);
-                    if (mjc.checkToSaveInResult(accessorLeft, getLeftTupleIndex(), memoryAccessor, MEMORY_INDEX)) {
+                    if (mjc.checkToSaveInResult(accessorLeft, getLeftTupleIndex(), memoryAccessor, tp.tupleIndex)) {
                         // add to result
-                        addToResult(accessorLeft, getLeftTupleIndex(), memoryAccessor, MEMORY_INDEX, writer);
+                        addToResult(accessorLeft, getLeftTupleIndex(), memoryAccessor, tp.tupleIndex, writer);
                     }
-                    if (mjc.checkToRemoveInMemory(accessorLeft, getLeftTupleIndex(), memoryAccessor, MEMORY_INDEX)) {
+                    if (mjc.checkToRemoveInMemory(accessorLeft, getLeftTupleIndex(), memoryAccessor, tp.tupleIndex)) {
                         // remove from memory
                         bufferManager.deleteTuple(tp);
                         memoryIterator.remove();
@@ -356,7 +353,7 @@ public class MergeJoiner {
 
     public void setRightRecordDescriptor(RecordDescriptor rightRd) {
         accessorRight = new FrameTupleAccessor(rightRd);
-        bufferManager = new VariableTupleMemoryManager(framePool, rightRd);
-        memoryAccessor = bufferManager.getFrameTupleAccessor();
+        bufferManager = new VariableDeletableTupleMemoryManager(framePool, rightRd);
+        memoryAccessor = bufferManager.getTupleAccessor();
     }
 }

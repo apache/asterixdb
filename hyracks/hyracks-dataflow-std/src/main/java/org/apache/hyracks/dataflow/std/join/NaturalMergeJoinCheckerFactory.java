@@ -20,7 +20,7 @@ package org.apache.hyracks.dataflow.std.join;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
+import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class NaturalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory {

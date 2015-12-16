@@ -91,7 +91,7 @@ public class JoinUtils {
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context)
             throws AlgebricksException {
         op.setPhysicalOperator(new HybridHashJoinPOperator(op.getJoinKind(), partitioningType, sideLeft, sideRight,
-                context.getPhysicalOptimizationConfig().getMaxFramesHybridHash(), context
+                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), context
                         .getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(), context
                         .getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), context
                         .getPhysicalOptimizationConfig().getFudgeFactor()));

@@ -36,10 +36,10 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
@@ -74,8 +74,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
 
     public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int outputLimit)
-            throws HyracksDataException {
+            RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
         this.bufferManager = bufferManager;
         this.sortFields = sortFields;
         this.nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
@@ -135,8 +134,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
                 int f0StartRel = inputTupleAccessor.getFieldStartOffset(j, sfIdx);
                 int f0EndRel = inputTupleAccessor.getFieldEndOffset(j, sfIdx);
                 int f0Start = f0StartRel + tStart + inputTupleAccessor.getFieldSlotsLength();
-                tPointers[ptr * PTR_SIZE + ID_NORMAL_KEY] =
-                        nkc == null ? 0 : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
+                tPointers[ptr * PTR_SIZE + ID_NORMAL_KEY] = nkc == null ? 0
+                        : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
                 ++ptr;
             }
         }
@@ -155,6 +154,17 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     @Override
     public boolean hasRemaining() {
         return getFrameCount() > 0;
+    }
+
+    public int getTuple(int ptr, FrameTupleAccessor tupleAccessor) {
+        int i = tPointers[ptr * PTR_SIZE + ID_FRAMEID];
+        bufferManager.getFrame(i, info);
+        tupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
+        return tPointers[ptr * PTR_SIZE + ID_TUPLE_START];
+    }
+
+    public int getTuplecount() {
+        return tupleCount;
     }
 
     @Override
@@ -185,13 +195,13 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     }
 
     protected final int compare(int tp1, int tp2) throws HyracksDataException {
-        int i1 = tPointers[tp1 * 4];
-        int j1 = tPointers[tp1 * 4 + 1];
-        int v1 = tPointers[tp1 * 4 + 3];
+        int i1 = tPointers[tp1 * 4 + ID_FRAMEID];
+        int j1 = tPointers[tp1 * 4 + ID_TUPLE_START];
+        int v1 = tPointers[tp1 * 4 + ID_NORMAL_KEY];
 
-        int tp2i = tPointers[tp2 * 4];
-        int tp2j = tPointers[tp2 * 4 + 1];
-        int tp2v = tPointers[tp2 * 4 + 3];
+        int tp2i = tPointers[tp2 * 4 + ID_FRAMEID];
+        int tp2j = tPointers[tp2 * 4 + ID_TUPLE_START];
+        int tp2v = tPointers[tp2 * 4 + ID_NORMAL_KEY];
 
         if (v1 != tp2v) {
             return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;

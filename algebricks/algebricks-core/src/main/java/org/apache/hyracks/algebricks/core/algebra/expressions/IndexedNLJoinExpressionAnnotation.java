@@ -44,6 +44,6 @@ public class IndexedNLJoinExpressionAnnotation implements IExpressionAnnotation 
 
     @Override
     public String toString() {
-        return INDEXED_NL_JOIN_ANNOTATION_KEY;
+        return HINT_STRING;
     }
 }

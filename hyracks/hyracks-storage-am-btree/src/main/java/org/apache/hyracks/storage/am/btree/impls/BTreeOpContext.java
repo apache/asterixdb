@@ -61,8 +61,8 @@ public class BTreeOpContext implements IIndexOperationContext {
     public RangePredicate pred;
     public BTreeSplitKey splitKey;
     public LongArrayList pageLsns;
-    public IntArrayList smPages;
-    public IntArrayList freePages;
+    public IGrowableIntArray smPages;
+    public IGrowableIntArray freePages;
     public int opRestarts = 0;
     public boolean exceptionHandled;
     public IModificationOperationCallback modificationCallback;
