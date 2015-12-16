@@ -35,7 +35,6 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
@@ -116,7 +115,6 @@ public class MetadataBootstrap {
     private static String outputDir;
 
     private static IMetadataIndex[] primaryIndexes;
-    private static IMetadataIndex[] secondaryIndexes;
 
     private static IAsterixPropertiesProvider propertiesProvider;
 
@@ -128,10 +126,6 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.FEED_DATASET,
                 MetadataPrimaryIndexes.FEED_POLICY_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET,
                 MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
-
-        secondaryIndexes = new IMetadataIndex[] { MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX,
-                MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX,
-                MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
     public static void startUniverse(IAsterixPropertiesProvider asterixPropertiesProvider,
@@ -145,7 +139,6 @@ public class MetadataBootstrap {
         // rely on the type type descriptors.
         MetadataRecordTypes.init();
         MetadataPrimaryIndexes.init();
-        MetadataSecondaryIndexes.init();
         initLocalIndexArrays();
 
         AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
@@ -170,9 +163,6 @@ public class MetadataBootstrap {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true, mdTxnCtx);
                 }
-                for (int i = 0; i < secondaryIndexes.length; i++) {
-                    enlistMetadataDataset(secondaryIndexes[i], true, mdTxnCtx);
-                }
 
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Finished enlistment of metadata B-trees in  new universe");
@@ -181,7 +171,6 @@ public class MetadataBootstrap {
                 insertInitialDataverses(mdTxnCtx);
                 insertInitialDatasets(mdTxnCtx);
                 insertInitialDatatypes(mdTxnCtx);
-                insertInitialIndexes(mdTxnCtx);
                 insertNodes(mdTxnCtx);
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
@@ -194,9 +183,6 @@ public class MetadataBootstrap {
             } else {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], false, mdTxnCtx);
-                }
-                for (int i = 0; i < secondaryIndexes.length; i++) {
-                    enlistMetadataDataset(secondaryIndexes[i], false, mdTxnCtx);
                 }
 
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -277,19 +263,6 @@ public class MetadataBootstrap {
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datatypes.");
-        }
-    }
-
-    public static void insertInitialIndexes(MetadataTransactionContext mdTxnCtx) throws Exception {
-        for (int i = 0; i < secondaryIndexes.length; i++) {
-            MetadataManager.INSTANCE.addIndex(mdTxnCtx,
-                    new Index(secondaryIndexes[i].getDataverseName(), secondaryIndexes[i].getIndexedDatasetName(),
-                            secondaryIndexes[i].getIndexName(), IndexType.BTREE,
-                            secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(),
-                            false, false, IMetadataEntity.PENDING_NO_OP));
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Finished inserting initial indexes.");
         }
     }
 

@@ -58,7 +58,7 @@ public class DatatypeNameValueExtractor implements IValueExtractor<String> {
             if (metadataNode.getDatatype(jobId, dataverseName, typeName).getIsAnonymous()) {
                 // Get index 0 because it is anonymous type, and it is used in
                 // only one non-anonymous type.
-                typeName = metadataNode.getDatatypeNamesUsingThisDatatype(jobId, dataverseName, typeName).get(0);
+                typeName = metadataNode.getDatatypeNameUsingThisAnonymousDatatype(jobId, dataverseName, typeName);
             }
             return typeName;
         } catch (IOException e) {
