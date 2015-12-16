@@ -19,9 +19,8 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 
-public abstract class AbstractIntervalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory {
+public abstract class AbstractIntervalMergeJoinCheckerFactory implements IIntervalMergeJoinCheckerFactory {
 
     private static final long serialVersionUID = 1L;
 

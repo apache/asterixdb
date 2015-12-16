@@ -18,13 +18,11 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
-
 public class OverlapsIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
         return new OverlapsIntervalMergeJoinChecker(keys0, keys1);
     }
 

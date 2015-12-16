@@ -18,12 +18,10 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
-
 public class CoversIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
 
-    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
         return new CoversIntervalMergeJoinChecker(keys0, keys1);
     }
 

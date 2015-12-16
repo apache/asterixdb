@@ -19,8 +19,6 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class OverlappedByIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
     private static final long serialVersionUID = 1L;
@@ -30,14 +28,8 @@ public class OverlappedByIntervalMergeJoinChecker extends AbstractIntervalMergeJ
     }
 
     @Override
-    public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end0 = getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-
-        long start1 = getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        long end1 = getIntervalEnd(accessorRight, rightTupleIndex, idRight);
-
+    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
         return IntervalLogic.overlappedBy(start0, end0, start1, end1);
     }
+
 }

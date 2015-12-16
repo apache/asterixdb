@@ -151,11 +151,10 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
 
     A `boolean` value. Specifically, `interval-overlapping(interval1, interval2)` is true if
 
-        (interval2.start >= interval1.start
-        AND interval2.start < interval1.end)
-        OR
-        (interval2.end > interval1.start
-        AND interval2.end <= interval1.end)
+        interval1.start <= interval2.end
+        AND interval1.end >= interval2.start
+        AND interval1.end != interval2.start
+        AND interval1.start != interval2.end
 
     If any of the two inputs is `null`, `null` is returned.
 

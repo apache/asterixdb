@@ -23,7 +23,8 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
 
-    public static final String IOP_HINT_STRING = "interval-iop-join";
+    public static final String RAW_HINT_STRING = "interval-raw-join";
+    public static final String PARTITION_HINT_STRING = "interval-partition-join";
     public static final String MERGE_HINT_STRING = "interval-merge-join";
     public static final String SPATIAL_HINT_STRING = "interval-spatial-join";
     public static final IntervalJoinExpressionAnnotation INSTANCE = new IntervalJoinExpressionAnnotation();
@@ -58,8 +59,10 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
     }
 
     public void setJoinType(String hint) {
-        if (hint.startsWith(IOP_HINT_STRING)) {
-            joinType = IOP_HINT_STRING;
+        if (hint.startsWith(RAW_HINT_STRING)) {
+            joinType = RAW_HINT_STRING;
+        } else if (hint.startsWith(PARTITION_HINT_STRING)) {
+            joinType = PARTITION_HINT_STRING;
         } else if (hint.startsWith(MERGE_HINT_STRING)) {
             joinType = MERGE_HINT_STRING;
         } else if (hint.startsWith(SPATIAL_HINT_STRING)) {
@@ -71,8 +74,22 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
         return joinType;
     }
 
-    public boolean isIopJoin() {
-        if (joinType.equals(IOP_HINT_STRING)) {
+    public boolean hasRangeArgument() {
+        if (joinType.equals(RAW_HINT_STRING)) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isRawJoin() {
+        if (joinType.equals(RAW_HINT_STRING)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isPartitionJoin() {
+        if (joinType.equals(PARTITION_HINT_STRING)) {
             return true;
         }
         return false;
@@ -93,8 +110,8 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
     }
 
     public static boolean isIntervalJoinHint(String hint) {
-        if (hint.startsWith(IOP_HINT_STRING) || hint.startsWith(MERGE_HINT_STRING)
-                || hint.startsWith(SPATIAL_HINT_STRING)) {
+        if (hint.startsWith(RAW_HINT_STRING) || hint.startsWith(PARTITION_HINT_STRING)
+                || hint.startsWith(MERGE_HINT_STRING) || hint.startsWith(SPATIAL_HINT_STRING)) {
             return true;
         } else {
             return false;
@@ -102,8 +119,10 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
     }
 
     public static int getHintLength(String hint) {
-        if (hint.startsWith(IOP_HINT_STRING)) {
-            return IOP_HINT_STRING.length();
+        if (hint.startsWith(PARTITION_HINT_STRING)) {
+            return PARTITION_HINT_STRING.length();
+        } else if (hint.startsWith(PARTITION_HINT_STRING)) {
+            return PARTITION_HINT_STRING.length();
         } else if (hint.startsWith(MERGE_HINT_STRING)) {
             return MERGE_HINT_STRING.length();
         } else if (hint.startsWith(SPATIAL_HINT_STRING)) {

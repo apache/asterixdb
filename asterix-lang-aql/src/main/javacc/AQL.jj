@@ -2109,7 +2109,9 @@ Expression FunctionCallExpr() throws ParseException:
           ijea.setObject(hint);
           ijea.setJoinType(hint);
           try {
-            ijea.setRangeMap(RangeMapBuilder.parseHint(hint.substring(IntervalJoinExpressionAnnotation.getHintLength(hint))));
+            if (ijea.hasRangeArgument()) {
+              ijea.setRangeMap(RangeMapBuilder.parseHint(hint.substring(IntervalJoinExpressionAnnotation.getHintLength(hint))));
+            }
           } catch (AsterixException e) {
             {if (true) throw new ParseException(e.getMessage());}
           }

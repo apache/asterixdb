@@ -25,7 +25,7 @@ public class CoveredByIntervalMergeJoinCheckerFactory extends AbstractIntervalMe
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
         return new CoveredByIntervalMergeJoinChecker(keys0, keys1);
     }
 

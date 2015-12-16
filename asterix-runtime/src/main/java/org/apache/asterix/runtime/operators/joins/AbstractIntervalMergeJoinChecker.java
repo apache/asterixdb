@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
 
-public abstract class AbstractIntervalMergeJoinChecker implements IMergeJoinChecker {
+public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMergeJoinChecker {
 
     private static final long serialVersionUID = 1L;
     protected final int idLeft;
@@ -34,38 +33,37 @@ public abstract class AbstractIntervalMergeJoinChecker implements IMergeJoinChec
         this.idRight = idRight;
     }
 
-    protected long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId)
-            throws HyracksDataException {
-        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        return AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
-    }
-
-    protected long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
-        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        return AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
-    }
-
     public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start1 < end0);
     }
 
     public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end1 = getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
         return (end1 < start0);
     }
 
     public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start1 < end0);
     }
 
+    public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
+            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
+        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+
+        return compareInterval(start0, end0, start1, end1);
+    }
+
+    public abstract <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1);
 }

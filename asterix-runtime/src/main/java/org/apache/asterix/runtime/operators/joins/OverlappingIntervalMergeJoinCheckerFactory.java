@@ -23,7 +23,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
 
 public class OverlappingIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
@@ -34,7 +33,7 @@ public class OverlappingIntervalMergeJoinCheckerFactory extends AbstractInterval
     }
 
     @Override
-    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition)
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition)
             throws HyracksDataException {
         int fieldIndex = 0;
         if (ATypeTag.INT64.serialize() != rangeMap.getTag(0, 0)) {
