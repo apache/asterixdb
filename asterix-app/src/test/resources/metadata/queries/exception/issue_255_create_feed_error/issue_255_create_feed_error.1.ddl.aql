@@ -37,5 +37,5 @@ create type TweetType as closed {
 
 create feed dataset TweetFeed(TweetType)
 using "org.apache.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
-(("output-type-name"="TweetType"),("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
+(("output-type-name"="TweetType"),("fs"="localfs"),("path"="asterix_nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
 primary key name;

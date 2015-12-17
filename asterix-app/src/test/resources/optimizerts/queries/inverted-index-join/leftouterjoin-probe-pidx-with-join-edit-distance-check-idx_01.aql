@@ -57,7 +57,7 @@ create index msgKeywordIx on TweetMessages(message-text) type keyword;
 create index msgNgramIx on TweetMessages(message-text) type ngram(3);
 create index topicKeywordIx on TweetMessages(referred-topics) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
 
 for $t1 in dataset('TweetMessages')
 where $t1.tweetid > int64("240")

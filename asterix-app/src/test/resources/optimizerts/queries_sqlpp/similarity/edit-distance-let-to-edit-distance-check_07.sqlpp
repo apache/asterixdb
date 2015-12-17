@@ -41,7 +41,7 @@ create type test.DBLPType as
 
 create  table DBLP(DBLPType) primary key id;
 
-write output to nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_07.adm"
+write output to asterix_nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_07.adm"
 select element ed
 from  DBLP as o
 with  ed as test."edit-distance"(o.authors,'Michael J. Carey')

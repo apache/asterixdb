@@ -38,7 +38,6 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     private static final long serialVersionUID = 1L;
 
     private IAdapterFactory adapterFactory;
-    
 
     public ExternalDataScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
             IAdapterFactory dataSourceAdapterFactory) {
@@ -50,19 +49,20 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
             @Override
             public void initialize() throws HyracksDataException {
-                writer.open();
                 IDatasourceAdapter adapter = null;
                 try {
+                    writer.open();
                     adapter = adapterFactory.createAdapter(ctx, partition);
                     adapter.start(partition, writer);
-                } catch (Exception e) {
-                    throw new HyracksDataException("exception during reading from external data source", e);
+                } catch (Throwable th) {
+                    writer.fail();
+                    throw new HyracksDataException(th);
                 } finally {
                     writer.close();
                 }

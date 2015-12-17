@@ -43,14 +43,14 @@ declare type OrderType as open {
   total: float
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Customers(CustomerType) 
   primary key cid on group1;
 declare dataset Orders(OrderType)
   primary key oid on group1;
 
-write output to nc1:"/tmp/06-count-custord.adm";
+write output to asterix_nc1:"/tmp/06-count-custord.adm";
 
 for $c in dataset('Customers')
 for $o in dataset('Orders')

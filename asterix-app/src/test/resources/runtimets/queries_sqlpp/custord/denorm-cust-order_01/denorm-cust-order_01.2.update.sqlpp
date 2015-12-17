@@ -20,7 +20,7 @@
 use test;
 
 
-load  table Customers1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
+load  table Customers1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
 
-load  table Orders1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm")) pre-sorted;
+load  table Orders1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/custord-tiny/order-tiny.adm"),("format"="adm")) pre-sorted;
 

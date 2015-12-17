@@ -98,8 +98,11 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        frameDistributor.close();
-        writer.close();
+        try {
+            frameDistributor.close();
+        } finally {
+            writer.close();
+        }
     }
 
     @Override

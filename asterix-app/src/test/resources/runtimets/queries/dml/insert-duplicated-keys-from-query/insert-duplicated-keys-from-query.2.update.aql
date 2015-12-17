@@ -20,7 +20,7 @@
 use dataverse recovery;
 
 load dataset Fragile_raw using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/csv/fragile_01.csv"),("format"="delimited-text"),("delimiter"=",")) pre-sorted;
+(("path"="asterix_nc1://data/csv/fragile_01.csv"),("format"="delimited-text"),("delimiter"=",")) pre-sorted;
 
 use dataverse recovery;
 

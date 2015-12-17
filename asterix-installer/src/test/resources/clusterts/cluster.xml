@@ -29,12 +29,11 @@
 
       <log_dir>/home/vagrant/logs/</log_dir>
       <txn_log_dir>/home/vagrant/tx_logs</txn_log_dir>
-
-      <iodevices>/home/vagrant</iodevices>
+      <iodevices>/home/vagrant/p1,/home/vagrant/p2</iodevices>
 
       <store>storage</store>
 
-      <java_home>/usr/java/jdk1.7.0_51</java_home>
+      <java_home>/usr/java/latest</java_home>
 
       <master_node>
           <id>cc</id>
@@ -45,19 +44,11 @@
           <http_port>8888</http_port>
       </master_node>
       <node>
-          <id>nc0</id>
-          <cluster_ip>10.10.0.2</cluster_ip>
-      </node>
-      <node>
           <id>nc1</id>
           <cluster_ip>10.10.0.3</cluster_ip>
       </node>
       <node>
           <id>nc2</id>
           <cluster_ip>10.10.0.4</cluster_ip>
-      </node>
-      <node>
-          <id>nc3</id>
-          <cluster_ip>10.10.0.5</cluster_ip>
       </node>
 </cluster>

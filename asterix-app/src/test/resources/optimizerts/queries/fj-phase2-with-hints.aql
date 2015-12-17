@@ -30,12 +30,12 @@ create type DBLPType as open {
   misc: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset DBLP_fuzzyjoin_078(DBLPType) 
   primary key id on group1;
 
-write output to nc1:'rttest/fuzzyjoin_078.adm';
+write output to asterix_nc1:'rttest/fuzzyjoin_078.adm';
 
     //
     // -- - Stage 2 - --

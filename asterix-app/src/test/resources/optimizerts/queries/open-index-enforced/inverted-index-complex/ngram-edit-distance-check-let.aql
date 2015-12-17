@@ -38,7 +38,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index ngram_index on DBLP(authors:string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let.adm";
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let.adm";
 
 for $o in dataset('DBLP')
 let $ed := edit-distance-check($o.authors, "Amihay Motro", 1)

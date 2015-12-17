@@ -23,7 +23,7 @@ create  database test;
 use test;
 
 
-write output to nc1:"rttest/filter-nested.adm"
+write output to asterix_nc1:"rttest/filter-nested.adm"
 create type test.TestTypetmp as
 {
   fname : string,

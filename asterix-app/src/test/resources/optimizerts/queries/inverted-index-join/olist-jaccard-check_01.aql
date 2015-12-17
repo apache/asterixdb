@@ -47,7 +47,7 @@ create dataset Customers2(CustomerType) primary key cid;
 
 create index interests_index on Customers(interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_olist-jaccard-check_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_olist-jaccard-check_01.adm";
 
 for $a in dataset('Customers')
 for $b in dataset('Customers2')

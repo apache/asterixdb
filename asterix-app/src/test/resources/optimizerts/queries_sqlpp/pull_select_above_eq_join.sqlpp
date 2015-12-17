@@ -40,14 +40,14 @@ create type "pull-select-above-eq-join".VisitorType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Users(UserType) primary key uid on group1;
 
 create  table Visitors(VisitorType) primary key vid on group1;
 
-write output to nc1:"/tmp/pull-select-above-eq-join.adm"
+write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm"
 select element {'uid':user.uid,'vid':visitor.vid}
 from  Users as user,
       Visitors as visitor

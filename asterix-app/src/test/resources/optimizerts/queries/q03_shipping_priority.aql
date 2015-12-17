@@ -64,7 +64,7 @@ create type CustomerType as closed {
   c_comment: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
@@ -73,7 +73,7 @@ create dataset Orders(OrderType)
 create dataset Customers(CustomerType) 
   primary key c_custkey on group1;
 
-write output to nc1:"/tmp/q3_shipping_priority.adm";
+write output to asterix_nc1:"/tmp/q3_shipping_priority.adm";
 
 for $c in dataset('Customers')
 for $o in dataset('Orders')

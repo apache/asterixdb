@@ -58,9 +58,9 @@ create type AllType as open {
 
 create external dataset All(AllType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/allData.json"),("format"="adm"));
+(("path"="asterix_nc1://data/nontagged/allData.json"),("format"="adm"));
         
-write output to nc1:"rttest/scan_alltypes_02.adm";
+write output to asterix_nc1:"rttest/scan_alltypes_02.adm";
       
 for $a in dataset All
 return $a 

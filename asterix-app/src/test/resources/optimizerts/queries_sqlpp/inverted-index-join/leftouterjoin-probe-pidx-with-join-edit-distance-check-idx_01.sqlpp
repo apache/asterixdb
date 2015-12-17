@@ -65,7 +65,7 @@ create  index msgNgramIx  on TweetMessages ("message-text") type ngram (3);
 
 create  index topicKeywordIx  on TweetMessages ("referred-topics") type keyword;
 
-write output to nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm"
 select element {'tweet':{'id':t1.tweetid,'topics':t1."message-text"},'similar-tweets':(
         select element {'id':t2.tweetid,'topics':t2."message-text"}
         from  TweetMessages as t2

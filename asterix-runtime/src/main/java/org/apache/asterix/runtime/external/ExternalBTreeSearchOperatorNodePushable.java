@@ -46,12 +46,11 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
     // We override the open function to search a specific version of the index
     @Override
     public void open() throws HyracksDataException {
+        writer.open();
         ExternalBTreeWithBuddyDataflowHelper dataFlowHelper = (ExternalBTreeWithBuddyDataflowHelper) indexHelper;
         accessor = new FrameTupleAccessor(inputRecDesc);
-        writer.open();
         dataFlowHelper.open();
         index = indexHelper.getIndexInstance();
-
         if (retainNull) {
             int fieldCount = getFieldCount();
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
@@ -67,7 +66,6 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
         } else {
             nullTupleBuild = null;
         }
-
         ExternalBTreeWithBuddy externalIndex = (ExternalBTreeWithBuddy) index;
         try {
             searchPred = createSearchPredicate();
@@ -82,10 +80,8 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
             if (retainInput) {
                 frameTuple = new FrameTupleReference();
             }
-        } catch (Exception e) {
-            indexHelper.close();
-            throw new HyracksDataException(e);
+        } catch (Throwable th) {
+            throw new HyracksDataException(th);
         }
     }
-
 }

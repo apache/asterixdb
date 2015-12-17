@@ -25,5 +25,5 @@
 use test;
 
 
-load  table onektup using "localfs" (("path"="nc1:///tmp/one.adm"));
+load  table onektup using "localfs" (("path"="asterix_nc1:///tmp/one.adm"));
 

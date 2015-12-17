@@ -29,7 +29,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/btree-index_btree-primary-06.adm";
+write output to asterix_nc1:"rttest/btree-index_btree-primary-06.adm";
 
 create type TestType as open {
     fname : string,

@@ -29,7 +29,7 @@ use dataverse test;
 
 load dataset employee
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+(("path"="asterix_nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
 
 insert into dataset employeeOpen (
 	for $x in dataset employee

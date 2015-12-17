@@ -29,7 +29,7 @@ TypeDecl CustomerType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
 DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
-WriteOutputTo nc1:rttest/inverted-index-join-noeqjoin_olist-jaccard-inline.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join-noeqjoin_olist-jaccard-inline.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

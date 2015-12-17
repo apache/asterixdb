@@ -48,7 +48,7 @@ create index ngram_index_DBLP on DBLP(authors:string) type ngram(3) enforced;
 
 create index ngram_index_CSX on CSX(authors:string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm";
 
 set simfunction 'edit-distance';
 set simthreshold '3';

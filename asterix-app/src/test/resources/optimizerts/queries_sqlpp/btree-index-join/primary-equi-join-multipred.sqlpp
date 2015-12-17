@@ -65,7 +65,7 @@ create  table Customers(CustomerType) primary key cid;
 
 create  table Orders(OrderType) primary key oid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join-multipred.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join-multipred.adm"
 select element {'customer':c,'order':o}
 from  Customers as c,
       Orders as o

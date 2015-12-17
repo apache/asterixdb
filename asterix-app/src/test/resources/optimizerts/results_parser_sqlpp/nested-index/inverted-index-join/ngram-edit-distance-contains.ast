@@ -29,7 +29,7 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
 DatasetDecl CSX(CSXType) partitioned by [[nested, id]]
-WriteOutputTo nc1:rttest/inverted-index-join_ngram-edit-distance-contains.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_ngram-edit-distance-contains.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -1,5 +1,5 @@
 DataverseUse test
-WriteOutputTo nc1:/tmp/inline_funs.adm
+WriteOutputTo asterix_nc1:/tmp/inline_funs.adm
 FunctionDecl f1([]) {
   OperatorExpr [
     LiteralExpr [LONG] [1]

@@ -35,7 +35,7 @@ create type DBLPOpenType as open {
   misc: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset DBLP(DBLPType)
   primary key id on group1;

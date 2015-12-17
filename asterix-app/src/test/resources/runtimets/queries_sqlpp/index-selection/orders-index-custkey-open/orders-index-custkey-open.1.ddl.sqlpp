@@ -37,8 +37,8 @@ create type tpch.OrderType as
 }
 
 create  nodegroup group1 if not exists  on
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Orders(OrderType) primary key o_orderkey on group1;
 

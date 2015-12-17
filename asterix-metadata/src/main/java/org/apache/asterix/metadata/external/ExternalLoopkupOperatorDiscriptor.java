@@ -44,13 +44,12 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
     private final IControlledAdapterFactory adapterFactory;
     private final INullWriterFactory iNullWriterFactory;
 
-    public ExternalLoopkupOperatorDiscriptor(IOperatorDescriptorRegistry spec,
-            IControlledAdapterFactory adapterFactory, RecordDescriptor outRecDesc,
-            ExternalBTreeDataflowHelperFactory externalFilesIndexDataFlowHelperFactory, boolean propagateInput,
-            IIndexLifecycleManagerProvider lcManagerProvider, IStorageManagerInterface storageManager,
-            IFileSplitProvider fileSplitProvider, int datasetId, double bloomFilterFalsePositiveRate,
-            ISearchOperationCallbackFactory searchOpCallbackFactory, boolean retainNull,
-            INullWriterFactory iNullWriterFactory) {
+    public ExternalLoopkupOperatorDiscriptor(IOperatorDescriptorRegistry spec, IControlledAdapterFactory adapterFactory,
+            RecordDescriptor outRecDesc, ExternalBTreeDataflowHelperFactory externalFilesIndexDataFlowHelperFactory,
+            boolean propagateInput, IIndexLifecycleManagerProvider lcManagerProvider,
+            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider, int datasetId,
+            double bloomFilterFalsePositiveRate, ISearchOperationCallbackFactory searchOpCallbackFactory,
+            boolean retainNull, INullWriterFactory iNullWriterFactory) {
         super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
@@ -63,7 +62,7 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         // Create a file index accessor to be used for files lookup operations
         // Note that all file index accessors will use partition 0 since we only have 1 files index per NC 
         final ExternalFileIndexAccessor fileIndexAccessor = new ExternalFileIndexAccessor(
@@ -73,18 +72,22 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
             // The adapter that uses the file index along with the coming tuples to access files in HDFS
             private final IControlledAdapter adapter = adapterFactory.createAdapter(ctx, fileIndexAccessor,
                     recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
+            private boolean indexOpen = false;
+            private boolean writerOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
                 //Open the file index accessor here
                 fileIndexAccessor.openIndex();
+                indexOpen = true;
                 try {
                     adapter.initialize(ctx, iNullWriterFactory);
-                } catch (Exception e) {
+                } catch (Throwable th) {
                     // close the files index
                     fileIndexAccessor.closeIndex();
-                    throw new HyracksDataException("error during opening a controlled adapter", e);
+                    throw new HyracksDataException(th);
                 }
+                writerOpen = true;
                 writer.open();
             }
 
@@ -92,13 +95,19 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
             public void close() throws HyracksDataException {
                 try {
                     adapter.close(writer);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new HyracksDataException("controlled adapter failed to close", e);
+                } catch (Throwable th) {
+                    throw new HyracksDataException(th);
                 } finally {
-                    //close the file index
-                    fileIndexAccessor.closeIndex();
-                    writer.close();
+                    try {
+                        if (indexOpen) {
+                            //close the file index
+                            fileIndexAccessor.closeIndex();
+                        }
+                    } finally {
+                        if (writerOpen) {
+                            writer.close();
+                        }
+                    }
                 }
             }
 
@@ -106,12 +115,12 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
             public void fail() throws HyracksDataException {
                 try {
                     adapter.fail();
-                    writer.fail();
-                } catch (Exception e) {
-                    throw new HyracksDataException("controlled adapter failed to clean up", e);
+                } catch (Throwable th) {
+                    throw new HyracksDataException(th);
                 } finally {
-                    // close the open index
-                    fileIndexAccessor.closeIndex();
+                    if (writerOpen) {
+                        writer.fail();
+                    }
                 }
             }
 
@@ -119,11 +128,10 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 try {
                     adapter.nextFrame(buffer, writer);
-                } catch (Exception e) {
-                    throw new HyracksDataException("controlled adapter failed to process a frame", e);
+                } catch (Throwable th) {
+                    throw new HyracksDataException(th);
                 }
             }
-
         };
     }
 }

@@ -26,12 +26,12 @@ declare type DBLPType as open {
   misc: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset DBLP(DBLPType) 
   primary key id on group1;
 
 load dataset DBLP 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///asterix/asterix-app/data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter=":")) pre-sorted;
+(("path"="asterix_nc1:///asterix/asterix-app/data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter=":")) pre-sorted;
 

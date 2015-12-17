@@ -37,7 +37,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index keyword_index on DBLP(title:string) type keyword enforced;
 
-write output to nc1:"rttest/inverted-index-basic_word-jaccard.adm";
+write output to asterix_nc1:"rttest/inverted-index-basic_word-jaccard.adm";
 
 for $o in dataset('DBLP')
 where similarity-jaccard(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments")) >= 0.5f

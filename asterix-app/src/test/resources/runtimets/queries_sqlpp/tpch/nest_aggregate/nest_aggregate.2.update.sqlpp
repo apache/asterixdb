@@ -26,15 +26,15 @@
 use tpch;
 
 
-load  table Orders using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table Orders using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-load  table Supplier using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table Supplier using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-load  table Region using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table Region using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-load  table Nation using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table Nation using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-load  table Customer using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table Customer using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-load  table SelectedNation using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/selectednation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  table SelectedNation using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/selectednation.tbl"),("format"="delimited-text"),("delimiter"="|"));
 

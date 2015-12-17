@@ -38,7 +38,7 @@ create type Name as open {
 
 create dataset Names(Name) primary key nested.fname,nested.lname;
 
-write output to nc1:"rttest/btree-index-join_primary-composite-key-prefix-join_01.adm";
+write output to asterix_nc1:"rttest/btree-index-join_primary-composite-key-prefix-join_01.adm";
 
 for $emp1 in dataset('Names') 
 for $emp2 in dataset('Names') 

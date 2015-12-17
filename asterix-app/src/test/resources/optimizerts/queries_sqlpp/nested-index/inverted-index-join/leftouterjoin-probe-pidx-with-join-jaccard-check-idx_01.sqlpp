@@ -60,7 +60,7 @@ create  table TweetMessages(TweetMessageType) primary key nested.tweetid;
 
 create  index topicKeywordIx  on TweetMessages (nested."referred-topics") type keyword;
 
-write output to nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm"
 select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested."referred-topics"},'similar-tweets':(
         select element {'id':t2.nested.tweetid,'topics':t2.nested."referred-topics"}
         from  TweetMessages as t2

@@ -26,7 +26,7 @@
 use test;
 
 
-load  table test.employee using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+load  table test.employee using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
 
 insert into test.employee
 select element {'id':(x.id + 10000),'fname':x.fname,'lname':x.lname,'age':x.age,'dept':x.dept}

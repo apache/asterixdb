@@ -7,7 +7,7 @@ TypeDecl TestType [
 ]
 DatasetDecl t1(TestType) partitioned by [[id]]
 DatasetDecl t2(TestType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/hahsjoin-with-unnest.adm
+WriteOutputTo asterix_nc1:rttest/hahsjoin-with-unnest.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

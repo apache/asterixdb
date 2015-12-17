@@ -46,11 +46,11 @@ declare type AddressType as closed {
   latlong: point
 }
 
-declare nodegroup group1 on nc1;
+declare nodegroup group1 on asterix_nc1;
 
 /*
 declare dataset Event(EventType) 
-  splits nc1:"/home/nicnic/Work/Asterix/adg/event.adm";
+  splits asterix_nc1:"/home/nicnic/Work/Asterix/adg/event.adm";
 */
 
 drop dataset Event;
@@ -59,9 +59,9 @@ declare dataset Event(EventType)
 
 load dataset Event 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///home/nicnic/Work/Asterix/adg/event.adm"),("format"="adm"));
+(("path"="asterix_nc1:///home/nicnic/Work/Asterix/adg/event.adm"),("format"="adm"));
 
-write output to nc1:"/tmp/dapd_q2.adm";
+write output to asterix_nc1:"/tmp/dapd_q2.adm";
 
 for $event in dataset('Event')
 for $sponsor in $event.sponsoring_sigs

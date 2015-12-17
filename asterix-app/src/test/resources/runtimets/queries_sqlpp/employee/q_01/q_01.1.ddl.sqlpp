@@ -38,5 +38,5 @@ create type test.EmpType as
   children : [string]?
 }
 
-create external  table Emp(EmpType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/employee.json"),("format"="adm"));
+create external  table Emp(EmpType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/employee.json"),("format"="adm"));
 

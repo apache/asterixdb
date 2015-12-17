@@ -38,4 +38,4 @@ primary key id;
 
 create feed TweetFeed
 using file_feed
-(("output-type-name"="TweetType"),("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
+(("output-type-name"="TweetType"),("fs"="localfs"),("path"="asterix_nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))

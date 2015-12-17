@@ -25,4 +25,4 @@
 use dataverse foo;
 
 load dataset baz
-using localfs(("path"="nc1://data/adm-load/double_end_record_token.adm"), ("format"="adm"));
+using localfs(("path"="asterix_nc1://data/adm-load/double_end_record_token.adm"), ("format"="adm"));

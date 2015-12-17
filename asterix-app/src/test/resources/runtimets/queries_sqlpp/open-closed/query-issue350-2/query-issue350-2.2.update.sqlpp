@@ -26,7 +26,7 @@
 use TinySocial;
 
 
-load  table TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+load  table TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/twitter/tw_messages.adm"),("format"="adm"));
 
 insert into TweetMessages
 select element {'tweetid':'13','user':{'screen-name':'NathanGiesen@211','lang':'en','friends_count':39345,'statuses_count':479,'name':'Nathan Giesen','followers_count':49420,'hobbies':['basket weaving','mud wrestling']},'sender-location':TinySocial.point('47.44,80.65'),'send-time':TinySocial.datetime('2008-04-26T10:10:35'),'referred-topics':{{'tweeting'}},'message-text':'tweety tweet, my fellow tweeters!'};

@@ -13,7 +13,7 @@ TypeDecl MyRecord [
   }
 ]
 DatasetDecl MyData(MyRecord) partitioned by [[id]]
-WriteOutputTo nc1:rttest/index_rtree-secondary-index.adm
+WriteOutputTo asterix_nc1:rttest/index_rtree-secondary-index.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

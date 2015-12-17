@@ -19,7 +19,7 @@ TypeDecl VisitorType [
 ]
 DatasetDecl Users(UserType) partitioned by [[uid]]
 DatasetDecl Visitors(VisitorType) partitioned by [[vid]]
-WriteOutputTo nc1:/tmp/pull-select-above-eq-join.adm
+WriteOutputTo asterix_nc1:/tmp/pull-select-above-eq-join.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

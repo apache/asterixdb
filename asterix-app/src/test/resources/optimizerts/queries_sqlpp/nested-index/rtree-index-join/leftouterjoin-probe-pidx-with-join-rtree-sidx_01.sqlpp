@@ -66,7 +66,7 @@ create  index msgCountBIx  on TweetMessages (nested.countB) type btree;
 
 create  index msgTextIx  on TweetMessages (nested."message-text") type keyword;
 
-write output to nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_01.adm"
+write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_01.adm"
 select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested."sender-location",'nearby-message':(
         select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested."sender-location"}
         from  TweetMessages as t2

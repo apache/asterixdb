@@ -28,4 +28,5 @@
 use dataverse externallibtest;
 
 for $x in dataset TweetsFeedIngest
+order by $x.id
 return $x

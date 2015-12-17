@@ -33,12 +33,12 @@ create type fuzzyjoin_080.DBLPType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table DBLP(DBLPType) primary key id on group1;
 
-write output to nc1:"rttest/fuzzyjoin_080.adm"
+write output to asterix_nc1:"rttest/fuzzyjoin_080.adm"
 select element {'id':paperDBLP.id,'matches':matches}
 from  DBLP as paperDBLP
 with  matches as (

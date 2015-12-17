@@ -39,14 +39,14 @@ create type fuzzyjoin.TOKENSRANKEDADMType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table DBLP(DBLPType) primary key id on group1;
 
 create  table TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
 
-write output to nc1:"rttest/unnest_list_in_subplan.adm"
+write output to asterix_nc1:"rttest/unnest_list_in_subplan.adm"
 select element {'id':idDBLP,'tokens':tokensDBLP}
 from  DBLP as paperDBLP
 with  idDBLP as paperDBLP.id,

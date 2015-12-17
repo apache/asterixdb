@@ -29,5 +29,5 @@ use dataverse test;
 load dataset Customerstmp
 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
 

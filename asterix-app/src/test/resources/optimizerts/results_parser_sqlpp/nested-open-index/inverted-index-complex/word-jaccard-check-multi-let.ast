@@ -13,7 +13,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
-WriteOutputTo nc1:rttest/inverted-index-complex_word-jaccard-check-multi-let.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-complex_word-jaccard-check-multi-let.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -20,7 +20,7 @@ TypeDecl LineItemType [
   }
 ]
 DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
-WriteOutputTo nc1:rttest/tpch_q1_pricing_summary_report_nt.adm
+WriteOutputTo asterix_nc1:rttest/tpch_q1_pricing_summary_report_nt.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

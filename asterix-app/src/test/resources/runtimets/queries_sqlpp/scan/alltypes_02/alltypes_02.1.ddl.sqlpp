@@ -64,5 +64,5 @@ create type test.AllType as
   uuid : uuid
 }
 
-create external  table "All"(AllType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/allData.adm"),("format"="adm"));
+create external  table "All"(AllType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/allData.adm"),("format"="adm"));
 

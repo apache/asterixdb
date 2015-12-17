@@ -29,7 +29,7 @@
 use test;
 
 
-load  table employee using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+load  table employee using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
 
 insert into employeeOpen
 select element x

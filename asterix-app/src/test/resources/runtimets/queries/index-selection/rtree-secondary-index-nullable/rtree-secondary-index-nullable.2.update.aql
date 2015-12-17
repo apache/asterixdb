@@ -20,5 +20,5 @@ use dataverse test;
 
 load dataset MyData 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
+(("path"="asterix_nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
 

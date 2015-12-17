@@ -60,6 +60,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {
+            writer.open();
             // Transactional BulkLoader
             bulkLoader = ((ITwoPCIndex) index).createTransactionBulkLoader(fillFactor, verifyInput, deletedFiles.length,
                     checkIfEmptyIndex);
@@ -69,9 +70,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
                 filesIndexDescription.getBuddyBTreeTupleFromFileNumber(deleteTuple, buddyBTreeTupleBuilder, fileNumber);
                 ((ITwoPCIndexBulkLoader) bulkLoader).delete(deleteTuple);
             }
-        } catch (Exception e) {
-            ((ITwoPCIndexBulkLoader) bulkLoader).abort();
-            indexHelper.close();
+        } catch (Throwable e) {
             throw new HyracksDataException(e);
         }
     }
@@ -85,7 +84,6 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
             try {
                 bulkLoader.add(tuple);
             } catch (IndexException e) {
-                ((ITwoPCIndexBulkLoader) bulkLoader).abort();
                 throw new HyracksDataException(e);
             }
         }
@@ -93,17 +91,29 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            bulkLoader.end();
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        } finally {
-            indexHelper.close();
+        if (index != null) {
+            try {
+                bulkLoader.end();
+            } catch (Throwable th) {
+                throw new HyracksDataException(th);
+            } finally {
+                try {
+                    indexHelper.close();
+                } finally {
+                    writer.close();
+                }
+            }
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        ((ITwoPCIndexBulkLoader) bulkLoader).abort();
+        if (index != null) {
+            try {
+                ((ITwoPCIndexBulkLoader) bulkLoader).abort();
+            } finally {
+                writer.fail();
+            }
+        }
     }
 }

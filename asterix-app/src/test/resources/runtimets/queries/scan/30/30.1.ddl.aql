@@ -32,4 +32,4 @@ create type DBLPType as closed {
 
 create external dataset DBLPsplits(DBLPType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));

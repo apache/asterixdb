@@ -46,7 +46,7 @@ create type CustomerType as closed {
 
 create dataset Customers(CustomerType) primary key cid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_06.adm";
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_06.adm";
 
 for $c1 in dataset('Customers')
 for $c2 in dataset('Customers')

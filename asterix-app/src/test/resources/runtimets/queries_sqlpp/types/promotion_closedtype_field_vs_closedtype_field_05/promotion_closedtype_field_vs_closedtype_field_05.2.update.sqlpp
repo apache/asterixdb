@@ -24,7 +24,7 @@
 use test;
 
 
-load  table empDataset using "localfs" (("path"="nc1://data/types/empDataset_minus_data.adm"),("format"="adm"));
+load  table empDataset using "localfs" (("path"="asterix_nc1://data/types/empDataset_minus_data.adm"),("format"="adm"));
 
-load  table deptDataset using "localfs" (("path"="nc1://data/types/deptDataset_minus_data.adm"),("format"="adm"));
+load  table deptDataset using "localfs" (("path"="asterix_nc1://data/types/deptDataset_minus_data.adm"),("format"="adm"));
 

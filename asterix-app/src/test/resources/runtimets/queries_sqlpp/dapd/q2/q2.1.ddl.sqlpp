@@ -51,5 +51,5 @@ create type test.EventType as
   end_time : datetime
 }
 
-create external  table Event(EventType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/events/tiny/event.adm"),("format"="adm"));
+create external  table Event(EventType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/events/tiny/event.adm"),("format"="adm"));
 

@@ -34,12 +34,12 @@ create type "orders-aggreg".OrderType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Orders(OrderType) primary key oid on group1;
 
-write output to nc1:"/tmp/orders-aggreg.adm"
+write output to asterix_nc1:"/tmp/orders-aggreg.adm"
 select element {'cid':cid,'ordpercust':"orders-aggreg".count(o),'totalcust':"orders-aggreg".sum((
         select element i.total
         from  o as i

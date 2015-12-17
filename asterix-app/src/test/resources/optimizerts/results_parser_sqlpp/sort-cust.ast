@@ -20,7 +20,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:/tmp/custlimit.adm
+WriteOutputTo asterix_nc1:/tmp/custlimit.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

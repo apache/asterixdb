@@ -27,7 +27,7 @@ use dataverse TinySocial;
 
 load dataset TweetMessages
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/twitter/tw_messages.adm"),("format"="adm"));
 
 insert into dataset TweetMessages
 (

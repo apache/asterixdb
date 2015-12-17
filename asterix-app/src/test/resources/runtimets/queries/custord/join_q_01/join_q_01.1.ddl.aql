@@ -52,8 +52,8 @@ create type OrderType as open {
 
 create external dataset Customers(CustomerType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+(("path"="asterix_nc1://data/nontagged/customerData.json"),("format"="adm"));
 
 create external dataset Orders(OrderType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
+(("path"="asterix_nc1://data/nontagged/orderData.json"),("format"="adm"));

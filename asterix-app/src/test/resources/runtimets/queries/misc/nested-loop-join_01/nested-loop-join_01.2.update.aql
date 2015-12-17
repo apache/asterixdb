@@ -20,9 +20,9 @@ use dataverse test;
 
 load dataset Users 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/users-visitors-small/users.json"),("format"="adm"));
+(("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));
 
 load dataset Visitors 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/users-visitors-small/visitors.json"),("format"="adm"));
+(("path"="asterix_nc1://data/users-visitors-small/visitors.json"),("format"="adm"));
 

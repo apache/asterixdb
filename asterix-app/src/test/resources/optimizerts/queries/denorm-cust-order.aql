@@ -51,14 +51,14 @@ create type OrderType as closed {
   total: float
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType) 
   primary key cid on group1;
 create dataset Orders(OrderType)
   primary key oid on group1;
 
-write output to nc1:"/tmp/custorder.adm";
+write output to asterix_nc1:"/tmp/custorder.adm";
 
 for $c in dataset('Customers')
 for $o in dataset('Orders')

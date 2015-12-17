@@ -46,7 +46,7 @@ create type TweetOutputType as closed {
 
 create feed TweetFeed
 using file_feed
-(("type-name"="TweetInputType"),("fs"="localfs"),("path"="127.0.0.1://../../../../../../asterix-app/data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
+(("type-name"="TweetInputType"),("fs"="localfs"),("path"="asterix_nc1://../../../../../../asterix-app/data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
 apply function testlib#parseTweet;
 
 create dataset TweetsFeedIngest(TweetOutputType) 

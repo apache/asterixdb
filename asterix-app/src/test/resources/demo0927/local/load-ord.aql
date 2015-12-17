@@ -27,12 +27,12 @@ declare type OrderType as closed {
   total: float
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Orders(OrderType)
   primary key oid on group1;
 
-load dataset Orders from nc1:"/tmp/orderData.json";
+load dataset Orders from asterix_nc1:"/tmp/orderData.json";
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///tmp/orderData.json"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///tmp/orderData.json"),("format"="adm")) pre-sorted;
 

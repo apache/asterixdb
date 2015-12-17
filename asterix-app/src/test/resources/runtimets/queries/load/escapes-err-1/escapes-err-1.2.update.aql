@@ -18,4 +18,4 @@
  */
 use dataverse TestDataverse;
 
-load dataset TestSet using localfs (("path"="nc1://data/escapes-err-1.adm"),("format"="adm"));
+load dataset TestSet using localfs (("path"="asterix_nc1://data/escapes-err-1.adm"),("format"="adm"));

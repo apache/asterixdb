@@ -19,7 +19,7 @@
 use dataverse SocialNetworkData;
 
 load dataset FacebookUsers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/fbu-dml-insert-shuffled.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/fbu-dml-insert-shuffled.adm"),("format"="adm"));
 
 insert into dataset HandbookUsers (
 for $x in dataset FacebookUsers

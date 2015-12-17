@@ -9,7 +9,7 @@ TypeDecl Tweet [
   }
 ]
 DatasetDecl TwitterData(Tweet)is an external dataset
-WriteOutputTo nc1:/tmp/count-tweets.adm
+WriteOutputTo asterix_nc1:/tmp/count-tweets.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

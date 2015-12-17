@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
  ! Licensed to the Apache Software Foundation (ASF) under one
  ! or more contributor license agreements.  See the NOTICE file
@@ -17,26 +18,33 @@
  ! under the License.
  !-->
 <cluster xmlns="cluster">
-	<name>local</name>
-	<working_dir>
-		<dir>/tmp/asterix-installer</dir>
-		<NFS>true</NFS>
-	</working_dir>
-	<log_dir>/tmp/asterix/logs</log_dir>
-	<txn_log_dir>/tmp/asterix/txnLogs</txn_log_dir>
-	<iodevices>/tmp/asterix</iodevices>
-	<store>storage</store>
-	<java_home></java_home>
-	<master_node>
-		<id>master</id>
-		<client_ip>127.0.0.1</client_ip>
-		<cluster_ip>127.0.0.1</cluster_ip>
-		<cluster_port>1099</cluster_port>
-		<client_port>1098</client_port>
-		<http_port>8888</http_port>
-	</master_node>
-	<node>
-		<id>node1</id>
-		<cluster_ip>127.0.0.1</cluster_ip>
-	</node>
+    <java_home>/usr/lib/jvm/jdk-8-oracle-x64/jre</java_home>
+    <log_dir>/tmp/asterix/logs</log_dir>
+    <txn_log_dir>/tmp/asterix/txnLogs</txn_log_dir>
+    <store>storage</store>
+    <working_dir>
+        <dir>/tmp/asterix-installer</dir>
+        <NFS>true</NFS>
+    </working_dir>
+    <master_node>
+        <id>master</id>
+        <client_ip>127.0.0.1</client_ip>
+        <cluster_ip>127.0.0.1</cluster_ip>
+        <client_port>1098</client_port>
+        <cluster_port>1099</cluster_port>
+        <http_port>8888</http_port>
+    </master_node>
+    <node>
+        <id>nc1</id>
+        <cluster_ip>127.0.0.1</cluster_ip>
+        <txn_log_dir>/tmp/asterix/nc1/txnLogs</txn_log_dir>
+        <iodevices>/tmp/asterix/nc1/p1,/tmp/asterix/nc1/p2</iodevices>
+
+    </node>
+    <node>
+        <id>nc2</id>
+        <cluster_ip>127.0.0.1</cluster_ip>
+        <txn_log_dir>/tmp/asterix/nc2/txnLogs</txn_log_dir>
+        <iodevices>/tmp/asterix/nc2/p1,/tmp/asterix/nc2/p2</iodevices>
+    </node>
 </cluster>

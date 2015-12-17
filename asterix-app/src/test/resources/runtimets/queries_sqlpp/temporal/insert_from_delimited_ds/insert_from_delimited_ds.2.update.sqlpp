@@ -20,5 +20,5 @@
 use testdvt;
 
 
-create external  table testds(testtype) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/temporal/temporalData.txt"),("format"="delimited-text"),("delimiter"="|"));
+create external  table testds(testtype) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/temporal/temporalData.txt"),("format"="delimited-text"),("delimiter"="|"));
 

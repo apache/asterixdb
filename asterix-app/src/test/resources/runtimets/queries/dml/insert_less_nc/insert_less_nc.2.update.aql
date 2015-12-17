@@ -20,11 +20,11 @@ use dataverse test;
 
 load dataset LineItem 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset LineID 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into dataset LineID (
 for $l in dataset('LineItem')

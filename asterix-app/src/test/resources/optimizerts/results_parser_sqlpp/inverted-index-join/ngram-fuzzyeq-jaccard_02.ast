@@ -20,7 +20,7 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 DatasetDecl CSX(CSXType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/inverted-index-join_ngram-fuzzyeq-jaccard_02.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_ngram-fuzzyeq-jaccard_02.adm
 Set simfunction=jaccard
 Set simthreshold=0.5f
 Query:

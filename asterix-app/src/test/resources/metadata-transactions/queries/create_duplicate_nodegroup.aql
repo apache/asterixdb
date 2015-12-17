@@ -18,4 +18,4 @@
  */
 use dataverse custord;
 
-create nodegroup group1 on nc1, nc2;
+create nodegroup group1 on asterix_nc1, asterix_nc2;

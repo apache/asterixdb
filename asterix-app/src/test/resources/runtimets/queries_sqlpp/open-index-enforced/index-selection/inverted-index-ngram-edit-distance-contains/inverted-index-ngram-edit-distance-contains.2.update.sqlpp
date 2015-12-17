@@ -20,7 +20,7 @@
 use test;
 
 
-load  table DBLPtmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+load  table DBLPtmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 insert into test.DBLP
 select element x

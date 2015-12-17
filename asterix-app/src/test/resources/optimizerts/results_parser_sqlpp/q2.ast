@@ -30,7 +30,7 @@ TypeDecl EventType [
   }
 ]
 DatasetDecl Event(EventType) partitioned by [[name]]
-WriteOutputTo nc1:/tmp/q2.adm
+WriteOutputTo asterix_nc1:/tmp/q2.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

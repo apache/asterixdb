@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
     private final boolean isPrimary;
+    private AbstractLSMIndex lsmIndex;
 
     public boolean isPrimary() {
         return isPrimary;
@@ -57,10 +58,10 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
-        writer.open();
         indexHelper.open();
-        AbstractLSMIndex lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
+        lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
         try {
+            writer.open();
             modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
                     indexHelper.getResourceName(), indexHelper.getResourceID(), lsmIndex, ctx);
             indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
@@ -69,15 +70,11 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
                 frameTuple = new FrameTupleReference();
             }
-
             IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                     .getApplicationContext().getApplicationObject();
-
             AsterixLSMIndexUtil.checkAndSetFirstLSN(lsmIndex, runtimeCtx.getTransactionSubsystem().getLogManager());
-
-        } catch (Exception e) {
-            indexHelper.close();
-            throw new HyracksDataException(e);
+        } catch (Throwable th) {
+            throw new HyracksDataException(th);
         }
     }
 
@@ -114,18 +111,34 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                         }
                         break;
                     default: {
-                        throw new HyracksDataException("Unsupported operation " + op
-                                + " in tree index InsertDelete operator");
+                        throw new HyracksDataException(
+                                "Unsupported operation " + op + " in tree index InsertDelete operator");
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new HyracksDataException(e);
+        } catch (Throwable th) {
+            throw new HyracksDataException(th);
         }
         writeBuffer.ensureFrameSize(buffer.capacity());
         FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
         FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
     }
 
+    @Override
+    public void close() throws HyracksDataException {
+        if (lsmIndex != null) {
+            try {
+                indexHelper.close();
+            } finally {
+                writer.close();
+            }
+        }
+    }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        if (lsmIndex != null) {
+            writer.fail();
+        }
+    }
 }

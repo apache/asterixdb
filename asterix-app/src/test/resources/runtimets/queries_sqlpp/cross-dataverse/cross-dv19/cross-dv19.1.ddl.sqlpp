@@ -65,5 +65,5 @@ create  table test1.t3(testtype) primary key id;
 
 create  table test2.t4(testtype) primary key id;
 
-create external  table test1.TwitterData(Tweet) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
+create external  table test1.TwitterData(Tweet) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
 

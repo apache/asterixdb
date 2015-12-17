@@ -60,9 +60,13 @@ public class HDFSCluster {
      * Called prior to running the Runtime test suite.
      */
     public void setup() throws Exception {
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+        setup("");
+    }
+
+    public void setup(String basePath) throws Exception {
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/core-site.xml"));
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
         cleanupLocal();
         //this constructor is deprecated in hadoop 2x
         //dfsCluster = new MiniDFSCluster(nameNodePort, conf, numDataNodes, true, true, StartupOption.REGULAR, null);
@@ -72,13 +76,13 @@ public class HDFSCluster {
         build.startupOption(StartupOption.REGULAR);
         dfsCluster = build.build();
         dfs = FileSystem.get(conf);
-        loadData();
+        loadData(basePath);
     }
 
-    private void loadData() throws IOException {
+    private void loadData(String localDataRoot) throws IOException {
         Path destDir = new Path(HDFS_PATH);
         dfs.mkdirs(destDir);
-        File srcDir = new File(DATA_PATH);
+        File srcDir = new File(localDataRoot + DATA_PATH);
         File[] listOfFiles = srcDir.listFiles();
         for (File srcFile : listOfFiles) {
             Path path = new Path(srcFile.getAbsolutePath());

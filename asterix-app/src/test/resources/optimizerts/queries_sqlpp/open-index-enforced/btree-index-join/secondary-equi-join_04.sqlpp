@@ -53,7 +53,7 @@ create  index title_index_DBLP  on DBLP (title:string) type btree enforced;
 
 create  index title_index  on CSX (title:string) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_02.adm"
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_02.adm"
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b

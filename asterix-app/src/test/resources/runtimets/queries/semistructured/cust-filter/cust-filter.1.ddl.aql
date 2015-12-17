@@ -37,4 +37,4 @@ create type CustomerType as open {
 
 create external dataset Customers(CustomerType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/tiny01/customer.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/semistructured/tiny01/customer.adm"),("format"="adm"));

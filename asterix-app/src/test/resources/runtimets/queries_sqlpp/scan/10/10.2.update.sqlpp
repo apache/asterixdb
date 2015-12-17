@@ -21,5 +21,5 @@
 use test;
 
 
-load  table DBLP1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+load  table DBLP1 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 

@@ -28,12 +28,12 @@ declare type CSXType as open {
   misc: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset CSX(CSXType) 
   primary key id on group1;
 
-write output to nc1:'/tmp/pub.adm';
+write output to asterix_nc1:'/tmp/pub.adm';
 
 for $paper in dataset('CSX')
 // where $paper.id = 1

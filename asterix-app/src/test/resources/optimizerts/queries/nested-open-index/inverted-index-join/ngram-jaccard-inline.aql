@@ -44,7 +44,7 @@ create dataset DBLP(DBLPType) primary key nested.id;
 
 create index ngram_index on DBLP(nested.title: string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_ngram-jaccard-inline.adm";
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ngram-jaccard-inline.adm";
 
 for $a in dataset('DBLP')
 for $b in dataset('DBLP')

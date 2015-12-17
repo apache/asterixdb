@@ -46,7 +46,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index ngram_index  on DBLP (nested.title:string) type ngram (3) enforced;
 
-write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-substring.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-substring.adm"
 select element {'id':paper.nested.id,'title':paper.nested.title}
 from  DBLP as paper
 where test."edit-distance-check"(test.substring(paper.nested.title,0,8),'datbase',1)[0]

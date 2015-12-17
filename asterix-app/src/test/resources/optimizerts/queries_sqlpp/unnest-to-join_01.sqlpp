@@ -27,7 +27,7 @@ create  database test;
 use test;
 
 
-write output to nc1:"rttest/unnest-to-join_01.adm"
+write output to asterix_nc1:"rttest/unnest-to-join_01.adm"
 select element y
 from  [1,2,3,4,5,6] as x,
       [4,5,6,7,8,9] as y

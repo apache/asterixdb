@@ -56,7 +56,7 @@ create type test.CustomerType as
 
 create  table Customers(CustomerType) primary key nested.cid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_06.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_06.adm"
 select element {'customer1':c1.nested,'customer2':c2.nested}
 from  Customers as c1,
       Customers as c2

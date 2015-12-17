@@ -33,12 +33,12 @@ declare type AddressType as open {
   city: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Customers(CustomerType) 
   primary key cid on group1;
 
-write output to nc1:"/tmp/03-count-cust-age.adm";
+write output to asterix_nc1:"/tmp/03-count-cust-age.adm";
 
 count(
 for $c in dataset('Customers')

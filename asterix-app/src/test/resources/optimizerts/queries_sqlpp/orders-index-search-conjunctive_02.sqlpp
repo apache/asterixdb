@@ -37,16 +37,16 @@ create type tpch.OrderType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Orders(OrderType) primary key o_orderkey on group1;
 
-load  table Orders using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Orders using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 create  index idx_Orders_Custkey  on Orders (o_custkey) type btree;
 
-write output to nc1:"/tmp/index_search-conjunctive.adm"
+write output to asterix_nc1:"/tmp/index_search-conjunctive.adm"
 select element {'o_orderkey':o.o_orderkey,'o_custkey':o.o_custkey,'o_totalprice':o.o_totalprice}
 from  Orders as o
 where ((o.o_custkey = 40) and (o.o_totalprice > 150000.0))

@@ -41,7 +41,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title:string) type keyword enforced;
 
-write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm"
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
 with  paper_tokens as test."word-tokens"(paper.title),

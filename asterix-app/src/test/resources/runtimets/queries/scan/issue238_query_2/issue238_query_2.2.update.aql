@@ -31,6 +31,6 @@ use dataverse test;
 // drop dataset DBLPadm;
 load dataset DBLPadm 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/dblp-small/part-00000.adm, 
- nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/dblp-small/part-00000.adm, 
+ asterix_nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
 

@@ -43,12 +43,12 @@ declare type EventType as {
   end_time: datetime
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Users(UserType) primary key u_name on group1;
 declare dataset Events(EventType) primary key e_name on group1;
 
-write output to nc1:"/tmp/denorm_user_event.adm";
+write output to asterix_nc1:"/tmp/denorm_user_event.adm";
 
 for $u in dataset('Users')
 let $events := 

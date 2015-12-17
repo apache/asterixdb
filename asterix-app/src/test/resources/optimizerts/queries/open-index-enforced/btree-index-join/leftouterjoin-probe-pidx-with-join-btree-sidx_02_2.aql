@@ -51,7 +51,7 @@ primary key tweetid;
 create index msgCountAIx on TweetMessages(countA: int32) type btree enforced;
 create index msgCountBIx on TweetMessages(countB: int32) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_02.adm";
+write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_02.adm";
 
 for $t1 in dataset('TweetMessages')
 where $t1.tweetid < int64("10")

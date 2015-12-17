@@ -6,7 +6,7 @@ TypeDecl Name [
   }
 ]
 DatasetDecl Names(Name) partitioned by [[fname], [lname]]
-WriteOutputTo nc1:rttest/btree-index-join_primary-composite-key-prefix-prefix-join_03.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-composite-key-prefix-prefix-join_03.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

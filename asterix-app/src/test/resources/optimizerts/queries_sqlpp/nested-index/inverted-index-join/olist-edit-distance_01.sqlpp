@@ -60,7 +60,7 @@ create  table Customers2(CustomerType) primary key nested.cid;
 
 create  index interests_index  on Customers (nested.interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_olist-edit-distance_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_olist-edit-distance_01.adm"
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers2 as b

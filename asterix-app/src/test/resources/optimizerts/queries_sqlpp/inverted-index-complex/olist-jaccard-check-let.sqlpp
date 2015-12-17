@@ -54,7 +54,7 @@ create  table Customers(CustomerType) primary key cid;
 
 create  index interests_index  on Customers (interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-complex_olist-jaccard-check-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_olist-jaccard-check-let.adm"
 select element c
 from  Customers as c
 with  jacc as test."similarity-jaccard-check"(c.interests,['databases','computers','wine'],0.700000f)

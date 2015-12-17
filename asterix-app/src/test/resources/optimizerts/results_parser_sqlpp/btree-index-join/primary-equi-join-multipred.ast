@@ -31,7 +31,7 @@ TypeDecl OrderType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
 DatasetDecl Orders(OrderType) partitioned by [[oid]]
-WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join-multipred.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-equi-join-multipred.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

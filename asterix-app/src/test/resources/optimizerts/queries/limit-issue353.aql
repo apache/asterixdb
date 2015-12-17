@@ -50,7 +50,7 @@ create type LineItemType as closed {
 create dataset LineItem(LineItemType)
   primary key l_orderkey, l_linenumber;
   
-write output to nc1:"/tmp/push_limit.adm";
+write output to asterix_nc1:"/tmp/push_limit.adm";
 
 for $l in dataset('LineItem')
 limit 2

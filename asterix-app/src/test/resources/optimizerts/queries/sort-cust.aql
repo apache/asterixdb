@@ -42,12 +42,12 @@ create type CustomerType as closed {
 
 
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType)
   primary key cid on group1;
 
-write output to nc1:"/tmp/custlimit.adm";
+write output to asterix_nc1:"/tmp/custlimit.adm";
 
 for $c in dataset('Customers')
 order by $c.age

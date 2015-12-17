@@ -43,7 +43,7 @@ create  table Names(NameType) primary key nested.id;
 
 create  index Name_idx  on Names (nested.fname:string,lnested.name:string) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_03.adm"
+write output to asterix_nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_03.adm"
 select element {'emp1':emp1,'emp2':emp2}
 from  Names as emp1,
       Names as emp2

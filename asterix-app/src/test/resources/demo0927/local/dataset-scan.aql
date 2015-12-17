@@ -35,12 +35,12 @@ declare type AddressType as closed {
   city: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Customers(CustomerType) 
   primary key cid on group1;
 
-write output to nc1:"/tmp/mycustomers.adm";
+write output to asterix_nc1:"/tmp/mycustomers.adm";
 
 for $c in dataset('Customers')
 return $c

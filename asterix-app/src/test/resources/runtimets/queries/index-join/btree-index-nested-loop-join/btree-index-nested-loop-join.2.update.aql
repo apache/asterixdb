@@ -24,12 +24,12 @@
 
 load dataset TweetMessages
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/index-join/tw_messages.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/index-join/tw_messages.adm"),("format"="adm"));
 
 load dataset TwitterUsers
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/index-join/tw_users.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/index-join/tw_users.adm"),("format"="adm"));
 
 load dataset results
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/index-join/results.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/index-join/results.adm"),("format"="adm"));

@@ -23,7 +23,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:rttest/inverted-index-join_olist-edit-distance-check_04.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_olist-edit-distance-check_04.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

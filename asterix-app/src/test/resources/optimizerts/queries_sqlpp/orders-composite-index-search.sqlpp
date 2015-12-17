@@ -40,7 +40,7 @@ create  table Orders(OrderType) primary key o_orderkey;
 
 create  index idx_Custkey_Orderstatus  on Orders (o_custkey,o_orderstatus) type btree;
 
-write output to nc1:"/tmp/index_search.adm"
+write output to asterix_nc1:"/tmp/index_search.adm"
 select element {'o_orderkey':o.o_orderkey,'o_custkey':o.o_custkey,'o_orderstatus':o.o_orderstatus}
 from  Orders as o
 where ((o.o_custkey = 40) and (o.o_orderstatus = 'P'))

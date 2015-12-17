@@ -36,12 +36,12 @@ create type group_no_agg.CustomerType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Customers(CustomerType) primary key c_custkey on group1;
 
-write output to nc1:"/tmp/.adm"
+write output to asterix_nc1:"/tmp/.adm"
 select element name
 from  Customers as c
 group by c.c_name as name

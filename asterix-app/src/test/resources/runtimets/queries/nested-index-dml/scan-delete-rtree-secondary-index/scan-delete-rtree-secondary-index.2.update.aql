@@ -21,7 +21,7 @@ use dataverse test;
 
 load dataset MyDatatmp
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
 insert into dataset MyData
 (

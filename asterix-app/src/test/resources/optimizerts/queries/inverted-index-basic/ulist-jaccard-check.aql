@@ -45,7 +45,7 @@ create dataset Customers(CustomerType) primary key cid;
 
 create index interests_index on Customers(interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-basic_ulist-jaccard.adm";
+write output to asterix_nc1:"rttest/inverted-index-basic_ulist-jaccard.adm";
 
 for $c in dataset('Customers')
 where similarity-jaccard-check($c.interests, {{"computers", "wine", "databases"}}, 0.7f)[0]
