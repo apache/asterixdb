@@ -745,9 +745,9 @@ public class MetadataNode implements IMetadataNode {
         //If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(jobId);
         for (Dataset set : datasets) {
-            if (set.getItemTypeName() == datatypeName && set.getItemTypeDataverseName() == dataverseName) {
+            if (set.getItemTypeName().equals(datatypeName) && set.getItemTypeDataverseName().equals(dataverseName)) {
                 throw new MetadataException("Cannot drop type " + dataverseName + "." + datatypeName
-                        + " being used by dataset " + set.getItemTypeDataverseName() + "." + set.getItemTypeName());
+                        + " being used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
             }
         }
         return true;

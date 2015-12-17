@@ -5689,13 +5689,6 @@
                 <output-dir compare="Text">cross-dv07</output-dir>
             </compilation-unit>
         </test-case>
-        <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
-        <test-case FilePath="cross-dataverse">
-          <compilation-unit name="cross-dv08">
-            <output-dir compare="Text">cross-dv08</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv09">
                 <output-dir compare="Text">cross-dv09</output-dir>
@@ -5740,13 +5733,6 @@
           </compilation-unit>
         </test-case>
         -->
-        <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
-        <test-case FilePath="cross-dataverse">
-          <compilation-unit name="cross-dv18">
-            <output-dir compare="Text">cross-dv18</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv19">
                 <output-dir compare="Text">cross-dv19</output-dir>
@@ -5765,6 +5751,39 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="join_across_dataverses">
                 <output-dir compare="Text">join_across_dataverses</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="cross-dataverse">
+            <compilation-unit name="drop-dataverse">
+                <output-dir compare="Text">drop-dataverse</output-dir>
+                <expected-error>org.apache.asterix.metadata.MetadataException
+                </expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="cross-dataverse">
+            <compilation-unit name="drop-type-used-elsewhere">
+                <output-dir compare="Text">drop-type-used-elsewhere</output-dir>
+                <expected-error>org.apache.asterix.metadata.MetadataException
+                </expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="cross-dataverse">
+            <compilation-unit name="drop-type-used-here-dataset">
+                <output-dir compare="Text">drop-type-used-here-dataset</output-dir>
+                <expected-error>org.apache.asterix.metadata.MetadataException
+                </expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="cross-dataverse">
+            <compilation-unit name="drop-type-used-here-type">
+                <output-dir compare="Text">drop-type-used-here-type</output-dir>
+                <expected-error>org.apache.asterix.metadata.MetadataException
+                </expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="cross-dataverse">
+            <compilation-unit name="query-dataset-with-foreign-type">
+                <output-dir compare="Text">query-dataset-with-foreign-type</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

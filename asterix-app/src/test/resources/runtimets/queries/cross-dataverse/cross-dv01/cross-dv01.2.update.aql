@@ -25,7 +25,6 @@
  */
 
 
-use dataverse student;
 use dataverse teacher;
 
 

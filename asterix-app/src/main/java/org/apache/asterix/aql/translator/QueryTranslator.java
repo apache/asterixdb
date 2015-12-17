@@ -692,7 +692,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             throw e;
         } finally {
             MetadataLockManager.INSTANCE.createDatasetEnd(dataverseName, itemTypeDataverseName,
-                    dataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
+                    itemTypeDataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
                     dataverseName + "." + datasetName, defaultCompactionPolicy);
         }
     }

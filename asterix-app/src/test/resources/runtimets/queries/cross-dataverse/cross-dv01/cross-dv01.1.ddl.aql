@@ -30,7 +30,6 @@ drop dataverse teacher if exists;
 create dataverse student;
 create dataverse teacher;
 
-use dataverse student;
 use dataverse teacher;
 
 create type student.stdType as open {
@@ -49,8 +48,8 @@ sex : string,
 dept : string
 }
 
-create dataset student.ugdstd(stdType) primary key id;
-create dataset student.gdstd(stdType) primary key id;
+create dataset student.ugdstd(student.stdType) primary key id;
+create dataset student.gdstd(student.stdType) primary key id;
 create dataset teacher.prof(tchrType) primary key id;
 create dataset teacher.pstdoc(tchrType) primary key id;
 

@@ -86,8 +86,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             .getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
     private final AMutableInt32 aInt32;
     protected ISerializerDeserializer<AInt32> aInt32Serde;
-    private ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
-    public static final String DATATYPE_DATAVERSE_FIELD_NAME = "DatatypeDataverse";
 
     @SuppressWarnings("unchecked")
     public DatasetTupleTranslator(boolean getTuple) {
@@ -115,7 +113,11 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETNAME_FIELD_INDEX)).getStringValue();
         String typeName = ((AString) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX)).getStringValue();
-        DatasetType datasetType = DatasetType.valueOf(((AString) datasetRecord.getValueByPos(3)).getStringValue());
+        String typeDataverseName = ((AString) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPEDATAVERSENAME_FIELD_INDEX)).getStringValue();
+        DatasetType datasetType = DatasetType.valueOf(
+                ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETTYPE_FIELD_INDEX))
+                        .getStringValue());
         IDatasetDetails datasetDetails = null;
         int datasetId = ((AInt32) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX)).getIntegerValue();
@@ -222,12 +224,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         Map<String, String> hints = getDatasetHints(datasetRecord);
 
-        String typeDataverseName = dataverseName;
-        int typeDataverseNamePos = datasetRecord.getType().getFieldIndex(DATATYPE_DATAVERSE_FIELD_NAME);
-        if (typeDataverseNamePos >= 0) {
-            typeDataverseName = ((AString) datasetRecord.getValueByPos(typeDataverseNamePos)).getStringValue();
-        }
-
         return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, nodeGroupName, compactionPolicy,
                 compactionPolicyProperties, datasetDetails, hints, datasetType, datasetId, pendingOp);
     }
@@ -263,29 +259,35 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         // write field 2
         fieldValue.reset();
+        aString.setValue(dataset.getItemTypeDataverseName());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATATYPEDATAVERSENAME_FIELD_INDEX, fieldValue);
+
+        // write field 3
+        fieldValue.reset();
         aString.setValue(dataset.getItemTypeName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
 
-        // write field 3
+        // write field 4
         fieldValue.reset();
         aString.setValue(dataset.getDatasetType().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETTYPE_FIELD_INDEX, fieldValue);
 
-        // write field 4
+        // write field 5
         fieldValue.reset();
         aString.setValue(dataset.getNodeGroupName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
 
-        // write field 5
+        // write field 6
         fieldValue.reset();
         aString.setValue(dataset.getCompactionPolicy());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX, fieldValue);
 
-        // write field 6
+        // write field 7
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.DATASET_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX]);
         if (dataset.getCompactionPolicyProperties() != null) {
@@ -303,11 +305,11 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX,
                 fieldValue);
 
-        // write field 7/8
+        // write field 8/9
         fieldValue.reset();
         writeDatasetDetailsRecordType(recordBuilder, dataset, fieldValue.getDataOutput());
 
-        // write field 9
+        // write field 10
         UnorderedListBuilder uListBuilder = new UnorderedListBuilder();
         uListBuilder.reset((AUnorderedListType) MetadataRecordTypes.DATASET_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.DATASET_ARECORD_HINTS_FIELD_INDEX]);
@@ -322,40 +324,23 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         uListBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_HINTS_FIELD_INDEX, fieldValue);
 
-        // write field 10
+        // write field 11
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
-        // write field 11
+        // write field 12
         fieldValue.reset();
         aInt32.setValue(dataset.getDatasetId());
         aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX, fieldValue);
 
-        // write field 12
+        // write field 13
         fieldValue.reset();
         aInt32.setValue(dataset.getPendingOp());
         aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
-
-        // write optional field 13 datatype dataverse (when not from the same dataverse as dataset)
-        if (!dataset.getDataverseName().equals(dataset.getItemTypeDataverseName())) {
-            fieldValue.reset();
-            aString.setValue(dataset.getItemTypeDataverseName());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-
-            nameValue.reset();
-            aString.setValue(DATATYPE_DATAVERSE_FIELD_NAME);
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-
-            try {
-                recordBuilder.addField(nameValue, fieldValue);
-            } catch (AsterixException e) {
-                throw new MetadataException(e);
-            }
-        }
 
         // write record
         try {
