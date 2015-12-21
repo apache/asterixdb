@@ -45,8 +45,8 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
-            List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) throws Exception {
+            List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
+            EnumSet<JobFlag> flags) throws Exception {
         CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(deploymentId, jobId, planBytes,
                 taskDescriptors, connectorPolicies, flags);
         ipcHandle.send(-1, stf, null);
@@ -93,5 +93,12 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void shutDown() throws Exception {
         CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction();
         ipcHandle.send(-1, sdrf, null);
+    }
+
+    @Override
+    public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
+        CCNCFunctions.SendApplicationMessageFunction fn = new CCNCFunctions.SendApplicationMessageFunction(data,
+                deploymentId, nodeId);
+        ipcHandle.send(-1, fn, null);
     }
 }

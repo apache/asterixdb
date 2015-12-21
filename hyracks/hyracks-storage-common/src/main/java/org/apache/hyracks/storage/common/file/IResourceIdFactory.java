@@ -16,11 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common;
+package org.apache.hyracks.storage.common.file;
 
-import org.apache.hyracks.control.common.service.IService;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractRemoteService implements IService {
-    public AbstractRemoteService() {
-    }
+public interface IResourceIdFactory {
+
+    /**
+     * @return A unique monotonically increasing id.
+     * @throws Exception
+     */
+    long createId() throws HyracksDataException;
 }

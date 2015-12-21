@@ -31,8 +31,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
-import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
 
@@ -40,7 +40,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final IHyracksTaskContext ctx;
     protected final IIndexLifecycleManager lcManager;
     protected final ILocalResourceRepository localResourceRepository;
-    protected final ResourceIdFactory resourceIdFactory;
+    protected final IResourceIdFactory resourceIdFactory;
     protected final FileReference file;
     protected final int partition;
     protected final int ioDeviceId;
@@ -57,8 +57,9 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.partition = partition;
         this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
-        this.file = new FileReference(new File(IndexFileNameUtil.prepareFileName(opDesc.getFileSplitProvider()
-                .getFileSplits()[partition].getLocalFile().getFile().getPath(), ioDeviceId)));
+        this.file = new FileReference(new File(IndexFileNameUtil.prepareFileName(
+                opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile().getFile().getPath(),
+                ioDeviceId)));
         this.durable = durable;
         this.resourceName = file.getFile().getPath();
     }
@@ -92,8 +93,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
-                        partition));
+                localResourceRepository
+                        .insert(localResourceFactory.createLocalResource(resourceID, resourceName, partition));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

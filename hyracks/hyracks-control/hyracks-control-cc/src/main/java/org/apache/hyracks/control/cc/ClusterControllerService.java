@@ -47,6 +47,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.topology.TopologyDefinitionParser;
 import org.apache.hyracks.control.cc.application.CCApplicationContext;
@@ -84,7 +85,6 @@ import org.apache.hyracks.control.cc.work.TaskCompleteWork;
 import org.apache.hyracks.control.cc.work.TaskFailureWork;
 import org.apache.hyracks.control.cc.work.UnregisterNodeWork;
 import org.apache.hyracks.control.cc.work.WaitForJobCompletionWork;
-import org.apache.hyracks.control.common.AbstractRemoteService;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.deployment.DeploymentRun;
@@ -104,7 +104,7 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 import org.xml.sax.InputSource;
 
-public class ClusterControllerService extends AbstractRemoteService {
+public class ClusterControllerService implements IControllerService {
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final CCConfig ccConfig;
@@ -252,14 +252,14 @@ public class ClusterControllerService extends AbstractRemoteService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new CCApplicationContext(serverCtx, ccContext);
+        appCtx = new CCApplicationContext(this, serverCtx, ccContext);
         appCtx.addJobLifecycleListener(datasetDirectoryService);
         String className = ccConfig.appCCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
             aep = (ICCApplicationEntryPoint) c.newInstance();
-            String[] args = ccConfig.appArgs == null ? null : ccConfig.appArgs.toArray(new String[ccConfig.appArgs
-                    .size()]);
+            String[] args = ccConfig.appArgs == null ? null
+                    : ccConfig.appArgs.toArray(new String[ccConfig.appArgs.size()]);
             aep.start(appCtx, args);
         }
         executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
@@ -359,7 +359,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private class HyracksClientInterfaceIPCI implements IIPCI {
         @Override
-        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload,
+                Exception exception) {
             HyracksClientInterfaceFunctions.Function fn = (HyracksClientInterfaceFunctions.Function) payload;
             switch (fn.getFunctionId()) {
                 case GET_CLUSTER_CONTROLLER_INFO: {
@@ -388,8 +389,8 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case START_JOB: {
                     HyracksClientInterfaceFunctions.StartJobFunction sjf = (HyracksClientInterfaceFunctions.StartJobFunction) fn;
                     JobId jobId = createJobId();
-                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getDeploymentId(), sjf
-                            .getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
+                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getDeploymentId(),
+                            sjf.getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
                     return;
                 }
 
@@ -401,15 +402,15 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case GET_DATASET_RESULT_STATUS: {
                     HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction gdrlf = (HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction) fn;
-                    workQueue.schedule(new GetResultStatusWork(ClusterControllerService.this, gdrlf.getJobId(), gdrlf
-                            .getResultSetId(), new IPCResponder<Status>(handle, mid)));
+                    workQueue.schedule(new GetResultStatusWork(ClusterControllerService.this, gdrlf.getJobId(),
+                            gdrlf.getResultSetId(), new IPCResponder<Status>(handle, mid)));
                     return;
                 }
 
                 case GET_DATASET_RESULT_LOCATIONS: {
                     HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
-                    workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this, gdrlf
-                            .getJobId(), gdrlf.getResultSetId(), gdrlf.getKnownRecords(),
+                    workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this,
+                            gdrlf.getJobId(), gdrlf.getResultSetId(), gdrlf.getKnownRecords(),
                             new IPCResponder<DatasetDirectoryRecord[]>(handle, mid)));
                     return;
                 }
@@ -438,8 +439,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case CLI_DEPLOY_BINARY: {
                     HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = (HyracksClientInterfaceFunctions.CliDeployBinaryFunction) fn;
-                    workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs(), dbf
-                            .getDeploymentId(), new IPCResponder<DeploymentId>(handle, mid)));
+                    workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs(),
+                            dbf.getDeploymentId(), new IPCResponder<DeploymentId>(handle, mid)));
                     return;
                 }
 
@@ -483,22 +484,22 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case NODE_HEARTBEAT: {
                     CCNCFunctions.NodeHeartbeatFunction nhf = (CCNCFunctions.NodeHeartbeatFunction) fn;
-                    workQueue.schedule(new NodeHeartbeatWork(ClusterControllerService.this, nhf.getNodeId(), nhf
-                            .getHeartbeatData()));
+                    workQueue.schedule(new NodeHeartbeatWork(ClusterControllerService.this, nhf.getNodeId(),
+                            nhf.getHeartbeatData()));
                     return;
                 }
 
                 case NOTIFY_JOBLET_CLEANUP: {
                     CCNCFunctions.NotifyJobletCleanupFunction njcf = (CCNCFunctions.NotifyJobletCleanupFunction) fn;
-                    workQueue.schedule(new JobletCleanupNotificationWork(ClusterControllerService.this,
-                            njcf.getJobId(), njcf.getNodeId()));
+                    workQueue.schedule(new JobletCleanupNotificationWork(ClusterControllerService.this, njcf.getJobId(),
+                            njcf.getNodeId()));
                     return;
                 }
 
                 case NOTIFY_DEPLOY_BINARY: {
                     CCNCFunctions.NotifyDeployBinaryFunction ndbf = (CCNCFunctions.NotifyDeployBinaryFunction) fn;
-                    workQueue.schedule(new NotifyDeployBinaryWork(ClusterControllerService.this,
-                            ndbf.getDeploymentId(), ndbf.getNodeId(), ndbf.getDeploymentStatus()));
+                    workQueue.schedule(new NotifyDeployBinaryWork(ClusterControllerService.this, ndbf.getDeploymentId(),
+                            ndbf.getNodeId(), ndbf.getDeploymentStatus()));
                     return;
                 }
 
@@ -510,35 +511,35 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case NOTIFY_TASK_COMPLETE: {
                     CCNCFunctions.NotifyTaskCompleteFunction ntcf = (CCNCFunctions.NotifyTaskCompleteFunction) fn;
-                    workQueue.schedule(new TaskCompleteWork(ClusterControllerService.this, ntcf.getJobId(), ntcf
-                            .getTaskId(), ntcf.getNodeId(), ntcf.getStatistics()));
+                    workQueue.schedule(new TaskCompleteWork(ClusterControllerService.this, ntcf.getJobId(),
+                            ntcf.getTaskId(), ntcf.getNodeId(), ntcf.getStatistics()));
                     return;
                 }
                 case NOTIFY_TASK_FAILURE: {
                     CCNCFunctions.NotifyTaskFailureFunction ntff = (CCNCFunctions.NotifyTaskFailureFunction) fn;
-                    workQueue.schedule(new TaskFailureWork(ClusterControllerService.this, ntff.getJobId(), ntff
-                            .getTaskId(), ntff.getNodeId(), ntff.getExceptions()));
+                    workQueue.schedule(new TaskFailureWork(ClusterControllerService.this, ntff.getJobId(),
+                            ntff.getTaskId(), ntff.getNodeId(), ntff.getExceptions()));
                     return;
                 }
 
                 case REGISTER_PARTITION_PROVIDER: {
                     CCNCFunctions.RegisterPartitionProviderFunction rppf = (CCNCFunctions.RegisterPartitionProviderFunction) fn;
-                    workQueue.schedule(new RegisterPartitionAvailibilityWork(ClusterControllerService.this, rppf
-                            .getPartitionDescriptor()));
+                    workQueue.schedule(new RegisterPartitionAvailibilityWork(ClusterControllerService.this,
+                            rppf.getPartitionDescriptor()));
                     return;
                 }
 
                 case REGISTER_PARTITION_REQUEST: {
                     CCNCFunctions.RegisterPartitionRequestFunction rprf = (CCNCFunctions.RegisterPartitionRequestFunction) fn;
-                    workQueue.schedule(new RegisterPartitionRequestWork(ClusterControllerService.this, rprf
-                            .getPartitionRequest()));
+                    workQueue.schedule(new RegisterPartitionRequestWork(ClusterControllerService.this,
+                            rprf.getPartitionRequest()));
                     return;
                 }
 
                 case REGISTER_RESULT_PARTITION_LOCATION: {
                     CCNCFunctions.RegisterResultPartitionLocationFunction rrplf = (CCNCFunctions.RegisterResultPartitionLocationFunction) fn;
-                    workQueue.schedule(new RegisterResultPartitionLocationWork(ClusterControllerService.this, rrplf
-                            .getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf.getEmptyResult(),
+                    workQueue.schedule(new RegisterResultPartitionLocationWork(ClusterControllerService.this,
+                            rrplf.getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf.getEmptyResult(),
                             rrplf.getPartition(), rrplf.getNPartitions(), rrplf.getNetworkAddress()));
                     return;
                 }
@@ -552,15 +553,15 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case REPORT_RESULT_PARTITION_FAILURE: {
                     CCNCFunctions.ReportResultPartitionFailureFunction rrplf = (CCNCFunctions.ReportResultPartitionFailureFunction) fn;
-                    workQueue.schedule(new ReportResultPartitionFailureWork(ClusterControllerService.this, rrplf
-                            .getJobId(), rrplf.getResultSetId(), rrplf.getPartition()));
+                    workQueue.schedule(new ReportResultPartitionFailureWork(ClusterControllerService.this,
+                            rrplf.getJobId(), rrplf.getResultSetId(), rrplf.getPartition()));
                     return;
                 }
 
                 case SEND_APPLICATION_MESSAGE: {
                     CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
-                    workQueue.schedule(new ApplicationMessageWork(ClusterControllerService.this, rsf.getMessage(), rsf
-                            .getDeploymentId(), rsf.getNodeId()));
+                    workQueue.schedule(new ApplicationMessageWork(ClusterControllerService.this, rsf.getMessage(),
+                            rsf.getDeploymentId(), rsf.getNodeId()));
                     return;
                 }
 
@@ -637,10 +638,11 @@ public class ClusterControllerService extends AbstractRemoteService {
         deploymentRunMap.remove(deploymentKey);
     }
 
-    public synchronized void setShutdownRun(ShutdownRun sRun){
+    public synchronized void setShutdownRun(ShutdownRun sRun) {
         shutdownCallback = sRun;
     }
-    public synchronized ShutdownRun getShutdownRun(){
+
+    public synchronized ShutdownRun getShutdownRun() {
         return shutdownCallback;
     }
 

@@ -33,6 +33,8 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ApplicationContext;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -48,10 +50,13 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
 
     private List<IJobLifecycleListener> jobLifecycleListeners;
     private List<IClusterLifecycleListener> clusterLifecycleListeners;
+    private final ClusterControllerService ccs;
 
-    public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext) throws IOException {
+    public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext)
+            throws IOException {
         super(serverCtx);
         this.ccContext = ccContext;
+        this.ccs = ccs;
         initPendingNodeIds = new HashSet<String>();
         deinitPendingNodeIds = new HashSet<String>();
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
@@ -106,5 +111,10 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         for (IClusterLifecycleListener l : clusterLifecycleListeners) {
             l.notifyNodeFailure(deadNodeIds);
         }
+    }
+
+    @Override
+    public IControllerService getControllerService() {
+        return ccs;
     }
 }

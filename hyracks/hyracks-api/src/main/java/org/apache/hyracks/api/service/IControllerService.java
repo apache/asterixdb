@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.service;
+package org.apache.hyracks.api.service;
 
-public abstract class AbstractService implements IService {
+public interface IControllerService {
+    public void start() throws Exception;
+
+    public void stop() throws Exception;
 }

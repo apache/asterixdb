@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.api.service.IControllerService;
 
 /**
  * Base class of the {@link ICCApplicationContext} and the {@link INCApplicationContext}.
@@ -47,5 +48,10 @@ public interface IApplicationContext {
     public ThreadFactory getThreadFactory();
 
     public void setThreadFactory(ThreadFactory threadFactory);
+
+    /**
+     * @return The controller service which the application context belongs to.
+     */
+    public IControllerService getControllerService();
 
 }

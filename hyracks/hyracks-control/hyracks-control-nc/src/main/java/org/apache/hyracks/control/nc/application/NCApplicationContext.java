@@ -27,8 +27,10 @@ import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.context.IHyracksRootContext;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.common.application.ApplicationContext;
 import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 
 public class NCApplicationContext extends ApplicationContext implements INCApplicationContext {
@@ -38,14 +40,17 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     private final MemoryManager memoryManager;
     private Object appObject;
     private IStateDumpHandler sdh;
+    private final NodeControllerService ncs;
 
-    public NCApplicationContext(ServerContext serverCtx, IHyracksRootContext rootCtx, String nodeId,
-            MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager) throws IOException {
+    public NCApplicationContext(NodeControllerService ncs, ServerContext serverCtx, IHyracksRootContext rootCtx,
+            String nodeId, MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager)
+                    throws IOException {
         super(serverCtx);
         this.lccm = lifeCyclecomponentManager;
         this.nodeId = nodeId;
         this.rootCtx = rootCtx;
         this.memoryManager = memoryManager;
+        this.ncs = ncs;
         sdh = new IStateDumpHandler() {
 
             @Override
@@ -96,5 +101,10 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     @Override
     public IMemoryManager getMemoryManager() {
         return memoryManager;
+    }
+
+    @Override
+    public IControllerService getControllerService() {
+        return ncs;
     }
 }

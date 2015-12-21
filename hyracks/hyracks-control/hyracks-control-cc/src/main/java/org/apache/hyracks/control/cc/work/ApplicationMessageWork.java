@@ -38,7 +38,8 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
     private String nodeId;
     private ClusterControllerService ccs;
 
-    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId, String nodeId) {
+    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId,
+            String nodeId) {
         super(ccs, nodeId, null);
         this.ccs = ccs;
         this.deploymentId = deploymentId;
@@ -54,7 +55,11 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
-                    ctx.getMessageBroker().receivedMessage(data, nodeId);
+                    try {
+                        ctx.getMessageBroker().receivedMessage(data, nodeId);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
         } catch (Exception e) {

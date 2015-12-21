@@ -20,13 +20,14 @@ package org.apache.hyracks.storage.common.file;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ResourceIdFactory {
+public class ResourceIdFactory implements IResourceIdFactory {
     private AtomicLong id = null;
 
     public ResourceIdFactory(long initialValue) {
         id = new AtomicLong(initialValue);
     }
 
+    @Override
     public long createId() {
         return id.getAndIncrement();
     }

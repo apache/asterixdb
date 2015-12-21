@@ -380,7 +380,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId, String nodeId) throws Exception {
-        this.ncs.sendApplicationMessageToCC(message, deploymentId, nodeId);
+    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, deploymentId);
     }
 }
