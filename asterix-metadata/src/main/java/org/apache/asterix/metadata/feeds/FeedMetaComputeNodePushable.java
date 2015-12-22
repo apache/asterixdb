@@ -43,6 +43,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
+/*
+ * This IFrameWriter doesn't follow the contract
+ */
 public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
     private static final Logger LOGGER = Logger.getLogger(FeedMetaComputeNodePushable.class.getName());
@@ -77,7 +80,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     private int nPartitions;
 
     /** The (singleton) instance of IFeedManager **/
-    private IActiveManager feedManager;
+    private IActiveManager activeManager;
 
     private FrameTupleAccessor fta;
 
@@ -97,18 +100,18 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.partition = partition;
         this.nPartitions = nPartitions;
         this.connectionId = feedConnectionId;
-        this.feedManager = ((IAsterixAppRuntimeContext) (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject()).getActiveManager();
+        this.activeManager = ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+                .getApplicationObject()).getActiveManager();
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getActiveManager();
+        this.activeManager = runtimeCtx.getActiveManager();
     }
 
     @Override
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new SubscribableFeedRuntimeId(connectionId.getActiveId(), runtimeType, partition);
         try {
-            feedRuntime = feedManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
+            feedRuntime = activeManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
                 initializeNewFeedRuntime(runtimeId);
             } else {
@@ -125,17 +128,17 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.fta = new FrameTupleAccessor(recordDesc);
         this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
-                policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager,
-                nPartitions);
+                policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, activeManager, nPartitions);
 
-        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(), writer,
-                runtimeType, partition, new FrameTupleAccessor(recordDesc), feedManager);
+        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(),
+                writer, runtimeType, partition, new FrameTupleAccessor(recordDesc), activeManager);
+
         coreOperator.setOutputFrameWriter(0, distributeWriter, recordDesc);
 
         feedRuntime = new SubscribableRuntime(connectionId.getActiveId(), runtimeId, inputSideHandler, distributeWriter,
                 recordDesc);
-        feedManager.getFeedSubscriptionManager().registerFeedSubscribableRuntime((ISubscribableRuntime) feedRuntime);
-        feedManager.getConnectionManager().registerActiveRuntime(connectionId, feedRuntime);
+        activeManager.getFeedSubscriptionManager().registerFeedSubscribableRuntime((ISubscribableRuntime) feedRuntime);
+        activeManager.getConnectionManager().registerActiveRuntime(connectionId, feedRuntime);
 
         distributeWriter.subscribeFeed(policyEnforcer.getFeedPolicyAccessor(), writer, connectionId);
     }
@@ -145,8 +148,9 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.inputSideHandler = feedRuntime.getInputHandler();
         this.inputSideHandler.setCoreOperator(coreOperator);
 
-        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(), writer,
-                runtimeType, partition, new FrameTupleAccessor(recordDesc), feedManager);
+        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(),
+                writer, runtimeType, partition, new FrameTupleAccessor(recordDesc), activeManager);
+
         coreOperator.setOutputFrameWriter(0, distributeWriter, recordDesc);
         distributeWriter.subscribeFeed(policyEnforcer.getFeedPolicyAccessor(), writer, connectionId);
 
@@ -214,11 +218,11 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         if (feedRuntime != null) {
             // deregister from subscription manager
             SubscribableFeedRuntimeId runtimeId = (SubscribableFeedRuntimeId) feedRuntime.getRuntimeId();
-            feedManager.getFeedSubscriptionManager().deregisterFeedSubscribableRuntime(runtimeId);
+            activeManager.getFeedSubscriptionManager().deregisterFeedSubscribableRuntime(runtimeId);
 
             // deregister from connection manager
-            feedManager.getConnectionManager().deRegisterActiveRuntime(connectionId,
-                    ((ActiveRuntime) feedRuntime).getRuntimeId());
+            activeManager.getConnectionManager().deRegisterActiveRuntime(connectionId, feedRuntime.getRuntimeId());
+
         }
     }
 

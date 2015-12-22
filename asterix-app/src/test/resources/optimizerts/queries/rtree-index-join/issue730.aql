@@ -49,7 +49,7 @@ create dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create index twmSndLocIx on TweetMessages(sender_location) type rtree;
 
-write output to nc1:"rttest/rtree-index-join_issue730.adm";
+write output to asterix_nc1:"rttest/rtree-index-join_issue730.adm";
 
 for $t1 in dataset('TweetMessages')
 where $t1.send_time >= datetime('2011-06-18T14:10:17') and $t1.send_time < datetime('2011-06-18T15:10:17')

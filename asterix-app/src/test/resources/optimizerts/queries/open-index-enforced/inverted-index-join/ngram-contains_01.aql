@@ -46,7 +46,7 @@ create dataset CSX(CSXType) primary key id;
 
 create index ngram_index on DBLP(title: string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_ngram-contains-01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-01.adm";
 
 for $o1 in dataset('DBLP')
 for $o2 in dataset('CSX')

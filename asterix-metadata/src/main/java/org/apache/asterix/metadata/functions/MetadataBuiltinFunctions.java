@@ -85,7 +85,7 @@ public class MetadataBuiltinFunctions {
                             "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
                 String tn = dataset.getItemTypeName();
-                IAType t2 = metadata.findType(dataverseName, tn);
+                IAType t2 = metadata.findType(dataset.getItemTypeDataverseName(), tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);
                 }
@@ -166,7 +166,7 @@ public class MetadataBuiltinFunctions {
                             "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
                 String tn = dataset.getItemTypeName();
-                IAType t2 = metadata.findType(dataverseName, tn);
+                IAType t2 = metadata.findType(dataset.getItemTypeDataverseName(), tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);
                 }

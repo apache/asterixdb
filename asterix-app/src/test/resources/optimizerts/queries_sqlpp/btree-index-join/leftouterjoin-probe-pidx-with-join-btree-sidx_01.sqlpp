@@ -61,7 +61,7 @@ create  index msgCountBIx  on TweetMessages (countB) type btree;
 
 create  index msgTextIx  on TweetMessages ("message-text") type keyword;
 
-write output to nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
+write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
 select element {'tweetid1':t1.tweetid,'count1':t1.countA,'t2info':(
         select element {'tweetid2':t2.tweetid,'count2':t2.countB}
         from  TweetMessages as t2

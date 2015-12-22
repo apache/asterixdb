@@ -122,19 +122,19 @@ create type tpch.PartSuppType as
   ps_comment : string
 }
 
-create external  table LineItem(LineItemType) using "localfs"(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table LineItem(LineItemType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Orders(OrderType) using "localfs"(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Orders(OrderType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Supplier(SupplierType) using "localfs"(("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Supplier(SupplierType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Region(RegionType) using "localfs"(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Region(RegionType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Nation(NationType) using "localfs"(("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Nation(NationType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Part(PartType) using "localfs"(("path"="nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Part(PartType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Partsupp(PartSuppType) using "localfs"(("path"="nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Partsupp(PartSuppType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external  table Customer(CustomerType) using "localfs"(("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
+create external  table Customer(CustomerType) using "localfs"(("path"="asterix_nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
 

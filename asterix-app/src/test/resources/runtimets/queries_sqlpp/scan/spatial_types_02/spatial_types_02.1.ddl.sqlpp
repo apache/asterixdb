@@ -35,5 +35,5 @@ create type test.SpatialType as
 
 create  table Spatial2(SpatialType) primary key id;
 
-load  table Spatial2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Spatial2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 

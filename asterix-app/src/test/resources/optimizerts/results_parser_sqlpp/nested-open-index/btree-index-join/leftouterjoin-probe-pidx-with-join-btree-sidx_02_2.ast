@@ -26,7 +26,7 @@ TypeDecl TweetMessageType [
   }
 ]
 DatasetDecl TweetMessages(TweetMessageType) partitioned by [[nested, tweetid]]
-WriteOutputTo nc1:rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_02.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_02.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

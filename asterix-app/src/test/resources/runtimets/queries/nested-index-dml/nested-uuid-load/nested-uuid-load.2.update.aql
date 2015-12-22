@@ -19,5 +19,5 @@
 
 use dataverse twitter;
 
-load dataset TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/tinysocial/twm-nested.adm"),("format"="adm"))
+load dataset TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/tinysocial/twm-nested.adm"),("format"="adm"))
 

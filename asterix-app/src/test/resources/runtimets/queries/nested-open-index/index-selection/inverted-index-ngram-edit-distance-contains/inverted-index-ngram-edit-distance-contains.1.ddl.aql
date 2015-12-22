@@ -35,7 +35,7 @@ create type DBLPClosedType as closed {
   misc: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create type DBLPType as closed {
 nested : DBLPOpenType

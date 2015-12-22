@@ -41,7 +41,7 @@ create dataset DBLP(DBLPType) primary key nested.id;
 
 create index ngram_index on DBLP(nested.title: string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-basic_ngram-contains.adm";
+write output to asterix_nc1:"rttest/inverted-index-basic_ngram-contains.adm";
 
 for $o in dataset('DBLP')
 where contains($o.nested.title, "Multimedia")

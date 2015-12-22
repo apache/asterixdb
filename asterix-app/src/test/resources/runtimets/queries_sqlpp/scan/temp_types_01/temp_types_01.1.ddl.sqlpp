@@ -32,5 +32,5 @@ create type test.TempType as
   duration : duration
 }
 
-create external  table Temp(TempType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/tempData.json"),("format"="adm"));
+create external  table Temp(TempType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/tempData.json"),("format"="adm"));
 

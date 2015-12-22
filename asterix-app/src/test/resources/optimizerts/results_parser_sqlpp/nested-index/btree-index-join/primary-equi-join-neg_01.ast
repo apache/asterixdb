@@ -13,7 +13,7 @@ TypeDecl TestType [
 ]
 DatasetDecl DsOne(TestType) partitioned by [[nested, key1]]
 DatasetDecl DsTwo(TestType) partitioned by [[nested, key1]]
-WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join-neg_01.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-equi-join-neg_01.adm
 Query:
 SELECT ELEMENT [
 Variable [ Name=x ]

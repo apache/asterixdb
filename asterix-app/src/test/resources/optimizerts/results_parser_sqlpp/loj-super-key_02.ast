@@ -60,7 +60,7 @@ TypeDecl PartSuppType [
     ps_comment : string
   }
 ]
-WriteOutputTo nc1:/tmp/loj-super-key_01.adm
+WriteOutputTo asterix_nc1:/tmp/loj-super-key_01.adm
 DatasetDecl LineItems(LineItemType) partitioned by [[l_partkey], [l_linenumber]]
 DatasetDecl PartSupp(PartSuppType) partitioned by [[ps_partkey], [ps_suppkey]]
 Query:

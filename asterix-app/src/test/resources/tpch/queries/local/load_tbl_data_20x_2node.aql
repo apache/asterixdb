@@ -103,7 +103,7 @@ declare type PartSuppType as closed {
   ps_comment: string 
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
@@ -124,32 +124,32 @@ declare dataset PartSupp(PartSuppType)
 
 load dataset LineItems 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/lineitem.tbl.1,nc1:///opt/tpch/twentygigs/lineitem.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/lineitem.tbl.1,asterix_nc1:///opt/tpch/twentygigs/lineitem.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/orders.tbl.1,nc1:///opt/tpch/twentygigs/orders.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/orders.tbl.1,asterix_nc1:///opt/tpch/twentygigs/orders.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Customers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/customer.tbl.1,nc1:///opt/tpch/twentygigs/customer.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/customer.tbl.1,asterix_nc1:///opt/tpch/twentygigs/customer.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/supplier.tbl.1,nc1:///opt/tpch/twentygigs/supplier.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/supplier.tbl.1,asterix_nc1:///opt/tpch/twentygigs/supplier.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/nation.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/nation.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/region.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/region.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/part.tbl.1,nc2:///opt/tpch/twentygigs/part.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/part.tbl.1,asterix_nc2:///opt/tpch/twentygigs/part.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/twentygigs/partsupp.tbl.1,nc2:///opt/tpch/twentygigs/partsupp.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/twentygigs/partsupp.tbl.1,asterix_nc2:///opt/tpch/twentygigs/partsupp.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

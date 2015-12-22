@@ -24,7 +24,7 @@
 
 use dataverse custord;
 
-write output to nc1:"mdtest/transaction_verify_failure_subsequent_no_execution.adm";
+write output to asterix_nc1:"mdtest/transaction_verify_failure_subsequent_no_execution.adm";
 
 for $x in dataset('Metadata.Index')
 where $x.DataverseName='custord'

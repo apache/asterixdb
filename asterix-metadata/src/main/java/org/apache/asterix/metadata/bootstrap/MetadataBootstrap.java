@@ -35,7 +35,6 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
@@ -116,7 +115,6 @@ public class MetadataBootstrap {
     private static String outputDir;
 
     private static IMetadataIndex[] primaryIndexes;
-    private static IMetadataIndex[] secondaryIndexes;
 
     private static IAsterixPropertiesProvider propertiesProvider;
 
@@ -130,9 +128,6 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.CHANNEL_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
                 MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
 
-        secondaryIndexes = new IMetadataIndex[] { MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX,
-                MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX,
-                MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
     public static void startUniverse(IAsterixPropertiesProvider asterixPropertiesProvider,
@@ -146,7 +141,6 @@ public class MetadataBootstrap {
         // rely on the type type descriptors.
         MetadataRecordTypes.init();
         MetadataPrimaryIndexes.init();
-        MetadataSecondaryIndexes.init();
         initLocalIndexArrays();
 
         AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
@@ -171,9 +165,6 @@ public class MetadataBootstrap {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true, mdTxnCtx);
                 }
-                for (int i = 0; i < secondaryIndexes.length; i++) {
-                    enlistMetadataDataset(secondaryIndexes[i], true, mdTxnCtx);
-                }
 
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Finished enlistment of metadata B-trees in  new universe");
@@ -182,7 +173,6 @@ public class MetadataBootstrap {
                 insertInitialDataverses(mdTxnCtx);
                 insertInitialDatasets(mdTxnCtx);
                 insertInitialDatatypes(mdTxnCtx);
-                insertInitialIndexes(mdTxnCtx);
                 insertNodes(mdTxnCtx);
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
@@ -195,9 +185,6 @@ public class MetadataBootstrap {
             } else {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], false, mdTxnCtx);
-                }
-                for (int i = 0; i < secondaryIndexes.length; i++) {
-                    enlistMetadataDataset(secondaryIndexes[i], false, mdTxnCtx);
                 }
 
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -242,10 +229,11 @@ public class MetadataBootstrap {
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
                     primaryIndexes[i].getPartitioningExprType(), false, null, false);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
-                    primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
-                    primaryIndexes[i].getNodeGroupName(), GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<String, String>(),
-                    DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(), IMetadataEntity.PENDING_NO_OP));
+                    primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getDataverseName(),
+                    primaryIndexes[i].getPayloadRecordType().getTypeName(), primaryIndexes[i].getNodeGroupName(),
+                    GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME, GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id,
+                    new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
+                    IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datasets.");
@@ -255,13 +243,15 @@ public class MetadataBootstrap {
     public static void getBuiltinTypes(ArrayList<IAType> types) throws Exception {
         Collection<BuiltinType> builtinTypes = AsterixBuiltinTypeMap.getBuiltinTypes().values();
         Iterator<BuiltinType> iter = builtinTypes.iterator();
-        while (iter.hasNext())
+        while (iter.hasNext()) {
             types.add(iter.next());
+        }
     }
 
     public static void getMetadataTypes(ArrayList<IAType> types) throws Exception {
-        for (int i = 0; i < primaryIndexes.length; i++)
+        for (int i = 0; i < primaryIndexes.length; i++) {
             types.add(primaryIndexes[i].getPayloadRecordType());
+        }
     }
 
     public static void insertInitialDatatypes(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -275,19 +265,6 @@ public class MetadataBootstrap {
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datatypes.");
-        }
-    }
-
-    public static void insertInitialIndexes(MetadataTransactionContext mdTxnCtx) throws Exception {
-        for (int i = 0; i < secondaryIndexes.length; i++) {
-            MetadataManager.INSTANCE.addIndex(mdTxnCtx,
-                    new Index(secondaryIndexes[i].getDataverseName(), secondaryIndexes[i].getIndexedDatasetName(),
-                            secondaryIndexes[i].getIndexName(), IndexType.BTREE,
-                            secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(),
-                            false, false, IMetadataEntity.PENDING_NO_OP));
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Finished inserting initial indexes.");
         }
     }
 
@@ -445,7 +422,7 @@ public class MetadataBootstrap {
     }
 
     public static void startDDLRecovery() throws RemoteException, ACIDException, MetadataException {
-        //#. clean up any record which has pendingAdd/DelOp flag 
+        //#. clean up any record which has pendingAdd/DelOp flag
         //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
         String dataverseName = null;
         String datasetName = null;

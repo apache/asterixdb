@@ -51,12 +51,12 @@ create type events.EventType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Event(EventType) primary key name on group1;
 
-write output to nc1:"/tmp/q2.adm"
+write output to asterix_nc1:"/tmp/q2.adm"
 select element {'sig_name':sig_name,'total_count':sig_sponsorship_count,'chapter_breakdown':by_chapter}
 from  Event as event,
       event.sponsoring_sigs as sponsor

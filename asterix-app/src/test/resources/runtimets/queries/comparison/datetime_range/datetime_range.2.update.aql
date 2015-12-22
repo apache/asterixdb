@@ -20,5 +20,5 @@ use dataverse test;
 
 load dataset TwitterData 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
 

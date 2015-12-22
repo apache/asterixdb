@@ -44,13 +44,16 @@ public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutput
     @Override
     public void initialize() throws HyracksDataException {
         FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
-        if (fieldSlots != null && tupleData != null && tupleSize > 0)
+        if (fieldSlots != null && tupleData != null && tupleSize > 0) {
             appender.append(fieldSlots, tupleData, 0, tupleSize);
-        writer.open();
-        try {
-            appender.flush(writer, true);
         }
-        finally {
+        try {
+            writer.open();
+            appender.flush(writer, true);
+        } catch (Throwable th) {
+            writer.fail();
+            throw new HyracksDataException(th);
+        } finally {
             writer.close();
         }
     }

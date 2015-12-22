@@ -30,12 +30,12 @@ create type fuzzyjoin.TOKENSRANKEDADMType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
 
-write output to nc1:"rttest/introhashpartitionmerge.adm"
+write output to asterix_nc1:"rttest/introhashpartitionmerge.adm"
 select element token2.rank
 from  TOKENSRANKEDADM as token1,
       (

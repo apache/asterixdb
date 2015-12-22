@@ -44,5 +44,5 @@ create type test.CustomerType as
 
 }
 
-create external  table Customers(CustomerType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+create external  table Customers(CustomerType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/customerData.json"),("format"="adm"));
 

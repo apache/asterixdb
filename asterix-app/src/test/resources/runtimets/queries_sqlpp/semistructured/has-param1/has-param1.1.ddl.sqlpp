@@ -33,5 +33,5 @@ create type test.OrderType as
   total : float
 }
 
-create external  table Orders(OrderType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));
+create external  table Orders(OrderType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));
 

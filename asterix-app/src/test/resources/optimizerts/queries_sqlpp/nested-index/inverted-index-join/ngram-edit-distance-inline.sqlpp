@@ -48,7 +48,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index ngram_index  on DBLP (nested.authors) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_ngram-edit-distance-inline.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ngram-edit-distance-inline.adm"
 select element {'aauthors':a.nested.authors,'bauthors':b.nested.authors,'ed':ed}
 from  DBLP as a,
       DBLP as b

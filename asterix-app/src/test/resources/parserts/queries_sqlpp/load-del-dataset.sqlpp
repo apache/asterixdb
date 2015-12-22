@@ -44,10 +44,10 @@ create type demo0927.AddressType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table Customers(CustomerType) primary key cid on group1;
 
-load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1:///tmp/customerData.json"),("format"="adm")) pre-sorted;
+load  table Customers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1:///tmp/customerData.json"),("format"="adm")) pre-sorted;
 

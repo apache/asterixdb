@@ -37,14 +37,14 @@ declare type LineItemType as closed {
   l_comment: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
 
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_1.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_1.adm";
  
 for $l in dataset('LineItems')
 where $l.l_shipdate <= '1998-09-02'

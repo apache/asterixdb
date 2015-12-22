@@ -59,7 +59,7 @@ create index msgCountAIx on TweetMessages(nested.countA) type btree;
 create index msgCountBIx on TweetMessages(nested.countB) type btree;
 create index msgTextIx on TweetMessages(nested.message-text) type keyword;
 
-write output to nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_02.adm";
+write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_02.adm";
 
 for $t1 in dataset('TweetMessages')
 let $n :=  create-circle($t1.nested.sender-location, 0.5)

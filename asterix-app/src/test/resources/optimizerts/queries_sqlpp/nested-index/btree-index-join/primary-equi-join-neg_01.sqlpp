@@ -43,7 +43,7 @@ create  table test1.DsOne(TestType) primary key nested.key1;
 
 create  table test1.DsTwo(TestType) primary key nested.key1;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join-neg_01.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join-neg_01.adm"
 select element x
 from  "test1.DsOne" as x,
       "test1.DsTwo" as y

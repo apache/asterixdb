@@ -57,7 +57,7 @@ create index title_index_DBLP on DBLP(nested.title: string) enforced;
 
 create index title_index_CSX on CSX(nested.title: string) enforced;
 
-write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_03.adm";
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_03.adm";
 
 for $a in dataset('DBLP')
 for $b in dataset('CSX')

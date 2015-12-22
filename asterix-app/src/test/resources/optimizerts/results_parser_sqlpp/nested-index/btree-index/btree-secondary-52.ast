@@ -1,5 +1,5 @@
 DataverseUse test
-WriteOutputTo nc1:rttest/btree-index_btree-secondary-50.adm
+WriteOutputTo asterix_nc1:rttest/btree-index_btree-secondary-50.adm
 TypeDecl TestTypetmp [
   open RecordType {
     id : int32,

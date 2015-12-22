@@ -8,7 +8,7 @@ TypeDecl TestType [
 ]
 DatasetDecl DsOne(TestType) partitioned by [[key1]]
 DatasetDecl DsTwo(TestType) partitioned by [[key1]]
-WriteOutputTo nc1:rttest/btree-index-join_primary-gt-join_02.adm
+WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-gt-join_02.adm
 Query:
 SELECT ELEMENT [
 Variable [ Name=x ]

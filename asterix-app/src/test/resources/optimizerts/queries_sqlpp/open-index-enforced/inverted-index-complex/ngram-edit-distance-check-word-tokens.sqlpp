@@ -41,7 +41,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title:string) type ngram (3) enforced;
 
-write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm"
 select element {'id':paper.id,'title':paper.title}
 from  DBLP as paper,
       test."word-tokens"(paper.title) as word

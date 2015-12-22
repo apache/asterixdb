@@ -33,5 +33,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create external  table DBLPsplits(DBLPType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
+create external  table DBLPsplits(DBLPType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
 

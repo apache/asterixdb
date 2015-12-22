@@ -20,5 +20,5 @@
 use TinySocial;
 
 
-load  table FacebookUsers using "localfs" (("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));
+load  table FacebookUsers using "localfs" (("path"="asterix_nc1://data/tinysocial/fbu.adm"),("format"="adm"));
 

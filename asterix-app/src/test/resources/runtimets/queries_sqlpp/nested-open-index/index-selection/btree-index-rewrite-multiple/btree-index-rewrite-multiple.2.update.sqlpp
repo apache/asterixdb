@@ -27,7 +27,7 @@
 use tpch;
 
 
-load  table Orderstmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Orderstmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into Orders
 select element {'nested':{'o_orderkey':c.o_orderkey,'o_custkey':c.o_custkey,'o_orderstatus':c.o_orderstatus,'o_totalprice':c.o_totalprice,'o_orderdate':c.o_orderdate,'o_orderpriority':c.o_orderpriority,'o_clerk':c.o_clerk,'o_shippriority':c.o_shippriority,'o_comment':c.o_comment}}

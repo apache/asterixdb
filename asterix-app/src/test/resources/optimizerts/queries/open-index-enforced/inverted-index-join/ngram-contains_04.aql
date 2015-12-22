@@ -47,7 +47,7 @@ create index ngram_index_DBLP on DBLP(title: string) type ngram(3) enforced;
 
 create index ngram_index_CSX on CSX(title: string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_ngram-contains-04.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-04.adm";
 
 for $o1 in dataset('DBLP')
 for $o2 in dataset('CSX')

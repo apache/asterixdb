@@ -24,5 +24,5 @@
 use dataverse test;
 
 load dataset mydataset 
-using localfs(("path"="nc1://data/duplicateKeys.adm"),("format"="adm"));
+using localfs(("path"="asterix_nc1://data/duplicateKeys.adm"),("format"="adm"));
 

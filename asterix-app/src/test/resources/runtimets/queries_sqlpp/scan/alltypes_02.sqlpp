@@ -57,9 +57,9 @@ create type test.AllType as
   circle : circle
 }
 
-create external  table "All"(AllType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/allData.json"),("format"="adm"));
+create external  table "All"(AllType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/allData.json"),("format"="adm"));
 
-write output to nc1:"rttest/scan_alltypes_02.adm"
+write output to asterix_nc1:"rttest/scan_alltypes_02.adm"
 select element a
 from  "All" as a
 ;

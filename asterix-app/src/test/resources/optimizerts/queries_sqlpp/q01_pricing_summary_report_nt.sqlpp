@@ -45,9 +45,9 @@ create type tpch.LineItemType as
 
 create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
-load  table LineItem using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table LineItem using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-write output to nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.sum((
         select element i.l_quantity
         from  l as i

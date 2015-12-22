@@ -48,7 +48,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index keyword_index  on DBLP (nested.title) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_word-jaccard-inline.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_word-jaccard-inline.adm"
 select element {'atitle':a.nested.title,'btitle':b.nested.title,'jacc':jacc}
 from  DBLP as a,
       DBLP as b

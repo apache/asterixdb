@@ -76,7 +76,7 @@ create  table FacebookMessages(FacebookMessageType) primary key nested."message-
 
 create  index fbmIdxAutId  if not exists  on FacebookMessages (nested."author-id-copy":int32) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm"
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm"
 select element {'fbu-ID':user.nested.id,'fbm-auth-ID':message.nested."author-id",'uname':user.nested.name,'message':message.nested.message}
 from  FacebookUsers as user,
       FacebookMessages as message

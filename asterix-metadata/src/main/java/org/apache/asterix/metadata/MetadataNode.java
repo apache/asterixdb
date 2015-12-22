@@ -42,7 +42,6 @@ import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.metadata.bootstrap.MetadataSecondaryIndexes;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -72,15 +71,14 @@ import org.apache.asterix.metadata.entitytupletranslators.IndexTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.LibraryTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
-import org.apache.asterix.metadata.valueextractors.DatasetNameValueExtractor;
-import org.apache.asterix.metadata.valueextractors.DatatypeNameValueExtractor;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
-import org.apache.asterix.metadata.valueextractors.NestedDatatypeNameValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
@@ -183,10 +181,7 @@ public class MetadataNode implements IMetadataNode {
             DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(true);
             ITupleReference datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
-            // Add an entry for the node group
-            ITupleReference nodeGroupTuple = createTuple(dataset.getNodeGroupName(), dataset.getDataverseName(),
-                    dataset.getDatasetName());
-            insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
+
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
@@ -196,10 +191,6 @@ public class MetadataNode implements IMetadataNode {
 
                 addIndex(jobId, primaryIndex);
             }
-            // Add entry in datatype secondary index.
-            ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getItemTypeName(),
-                    dataset.getDatasetName());
-            insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataset with this name " + dataset.getDatasetName()
                     + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
@@ -277,12 +268,6 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public void insertIntoDatatypeSecondaryIndex(JobId jobId, String dataverseName, String nestedTypeName,
-            String topTypeName) throws Exception {
-        ITupleReference tuple = createTuple(dataverseName, nestedTypeName, topTypeName);
-        insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, tuple);
-    }
-
     private void insertTupleIntoIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws Exception {
         long resourceID = metadataIndex.getResourceID();
@@ -333,64 +318,56 @@ public class MetadataNode implements IMetadataNode {
     public void dropDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
         try {
 
+            confirmDataverseCanBeDeleted(jobId, dataverseName);
+
             List<Dataset> dataverseDatasets;
             Dataset ds;
             dataverseDatasets = getDataverseDatasets(jobId, dataverseName);
-            if (dataverseDatasets != null && dataverseDatasets.size() > 0) {
-                // Drop all datasets in this dataverse.
-                for (int i = 0; i < dataverseDatasets.size(); i++) {
-                    ds = dataverseDatasets.get(i);
-                    dropDataset(jobId, dataverseName, ds.getDatasetName());
-                }
+            // Drop all datasets in this dataverse.
+            for (int i = 0; i < dataverseDatasets.size(); i++) {
+                ds = dataverseDatasets.get(i);
+                dropDataset(jobId, dataverseName, ds.getDatasetName());
             }
+
+            //After dropping datasets, drop datatypes
             List<Datatype> dataverseDatatypes;
             // As a side effect, acquires an S lock on the 'datatype' dataset
             // on behalf of txnId.
             dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
-            if (dataverseDatatypes != null && dataverseDatatypes.size() > 0) {
-                // Drop all types in this dataverse.
-                for (int i = 0; i < dataverseDatatypes.size(); i++) {
-                    forceDropDatatype(jobId, dataverseName, dataverseDatatypes.get(i).getDatatypeName());
-                }
+            // Drop all types in this dataverse.
+            for (int i = 0; i < dataverseDatatypes.size(); i++) {
+                forceDropDatatype(jobId, dataverseName, dataverseDatatypes.get(i).getDatatypeName());
             }
 
             // As a side effect, acquires an S lock on the 'Function' dataset
             // on behalf of txnId.
             List<Function> dataverseFunctions = getDataverseFunctions(jobId, dataverseName);
-            if (dataverseFunctions != null && dataverseFunctions.size() > 0) {
-                // Drop all functions in this dataverse.
-                for (Function function : dataverseFunctions) {
-                    dropFunction(jobId, new FunctionSignature(dataverseName, function.getName(), function.getArity()));
-                }
+            // Drop all functions in this dataverse.
+            for (Function function : dataverseFunctions) {
+                dropFunction(jobId, new FunctionSignature(dataverseName, function.getName(), function.getArity()));
             }
 
             // As a side effect, acquires an S lock on the 'Adapter' dataset
             // on behalf of txnId.
             List<DatasourceAdapter> dataverseAdapters = getDataverseAdapters(jobId, dataverseName);
-            if (dataverseAdapters != null && dataverseAdapters.size() > 0) {
-                // Drop all functions in this dataverse.
-                for (DatasourceAdapter adapter : dataverseAdapters) {
-                    dropAdapter(jobId, dataverseName, adapter.getAdapterIdentifier().getName());
-                }
+            // Drop all functions in this dataverse.
+            for (DatasourceAdapter adapter : dataverseAdapters) {
+                dropAdapter(jobId, dataverseName, adapter.getAdapterIdentifier().getName());
             }
 
             List<Feed> dataverseFeeds;
             Feed feed;
             dataverseFeeds = getDataverseFeeds(jobId, dataverseName);
-            if (dataverseFeeds != null && dataverseFeeds.size() > 0) {
-                // Drop all datasets in this dataverse.
-                for (int i = 0; i < dataverseFeeds.size(); i++) {
-                    feed = dataverseFeeds.get(i);
-                    dropFeed(jobId, dataverseName, feed.getFeedName());
-                }
+            // Drop all datasets in this dataverse.
+            for (int i = 0; i < dataverseFeeds.size(); i++) {
+                feed = dataverseFeeds.get(i);
+                dropFeed(jobId, dataverseName, feed.getFeedName());
             }
 
             List<FeedPolicy> feedPolicies = getDataversePolicies(jobId, dataverseName);
-            if (feedPolicies != null && feedPolicies.size() > 0) {
-                // Drop all feed ingestion policies in this dataverse.
-                for (FeedPolicy feedPolicy : feedPolicies) {
-                    dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
-                }
+            // Drop all feed ingestion policies in this dataverse.
+            for (FeedPolicy feedPolicy : feedPolicies) {
+                dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
             }
 
             List<Channel> dataverseChannels;
@@ -440,33 +417,6 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference datasetTuple = null;
             try {
                 datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey);
-
-                // Delete entry from secondary index 'group'.
-                ITupleReference groupNameSearchKey = createTuple(dataset.getNodeGroupName(), dataverseName,
-                        datasetName);
-                // Searches the index for the tuple to be deleted. Acquires an S
-                // lock on the GROUPNAME_ON_DATASET_INDEX index.
-                try {
-                    ITupleReference groupNameTuple = getTupleToBeDeleted(jobId,
-                            MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
-                    deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
-                } catch (TreeIndexException tie) {
-                    // ignore this exception and continue deleting all relevant
-                    // artifacts.
-                }
-
-                // Delete entry from secondary index 'type'.
-                ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getItemTypeName(), datasetName);
-                // Searches the index for the tuple to be deleted. Acquires an S
-                // lock on the DATATYPENAME_ON_DATASET_INDEX index.
-                try {
-                    ITupleReference dataTypeTuple = getTupleToBeDeleted(jobId,
-                            MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeSearchKey);
-                    deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
-                } catch (TreeIndexException tie) {
-                    // ignore this exception and continue deleting all relevant
-                    // artifacts.
-                }
 
                 // Delete entry(s) from the 'indexes' dataset.
                 List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
@@ -554,49 +504,25 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropDatatype(JobId jobId, String dataverseName, String datatypeName)
             throws MetadataException, RemoteException {
-        List<String> datasetNames;
-        List<String> usedDatatypes;
-        try {
-            datasetNames = getDatasetNamesDeclaredByThisDatatype(jobId, dataverseName, datatypeName);
-            usedDatatypes = getDatatypeNamesUsingThisDatatype(jobId, dataverseName, datatypeName);
-        } catch (Exception e) {
-            throw new MetadataException(e);
-        }
-        // Check whether type is being used by datasets.
-        if (!datasetNames.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Cannot drop type '" + datatypeName + "'; it was used when creating these datasets:");
-            for (int i = 0; i < datasetNames.size(); i++) {
-                sb.append("\n" + (i + 1) + "- " + datasetNames.get(i) + ".");
-            }
-            throw new MetadataException(sb.toString());
-        }
-        // Check whether type is being used by other types.
-        if (!usedDatatypes.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Cannot drop type '" + datatypeName + "'; it is used in these datatypes:");
-            for (int i = 0; i < usedDatatypes.size(); i++) {
-                sb.append("\n" + (i + 1) + "- " + usedDatatypes.get(i) + ".");
-            }
-            throw new MetadataException(sb.toString());
-        }
-        // Delete the datatype entry, including all it's nested types.
+
+        confirmDatatypeIsUnused(jobId, dataverseName, datatypeName);
+
+        // Delete the datatype entry, including all it's nested anonymous types.
         try {
             ITupleReference searchKey = createTuple(dataverseName, datatypeName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
-            // This call uses the secondary index on datatype. Get nested types
-            // before deleting entry from secondary index.
-            List<String> nestedTypes = getNestedDatatypeNames(jobId, dataverseName, datatypeName);
+            // Get nested types
+            List<String> nestedTypes = getNestedComplexDatatypeNamesForThisDatatype(jobId, dataverseName, datatypeName);
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
-            deleteFromDatatypeSecondaryIndex(jobId, dataverseName, datatypeName);
             for (String nestedType : nestedTypes) {
                 Datatype dt = getDatatype(jobId, dataverseName, nestedType);
                 if (dt != null && dt.getIsAnonymous()) {
                     dropDatatype(jobId, dataverseName, dt.getDatatypeName());
                 }
             }
+
             // TODO: Change this to be a BTree specific exception, e.g.,
             // BTreeKeyDoesNotExistException.
         } catch (TreeIndexException e) {
@@ -613,30 +539,6 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
-            deleteFromDatatypeSecondaryIndex(jobId, dataverseName, datatypeName);
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
-        } catch (TreeIndexException e) {
-            throw new AsterixException("Cannot drop type '" + datatypeName + "' because it doesn't exist", e);
-        } catch (AsterixException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void deleteFromDatatypeSecondaryIndex(JobId jobId, String dataverseName, String datatypeName)
-            throws AsterixException {
-        try {
-            List<String> nestedTypes = getNestedDatatypeNames(jobId, dataverseName, datatypeName);
-            for (String nestedType : nestedTypes) {
-                ITupleReference searchKey = createTuple(dataverseName, nestedType, datatypeName);
-                // Searches the index for the tuple to be deleted. Acquires an S
-                // lock on the DATATYPENAME_ON_DATATYPE_INDEX index.
-                ITupleReference tuple = getTupleToBeDeleted(jobId,
-                        MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, searchKey);
-                deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, tuple);
-            }
             // TODO: Change this to be a BTree specific exception, e.g.,
             // BTreeKeyDoesNotExistException.
         } catch (TreeIndexException e) {
@@ -803,59 +705,130 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<String> getDatasetNamesDeclaredByThisDatatype(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
+    public List<Dataset> getAllDatasets(JobId jobId) throws MetadataException, RemoteException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datatypeName);
-            List<String> results = new ArrayList<String>();
-            IValueExtractor<String> valueExtractor = new DatasetNameValueExtractor();
-            searchIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, searchKey, valueExtractor,
-                    results);
+            ITupleReference searchKey = null;
+            DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
+            IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
+            List<Dataset> results = new ArrayList<Dataset>();
+            searchIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey, valueExtractor, results);
             return results;
         } catch (Exception e) {
             throw new MetadataException(e);
         }
     }
 
-    public List<String> getDatatypeNamesUsingThisDatatype(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
+    public List<Datatype> getAllDatatypes(JobId jobId) throws MetadataException, RemoteException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datatypeName);
-            List<String> results = new ArrayList<String>();
-            IValueExtractor<String> valueExtractor = new DatatypeNameValueExtractor(dataverseName, this);
-            searchIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, searchKey, valueExtractor,
-                    results);
+            ITupleReference searchKey = null;
+            DatatypeTupleTranslator tupleReaderWriter = new DatatypeTupleTranslator(jobId, this, false);
+            IValueExtractor<Datatype> valueExtractor = new MetadataEntityValueExtractor<Datatype>(tupleReaderWriter);
+            List<Datatype> results = new ArrayList<Datatype>();
+            searchIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey, valueExtractor, results);
             return results;
         } catch (Exception e) {
             throw new MetadataException(e);
         }
     }
 
-    private List<String> getNestedDatatypeNames(JobId jobId, String dataverseName, String datatypeName)
+    private void confirmDataverseCanBeDeleted(JobId jobId, String dataverseName)
             throws MetadataException, RemoteException {
-        try {
-            ITupleReference searchKey = createTuple(dataverseName);
-            List<String> results = new ArrayList<String>();
-            IValueExtractor<String> valueExtractor = new NestedDatatypeNameValueExtractor(datatypeName);
-            searchIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, searchKey, valueExtractor,
-                    results);
-            return results;
-        } catch (Exception e) {
-            throw new MetadataException(e);
+        //If a dataset from a DIFFERENT dataverse
+        //uses a type from this dataverse
+        //throw an error
+        List<Dataset> datasets = getAllDatasets(jobId);
+        for (Dataset set : datasets) {
+            if (set.getDataverseName().equals(dataverseName)) {
+                continue;
+            }
+            if (set.getItemTypeDataverseName().equals(dataverseName)) {
+                throw new MetadataException("Cannot drop dataverse. Type " + dataverseName + "." + set.getItemTypeName()
+                        + " used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
+            }
         }
+    }
+
+    private void confirmDatatypeIsUnused(JobId jobId, String dataverseName, String datatypeName)
+            throws MetadataException, RemoteException {
+        confirmDatatypeIsUnusedByDatatypes(jobId, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByDatasets(jobId, dataverseName, datatypeName);
+    }
+
+    private void confirmDatatypeIsUnusedByDatasets(JobId jobId, String dataverseName, String datatypeName)
+            throws MetadataException, RemoteException {
+        //If any dataset uses this type, throw an error
+        List<Dataset> datasets = getAllDatasets(jobId);
+        for (Dataset set : datasets) {
+            if (set.getItemTypeName().equals(datatypeName) && set.getItemTypeDataverseName().equals(dataverseName)) {
+                throw new MetadataException("Cannot drop type " + dataverseName + "." + datatypeName
+                        + " being used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
+            }
+        }
+    }
+
+    private void confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
+            throws MetadataException, RemoteException {
+        //If any datatype uses this type, throw an error
+        List<Datatype> datatypes = getAllDatatypes(jobId);
+        for (Datatype type : datatypes) {
+            if (!type.getDataverseName().equals(dataverseName)) {
+                continue;
+            }
+            ARecordType recType = (ARecordType) type.getDatatype();
+            for (IAType subType : recType.getFieldTypes()) {
+                if (subType.getTypeName().equals(datatypeName)) {
+                    throw new MetadataException("Cannot drop type " + dataverseName + "." + datatypeName
+                            + " being used by type " + dataverseName + "." + recType.getTypeName());
+                }
+            }
+        }
+    }
+
+    public String getDatatypeNameUsingThisAnonymousDatatype(JobId jobId, String dataverseName, String datatypeName)
+            throws MetadataException, RemoteException {
+        //Find the first datatype that uses this datatype
+        //Anonymous means there will be only one
+        List<Datatype> dataverseDatatypes;
+        dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
+        for (Datatype type : dataverseDatatypes) {
+            ARecordType recType = (ARecordType) type.getDatatype();
+            for (IAType subType : recType.getFieldTypes()) {
+                if (subType.getTypeName().equals(datatypeName)) {
+                    return type.getDatatypeName();
+                }
+            }
+        }
+
+        throw new MetadataException(
+                "Anonymous subtype " + dataverseName + "." + datatypeName + " is missing parent type");
+    }
+
+    private List<String> getNestedComplexDatatypeNamesForThisDatatype(JobId jobId, String dataverseName,
+            String datatypeName) throws Exception {
+        //Return all field types that aren't builtin types
+        Datatype parentType = getDatatype(jobId, dataverseName, datatypeName);
+        ARecordType recType = (ARecordType) parentType.getDatatype();
+        List<String> nestedTypes = new ArrayList<String>();
+        for (IAType subType : recType.getFieldTypes()) {
+            if (!(subType instanceof BuiltinType)) {
+                nestedTypes.add(subType.getTypeName());
+            }
+        }
+        return nestedTypes;
     }
 
     public List<String> getDatasetNamesPartitionedOnThisNodeGroup(JobId jobId, String nodegroup)
             throws MetadataException, RemoteException {
-        try {
-            ITupleReference searchKey = createTuple(nodegroup);
-            List<String> results = new ArrayList<String>();
-            IValueExtractor<String> valueExtractor = new DatasetNameValueExtractor();
-            searchIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, searchKey, valueExtractor, results);
-            return results;
-        } catch (Exception e) {
-            throw new MetadataException(e);
+        //this needs to scan the datasets and return the datasets that use this nodegroup
+        List<String> nodeGroupDatasets = new ArrayList<String>();
+        List<Dataset> datasets = getAllDatasets(jobId);
+        for (Dataset set : datasets) {
+            if (set.getNodeGroupName().equals(nodegroup)) {
+                nodeGroupDatasets.add(set.getDatasetName());
+            }
         }
+        return nodeGroupDatasets;
+
     }
 
     @Override

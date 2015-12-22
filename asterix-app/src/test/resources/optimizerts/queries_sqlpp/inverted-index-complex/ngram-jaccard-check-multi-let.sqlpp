@@ -44,7 +44,7 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-complex_ngram-jaccard-check-multi-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-jaccard-check-multi-let.adm"
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
 with  paper_tokens as test."gram-tokens"(paper.title,3,false),

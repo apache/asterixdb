@@ -26,5 +26,5 @@
 use temp;
 
 
-load  table testds using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/csv/sample_03.csv"),("format"="delimited-text"),("delimiter"=","),("quote"="\""));
+load  table testds using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/csv/sample_03.csv"),("format"="delimited-text"),("delimiter"=","),("quote"="\""));
 

@@ -64,7 +64,7 @@ create type OrderType as closed {
 create dataset Customers(CustomerType) primary key nested.cid;
 create dataset Orders(OrderType) primary key nested.oid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_05.adm";
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_05.adm";
 
 for $o in dataset('Orders')
 for $c in dataset('Customers')

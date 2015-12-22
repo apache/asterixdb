@@ -31,4 +31,4 @@ create type OrderType as open {
 
 create external dataset Orders(OrderType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));

@@ -31,7 +31,7 @@ declare type CustomerType as open {
   c_custkey: int32
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
@@ -42,7 +42,7 @@ declare dataset Orders(OrderType)
 declare dataset Customers(CustomerType) 
   primary key c_custkey on group1;
 
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_open_3.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_open_3.adm";
 
 for $c in dataset('Customers')
 for $o in dataset('Orders')

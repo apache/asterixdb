@@ -26,12 +26,12 @@ declare type DBLPType as open {
  misc: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset DBLP(DBLPType) 
   primary key id on group1;
 
-write output to nc1:"/tmp/110-self-join-dblp.adm";
+write output to asterix_nc1:"/tmp/110-self-join-dblp.adm";
 
 set simthreshold '.5f';
 

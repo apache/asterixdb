@@ -25,4 +25,4 @@
 use dataverse test;
 
 load dataset Animals using localfs
-(("path"="nc1://data/classifications/animals.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/classifications/animals.adm"),("format"="adm"));

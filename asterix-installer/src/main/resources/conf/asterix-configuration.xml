@@ -20,7 +20,7 @@
 
 	<property>
 		<name>nc.java.opts</name>
-		<value>-Xmx1536m</value>
+		<value>-Xmx3096m</value>
 		<description>JVM parameters for each Node Contoller (NC)</description>
 	</property>
 
@@ -98,7 +98,7 @@
 	
 	<property>
 		<name>storage.memorycomponent.globalbudget</name>
-		<value>536870912</value>
+		<value>1073741824</value>
 		<description>The total size of memory in bytes that the sum of all
 			open memory
 			components cannot exceed. (Default = "536870192" // 512MB)

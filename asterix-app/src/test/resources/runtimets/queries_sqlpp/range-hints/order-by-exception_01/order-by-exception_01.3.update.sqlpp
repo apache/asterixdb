@@ -20,5 +20,5 @@
 use TinySocial;
 
 
-load  table TwitterUsers using "localfs" (("path"="nc1://data/tinysocial/twu.adm"),("format"="adm"));
+load  table TwitterUsers using "localfs" (("path"="asterix_nc1://data/tinysocial/twu.adm"),("format"="adm"));
 

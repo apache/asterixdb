@@ -26,13 +26,13 @@ declare type CSXType as open {
   misc: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset CSX(CSXType) 
   primary key id on group1;
 
 load dataset CSX 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/fuzzyjoin/pub/csx-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+(("path"="asterix_nc1://data/fuzzyjoin/pub/csx-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 

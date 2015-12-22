@@ -53,7 +53,7 @@ create  table CSX(CSXType) primary key id;
 
 create  index ngram_index  on CSX (authors) type ngram (3);
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm"
 set "simfunction" "edit-distance";
 
 set "simthreshold" "3";

@@ -46,7 +46,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index keyword_index  on DBLP (nested.title) type keyword;
 
-write output to nc1:"rttest/inverted-index-basic_word-fuzzyeq-jaccard.adm"
+write output to asterix_nc1:"rttest/inverted-index-basic_word-fuzzyeq-jaccard.adm"
 set "simfunction" "jaccard";
 
 set "simthreshold" "0.5f";

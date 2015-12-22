@@ -38,7 +38,7 @@ create  table t1(TestType) primary key id;
 
 create  table t2(TestType) primary key id;
 
-write output to nc1:"rttest/hahsjoin-with-unnest.adm"
+write output to asterix_nc1:"rttest/hahsjoin-with-unnest.adm"
 select element {'t1':m,'t2':n}
 from  t1 as m,
       t2 as n,

@@ -44,12 +44,12 @@ create type tpch.LineItemType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table LineItems_q1(LineItemType) primary key l_orderkey,l_linenumber on group1;
 
-write output to nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_suppkey':tpch.count(g)}
 from  (
     select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'l_suppkey':l_suppkey}

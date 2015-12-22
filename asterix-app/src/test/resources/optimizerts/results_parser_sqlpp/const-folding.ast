@@ -1,5 +1,5 @@
 DataverseUse test
-WriteOutputTo nc1:rttest/divide.adm
+WriteOutputTo asterix_nc1:rttest/divide.adm
 Query:
 FieldAccessor [
   RecordConstructor [

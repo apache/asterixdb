@@ -20,5 +20,5 @@
 use tpch;
 
 
-load  table Regions_group_no_agg using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Regions_group_no_agg using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 

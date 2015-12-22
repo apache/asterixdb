@@ -19,7 +19,7 @@
 use dataverse custord;
 
 // Creating this nodegroup should succeed.
-create nodegroup newgroup if not exists on nc1, nc2;
+create nodegroup newgroup if not exists on asterix_nc1, asterix_nc2;
 
 // Creating this duplicate type should fail, and rollback should remove the new nodegroup.
 create type StreetType as closed {

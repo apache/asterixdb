@@ -32,19 +32,19 @@ create type MyRecord as open {
   circle: circle
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
+create nodegroup group1  if not exists on asterix_nc1, asterix_nc2;
 
 create dataset MyData(MyRecord)
   primary key id on group1;
 
 load dataset MyData
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
 create index rtree_index_point on MyData(point) type rtree;
 
 
-write output to nc1:"rttest/index_rtree-secondary-index-open.adm";
+write output to asterix_nc1:"rttest/index_rtree-secondary-index-open.adm";
 
 for $o in dataset('MyData')
 where spatial-intersect($o.point, create-polygon([4.0,1.0,4.0,4.0,12.0,4.0,12.0,1.0]))

@@ -85,10 +85,10 @@ create type "loj-super-key_02".PartSuppType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
-write output to nc1:"/tmp/loj-super-key_01.adm"
+write output to asterix_nc1:"/tmp/loj-super-key_01.adm"
 create  table LineItems(LineItemType) primary key l_partkey,l_linenumber on group1;
 
 create  table PartSupp(PartSuppType) primary key ps_partkey,ps_suppkey on group1;

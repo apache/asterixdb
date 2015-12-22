@@ -26,7 +26,7 @@
 use test;
 
 
-load  table t1tmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table t1tmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into t1
 select element {'nested':c}

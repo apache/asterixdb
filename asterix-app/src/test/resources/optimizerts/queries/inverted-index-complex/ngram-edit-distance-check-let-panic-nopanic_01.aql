@@ -40,7 +40,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index ngram_index on DBLP(authors) type ngram(3);
 
-write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm";
 
 // Only the first edit-distance-check can be optimized with an index.
 for $o in dataset('DBLP')

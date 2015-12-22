@@ -47,7 +47,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index keyword_index  on DBLP (nested.title) type keyword;
 
-write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm"
 select element o
 from  DBLP as o
 with  jacc as test."similarity-jaccard-check"(test."word-tokens"(o.nested.title),test."word-tokens"('Transactions for Cooperative Environments'),0.500000f)

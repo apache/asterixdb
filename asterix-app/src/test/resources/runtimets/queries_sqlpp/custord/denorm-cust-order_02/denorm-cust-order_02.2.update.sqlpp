@@ -20,9 +20,9 @@
 use test;
 
 
-load  table Customers2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
+load  table Customers2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
 
-load  table Orders2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
+load  table Orders2 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
 
 insert into CustomerOrders2
 select element {'cid':c.cid,'cust':c,'orders':orders}

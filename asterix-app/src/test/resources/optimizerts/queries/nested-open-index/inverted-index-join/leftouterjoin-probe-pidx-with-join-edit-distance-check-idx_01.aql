@@ -55,7 +55,7 @@ primary key nested.tweetid;
 
 create index msgNgramIx on TweetMessages(nested.message-text: string) type ngram(3) enforced;
 
-write output to nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
 
 for $t1 in dataset('TweetMessages')
 where $t1.nested.tweetid > int64("240")

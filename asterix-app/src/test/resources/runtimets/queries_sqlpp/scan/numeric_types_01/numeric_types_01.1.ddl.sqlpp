@@ -34,5 +34,5 @@ create type test.NumericType as
   doubleField : double?
 }
 
-create external  table Numeric(NumericType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/nontagged/numericData.adm"),("format"="adm"));
+create external  table Numeric(NumericType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/nontagged/numericData.adm"),("format"="adm"));
 

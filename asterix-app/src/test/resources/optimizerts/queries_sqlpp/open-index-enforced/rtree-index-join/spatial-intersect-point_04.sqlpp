@@ -48,7 +48,7 @@ create  index rtree_index  on MyData1 (point:point) type rtree enforced;
 
 create  index rtree_index2  on MyData2 (point:point) type rtree enforced;
 
-write output to nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
+write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
 select element {'a':a,'b':b}
 from  MyData1 as a,
       MyData2 as b

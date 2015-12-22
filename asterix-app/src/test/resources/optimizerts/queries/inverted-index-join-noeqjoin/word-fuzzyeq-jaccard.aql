@@ -49,7 +49,7 @@ create dataset CSX(CSXType) primary key id;
 
 create index keyword_index on DBLP(title) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_word-fuzzyeq-jaccard.adm";
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_word-fuzzyeq-jaccard.adm";
 
 set simfunction 'jaccard';
 set simthreshold '0.5f';

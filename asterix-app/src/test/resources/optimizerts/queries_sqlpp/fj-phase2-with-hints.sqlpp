@@ -33,12 +33,12 @@ create type fuzzyjoin_078.DBLPType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table DBLP_fuzzyjoin_078(DBLPType) primary key id on group1;
 
-write output to nc1:"rttest/fuzzyjoin_078.adm"
+write output to asterix_nc1:"rttest/fuzzyjoin_078.adm"
 select element {'id':paperDBLP.id,'tokens':tokensDBLP}
 from  DBLP_fuzzyjoin_078 as paperDBLP
 with  unrankedTokensDBLP as fuzzyjoin_078."counthashed-word-tokens"(paperDBLP.title),

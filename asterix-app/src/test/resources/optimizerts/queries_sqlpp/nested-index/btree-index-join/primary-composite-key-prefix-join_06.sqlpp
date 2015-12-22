@@ -42,7 +42,7 @@ create type test.Name as
 
 create  table Names(Name) primary key nested.fname,nested.lname;
 
-write output to nc1:"rttest/btree-index-join_primary-composite-key-prefix-prefix-join_06.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-composite-key-prefix-prefix-join_06.adm"
 select element {'emp1':emp1,'emp2':emp2}
 from  Names as emp1,
       Names as emp2

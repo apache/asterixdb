@@ -10,7 +10,7 @@ TypeDecl OrderType [
   }
 ]
 DatasetDecl Orders(OrderType) partitioned by [[oid]]
-WriteOutputTo nc1:/tmp/orders-aggreg.adm
+WriteOutputTo asterix_nc1:/tmp/orders-aggreg.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

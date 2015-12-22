@@ -20,7 +20,7 @@ use dataverse metadata;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
-write output to nc1:"/home/yasser/Dropbox/metadata.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/metadata.adm";
 
 
 declare type DataverseType as open {
@@ -32,7 +32,7 @@ DataverseInfo : {
 }
 
 
-declare nodegroup group1 on nc1;
+declare nodegroup group1 on asterix_nc1;
 
 declare dataset Dataverse(DataverseType)
   primary key dataverseName on group1;        

@@ -19,4 +19,4 @@
 use dataverse TinySocial;
 
 load dataset FacebookUsers using localfs
-(("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/tinysocial/fbu.adm"),("format"="adm"));

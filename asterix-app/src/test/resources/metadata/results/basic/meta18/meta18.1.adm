@@ -1,3 +1,0 @@
-{ "DataverseName": "Metadata", "DataFormat": "org.apache.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Thu Apr 04 21:10:48 PDT 2013", "PendingOp": 0 }
-{ "DataverseName": "test", "DataFormat": "org.apache.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Thu Apr 04 21:10:55 PDT 2013", "PendingOp": 0 }
-{ "DataverseName": "testdv", "DataFormat": "org.apache.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Thu Apr 04 21:10:52 PDT 2013", "PendingOp": 0 }

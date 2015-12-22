@@ -590,6 +590,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         String dataverseName = getActiveDataverse(dd.getDataverse());
         String datasetName = dd.getName().getValue();
         DatasetType dsType = dd.getDatasetType();
+        String itemTypeDataverseName = dd.getItemTypeDataverse().getValue();
         String itemTypeName = dd.getItemTypeName().getValue();
         Identifier ngNameId = dd.getNodegroupName();
         String nodegroupName = getNodeGroupName(ngNameId, dd, dataverseName);
@@ -602,8 +603,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-        MetadataLockManager.INSTANCE.createDatasetBegin(dataverseName, dataverseName + "." + itemTypeName,
-                nodegroupName, compactionPolicy, dataverseName + "." + datasetName, defaultCompactionPolicy);
+        MetadataLockManager.INSTANCE.createDatasetBegin(dataverseName, itemTypeDataverseName,
+                itemTypeDataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
+                dataverseName + "." + datasetName, defaultCompactionPolicy);
         Dataset dataset = null;
         try {
 
@@ -618,8 +620,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     throw new AlgebricksException("A dataset with this name " + datasetName + " already exists.");
                 }
             }
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    itemTypeDataverseName, itemTypeName);
             if (dt == null) {
                 throw new AlgebricksException(": type " + itemTypeName + " could not be found.");
             }
@@ -679,8 +681,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
 
             //#. add a new dataset with PendingAddOp
-            dataset = new Dataset(dataverseName, datasetName, itemTypeName, ngName, compactionPolicy,
-                    compactionPolicyProperties, datasetDetails, dd.getHints(), dsType,
+            dataset = new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, ngName,
+                    compactionPolicy, compactionPolicyProperties, datasetDetails, dd.getHints(), dsType,
                     DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
@@ -754,8 +756,9 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.createDatasetEnd(dataverseName, dataverseName + "." + itemTypeName,
-                    nodegroupName, compactionPolicy, dataverseName + "." + datasetName, defaultCompactionPolicy);
+            MetadataLockManager.INSTANCE.createDatasetEnd(dataverseName, itemTypeDataverseName,
+                    itemTypeDataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
+                    dataverseName + "." + datasetName, defaultCompactionPolicy);
         }
     }
 
@@ -880,8 +883,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     datasetName, indexName);
 
             String itemTypeName = ds.getItemTypeName();
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    ds.getItemTypeDataverseName(), itemTypeName);
             IAType itemType = dt.getDatatype();
             ARecordType aRecordType = (ARecordType) itemType;
 
@@ -1440,9 +1443,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //#. mark the existing dataset as PendingDropOp
                 MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx,
-                        new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getNodeGroupName(),
-                                ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(), ds.getDatasetDetails(),
-                                ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
+                        new Dataset(dataverseName, datasetName, ds.getItemTypeDataverseName(), ds.getItemTypeName(),
+                                ds.getNodeGroupName(), ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(),
+                                ds.getDatasetDetails(), ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
                                 IMetadataEntity.PENDING_DROP_OP));
 
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1483,9 +1486,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //#. mark the existing dataset as PendingDropOp
                 MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx,
-                        new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getNodeGroupName(),
-                                ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(), ds.getDatasetDetails(),
-                                ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
+                        new Dataset(dataverseName, datasetName, ds.getItemTypeDataverseName(), ds.getItemTypeName(),
+                                ds.getNodeGroupName(), ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(),
+                                ds.getDatasetDetails(), ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
                                 IMetadataEntity.PENDING_DROP_OP));
 
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2614,8 +2617,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             partitionFields.add(fieldNames);
             IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, true, null, false);
             DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseIdentifier, subscriptionsName,
-                    subscriptionsTypeName, null, null, new HashMap<String, String>(), new HashMap<String, String>(),
-                    DatasetType.INTERNAL, idd, true);
+                    dataverseIdentifier, subscriptionsTypeName, null, null, new HashMap<String, String>(),
+                    new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
 
             //Set up the datatype for the results dataset
             RecordTypeDefinition resultsTypeExpression = new RecordTypeDefinition();
@@ -2634,9 +2637,9 @@ public class QueryTranslator extends AbstractLangTranslator {
             fieldNames.add("rid");
             partitionFields.add(fieldNames);
             idd = new InternalDetailsDecl(partitionFields, false, null, false);
-            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName, resultsTypeName, null,
-                    null, new HashMap<String, String>(), new HashMap<String, String>(), DatasetType.INTERNAL, idd,
-                    true);
+            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName, dataverseIdentifier,
+                    resultsTypeName, null, null, new HashMap<String, String>(), new HashMap<String, String>(),
+                    DatasetType.INTERNAL, idd, true);
 
             //Run all four statements together to create datasets
             List<Statement> statements = new ArrayList<Statement>();
@@ -2839,8 +2842,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
 
             String itemTypeName = ds.getItemTypeName();
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    ds.getItemTypeDataverseName(), itemTypeName);
 
             // Prepare jobs to compact the datatset and its indexes
             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
@@ -3340,10 +3343,10 @@ public class QueryTranslator extends AbstractLangTranslator {
             IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(), false, null,
                     toDataset.getDatasetDetails().isTemp());
             DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
-                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeName()),
-                    new Identifier(toDataset.getNodeGroupName()), toDataset.getCompactionPolicy(),
-                    toDataset.getCompactionPolicyProperties(), toDataset.getHints(), toDataset.getDatasetType(), idd,
-                    false);
+                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeDataverseName()),
+                    new Identifier(toDataset.getItemTypeName()), new Identifier(toDataset.getNodeGroupName()),
+                    toDataset.getCompactionPolicy(), toDataset.getCompactionPolicyProperties(), toDataset.getHints(),
+                    toDataset.getDatasetType(), idd, false);
             this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc);
         } catch (Exception e) {
             e.printStackTrace();

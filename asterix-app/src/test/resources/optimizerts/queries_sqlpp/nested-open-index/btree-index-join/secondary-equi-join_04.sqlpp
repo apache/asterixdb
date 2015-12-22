@@ -46,7 +46,7 @@ create  table DBLP(DBLPType) primary key nested.id;
 
 create  index title_index  on DBLP (nested.title:string) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_04.adm"
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_04.adm"
 select element {'arec':a,'arec2':a2}
 from  DBLP as a,
       DBLP as a2

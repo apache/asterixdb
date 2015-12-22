@@ -17,22 +17,22 @@
  ! under the License.
  !-->
 <asterixConfiguration xmlns="asterixconf">
-	<metadataNode>nc1</metadataNode>
+	<metadataNode>asterix_nc1</metadataNode>
 	<store>
-		<ncId>nc1</ncId>
-		<storeDirs>nc1data</storeDirs>
+		<ncId>asterix_nc1</ncId>
+		<storeDirs>asterix_nc1data</storeDirs>
 	</store>
 	<store>
-		<ncId>nc2</ncId>
-		<storeDirs>nc2data</storeDirs>
+		<ncId>asterix_nc2</ncId>
+		<storeDirs>asterix_nc2data</storeDirs>
 	</store>
 	<transactionLogDir>
-		<ncId>nc1</ncId>
-		<txnLogDirPath>target/txnLogDir/nc1</txnLogDirPath>
+		<ncId>asterix_nc1</ncId>
+		<txnLogDirPath>target/txnLogDir/asterix_nc1</txnLogDirPath>
 	</transactionLogDir>
 	<transactionLogDir>
-		<ncId>nc2</ncId>
-		<txnLogDirPath>target/txnLogDir/nc2</txnLogDirPath>
+		<ncId>asterix_nc2</ncId>
+		<txnLogDirPath>target/txnLogDir/asterix_nc2</txnLogDirPath>
 	</transactionLogDir>
 
 	<property>
@@ -56,7 +56,7 @@
 	</property>
 	<property>
 		<name>compiler.sortmemory</name>
-		<value>163840</value>
+		<value>327680</value>
 	</property>
 	<property>
 		<name>compiler.groupmemory</name>

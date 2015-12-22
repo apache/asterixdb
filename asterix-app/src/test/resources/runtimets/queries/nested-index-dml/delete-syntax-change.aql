@@ -51,11 +51,11 @@ create dataset LineItem(LineItemType)
 
 load dataset LineItem
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 delete $l from dataset LineItem where $l.l_orderkey>=10
 
-write output to nc1:"rttest/dml_delete-syntax-change.adm";
+write output to asterix_nc1:"rttest/dml_delete-syntax-change.adm";
 for $c in dataset('LineItem')
 order by $c.l_orderkey, $c.l_linenumber
 return $c

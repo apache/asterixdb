@@ -28,14 +28,14 @@ declare type ExampleType as open {
   doubleField: double
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Numeric(ExampleType)
   primary key id on group1;
   
-write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_numeric_3.adm";
+write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_numeric_3.adm";
 
 
 for $o in dataset('Numeric')

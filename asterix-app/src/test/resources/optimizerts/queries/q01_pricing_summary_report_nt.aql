@@ -44,9 +44,9 @@ create dataset LineItem(LineItemType)
 
 load dataset LineItem 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-write output to nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
  
 for $l in dataset('LineItem')
 where $l.l_shipdate <= '1998-09-02'

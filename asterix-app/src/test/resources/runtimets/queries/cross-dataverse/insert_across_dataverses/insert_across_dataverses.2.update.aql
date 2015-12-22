@@ -20,7 +20,7 @@
 
 load dataset test1.Customers
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+(("path"="asterix_nc1://data/nontagged/customerData.json"),("format"="adm"));
 
 insert into dataset test2.Customers(
 for $x in dataset('test1.Customers')

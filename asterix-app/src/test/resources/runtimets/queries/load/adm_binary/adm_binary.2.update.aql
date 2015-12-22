@@ -27,4 +27,4 @@ use dataverse temp;
 
 load dataset testds
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/adm-load/binary_type.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/adm-load/binary_type.adm"),("format"="adm"));

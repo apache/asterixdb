@@ -52,7 +52,7 @@ create  table CSX(CSXType) primary key id;
 
 create  index keyword_index  on CSX (title) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_word-jaccard-check_02.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_02.adm"
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b

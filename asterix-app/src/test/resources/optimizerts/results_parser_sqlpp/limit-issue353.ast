@@ -20,7 +20,7 @@ TypeDecl LineItemType [
   }
 ]
 DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
-WriteOutputTo nc1:/tmp/push_limit.adm
+WriteOutputTo asterix_nc1:/tmp/push_limit.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

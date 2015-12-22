@@ -43,7 +43,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 public class AsterixLifecycleIT {
 
-    private static final int NUM_NC = 1;
+    private static final int NUM_NC = 2;
     private static final CommandHandler cmdHandler = new CommandHandler();
     private static final String PATH_BASE = "src/test/resources/integrationts/lifecycle";
     private static final String PATH_ACTUAL = "ittest/";

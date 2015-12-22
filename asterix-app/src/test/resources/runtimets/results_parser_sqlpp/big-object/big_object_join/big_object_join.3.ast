@@ -72,3 +72,15 @@ Where
       Field=o_custkey
     ]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_custkey
+  ]
+  ASC
+

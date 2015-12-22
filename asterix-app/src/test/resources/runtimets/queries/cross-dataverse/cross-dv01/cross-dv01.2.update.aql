@@ -25,10 +25,6 @@
  */
 
 
-use dataverse student;
-use dataverse teacher;
-
-
 insert into dataset student.ugdstd({"id":457,"name":"John Doe","age":22,"sex":"M","dept":"Dance"});
 
 insert into dataset student.gdstd({"id":418,"name":"John Smith","age":26,"sex":"M","dept":"Economics"});

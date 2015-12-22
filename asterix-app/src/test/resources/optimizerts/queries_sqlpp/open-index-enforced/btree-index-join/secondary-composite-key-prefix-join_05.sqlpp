@@ -38,7 +38,7 @@ create  table Names(Name) primary key id;
 
 create  index Name_idx  on Names (fname:string,lname:string) type btree enforced;
 
-write output to nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_05.adm"
+write output to asterix_nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_05.adm"
 select element {'emp1':emp1,'emp2':emp2}
 from  Names as emp1,
       Names as emp2

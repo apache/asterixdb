@@ -24,7 +24,7 @@ TypeDecl CustomerType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
 DatasetDecl Customers2(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:rttest/inverted-index-join_olist-fuzzyeq-jaccard_01.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-join_olist-fuzzyeq-jaccard_01.adm
 Set simfunction=edit-distance
 Set simthreshold=3
 Query:

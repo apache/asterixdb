@@ -23,7 +23,7 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
-WriteOutputTo nc1:rttest/inverted-index-complex_olist-jaccard-check-let.adm
+WriteOutputTo asterix_nc1:rttest/inverted-index-complex_olist-jaccard-check-let.adm
 Query:
 SELECT ELEMENT [
 Variable [ Name=c ]

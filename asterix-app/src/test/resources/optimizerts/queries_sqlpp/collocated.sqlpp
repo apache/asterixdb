@@ -41,7 +41,7 @@ create  table Users(UserType) primary key uid;
 
 create  table Visitors(VisitorType) primary key vid;
 
-write output to nc1:"/tmp/fuzzy1.adm"
+write output to asterix_nc1:"/tmp/fuzzy1.adm"
 select element {'user_name':user.name,'visitor_name':visitor.name}
 from  Users as user,
       Visitors as visitor

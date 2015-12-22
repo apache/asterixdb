@@ -52,7 +52,7 @@ declare type PartSuppType as open {
   ps_suppkey: int32 
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
@@ -73,12 +73,12 @@ declare dataset Parts(PartType)
 declare dataset PartSupp(PartSuppType)
   primary key ps_partkey, ps_suppkey on group1;  
 
-//load dataset LineItems from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/lineitem.json" pre-sorted;
-//load dataset Orders from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/orders.json" pre-sorted;
-//load dataset Customers from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/customer.json" pre-sorted;
-//load dataset Suppliers from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/supplier.json" pre-sorted;
-//load dataset Nations from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/nation.json" pre-sorted;
-//load dataset Regions from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/region.json" pre-sorted;
-//load dataset Parts from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/part.json" pre-sorted;
-load dataset PartSupp from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/partsupp.json" pre-sorted;
+//load dataset LineItems from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/lineitem.json" pre-sorted;
+//load dataset Orders from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/orders.json" pre-sorted;
+//load dataset Customers from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/customer.json" pre-sorted;
+//load dataset Suppliers from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/supplier.json" pre-sorted;
+//load dataset Nations from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/nation.json" pre-sorted;
+//load dataset Regions from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/region.json" pre-sorted;
+//load dataset Parts from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/part.json" pre-sorted;
+load dataset PartSupp from asterix_nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/partsupp.json" pre-sorted;
 

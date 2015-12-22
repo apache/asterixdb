@@ -29,6 +29,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +62,19 @@ public class TestExecutor {
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
     private static Method managixExecuteMethod = null;
+
+    private static String host;
+    private static int port;
+
+    public TestExecutor() {
+        this.host = "127.0.0.1";
+        this.port = 19002;
+    }
+
+    public TestExecutor(String host, int port){
+        this.host = host;
+        this.port = port;
+    }
 
     /**
      * Probably does not work well with symlinks.
@@ -289,7 +303,7 @@ public class TestExecutor {
     }
 
     private InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
-        final String url = "http://localhost:19002/query/result";
+        final String url = "http://"+host+":"+port+"/query/result";
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
@@ -416,9 +430,9 @@ public class TestExecutor {
                     switch (ctx.getType()) {
                         case "ddl":
                             if (ctx.getFile().getName().endsWith("aql")) {
-                                executeDDL(statement, "http://localhost:19002/ddl");
+                                executeDDL(statement, "http://"+host+":"+port+"/ddl");
                             } else {
-                                executeDDL(statement, "http://localhost:19002/ddl/sqlpp");
+                                executeDDL(statement, "http://"+host+":"+port+"/ddl/sqlpp");
                             }
                             break;
                         case "update":
@@ -428,9 +442,9 @@ public class TestExecutor {
                                         "127.0.0.1://../../../../../../asterix-app/");
                             }
                             if (ctx.getFile().getName().endsWith("aql")) {
-                                executeUpdate(statement, "http://localhost:19002/update");
+                                executeUpdate(statement, "http://"+host+":"+port+"/update");
                             } else {
-                                executeUpdate(statement, "http://localhost:19002/update/sqlpp");
+                                executeUpdate(statement, "http://"+host+":"+port+"/update/sqlpp");
                             }
                             break;
                         case "query":
@@ -447,25 +461,25 @@ public class TestExecutor {
                             OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
                             if (ctx.getFile().getName().endsWith("aql")) {
                                 if (ctx.getType().equalsIgnoreCase("query")) {
-                                    resultStream = executeQuery(statement, fmt, "http://localhost:19002/query",
+                                    resultStream = executeQuery(statement, fmt, "http://"+host+":"+port+"/query",
                                             cUnit.getParameter());
                                 } else if (ctx.getType().equalsIgnoreCase("async")) {
                                     resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://localhost:19002/aql");
+                                            "http://"+host+":"+port+"/aql");
                                 } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                                     resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://localhost:19002/aql");
+                                            "http://"+host+":"+port+"/aql");
                                 }
                             } else {
                                 if (ctx.getType().equalsIgnoreCase("query")) {
-                                    resultStream = executeQuery(statement, fmt, "http://localhost:19002/query/sqlpp",
+                                    resultStream = executeQuery(statement, fmt, "http://"+host+":"+port+"/query/sqlpp",
                                             cUnit.getParameter());
                                 } else if (ctx.getType().equalsIgnoreCase("async")) {
                                     resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://localhost:19002/sqlpp");
+                                            "http://"+host+":"+port+"/sqlpp");
                                 } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                                     resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://localhost:19002/sqlpp");
+                                            "http://"+host+":"+port+"/sqlpp");
                                 }
                             }
 
@@ -492,7 +506,7 @@ public class TestExecutor {
                             break;
                         case "txnqbc": //qbc represents query before crash
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://localhost:19002/query", cUnit.getParameter());
+                                    "http://"+host+":"+port+"/query", cUnit.getParameter());
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -501,7 +515,7 @@ public class TestExecutor {
                             break;
                         case "txnqar": //qar represents query after recovery
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://localhost:19002/query", cUnit.getParameter());
+                                    "http://"+host+":"+port+"/query", cUnit.getParameter());
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
@@ -514,7 +528,7 @@ public class TestExecutor {
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
-                                executeUpdate(statement, "http://localhost:19002/update");
+                                executeUpdate(statement, "http://"+host+":"+port+"/update");
                             } catch (Exception e) {
                                 //An exception is expected.
                                 failed = true;
@@ -542,7 +556,7 @@ public class TestExecutor {
                             break;
                         case "errddl": // a ddlquery that expects error
                             try {
-                                executeDDL(statement, "http://localhost:19002/ddl");
+                                executeDDL(statement, "http://"+host+":"+port+"/ddl");
                             } catch (Exception e) {
                                 // expected error happens
                                 failed = true;

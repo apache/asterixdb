@@ -37,20 +37,20 @@ declare type LineItemType as closed {
   l_comment: string
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
 
-// load dataset LineItems from nc1:"/opt/tpch/tengigs/lineitem.tbl" delimited by "|";
+// load dataset LineItems from asterix_nc1:"/opt/tpch/tengigs/lineitem.tbl" delimited by "|";
 
 // for external datasets, use:
 //
 // declare dataset LineItems(LineItemType)
-//   splits nc1:"/opt/tmp/tpch0.001/lineitem.tbl" delimited by "|";
+//   splits asterix_nc1:"/opt/tmp/tpch0.001/lineitem.tbl" delimited by "|";
 
 
-write output to nc1:"/tmp/li_10x.adm";
+write output to asterix_nc1:"/tmp/li_10x.adm";
 
 for $li in dataset('LineItems')
 where $li.l_orderkey = 1

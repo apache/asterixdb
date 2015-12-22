@@ -15,4 +15,4 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-$MANAGIX_HOME/bin/managix create -n nc1 -c $MANAGIX_HOME/clusters/local/local.xml;
+$MANAGIX_HOME/bin/managix create -n asterix -c $MANAGIX_HOME/clusters/local/local.xml;

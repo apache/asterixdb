@@ -53,7 +53,7 @@ create dataset Customers2(CustomerType) primary key nested.cid;
 
 create index interests_index on Customers(nested.interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-basic_olist-edit-distance-check-panic.adm";
+write output to asterix_nc1:"rttest/inverted-index-basic_olist-edit-distance-check-panic.adm";
 
 // Index should not be applied because all list elements can be modified by 3 edit operations.
 for $c in dataset('Customers')

@@ -78,8 +78,8 @@ create type tpch.PartSuppType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table LineItems(LineItemType) primary key l_orderkey,l_linenumber on group1;
 
@@ -89,7 +89,7 @@ create  table Customers(CustomerType) primary key c_custkey on group1;
 
 create  table PartSupp(PartSuppType) primary key ps_partkey,ps_suppkey on group1;
 
-write output to nc1:"/tmp/nested_loj.adm"
+write output to asterix_nc1:"/tmp/nested_loj.adm"
 select element {'cust':c,'orders':orders}
 from  Customers as c
 with  orders as (

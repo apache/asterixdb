@@ -26,5 +26,5 @@
 use test;
 
 
-load  table TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));
+load  table TweetMessages using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));
 

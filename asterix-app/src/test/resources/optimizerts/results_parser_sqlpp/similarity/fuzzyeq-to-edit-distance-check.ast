@@ -9,7 +9,7 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo nc1:rttest/similarity_fuzzyeq-to-edit-distance-check.adm
+WriteOutputTo asterix_nc1:rttest/similarity_fuzzyeq-to-edit-distance-check.adm
 Set simfunction=edit-distance
 Set simthreshold=1
 Query:

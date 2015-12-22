@@ -20,7 +20,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"/tmp/rec_access.adm";
+write output to asterix_nc1:"/tmp/rec_access.adm";
 
 let $r := { "a": 2 }
 let $a := $r.a

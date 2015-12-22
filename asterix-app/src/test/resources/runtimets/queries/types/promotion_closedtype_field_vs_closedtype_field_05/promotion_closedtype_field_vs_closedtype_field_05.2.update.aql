@@ -24,8 +24,8 @@
 use dataverse test;
 
 load dataset empDataset using localfs
-(("path"="nc1://data/types/empDataset_minus_data.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/types/empDataset_minus_data.adm"),("format"="adm"));
 
 load dataset deptDataset using localfs
-(("path"="nc1://data/types/deptDataset_minus_data.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/types/deptDataset_minus_data.adm"),("format"="adm"));
 

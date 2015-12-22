@@ -60,22 +60,10 @@ public class AsterixInstallerIntegrationUtil {
     }
 
     public static void init() throws Exception {
-        File asterixProjectDir = new File(System.getProperty("user.dir"));
-
-        File installerTargetDir = new File(asterixProjectDir, "target");
-        String managixHomeDirName = installerTargetDir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return new File(dir, name).isDirectory() && name.startsWith("asterix-installer")
-                        && name.endsWith("binary-assembly");
-            }
-
-        })[0];
-        managixHome = new File(installerTargetDir, managixHomeDirName).getAbsolutePath();
+        managixHome = getManagixHome();
         System.setProperty("log4j.configuration",
                 managixHome + File.separator + "conf" + File.separator + "log4j.properties");
 
-        managixHome = AsterixInstallerIntegrationUtil.getManagixHome();
         clusterConfigurationPath = managixHome + File.separator + "clusters" + File.separator + "local" + File.separator
                 + "local.xml";
 
@@ -199,7 +187,18 @@ public class AsterixInstallerIntegrationUtil {
     }
 
     public static String getManagixHome() {
-        return managixHome;
+        File asterixProjectDir = new File(System.getProperty("user.dir"));
+
+        File installerTargetDir = new File(asterixProjectDir, "target");
+        String managixHomeDirName = installerTargetDir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return new File(dir, name).isDirectory() && name.startsWith("asterix-installer")
+                        && name.endsWith("binary-assembly");
+            }
+
+        })[0];
+        return new File(installerTargetDir, managixHomeDirName).getAbsolutePath();
     }
 
     public static void installLibrary(String libraryName, String libraryDataverse, String libraryPath)

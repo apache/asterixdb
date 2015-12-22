@@ -17,7 +17,7 @@ TypeDecl VisitorType [
 ]
 DatasetDecl Users(UserType) partitioned by [[uid]]
 DatasetDecl Visitors(VisitorType) partitioned by [[vid]]
-WriteOutputTo nc1:/tmp/fuzzy1.adm
+WriteOutputTo asterix_nc1:/tmp/fuzzy1.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

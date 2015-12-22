@@ -56,7 +56,7 @@ create dataset CSX(CSXType) primary key nested.id;
 
 create index keyword_index on DBLP(nested.title) type keyword;
 
-write output to nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm";
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm";
 
 for $a in dataset('DBLP')
 for $b in dataset('CSX')

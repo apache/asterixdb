@@ -103,7 +103,7 @@ declare type PartSuppType as closed {
   ps_comment: string 
 }
 
-declare nodegroup group1 on nc1, nc2;
+declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
@@ -124,32 +124,32 @@ declare dataset PartSupp(PartSuppType)
 
 load dataset LineItems 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/lineitems.adm"),("format="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/lineitems.adm"),("format="adm")) pre-sorted;
 
 load dataset Orders 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/orders.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/orders.adm"),("format"="adm")) pre-sorted;
 
 load dataset Customers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/customers.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/customers.adm"),("format"="adm")) pre-sorted;
 
 load dataset Suppliers 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/suppliers.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/suppliers.adm"),("format"="adm")) pre-sorted;
 
 load dataset Nations 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/nations.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/nations.adm"),("format"="adm")) pre-sorted;
 
 load dataset Regions 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/regions.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/regions.adm"),("format"="adm")) pre-sorted;
 
 load dataset Parts 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/parts.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/parts.adm"),("format"="adm")) pre-sorted;
 
 load dataset PartSupp 
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///opt/tpch/tpch0.001/tbl/partsupp.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1:///opt/tpch/tpch0.001/tbl/partsupp.adm"),("format"="adm")) pre-sorted;

@@ -17,7 +17,7 @@ TypeDecl MyRecordOpen [
 ]
 DatasetDecl MyData1(MyRecordOpen) partitioned by [[nested, id]]
 DatasetDecl MyData2(MyRecordOpen) partitioned by [[nested, id]]
-WriteOutputTo nc1:rttest/rtree-index-join_spatial-intersect-point_02.adm
+WriteOutputTo asterix_nc1:rttest/rtree-index-join_spatial-intersect-point_02.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

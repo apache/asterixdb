@@ -19,7 +19,7 @@
 use dataverse test;
 
 load dataset FacebookMessagesTmp using localfs
-(("path"="nc1://data/fbm-with-send-time.adm"),("format"="adm"));
+(("path"="asterix_nc1://data/fbm-with-send-time.adm"),("format"="adm"));
 
 insert into dataset FacebookMessages
 (

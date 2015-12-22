@@ -29,7 +29,7 @@
 use test;
 
 
-load  table employeeTmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+load  table employeeTmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
 
 insert into employee
 select element {'nested':{'id':c.id,'fname':c.fname,'lname':c.lname,'age':c.age,'dept':c.dept}}

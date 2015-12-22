@@ -51,8 +51,8 @@ create type tpch.LineIDType as
 }
 
 create  nodegroup group1 if not exists  on 
-    nc1,
-    nc2
+    asterix_nc1,
+    asterix_nc2
 ;
 create  table LineItems_q1(LineItemType) primary key l_orderkey on group1;
 
