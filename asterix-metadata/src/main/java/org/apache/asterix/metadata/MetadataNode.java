@@ -80,7 +80,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -322,12 +321,10 @@ public class MetadataNode implements IMetadataNode {
             List<Dataset> dataverseDatasets;
             Dataset ds;
             dataverseDatasets = getDataverseDatasets(jobId, dataverseName);
-            if (dataverseDatasets != null && dataverseDatasets.size() > 0) {
-                // Drop all datasets in this dataverse.
-                for (int i = 0; i < dataverseDatasets.size(); i++) {
-                    ds = dataverseDatasets.get(i);
-                    dropDataset(jobId, dataverseName, ds.getDatasetName());
-                }
+            // Drop all datasets in this dataverse.
+            for (int i = 0; i < dataverseDatasets.size(); i++) {
+                ds = dataverseDatasets.get(i);
+                dropDataset(jobId, dataverseName, ds.getDatasetName());
             }
 
             //After dropping datasets, drop datatypes
@@ -335,50 +332,40 @@ public class MetadataNode implements IMetadataNode {
             // As a side effect, acquires an S lock on the 'datatype' dataset
             // on behalf of txnId.
             dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
-            if (dataverseDatatypes != null && dataverseDatatypes.size() > 0) {
-                // Drop all types in this dataverse.
-                for (int i = 0; i < dataverseDatatypes.size(); i++) {
-                    forceDropDatatype(jobId, dataverseName, dataverseDatatypes.get(i).getDatatypeName());
-                }
+            // Drop all types in this dataverse.
+            for (int i = 0; i < dataverseDatatypes.size(); i++) {
+                forceDropDatatype(jobId, dataverseName, dataverseDatatypes.get(i).getDatatypeName());
             }
 
             // As a side effect, acquires an S lock on the 'Function' dataset
             // on behalf of txnId.
             List<Function> dataverseFunctions = getDataverseFunctions(jobId, dataverseName);
-            if (dataverseFunctions != null && dataverseFunctions.size() > 0) {
-                // Drop all functions in this dataverse.
-                for (Function function : dataverseFunctions) {
-                    dropFunction(jobId, new FunctionSignature(dataverseName, function.getName(), function.getArity()));
-                }
+            // Drop all functions in this dataverse.
+            for (Function function : dataverseFunctions) {
+                dropFunction(jobId, new FunctionSignature(dataverseName, function.getName(), function.getArity()));
             }
 
             // As a side effect, acquires an S lock on the 'Adapter' dataset
             // on behalf of txnId.
             List<DatasourceAdapter> dataverseAdapters = getDataverseAdapters(jobId, dataverseName);
-            if (dataverseAdapters != null && dataverseAdapters.size() > 0) {
-                // Drop all functions in this dataverse.
-                for (DatasourceAdapter adapter : dataverseAdapters) {
-                    dropAdapter(jobId, dataverseName, adapter.getAdapterIdentifier().getName());
-                }
+            // Drop all functions in this dataverse.
+            for (DatasourceAdapter adapter : dataverseAdapters) {
+                dropAdapter(jobId, dataverseName, adapter.getAdapterIdentifier().getName());
             }
 
             List<Feed> dataverseFeeds;
             Feed feed;
             dataverseFeeds = getDataverseFeeds(jobId, dataverseName);
-            if (dataverseFeeds != null && dataverseFeeds.size() > 0) {
-                // Drop all datasets in this dataverse.
-                for (int i = 0; i < dataverseFeeds.size(); i++) {
-                    feed = dataverseFeeds.get(i);
-                    dropFeed(jobId, dataverseName, feed.getFeedName());
-                }
+            // Drop all datasets in this dataverse.
+            for (int i = 0; i < dataverseFeeds.size(); i++) {
+                feed = dataverseFeeds.get(i);
+                dropFeed(jobId, dataverseName, feed.getFeedName());
             }
 
             List<FeedPolicy> feedPolicies = getDataversePolicies(jobId, dataverseName);
-            if (feedPolicies != null && feedPolicies.size() > 0) {
-                // Drop all feed ingestion policies in this dataverse.
-                for (FeedPolicy feedPolicy : feedPolicies) {
-                    dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
-                }
+            // Drop all feed ingestion policies in this dataverse.
+            for (FeedPolicy feedPolicy : feedPolicies) {
+                dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
             }
 
             // Delete the dataverse entry from the 'dataverse' dataset.
@@ -471,7 +458,7 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void dropNodegroup(JobId jobId, String nodeGroupName) throws MetadataException, RemoteException {
-        List<Pair<String, String>> datasetNames;
+        List<String> datasetNames;
         try {
             datasetNames = getDatasetNamesPartitionedOnThisNodeGroup(jobId, nodeGroupName);
         } catch (Exception e) {
@@ -482,7 +469,7 @@ public class MetadataNode implements IMetadataNode {
             sb.append("Nodegroup '" + nodeGroupName
                     + "' cannot be dropped; it was used for partitioning these datasets:");
             for (int i = 0; i < datasetNames.size(); i++) {
-                sb.append("\n" + (i + 1) + "- " + datasetNames.get(i).first + "." + datasetNames.get(i).second + ".");
+                sb.append("\n" + (i + 1) + "- " + datasetNames.get(i) + ".");
             }
             throw new MetadataException(sb.toString());
         }
@@ -514,7 +501,7 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
             // Get nested types
-            List<String> nestedTypes = getNestedDatatypeNamesForThisDatatype(jobId, dataverseName, datatypeName);
+            List<String> nestedTypes = getNestedComplexDatatypeNamesForThisDatatype(jobId, dataverseName, datatypeName);
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
             for (String nestedType : nestedTypes) {
                 Datatype dt = getDatatype(jobId, dataverseName, nestedType);
@@ -716,7 +703,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private boolean confirmDataverseCanBeDeleted(JobId jobId, String dataverseName)
+    private void confirmDataverseCanBeDeleted(JobId jobId, String dataverseName)
             throws MetadataException, RemoteException {
         //If a dataset from a DIFFERENT dataverse
         //uses a type from this dataverse
@@ -731,16 +718,15 @@ public class MetadataNode implements IMetadataNode {
                         + " used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
             }
         }
-        return true;
     }
 
-    private boolean confirmDatatypeIsUnused(JobId jobId, String dataverseName, String datatypeName)
+    private void confirmDatatypeIsUnused(JobId jobId, String dataverseName, String datatypeName)
             throws MetadataException, RemoteException {
-        return confirmDatatypeIsUnusedByDatatypes(jobId, dataverseName, datatypeName)
-                && confirmDatatypeIsUnusedByDatasets(jobId, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByDatatypes(jobId, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByDatasets(jobId, dataverseName, datatypeName);
     }
 
-    private boolean confirmDatatypeIsUnusedByDatasets(JobId jobId, String dataverseName, String datatypeName)
+    private void confirmDatatypeIsUnusedByDatasets(JobId jobId, String dataverseName, String datatypeName)
             throws MetadataException, RemoteException {
         //If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(jobId);
@@ -750,10 +736,9 @@ public class MetadataNode implements IMetadataNode {
                         + " being used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
             }
         }
-        return true;
     }
 
-    private boolean confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
+    private void confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
             throws MetadataException, RemoteException {
         //If any datatype uses this type, throw an error
         List<Datatype> datatypes = getAllDatatypes(jobId);
@@ -769,7 +754,6 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         }
-        return true;
     }
 
     public String getDatatypeNameUsingThisAnonymousDatatype(JobId jobId, String dataverseName, String datatypeName)
@@ -778,22 +762,21 @@ public class MetadataNode implements IMetadataNode {
         //Anonymous means there will be only one
         List<Datatype> dataverseDatatypes;
         dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
-        if (dataverseDatatypes != null && dataverseDatatypes.size() > 0) {
-            for (Datatype type : dataverseDatatypes) {
-                ARecordType recType = (ARecordType) type.getDatatype();
-                for (IAType subType : recType.getFieldTypes()) {
-                    if (subType.getTypeName().equals(datatypeName)) {
-                        return type.getDatatypeName();
-                    }
+        for (Datatype type : dataverseDatatypes) {
+            ARecordType recType = (ARecordType) type.getDatatype();
+            for (IAType subType : recType.getFieldTypes()) {
+                if (subType.getTypeName().equals(datatypeName)) {
+                    return type.getDatatypeName();
                 }
             }
         }
+
         throw new MetadataException(
                 "Anonymous subtype " + dataverseName + "." + datatypeName + " is missing parent type");
     }
 
-    private List<String> getNestedDatatypeNamesForThisDatatype(JobId jobId, String dataverseName, String datatypeName)
-            throws Exception {
+    private List<String> getNestedComplexDatatypeNamesForThisDatatype(JobId jobId, String dataverseName,
+            String datatypeName) throws Exception {
         //Return all field types that aren't builtin types
         Datatype parentType = getDatatype(jobId, dataverseName, datatypeName);
         ARecordType recType = (ARecordType) parentType.getDatatype();
@@ -806,14 +789,14 @@ public class MetadataNode implements IMetadataNode {
         return nestedTypes;
     }
 
-    public List<Pair<String, String>> getDatasetNamesPartitionedOnThisNodeGroup(JobId jobId, String nodegroup)
+    public List<String> getDatasetNamesPartitionedOnThisNodeGroup(JobId jobId, String nodegroup)
             throws MetadataException, RemoteException {
         //this needs to scan the datasets and return the datasets that use this nodegroup
-        List<Pair<String, String>> nodeGroupDatasets = new ArrayList<Pair<String, String>>();
+        List<String> nodeGroupDatasets = new ArrayList<String>();
         List<Dataset> datasets = getAllDatasets(jobId);
         for (Dataset set : datasets) {
             if (set.getNodeGroupName().equals(nodegroup)) {
-                nodeGroupDatasets.add(new Pair<String, String>(set.getDataverseName(), set.getDatasetName()));
+                nodeGroupDatasets.add(set.getDatasetName());
             }
         }
         return nodeGroupDatasets;

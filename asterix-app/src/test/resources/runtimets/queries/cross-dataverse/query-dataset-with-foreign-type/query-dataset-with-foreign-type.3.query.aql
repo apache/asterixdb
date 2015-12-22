@@ -19,7 +19,7 @@
 /*
  * Description  : Test cross dataverse functionality
  *              : create a dataset using a foreign datatype
- 				: Query the dataset
+ *              : Query the dataset
  * Expected Res : Success
  * Date         : 2015 Steven Jacobs
  */

@@ -19,7 +19,7 @@
 /*
  * Description  : Test cross dataverse functionality
  *              : create a dataset using a foreign datatype
- 				: Try dropping the foreign datatype
+ *              : Try dropping the foreign datatype
  * Expected Res : Failure
  * Date         : 2015 Steven Jacobs
  */
