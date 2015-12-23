@@ -26,7 +26,6 @@ import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.external.dataset.adapter.RSSFeedAdapter;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -68,7 +67,7 @@ public class RSSFeedAdapterFactory implements IFeedAdapterFactory {
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         this.outputType = outputType;
-        String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
+        String rssURLProperty = configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
             throw new IllegalArgumentException("no rss url provided");
         }

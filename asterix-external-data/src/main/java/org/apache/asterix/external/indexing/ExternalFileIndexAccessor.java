@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.indexing;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -24,8 +24,8 @@ import java.io.DataInputStream;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.apache.asterix.external.indexing.operators.ExternalLoopkupOperatorDiscriptor;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -71,7 +71,8 @@ public class ExternalFileIndexAccessor implements Serializable {
     private ILSMIndexAccessorInternal fileIndexAccessor;
     private IIndexCursor fileIndexSearchCursor;
 
-    public ExternalFileIndexAccessor(ExternalBTreeDataflowHelper indexDataflowHelper, ExternalLoopkupOperatorDiscriptor opDesc) {
+    public ExternalFileIndexAccessor(ExternalBTreeDataflowHelper indexDataflowHelper,
+            ExternalLoopkupOperatorDiscriptor opDesc) {
         this.indexDataflowHelper = indexDataflowHelper;
         this.opDesc = opDesc;
     }
@@ -129,12 +130,14 @@ public class ExternalFileIndexAccessor implements Serializable {
     }
 
     private void setExternalFileFromARecord(ARecord externalFileRecord, ExternalFile file) {
-        file.setFileName(((AString) externalFileRecord
-                .getValueByPos(FilesIndexDescription.EXTERNAL_FILE_NAME_FIELD_INDEX)).getStringValue());
+        file.setFileName(
+                ((AString) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_NAME_FIELD_INDEX))
+                        .getStringValue());
         file.setSize(((AInt64) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_SIZE_FIELD_INDEX))
                 .getLongValue());
-        file.setLastModefiedTime((new Date(((ADateTime) externalFileRecord
-                .getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX)).getChrononTime())));
+        file.setLastModefiedTime((new Date(
+                ((ADateTime) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX))
+                        .getChrononTime())));
     }
 
     public void closeIndex() throws HyracksDataException {

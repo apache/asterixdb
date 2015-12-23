@@ -23,9 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.external.dataset.adapter.HDFSIndexingAdapter;
 import org.apache.asterix.external.indexing.dataflow.HDFSIndexingParserFactory;
@@ -39,6 +36,8 @@ import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.DelimitedDataParser;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -75,8 +74,8 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
         IndexingScheduler scheduler = null;
         try {
-            scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(), ccContext
-                    .getClusterControllerInfo().getClientNetPort());
+            scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
+                    ccContext.getClusterControllerInfo().getClientNetPort());
         } catch (HyracksException e) {
             throw new IllegalStateException("Cannot obtain hdfs scheduler");
         }
@@ -98,7 +97,7 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         if (!configured) {
             throw new IllegalStateException("Adapter factory has not been configured yet");
         }
-        return (AlgebricksPartitionConstraint) clusterLocations;
+        return clusterLocations;
     }
 
     @Override
@@ -131,11 +130,12 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         executed = new boolean[readSchedule.length];
         Arrays.fill(executed, false);
         configured = true;
-        atype = (IAType) outputType;
+        atype = outputType;
         // The function below is overwritten to create indexing adapter factory instead of regular adapter factory
         configureFormat(atype);
     }
 
+    @Override
     protected void configureFormat(IAType sourceDatatype) throws Exception {
 
         char delimiter = AsterixTupleParserFactory.getDelimiter(configuration);

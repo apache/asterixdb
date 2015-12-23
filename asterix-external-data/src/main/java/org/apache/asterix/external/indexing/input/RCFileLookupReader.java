@@ -21,6 +21,9 @@ package org.apache.asterix.external.indexing.input;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,10 +32,6 @@ import org.apache.hadoop.hive.ql.io.RCFile.Reader;
 import org.apache.hadoop.hive.serde2.columnar.BytesRefArrayWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
-
-import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 
 public class RCFileLookupReader {
     private FileSystem fs;
@@ -85,7 +84,7 @@ public class RCFileLookupReader {
         // Seek to the record group if needed
         if (recordGroupOffset != this.recordGroupOffset) {
             this.recordGroupOffset = recordGroupOffset;
-            if(reader.getPosition() != recordGroupOffset)
+            if (reader.getPosition() != recordGroupOffset)
                 reader.seek(recordGroupOffset);
             reader.resetBuffer();
             this.rowNumber = -1;

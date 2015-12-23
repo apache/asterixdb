@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
-import org.apache.asterix.metadata.feeds.FeedPolicyEnforcer;
-import org.apache.asterix.metadata.feeds.IPullBasedFeedAdapter;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
+import org.apache.asterix.external.feeds.IPullBasedFeedAdapter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -136,7 +136,8 @@ public abstract class PullBasedAdapter implements IPullBasedFeedAdapter {
     }
 
     private void appendTupleToFrame(IFrameWriter writer) throws HyracksDataException {
-        if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
+        if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                tupleBuilder.getSize())) {
             appender.flush(writer, true);
             if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                     tupleBuilder.getSize())) {

@@ -23,8 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.indexing.input.RCFileLookupReader;
-import org.apache.asterix.metadata.external.IndexingConstants;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.types.ATypeTag;
@@ -127,23 +127,17 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
                     // Get file number
                     bbis.setByteBuffer(frameBuffer, tupleStartOffset + fileNumberStartOffset);
                     int fileNumber = ((AInt32) inRecDesc
-                            .getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]]
-                            .deserialize(dis)).getIntegerValue();
+                            .getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]].deserialize(dis))
+                                    .getIntegerValue();
                     // Get record group offset
-                    bbis.setByteBuffer(
-                            frameBuffer,
-                            tupleStartOffset
-                                    + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                    ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
+                    bbis.setByteBuffer(frameBuffer, tupleStartOffset + tupleAccessor.getFieldStartOffset(tupleIndex,
+                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
                     long recordOffset = ((AInt64) inRecDesc
-                            .getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]]
-                            .deserialize(dis)).getLongValue();
+                            .getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]].deserialize(dis))
+                                    .getLongValue();
                     // Get row number
-                    bbis.setByteBuffer(
-                            frameBuffer,
-                            tupleStartOffset
-                                    + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                    ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]));
+                    bbis.setByteBuffer(frameBuffer, tupleStartOffset + tupleAccessor.getFieldStartOffset(tupleIndex,
+                            ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]));
                     int rowNumber = ((AInt32) inRecDesc.getFields()[ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]]
                             .deserialize(dis)).getIntegerValue();
 

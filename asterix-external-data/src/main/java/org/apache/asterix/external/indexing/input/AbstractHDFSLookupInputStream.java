@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

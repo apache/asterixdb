@@ -23,8 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.indexing.input.ILookupReader;
-import org.apache.asterix.metadata.external.IndexingConstants;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.types.ATypeTag;
@@ -60,9 +60,9 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
     protected byte nullByte;
     protected ArrayTupleBuilder nullTupleBuild;
 
-    public SeqOrTxtControlledTupleParser(IHyracksTaskContext ctx, IAsterixHDFSRecordParser parser,
-            ILookupReader reader, boolean propagateInput, int[] propagatedFields, RecordDescriptor inRecDesc,
-            int[] ridFields, boolean retainNull, INullWriterFactory iNullWriterFactory) throws HyracksDataException {
+    public SeqOrTxtControlledTupleParser(IHyracksTaskContext ctx, IAsterixHDFSRecordParser parser, ILookupReader reader,
+            boolean propagateInput, int[] propagatedFields, RecordDescriptor inRecDesc, int[] ridFields,
+            boolean retainNull, INullWriterFactory iNullWriterFactory) throws HyracksDataException {
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.parser = parser;
         this.reader = reader;
@@ -125,16 +125,15 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
                 } else {
                     // Get file number
                     bbis.setByteBuffer(frameBuffer, tupleStartOffset + fileNumberStartOffset);
-                    int fileNumber = ((AInt32) inRecDesc.getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]]
-                            .deserialize(dis)).getIntegerValue();
+                    int fileNumber = ((AInt32) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]].deserialize(dis))
+                                    .getIntegerValue();
                     // Get record offset
-                    bbis.setByteBuffer(
-                            frameBuffer,
-                            tupleStartOffset
-                                    + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
-                    long recordOffset = ((AInt64) inRecDesc.getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]]
-                            .deserialize(dis)).getLongValue();
+                    bbis.setByteBuffer(frameBuffer, tupleStartOffset + tupleAccessor.getFieldStartOffset(tupleIndex,
+                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
+                    long recordOffset = ((AInt64) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]].deserialize(dis))
+                                    .getLongValue();
                     // Read the record
                     record = reader.read(fileNumber, recordOffset);
                 }

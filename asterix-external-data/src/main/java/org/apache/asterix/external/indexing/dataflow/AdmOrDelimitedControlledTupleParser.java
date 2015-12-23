@@ -23,8 +23,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.indexing.input.AbstractHDFSLookupInputStream;
-import org.apache.asterix.metadata.external.IndexingConstants;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.types.ARecordType;
@@ -72,7 +72,7 @@ public class AdmOrDelimitedControlledTupleParser implements IControlledTuplePars
     public AdmOrDelimitedControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType,
             AbstractHDFSLookupInputStream in, boolean propagateInput, RecordDescriptor inRecDesc, IDataParser parser,
             int[] propagatedFields, int[] ridFields, boolean retainNull, INullWriterFactory iNullWriterFactory)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         this.recType = recType;
         this.in = in;
         this.propagateInput = propagateInput;
@@ -136,16 +136,15 @@ public class AdmOrDelimitedControlledTupleParser implements IControlledTuplePars
                 } else {
                     // Get file number
                     bbis.setByteBuffer(frameBuffer, tupleStartOffset + fileNumberStartOffset);
-                    int fileNumber = ((AInt32) inRecDesc.getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]]
-                            .deserialize(dis)).getIntegerValue();
+                    int fileNumber = ((AInt32) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]].deserialize(dis))
+                                    .getIntegerValue();
                     // Get record offset
-                    bbis.setByteBuffer(
-                            frameBuffer,
-                            tupleStartOffset
-                                    + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
-                    long recordOffset = ((AInt64) inRecDesc.getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]]
-                            .deserialize(dis)).getLongValue();
+                    bbis.setByteBuffer(frameBuffer, tupleStartOffset + tupleAccessor.getFieldStartOffset(tupleIndex,
+                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
+                    long recordOffset = ((AInt64) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]].deserialize(dis))
+                                    .getLongValue();
                     found = in.fetchRecord(fileNumber, recordOffset);
                 }
                 if (found) {
@@ -202,16 +201,14 @@ public class AdmOrDelimitedControlledTupleParser implements IControlledTuplePars
         int tc = tupleAccessor.getTupleCount();
         System.err.println("TC: " + tc);
         for (int i = 0; i < tc; ++i) {
-            System.err.print(i + ":(" + tupleAccessor.getTupleStartOffset(i) + ", "
-                    + tupleAccessor.getTupleEndOffset(i) + ")[");
+            System.err.print(
+                    i + ":(" + tupleAccessor.getTupleStartOffset(i) + ", " + tupleAccessor.getTupleEndOffset(i) + ")[");
             for (int j = 0; j < tupleAccessor.getFieldCount(); ++j) {
                 System.err.print(j + ":(" + tupleAccessor.getFieldStartOffset(i, j) + ", "
                         + tupleAccessor.getFieldEndOffset(i, j) + ") ");
                 System.err.print("{");
-                bbis.setByteBuffer(
-                        tupleAccessor.getBuffer(),
-                        tupleAccessor.getTupleStartOffset(i) + tupleAccessor.getFieldSlotsLength()
-                                + tupleAccessor.getFieldStartOffset(i, j));
+                bbis.setByteBuffer(tupleAccessor.getBuffer(), tupleAccessor.getTupleStartOffset(i)
+                        + tupleAccessor.getFieldSlotsLength() + tupleAccessor.getFieldStartOffset(i, j));
                 try {
                     byte tag = dis.readByte();
                     if (tag == nullByte) {

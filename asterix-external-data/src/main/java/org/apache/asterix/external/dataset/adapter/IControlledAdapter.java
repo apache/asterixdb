@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.dataset.adapter;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;

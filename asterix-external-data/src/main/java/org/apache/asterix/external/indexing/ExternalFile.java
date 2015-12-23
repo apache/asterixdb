@@ -17,15 +17,14 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.entities;
+package org.apache.asterix.external.indexing;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.metadata.MetadataCache;
-import org.apache.asterix.metadata.api.IMetadataEntity;
 
-public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile> {
+public class ExternalFile implements Serializable, Comparable<ExternalFile> {
 
     /**
      * A class for metadata entity externalFile
@@ -106,18 +105,6 @@ public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile> {
 
     public void setPendingOp(ExternalFilePendingOp pendingOp) {
         this.pendingOp = pendingOp;
-    }
-
-    @Override
-    public Object addToCache(MetadataCache cache) {
-        return null;
-        //return cache.addExternalFileIfNotExists(this);
-    }
-
-    @Override
-    public Object dropFromCache(MetadataCache cache) {
-        return null;
-        //return cache.dropExternalFile(this);
     }
 
     @Override

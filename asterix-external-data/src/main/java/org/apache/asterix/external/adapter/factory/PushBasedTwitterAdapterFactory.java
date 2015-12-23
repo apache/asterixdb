@@ -25,7 +25,6 @@ import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.external.dataset.adapter.PushBasedTwitterAdapter;
 import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;

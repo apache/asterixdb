@@ -22,9 +22,9 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.FilesIndexDescription;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDateTime;
@@ -42,25 +42,30 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 @SuppressWarnings("unchecked")
 public class FileIndexTupleTranslator {
     private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
-    private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFieldCount());
+    private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(
+            filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFieldCount());
     private RecordBuilder recordBuilder = new RecordBuilder();
     private ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
     private AMutableInt32 aInt32 = new AMutableInt32(0);
     private AMutableInt64 aInt64 = new AMutableInt64(0);
     private AMutableString aString = new AMutableString(null);
     private AMutableDateTime aDateTime = new AMutableDateTime(0);
-    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
-    private ISerializerDeserializer<ADateTime> dateTimeSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
-    private ISerializerDeserializer<AInt64> longSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ASTRING);
+    private ISerializerDeserializer<ADateTime> dateTimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ADATETIME);
+    private ISerializerDeserializer<AInt64> longSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT64);
     private ArrayTupleReference tuple = new ArrayTupleReference();
-    
-    public ITupleReference getTupleFromFile(ExternalFile file) throws IOException, AsterixException{
+
+    public ITupleReference getTupleFromFile(ExternalFile file) throws IOException, AsterixException {
         tupleBuilder.reset();
         //File Number
         aInt32.setValue(file.getFileNumber());
-        filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32, tupleBuilder.getDataOutput());
+        filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32,
+                tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
-        
+
         //File Record
         recordBuilder.reset(filesIndexDescription.EXTERNAL_FILE_RECORD_TYPE);
         // write field 0 (File Name)
@@ -68,19 +73,19 @@ public class FileIndexTupleTranslator {
         aString.setValue(file.getFileName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(0, fieldValue);
-        
+
         //write field 1 (File Size)
         fieldValue.reset();
         aInt64.setValue(file.getSize());
         longSerde.serialize(aInt64, fieldValue.getDataOutput());
         recordBuilder.addField(1, fieldValue);
-        
+
         //write field 2 (File Mod Date)
         fieldValue.reset();
         aDateTime.setValue(file.getLastModefiedTime().getTime());
         dateTimeSerde.serialize(aDateTime, fieldValue.getDataOutput());
         recordBuilder.addField(2, fieldValue);
-        
+
         //write the record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();

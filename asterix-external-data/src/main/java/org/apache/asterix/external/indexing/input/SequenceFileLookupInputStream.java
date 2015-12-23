@@ -20,6 +20,7 @@ package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
 
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -28,31 +29,28 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
-
-
 @SuppressWarnings("deprecation")
-public class SequenceFileLookupInputStream extends AbstractHDFSLookupInputStream{
+public class SequenceFileLookupInputStream extends AbstractHDFSLookupInputStream {
 
     private SequenceFile.Reader reader;
     private Writable seqKey;
     private Text seqValue = new Text();
     private Configuration conf;
-    
-    public SequenceFileLookupInputStream(ExternalFileIndexAccessor fileIndexAccessor, JobConf conf) throws IOException{
+
+    public SequenceFileLookupInputStream(ExternalFileIndexAccessor fileIndexAccessor, JobConf conf) throws IOException {
         super(fileIndexAccessor, conf);
         this.conf = conf;
     }
-    
+
     @Override
     protected void openFile(String fileName) throws IOException {
         if (reader != null) {
             reader.close();
         }
         reader = new SequenceFile.Reader(fs, new Path(fileName), conf);
-        seqKey = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf); 
+        seqKey = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
     }
-    
+
     @Override
     public void close() throws IOException {
         if (reader != null) {

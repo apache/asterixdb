@@ -22,16 +22,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-
 import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.input.GenericFileAwareRecordReader;
 import org.apache.asterix.external.indexing.input.RCFileDataReader;
 import org.apache.asterix.external.indexing.input.TextualDataReader;
-import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;

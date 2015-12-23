@@ -24,8 +24,7 @@ import java.util.Map;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
 import org.apache.asterix.external.dataset.adapter.HiveAdapter;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
@@ -67,7 +66,6 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IAd
         return "hive";
     }
 
-  
     @Override
     public SupportedOperation getSupportedOperations() {
         return SupportedOperation.READ;
@@ -78,13 +76,13 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IAd
         if (!configured) {
             populateConfiguration(configuration);
             hdfsAdapterFactory.configure(configuration, outputType);
-            this.atype = (IAType) outputType;
+            this.atype = outputType;
         }
     }
 
     public static void populateConfiguration(Map<String, String> configuration) throws Exception {
         /** configure hive */
-        String database = (String) configuration.get(HIVE_DATABASE);
+        String database = configuration.get(HIVE_DATABASE);
         String tablePath = null;
         if (database == null) {
             tablePath = configuration.get(HIVE_WAREHOUSE_DIR) + "/" + configuration.get(HIVE_TABLE);
@@ -93,14 +91,17 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IAd
                     + configuration.get(HIVE_TABLE);
         }
         configuration.put(HDFSAdapterFactory.KEY_PATH, tablePath);
-        if (!configuration.get(AsterixTupleParserFactory.KEY_FORMAT).equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
-            throw new IllegalArgumentException("format" + configuration.get(AsterixTupleParserFactory.KEY_FORMAT) + " is not supported");
+        if (!configuration.get(AsterixTupleParserFactory.KEY_FORMAT)
+                .equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
+            throw new IllegalArgumentException(
+                    "format" + configuration.get(AsterixTupleParserFactory.KEY_FORMAT) + " is not supported");
         }
 
-        if (!(configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT) || configuration
-                .get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_SEQUENCE))) {
-            throw new IllegalArgumentException("file input format"
-                    + configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT) + " is not supported");
+        if (!(configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT)
+                || configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT)
+                        .equals(HDFSAdapterFactory.INPUT_FORMAT_SEQUENCE))) {
+            throw new IllegalArgumentException(
+                    "file input format" + configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT) + " is not supported");
         }
     }
 
@@ -109,7 +110,6 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IAd
         return hdfsAdapterFactory.getPartitionConstraint();
     }
 
-    
     @Override
     public ARecordType getAdapterOutputType() {
         return (ARecordType) atype;

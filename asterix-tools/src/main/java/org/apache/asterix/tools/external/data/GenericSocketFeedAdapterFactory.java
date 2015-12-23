@@ -29,9 +29,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.external.adapter.factory.IFeedAdapterFactory;
 import org.apache.asterix.external.adapter.factory.StreamBasedAdapterFactory;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
-import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.util.AsterixRuntimeUtil;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;

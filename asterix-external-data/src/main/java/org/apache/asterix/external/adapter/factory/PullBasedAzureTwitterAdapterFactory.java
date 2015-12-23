@@ -25,13 +25,7 @@ import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.external.dataset.adapter.PullBasedAzureTwitterAdapter;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.entities.Datatype;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -42,7 +36,6 @@ public class PullBasedAzureTwitterAdapterFactory implements IFeedAdapterFactory 
 
     private static final String INGESTOR_LOCATIONS_KEY = "ingestor-locations";
     private static final String PARTITIONS_KEY = "partitions";
-    private static final String OUTPUT_TYPE_KEY = "output-type";
     private static final String TABLE_NAME_KEY = "table-name";
     private static final String ACCOUNT_NAME_KEY = "account-name";
     private static final String ACCOUNT_KEY_KEY = "account-key";
@@ -78,8 +71,8 @@ public class PullBasedAzureTwitterAdapterFactory implements IFeedAdapterFactory 
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new PullBasedAzureTwitterAdapter(azureAccountName, azureAccountKey, tableName, partitions,
-                configuration, ctx, outputType);
+        return new PullBasedAzureTwitterAdapter(azureAccountName, azureAccountKey, tableName, partitions, configuration,
+                ctx, outputType);
     }
 
     @Override
@@ -120,38 +113,6 @@ public class PullBasedAzureTwitterAdapterFactory implements IFeedAdapterFactory 
             throw new AsterixException("Invalid adapter configuration: number of ingestion-locations ("
                     + nIngestLocations + ") must be the same as the number of partitions (" + nPartitions + ")");
         }
-        configureType();
-    }
-
-    private void configureType() throws Exception {
-        String fqOutputType = configuration.get(OUTPUT_TYPE_KEY);
-
-        if (fqOutputType == null) {
-            throw new IllegalArgumentException("No output type specified");
-        }
-        String[] dataverseAndType = fqOutputType.split("[.]");
-        String dataverseName = dataverseAndType[0];
-        String datatypeName = dataverseAndType[1];
-
-        MetadataTransactionContext ctx = null;
-        MetadataManager.INSTANCE.acquireReadLatch();
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
-            IAType type = t.getDatatype();
-            if (type.getTypeTag() != ATypeTag.RECORD) {
-                throw new IllegalStateException();
-            }
-            outputType = (ARecordType) t.getDatatype();
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
-            if (ctx != null) {
-                MetadataManager.INSTANCE.abortTransaction(ctx);
-            }
-            throw e;
-        } finally {
-            MetadataManager.INSTANCE.releaseReadLatch();
-        }
     }
 
     @Override
@@ -167,7 +128,5 @@ public class PullBasedAzureTwitterAdapterFactory implements IFeedAdapterFactory 
     public FeedPolicyAccessor getIngestionPolicy() {
         return ingestionPolicy;
     }
-    
-    
 
 }

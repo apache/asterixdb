@@ -21,15 +21,14 @@ package org.apache.asterix.external.indexing.input;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-
-import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 
 public class TextFileLookupReader implements ILookupReader {
     private FileSystem fs;
@@ -78,14 +77,15 @@ public class TextFileLookupReader implements ILookupReader {
     }
 
     private void openFile(String FileName) throws IOException {
-        if(lineReader.getReader() != null){
+        if (lineReader.getReader() != null) {
             lineReader.getReader().close();
         }
         lineReader.resetReader(fs.open(new Path(FileName)));
     }
 
+    @Override
     public void close() {
-        if (lineReader.getReader() != null){
+        if (lineReader.getReader() != null) {
             try {
                 lineReader.getReader().close();
             } catch (IOException e) {

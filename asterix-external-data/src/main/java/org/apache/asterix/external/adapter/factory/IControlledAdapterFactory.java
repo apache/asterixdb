@@ -16,15 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.feeds;
+package org.apache.asterix.external.adapter.factory;
 
-import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
-import org.apache.asterix.metadata.external.IAdapterFactory;
+import java.io.Serializable;
+import java.util.Map;
 
-public interface IFeedAdapterFactory extends IAdapterFactory {
+import org.apache.asterix.external.dataset.adapter.IControlledAdapter;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
-    public boolean isRecordTrackingEnabled();
+public interface IControlledAdapterFactory extends Serializable {
+    public IControlledAdapter createAdapter(IHyracksTaskContext ctx, ExternalFileIndexAccessor fileIndexAccessor,
+            RecordDescriptor inRecDesc);
 
-    public IIntakeProgressTracker createIntakeProgressTracker();
-
+    public void configure(IAType atype, boolean propagateInput, int[] ridFields,
+            Map<String, String> adapterConfiguration, boolean retainNull);
 }

@@ -37,6 +37,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.library.ExternalLibrary;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.library.LibraryAdapter;
 import org.apache.asterix.external.library.LibraryFunction;
 import org.apache.asterix.metadata.MetadataManager;
@@ -46,7 +47,6 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
-import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryBootstrap {

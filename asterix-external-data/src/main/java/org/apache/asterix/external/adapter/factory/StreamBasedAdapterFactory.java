@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.util.INodeResolver;
-import org.apache.asterix.metadata.external.IAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
@@ -42,7 +41,8 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
     public abstract InputDataFormat getInputDataFormat();
 
     protected void configureFormat(IAType sourceDatatype) throws Exception {
-        parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype, getInputDataFormat());
+        parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype,
+                getInputDataFormat());
 
     }
 

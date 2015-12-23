@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.util.Map;
 
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
-import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.external.adapter.factory.IAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;

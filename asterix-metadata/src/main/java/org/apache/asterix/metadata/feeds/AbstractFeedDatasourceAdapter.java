@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.feeds;
 
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 
 
 public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapter {

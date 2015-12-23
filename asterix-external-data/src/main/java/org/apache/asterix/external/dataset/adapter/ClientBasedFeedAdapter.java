@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
 import org.apache.asterix.common.parse.ITupleForwardPolicy;
 import org.apache.asterix.external.dataset.adapter.IFeedClient.InflowState;
-import org.apache.asterix.metadata.feeds.FeedPolicyEnforcer;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -138,6 +138,7 @@ public abstract class ClientBasedFeedAdapter implements IFeedAdapter {
      * 
      * @throws Exception
      */
+    @Override
     public void stop() throws Exception {
         continueIngestion = false;
     }

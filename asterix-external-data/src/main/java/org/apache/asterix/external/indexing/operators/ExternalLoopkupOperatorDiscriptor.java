@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.indexing.operators;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.external.adapter.factory.IControlledAdapterFactory;
+import org.apache.asterix.external.dataset.adapter.IControlledAdapter;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
+import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.INullWriterFactory;

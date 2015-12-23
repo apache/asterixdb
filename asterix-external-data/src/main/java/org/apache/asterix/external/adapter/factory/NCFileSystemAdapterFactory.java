@@ -26,11 +26,10 @@ import java.util.logging.Level;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
 import org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.DNSResolverFactory;
 import org.apache.asterix.external.util.INodeResolver;
 import org.apache.asterix.external.util.INodeResolverFactory;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.IAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
@@ -58,7 +57,6 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
     private FileSplit[] fileSplits;
     private ARecordType outputType;
 
-
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         NCFileSystemAdapter fsAdapter = new NCFileSystemAdapter(fileSplits, parserFactory, sourceDatatype, ctx);
@@ -70,7 +68,6 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
         return NC_FILE_SYSTEM_ADAPTER_NAME;
     }
 
-
     @Override
     public SupportedOperation getSupportedOperations() {
         return SupportedOperation.READ;
@@ -80,8 +77,8 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         this.outputType = outputType;
-        String[] splits = ((String) configuration.get(AsterixTupleParserFactory.KEY_PATH)).split(",");
-        IAType sourceDatatype = (IAType) outputType;
+        String[] splits = configuration.get(AsterixTupleParserFactory.KEY_PATH).split(",");
+        IAType sourceDatatype = outputType;
         configureFileSplits(splits);
         configureFormat(sourceDatatype);
 
@@ -102,8 +99,8 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
             for (String splitPath : splits) {
                 trimmedValue = splitPath.trim();
                 if (!trimmedValue.contains("://")) {
-                    throw new AsterixException("Invalid path: " + splitPath
-                            + "\nUsage- path=\"Host://Absolute File Path\"");
+                    throw new AsterixException(
+                            "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
                 }
                 nodeName = trimmedValue.split(":")[0];
                 nodeLocalPath = trimmedValue.split("://")[1];
@@ -132,7 +129,8 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
 
     private static INodeResolver initializeNodeResolver() {
         INodeResolver nodeResolver = null;
-        String configuredNodeResolverFactory = System.getProperty(AsterixTupleParserFactory.NODE_RESOLVER_FACTORY_PROPERTY);
+        String configuredNodeResolverFactory = System
+                .getProperty(AsterixTupleParserFactory.NODE_RESOLVER_FACTORY_PROPERTY);
         if (configuredNodeResolverFactory != null) {
             try {
                 nodeResolver = ((INodeResolverFactory) (Class.forName(configuredNodeResolverFactory).newInstance()))
@@ -150,12 +148,12 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
         }
         return nodeResolver;
     }
-    
+
     @Override
     public ARecordType getAdapterOutputType() {
         return outputType;
     }
-    
+
     @Override
     public InputDataFormat getInputDataFormat() {
         return InputDataFormat.UNKNOWN;

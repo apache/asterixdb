@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.feeds;
+package org.apache.asterix.external.feeds;
 
 import java.rmi.RemoteException;
 import java.util.Map;

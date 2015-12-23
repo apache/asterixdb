@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.indexing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
-import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -56,12 +55,14 @@ public class IndexingConstants {
             .getBinaryComparatorFactory(BuiltinType.AINT64, true);
     private static final IBinaryComparatorFactory rowNumberCompFactory = AqlBinaryComparatorFactoryProvider.INSTANCE
             .getBinaryComparatorFactory(BuiltinType.AINT32, true);
-    
-    private static final IBinaryComparatorFactory[] rCFileRIDComparatorFactories = {fileNumberCompFactory, recordOffsetCompFactory, rowNumberCompFactory};
-    private static final IBinaryComparatorFactory[] txtSeqFileRIDComparatorFactories = {fileNumberCompFactory, recordOffsetCompFactory};
 
-    private static final IBinaryComparatorFactory[] buddyBtreeComparatorFactories = {fileNumberCompFactory};
-    
+    private static final IBinaryComparatorFactory[] rCFileRIDComparatorFactories = { fileNumberCompFactory,
+            recordOffsetCompFactory, rowNumberCompFactory };
+    private static final IBinaryComparatorFactory[] txtSeqFileRIDComparatorFactories = { fileNumberCompFactory,
+            recordOffsetCompFactory };
+
+    private static final IBinaryComparatorFactory[] buddyBtreeComparatorFactories = { fileNumberCompFactory };
+
     //Serdes
     private static ISerializerDeserializer fileNumberSerializerDeserializer;
     private static ISerializerDeserializer recordOffsetSerializerDeserializer;
@@ -79,7 +80,7 @@ public class IndexingConstants {
     public static final int FILE_NUMBER_FIELD_INDEX = 0;
     public static final int RECORD_OFFSET_FIELD_INDEX = 1;
     public static final int ROW_NUMBER_FIELD_INDEX = 2;
-    
+
     public static final ArrayList<List<String>> RecordIDFields = new ArrayList<List<String>>();
 
     static {
@@ -98,7 +99,7 @@ public class IndexingConstants {
         fileNumberEvalFactory = new TupleFieldEvaluatorFactory(1);
         recordOffsetEvalFactory = new TupleFieldEvaluatorFactory(2);
         rowNumberEvalFactory = new TupleFieldEvaluatorFactory(3);
-        
+
         // Add field names
         RecordIDFields.add(new ArrayList<String>(Arrays.asList("FileNumber")));
         RecordIDFields.add(new ArrayList<String>(Arrays.asList("RecordOffset")));
@@ -112,15 +113,15 @@ public class IndexingConstants {
         else
             return 2;
     }
-    
- // This function returns the size of the RID for the passed file input format
+
+    // This function returns the size of the RID for the passed file input format
     public static IBinaryComparatorFactory[] getComparatorFactories(String fileInputFormat) {
         if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
             return rCFileRIDComparatorFactories;
         else
             return txtSeqFileRIDComparatorFactories;
     }
-    
+
     public static IAType getFieldType(int fieldNumber) throws AsterixException {
         switch (fieldNumber) {
             case 0:
@@ -133,9 +134,8 @@ public class IndexingConstants {
                 throw new AsterixException("Unknown external field RID number");
         }
     }
-    
-    public static IBinaryComparatorFactory getComparatorFactory(int fieldNumber)
-            throws AsterixException {
+
+    public static IBinaryComparatorFactory getComparatorFactory(int fieldNumber) throws AsterixException {
         switch (fieldNumber) {
             case 0:
                 return fileNumberCompFactory;
@@ -147,9 +147,8 @@ public class IndexingConstants {
                 throw new AsterixException("Unknown external field RID number");
         }
     }
-    
-    public static ISerializerDeserializer getSerializerDeserializer(int fieldNumber)
-            throws AsterixException {
+
+    public static ISerializerDeserializer getSerializerDeserializer(int fieldNumber) throws AsterixException {
         switch (fieldNumber) {
             case 0:
                 return fileNumberSerializerDeserializer;
@@ -161,9 +160,8 @@ public class IndexingConstants {
                 throw new AsterixException("Unknown external field RID number");
         }
     }
-    
-    public static ITypeTraits getTypeTraits(int fieldNumber)
-            throws AsterixException {
+
+    public static ITypeTraits getTypeTraits(int fieldNumber) throws AsterixException {
         switch (fieldNumber) {
             case 0:
                 return fileNumberTypeTraits;
@@ -175,30 +173,30 @@ public class IndexingConstants {
                 throw new AsterixException("Unknown external field RID number");
         }
     }
-    
-    public static IScalarEvaluatorFactory getEvalFactory(int fieldNumber) throws AsterixException{
+
+    public static IScalarEvaluatorFactory getEvalFactory(int fieldNumber) throws AsterixException {
         switch (fieldNumber) {
-        case 0:
-            return fileNumberEvalFactory;
-        case 1:
-            return recordOffsetEvalFactory;
-        case 2:
-            return rowNumberEvalFactory;
-        default:
-            throw new AsterixException("Unknown external field RID number");
-    }
+            case 0:
+                return fileNumberEvalFactory;
+            case 1:
+                return recordOffsetEvalFactory;
+            case 2:
+                return rowNumberEvalFactory;
+            default:
+                throw new AsterixException("Unknown external field RID number");
+        }
     }
 
     public static IBinaryComparatorFactory[] getBuddyBtreeComparatorFactories() {
         return buddyBtreeComparatorFactories;
     }
 
-    public static int getRIDSize(Dataset dataset) {
-        return getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties().get(KEY_INPUT_FORMAT));
+    public static int getRIDSize(Map<String, String> properties) {
+        return getRIDSize(properties.get(KEY_INPUT_FORMAT));
     }
 
-    public static List<List<String>> getRIDKeys(Dataset dataset) {
-        String fileInputFormat = ((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties().get(KEY_INPUT_FORMAT);
+    public static List<List<String>> getRIDKeys(Map<String, String> properties) {
+        String fileInputFormat = properties.get(KEY_INPUT_FORMAT);
         if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
             return RecordIDFields;
         else

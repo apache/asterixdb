@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.indexing;
 
 import java.io.IOException;
 
@@ -64,8 +64,7 @@ public class FilesIndexDescription {
     public FilesIndexDescription() {
         ARecordType type;
         try {
-            type = new ARecordType("ExternalFileRecordType", payloadFieldNames,
-                    payloadFieldTypes, true);
+            type = new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -98,8 +97,7 @@ public class FilesIndexDescription {
     public void getBuddyBTreeTupleFromFileNumber(ArrayTupleReference tuple, ArrayTupleBuilder tupleBuilder,
             AMutableInt32 aInt32) throws IOException, AsterixException {
         tupleBuilder.reset();
-        FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32,
-                tupleBuilder.getDataOutput());
+        FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
     }

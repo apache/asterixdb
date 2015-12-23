@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.external;
+package org.apache.asterix.external.feeds;
 
-import java.io.Serializable;
-import java.util.Map;
+import org.apache.asterix.common.feeds.api.IFeedAdapter;
 
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+public interface IPullBasedFeedAdapter extends IFeedAdapter {
 
-public interface IControlledAdapterFactory extends Serializable {
-    public IControlledAdapter createAdapter(IHyracksTaskContext ctx, ExternalFileIndexAccessor fileIndexAccessor,
-            RecordDescriptor inRecDesc);
+    /**
+     * @return
+     */
+    public FeedPolicyEnforcer getPolicyEnforcer();
 
-    public void configure(IAType atype, boolean propagateInput, int[] ridFields,
-            Map<String, String> adapterConfiguration, boolean retainNull);
+    /**
+     * @param feedPolicyEnforcer
+     */
+    public void setFeedPolicyEnforcer(FeedPolicyEnforcer feedPolicyEnforcer);
 }

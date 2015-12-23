@@ -26,6 +26,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,19 +44,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-
-import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
-import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
-import org.apache.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
-import org.apache.asterix.metadata.entities.ExternalFile;
-import org.apache.asterix.metadata.external.IAdapterFactory;
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.ICCContext;
@@ -106,8 +104,8 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
         ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
         Scheduler scheduler = null;
         try {
-            scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(), ccContext
-                    .getClusterControllerInfo().getClientNetPort());
+            scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
+                    ccContext.getClusterControllerInfo().getClientNetPort());
         } catch (HyracksException e) {
             throw new IllegalStateException("Cannot obtain hdfs scheduler");
         }
@@ -145,15 +143,15 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
 
     public static JobConf configureJobConf(Map<String, String> configuration) throws Exception {
         JobConf conf = new JobConf();
-        String formatClassName = (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim());
-        String localShortCircuitSocketPath = (String) configuration.get(KEY_LOCAL_SOCKET_PATH);
+        String formatClassName = formatClassNames.get(configuration.get(KEY_INPUT_FORMAT).trim());
+        String localShortCircuitSocketPath = configuration.get(KEY_LOCAL_SOCKET_PATH);
         if (formatClassName == null) {
-            formatClassName = ((String) configuration.get(KEY_INPUT_FORMAT)).trim();
+            formatClassName = configuration.get(KEY_INPUT_FORMAT).trim();
         }
-        conf.set(KEY_HADOOP_FILESYSTEM_URI, ((String) configuration.get(KEY_HDFS_URL)).trim());
+        conf.set(KEY_HADOOP_FILESYSTEM_URI, configuration.get(KEY_HDFS_URL).trim());
         conf.set(KEY_HADOOP_FILESYSTEM_CLASS, CLASS_NAME_HDFS_FILESYSTEM);
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
-        conf.set(KEY_HADOOP_INPUT_DIR, ((String) configuration.get(KEY_PATH)).trim());
+        conf.set(KEY_HADOOP_INPUT_DIR, configuration.get(KEY_PATH).trim());
         conf.set(KEY_HADOOP_INPUT_FORMAT, formatClassName);
 
         // Enable local short circuit reads if user supplied the parameters
@@ -169,7 +167,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
         if (!configured) {
             throw new IllegalStateException("Adapter factory has not been configured yet");
         }
-        return (AlgebricksPartitionConstraint) clusterLocations;
+        return clusterLocations;
     }
 
     @Override
@@ -199,7 +197,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
         Arrays.fill(executed, false);
         configured = true;
 
-        atype = (IAType) outputType;
+        atype = outputType;
         configureFormat(atype);
     }
 
@@ -241,26 +239,26 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
      * if data is text data (adm or delimited text), it will use a text tuple parser,
      * otherwise it will use hdfs record object parser
      */
+    @Override
     protected void configureFormat(IAType sourceDatatype) throws Exception {
-         String specifiedFormat = (String) configuration.get(AsterixTupleParserFactory.KEY_FORMAT);
-         if (specifiedFormat == null) {
-                 throw new IllegalArgumentException(" Unspecified data format");
-         } 
-         
-         if(AsterixTupleParserFactory.FORMAT_BINARY.equalsIgnoreCase(specifiedFormat)){
-             parserFactory = new HDFSObjectTupleParserFactory((ARecordType) atype, this, configuration);
-         } else {
-             InputDataFormat inputFormat = InputDataFormat.UNKNOWN;
-             if (AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
-                 inputFormat = InputDataFormat.DELIMITED;
-             }   else if (AsterixTupleParserFactory.FORMAT_ADM.equalsIgnoreCase(specifiedFormat)) {
-                 inputFormat = InputDataFormat.ADM;
-             }    
-             parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype
-                     , inputFormat);
-         }  
-        
-     }
+        String specifiedFormat = configuration.get(AsterixTupleParserFactory.KEY_FORMAT);
+        if (specifiedFormat == null) {
+            throw new IllegalArgumentException(" Unspecified data format");
+        }
+
+        if (AsterixTupleParserFactory.FORMAT_BINARY.equalsIgnoreCase(specifiedFormat)) {
+            parserFactory = new HDFSObjectTupleParserFactory((ARecordType) atype, this, configuration);
+        } else {
+            InputDataFormat inputFormat = InputDataFormat.UNKNOWN;
+            if (AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
+                inputFormat = InputDataFormat.DELIMITED;
+            } else if (AsterixTupleParserFactory.FORMAT_ADM.equalsIgnoreCase(specifiedFormat)) {
+                inputFormat = InputDataFormat.ADM;
+            }
+            parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype, inputFormat);
+        }
+
+    }
 
     /**
      * Instead of creating the split using the input format, we do it manually
@@ -296,9 +294,11 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
                 // Create a split per block
                 for (BlockLocation block : fileBlocks) {
                     if (block.getOffset() < file.getSize()) {
-                        fileSplits.add(new FileSplit(filePath, block.getOffset(), (block.getLength() + block
-                                .getOffset()) < file.getSize() ? block.getLength() : (file.getSize() - block
-                                .getOffset()), block.getHosts()));
+                        fileSplits
+                                .add(new FileSplit(filePath,
+                                        block.getOffset(), (block.getLength() + block.getOffset()) < file.getSize()
+                                                ? block.getLength() : (file.getSize() - block.getOffset()),
+                                block.getHosts()));
                         orderedExternalFiles.add(file);
                     }
                 }
@@ -322,11 +322,11 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
                         if (block.getOffset() < newSize) {
                             // Block interact with delta -> Create a split
                             long startCut = (block.getOffset() > oldSize) ? 0L : oldSize - block.getOffset();
-                            long endCut = (block.getOffset() + block.getLength() < newSize) ? 0L : block.getOffset()
-                                    + block.getLength() - newSize;
+                            long endCut = (block.getOffset() + block.getLength() < newSize) ? 0L
+                                    : block.getOffset() + block.getLength() - newSize;
                             long splitLength = block.getLength() - startCut - endCut;
-                            fileSplits.add(new FileSplit(filePath, block.getOffset() + startCut, splitLength, block
-                                    .getHosts()));
+                            fileSplits.add(new FileSplit(filePath, block.getOffset() + startCut, splitLength,
+                                    block.getHosts()));
                             orderedExternalFiles.add(file);
                         }
                     }

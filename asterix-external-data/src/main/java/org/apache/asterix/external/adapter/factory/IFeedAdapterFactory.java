@@ -16,19 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.feeds;
+package org.apache.asterix.external.adapter.factory;
 
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 
-public interface IPullBasedFeedAdapter extends IFeedAdapter {
+public interface IFeedAdapterFactory extends IAdapterFactory {
 
-    /**
-     * @return
-     */
-    public FeedPolicyEnforcer getPolicyEnforcer();
+    public boolean isRecordTrackingEnabled();
 
-    /**
-     * @param feedPolicyEnforcer
-     */
-    public void setFeedPolicyEnforcer(FeedPolicyEnforcer feedPolicyEnforcer);
+    public IIntakeProgressTracker createIntakeProgressTracker();
+
 }

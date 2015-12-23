@@ -20,7 +20,7 @@ package org.apache.asterix.external.indexing.operators;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.metadata.external.FilesIndexDescription;
+import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;

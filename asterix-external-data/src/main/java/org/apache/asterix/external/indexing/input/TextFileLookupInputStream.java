@@ -20,11 +20,10 @@ package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
 
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
-
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 
 public class TextFileLookupInputStream extends AbstractHDFSLookupInputStream {
 

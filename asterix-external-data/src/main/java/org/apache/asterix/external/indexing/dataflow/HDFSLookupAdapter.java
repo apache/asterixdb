@@ -25,13 +25,13 @@ import java.util.Map;
 
 import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
 import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
+import org.apache.asterix.external.dataset.adapter.IControlledAdapter;
+import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.asterix.external.indexing.input.RCFileLookupReader;
 import org.apache.asterix.external.indexing.input.SequenceFileLookupInputStream;
 import org.apache.asterix.external.indexing.input.SequenceFileLookupReader;
 import org.apache.asterix.external.indexing.input.TextFileLookupInputStream;
 import org.apache.asterix.external.indexing.input.TextFileLookupReader;
-import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
-import org.apache.asterix.metadata.external.IControlledAdapter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.file.ADMDataParser;

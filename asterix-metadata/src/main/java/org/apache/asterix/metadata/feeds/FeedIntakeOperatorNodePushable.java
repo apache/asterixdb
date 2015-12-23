@@ -36,6 +36,7 @@ import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
 import org.apache.asterix.common.feeds.api.IFeedManager;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.external.adapter.factory.IFeedAdapterFactory;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
