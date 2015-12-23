@@ -140,14 +140,14 @@ public class AsterixReplicationProtocol {
         return bb;
     }
 
-    public static void writeReplicateLogRequest(ByteBuffer requestBuffer, ILogRecord logRecord) {
+    public static void writeRemoteRecoveryLogRequest(ByteBuffer requestBuffer, ILogRecord logRecord) {
         requestBuffer.clear();
         //put request type (4 bytes)
         requestBuffer.putInt(ReplicationRequestType.REPLICATE_LOG.ordinal());
         //leave space for log size
         requestBuffer.position(requestBuffer.position() + Integer.BYTES);
-        int logSize = logRecord.serialize(requestBuffer);
-        //put request type (4 bytes)
+        int logSize = logRecord.writeRemoteRecoveryLog(requestBuffer);
+        //put request size (4 bytes)
         requestBuffer.putInt(4, logSize);
         requestBuffer.flip();
     }

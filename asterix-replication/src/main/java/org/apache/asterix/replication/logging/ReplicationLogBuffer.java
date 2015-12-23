@@ -89,6 +89,7 @@ public class ReplicationLogBuffer {
         full.set(false);
         appendOffset = 0;
         flushOffset = 0;
+        stop = false;
     }
 
     public void flush() {

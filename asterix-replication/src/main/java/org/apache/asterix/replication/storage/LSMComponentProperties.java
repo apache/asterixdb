@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -50,9 +49,7 @@ public class LSMComponentProperties {
         this.nodeId = nodeId;
         componentId = LSMComponentProperties.getLSMComponentID((String) job.getJobFiles().toArray()[0], nodeId);
         numberOfFiles = new AtomicInteger(job.getJobFiles().size());
-        originalLSN = getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(), job.getLSMIndexOperationContext());
-        //TODO this should be changed to a dynamic value when append only LSM indexes are implemented
-        LSNOffset = LIFOMetaDataFrame.lsnOff;
+        originalLSN = LSMComponentProperties.getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(), job.getLSMIndexOperationContext());
         opType = job.getLSMOpType();
     }
 
@@ -60,11 +57,11 @@ public class LSMComponentProperties {
 
     }
 
-    public long getLSMComponentLSN(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext ctx) {
+    public static long getLSMComponentLSN(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext ctx) {
         long componentLSN = -1;
         try {
-            componentLSN = ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback()).getComponentLSN(ctx
-                    .getComponentsToBeReplicated());
+            componentLSN = ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
+                    .getComponentLSN(ctx.getComponentsToBeReplicated());
         } catch (HyracksDataException e) {
             e.printStackTrace();
         }
@@ -147,14 +144,6 @@ public class LSMComponentProperties {
 
     public void setComponentId(String componentId) {
         this.componentId = componentId;
-    }
-
-    public long getLSNOffset() {
-        return LSNOffset;
-    }
-
-    public void setLSNOffset(long lSNOffset) {
-        LSNOffset = lSNOffset;
     }
 
     public long getOriginalLSN() {

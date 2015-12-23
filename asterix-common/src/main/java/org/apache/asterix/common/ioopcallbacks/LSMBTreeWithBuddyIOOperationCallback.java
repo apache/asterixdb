@@ -21,6 +21,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -34,7 +35,6 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
         if (newComponent != null) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) newComponent;
             putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
-            putLSNIntoMetadata(btreeComponent.getBuddyBTree(), oldComponents);
         }
     }
 
@@ -51,19 +51,18 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
         long maxLSN = -1;
         for (Object o : diskComponents) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) o;
-            maxLSN = Math.max(getTreeIndexLSN(btreeComponent.getBTree()), maxLSN);
+            maxLSN = Math.max(AbstractLSMIOOperationCallback.getTreeIndexLSN(btreeComponent.getBTree()), maxLSN);
         }
         return maxLSN;
     }
 
     @Override
-    public boolean componentFileHasLSN(String componentFilePath) {
-        if (componentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)
-                || componentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BUDDY_BTREE_STRING)) {
-            return true;
+    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+            throws HyracksDataException {
+        if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)) {
+            LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) diskComponent;
+            return btreeComponent.getBTree().getMetaManager().getLSNOffset();
         }
-
-        return false;
+        return IMetaDataPageManager.INVALID_LSN_OFFSET;
     }
-
 }

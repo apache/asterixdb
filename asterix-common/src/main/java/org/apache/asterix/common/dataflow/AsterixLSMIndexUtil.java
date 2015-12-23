@@ -18,17 +18,16 @@
  */
 package org.apache.asterix.common.dataflow;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class AsterixLSMIndexUtil {
 
     public static void checkAndSetFirstLSN(AbstractLSMIndex lsmIndex, ILogManager logManager)
-            throws HyracksDataException, AsterixException {
-
+            throws HyracksDataException {
         // If the index has an empty memory component, we need to set its first LSN (For soft checkpoint)
         if (lsmIndex.isCurrentMutableComponentEmpty()) {
             //prevent transactions from incorrectly setting the first LSN on a modified component by checking the index is still empty
@@ -42,9 +41,10 @@ public class AsterixLSMIndexUtil {
         }
     }
 
-    public static boolean lsmComponentFileHasLSN(AbstractLSMIndex lsmIndex, String componentFilePath) {
+    public static long getComponentFileLSNOffset(AbstractLSMIndex lsmIndex, ILSMComponent lsmComponent,
+            String componentFilePath) throws HyracksDataException {
         AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
                 .getIOOperationCallback();
-        return ioOpCallback.componentFileHasLSN(componentFilePath);
+        return ioOpCallback.getComponentFileLSNOffset(lsmComponent, componentFilePath);
     }
 }

@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 
 public class AsterixLSMIndexFileProperties {
@@ -35,36 +36,36 @@ public class AsterixLSMIndexFileProperties {
     private int ioDeviceNum;
     private String idxName;
     private boolean lsmComponentFile;
-    private boolean requireLSNSync;
     private String filePath;
     private boolean requiresAck = false;
+    private long LSNByteOffset;
 
     public AsterixLSMIndexFileProperties() {
     }
 
     public AsterixLSMIndexFileProperties(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
-            boolean requireLSNSync, boolean requiresAck) {
-        initialize(filePath, fileSize, nodeId, lsmComponentFile, requireLSNSync, requiresAck);
+            long LSNByteOffset, boolean requiresAck) {
+        initialize(filePath, fileSize, nodeId, lsmComponentFile, LSNByteOffset, requiresAck);
     }
 
     public AsterixLSMIndexFileProperties(LSMComponentProperties lsmComponentProperties) {
-        initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false, false, false);
+        initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false,
+                IMetaDataPageManager.INVALID_LSN_OFFSET, false);
     }
 
-    public void initialize(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
-            boolean requireLSNSync, boolean requiresAck) {
+    public void initialize(String filePath, long fileSize, String nodeId, boolean lsmComponentFile, long LSNByteOffset,
+            boolean requiresAck) {
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.nodeId = nodeId;
         String[] tokens = filePath.split(File.separator);
-
         int arraySize = tokens.length;
         this.fileName = tokens[arraySize - 1];
         this.ioDeviceNum = getDeviceIONumFromName(tokens[arraySize - 2]);
         this.idxName = tokens[arraySize - 3];
         this.dataverse = tokens[arraySize - 4];
         this.lsmComponentFile = lsmComponentFile;
-        this.requireLSNSync = requireLSNSync;
+        this.LSNByteOffset = LSNByteOffset;
         this.requiresAck = requiresAck;
     }
 
@@ -78,7 +79,7 @@ public class AsterixLSMIndexFileProperties {
         dos.writeUTF(filePath);
         dos.writeLong(fileSize);
         dos.writeBoolean(lsmComponentFile);
-        dos.writeBoolean(requireLSNSync);
+        dos.writeLong(LSNByteOffset);
         dos.writeBoolean(requiresAck);
     }
 
@@ -87,10 +88,10 @@ public class AsterixLSMIndexFileProperties {
         String filePath = input.readUTF();
         long fileSize = input.readLong();
         boolean lsmComponentFile = input.readBoolean();
-        boolean requireLSNSync = input.readBoolean();
+        long LSNByteOffset = input.readLong();
         boolean requiresAck = input.readBoolean();
         AsterixLSMIndexFileProperties fileProp = new AsterixLSMIndexFileProperties();
-        fileProp.initialize(filePath, fileSize, nodeId, lsmComponentFile, requireLSNSync, requiresAck);
+        fileProp.initialize(filePath, fileSize, nodeId, lsmComponentFile, LSNByteOffset, requiresAck);
         return fileProp;
     }
 
@@ -158,14 +159,6 @@ public class AsterixLSMIndexFileProperties {
         this.lsmComponentFile = lsmComponentFile;
     }
 
-    public boolean isRequireLSNSync() {
-        return requireLSNSync;
-    }
-
-    public void setRequireLSNSync(boolean requireLSNSync) {
-        this.requireLSNSync = requireLSNSync;
-    }
-
     public boolean requiresAck() {
         return requiresAck;
     }
@@ -184,6 +177,15 @@ public class AsterixLSMIndexFileProperties {
         sb.append("IDX Name: " + idxName + "  ");
         sb.append("isLSMComponentFile : " + lsmComponentFile + "  ");
         sb.append("Dataverse: " + dataverse);
+        sb.append("LSN Byte Offset: " + LSNByteOffset);
         return sb.toString();
+    }
+
+    public long getLSNByteOffset() {
+        return LSNByteOffset;
+    }
+
+    public void setLSNByteOffset(long lSNByteOffset) {
+        LSNByteOffset = lSNByteOffset;
     }
 }
