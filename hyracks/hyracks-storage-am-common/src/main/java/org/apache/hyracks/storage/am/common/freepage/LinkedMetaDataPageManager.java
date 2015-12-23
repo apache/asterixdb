@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -37,14 +38,13 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     public static final int NO_FILTER_IN_PLACE = -1;
     public static final int NO_FILTER_APPEND_ONLY = -2;
     private final IBufferCache bufferCache;
-    private int headPage = -1;
+    private int headPage = IBufferCache.INVALID_PAGEID;
     private int fileId = -1;
     private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
     private boolean appendOnly = false;
     ICachedPage confiscatedMetaNode;
     ICachedPage filterPage;
-    private static Logger LOGGER = Logger
-            .getLogger(LinkedMetaDataPageManager.class.getName());
+    private static Logger LOGGER = Logger.getLogger(LinkedMetaDataPageManager.class.getName());
 
     public LinkedMetaDataPageManager(IBufferCache bufferCache, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
         this.bufferCache = bufferCache;
@@ -53,7 +53,6 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
 
     @Override
     public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException {
-
         ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getFirstMetadataPage()), false);
         metaNode.acquireWriteLatch();
 
@@ -76,8 +75,8 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
                     int metaMaxPage = metaFrame.getMaxPage();
 
                     // copy metaDataPage to newNode
-                    System.arraycopy(metaNode.getBuffer().array(), 0, newNode.getBuffer().array(), 0, metaNode
-                            .getBuffer().capacity());
+                    System.arraycopy(metaNode.getBuffer().array(), 0, newNode.getBuffer().array(), 0,
+                            metaNode.getBuffer().capacity());
 
                     metaFrame.initBuffer(META_PAGE_LEVEL_INDICATOR);
                     metaFrame.setNextPage(newPage);
@@ -128,8 +127,8 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
                         // copy entire page (including sibling pointer, free
                         // page entries, and all other info)
                         // after this copy nextPage is considered a free page
-                        System.arraycopy(nextNode.getBuffer().array(), 0, metaNode.getBuffer().array(), 0, nextNode
-                                .getBuffer().capacity());
+                        System.arraycopy(nextNode.getBuffer().array(), 0, metaNode.getBuffer().array(), 0,
+                                nextNode.getBuffer().capacity());
 
                         // reset unchanged entry
                         metaFrame.setMaxPage(maxPage);
@@ -169,7 +168,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         ICachedPage metaNode;
         if (!appendOnly || (appendOnly && confiscatedMetaNode == null)) {
             int mdPage = getFirstMetadataPage();
-            if( mdPage <0 ){
+            if (mdPage < 0) {
                 return IBufferCache.INVALID_PAGEID;
             }
             metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, mdPage), false);
@@ -195,7 +194,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         ICachedPage metaNode;
         if (!appendOnly) {
             int mdPage = getFirstMetadataPage();
-            if( mdPage <0 ){
+            if (mdPage < 0) {
                 return;
             }
             metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, mdPage), false);
@@ -231,7 +230,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         try {
             metaFrame.setPage(metaNode);
             filterPageId = metaFrame.getLSMComponentFilterPageId();
-            if(appendOnly && filterPageId == -1){
+            if (appendOnly && filterPageId == -1) {
                 //hint to filter manager that we are in append-only mode
                 filterPageId = NO_FILTER_APPEND_ONLY;
             }
@@ -248,7 +247,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     public void init(ITreeIndexMetaDataFrame metaFrame, int currentMaxPage) throws HyracksDataException {
         // initialize meta data page
         int metaPage = getFirstMetadataPage();
-        if(metaPage == IBufferCache.INVALID_PAGEID){
+        if (metaPage == IBufferCache.INVALID_PAGEID) {
             throw new HyracksDataException("No valid metadata found in this file.");
         }
         ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getFirstMetadataPage()), true);
@@ -319,7 +318,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
             metaFrame.setPage(confiscatedMetaNode);
             metaFrame.setValid(true);
             int finalMetaPage = getMaxPage(metaFrame) + 1;
-            bufferCache.setPageDiskId(confiscatedMetaNode, BufferedFileHandle.getDiskPageId(fileId,finalMetaPage));
+            bufferCache.setPageDiskId(confiscatedMetaNode, BufferedFileHandle.getDiskPageId(fileId, finalMetaPage));
             queue.put(confiscatedMetaNode);
             bufferCache.finishQueue();
             confiscatedMetaNode = null;
@@ -327,7 +326,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     }
 
     private void writeFilterPage(IFIFOPageQueue queue) throws HyracksDataException {
-        if(filterPage != null) {
+        if (filterPage != null) {
             ITreeIndexMetaDataFrame metaFrame = metaDataFrameFactory.createFrame();
             metaFrame.setPage(confiscatedMetaNode);
             int finalFilterPage = getFreePage(metaFrame);
@@ -354,7 +353,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
 
         int pages = bufferCache.getNumPagesOfFile(fileId);
         //if there are no pages in the file yet, we're just initializing
-        if(pages == 0){
+        if (pages == 0) {
             return 0;
         }
         //look at the front (modify in-place index)
@@ -373,7 +372,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
             bufferCache.unpin(metaNode);
         }
         //otherwise, look at the back. (append-only index)
-        page = pages-1 >0 ? pages -1 : 0;
+        page = pages - 1 > 0 ? pages - 1 : 0;
         metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, page), false);
         try {
             metaNode.acquireReadLatch();
@@ -388,10 +387,9 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
             bufferCache.unpin(metaNode);
         }
         //if we find nothing, this isn't a tree (or isn't one yet).
-        if(pages>0){
+        if (pages > 0) {
             return IBufferCache.INVALID_PAGEID;
-        }
-        else{
+        } else {
             return 0;
         }
     }
@@ -454,5 +452,13 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     public boolean appendOnlyMode() {
         return appendOnly;
     }
-}
 
+    @Override
+    public long getLSNOffset() throws HyracksDataException {
+        int metadataPageNum = getFirstMetadataPage();
+        if (metadataPageNum != IBufferCache.INVALID_PAGEID) {
+            return (metadataPageNum * bufferCache.getPageSize()) + LIFOMetaDataFrame.lsnOff;
+        }
+        return IMetaDataPageManager.INVALID_LSN_OFFSET;
+    }
+}

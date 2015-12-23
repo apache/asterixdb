@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IVirtualMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -150,7 +151,7 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         // Method doesn't make sense for this free page manager.
     }
 
-    public ICachedPage getFilterPage(){
+    public ICachedPage getFilterPage() {
         return null;
     }
 
@@ -159,4 +160,8 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         return false;
     }
 
+    @Override
+    public long getLSNOffset() throws HyracksDataException {
+        return IMetaDataPageManager.INVALID_LSN_OFFSET;
+    }
 }

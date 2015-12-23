@@ -22,6 +22,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface IMetaDataPageManager {
+    public static final long INVALID_LSN_OFFSET = -1;
+
     /**
      * This is the class through which one interfaces with index metadata.
      * The index metadata contains information such as the LSN of the index, free page information,
@@ -129,5 +131,11 @@ public interface IMetaDataPageManager {
     ICachedPage getFilterPage();
 
     boolean appendOnlyMode();
+
+    /**
+     * @return The LSN byte offset in the LSM disk component if the index is valid, otherwise {@link #INVALID_LSN_OFFSET}.
+     * @throws HyracksDataException 
+     */
+    long getLSNOffset() throws HyracksDataException;
 
 }
