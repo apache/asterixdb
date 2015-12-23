@@ -34,12 +34,13 @@ import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
-import org.apache.asterix.event.schema.cluster.SubstituteNodes;
+import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -54,6 +55,8 @@ import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -75,6 +78,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private SystemState systemState = SystemState.NEW_UNIVERSE;
     private boolean performedRemoteRecovery = false;
     private boolean replicationEnabled = false;
+    private IMessageBroker messageBroker;
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
@@ -91,6 +95,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
+        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService());
+        ncApplicationContext.setMessageBroker(messageBroker);
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
@@ -191,6 +197,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void notifyStartupComplete() throws Exception {
+        //send max resource id on this NC to the CC
+        ((INCMessageBroker) ncApplicationContext.getMessageBroker()).reportMaxResourceId();
+
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
 
@@ -250,8 +259,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Configured:" + lccm);
         }
-        ncApplicationContext.setStateDumpHandler(new AsterixStateDumpHandler(ncApplicationContext.getNodeId(), lccm
-                .getDumpPath(), lccm));
+        ncApplicationContext.setStateDumpHandler(
+                new AsterixStateDumpHandler(ncApplicationContext.getNodeId(), lccm.getDumpPath(), lccm));
 
         lccm.startAll();
 

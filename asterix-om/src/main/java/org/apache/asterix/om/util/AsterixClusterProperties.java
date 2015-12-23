@@ -185,4 +185,16 @@ public class AsterixClusterProperties {
     public void setGlobalRecoveryCompleted(boolean globalRecoveryCompleted) {
         this.globalRecoveryCompleted = globalRecoveryCompleted;
     }
+
+    public static boolean isClusterActive() {
+        if (AsterixClusterProperties.INSTANCE.getCluster() == null) {
+            //this is a virtual cluster
+            return true;
+        }
+        return AsterixClusterProperties.INSTANCE.getState() == ClusterState.ACTIVE;
+    }
+
+    public static int getNumberOfNodes(){
+        return AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames().size();
+    }
 }

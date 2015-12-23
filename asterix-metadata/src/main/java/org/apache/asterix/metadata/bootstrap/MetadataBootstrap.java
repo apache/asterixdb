@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import java.io.File;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +38,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
@@ -73,7 +71,6 @@ import org.apache.asterix.transaction.management.service.transaction.Transaction
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
@@ -223,7 +220,7 @@ public class MetadataBootstrap {
         }
     }
 
-    public static void stopUniverse() throws HyracksDataException {
+    public static void stopUniverse() {
         // Close all BTree files in BufferCache.
         // metadata datasets will be closed when the dataset life cycle manger is closed
     }
@@ -404,7 +401,7 @@ public class MetadataBootstrap {
                     LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                     null, null, null, null, true);
             lsmBtree.create();
-            resourceID = runtimeContext.getResourceIdFactory().createId();
+            resourceID = index.getResourceID();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(), index.getDatasetId().getId(),
                     runtimeContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES,
@@ -443,7 +440,7 @@ public class MetadataBootstrap {
         return metadataNodeName;
     }
 
-    public static void startDDLRecovery() throws RemoteException, ACIDException, MetadataException {
+    public static void startDDLRecovery() throws MetadataException {
         //#. clean up any record which has pendingAdd/DelOp flag 
         //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
         String dataverseName = null;

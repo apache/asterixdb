@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public interface IAsterixAppRuntimeContext {
@@ -65,7 +66,7 @@ public interface IAsterixAppRuntimeContext {
 
     public IDatasetLifecycleManager getDatasetLifecycleManager();
 
-    public ResourceIdFactory getResourceIdFactory();
+    public IResourceIdFactory getResourceIdFactory();
 
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
