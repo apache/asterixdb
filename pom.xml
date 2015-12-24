@@ -54,8 +54,8 @@
         <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
         <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests},${repeated.tests}</global.test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-        <algebricks.version>0.2.17-SNAPSHOT</algebricks.version>
-        <hyracks.version>0.2.17-SNAPSHOT</hyracks.version>
+        <algebricks.version>0.2.17-incubating</algebricks.version>
+        <hyracks.version>0.2.17-incubating</hyracks.version>
         <hadoop.version>2.2.0</hadoop.version>
         <junit.version>4.11</junit.version>
         <commons.io.version>2.4</commons.io.version>
@@ -337,6 +337,15 @@
             </snapshots>
             <id>algebricks-snapshots</id>
             <url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+            <id>apache-staging</id>
+            <url>https://repository.apache.org/content/repositories/orgapacheasterix-1015/</url>
         </repository>
     </repositories>
     <dependencyManagement>
