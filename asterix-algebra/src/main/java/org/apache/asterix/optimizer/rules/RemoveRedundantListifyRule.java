@@ -20,7 +20,6 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -50,20 +49,36 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-/*
- *
- *  unnest $x [[ at $p ]] <- $y
- *    aggregate $y <- function-call: listify@1(unresolved), Args:[$z]
- *       Rest
- *
- * if $y is not used above these operators,
- * the plan fragment becomes
- *
- *  [[ runningaggregate $p <- tid]]
- *  assign $x <- $z
- *       Rest
- *
- *
+/**
+ * The rule cancels out redundant pairs of operators unnest-listify aggregate
+ * <p>
+ * <ul>
+ * <li>case 1 (direct):
+ * <p>
+ * Before plan:
+ * <ul>
+ * <li>unnest $x [[ at $p ]] <- function-call:scan-collection($y)
+ * <li>aggregate $y <- function-call:listify($z)
+ * </ul>
+ * <p>
+ * After plan:
+ * <ul>
+ * <li>[[ runningaggregate $p <- tid]]
+ * <li>assign $x <- $z
+ * </ul>
+ * <li>case 2 (reverse):
+ * <p>
+ * Before plan:
+ * <ul>
+ * <li>aggregate $x <- function-call:listify($y)
+ * <li>unnest $y <- function-call:scan-collection($z)
+ * </ul>
+ * <p>
+ * After plan:
+ * <ul>
+ * <li>assign $x <- $z
+ * </ul>
+ * </ul>
  */
 
 public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
@@ -122,26 +137,21 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         }
         UnnestOperator unnest1 = (UnnestOperator) op1;
         ILogicalExpression expr = unnest1.getExpressionRef().getValue();
-        LogicalVariable unnestedVar;
-        switch (expr.getExpressionTag()) {
-            case VARIABLE:
-                unnestedVar = ((VariableReferenceExpression) expr).getVariableReference();
-                break;
-            case FUNCTION_CALL:
-                if (((AbstractFunctionCallExpression) expr)
-                        .getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
-                    return false;
-                }
-                AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;
-                ILogicalExpression functionCallArgExpr = functionCall.getArguments().get(0).getValue();
-                if (functionCallArgExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                    return false;
-                }
-                unnestedVar = ((VariableReferenceExpression) functionCallArgExpr).getVariableReference();
-                break;
-            default:
-                return false;
+
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
         }
+        if (((AbstractFunctionCallExpression) expr)
+                .getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+            return false;
+        }
+        AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;
+        ILogicalExpression functionCallArgExpr = functionCall.getArguments().get(0).getValue();
+        if (functionCallArgExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            return false;
+        }
+        LogicalVariable unnestedVar = ((VariableReferenceExpression) functionCallArgExpr).getVariableReference();
+
         if (varUsedAbove.contains(unnestedVar)) {
             return false;
         }
@@ -226,6 +236,9 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         LogicalVariable aggInputVar = ((VariableReferenceExpression) arg0).getVariableReference();
+        if (varUsedAbove.contains(aggInputVar)) {
+            return false;
+        }
 
         if (agg.getInputs().size() == 0) {
             return false;
@@ -241,16 +254,21 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (!unnest.getVariable().equals(aggInputVar)) {
             return false;
         }
-        List<LogicalVariable> unnestSource = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(unnest, unnestSource);
-        if (unnestSource.size() > 1 || unnestSource.size() <= 0) {
+        ILogicalExpression unnestArg = unnest.getExpressionRef().getValue();
+        if (unnestArg.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
+        AbstractFunctionCallExpression scanFunc = (AbstractFunctionCallExpression) unnestArg;
+        if (scanFunc.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+            return false;
+        }
+        if (scanFunc.getArguments().size() != 1) {
+            return false;
+        }
+
         ArrayList<LogicalVariable> assgnVars = new ArrayList<LogicalVariable>(1);
         assgnVars.add(aggVar);
-        ArrayList<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
-        assgnExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(unnestSource.get(0))));
-        AssignOperator assign = new AssignOperator(assgnVars, assgnExprs);
+        AssignOperator assign = new AssignOperator(assgnVars, scanFunc.getArguments());
         assign.getInputs().add(unnest.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(assign);
         opRef.setValue(assign);
