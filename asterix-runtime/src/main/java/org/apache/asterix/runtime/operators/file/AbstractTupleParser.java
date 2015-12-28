@@ -27,7 +27,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.parse.ITupleForwardPolicy;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
@@ -44,9 +44,9 @@ public abstract class AbstractTupleParser implements ITupleParser {
     protected ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
     protected DataOutput dos = tb.getDataOutput();
     protected final ARecordType recType;
-    protected final IHyracksTaskContext ctx;
+    protected final IHyracksCommonContext ctx;
 
-    public AbstractTupleParser(IHyracksTaskContext ctx, ARecordType recType) throws HyracksDataException {
+    public AbstractTupleParser(IHyracksCommonContext ctx, ARecordType recType) throws HyracksDataException {
         this.recType = recType;
         this.ctx = ctx;
     }

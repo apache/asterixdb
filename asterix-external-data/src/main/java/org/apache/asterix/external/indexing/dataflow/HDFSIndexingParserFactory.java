@@ -27,7 +27,7 @@ import org.apache.asterix.runtime.operators.file.ADMDataParser;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.DelimitedDataParser;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -66,7 +66,7 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
     }
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    public ITupleParser createTupleParser(IHyracksCommonContext ctx) throws HyracksDataException {
         if (format == null) {
             throw new IllegalArgumentException("Unspecified data format");
         }

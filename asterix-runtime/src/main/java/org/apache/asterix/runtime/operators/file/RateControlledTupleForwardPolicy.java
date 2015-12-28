@@ -24,7 +24,7 @@ import org.apache.asterix.common.parse.ITupleForwardPolicy;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -48,7 +48,7 @@ public class RateControlledTupleForwardPolicy implements ITupleForwardPolicy {
         delayConfigured = interTupleInterval != 0;
     }
 
-    public void initialize(IHyracksTaskContext ctx, IFrameWriter writer) throws HyracksDataException {
+    public void initialize(IHyracksCommonContext ctx, IFrameWriter writer) throws HyracksDataException {
         this.appender = new FrameTupleAppender();
         this.frame = new VSizeFrame(ctx);
         this.writer = writer;

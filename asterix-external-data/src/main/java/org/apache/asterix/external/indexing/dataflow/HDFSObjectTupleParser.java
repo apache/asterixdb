@@ -25,7 +25,7 @@ import org.apache.asterix.external.indexing.input.AbstractHDFSReader;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -40,7 +40,8 @@ public class HDFSObjectTupleParser implements ITupleParser{
     private final FrameTupleAppender appender;
     private IAsterixHDFSRecordParser deserializer;
 
-    public HDFSObjectTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer) throws HyracksDataException {
+    public HDFSObjectTupleParser(IHyracksCommonContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer)
+            throws HyracksDataException {
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.deserializer = deserializer;
         tb = new ArrayTupleBuilder(1);

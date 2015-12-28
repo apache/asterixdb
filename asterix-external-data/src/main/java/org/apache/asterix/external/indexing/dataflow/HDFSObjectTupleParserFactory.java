@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -46,7 +46,7 @@ public class HDFSObjectTupleParserFactory implements ITupleParserFactory{
     }
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    public ITupleParser createTupleParser(IHyracksCommonContext ctx) throws HyracksDataException {
         IAsterixHDFSRecordParser objectParser;
         if (parserClassName.equals(HDFSAdapterFactory.PARSER_HIVE)) {
             objectParser = new HiveObjectParser();

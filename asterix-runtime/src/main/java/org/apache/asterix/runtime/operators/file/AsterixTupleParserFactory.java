@@ -31,7 +31,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
@@ -93,7 +93,7 @@ public class AsterixTupleParserFactory implements ITupleParserFactory {
     }
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    public ITupleParser createTupleParser(IHyracksCommonContext ctx) throws HyracksDataException {
         ITupleParser tupleParser = null;
         try {
             String parserFactoryClassname = (String) configuration.get(KEY_PARSER_FACTORY);
@@ -120,7 +120,7 @@ public class AsterixTupleParserFactory implements ITupleParserFactory {
 
         private final ITupleForwardPolicy policy;
 
-        public GenericTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
+        public GenericTupleParser(IHyracksCommonContext ctx, ARecordType recType, IDataParser dataParser,
                 ITupleForwardPolicy policy) throws HyracksDataException {
             super(ctx, recType);
             this.dataParser = dataParser;
@@ -139,7 +139,7 @@ public class AsterixTupleParserFactory implements ITupleParserFactory {
 
     }
 
-    private IDataParser createDataParser(IHyracksTaskContext ctx) throws Exception {
+    private IDataParser createDataParser(IHyracksCommonContext ctx) throws Exception {
         IDataParser dataParser = null;
         switch (inputDataFormat) {
             case ADM:
@@ -189,7 +189,7 @@ public class AsterixTupleParserFactory implements ITupleParserFactory {
         return policy;
     }
 
-    private IDataParser configureDelimitedDataParser(IHyracksTaskContext ctx) throws AsterixException {
+    private IDataParser configureDelimitedDataParser(IHyracksCommonContext ctx) throws AsterixException {
         IValueParserFactory[] valueParserFactories = getValueParserFactories();
         Character delimiter = getDelimiter(configuration);
         char quote = getQuote(configuration, delimiter);

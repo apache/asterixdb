@@ -20,7 +20,7 @@ package org.apache.asterix.external.indexing.dataflow;
 
 import org.apache.asterix.external.indexing.input.AbstractHDFSReader;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
@@ -30,7 +30,8 @@ public class RCFileIndexingTupleParser extends AbstractIndexingTupleParser{
     private Integer lastFileNumber = -1;
     private long lastByteLocation = -1;
 
-    public RCFileIndexingTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer)
+    public RCFileIndexingTupleParser(IHyracksCommonContext ctx, ARecordType recType, IAsterixHDFSRecordParser
+            deserializer)
             throws HyracksDataException {
         super(ctx, recType, deserializer);
         tb = new ArrayTupleBuilder(4);

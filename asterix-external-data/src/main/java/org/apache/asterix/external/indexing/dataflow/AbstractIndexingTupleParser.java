@@ -29,7 +29,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -42,7 +42,7 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
     protected DataOutput dos;
     protected final FrameTupleAppender appender;
     protected final ARecordType recType;
-    protected final IHyracksTaskContext ctx;
+    protected final IHyracksCommonContext ctx;
     protected final IAsterixHDFSRecordParser deserializer;
     protected final AMutableInt32 aMutableInt = new AMutableInt32(0);
     protected final AMutableInt64 aMutableLong = new AMutableInt64(0);
@@ -52,7 +52,8 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
     @SuppressWarnings("rawtypes")
     protected final ISerializerDeserializer longSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     
-    public AbstractIndexingTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer) throws HyracksDataException {
+    public AbstractIndexingTupleParser(IHyracksCommonContext ctx, ARecordType recType, IAsterixHDFSRecordParser
+            deserializer) throws HyracksDataException {
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.recType = recType;
         this.ctx = ctx;

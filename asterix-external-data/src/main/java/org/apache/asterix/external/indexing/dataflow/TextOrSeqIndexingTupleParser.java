@@ -20,12 +20,12 @@ package org.apache.asterix.external.indexing.dataflow;
 
 import org.apache.asterix.external.indexing.input.AbstractHDFSReader;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class TextOrSeqIndexingTupleParser extends AbstractIndexingTupleParser{
-    public TextOrSeqIndexingTupleParser(IHyracksTaskContext ctx,
+    public TextOrSeqIndexingTupleParser(IHyracksCommonContext ctx,
             ARecordType recType, IAsterixHDFSRecordParser deserializer)
             throws HyracksDataException {
         super(ctx, recType, deserializer);

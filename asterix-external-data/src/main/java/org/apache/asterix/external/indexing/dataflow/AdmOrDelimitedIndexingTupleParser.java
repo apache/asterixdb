@@ -30,7 +30,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.operators.file.IDataParser;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -53,7 +53,7 @@ public class AdmOrDelimitedIndexingTupleParser implements ITupleParser {
     private ISerializerDeserializer longSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
 
-    public AdmOrDelimitedIndexingTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser parser)
+    public AdmOrDelimitedIndexingTupleParser(IHyracksCommonContext ctx, ARecordType recType, IDataParser parser)
             throws HyracksDataException {
         this.parser = parser;
         this.recType = recType;
