@@ -63,6 +63,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.external.IAdapterFactory;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
@@ -254,11 +255,26 @@ public class MetadataBootstrap {
         }
     }
 
+    public static void getChannelHelperTypes(ArrayList<IAType> types) throws Exception {
+        String[] subTypeFieldNames = { "BrokerName", "subscriptionId" };
+        IAType[] subTypeFieldTypes = { BuiltinType.ASTRING, BuiltinType.AUUID };
+        ARecordType channelSubscriptionsType = new ARecordType("ChannelSubscriptionsType", subTypeFieldNames,
+                subTypeFieldTypes, true);
+        types.add(channelSubscriptionsType);
+
+        String[] resultTypeFieldNames = { "resultId", "subscriptionId", "deliveryTime" };
+        IAType[] resultTypeFieldTypes = { BuiltinType.AUUID, BuiltinType.AUUID, BuiltinType.ADATETIME };
+        ARecordType channelResultsType = new ARecordType("ChannelSubscriptionsType", resultTypeFieldNames,
+                resultTypeFieldTypes, true);
+        types.add(channelResultsType);
+    }
+
     public static void insertInitialDatatypes(MetadataTransactionContext mdTxnCtx) throws Exception {
         String dataverseName = MetadataPrimaryIndexes.DATAVERSE_DATASET.getDataverseName();
         ArrayList<IAType> types = new ArrayList<IAType>();
         getBuiltinTypes(types);
         getMetadataTypes(types);
+        getChannelHelperTypes(types);
         for (int i = 0; i < types.size(); i++) {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
                     new Datatype(dataverseName, types.get(i).getTypeName(), types.get(i), false));

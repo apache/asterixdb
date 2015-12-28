@@ -96,9 +96,7 @@ import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
-import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
-import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
@@ -2583,53 +2581,26 @@ public class QueryTranslator extends AbstractLangTranslator {
                 throw new AsterixException("A channel with this name " + channelName + " already exists.");
             }
             //check if names are available before creating anything
-            subscriptionsTypeName = new Identifier(channelName + "SubscriptionsType");
+            subscriptionsTypeName = new Identifier("ChannelSubscriptionsType");
             subscriptionsName = new Identifier(channelName + "Subscriptions");
-            resultsTypeName = new Identifier(channelName + "ResultsType");
+            resultsTypeName = new Identifier("ChannelResultsType");
             resultsName = new Identifier(channelName + "Results");
-            if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName,
-                    subscriptionsTypeName.getValue()) != null) {
-                throw new AsterixException("The channel name:" + channelName + " is not available.");
-            }
             if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, subscriptionsName.getValue()) != null) {
-                throw new AsterixException("The channel name:" + channelName + " is not available.");
-            }
-            if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, resultsTypeName.getValue()) != null) {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
             if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, resultsName.getValue()) != null) {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
 
-            //TODO: datatypes are actually the same for all subscriptions and results set
-            //It would be nice if we could have a type in metadata to be shared by all channels
-            RecordTypeDefinition subscriptionsTypeExpression = new RecordTypeDefinition();
-            subscriptionsTypeExpression.addField("subscription-id", new TypeReferenceExpression(new Identifier("uuid")),
-                    false);
-            subscriptionsTypeExpression.setRecordKind(RecordTypeDefinition.RecordKind.OPEN);
-            TypeDecl subscriptionsTypeDecl = new TypeDecl(dataverseIdentifier, subscriptionsTypeName,
-                    subscriptionsTypeExpression, null, true);
-
             //Setup the subscriptions dataset
             List<List<String>> partitionFields = new ArrayList<List<String>>();
             List<String> fieldNames = new ArrayList<String>();
-            fieldNames.add("subscription-id");
+            fieldNames.add("subscriptionId");
             partitionFields.add(fieldNames);
             IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, true, null, false);
             DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseIdentifier, subscriptionsName,
-                    dataverseIdentifier, subscriptionsTypeName, null, null, new HashMap<String, String>(),
+                    new Identifier("Metadata"), subscriptionsTypeName, null, null, new HashMap<String, String>(),
                     new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
-
-            //Set up the datatype for the results dataset
-            RecordTypeDefinition resultsTypeExpression = new RecordTypeDefinition();
-            resultsTypeExpression.addField("rid", new TypeReferenceExpression(new Identifier("uuid")), false);
-            resultsTypeExpression.addField("subscription-id", new TypeReferenceExpression(new Identifier("uuid")),
-                    false);
-            resultsTypeExpression.addField("moment-of-delivery",
-                    new TypeReferenceExpression(new Identifier("datetime")), false);
-            resultsTypeExpression.setRecordKind(RecordTypeDefinition.RecordKind.OPEN);
-            TypeDecl resultsTypeDecl = new TypeDecl(dataverseIdentifier, resultsTypeName, resultsTypeExpression, null,
-                    true);
 
             //Setup the results dataset
             partitionFields = new ArrayList<List<String>>();
@@ -2637,15 +2608,13 @@ public class QueryTranslator extends AbstractLangTranslator {
             fieldNames.add("rid");
             partitionFields.add(fieldNames);
             idd = new InternalDetailsDecl(partitionFields, false, null, false);
-            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName, dataverseIdentifier,
-                    resultsTypeName, null, null, new HashMap<String, String>(), new HashMap<String, String>(),
-                    DatasetType.INTERNAL, idd, true);
+            DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName,
+                    new Identifier("Metadata"), resultsTypeName, null, null, new HashMap<String, String>(),
+                    new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
 
-            //Run all four statements together to create datasets
+            //Run both statements together to create datasets
             List<Statement> statements = new ArrayList<Statement>();
-            statements.add(subscriptionsTypeDecl);
             statements.add(createSubscriptionsDataset);
-            statements.add(resultsTypeDecl);
             statements.add(createResultsDataset);
             QueryTranslator translator = new QueryTranslator(statements, this.sessionConfig,
                     new AqlCompilationProvider());
