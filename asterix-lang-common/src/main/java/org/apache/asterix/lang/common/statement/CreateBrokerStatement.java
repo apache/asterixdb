@@ -14,59 +14,35 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class ChannelSubscribeStatement implements Statement {
+public class CreateBrokerStatement implements Statement {
 
-    private final Identifier dataverseName;
-    private final Identifier channelName;
-    private final String brokerName;
-    private final List<Expression> argList;
-    private final int varCounter;
+    private String brokerName;
+    private String endPointName;
 
-    public ChannelSubscribeStatement(Identifier dataverseName, Identifier channelName, List<Expression> argList,
-            int varCounter, String brokerName) {
-        this.channelName = channelName;
-        this.dataverseName = dataverseName;
+    public CreateBrokerStatement(String brokerName, String endPointName) {
         this.brokerName = brokerName;
-        this.argList = argList;
-        this.varCounter = varCounter;
+        this.endPointName = endPointName;
     }
 
-    public Identifier getDataverseName() {
-        return dataverseName;
-    }
-
-    public Identifier getChannelName() {
-        return channelName;
+    public String getEndPointName() {
+        return endPointName;
     }
 
     public String getBrokerName() {
         return brokerName;
     }
 
-    public List<Expression> getArgList() {
-        return argList;
-    }
-
-    public int getVarCounter() {
-        return varCounter;
-    }
-
     @Override
     public Kind getKind() {
-        return Kind.SUBSCRIBE_CHANNEL;
+        return Kind.CREATE_BROKER;
     }
 
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
     }
-
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -260,6 +261,18 @@ public class MetadataTransactionContext extends MetadataCache {
         Channel channel = new Channel(dataverse, channelName, null, null, null, null);
         droppedCache.addChannelIfNotExists(channel);
         logAndApply(new MetadataLogicalOperation(channel, false));
+    }
+
+    public void addBroker(Broker broker) {
+        droppedCache.dropBroker(broker);
+        logAndApply(new MetadataLogicalOperation(broker, true));
+
+    }
+
+    public void dropBroker(String brokerName) {
+        Broker broker = new Broker(brokerName, null);
+        droppedCache.addBrokerIfNotExists(broker);
+        logAndApply(new MetadataLogicalOperation(broker, false));
     }
 
     @Override

@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -57,6 +58,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entitytupletranslators.BrokerTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.ChannelTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
@@ -1525,6 +1527,57 @@ public class MetadataNode implements IMetadataNode {
             // BTreeKeyDoesNotExistException.
         } catch (TreeIndexException e) {
             throw new MetadataException("Cannot drop feed '" + channelName + "' because it doesn't exist", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public void addBroker(JobId jobId, Broker broker) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'Broker' dataset.
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(true);
+            ITupleReference brokerTuple = tupleReaderWriter.getTupleFromMetadataEntity(broker);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, brokerTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A broker with this name " + broker.getBrokerName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public Broker getBroker(JobId jobId, String brokerName) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(brokerName);
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(false);
+            List<Broker> results = new ArrayList<Broker>();
+            IValueExtractor<Broker> valueExtractor = new MetadataEntityValueExtractor<Broker>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropBroker(JobId jobId, String brokerName) throws MetadataException, RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(brokerName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'nodegroup' dataset.
+            ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.BROKER_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, tuple);
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop broker '" + brokerName + "' because it doesn't exist", e);
         } catch (Exception e) {
             throw new MetadataException(e);
         }

@@ -99,11 +99,13 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
 import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
 import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -151,6 +153,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -421,6 +424,16 @@ public class QueryTranslator extends AbstractLangTranslator {
 
                 case DROP_CHANNEL: {
                     handleDropChannelStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case CREATE_BROKER: {
+                    handleCreateBrokerStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case DROP_BROKER: {
+                    handleDropBrokerStatement(metadataProvider, stmt, hcc);
                     break;
                 }
 
@@ -2556,6 +2569,68 @@ public class QueryTranslator extends AbstractLangTranslator {
         }
     }
 
+    private void handleCreateBrokerStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+
+        CreateBrokerStatement ccs = (CreateBrokerStatement) stmt;
+        String brokerName = ccs.getBrokerName();
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        MetadataLockManager.INSTANCE.acquireBrokerWriteLock(brokerName);
+        boolean metaDataLock = true;
+
+        Broker broker = null;
+        try {
+            broker = MetadataManager.INSTANCE.getBroker(mdTxnCtx, brokerName);
+            if (broker != null) {
+                throw new AsterixException("A broker with this name " + brokerName + " already exists.");
+            }
+            broker = new Broker(brokerName, ccs.getEndPointName());
+
+            MetadataManager.INSTANCE.addBroker(mdTxnCtx, broker);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        } finally {
+            if (metaDataLock) {
+                MetadataLockManager.INSTANCE.releaseBrokerWriteLock(brokerName);
+            }
+        }
+    }
+
+    private void handleDropBrokerStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+
+        BrokerDropStatement ccs = (BrokerDropStatement) stmt;
+        String brokerName = ccs.getBrokerName();
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        MetadataLockManager.INSTANCE.acquireBrokerWriteLock(brokerName);
+        boolean metaDataLock = true;
+
+        Broker broker = null;
+        try {
+            broker = MetadataManager.INSTANCE.getBroker(mdTxnCtx, brokerName);
+            if (broker == null) {
+                throw new AsterixException("A broker with this name " + brokerName + " does not exists.");
+            }
+            //TODO:Get confirm that there arent any subscriptions using this broker on any channel
+
+            MetadataManager.INSTANCE.dropBroker(mdTxnCtx, brokerName);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        } finally {
+            if (metaDataLock) {
+                MetadataLockManager.INSTANCE.releaseBrokerWriteLock(brokerName);
+            }
+        }
+    }
+
     private void handleCreateChannelStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
@@ -2605,7 +2680,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             //Setup the results dataset
             partitionFields = new ArrayList<List<String>>();
             fieldNames = new ArrayList<String>();
-            fieldNames.add("rid");
+            fieldNames.add("resultId");
             partitionFields.add(fieldNames);
             idd = new InternalDetailsDecl(partitionFields, false, null, false);
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName,
@@ -2714,6 +2789,11 @@ public class QueryTranslator extends AbstractLangTranslator {
         if (channel == null) {
             throw new AsterixException("There is no channel with this name " + channelName + ".");
         }
+        Broker broker = MetadataManager.INSTANCE.getBroker(mdTxnCtx, stmtChannelSub.getBrokerName());
+        if (broker == null) {
+            throw new AsterixException("There is no broker with this name " + stmtChannelSub.getBrokerName() + ".");
+        }
+
         String subscriptionsDatasetName = channel.getSubscriptionsDataset();
         List<String> returnField = new ArrayList<String>();
         returnField.add("subscription-id");
@@ -2727,9 +2807,13 @@ public class QueryTranslator extends AbstractLangTranslator {
         Query subscriptionTuple = new Query();
 
         List<FieldBinding> fb = new ArrayList<FieldBinding>();
+        LiteralExpr leftExpr = new LiteralExpr(new StringLiteral("BrokerName"));
+        Expression rightExpr = new LiteralExpr(new StringLiteral(broker.getBrokerName()));
+        fb.add(new FieldBinding(leftExpr, rightExpr));
+
         for (int i = 0; i < stmtChannelSub.getArgList().size(); i++) {
-            LiteralExpr leftExpr = new LiteralExpr(new StringLiteral("param" + i));
-            Expression rightExpr = stmtChannelSub.getArgList().get(i);
+            leftExpr = new LiteralExpr(new StringLiteral("param" + i));
+            rightExpr = stmtChannelSub.getArgList().get(i);
             fb.add(new FieldBinding(leftExpr, rightExpr));
         }
         RecordConstructor recordCon = new RecordConstructor(fb);

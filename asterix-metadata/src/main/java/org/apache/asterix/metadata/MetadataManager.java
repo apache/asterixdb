@@ -32,6 +32,7 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -863,6 +864,37 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         ctx.dropChannel(dataverse, channelName);
+    }
+
+    @Override
+    public void addBroker(MetadataTransactionContext ctx, Broker broker) throws MetadataException {
+        try {
+            metadataNode.addBroker(ctx.getJobId(), broker);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addBroker(broker);
+    }
+
+    @Override
+    public Broker getBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException {
+        Broker broker = null;
+        try {
+            broker = metadataNode.getBroker(ctx.getJobId(), brokerName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return broker;
+    }
+
+    @Override
+    public void dropBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException {
+        try {
+            metadataNode.dropBroker(ctx.getJobId(), brokerName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropBroker(brokerName);
     }
 
     public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)

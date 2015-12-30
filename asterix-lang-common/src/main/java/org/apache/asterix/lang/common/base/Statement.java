@@ -53,6 +53,8 @@ public interface Statement extends ILangExpression {
         DROP_CHANNEL,
         SUBSCRIBE_CHANNEL,
         UNSUBSCRIBE_CHANNEL,
+        CREATE_BROKER,
+        DROP_BROKER,
         CREATE_FUNCTION,
         FUNCTION_DROP,
         COMPACT,

@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -679,5 +680,11 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     public void cleanupTempDatasets() throws MetadataException;
+
+    Broker getBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException;
+
+    void dropBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException;
+
+    void addBroker(MetadataTransactionContext ctx, Broker broker) throws MetadataException;
 
 }

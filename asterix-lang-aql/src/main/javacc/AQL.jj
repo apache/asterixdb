@@ -91,11 +91,13 @@ import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
 import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
 import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -350,6 +352,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = FeedSpecification()
     | stmt = FeedPolicySpecification()
     | stmt = ChannelSpecification()
+    | stmt = BrokerSpecification()
   )
   {
     return stmt;
@@ -781,6 +784,26 @@ CreateChannelStatement ChannelSpecification() throws ParseException:
     }
 }
 
+CreateBrokerStatement BrokerSpecification() throws ParseException:
+{
+  CreateBrokerStatement cbs = null;
+  String name = null;
+  String endPoint = null;
+}
+{
+  (
+    "broker"  name = Identifier()
+    <AT>  endPoint = StringLiteral()
+    {
+    	cbs = new CreateBrokerStatement(name,endPoint);
+    }
+  )
+    {
+      return cbs;
+    }
+}
+
+
 List<VarIdentifier> ParameterList() throws ParseException:
 {
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
@@ -932,6 +955,10 @@ Statement DropStatement() throws ParseException:
     | "channel" pairId = QualifiedName() ifExists = IfExists()
       {
         stmt = new ChannelDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | "broker" id = Identifier() ifExists = IfExists()
+      {
+        stmt = new BrokerDropStatement(id, ifExists);
       }
   )
   {
@@ -1161,6 +1188,7 @@ Statement ChannelSubscriptionStatement() throws ParseException:
   List<Expression> argList = new ArrayList<Expression>();
   Expression tmp = null;
   String id = null;
+  String brokerName = null;
 }
 {
   (
@@ -1173,9 +1201,9 @@ Statement ChannelSubscriptionStatement() throws ParseException:
     	{
       			argList.add(tmp);
     	}
-  		)*)? <RIGHTPAREN>
+  		)*)? <RIGHTPAREN> "on" brokerName = Identifier()
       {
-        stmt = new ChannelSubscribeStatement(nameComponents.first, nameComponents.second, argList, getVarCounter());
+        stmt = new ChannelSubscribeStatement(nameComponents.first, nameComponents.second, argList, getVarCounter(), brokerName);
       }
     | "unsubscribe" "subscription" id = StringLiteral() <FROM> "channel" nameComponents = QualifiedName()
 

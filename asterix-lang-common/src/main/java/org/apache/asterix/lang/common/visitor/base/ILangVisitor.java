@@ -40,11 +40,13 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
 import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
 import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -186,5 +188,9 @@ public interface ILangVisitor<R, T> {
     R visit(ExecuteProcedureStatement executeProcedureStatement, T arg) throws AsterixException;
 
     R visit(CreateChannelStatement createChannelStatement, T arg);
+
+    R visit(CreateBrokerStatement createBrokerStatement, T arg);
+
+    R visit(BrokerDropStatement brokerDropStatement, T arg);
 
 }

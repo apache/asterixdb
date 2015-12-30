@@ -24,11 +24,13 @@ import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
 import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
 import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -241,6 +243,16 @@ public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisit
 
     @Override
     public R visit(CreateChannelStatement createChannelStatement, T arg) {
+        return null;
+    };
+
+    @Override
+    public R visit(BrokerDropStatement brokerDropStatement, T arg) {
+        return null;
+    };
+
+    @Override
+    public R visit(CreateBrokerStatement createBrokerStatement, T arg) {
         return null;
     };
 }

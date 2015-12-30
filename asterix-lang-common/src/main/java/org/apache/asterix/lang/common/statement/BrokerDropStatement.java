@@ -14,54 +14,31 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class ChannelSubscribeStatement implements Statement {
+public class BrokerDropStatement implements Statement {
 
-    private final Identifier dataverseName;
-    private final Identifier channelName;
-    private final String brokerName;
-    private final List<Expression> argList;
-    private final int varCounter;
+    private String brokerName;
+    private boolean ifExists;
 
-    public ChannelSubscribeStatement(Identifier dataverseName, Identifier channelName, List<Expression> argList,
-            int varCounter, String brokerName) {
-        this.channelName = channelName;
-        this.dataverseName = dataverseName;
+    public BrokerDropStatement(String brokerName, boolean ifExists) {
         this.brokerName = brokerName;
-        this.argList = argList;
-        this.varCounter = varCounter;
+        this.ifExists = ifExists;
     }
 
-    public Identifier getDataverseName() {
-        return dataverseName;
-    }
-
-    public Identifier getChannelName() {
-        return channelName;
+    public boolean getIfExists() {
+        return ifExists;
     }
 
     public String getBrokerName() {
         return brokerName;
     }
 
-    public List<Expression> getArgList() {
-        return argList;
-    }
-
-    public int getVarCounter() {
-        return varCounter;
-    }
-
     @Override
     public Kind getKind() {
-        return Kind.SUBSCRIBE_CHANNEL;
+        return Kind.DROP_BROKER;
     }
 
     @Override

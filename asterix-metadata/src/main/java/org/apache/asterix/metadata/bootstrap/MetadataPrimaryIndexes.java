@@ -42,6 +42,7 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex LIBRARY_DATASET;
     public static IMetadataIndex FEED_DATASET;
     public static IMetadataIndex CHANNEL_DATASET;
+    public static IMetadataIndex BROKER_DATASET;
     public static IMetadataIndex FEED_POLICY_DATASET;
     public static IMetadataIndex COMPACTION_POLICY_DATASET;
     public static IMetadataIndex EXTERNAL_FILE_DATASET;
@@ -63,6 +64,7 @@ public class MetadataPrimaryIndexes {
     public static final int COMPACTION_POLICY_DATASET_ID = 13;
     public static final int EXTERNAL_FILE_DATASET_ID = 14;
     public static final int CHANNEL_DATASET_ID = 15;
+    public static final int BROKER_DATASET_ID = 16;
 
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
@@ -85,63 +87,73 @@ public class MetadataPrimaryIndexes {
                 DATAVERSE_DATASET_ID, true, new int[] { 0 });
 
         DATASET_DATASET = new MetadataIndex("Dataset", null, 3,
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(
-                        Arrays.asList("DataverseName"), Arrays.asList("DatasetName"))), 0,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatasetName"))), 0,
                 MetadataRecordTypes.DATASET_RECORDTYPE, DATASET_DATASET_ID, true, new int[] { 0, 1 });
 
-        DATATYPE_DATASET = new MetadataIndex("Datatype", null, 3, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatatypeName"))),
-                0, MetadataRecordTypes.DATATYPE_RECORDTYPE, DATATYPE_DATASET_ID, true, new int[] { 0, 1 });
+        DATATYPE_DATASET = new MetadataIndex("Datatype", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatatypeName"))), 0,
+                MetadataRecordTypes.DATATYPE_RECORDTYPE, DATATYPE_DATASET_ID, true, new int[] { 0, 1 });
 
-        INDEX_DATASET = new MetadataIndex("Index", null, 4, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
-                BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatasetName"),
-                Arrays.asList("IndexName"))), 0, MetadataRecordTypes.INDEX_RECORDTYPE, INDEX_DATASET_ID, true,
-                new int[] { 0, 1, 2 });
+        INDEX_DATASET = new MetadataIndex("Index", null, 4,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatasetName"),
+                        Arrays.asList("IndexName"))),
+                0, MetadataRecordTypes.INDEX_RECORDTYPE, INDEX_DATASET_ID, true, new int[] { 0, 1, 2 });
 
-        NODE_DATASET = new MetadataIndex("Node", null, 2, new IAType[] { BuiltinType.ASTRING }, (Arrays.asList(Arrays
-                .asList("NodeName"))), 0, MetadataRecordTypes.NODE_RECORDTYPE, NODE_DATASET_ID, true, new int[] { 0 });
+        NODE_DATASET = new MetadataIndex("Node", null, 2, new IAType[] { BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("NodeName"))), 0, MetadataRecordTypes.NODE_RECORDTYPE, NODE_DATASET_ID,
+                true, new int[] { 0 });
 
         NODEGROUP_DATASET = new MetadataIndex("Nodegroup", null, 2, new IAType[] { BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("GroupName"))), 0, MetadataRecordTypes.NODEGROUP_RECORDTYPE,
                 NODEGROUP_DATASET_ID, true, new int[] { 0 });
 
-        FUNCTION_DATASET = new MetadataIndex("Function", null, 4, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"),
-                Arrays.asList("Name"), Arrays.asList("Arity"))), 0, MetadataRecordTypes.FUNCTION_RECORDTYPE,
-                FUNCTION_DATASET_ID, true, new int[] { 0, 1, 2 });
+        FUNCTION_DATASET = new MetadataIndex("Function", null, 4,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("Name"), Arrays.asList("Arity"))), 0,
+                MetadataRecordTypes.FUNCTION_RECORDTYPE, FUNCTION_DATASET_ID, true, new int[] { 0, 1, 2 });
 
-        DATASOURCE_ADAPTER_DATASET = new MetadataIndex("DatasourceAdapter", null, 3, new IAType[] {
-                BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"),
-                Arrays.asList("Name"))), 0, MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE,
-                DATASOURCE_ADAPTER_DATASET_ID, true, new int[] { 0, 1 });
+        DATASOURCE_ADAPTER_DATASET = new MetadataIndex("DatasourceAdapter", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("Name"))), 0,
+                MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, DATASOURCE_ADAPTER_DATASET_ID, true,
+                new int[] { 0, 1 });
 
         FEED_DATASET = new MetadataIndex("Feed", null, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("FeedName"))), 0,
                 MetadataRecordTypes.FEED_RECORDTYPE, FEED_DATASET_ID, true, new int[] { 0, 1 });
 
         CHANNEL_DATASET = new MetadataIndex("Channel", null, 3,
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, Arrays.asList(
-                        Arrays.asList("DataverseName"), Arrays.asList("ChannelName")), 0,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("ChannelName")), 0,
                 MetadataRecordTypes.CHANNEL_RECORDTYPE, CHANNEL_DATASET_ID, true, new int[] { 0, 1 });
 
+        BROKER_DATASET = new MetadataIndex("Broker", null, 2, new IAType[] { BuiltinType.ASTRING },
+                Arrays.asList(Arrays.asList("BrokerName")), 0, MetadataRecordTypes.BROKER_RECORDTYPE, BROKER_DATASET_ID,
+                true, new int[] { 0 });
+
         LIBRARY_DATASET = new MetadataIndex("Library", null, 3,
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(
-                        Arrays.asList("DataverseName"), Arrays.asList("Name"))), 0,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("Name"))), 0,
                 MetadataRecordTypes.LIBRARY_RECORDTYPE, LIBRARY_DATASET_ID, true, new int[] { 0, 1 });
 
-        FEED_POLICY_DATASET = new MetadataIndex("FeedPolicy", null, 3, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("PolicyName"))), 0,
+        FEED_POLICY_DATASET = new MetadataIndex("FeedPolicy", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("PolicyName"))), 0,
                 MetadataRecordTypes.FEED_POLICY_RECORDTYPE, FEED_POLICY_DATASET_ID, true, new int[] { 0, 1 });
 
-        COMPACTION_POLICY_DATASET = new MetadataIndex("CompactionPolicy", null, 3, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING },
+        COMPACTION_POLICY_DATASET = new MetadataIndex("CompactionPolicy", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("CompactionPolicy"))), 0,
                 MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE, COMPACTION_POLICY_DATASET_ID, true,
                 new int[] { 0, 1 });
 
-        EXTERNAL_FILE_DATASET = new MetadataIndex("ExternalFile", null, 4, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING, BuiltinType.AINT32 }, (Arrays.asList(Arrays.asList("DataverseName"),
-                Arrays.asList("DatasetName"), Arrays.asList("FileNumber"))), 0,
-                MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE, EXTERNAL_FILE_DATASET_ID, true, new int[] { 0, 1, 2 });
+        EXTERNAL_FILE_DATASET = new MetadataIndex("ExternalFile", null, 4,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatasetName"),
+                        Arrays.asList("FileNumber"))),
+                0, MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE, EXTERNAL_FILE_DATASET_ID, true, new int[] { 0, 1, 2 });
     }
 }

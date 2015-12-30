@@ -29,6 +29,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -76,6 +77,8 @@ public class MetadataCache {
     protected final Map<String, Map<String, Feed>> feeds = new HashMap<String, Map<String, Feed>>();
     // Key is library dataverse. Key of value map is the channel name  
     protected final Map<String, Map<String, Channel>> channels = new HashMap<String, Map<String, Channel>>();
+    // Key is the broker name  
+    protected final Map<String, Broker> brokers = new HashMap<String, Broker>();
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, CompactionPolicy>> compactionPolicies = new HashMap<String, Map<String, CompactionPolicy>>();
 
@@ -490,8 +493,8 @@ public class MetadataCache {
 
     public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse == null) {
                 adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
                 adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
@@ -506,8 +509,8 @@ public class MetadataCache {
 
     public Object dropAdapter(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse != null) {
                 return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getName());
             }
@@ -577,6 +580,27 @@ public class MetadataCache {
                 return channelsInDataverse.remove(channel.getChannelId().getName());
             }
             return null;
+        }
+    }
+
+    public Object addBrokerIfNotExists(Broker broker) {
+        synchronized (brokers) {
+            Broker existingBroker = brokers.get(broker.getBrokerName());
+            if (existingBroker == null) {
+                return brokers.put(broker.getBrokerName(), broker);
+            }
+            return null;
+        }
+
+    }
+
+    public Object dropBroker(Broker broker) {
+        synchronized (brokers) {
+            Broker existingBroker = brokers.get(broker.getBrokerName());
+            if (existingBroker == null) {
+                return null;
+            }
+            return brokers.remove(existingBroker);
         }
     }
 

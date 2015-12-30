@@ -55,8 +55,7 @@ public final class MetadataRecordTypes {
     public static ARecordType SECONDARY_FEED_DETAILS_RECORDTYPE;
     public static ARecordType FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
     public static ARecordType CHANNEL_RECORDTYPE;
-    public static ARecordType CHANNEL_SUBSCRIPTIONS_RECORDTYPE;
-    public static ARecordType CHANNEL_RESULTS_RECORDTYPE;
+    public static ARecordType BROKER_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
     public static ARecordType LIBRARY_RECORDTYPE;
@@ -103,8 +102,7 @@ public final class MetadataRecordTypes {
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
             LIBRARY_RECORDTYPE = createLibraryRecordType();
             CHANNEL_RECORDTYPE = createChannelRecordType();
-            CHANNEL_SUBSCRIPTIONS_RECORDTYPE = createChannelSubscriptionsRecordType();
-            CHANNEL_RESULTS_RECORDTYPE = createChannelResultsRecordType();
+            BROKER_RECORDTYPE = createBrokerRecordType();
 
             COMPACTION_POLICY_RECORDTYPE = createCompactionPolicyRecordType();
 
@@ -431,26 +429,15 @@ public final class MetadataRecordTypes {
         return new ARecordType("ChannelRecordType", fieldNames, fieldTypes, true);
     }
 
-    public static final int CHANNEL_SUBSCRIPTION_ARECORD_SUBSCRIPTION_ID_FIELD_INDEX = 0;
+    public static final int BROKER_NAME_FIELD_INDEX = 0;
+    public static final int BROKER_ENDPOINT_FIELD_INDEX = 1;
 
-    private static ARecordType createChannelSubscriptionsRecordType() throws AsterixException {
+    private static ARecordType createBrokerRecordType() throws AsterixException {
 
-        String[] fieldNames = { "subscription-id" };
-        IAType[] fieldTypes = { BuiltinType.AUUID };
+        String[] fieldNames = { "BrokerName", "EndPoint" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING };
 
-        return new ARecordType("ChannelSubscriptionRecordType", fieldNames, fieldTypes, true);
-    }
-
-    public static final int CHANNEL_RESULT_ARECORD_RESULT_ID_FIELD_INDEX = 0;
-    public static final int CHANNEL_RESULT_ARECORD_SUBSCRIPTION_ID_FIELD_INDEX = 1;
-    public static final int CHANNEL_RESULT_ARECORD_DELIVERY_FIELD_INDEX = 2;
-
-    private static ARecordType createChannelResultsRecordType() throws AsterixException {
-
-        String[] fieldNames = { "rid", "subscription-id", "moment-of-delivery", "ResultsDatasetName" };
-        IAType[] fieldTypes = { BuiltinType.AUUID, BuiltinType.AUUID, BuiltinType.ADATETIME };
-
-        return new ARecordType("ChannelResultRecordType", fieldNames, fieldTypes, true);
+        return new ARecordType("BrokerRecordType", fieldNames, fieldTypes, true);
     }
 
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;

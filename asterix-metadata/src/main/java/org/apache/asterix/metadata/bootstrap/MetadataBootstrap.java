@@ -126,8 +126,8 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.NODEGROUP_DATASET, MetadataPrimaryIndexes.FUNCTION_DATASET,
                 MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.FEED_DATASET,
                 MetadataPrimaryIndexes.FEED_POLICY_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET,
-                MetadataPrimaryIndexes.CHANNEL_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
-                MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
+                MetadataPrimaryIndexes.CHANNEL_DATASET, MetadataPrimaryIndexes.BROKER_DATASET,
+                MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
 
     }
 

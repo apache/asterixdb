@@ -35,6 +35,7 @@ public class MetadataLockManager {
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> channelsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> brokersLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
 
@@ -46,6 +47,7 @@ public class MetadataLockManager {
         feedsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         feedPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         channelsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
+        brokersLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         compactionPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         dataTypeLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
     }
@@ -265,6 +267,32 @@ public class MetadataLockManager {
 
     public void releaseChannelWriteLock(String channelName) {
         channelsLocks.get(channelName).writeLock().unlock();
+    }
+
+    public void releaseBrokerReadLock(String brokerName) {
+        brokersLocks.get(brokerName).readLock().unlock();
+    }
+
+    public void acquireBrokerWriteLock(String brokerName) {
+        ReentrantReadWriteLock fLock = brokersLocks.get(brokerName);
+        if (fLock == null) {
+            brokersLocks.putIfAbsent(brokerName, new ReentrantReadWriteLock());
+            fLock = brokersLocks.get(brokerName);
+        }
+        fLock.writeLock().lock();
+    }
+
+    public void releaseBrokerWriteLock(String brokerName) {
+        brokersLocks.get(brokerName).writeLock().unlock();
+    }
+
+    public void acquireBrokerReadLock(String brokerName) {
+        ReentrantReadWriteLock fLock = brokersLocks.get(brokerName);
+        if (fLock == null) {
+            brokersLocks.putIfAbsent(brokerName, new ReentrantReadWriteLock());
+            fLock = brokersLocks.get(brokerName);
+        }
+        fLock.readLock().lock();
     }
 
     public void acquireCompactionPolicyReadLock(String compactionPolicyName) {

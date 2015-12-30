@@ -60,11 +60,13 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelDropStatement;
 import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
 import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
 import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -111,6 +113,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     private final static String CREATE = "create ";
     private final static String FEED = " feed ";
     private final static String CHANNEL = " channel ";
+    private final static String BROKER = " broker ";
     private final static String DEFAULT_DATAVERSE_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
     protected Set<Character> validIdentifierChars = new HashSet<Character>();
     protected Set<Character> validIdentifierStartChars = new HashSet<Character>();
@@ -1131,5 +1134,23 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         out.print(SEMICOLON);
         return null;
 
+    }
+
+    @Override
+    public Void visit(CreateBrokerStatement createBrokerStatement, Integer step) {
+        out.print(skip(step) + "create " + BROKER);
+        out.println(" " + createBrokerStatement.getBrokerName());
+        out.print(skip(step) + " at ");
+        out.println(" " + createBrokerStatement.getEndPointName());
+        out.print(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(BrokerDropStatement brokerDropStatement, Integer step) {
+        out.print(skip(step) + "drop " + BROKER);
+        out.println(" " + brokerDropStatement.getBrokerName());
+        out.print(SEMICOLON);
+        return null;
     }
 }
