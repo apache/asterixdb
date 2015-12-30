@@ -264,7 +264,7 @@ public class MetadataBootstrap {
 
         String[] resultTypeFieldNames = { "resultId", "subscriptionId", "deliveryTime" };
         IAType[] resultTypeFieldTypes = { BuiltinType.AUUID, BuiltinType.AUUID, BuiltinType.ADATETIME };
-        ARecordType channelResultsType = new ARecordType("ChannelSubscriptionsType", resultTypeFieldNames,
+        ARecordType channelResultsType = new ARecordType("ChannelResultsType", resultTypeFieldNames,
                 resultTypeFieldTypes, true);
         types.add(channelResultsType);
     }
