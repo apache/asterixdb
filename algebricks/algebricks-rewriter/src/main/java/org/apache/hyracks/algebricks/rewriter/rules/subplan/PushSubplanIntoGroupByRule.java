@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.algebricks.rewriter.rules;
+package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
 import java.util.ArrayList;
 import java.util.HashSet;

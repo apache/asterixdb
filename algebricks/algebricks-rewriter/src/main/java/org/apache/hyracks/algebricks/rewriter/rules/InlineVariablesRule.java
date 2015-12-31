@@ -85,7 +85,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (hasRun) {
             return false;
         }
@@ -145,7 +146,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
-                // Ignore functions that are either in the doNotInline set or are non-functional               
+                // Ignore functions that are either in the doNotInline set or are non-functional
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                     if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())
@@ -172,6 +173,14 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             if (inlineVariables(subPlanRootOpRef, context)) {
                 modified = true;
             }
+        }
+
+        // References to variables generated in the right branch of a left-outer-join cannot be inlined
+        // in operators above the left-outer-join.
+        if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+            Set<LogicalVariable> rightLiveVars = new HashSet<LogicalVariable>();
+            VariableUtilities.getLiveVariables(op.getInputs().get(1).getValue(), rightLiveVars);
+            varAssignRhs.keySet().removeAll(rightLiveVars);
         }
 
         if (performBottomUpAction(op)) {

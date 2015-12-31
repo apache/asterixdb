@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -34,22 +34,22 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class ScriptOperator extends AbstractLogicalOperator {
 
-    private ArrayList<LogicalVariable> inputVariables;
-    private ArrayList<LogicalVariable> outputVariables;
+    private List<LogicalVariable> inputVariables;
+    private List<LogicalVariable> outputVariables;
     private IScriptDescription scriptDesc;
 
-    public ScriptOperator(IScriptDescription scriptDesc, ArrayList<LogicalVariable> inputVariables,
-            ArrayList<LogicalVariable> outputVariables) {
+    public ScriptOperator(IScriptDescription scriptDesc, List<LogicalVariable> inputVariables,
+            List<LogicalVariable> outputVariables) {
         this.inputVariables = inputVariables;
         this.outputVariables = outputVariables;
         this.scriptDesc = scriptDesc;
     }
 
-    public ArrayList<LogicalVariable> getInputVariables() {
+    public List<LogicalVariable> getInputVariables() {
         return inputVariables;
     }
 
-    public ArrayList<LogicalVariable> getOutputVariables() {
+    public List<LogicalVariable> getOutputVariables() {
         return outputVariables;
     }
 

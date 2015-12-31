@@ -36,7 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -80,19 +79,41 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalOperator> tupleSourceOpRef = currentOpRef;
         currentOpRef = opRef;
         if (tupleSourceOpRef.getValue().getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-            NestedTupleSourceOperator nts = (NestedTupleSourceOperator) tupleSourceOpRef.getValue();
-            // If the subplan input is a trivial plan, do not do the rewriting.
-            if (nts.getSourceOperator().getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-                while (currentOpRef.getValue().getInputs().size() == 1
-                        && currentOpRef.getValue() instanceof AbstractScanOperator
-                        && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
-                    if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
-                        /** move down the boundary if the operator is independent of the tuple source */
-                        boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
-                    } else {
-                        break;
-                    }
-                    currentOpRef = currentOpRef.getValue().getInputs().get(0);
+            while (currentOpRef.getValue().getInputs().size() == 1
+                    /*
+                     * When this rule is fired,
+                     * Unnests with a dataset function have been rewritten to DataSourceScans and
+                     * AccessMethod related rewriting hasn't been done. Therefore, we only need
+                     * to check if currentOpRef holds a DataSourceScanOperator.
+                     */
+                    && currentOpRef.getValue().getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
+                    && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
+                if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
+                    /** move down the boundary if the operator is independent of the tuple source */
+                    boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
+                } else {
+                    break;
+                }
+                currentOpRef = currentOpRef.getValue().getInputs().get(0);
+            }
+        } else {
+            //Move the boundary below any top const assigns.
+            boundaryOpRef = opRef.getValue().getInputs().get(0);
+            while (boundaryOpRef.getValue().getInputs().size() == 1
+                    /*
+                     * When this rule is fired,
+                     * Unnests with a dataset function have been rewritten to DataSourceScans and
+                     * AccessMethod related rewriting hasn't been done. Therefore, we only need
+                     * to check if boundaryOpRef holds a DataSourceScanOperator.
+                     */
+                    && boundaryOpRef.getValue().getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
+                List<LogicalVariable> opUsedVars = new ArrayList<LogicalVariable>();
+                VariableUtilities.getUsedVariables(boundaryOpRef.getValue(), opUsedVars);
+                if (opUsedVars.size() == 0) {
+                    // move down the boundary if the operator is a const assigns.
+                    boundaryOpRef = boundaryOpRef.getValue().getInputs().get(0);
+                } else {
+                    break;
                 }
             }
         }

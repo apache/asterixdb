@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.rewriter.rules;
+package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -70,7 +69,7 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
  *
  * <pre>
  * Before
- * 
+ *
  *   plan__parent
  *   SUBPLAN {
  *     PROJECT?
@@ -80,11 +79,11 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
  *       plan__nested_B
  *   }
  *   plan__child
- * 
+ *
  *   where $condition does not equal a constant true.
- * 
+ *
  * After (This is a general application of the rule, specifics may vary based on the query plan.)
- * 
+ *
  *   plan__parent
  *   GROUP_BY {
  *     PROJECT?
@@ -106,7 +105,8 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -188,9 +188,18 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         Set<LogicalVariable> pkVars = computeGbyVars(outerNts, free, context);
         if (pkVars == null || pkVars.size() < 1) {
             // there is no non-trivial primary key, group-by keys are all live variables
+            // that were produced by descendant or self
             ILogicalOperator subplanInput = subplan.getInputs().get(0).getValue();
             pkVars = new HashSet<LogicalVariable>();
+            //get live variables
             VariableUtilities.getLiveVariables(subplanInput, pkVars);
+
+            //get produced variables
+            Set<LogicalVariable> producedVars = new HashSet<LogicalVariable>();
+            VariableUtilities.getProducedVariablesInDescendantsAndSelf(subplanInput, producedVars);
+
+            //retain the intersection
+            pkVars.retainAll(producedVars);
         }
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Found FD for introducing group-by: " + pkVars);
 
@@ -222,11 +231,13 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
                 }
                 break;
             }
+            default:
+                break;
         }
         if (testForNull == null) {
             testForNull = context.newVar();
-            AssignOperator tmpAsgn = new AssignOperator(testForNull, new MutableObject<ILogicalExpression>(
-                    ConstantExpression.TRUE));
+            AssignOperator tmpAsgn = new AssignOperator(testForNull,
+                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
             tmpAsgn.getInputs().add(new MutableObject<ILogicalOperator>(rightRef.getValue()));
             rightRef.setValue(tmpAsgn);
             context.computeAndSetTypeEnvironmentForOperator(tmpAsgn);
@@ -261,9 +272,8 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         Map<LogicalVariable, LogicalVariable> mappedVars = buildVarExprList(pkVars, context, g, g.getGroupByList());
         context.updatePrimaryKeys(mappedVars);
         for (LogicalVariable uv : underVars) {
-            g.getDecorList().add(
-                    new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null, new MutableObject<ILogicalExpression>(
-                            new VariableReferenceExpression(uv))));
+            g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null,
+                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(uv))));
         }
         OperatorPropertiesUtil.typeOpRec(subplanRoot, context);
         OperatorPropertiesUtil.typeOpRec(gPlan.getRoots().get(0), context);

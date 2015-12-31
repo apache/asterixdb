@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
@@ -85,7 +84,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         SubplanOperator subplan = (SubplanOperator) op;
         if (subplan.getNestedPlans().size() != 1) {
             throw new NotImplementedException("Subplan currently works only for one nested plan with one root.");
@@ -93,8 +92,8 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], subplan, opSchema, context);
         assert (subplans.length == 1);
         AlgebricksPipeline np = subplans[0];
-        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op.getInputs().get(0).getValue()),
-                inputSchemas[0], context);
+        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
+                context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         INullWriterFactory[] nullWriterFactories = new INullWriterFactory[np.getOutputWidth()];
         for (int i = 0; i < nullWriterFactories.length; i++) {
             nullWriterFactories[i] = context.getNullWriterFactory();

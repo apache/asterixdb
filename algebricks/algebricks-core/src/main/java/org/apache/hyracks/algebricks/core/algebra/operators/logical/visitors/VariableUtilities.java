@@ -21,15 +21,17 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class VariableUtilities {
@@ -96,6 +98,34 @@ public class VariableUtilities {
         varSet.addAll(var);
         varArgSet.addAll(varArg);
         return varSet.equals(varArgSet);
+    }
+
+    /**
+     * Recursively modifies the query plan to make sure every variable in {@code varsToEnforce}
+     * be part of the output schema of {@code opRef}.
+     *
+     * @param opRef,
+     *            the operator to enforce.
+     * @param varsToEnforce,
+     *            the variables that needs to be live after the operator of {@code opRef}.
+     * @param context,
+     *            the optimization context.
+     * @return a map that maps a variable in {@code varsToEnforce} to yet-another-variable if
+     *         a mapping happens in the query plan under {@code opRef}, e.g., by grouping and assigning.
+     * @throws AlgebricksException
+     */
+    public static Map<LogicalVariable, LogicalVariable> enforceVariablesInDescendantsAndSelf(
+            Mutable<ILogicalOperator> opRef, Collection<LogicalVariable> varsToEnforce, IOptimizationContext context)
+                    throws AlgebricksException {
+        Set<LogicalVariable> copiedVarsToEnforce = new HashSet<>();
+        copiedVarsToEnforce.addAll(varsToEnforce);
+        // Rewrites the query plan
+        EnforceVariablesVisitor visitor = new EnforceVariablesVisitor(context);
+        ILogicalOperator result = opRef.getValue().accept(visitor, copiedVarsToEnforce);
+        opRef.setValue(result);
+        // Re-computes the type environment bottom up.
+        OperatorManipulationUtil.computeTypeEnvironmentBottomUp(result, context);
+        return visitor.getInputVariableToOutputVariableMap();
     }
 
 }

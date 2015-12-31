@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -224,6 +223,23 @@ public class OperatorManipulationUtil {
     public static ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
         OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
         return op.accept(visitor, null);
+    }
+
+    /**
+     * Compute type environment of a newly generated operator {@code op} and its input.
+     *
+     * @param op,
+     *            the logical operator.
+     * @param context,the
+     *            optimization context.
+     * @throws AlgebricksException
+     */
+    public static void computeTypeEnvironmentBottomUp(ILogicalOperator op, IOptimizationContext context)
+            throws AlgebricksException {
+        for (Mutable<ILogicalOperator> children : op.getInputs()) {
+            computeTypeEnvironmentBottomUp(children.getValue(), context);
+        }
+        context.computeAndSetTypeEnvironmentForOperator(op);
     }
 
 }

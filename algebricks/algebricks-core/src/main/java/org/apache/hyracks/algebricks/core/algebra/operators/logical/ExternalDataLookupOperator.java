@@ -21,14 +21,13 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -40,7 +39,7 @@ public class ExternalDataLookupOperator extends AbstractDataSourceOperator {
 
     private final List<Object> variableTypes;
     protected final Mutable<ILogicalExpression> expression;
-    private final boolean propagateInput;
+    private boolean propagateInput;
 
     public ExternalDataLookupOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput, IDataSource<?> dataSource) {
@@ -83,6 +82,10 @@ public class ExternalDataLookupOperator extends AbstractDataSourceOperator {
 
     public boolean isPropagateInput() {
         return propagateInput;
+    }
+
+    public void setPropagateInput(boolean propagateInput) {
+        this.propagateInput = propagateInput;
     }
 
     @Override

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.rewriter.rules;
+package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
 import java.util.Iterator;
 
@@ -34,7 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOpera
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class InsertOuterJoinRule implements IAlgebraicRewriteRule {
+public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {

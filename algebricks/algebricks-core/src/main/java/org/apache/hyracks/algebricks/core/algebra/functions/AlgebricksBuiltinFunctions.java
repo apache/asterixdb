@@ -54,6 +54,7 @@ public class AlgebricksBuiltinFunctions {
     public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1);
 
     private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions = new HashMap<FunctionIdentifier, ComparisonKind>();
+
     static {
         comparisonFunctions.put(AlgebricksBuiltinFunctions.EQ, ComparisonKind.EQ);
         comparisonFunctions.put(AlgebricksBuiltinFunctions.LE, ComparisonKind.LE);

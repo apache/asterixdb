@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.rewriter.rules;
+package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
 import java.util.HashSet;
 import java.util.ListIterator;
@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.algebricks.rewriter.rules.AbstractDecorrelationRule;
 
 /**
  * The rule searches for operators that can be moved outside the subplan.

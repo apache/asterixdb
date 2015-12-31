@@ -69,7 +69,6 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     public AbstractLogicalOperator() {
         inputs = new ArrayList<Mutable<ILogicalOperator>>();
-        // outputs = new ArrayList<LogicalOperatorReference>();
     }
 
     @Override

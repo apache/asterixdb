@@ -24,8 +24,34 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 
 public interface IAlgebraicRewriteRule {
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException;
 
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException;
+    /**
+     * This method is invoked in pre-order traversal of a query plan.
+     *
+     * @param opRef,
+     *            the reference of the current operator to look at,
+     * @param context
+     *            the optimization context
+     * @return true if any change is introduced to the query plan; false otherwise.
+     * @throws AlgebricksException
+     */
+    public default boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        return false;
+    }
+
+    /**
+     * This method is invoked in the post-order traversal of a query plan.
+     *
+     * @param opRef,
+     *            the reference of the current operator to look at,
+     * @param context
+     *            the optimization context
+     * @return true if any change is introduced to the query plan; false otherwise.
+     * @throws AlgebricksException
+     */
+    public default boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        return false;
+    }
 }
