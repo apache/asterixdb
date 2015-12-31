@@ -113,7 +113,6 @@
 				<xs:element ref="cl:java_home" minOccurs="0" />
 				<xs:element ref="cl:log_dir" minOccurs="0" />
 				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
-				<xs:element ref="cl:store" minOccurs="0" />
 				<xs:element ref="cl:iodevices" minOccurs="0" />
 				<xs:element ref="cl:debug_port" minOccurs="0" />
 			</xs:sequence>

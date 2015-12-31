@@ -164,11 +164,11 @@ public class PatternCreator {
         String store;
         String pargs;
         String iodevices;
+        store = cluster.getStore();
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
-            store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
                     + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
@@ -188,12 +188,12 @@ public class PatternCreator {
         String txnLogDir;
         String store;
         String pargs;
+        store = cluster.getStore();
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
             txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
-            store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
                     + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
                     + " " + "local" + " " + node.getId();
@@ -212,14 +212,12 @@ public class PatternCreator {
         VerificationUtil.verifyBackupRestoreConfiguration(hdfsUrl, hadoopVersion, hdfsBackupDir);
         String workingDir = cluster.getWorkingDir().getDir();
         int backupId = backupInfo.getId();
-        String nodeStore;
         String pargs;
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + clusterStore + " "
                     + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
                     + hadoopVersion;
@@ -235,14 +233,12 @@ public class PatternCreator {
         String backupDir = backupInfo.getBackupConf().getBackupDir();
         String workingDir = cluster.getWorkingDir().getDir();
         int backupId = backupInfo.getId();
-        String nodeStore;
         String pargs;
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + clusterStore + " "
                     + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + backupDir + " " + "local" + " " + node.getId();
             Event event = new Event("restore", nodeid, pargs);
@@ -262,8 +258,8 @@ public class PatternCreator {
 
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
-        String pargs = username + " " + hadoopDir.getAbsolutePath() + " " + cluster.getMasterNode().getClusterIp()
-                + " " + workingDir;
+        String pargs = username + " " + hadoopDir.getAbsolutePath() + " " + cluster.getMasterNode().getClusterIp() + " "
+                + workingDir;
         Event event = new Event("directory_transfer", nodeid, pargs);
         Pattern p = new Pattern(null, 1, null, event);
         addInitialDelay(p, 2, "sec");
@@ -428,8 +424,8 @@ public class PatternCreator {
                 patternList.add(p);
             }
 
-            pargs = username + " " + fileToTransfer + " " + cluster.getMasterNode().getClusterIp() + " " + destDir
-                    + " " + "unpack";
+            pargs = username + " " + fileToTransfer + " " + cluster.getMasterNode().getClusterIp() + " " + destDir + " "
+                    + "unpack";
             event = new Event("file_transfer", nodeid, pargs);
             p = new Pattern(null, 1, null, event);
             patternList.add(p);
@@ -529,8 +525,8 @@ public class PatternCreator {
             String[] nodeIODevices;
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             nodeIODevices = iodevices.trim().split(",");
+            String nodeStore = cluster.getStore().trim();
             for (String nodeIODevice : nodeIODevices) {
-                String nodeStore = node.getStore() == null ? cluster.getStore() : node.getStore();
                 pargs = nodeIODevice.trim() + File.separator + nodeStore;
                 Event event = new Event("file_delete", nodeid, pargs);
                 patternList.add(new Pattern(null, 1, null, event));
@@ -540,13 +536,15 @@ public class PatternCreator {
         return patterns;
     }
 
-    private Pattern createCopyHyracksPattern(String instanceName, Cluster cluster, String destinationIp, String destDir) {
+    private Pattern createCopyHyracksPattern(String instanceName, Cluster cluster, String destinationIp,
+            String destDir) {
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
-        String fileToTransfer = new File(AsterixEventService.getAsterixDir() + File.separator + instanceName
-                + File.separator + asterixZipName).getAbsolutePath();
+        String asterixZipName = AsterixEventService.getAsterixZip()
+                .substring(AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+        String fileToTransfer = new File(
+                AsterixEventService.getAsterixDir() + File.separator + instanceName + File.separator + asterixZipName)
+                        .getAbsolutePath();
         String pargs = username + " " + fileToTransfer + " " + destinationIp + " " + destDir + " " + "unpack";
         Event event = new Event("file_transfer", nodeid, pargs);
         return new Pattern(null, 1, null, event);
@@ -607,8 +605,8 @@ public class PatternCreator {
             ps.add(p);
 
             nodeid = new Nodeid(new Value(null, nodeToBeAdded.getId()));
-            pargs = cluster.getUsername() + " " + hadoopDir.getAbsolutePath() + " " + nodeToBeAdded.getClusterIp()
-                    + " " + workingDir;
+            pargs = cluster.getUsername() + " " + hadoopDir.getAbsolutePath() + " " + nodeToBeAdded.getClusterIp() + " "
+                    + workingDir;
             event = new Event("directory_transfer", nodeid, pargs);
             p = new Pattern(null, 1, null, event);
             addInitialDelay(p, 2, "sec");
@@ -626,8 +624,8 @@ public class PatternCreator {
         String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
         String srcHost = cluster.getMasterNode().getClientIp();
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
-        String srcDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode()
-                .getLogDir();
+        String srcDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir()
+                : cluster.getMasterNode().getLogDir();
         String destDir = outputDir + File.separator + "cc";
         String pargs = username + " " + srcHost + " " + srcDir + " " + destDir;
         Event event = new Event("directory_copy", nodeid, pargs);
@@ -649,7 +647,7 @@ public class PatternCreator {
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }
-    
+
     private Patterns createRemoveAsterixReplicationPattern(AsterixInstance instance) throws Exception {
 
         List<Pattern> patternList = new ArrayList<Pattern>();

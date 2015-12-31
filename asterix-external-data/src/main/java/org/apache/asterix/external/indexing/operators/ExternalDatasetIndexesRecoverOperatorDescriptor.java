@@ -49,9 +49,7 @@ public class ExternalDatasetIndexesRecoverOperatorDescriptor extends AbstractExt
     @Override
     protected void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory, IHyracksTaskContext ctx,
             IndexInfoOperatorDescriptor fileIndexInfo, int partition) throws Exception {
-        FileReference file = new FileReference(new File(IndexFileNameUtil.prepareFileName(fileIndexInfo
-                .getFileSplitProvider().getFileSplits()[partition].getLocalFile().getFile().getPath(), fileIndexInfo
-                .getFileSplitProvider().getFileSplits()[partition].getIODeviceId())));
+        FileReference file = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition, ctx.getIOManager());
         AbortRecoverLSMIndexFileManager fileManager = new AbortRecoverLSMIndexFileManager(file);
         fileManager.recoverTransaction();
     }

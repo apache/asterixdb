@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -62,8 +63,10 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -108,7 +111,6 @@ public class MetadataBootstrap {
     private static IIOManager ioManager;
 
     private static String metadataNodeName;
-    private static String metadataStore;
     private static Set<String> nodeNames;
     private static String outputDir;
 
@@ -147,9 +149,7 @@ public class MetadataBootstrap {
 
         AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
         metadataNodeName = metadataProperties.getMetadataNodeName();
-        metadataStore = metadataProperties.getMetadataStore();
         nodeNames = metadataProperties.getNodeNames();
-        // nodeStores = asterixProperity.getStores();
 
         dataLifecycleManager = runtimeContext.getDatasetLifecycleManager();
         localResourceRepository = runtimeContext.getLocalResourceRepository();
@@ -375,11 +375,14 @@ public class MetadataBootstrap {
 
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create, MetadataTransactionContext mdTxnCtx)
             throws Exception {
-        String filePath = ioManager.getIODevices().get(runtimeContext.getMetaDataIODeviceId()).getPath()
-                + File.separator
-                + IndexFileNameUtil.prepareFileName(metadataStore + File.separator + index.getFileNameRelativePath(),
-                        runtimeContext.getMetaDataIODeviceId());
-        FileReference file = new FileReference(new File(filePath));
+        ClusterPartition metadataPartition = propertiesProvider.getMetadataProperties().getMetadataPartition();
+        int metadataDeviceId = metadataPartition.getIODeviceNum();
+        String metadataPartitionPath = SplitsAndConstraintsUtil.prepareStoragePartitionPath(
+                AsterixClusterProperties.INSTANCE.getStorageDirectoryName(),
+                metadataPartition.getPartitionId());
+        String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
+        FileReference file = ioManager.getAbsoluteFileRef(metadataDeviceId, resourceName);
+
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContext
                 .getVirtualBufferCaches(index.getDatasetId().getId());
         ITypeTraits[] typeTraits = index.getTypeTraits();
@@ -391,7 +394,7 @@ public class MetadataBootstrap {
                 ? runtimeContext.getLSMBTreeOperationTracker(index.getDatasetId().getId())
                 : new BaseOperationTracker(index.getDatasetId().getId(),
                         dataLifecycleManager.getDatasetInfo(index.getDatasetId().getId()));
-        final String path = file.getFile().getPath();
+        final String absolutePath = file.getFile().getPath();
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider, typeTraits,
                     comparatorFactories, bloomFilterKeyFields, runtimeContext.getBloomFilterFalsePositiveRate(),
@@ -409,12 +412,13 @@ public class MetadataBootstrap {
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, path, 0));
-            dataLifecycleManager.register(path, lsmBtree);
+            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
+                    metadataPartition.getPartitionId(), absolutePath));
+            dataLifecycleManager.register(absolutePath, lsmBtree);
         } else {
-            final LocalResource resource = localResourceRepository.getResourceByName(path);
+            final LocalResource resource = localResourceRepository.getResourceByPath(absolutePath);
             resourceID = resource.getResourceId();
-            lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(resource.getResourceName());
+            lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(absolutePath);
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider,
                         typeTraits, comparatorFactories, bloomFilterKeyFields,
@@ -424,7 +428,7 @@ public class MetadataBootstrap {
                         opTracker, runtimeContext.getLSMIOScheduler(),
                         LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                         null, null, null, null, true);
-                dataLifecycleManager.register(path, lsmBtree);
+                dataLifecycleManager.register(absolutePath, lsmBtree);
             }
         }
 

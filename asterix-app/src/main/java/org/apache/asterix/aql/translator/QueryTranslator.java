@@ -1246,7 +1246,6 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
             }
             jobsToExecute.add(DataverseOperations.createDropDataverseJobSpec(dv, metadataProvider));
-
             //#. mark PendingDropOp on the dataverse record by
             //   first, deleting the dataverse record from the DATAVERSE_DATASET
             //   second, inserting the dataverse record with the PendingDropOp value into the DATAVERSE_DATASET

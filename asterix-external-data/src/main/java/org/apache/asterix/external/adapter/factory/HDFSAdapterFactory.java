@@ -34,7 +34,6 @@ import org.apache.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactor
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.hadoop.fs.BlockLocation;
@@ -211,12 +210,10 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
         Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         for (String i : stores.keySet()) {
             String[] nodeStores = stores.get(i);
-            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
             for (int j = 0; j < nodeStores.length; j++) {
-                for (int k = 0; k < numIODevices; k++) {
-                    locs.add(i);
-                    locs.add(i);
-                }
+                //two readers per partition
+                locs.add(i);
+                locs.add(i);
             }
         }
         String[] cluster = new String[locs.size()];
@@ -273,67 +270,67 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
      * @throws IOException
      */
     protected InputSplit[] getSplits(JobConf conf) throws IOException {
-        // Create file system object
-        FileSystem fs = FileSystem.get(conf);
         ArrayList<FileSplit> fileSplits = new ArrayList<FileSplit>();
         ArrayList<ExternalFile> orderedExternalFiles = new ArrayList<ExternalFile>();
-        // Create files splits
-        for (ExternalFile file : files) {
-            Path filePath = new Path(file.getFileName());
-            FileStatus fileStatus;
-            try {
-                fileStatus = fs.getFileStatus(filePath);
-            } catch (FileNotFoundException e) {
-                // file was deleted at some point, skip to next file
-                continue;
-            }
-            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_ADD_OP
-                    && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
-                // Get its information from HDFS name node
-                BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, file.getSize());
-                // Create a split per block
-                for (BlockLocation block : fileBlocks) {
-                    if (block.getOffset() < file.getSize()) {
-                        fileSplits
-                                .add(new FileSplit(filePath,
-                                        block.getOffset(), (block.getLength() + block.getOffset()) < file.getSize()
-                                                ? block.getLength() : (file.getSize() - block.getOffset()),
-                                block.getHosts()));
-                        orderedExternalFiles.add(file);
-                    }
+        // Create file system object
+        try (FileSystem fs = FileSystem.get(conf)) {
+            // Create files splits
+            for (ExternalFile file : files) {
+                Path filePath = new Path(file.getFileName());
+                FileStatus fileStatus;
+                try {
+                    fileStatus = fs.getFileStatus(filePath);
+                } catch (FileNotFoundException e) {
+                    // file was deleted at some point, skip to next file
+                    continue;
                 }
-            } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_NO_OP
-                    && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
-                long oldSize = 0L;
-                long newSize = file.getSize();
-                for (int i = 0; i < files.size(); i++) {
-                    if (files.get(i).getFileName() == file.getFileName() && files.get(i).getSize() != file.getSize()) {
-                        newSize = files.get(i).getSize();
-                        oldSize = file.getSize();
-                        break;
-                    }
-                }
-
-                // Get its information from HDFS name node
-                BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, newSize);
-                // Create a split per block
-                for (BlockLocation block : fileBlocks) {
-                    if (block.getOffset() + block.getLength() > oldSize) {
-                        if (block.getOffset() < newSize) {
-                            // Block interact with delta -> Create a split
-                            long startCut = (block.getOffset() > oldSize) ? 0L : oldSize - block.getOffset();
-                            long endCut = (block.getOffset() + block.getLength() < newSize) ? 0L
-                                    : block.getOffset() + block.getLength() - newSize;
-                            long splitLength = block.getLength() - startCut - endCut;
-                            fileSplits.add(new FileSplit(filePath, block.getOffset() + startCut, splitLength,
+                if (file.getPendingOp() == ExternalFilePendingOp.PENDING_ADD_OP
+                        && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
+                    // Get its information from HDFS name node
+                    BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, file.getSize());
+                    // Create a split per block
+                    for (BlockLocation block : fileBlocks) {
+                        if (block.getOffset() < file.getSize()) {
+                            fileSplits.add(new FileSplit(filePath,
+                                    block.getOffset(), (block.getLength() + block.getOffset()) < file.getSize()
+                                            ? block.getLength() : (file.getSize() - block.getOffset()),
                                     block.getHosts()));
                             orderedExternalFiles.add(file);
+                        }
+                    }
+                } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_NO_OP
+                        && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
+                    long oldSize = 0L;
+                    long newSize = file.getSize();
+                    for (int i = 0; i < files.size(); i++) {
+                        if (files.get(i).getFileName() == file.getFileName()
+                                && files.get(i).getSize() != file.getSize()) {
+                            newSize = files.get(i).getSize();
+                            oldSize = file.getSize();
+                            break;
+                        }
+                    }
+
+                    // Get its information from HDFS name node
+                    BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, newSize);
+                    // Create a split per block
+                    for (BlockLocation block : fileBlocks) {
+                        if (block.getOffset() + block.getLength() > oldSize) {
+                            if (block.getOffset() < newSize) {
+                                // Block interact with delta -> Create a split
+                                long startCut = (block.getOffset() > oldSize) ? 0L : oldSize - block.getOffset();
+                                long endCut = (block.getOffset() + block.getLength() < newSize) ? 0L
+                                        : block.getOffset() + block.getLength() - newSize;
+                                long splitLength = block.getLength() - startCut - endCut;
+                                fileSplits.add(new FileSplit(filePath, block.getOffset() + startCut, splitLength,
+                                        block.getHosts()));
+                                orderedExternalFiles.add(file);
+                            }
                         }
                     }
                 }
             }
         }
-        fs.close();
         files = orderedExternalFiles;
         return fileSplits.toArray(new FileSplit[fileSplits.size()]);
     }

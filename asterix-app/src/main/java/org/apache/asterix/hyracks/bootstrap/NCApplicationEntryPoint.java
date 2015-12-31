@@ -46,11 +46,11 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.replication.storage.AsterixFilesUtil;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
@@ -202,7 +202,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
-
         if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
@@ -213,7 +212,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
-            localResourceRepository.initializeNewUniverse(metadataProperties.getStores().get(nodeId)[0]);
+            localResourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 
         IAsterixStateProxy proxy = null;
@@ -277,22 +276,18 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         performLocalCleanUp();
     }
 
-    private void performLocalCleanUp() throws IOException {
+    private void performLocalCleanUp() {
         //delete working area files from failed jobs
         runtimeContext.getIOManager().deleteWorkspaceFiles();
 
         //reclaim storage for temporary datasets.
-        PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                .getLocalResourceRepository();
-
-        String[] storageMountingPoints = localResourceRepository.getStorageMountingPoints();
-        String storageFolderName = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties().getStores()
-                .get(nodeId)[0];
-
-        for (String mountPoint : storageMountingPoints) {
-            String tempDatasetFolder = mountPoint + storageFolderName + File.separator
-                    + AqlMetadataProvider.TEMP_DATASETS_STORAGE_FOLDER;
-            AsterixFilesUtil.deleteFolder(tempDatasetFolder);
+        //get node stores
+        String[] nodeStores = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties().getStores()
+                .get(nodeId);
+        for (String store : nodeStores) {
+            String tempDatasetFolder = store + File.separator
+                    + SplitsAndConstraintsUtil.TEMP_DATASETS_STORAGE_FOLDER;
+            FileUtils.deleteQuietly(new File(tempDatasetFolder));
         }
 
         // TODO
@@ -309,7 +304,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (cluster == null) {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
-            String asterixInstanceName = cluster.getInstanceName();
+            String asterixInstanceName = metadataProperties.getInstanceName();
             AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
                     .getTransactionProperties();
             Node self = null;
@@ -322,8 +317,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             for (Node node : nodes) {
                 String ncId = asterixInstanceName + "_" + node.getId();
                 if (ncId.equalsIgnoreCase(nodeId)) {
-                    String storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
-                    metadataProperties.getStores().put(nodeId, storeDir.split(","));
+                    String storeDir = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+                    String nodeIoDevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+                    String[] ioDevicePaths = nodeIoDevices.trim().split(",");
+                    for (int i = 0; i < ioDevicePaths.length; i++) {
+                        //construct full store path
+                        ioDevicePaths[i] += File.separator + storeDir;
+                    }
+                    metadataProperties.getStores().put(nodeId, ioDevicePaths);
 
                     String coredumpPath = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
                     metadataProperties.getCoredumpPaths().put(nodeId, coredumpPath);

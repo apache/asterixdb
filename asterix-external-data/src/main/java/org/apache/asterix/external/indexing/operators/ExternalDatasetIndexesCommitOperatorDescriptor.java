@@ -21,6 +21,7 @@ package org.apache.asterix.external.indexing.operators;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
@@ -49,18 +50,15 @@ public class ExternalDatasetIndexesCommitOperatorDescriptor extends AbstractExte
     @Override
     protected void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory, IHyracksTaskContext ctx,
             IndexInfoOperatorDescriptor fileIndexInfo, int partition) throws Exception {
-        System.err.println("performing the operation on "+ IndexFileNameUtil.prepareFileName(fileIndexInfo.getFileSplitProvider()
-                .getFileSplits()[partition].getLocalFile().getFile().getPath(), fileIndexInfo.getFileSplitProvider()
-                .getFileSplits()[partition].getIODeviceId()));
+        FileReference resourecePath = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition, ctx.getIOManager());
+        System.err.println("performing the operation on "+ resourecePath.getFile().getAbsolutePath());
         // Get DataflowHelper
         IIndexDataflowHelper indexHelper = indexDataflowHelperFactory.createIndexDataflowHelper(fileIndexInfo, ctx, partition);
         // Get index
         IIndex index = indexHelper.getIndexInstance();
         // commit transaction
         ((ITwoPCIndex) index).commitTransaction();
-        System.err.println("operation on "+ IndexFileNameUtil.prepareFileName(fileIndexInfo.getFileSplitProvider()
-                .getFileSplits()[partition].getLocalFile().getFile().getPath(), fileIndexInfo.getFileSplitProvider()
-                .getFileSplits()[partition].getIODeviceId()) + " Succeded");
+        System.err.println("operation on "+ resourecePath.getFile().getAbsolutePath() + " Succeded");
 
     }
 

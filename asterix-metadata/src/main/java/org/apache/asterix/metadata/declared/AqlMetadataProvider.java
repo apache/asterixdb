@@ -91,6 +91,7 @@ import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -148,7 +149,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
-import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
@@ -160,16 +160,13 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
@@ -2095,10 +2092,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return jobId;
     }
 
-    public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
-        return new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
-    }
-
     public static ILinearizeComparatorFactory proposeLinearizer(ATypeTag keyType, int numKeyFields)
             throws AlgebricksException {
         return AqlLinearizeComparatorFactoryProvider.INSTANCE.getLinearizeComparatorFactory(keyType, true,
@@ -2128,7 +2121,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName())
                 .getNodeNames();
         for (String nd : nodeGroup) {
-            numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+            numPartitions += AsterixClusterProperties.INSTANCE.getNodePartitionsCount(nd);
         }
         return numElementsHint /= numPartitions;
     }
@@ -2141,88 +2134,17 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataset(
             String dataverseName, String datasetName, String targetIdxName, boolean temp) throws AlgebricksException {
         FileSplit[] splits = splitsForDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName, temp);
-        return splitProviderAndPartitionConstraints(splits);
+        return SplitsAndConstraintsUtil.splitProviderAndPartitionConstraints(splits);
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataverse(
             String dataverse) {
-        FileSplit[] splits = splitsForDataverse(mdTxnCtx, dataverse);
-        return splitProviderAndPartitionConstraints(splits);
-    }
-
-    private Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraints(
-            FileSplit[] splits) {
-        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
-        String[] loc = new String[splits.length];
-        for (int p = 0; p < splits.length; p++) {
-            loc[p] = splits[p].getNodeName();
-        }
-        AlgebricksPartitionConstraint pc = new AlgebricksAbsolutePartitionConstraint(loc);
-        return new Pair<IFileSplitProvider, AlgebricksPartitionConstraint>(splitProvider, pc);
-    }
-
-    private FileSplit[] splitsForDataverse(MetadataTransactionContext mdTxnCtx, String dataverseName) {
-        File relPathFile = new File(dataverseName);
-        List<FileSplit> splits = new ArrayList<FileSplit>();
-        for (Map.Entry<String, String[]> entry : stores.entrySet()) {
-            String node = entry.getKey();
-            String[] nodeStores = entry.getValue();
-            if (nodeStores == null) {
-                continue;
-            }
-            for (int i = 0; i < nodeStores.length; i++) {
-                int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
-                String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(node);
-                for (int j = 0; j < nodeStores.length; j++) {
-                    for (int k = 0; k < numIODevices; k++) {
-                        File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator + relPathFile);
-                        splits.add(new FileSplit(node, new FileReference(f), k));
-                    }
-                }
-            }
-        }
-        return splits.toArray(new FileSplit[] {});
+        return SplitsAndConstraintsUtil.splitProviderAndPartitionConstraintsForDataverse(dataverse);
     }
 
     public FileSplit[] splitsForDataset(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
             String targetIdxName, boolean temp) throws AlgebricksException {
-        try {
-            File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
-            Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-            List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName())
-                    .getNodeNames();
-            if (nodeGroup == null) {
-                throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
-            }
-
-            List<FileSplit> splitArray = new ArrayList<FileSplit>();
-            for (String nd : nodeGroup) {
-                String[] nodeStores = stores.get(nd);
-                if (nodeStores == null) {
-                    LOGGER.warning("Node " + nd + " has no stores.");
-                    throw new AlgebricksException("Node " + nd + " has no stores.");
-                } else {
-                    int numIODevices;
-                    if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
-                        numIODevices = 1;
-                    } else {
-                        numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
-                    }
-                    String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
-                    for (int j = 0; j < nodeStores.length; j++) {
-                        for (int k = 0; k < numIODevices; k++) {
-                            File f = new File(ioDevices[k] + File.separator + nodeStores[j]
-                                    + (temp ? (File.separator + TEMP_DATASETS_STORAGE_FOLDER) : "") + File.separator
-                                    + relPathFile);
-                            splitArray.add(new FileSplit(nd, new FileReference(f), k));
-                        }
-                    }
-                }
-            }
-            return splitArray.toArray(new FileSplit[0]);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
+        return SplitsAndConstraintsUtil.splitsForDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName, temp);
     }
 
     private static Map<String, String> initializeAdapterFactoryMapping() {
@@ -2254,10 +2176,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, dataverseName, adapterName);
         }
         return adapter;
-    }
-
-    private static String getRelativePath(String dataverseName, String fileName) {
-        return dataverseName + File.separator + fileName;
     }
 
     public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {
@@ -2307,19 +2225,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public AlgebricksPartitionConstraint getClusterLocations() {
-        ArrayList<String> locs = new ArrayList<String>();
-        for (String i : stores.keySet()) {
-            String[] nodeStores = stores.get(i);
-            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
-            for (int j = 0; j < nodeStores.length; j++) {
-                for (int k = 0; k < numIODevices; k++) {
-                    locs.add(i);
-                }
-            }
-        }
-        String[] cluster = new String[locs.size()];
-        cluster = locs.toArray(cluster);
-        return new AlgebricksAbsolutePartitionConstraint(cluster);
+        return AsterixClusterProperties.INSTANCE.getClusterLocations();
     }
 
     public IDataFormat getFormat() {
@@ -2334,7 +2240,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * @return a new map containing the original dataset properties and the
      *         scheduler/locations
      */
-    private Map<String, Object> wrapProperties(Map<String, String> properties) {
+    private static Map<String, Object> wrapProperties(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
         // wrappedProperties.put(SCHEDULER, hdfsScheduler);
@@ -2349,7 +2255,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      *            the original properties
      * @return the new stirng-object map
      */
-    private Map<String, Object> wrapPropertiesEmpty(Map<String, String> properties) {
+    private static Map<String, Object> wrapPropertiesEmpty(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
         return wrappedProperties;
@@ -2357,58 +2263,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForFilesIndex(
             String dataverseName, String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
-        FileSplit[] splits = splitsForFilesIndex(mdTxnCtx, dataverseName, datasetName, targetIdxName, create);
-        return splitProviderAndPartitionConstraints(splits);
-    }
-
-    private FileSplit[] splitsForFilesIndex(MetadataTransactionContext mdTxnCtx, String dataverseName,
-            String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
-
-        try {
-            File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
-            Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-            List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName())
-                    .getNodeNames();
-            if (nodeGroup == null) {
-                throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
-            }
-
-            List<FileSplit> splitArray = new ArrayList<FileSplit>();
-            for (String nd : nodeGroup) {
-                String[] nodeStores = stores.get(nd);
-                if (nodeStores == null) {
-                    LOGGER.warning("Node " + nd + " has no stores.");
-                    throw new AlgebricksException("Node " + nd + " has no stores.");
-                } else {
-                    // Only the first partition when create
-                    String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
-                    if (create) {
-                        for (int j = 0; j < nodeStores.length; j++) {
-                            File f = new File(
-                                    ioDevices[0] + File.separator + nodeStores[j] + File.separator + relPathFile);
-                            splitArray.add(new FileSplit(nd, new FileReference(f), 0));
-                        }
-                    } else {
-                        int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
-                        for (int j = 0; j < nodeStores.length; j++) {
-                            for (int k = 0; k < numIODevices; k++) {
-                                File f = new File(
-                                        ioDevices[0] + File.separator + nodeStores[j] + File.separator + relPathFile);
-                                splitArray.add(new FileSplit(nd, new FileReference(f), 0));
-                            }
-                        }
-                    }
-                }
-            }
-            FileSplit[] splits = new FileSplit[splitArray.size()];
-            int i = 0;
-            for (FileSplit fs : splitArray) {
-                splits[i++] = fs;
-            }
-            return splits;
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
+        return SplitsAndConstraintsUtil.splitProviderAndPartitionConstraintsForFilesIndex(mdTxnCtx, dataverseName,
+                datasetName, targetIdxName, create);
     }
 
     public AsterixStorageProperties getStorageProperties() {

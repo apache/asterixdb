@@ -187,7 +187,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
             String nodeId = ncApplicationContext.getNodeId();
 
             replicaResourcesManager = new ReplicaResourcesManager(ioManager.getIODevices(),
-                    metadataProperties.getStores().get(nodeId)[0], nodeId, replicationProperties.getReplicationStore());
+                    AsterixClusterProperties.INSTANCE.getStorageDirectoryName(), nodeId,
+                    replicationProperties.getReplicationStore());
 
             replicationManager = new ReplicationManager(nodeId, replicationProperties, replicaResourcesManager,
                     txnSubsystem.getLogManager(), asterixAppRuntimeContextProvider);
@@ -377,7 +378,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     @Override
     public void initializeResourceIdFactory() throws HyracksDataException {
-        resourceIdFactory = new GlobalResourceIdFactoryProvider(ncApplicationContext)
-                .createResourceIdFactory();
+        resourceIdFactory = new GlobalResourceIdFactoryProvider(ncApplicationContext).createResourceIdFactory();
     }
 }
