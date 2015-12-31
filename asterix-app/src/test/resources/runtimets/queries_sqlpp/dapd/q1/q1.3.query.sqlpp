@@ -23,4 +23,4 @@ use test;
 select element {'name':user.name}
 from  User as user
 where some i in user.interests satisfies (i = 'movies')
-;
+order by user.name desc;

@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules;
+package org.apache.asterix.optimizer.rules.subplan;
 
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.rewriter.rules.MoveFreeVariableOperatorOutOfSubplanRule;
+import org.apache.hyracks.algebricks.rewriter.rules.subplan.MoveFreeVariableOperatorOutOfSubplanRule;
 
 public class AsterixMoveFreeVariableOperatorOutOfSubplanRule extends MoveFreeVariableOperatorOutOfSubplanRule {
 

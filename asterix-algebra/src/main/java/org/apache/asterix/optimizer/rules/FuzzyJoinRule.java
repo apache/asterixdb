@@ -24,9 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.algebra.base.LogicalOperatorDeepCopyVisitor;
 import org.apache.asterix.aqlplus.parser.AQLPlusParser;
 import org.apache.asterix.aqlplus.parser.ParseException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -38,6 +35,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.asterix.translator.AqlPlusExpressionToPlanTranslator;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -57,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -64,6 +64,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class FuzzyJoinRule implements IAlgebraicRewriteRule {
 
     private static HashSet<FunctionIdentifier> simFuncs = new HashSet<FunctionIdentifier>();
+
     static {
         simFuncs.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
     }
@@ -72,68 +73,45 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             //
             // -- - Stage 3 - --
             //
-            + "((#RIGHT), "
-            + "  (join((#LEFT), "
+            + "((#RIGHT), " + "  (join((#LEFT), "
             //
             // -- -- - Stage 2 - --
             //
-            + "    ("
-            + "    join( "
-            + "      ( "
-            + "      #LEFT_1 "
-            + "      let $tokensUnrankedLeft := %s($$LEFT_1) "
-            + "      let $lenLeft := len($tokensUnrankedLeft) "
-            + "      let $tokensLeft := "
-            + "        for $token in $tokensUnrankedLeft "
-            + "        for $tokenRanked at $i in "
+            + "    (" + "    join( " + "      ( " + "      #LEFT_1 " + "      let $tokensUnrankedLeft := %s($$LEFT_1) "
+            + "      let $lenLeft := len($tokensUnrankedLeft) " + "      let $tokensLeft := "
+            + "        for $token in $tokensUnrankedLeft " + "        for $tokenRanked at $i in "
             //
             // -- -- -- - Stage 1 - --
             //
             // + "          #LEFT_2 "
             // + "          let $id := $$LEFTPK_2 "
             // + "          for $token in %s($$LEFT_2) "
-            + "          #RIGHT_2 "
-            + "          let $id := $$RIGHTPK_2 "
-            + "          for $token in %s($$RIGHT_2) "
-            + "          /*+ hash */ "
-            + "          group by $tokenGroupped := $token with $id "
-            + "          /*+ inmem 34 198608 */ "
-            + "          order by count($id), $tokenGroupped "
+            + "          #RIGHT_2 " + "          let $id := $$RIGHTPK_2 " + "          for $token in %s($$RIGHT_2) "
+            + "          /*+ hash */ " + "          group by $tokenGroupped := $token with $id "
+            + "          /*+ inmem 34 198608 */ " + "          order by count($id), $tokenGroupped "
             + "          return $tokenGroupped "
             //
             // -- -- -- -
             //
-            + "        where $token = /*+ bcast */ $tokenRanked "
-            + "        order by $i "
-            + "        return $i "
+            + "        where $token = /*+ bcast */ $tokenRanked " + "        order by $i " + "        return $i "
             + "      for $prefixTokenLeft in subset-collection($tokensLeft, 0, prefix-len-%s(len($tokensLeft), %ff)) "
-            + "      ),( "
-            + "      #RIGHT_1 "
-            + "      let $tokensUnrankedRight := %s($$RIGHT_1) "
-            + "      let $lenRight := len($tokensUnrankedRight) "
-            + "      let $tokensRight := "
-            + "        for $token in $tokensUnrankedRight "
-            + "        for $tokenRanked at $i in "
+            + "      ),( " + "      #RIGHT_1 " + "      let $tokensUnrankedRight := %s($$RIGHT_1) "
+            + "      let $lenRight := len($tokensUnrankedRight) " + "      let $tokensRight := "
+            + "        for $token in $tokensUnrankedRight " + "        for $tokenRanked at $i in "
             //
             // -- -- -- - Stage 1 - --
             //
             // + "          #LEFT_3 "
             // + "          let $id := $$LEFTPK_3 "
             // + "          for $token in %s($$LEFT_3) "
-            + "          #RIGHT_3 "
-            + "          let $id := $$RIGHTPK_3 "
-            + "          for $token in %s($$RIGHT_3) "
-            + "          /*+ hash */ "
-            + "          group by $tokenGroupped := $token with $id "
-            + "          /*+ inmem 34 198608 */ "
-            + "          order by count($id), $tokenGroupped "
+            + "          #RIGHT_3 " + "          let $id := $$RIGHTPK_3 " + "          for $token in %s($$RIGHT_3) "
+            + "          /*+ hash */ " + "          group by $tokenGroupped := $token with $id "
+            + "          /*+ inmem 34 198608 */ " + "          order by count($id), $tokenGroupped "
             + "          return $tokenGroupped "
             //
             // -- -- -- -
             //
-            + "        where $token = /*+ bcast */ $tokenRanked "
-            + "        order by $i "
-            + "        return $i "
+            + "        where $token = /*+ bcast */ $tokenRanked " + "        order by $i " + "        return $i "
             + "      for $prefixTokenRight in subset-collection($tokensRight, 0, prefix-len-%s(len($tokensRight), %ff)) "
             + "      ), $prefixTokenLeft = $prefixTokenRight) "
             + "    let $sim := similarity-%s-prefix($lenLeft, $tokensLeft, $lenRight, $tokensRight, $prefixTokenLeft, %ff) "
@@ -285,8 +263,10 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         // under the same transaction id as the "outer" compilation.
         AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(
                 metadataProvider.getJobId(), metadataProvider, counter, null, null);
+        context.setVarCounter(counter.get());
 
-        LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);
+        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
+                context);
 
         translator.addOperatorToMetaScope(new Identifier("#LEFT"), leftInputOp);
         translator.addVariableToMetaScope(new Identifier("$$LEFT"), leftInputVar);
@@ -401,7 +381,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 }
