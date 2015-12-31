@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.common.active.api;
 
+import java.rmi.RemoteException;
+
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
@@ -92,5 +96,7 @@ public interface IActiveManager {
      * @see AsterixFeedProperties
      */
     public AsterixFeedProperties getAsterixFeedProperties();
+
+    public void sendHttpForChannel() throws RemoteException, ACIDException, AsterixException;
 
 }

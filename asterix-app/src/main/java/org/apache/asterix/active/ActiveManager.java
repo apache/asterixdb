@@ -18,12 +18,18 @@
  */
 package org.apache.asterix.active;
 
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.api.IActiveConnectionManager;
 import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedMemoryManager;
 import org.apache.asterix.common.feeds.FeedMessageService;
@@ -34,7 +40,11 @@ import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.active.ActiveConnectionManager;
+import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.feeds.FeedSubscriptionManager;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -68,15 +78,15 @@ public class ActiveManager implements IActiveManager {
 
     private final int frameSize;
 
-    public ActiveManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize) throws AsterixException,
-            HyracksDataException {
+    public ActiveManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize)
+            throws AsterixException, HyracksDataException {
         this.nodeId = nodeId;
         this.feedSubscriptionManager = new FeedSubscriptionManager(nodeId);
         this.connectionManager = new ActiveConnectionManager(nodeId);
         this.feedMetadataManager = new FeedMetadataManager(nodeId);
         this.feedMemoryManager = new FeedMemoryManager(nodeId, feedProperties, frameSize);
-        String ccClusterIp = AsterixClusterProperties.INSTANCE.getCluster() != null ? AsterixClusterProperties.INSTANCE
-                .getCluster().getMasterNode().getClusterIp() : "localhost";
+        String ccClusterIp = AsterixClusterProperties.INSTANCE.getCluster() != null
+                ? AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp() : "localhost";
         this.feedMessageService = new FeedMessageService(feedProperties, nodeId, ccClusterIp);
         this.nodeLoadReportService = new NodeLoadReportService(nodeId, this);
         try {
@@ -140,6 +150,52 @@ public class ActiveManager implements IActiveManager {
     @Override
     public AsterixFeedProperties getAsterixFeedProperties() {
         return asterixFeedProperties;
+    }
+
+    //TODO: Move these things to a new class for sending messages to Brokers
+    @Override
+    public void sendHttpForChannel() throws RemoteException, ACIDException, AsterixException {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+
+        List<Broker> brokers;
+        try {
+            brokers = MetadataManager.INSTANCE.getBrokers(mdTxnCtx);
+        } catch (MetadataException e) {
+            throw new AsterixException("unable to read brokers from metadata", e);
+        }
+        for (Broker b : brokers) {
+            String endPoint = b.getEndPointName();
+            sendMessage(endPoint, "newResults");
+        }
+    }
+
+    public static void sendMessage(String targetURL, String urlParameters) {
+        HttpURLConnection connection = null;
+        try {
+            //Create connection
+            URL url = new URL(targetURL);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            connection.setRequestProperty("Content-Length", Integer.toString(urlParameters.getBytes().length));
+            connection.setRequestProperty("Content-Language", "en-US");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            //Send message
+            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+            wr.writeBytes(urlParameters);
+            wr.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
 }

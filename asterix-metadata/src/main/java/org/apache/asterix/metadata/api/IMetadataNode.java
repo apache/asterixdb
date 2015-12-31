@@ -811,4 +811,6 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public void updateDataset(JobId jobId, Dataset dataset) throws MetadataException, RemoteException;
 
+    List<Broker> getBrokers(JobId jobId) throws MetadataException, RemoteException;
+
 }

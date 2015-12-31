@@ -598,6 +598,23 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Broker> getBrokers(JobId jobId) throws MetadataException, RemoteException {
+        try {
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(false);
+            IValueExtractor<Broker> valueExtractor = new MetadataEntityValueExtractor<Broker>(tupleReaderWriter);
+            List<Broker> results = new ArrayList<Broker>();
+            searchIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, null, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
     public Dataverse getDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
 
         try {

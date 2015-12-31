@@ -208,6 +208,15 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public List<Broker> getBrokers(MetadataTransactionContext ctx) throws MetadataException {
+        try {
+            return metadataNode.getBrokers(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
     public Dataverse getDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
         // First look in the context to see if this transaction created the
         // requested dataverse itself (but the dataverse is still uncommitted).

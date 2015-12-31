@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.channels;
 
+import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -29,6 +30,8 @@ import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.active.message.RepetitiveChannelXAQLMessage;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.json.JSONException;
@@ -64,6 +67,11 @@ public class ChannelRuntime extends ActiveRuntime {
                     e.printStackTrace();
                 }
 
+            }
+            try {
+                activeManager.sendHttpForChannel();
+            } catch (RemoteException | ACIDException | AsterixException e) {
+                e.printStackTrace();
             }
         }
     }

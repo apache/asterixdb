@@ -687,4 +687,6 @@ public interface IMetadataManager {
 
     void addBroker(MetadataTransactionContext ctx, Broker broker) throws MetadataException;
 
+    List<Broker> getBrokers(MetadataTransactionContext ctx) throws MetadataException;
+
 }

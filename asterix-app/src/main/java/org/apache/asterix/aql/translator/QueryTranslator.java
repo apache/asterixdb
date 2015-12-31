@@ -2796,7 +2796,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
         String subscriptionsDatasetName = channel.getSubscriptionsDataset();
         List<String> returnField = new ArrayList<String>();
-        returnField.add("subscription-id");
+        returnField.add("subscriptionId");
 
         List<Expression> exps = stmtChannelSub.getArgList();
         if (exps.size() != channel.getFunction().getArity()) {
