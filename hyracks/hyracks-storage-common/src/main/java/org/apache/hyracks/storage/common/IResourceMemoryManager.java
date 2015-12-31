@@ -21,5 +21,5 @@ package org.apache.hyracks.storage.common;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IResourceMemoryManager {
-    void allocateMemory(String resourceName) throws HyracksDataException;
+    void allocateMemory(String resourcePath) throws HyracksDataException;
 }

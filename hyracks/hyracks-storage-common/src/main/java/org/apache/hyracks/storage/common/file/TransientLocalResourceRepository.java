@@ -25,12 +25,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TransientLocalResourceRepository implements ILocalResourceRepository {
 
-    private Map<String, LocalResource> name2ResourceMap = new HashMap<String, LocalResource>();
+    private Map<String, LocalResource> path2ResourceMap = new HashMap<String, LocalResource>();
     private Map<Long, LocalResource> id2ResourceMap = new HashMap<Long, LocalResource>();
 
     @Override
-    public LocalResource getResourceByName(String name) throws HyracksDataException {
-        return name2ResourceMap.get(name);
+    public LocalResource getResourceByPath(String path) throws HyracksDataException {
+        return path2ResourceMap.get(path);
     }
 
     @Override
@@ -41,17 +41,17 @@ public class TransientLocalResourceRepository implements ILocalResourceRepositor
             throw new HyracksDataException("Duplicate resource");
         }
         id2ResourceMap.put(id, resource);
-        name2ResourceMap.put(resource.getResourceName(), resource);
+        path2ResourceMap.put(resource.getResourcePath(), resource);
     }
 
     @Override
-    public synchronized void deleteResourceByName(String name) throws HyracksDataException {
-        LocalResource resource = name2ResourceMap.get(name);
+    public synchronized void deleteResourceByPath(String path) throws HyracksDataException {
+        LocalResource resource = path2ResourceMap.get(path);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
         id2ResourceMap.remove(resource.getResourceId());
-        name2ResourceMap.remove(name);
+        path2ResourceMap.remove(path);
     }
 
     @Override

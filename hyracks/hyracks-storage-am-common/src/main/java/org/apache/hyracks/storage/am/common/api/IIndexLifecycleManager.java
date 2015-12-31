@@ -26,13 +26,13 @@ import org.apache.hyracks.storage.common.IResourceMemoryManager;
 public interface IIndexLifecycleManager extends IResourceMemoryManager {
     public List<IIndex> getOpenIndexes();
 
-    public void register(String resourceName, IIndex index) throws HyracksDataException;
+    public void register(String resourcePath, IIndex index) throws HyracksDataException;
 
-    public void open(String resourceName) throws HyracksDataException;
+    public void open(String resourcePath) throws HyracksDataException;
 
-    public void close(String resourceName) throws HyracksDataException;
+    public void close(String resourcePath) throws HyracksDataException;
 
-    public IIndex getIndex(String resourceName) throws HyracksDataException;
+    public IIndex getIndex(String resourcePath) throws HyracksDataException;
 
-    public void unregister(String resourceName) throws HyracksDataException;
+    public void unregister(String resourcePath) throws HyracksDataException;
 }

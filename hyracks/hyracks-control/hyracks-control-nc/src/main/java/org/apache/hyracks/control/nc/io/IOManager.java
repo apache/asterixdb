@@ -282,4 +282,10 @@ public class IOManager implements IIOManager {
             return name.endsWith(WORKSPACE_FILE_SUFFIX);
         }
     };
+
+    @Override
+    public FileReference getAbsoluteFileRef(int ioDeviceId, String relativePath) {
+        IODeviceHandle devHandle = ioDevices.get(ioDeviceId);
+        return new FileReference(devHandle, relativePath);
+    }
 }

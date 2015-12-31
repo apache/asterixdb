@@ -58,4 +58,11 @@ public interface IIOManager {
     public long getSize(IFileHandle fileHandle);
 
     public void deleteWorkspaceFiles();
+
+    /**
+     * @param ioDeviceId
+     * @param relativePath
+     * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
+     */
+    public FileReference getAbsoluteFileRef(int ioDeviceId, String relativePath);
 }

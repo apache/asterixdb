@@ -22,11 +22,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILocalResourceRepository {
 
-    public LocalResource getResourceByName(String name) throws HyracksDataException;
+    public LocalResource getResourceByPath(String name) throws HyracksDataException;
 
     public void insert(LocalResource resource) throws HyracksDataException;
 
-    public void deleteResourceByName(String name) throws HyracksDataException;
+    public void deleteResourceByPath(String name) throws HyracksDataException;
 
     public long getMaxResourceID() throws HyracksDataException;
 }

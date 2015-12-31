@@ -21,11 +21,22 @@ package org.apache.hyracks.storage.am.common.util;
 
 import java.io.File;
 
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+
 public class IndexFileNameUtil {
 
     public static final String IO_DEVICE_NAME_PREFIX = "device_id_";
-    
+
+    @Deprecated
     public static String prepareFileName(String path, int ioDeviceId) {
         return path + File.separator + IO_DEVICE_NAME_PREFIX + ioDeviceId;
+    }
+
+    public static FileReference getIndexAbsoluteFileRef(IIndexOperatorDescriptor opDesc, int partition, IIOManager ioManager){
+        String indexName = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile().getFile().getPath();
+        int ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
+        return ioManager.getAbsoluteFileRef(ioDeviceId, indexName);
     }
 }

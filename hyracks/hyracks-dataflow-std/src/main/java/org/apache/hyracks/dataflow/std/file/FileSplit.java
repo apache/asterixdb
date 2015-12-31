@@ -29,29 +29,34 @@ public class FileSplit implements Serializable {
     private final String nodeName;
     private final FileReference file;
     private final int ioDeviceId;
+    private final int partition;
 
     public FileSplit(String nodeName, FileReference file) {
         this.nodeName = nodeName;
         this.file = file;
         this.ioDeviceId = 0;
+        this.partition = -1;
     }
 
-    public FileSplit(String nodeName, FileReference file, int ioDeviceId) {
+    public FileSplit(String nodeName, FileReference file, int ioDeviceId, int partition) {
         this.nodeName = nodeName;
         this.file = file;
         this.ioDeviceId = ioDeviceId;
+        this.partition = partition;
     }
 
     public FileSplit(String nodeName, String path, int ioDeviceId) {
         this.nodeName = nodeName;
         this.file = new FileReference(new File(path));
         this.ioDeviceId = ioDeviceId;
+        this.partition = -1;
     }
 
     public FileSplit(String nodeName, String path) {
         this.nodeName = nodeName;
         this.file = new FileReference(new File(path));
         this.ioDeviceId = 0;
+        this.partition = -1;
     }
 
     public String getNodeName() {
@@ -64,6 +69,10 @@ public class FileSplit implements Serializable {
 
     public int getIODeviceId() {
         return ioDeviceId;
+    }
+
+    public int getPartition() {
+        return partition;
     }
 
     @Override

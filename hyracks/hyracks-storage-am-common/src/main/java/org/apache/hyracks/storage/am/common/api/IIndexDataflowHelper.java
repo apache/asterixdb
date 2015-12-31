@@ -45,5 +45,5 @@ public interface IIndexDataflowHelper {
 
     public IHyracksTaskContext getTaskContext();
 
-    public String getResourceName();
+    public String getResourcePath();
 }

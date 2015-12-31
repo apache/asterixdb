@@ -183,23 +183,23 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     }
 
     @Override
-    public void register(String resourceName, IIndex index) throws HyracksDataException {
-        if (indexInfos.containsKey(resourceName)) {
-            throw new HyracksDataException("Index with resource name " + resourceName + " already exists.");
+    public void register(String resourcePath, IIndex index) throws HyracksDataException {
+        if (indexInfos.containsKey(resourcePath)) {
+            throw new HyracksDataException("Index with resource name " + resourcePath + " already exists.");
         }
-        indexInfos.put(resourceName, new IndexInfo(index));
+        indexInfos.put(resourcePath, new IndexInfo(index));
     }
 
     @Override
-    public void open(String resourceName) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourceName);
+    public void open(String resourcePath) throws HyracksDataException {
+        IndexInfo info = indexInfos.get(resourcePath);
         if (info == null) {
             throw new HyracksDataException(
-                    "Failed to open index with resource name " + resourceName + " since it does not exist.");
+                    "Failed to open index with resource name " + resourcePath + " since it does not exist.");
         }
 
         if (!info.isOpen) {
-            allocateMemory(resourceName);
+            allocateMemory(resourcePath);
             info.index.activate();
             info.isOpen = true;
         }
@@ -207,40 +207,40 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     }
 
     @Override
-    public void close(String resourceName) throws HyracksDataException {
-        indexInfos.get(resourceName).untouch();
+    public void close(String resourcePath) throws HyracksDataException {
+        indexInfos.get(resourcePath).untouch();
     }
 
     @Override
-    public IIndex getIndex(String resourceName) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourceName);
+    public IIndex getIndex(String resourcePath) throws HyracksDataException {
+        IndexInfo info = indexInfos.get(resourcePath);
         return info == null ? null : info.index;
     }
 
     @Override
-    public void unregister(String resourceName) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourceName);
+    public void unregister(String resourcePath) throws HyracksDataException {
+        IndexInfo info = indexInfos.get(resourcePath);
         if (info == null) {
-            throw new HyracksDataException("Index with resource name " + resourceName + " does not exist.");
+            throw new HyracksDataException("Index with resource name " + resourcePath + " does not exist.");
         }
 
         if (info.referenceCount != 0) {
-            indexInfos.put(resourceName, info);
+            indexInfos.put(resourcePath, info);
             throw new HyracksDataException("Cannot remove index while it is open.");
         }
 
         if (info.isOpen) {
             info.index.deactivate();
-            deallocateMemory(resourceName);
+            deallocateMemory(resourcePath);
         }
-        indexInfos.remove(resourceName);
+        indexInfos.remove(resourcePath);
     }
 
     @Override
-    public void allocateMemory(String resourceName) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourceName);
+    public void allocateMemory(String resourcePath) throws HyracksDataException {
+        IndexInfo info = indexInfos.get(resourcePath);
         if (info == null) {
-            throw new HyracksDataException("Failed to allocate memory for index with resource ID " + resourceName
+            throw new HyracksDataException("Failed to allocate memory for index with resource ID " + resourcePath
                     + " since it does not exist.");
         }
         if (!info.memoryAllocated) {
@@ -256,10 +256,10 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
         }
     }
 
-    private void deallocateMemory(String resourceName) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourceName);
+    private void deallocateMemory(String resourcePath) throws HyracksDataException {
+        IndexInfo info = indexInfos.get(resourcePath);
         if (info == null) {
-            throw new HyracksDataException("Failed to deallocate memory for index with resource name " + resourceName
+            throw new HyracksDataException("Failed to deallocate memory for index with resource name " + resourcePath
                     + " since it does not exist.");
         }
         if (info.isOpen && info.memoryAllocated) {

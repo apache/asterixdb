@@ -21,7 +21,7 @@ package org.apache.hyracks.storage.common.file;
 public class TransientLocalResourceFactory implements ILocalResourceFactory {
 
     @Override
-    public LocalResource createLocalResource(long resourceId, String resourceName, int partition) {
-        return new LocalResource(resourceId, resourceName, partition, LocalResource.TransientResource, null);
+    public LocalResource createLocalResource(long resourceId, String resourceName, int partition, String resourcePath) {
+        return new LocalResource(resourceId, resourceName, partition, resourcePath, LocalResource.TransientResource, null);
     }
 }

@@ -39,7 +39,7 @@ public enum NoOpOperationCallbackFactory implements ISearchOperationCallbackFact
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(String resourceName, long resourceId,
+    public IModificationOperationCallback createModificationOperationCallback(String resourcePath, long resourceId,
             Object resource, IHyracksTaskContext ctx) throws HyracksDataException {
         return NoOpOperationCallback.INSTANCE;
     }
