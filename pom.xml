@@ -172,6 +172,9 @@
            <exclude>**/target/**</exclude>
            <exclude>**/output/**</exclude>
            <exclude>**/*.iml</exclude>
+           <exclude>**/*.prefs</exclude>
+           <exclude>**/.classpath</exclude>
+           <exclude>**/.project</exclude>
       </excludes>
         </configuration>
       </plugin>

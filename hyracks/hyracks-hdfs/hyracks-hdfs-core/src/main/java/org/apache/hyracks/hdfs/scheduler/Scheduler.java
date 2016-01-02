@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -48,7 +47,6 @@ import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
  * The scheduler conduct data-local scheduling for data reading on HDFS. This
  * class works for Hadoop old API.
  */
-@SuppressWarnings("deprecation")
 public class Scheduler {
     private static final Logger LOGGER = Logger.getLogger(Scheduler.class.getName());
 
@@ -75,6 +73,7 @@ public class Scheduler {
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
+
     public Scheduler(String ipAddress, int port) throws HyracksException {
         try {
             IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
@@ -127,7 +126,8 @@ public class Scheduler {
      *            the hyracks cluster toplogy
      * @throws HyracksException
      */
-    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology) throws HyracksException {
+    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology)
+            throws HyracksException {
         this(ncNameToNcInfos);
         this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
                 : new RackAwareNcCollectionBuilder(topology);
@@ -274,8 +274,8 @@ public class Scheduler {
      * @throws UnknownHostException
      */
     private void scheduleLocalSlots(InputSplit[] splits, int[] workloads, String[] locations, int slots, Random random,
-            boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits) throws IOException,
-            UnknownHostException {
+            boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits)
+                    throws IOException, UnknownHostException {
         /** scheduling candidates will be ordered inversely according to their popularity */
         PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
 

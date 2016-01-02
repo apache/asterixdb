@@ -25,45 +25,48 @@ import java.util.Arrays;
 public class FieldCursorForDelimitedDataParser {
 
     private enum State {
-        INIT,
-        IN_RECORD,
-        EOR,
-        CR,
-        EOF
+        INIT, //initial state
+        IN_RECORD, //cursor is inside record
+        EOR, //cursor is at end of record
+        CR, //cursor at carriage return
+        EOF //end of stream reached
     }
 
-    // public variables will be used by delimited data parser
-    public char[] buffer;
-    public int fStart;
-    public int fEnd;
-    public int recordCount;
-    public int fieldCount;
-    public int doubleQuoteCount;
-    public boolean isDoubleQuoteIncludedInThisField;
+    public char[] buffer; //buffer to holds the input coming form the underlying input stream
+    public int fStart; //start position for field
+    public int fEnd; //end position for field
+    public int recordCount; //count of records
+    public int fieldCount; //count of fields in current record
+    public int doubleQuoteCount; //count of double quotes
+    public boolean isDoubleQuoteIncludedInThisField; //does current field include double quotes
 
-    private static final int INITIAL_BUFFER_SIZE = 4096;
-    private static final int INCREMENT = 4096;
+    private static final int INITIAL_BUFFER_SIZE = 4096;//initial buffer size
+    private static final int INCREMENT = 4096; //increment size
 
-    private final Reader in;
+    private Reader in; //the underlying buffer
 
-    private int start;
-    private int end;
-    private State state;
+    private int start; //start of valid buffer area
+    private int end; //end of valid buffer area
+    private State state; //state (see states above)
 
-    private int lastQuotePosition;
-    private int lastDoubleQuotePosition;
-    private int lastDelimiterPosition;
-    private int quoteCount;
-    private boolean startedQuote;
+    private int lastQuotePosition; //position of last quote
+    private int lastDoubleQuotePosition; //position of last double quote
+    private int lastDelimiterPosition; //position of last delimiter
+    private int quoteCount; //count of single quotes
+    private boolean startedQuote; //whether a quote has been started
 
-    private char quote;
-    private char fieldDelimiter;
+    private char quote; //the quote character
+    private char fieldDelimiter; //the delimiter
 
     public FieldCursorForDelimitedDataParser(Reader in, char fieldDelimiter, char quote) {
         this.in = in;
-        buffer = new char[INITIAL_BUFFER_SIZE];
+        if (in != null) {
+            buffer = new char[INITIAL_BUFFER_SIZE];
+            end = 0;
+        } else {
+            end = Integer.MAX_VALUE;
+        }
         start = 0;
-        end = 0;
         state = State.INIT;
         this.quote = quote;
         this.fieldDelimiter = fieldDelimiter;
@@ -76,6 +79,15 @@ public class FieldCursorForDelimitedDataParser {
         isDoubleQuoteIncludedInThisField = false;
         recordCount = 0;
         fieldCount = 0;
+    }
+
+    public void nextRecord(char[] buffer, int recordLength) throws IOException {
+        recordCount++;
+        fieldCount = 0;
+        start = 0;
+        end = recordLength;
+        state = State.IN_RECORD;
+        this.buffer = buffer;
     }
 
     public boolean nextRecord() throws IOException {
@@ -224,12 +236,8 @@ public class FieldCursorForDelimitedDataParser {
                                 startedQuote = true;
                             } else {
                                 // In this case, we don't have a quote in the beginning of a field.
-                                throw new IOException(
-                                        "At record: "
-                                                + recordCount
-                                                + ", field#: "
-                                                + fieldCount
-                                                + " - a quote enclosing a field needs to be placed in the beginning of that field.");
+                                throw new IOException("At record: " + recordCount + ", field#: " + fieldCount
+                                        + " - a quote enclosing a field needs to be placed in the beginning of that field.");
                             }
                         }
                         // Check double quotes - "". We check [start != p-2]
