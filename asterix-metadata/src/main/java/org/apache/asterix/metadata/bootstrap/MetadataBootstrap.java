@@ -39,9 +39,13 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.external.adapter.factory.IAdapterFactory;
+import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory;
+import org.apache.asterix.external.runtime.SocketClientAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -76,12 +80,14 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
@@ -316,19 +322,8 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
-        String[] builtInAdapterClassNames = new String[] {
-                "org.apache.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.HDFSAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.HiveAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.PushBasedTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.RSSFeedAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.CNNFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
-                "org.apache.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.SocketClientAdapterFactory" };
+        String[] builtInAdapterClassNames = new String[] { GenericAdapterFactory.class.getName(),
+                GenericSocketFeedAdapterFactory.class.getName(), SocketClientAdapterFactory.class.getName() };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);
@@ -349,11 +344,9 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialCompactionPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
-        String[] builtInCompactionPolicyClassNames = new String[] {
-                "org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",
-                "org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory",
-                "org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory",
-                "org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory" };
+        String[] builtInCompactionPolicyClassNames = new String[] { ConstantMergePolicyFactory.class.getName(),
+                PrefixMergePolicyFactory.class.getName(), NoMergePolicyFactory.class.getName(),
+                CorrelatedPrefixMergePolicyFactory.class.getName() };
         CompactionPolicy compactionPolicy;
         for (String policyClassName : builtInCompactionPolicyClassNames) {
             compactionPolicy = getCompactionPolicyEntity(policyClassName);
@@ -362,7 +355,7 @@ public class MetadataBootstrap {
     }
 
     private static DatasourceAdapter getAdapter(String adapterFactoryClassName) throws Exception {
-        String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getName();
+        String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
         return new DatasourceAdapter(new AdapterIdentifier(MetadataConstants.METADATA_DATAVERSE_NAME, adapterName),
                 adapterFactoryClassName, DatasourceAdapter.AdapterType.INTERNAL);
     }
@@ -378,8 +371,7 @@ public class MetadataBootstrap {
         ClusterPartition metadataPartition = propertiesProvider.getMetadataProperties().getMetadataPartition();
         int metadataDeviceId = metadataPartition.getIODeviceNum();
         String metadataPartitionPath = SplitsAndConstraintsUtil.prepareStoragePartitionPath(
-                AsterixClusterProperties.INSTANCE.getStorageDirectoryName(),
-                metadataPartition.getPartitionId());
+                AsterixClusterProperties.INSTANCE.getStorageDirectoryName(), metadataPartition.getPartitionId());
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
         FileReference file = ioManager.getAbsoluteFileRef(metadataDeviceId, resourceName);
 

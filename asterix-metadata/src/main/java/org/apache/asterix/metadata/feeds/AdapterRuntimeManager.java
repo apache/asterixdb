@@ -27,7 +27,7 @@ import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 
 public class AdapterRuntimeManager implements IAdapterRuntimeManager {
@@ -36,7 +36,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private final FeedId feedId;
 
-    private final IFeedAdapter feedAdapter;
+    private final IDataSourceAdapter feedAdapter;
 
     private final IIntakeProgressTracker tracker;
 
@@ -50,7 +50,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private State state;
 
-    public AdapterRuntimeManager(FeedId feedId, IFeedAdapter feedAdapter, IIntakeProgressTracker tracker,
+    public AdapterRuntimeManager(FeedId feedId, IDataSourceAdapter feedAdapter, IIntakeProgressTracker tracker,
             DistributeFeedFrameWriter writer, int partition) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -91,7 +91,8 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
         return feedId + "[" + partition + "]";
     }
 
-    public IFeedAdapter getFeedAdapter() {
+    @Override
+    public IDataSourceAdapter getFeedAdapter() {
         return feedAdapter;
     }
 
@@ -99,10 +100,12 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
         return tracker;
     }
 
+    @Override
     public synchronized State getState() {
         return state;
     }
 
+    @Override
     public synchronized void setState(State state) {
         this.state = state;
     }

@@ -24,7 +24,7 @@ import java.io.DataInputStream;
 import java.io.Serializable;
 import java.util.Date;
 
-import org.apache.asterix.external.indexing.operators.ExternalLoopkupOperatorDiscriptor;
+import org.apache.asterix.external.operators.ExternalLookupOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt64;
@@ -57,7 +57,7 @@ public class ExternalFileIndexAccessor implements Serializable {
     private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
     private static final long serialVersionUID = 1L;
     private ExternalBTreeDataflowHelper indexDataflowHelper;
-    private ExternalLoopkupOperatorDiscriptor opDesc;
+    private ExternalLookupOperatorDescriptor opDesc;
 
     private IHyracksTaskContext ctx;
     private ExternalBTree index;
@@ -72,39 +72,34 @@ public class ExternalFileIndexAccessor implements Serializable {
     private IIndexCursor fileIndexSearchCursor;
 
     public ExternalFileIndexAccessor(ExternalBTreeDataflowHelper indexDataflowHelper,
-            ExternalLoopkupOperatorDiscriptor opDesc) {
+            ExternalLookupOperatorDescriptor opDesc) {
         this.indexDataflowHelper = indexDataflowHelper;
         this.opDesc = opDesc;
     }
 
-    public void openIndex() throws HyracksDataException {
+    public void open() throws HyracksDataException {
         // Open the index and get the instance
         indexDataflowHelper.open();
         index = (ExternalBTree) indexDataflowHelper.getIndexInstance();
-        try {
-            // Create search key and search predicate objects
-            searchKey = new ArrayTupleReference();
-            searchKeyTupleBuilder = new ArrayTupleBuilder(FilesIndexDescription.FILE_KEY_SIZE);
-            searchKeyTupleBuilder.reset();
-            searchKeyTupleBuilder.addField(intSerde, currentFileNumber);
-            searchKey.reset(searchKeyTupleBuilder.getFieldEndOffsets(), searchKeyTupleBuilder.getByteArray());
-            searchCmp = BTreeUtils.getSearchMultiComparator(index.getComparatorFactories(), searchKey);
-            searchPredicate = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
+        // Create search key and search predicate objects
+        searchKey = new ArrayTupleReference();
+        searchKeyTupleBuilder = new ArrayTupleBuilder(FilesIndexDescription.FILE_KEY_SIZE);
+        searchKeyTupleBuilder.reset();
+        searchKeyTupleBuilder.addField(intSerde, currentFileNumber);
+        searchKey.reset(searchKeyTupleBuilder.getFieldEndOffsets(), searchKeyTupleBuilder.getByteArray());
+        searchCmp = BTreeUtils.getSearchMultiComparator(index.getComparatorFactories(), searchKey);
+        searchPredicate = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
 
-            // create the accessor  and the cursor using the passed version
-            ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexDataflowHelper.getResourceID(), ctx);
-            fileIndexAccessor = index.createAccessor(searchCallback, indexDataflowHelper.getVersion());
-            fileIndexSearchCursor = fileIndexAccessor.createSearchCursor(false);
-        } catch (Exception e) {
-            indexDataflowHelper.close();
-            throw new HyracksDataException(e);
-        }
+        // create the accessor  and the cursor using the passed version
+        ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
+                .createSearchOperationCallback(indexDataflowHelper.getResourceID(), ctx);
+        fileIndexAccessor = index.createAccessor(searchCallback, indexDataflowHelper.getVersion());
+        fileIndexSearchCursor = fileIndexAccessor.createSearchCursor(false);
     }
 
-    public void searchForFile(int fileNumber, ExternalFile file) throws Exception {
+    public void lookup(int fileId, ExternalFile file) throws Exception {
         // Set search parameters
-        currentFileNumber.setValue(fileNumber);
+        currentFileNumber.setValue(fileId);
         searchKeyTupleBuilder.reset();
         searchKeyTupleBuilder.addField(intSerde, currentFileNumber);
         searchKey.reset(searchKeyTupleBuilder.getFieldEndOffsets(), searchKeyTupleBuilder.getByteArray());
@@ -122,14 +117,14 @@ public class ExternalFileIndexAccessor implements Serializable {
             ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
             DataInput in = new DataInputStream(stream);
             ARecord externalFileRecord = (ARecord) filesIndexDescription.EXTERNAL_FILE_RECORD_SERDE.deserialize(in);
-            setExternalFileFromARecord(externalFileRecord, file);
+            setFile(externalFileRecord, file);
         } else {
             // This should never happen
             throw new HyracksDataException("Was not able to find a file in the files index");
         }
     }
 
-    private void setExternalFileFromARecord(ARecord externalFileRecord, ExternalFile file) {
+    private void setFile(ARecord externalFileRecord, ExternalFile file) {
         file.setFileName(
                 ((AString) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_NAME_FIELD_INDEX))
                         .getStringValue());
@@ -140,11 +135,13 @@ public class ExternalFileIndexAccessor implements Serializable {
                         .getChrononTime())));
     }
 
-    public void closeIndex() throws HyracksDataException {
-        try {
-            fileIndexSearchCursor.close();
-        } finally {
-            indexDataflowHelper.close();
+    public void close() throws HyracksDataException {
+        if (index != null) {
+            try {
+                fileIndexSearchCursor.close();
+            } finally {
+                indexDataflowHelper.close();
+            }
         }
     }
 

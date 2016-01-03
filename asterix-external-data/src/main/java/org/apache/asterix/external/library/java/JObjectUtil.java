@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.library.java.JObjects.ByteArrayAccessibleDataInputStream;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
 import org.apache.asterix.external.library.java.JObjects.JCircle;

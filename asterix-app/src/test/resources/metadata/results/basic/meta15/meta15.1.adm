@@ -1,12 +1,3 @@
-{ "DataverseName": "Metadata", "Name": "azure_twitter", "Classname": "org.apache.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory", "Type": "INTERNAL", "Timestamp": "Thu Oct 24 01:39:27 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "cnn_feed", "Classname": "org.apache.asterix.external.adapter.factory.CNNFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "file_feed", "Classname": "org.apache.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "hdfs", "Classname": "org.apache.asterix.external.adapter.factory.HDFSAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "hive", "Classname": "org.apache.asterix.external.adapter.factory.HiveAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "localfs", "Classname": "org.apache.asterix.external.adapter.factory.NCFileSystemAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "pull_twitter", "Classname": "org.apache.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "push_twitter", "Classname": "org.apache.asterix.external.adapter.factory.PushBasedTwitterAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "rss_feed", "Classname": "org.apache.asterix.external.adapter.factory.RSSFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "socket_adapter", "Classname": "org.apache.asterix.tools.external.data.GenericSocketFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "socket_client", "Classname": "org.apache.asterix.tools.external.data.SocketClientAdapterFactory", "Type": "INTERNAL", "Timestamp": "Wed Nov 20 14:45:58 IST 2013" }
-{ "DataverseName": "Metadata", "Name": "twitter_firehose", "Classname": "org.apache.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
+{ "DataverseName": "Metadata", "Name": "adapter", "Classname": "org.apache.asterix.external.adapter.factory.GenericAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }
+{ "DataverseName": "Metadata", "Name": "socket_adapter", "Classname": "org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }
+{ "DataverseName": "Metadata", "Name": "socket_client", "Classname": "org.apache.asterix.external.runtime.SocketClientAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }

@@ -24,6 +24,8 @@ import org.apache.asterix.common.feeds.FeedConstants.StatisticsConstants;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
+import org.apache.asterix.common.feeds.api.IFramePostProcessor;
+import org.apache.asterix.common.feeds.api.IFramePreprocessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;

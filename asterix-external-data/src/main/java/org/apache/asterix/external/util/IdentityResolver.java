@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.util;
 
+import org.apache.asterix.external.api.INodeResolver;
+
 /**
  * Identity resolver simply resolves a value to itself and is useful when value being resolved
  * is a node controller id.

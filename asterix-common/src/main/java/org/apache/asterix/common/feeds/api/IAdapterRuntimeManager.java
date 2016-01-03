@@ -45,14 +45,12 @@ public interface IAdapterRuntimeManager {
 
     /**
      * Start feed ingestion
-     * 
      * @throws Exception
      */
     public void start() throws Exception;
 
     /**
      * Stop feed ingestion.
-     * 
      * @throws Exception
      */
     public void stop() throws Exception;
@@ -65,7 +63,7 @@ public interface IAdapterRuntimeManager {
     /**
      * @return the instance of the feed adapter (an implementation of {@code IFeedAdapter}) in use.
      */
-    public IFeedAdapter getFeedAdapter();
+    public IDataSourceAdapter getFeedAdapter();
 
     /**
      * @return state associated with the AdapterRuntimeManager. See {@code State}.

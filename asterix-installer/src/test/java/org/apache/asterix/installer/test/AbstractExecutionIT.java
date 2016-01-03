@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
@@ -43,8 +43,8 @@ public abstract class AbstractExecutionIT {
     protected static final Logger LOGGER = Logger.getLogger(AbstractExecutionIT.class.getName());
 
     protected static final String PATH_ACTUAL = "ittest" + File.separator;
-    protected static final String PATH_BASE = StringUtils.join(new String[] { "..", "asterix-app", "src", "test",
-            "resources", "runtimets" }, File.separator);
+    protected static final String PATH_BASE = StringUtils
+            .join(new String[] { "..", "asterix-app", "src", "test", "resources", "runtimets" }, File.separator);
 
     protected static final String HDFS_BASE = "../asterix-app/";
 
@@ -63,21 +63,21 @@ public abstract class AbstractExecutionIT {
 
         //This is nasty but there is no very nice way to set a system property on each NC that I can figure.
         //The main issue is that we need the NC resolver to be the IdentityResolver and not the DNSResolver.
-        FileUtils.copyFile(
-                new File(StringUtils.join(new String[] { "src", "test", "resources", "integrationts", "asterix-configuration.xml" }, File.separator)),
+        FileUtils
+                .copyFile(
+                        new File(StringUtils.join(new String[] { "src", "test", "resources", "integrationts",
+                                "asterix-configuration.xml" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/conf/asterix-configuration.xml"));
 
         AsterixLifecycleIT.setUp();
-
 
         FileUtils.copyDirectoryStructure(
                 new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/data"));
 
-
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
-        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
+        System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
     }
 

@@ -29,7 +29,7 @@ import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.external.adapter.factory.IFeedAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -188,7 +188,7 @@ public class SubscribeFeedStatement implements Statement {
         try {
             switch (feed.getFeedType()) {
                 case PRIMARY:
-                    Triple<IFeedAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
+                    Triple<IAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
 
                     factoryOutput = FeedUtil.getPrimaryFeedFactoryAndOutput((PrimaryFeed) feed, policyAccessor,
                             mdTxnCtx);

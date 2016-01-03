@@ -27,14 +27,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
 import org.apache.asterix.external.dataset.adapter.StreamBasedAdapter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapter extends StreamBasedAdapter implements IFeedAdapter {
+public class TestTypedAdapter extends StreamBasedAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -126,17 +125,13 @@ public class TestTypedAdapter extends StreamBasedAdapter implements IFeedAdapter
     }
 
     @Override
-    public DataExchangeMode getDataExchangeMode() {
-        return DataExchangeMode.PUSH;
-    }
-
-    @Override
-    public void stop() throws Exception {
+    public boolean stop() throws Exception {
         generator.stop();
+        return true;
     }
 
     @Override
-    public boolean handleException(Exception e) {
+    public boolean handleException(Throwable e) {
         return false;
     }
 

@@ -27,11 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -45,16 +40,17 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
-import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
-import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
-import org.apache.asterix.external.adapter.factory.HiveAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.external.indexing.IndexingConstants;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesAbortOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesCommitOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesRecoverOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.IndexInfoOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesAbortOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesCommitOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesRecoverOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalFilesIndexOperatorDescriptor;
+import org.apache.asterix.external.operators.IndexInfoOperatorDescriptor;
+import org.apache.asterix.external.provider.AdapterFactoryProvider;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
@@ -73,13 +69,17 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.asterix.tools.external.data.ExternalFilesIndexOperatorDescriptor;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.ExternalBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -107,6 +107,7 @@ public class ExternalIndexingOperations {
 
     public static final List<List<String>> FILE_INDEX_FIELD_NAMES = new ArrayList<List<String>>();
     public static final ArrayList<IAType> FILE_INDEX_FIELD_TYPES = new ArrayList<IAType>();
+
     static {
         FILE_INDEX_FIELD_NAMES.add(new ArrayList<String>(Arrays.asList("")));
         FILE_INDEX_FIELD_TYPES.add(BuiltinType.ASTRING);
@@ -114,9 +115,7 @@ public class ExternalIndexingOperations {
 
     public static boolean isIndexible(ExternalDatasetDetails ds) {
         String adapter = ds.getAdapter();
-        if (adapter.equalsIgnoreCase("hdfs") || adapter.equalsIgnoreCase("hive")
-                || adapter.equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HDFSAdapter")
-                || adapter.equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HIVEAdapter")) {
+        if (adapter.equalsIgnoreCase(ExternalDataConstants.ALIAS_HDFS_ADAPTER)) {
             return true;
         }
         return false;
@@ -124,12 +123,6 @@ public class ExternalIndexingOperations {
 
     public static boolean isRefereshActive(ExternalDatasetDetails ds) {
         return ds.getState() != ExternalDatasetTransactionState.COMMIT;
-    }
-
-    public static boolean datasetUsesHiveAdapter(ExternalDatasetDetails ds) {
-        String adapter = ds.getAdapter();
-        return (adapter.equalsIgnoreCase("hive") || adapter
-                .equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HIVEAdapter"));
     }
 
     public static boolean isValidIndexName(String datasetName, String indexName) {
@@ -154,18 +147,15 @@ public class ExternalIndexingOperations {
         return IndexingConstants.getBuddyBtreeComparatorFactories();
     }
 
-    public static ArrayList<ExternalFile> getSnapshotFromExternalFileSystem(Dataset dataset) throws AlgebricksException {
+    public static ArrayList<ExternalFile> getSnapshotFromExternalFileSystem(Dataset dataset)
+            throws AlgebricksException {
         ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
         ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         try {
             // Create the file system object
             FileSystem fs = getFileSystemObject(datasetDetails.getProperties());
-            // If dataset uses hive adapter, add path to the dataset properties
-            if (datasetUsesHiveAdapter(datasetDetails)) {
-                HiveAdapterFactory.populateConfiguration(datasetDetails.getProperties());
-            }
             // Get paths of dataset
-            String path = datasetDetails.getProperties().get(HDFSAdapterFactory.KEY_PATH);
+            String path = datasetDetails.getProperties().get(ExternalDataConstants.KEY_PATH);
             String[] paths = path.split(",");
 
             // Add fileStatuses to files
@@ -176,9 +166,9 @@ public class ExternalIndexingOperations {
                     if (fileStatuses[i].isDirectory()) {
                         listSubFiles(dataset, fs, fileStatuses[i], files);
                     } else {
-                        files.add(new ExternalFile(dataset.getDataverseName(), dataset.getDatasetName(),
-                                nextFileNumber, fileStatuses[i].getPath().toUri().getPath(), new Date(fileStatuses[i]
-                                        .getModificationTime()), fileStatuses[i].getLen(),
+                        files.add(new ExternalFile(dataset.getDataverseName(), dataset.getDatasetName(), nextFileNumber,
+                                fileStatuses[i].getPath().toUri().getPath(),
+                                new Date(fileStatuses[i].getModificationTime()), fileStatuses[i].getLen(),
                                 ExternalFilePendingOp.PENDING_NO_OP));
                     }
                 }
@@ -216,14 +206,14 @@ public class ExternalIndexingOperations {
 
     public static FileSystem getFileSystemObject(Map<String, String> map) throws IOException {
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", map.get(HDFSAdapterFactory.KEY_HDFS_URL).trim());
-        conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI, map.get(ExternalDataConstants.KEY_HDFS_URL).trim());
+        conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_CLASS, DistributedFileSystem.class.getName());
         return FileSystem.get(conf);
     }
 
     public static JobSpecification buildFilesIndexReplicationJobSpec(Dataset dataset,
             ArrayList<ExternalFile> externalFilesSnapshot, AqlMetadataProvider metadataProvider, boolean createIndex)
-            throws MetadataException, AlgebricksException {
+                    throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
@@ -232,20 +222,20 @@ public class ExternalIndexingOperations {
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(),
-                        dataset.getDatasetName(), getFilesIndexName(dataset.getDatasetName()), true);
+                .splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(), dataset.getDatasetName(),
+                        getFilesIndexName(dataset.getDatasetName()), true);
         IFileSplitProvider secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
         ILocalResourceMetadata localResourceMetadata = new ExternalBTreeLocalResourceMetadata(
-                filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                filesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, false, dataset.getDatasetId(),
-                mergePolicyFactory, mergePolicyFactoryProperties);
+                filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS, filesIndexDescription.FILES_INDEX_COMP_FACTORIES,
+                new int[] { 0 }, false, dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties);
         PersistentLocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.ExternalBTreeResource);
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
-                mergePolicyFactory, mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(
-                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory, mergePolicyFactoryProperties,
+                new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true);
         ExternalFilesIndexOperatorDescriptor externalFilesOp = new ExternalFilesIndexOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
@@ -260,7 +250,6 @@ public class ExternalIndexingOperations {
 
     /**
      * This method create an indexing operator that index records in HDFS
-     * 
      * @param jobSpec
      * @param itemType
      * @param dataset
@@ -272,10 +261,10 @@ public class ExternalIndexingOperations {
     private static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> getExternalDataIndexingOperator(
             JobSpecification jobSpec, IAType itemType, Dataset dataset, List<ExternalFile> files,
             RecordDescriptor indexerDesc, AqlMetadataProvider metadataProvider) throws Exception {
-        HDFSIndexingAdapterFactory adapterFactory = new HDFSIndexingAdapterFactory();
-        adapterFactory.setFiles(files);
-        adapterFactory.configure(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties(),
-                (ARecordType) itemType);
+        ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+        Map<String, String> configuration = externalDatasetDetails.getProperties();
+        IAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(externalDatasetDetails.getAdapter(),
+                configuration, (ARecordType) itemType, files, true);
         return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
                 new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());
@@ -297,7 +286,6 @@ public class ExternalIndexingOperations {
      * deleteedFiles should contain files that are no longer there in the file system
      * appendedFiles should have the new file information of existing files
      * The method should return false in case of zero delta
-     * 
      * @param dataset
      * @param metadataFiles
      * @param addedFiles
@@ -309,7 +297,7 @@ public class ExternalIndexingOperations {
      */
     public static boolean isDatasetUptodate(Dataset dataset, List<ExternalFile> metadataFiles,
             List<ExternalFile> addedFiles, List<ExternalFile> deletedFiles, List<ExternalFile> appendedFiles)
-            throws MetadataException, AlgebricksException {
+                    throws MetadataException, AlgebricksException {
         boolean uptodate = true;
         int newFileNumber = metadataFiles.get(metadataFiles.size() - 1).getFileNumber() + 1;
 
@@ -340,9 +328,10 @@ public class ExternalIndexingOperations {
                     } else {
                         // Same file name, Different file mod date -> delete and add
                         metadataFile.setPendingOp(ExternalFilePendingOp.PENDING_DROP_OP);
-                        deletedFiles.add(new ExternalFile(metadataFile.getDataverseName(), metadataFile
-                                .getDatasetName(), 0, metadataFile.getFileName(), metadataFile.getLastModefiedTime(),
-                                metadataFile.getSize(), ExternalFilePendingOp.PENDING_DROP_OP));
+                        deletedFiles
+                                .add(new ExternalFile(metadataFile.getDataverseName(), metadataFile.getDatasetName(), 0,
+                                        metadataFile.getFileName(), metadataFile.getLastModefiedTime(),
+                                        metadataFile.getSize(), ExternalFilePendingOp.PENDING_DROP_OP));
                         fileSystemFile.setPendingOp(ExternalFilePendingOp.PENDING_ADD_OP);
                         fileSystemFile.setFileNumber(newFileNumber);
                         addedFiles.add(fileSystemFile);
@@ -382,8 +371,8 @@ public class ExternalIndexingOperations {
             if (metadataFile.getPendingOp() == ExternalFilePendingOp.PENDING_NO_OP) {
                 metadataFile.setPendingOp(ExternalFilePendingOp.PENDING_DROP_OP);
                 deletedFiles.add(new ExternalFile(metadataFile.getDataverseName(), metadataFile.getDatasetName(),
-                        newFileNumber, metadataFile.getFileName(), metadataFile.getLastModefiedTime(), metadataFile
-                                .getSize(), metadataFile.getPendingOp()));
+                        newFileNumber, metadataFile.getFileName(), metadataFile.getLastModefiedTime(),
+                        metadataFile.getSize(), metadataFile.getPendingOp()));
                 newFileNumber++;
                 uptodate = false;
             }
@@ -421,13 +410,14 @@ public class ExternalIndexingOperations {
                 metadataProvider.getMetadataTxnContext());
         IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                        dataset.getDatasetId()), compactionInfo.first, compactionInfo.second,
+                splitsAndConstraint.first,
+                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                        compactionInfo.first, compactionInfo.second,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), false, null, null, null, null, !temp));
-        AlgebricksPartitionConstraintHelper
-                .setPartitionConstraintInJobSpec(spec, btreeDrop, splitsAndConstraint.second);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
+                splitsAndConstraint.second);
         spec.addRoot(btreeDrop);
 
         return spec;
@@ -443,9 +433,9 @@ public class ExternalIndexingOperations {
             else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
                 for (ExternalFile appendedFile : appendedFiles) {
                     if (appendedFile.getFileName().equals(file.getFileName())) {
-                        files.add(new ExternalFile(file.getDataverseName(), file.getDatasetName(),
-                                file.getFileNumber(), file.getFileName(), file.getLastModefiedTime(), appendedFile
-                                        .getSize(), ExternalFilePendingOp.PENDING_NO_OP));
+                        files.add(new ExternalFile(file.getDataverseName(), file.getDatasetName(), file.getFileNumber(),
+                                file.getFileName(), file.getLastModefiedTime(), appendedFile.getSize(),
+                                ExternalFilePendingOp.PENDING_NO_OP));
                     }
                 }
             }
@@ -557,8 +547,7 @@ public class ExternalIndexingOperations {
             AsterixStorageProperties storageProperties, JobSpecification spec) {
         return new ExternalBTreeWithBuddyDataflowHelperFactory(mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(ds.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE,
+                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE,
                 storageProperties.getBloomFilterFalsePositiveRate(), new int[] { index.getKeyFieldNames().size() },
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true);
     }
@@ -567,7 +556,7 @@ public class ExternalIndexingOperations {
     private static ExternalRTreeDataflowHelperFactory getRTreeDataflowHelperFactory(Dataset ds, Index index,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
             AsterixStorageProperties storageProperties, AqlMetadataProvider metadataProvider, JobSpecification spec)
-            throws AlgebricksException, AsterixException {
+                    throws AlgebricksException, AsterixException {
         int numPrimaryKeys = getRIDSize(ds);
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         secondaryKeyFields.size();
@@ -594,8 +583,8 @@ public class ExternalIndexingOperations {
                     .getSerializerDeserializer(nestedKeyType);
             secondaryRecFields[i] = keySerde;
 
-            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
-                    nestedKeyType, true);
+            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(nestedKeyType, true);
             secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
@@ -743,13 +732,14 @@ public class ExternalIndexingOperations {
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(),
-                        dataset.getDatasetName(), getFilesIndexName(dataset.getDatasetName()), true);
+                .splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(), dataset.getDatasetName(),
+                        getFilesIndexName(dataset.getDatasetName()), true);
         IFileSplitProvider secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
-                mergePolicyFactory, mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(
-                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory, mergePolicyFactoryProperties,
+                new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true);
         FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,

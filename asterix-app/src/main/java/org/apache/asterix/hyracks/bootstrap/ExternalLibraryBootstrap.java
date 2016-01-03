@@ -46,6 +46,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
@@ -221,8 +222,7 @@ public class ExternalLibraryBootstrap {
                 LOGGER.info("Installed adapters contain in library :" + libraryName);
             }
 
-            MetadataManager.INSTANCE.addLibrary(mdTxnCtx,
-                    new org.apache.asterix.metadata.entities.Library(dataverse, libraryName));
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new Library(dataverse, libraryName));
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Added library " + libraryName + "to Metadata");

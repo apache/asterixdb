@@ -20,7 +20,7 @@ package org.apache.asterix.external.library;
 
 import java.util.List;
 
-import org.apache.asterix.external.library.java.IJObject;
+import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
 import org.apache.asterix.external.library.java.JObjects.JCircle;
 import org.apache.asterix.external.library.java.JObjects.JDate;

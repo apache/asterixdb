@@ -38,7 +38,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingConstants;
-import org.apache.asterix.external.indexing.operators.ExternalIndexBulkModifyOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalIndexBulkModifyOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;

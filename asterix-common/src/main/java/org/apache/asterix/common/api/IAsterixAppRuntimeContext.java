@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
-import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public interface IAsterixAppRuntimeContext {
 

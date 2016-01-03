@@ -20,6 +20,8 @@ package org.apache.asterix.external.library;
 
 import java.util.Random;
 
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JObjects.JRecord;
 
 public class EchoDelayFunction implements IExternalScalarFunction {

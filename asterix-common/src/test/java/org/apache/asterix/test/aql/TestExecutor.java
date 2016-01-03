@@ -29,7 +29,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,12 +62,12 @@ public class TestExecutor {
     private static final long MAX_URL_LENGTH = 2000l;
     private static Method managixExecuteMethod = null;
 
-    private static String host;
-    private static int port;
+    private String host;
+    private int port;
 
     public TestExecutor() {
-        this.host = "127.0.0.1";
-        this.port = 19002;
+        host = "127.0.0.1";
+        port = 19002;
     }
 
     public TestExecutor(String host, int port) {

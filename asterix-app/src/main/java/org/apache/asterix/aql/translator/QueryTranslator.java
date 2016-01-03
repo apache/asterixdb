@@ -63,7 +63,7 @@ import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLif
 import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.external.adapter.factory.IFeedAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.feeds.CentralFeedManager;
 import org.apache.asterix.feeds.FeedJoint;
@@ -238,13 +238,12 @@ public class QueryTranslator extends AbstractLangTranslator {
 
     /**
      * Compiles and submits for execution a list of AQL statements.
-     *
      * @param hcc
-     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
+     *        A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
-     *            A Hyracks dataset client object that is used to read the results.
+     *        A Hyracks dataset client object that is used to read the results.
      * @param resultDelivery
-     *            True if the results should be read asynchronously or false if we should wait for results to be read.
+     *        True if the results should be read asynchronously or false if we should wait for results to be read.
      * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
      * @throws Exception
      */
@@ -2133,7 +2132,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 FeedId feedId = connectionRequest.getFeedJointKey().getFeedId();
                 PrimaryFeed primaryFeed = (PrimaryFeed) MetadataManager.INSTANCE.getFeed(mdTxnCtx,
                         feedId.getDataverse(), feedId.getFeedName());
-                Pair<JobSpecification, IFeedAdapterFactory> pair = FeedOperations.buildFeedIntakeJobSpec(primaryFeed,
+                Pair<JobSpecification, IAdapterFactory> pair = FeedOperations.buildFeedIntakeJobSpec(primaryFeed,
                         metadataProvider, policyAccessor);
                 // adapter configuration are valid at this stage
                 // register the feed joints (these are auto-de-registered)
@@ -2141,11 +2140,13 @@ public class QueryTranslator extends AbstractLangTranslator {
                     FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
                 }
                 JobUtils.runJob(hcc, pair.first, false);
-                IFeedAdapterFactory adapterFactory = pair.second;
+                /* TODO: Fix record tracking
+                 * IFeedAdapterFactory adapterFactory = pair.second;
                 if (adapterFactory.isRecordTrackingEnabled()) {
                     FeedLifecycleListener.INSTANCE.registerFeedIntakeProgressTracker(feedConnId,
                             adapterFactory.createIntakeProgressTracker());
                 }
+                */
                 eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_INTAKE_STARTED);
             } else {
                 for (IFeedJoint fj : triple.third) {
@@ -2186,7 +2187,6 @@ public class QueryTranslator extends AbstractLangTranslator {
     /**
      * Generates a subscription request corresponding to a connect feed request. In addition, provides a boolean
      * flag indicating if feed intake job needs to be started (source primary feed not found to be active).
-     *
      * @param dataverse
      * @param feed
      * @param dataset

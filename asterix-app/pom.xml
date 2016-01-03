@@ -187,13 +187,18 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <type>jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <type>jar</type>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -232,6 +237,11 @@
             <artifactId>asterix-replication</artifactId>
             <version>0.8.8-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.asterix</groupId>
+            <artifactId>asterix-external-data</artifactId>
+            <version>0.8.8-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
