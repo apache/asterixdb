@@ -53,7 +53,7 @@ public class RTreeOpContext implements IIndexOperationContext {
     public ArrayList<ICachedPage> NSNUpdates;
     public ArrayList<ICachedPage> LSNUpdates;
 
-    public final IModificationOperationCallback modificationCallback;
+    public IModificationOperationCallback modificationCallback;
 
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories,
@@ -116,5 +116,9 @@ public class RTreeOpContext implements IIndexOperationContext {
     @Override
     public IndexOperation getOperation() {
         return op;
+    }
+
+    public void setModificationCallback(IModificationOperationCallback modificationCallback) {
+        this.modificationCallback = modificationCallback;
     }
 }

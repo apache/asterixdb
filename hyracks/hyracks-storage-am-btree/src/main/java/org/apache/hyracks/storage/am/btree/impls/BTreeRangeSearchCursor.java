@@ -318,4 +318,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             throw new HyracksDataException("This cursor has not been created with the intention to allow updates.");
         }
     }
+
+    public boolean isBloomFilterAware(){
+        return false;
+    }
 }

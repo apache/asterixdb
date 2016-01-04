@@ -227,4 +227,10 @@ public class BTreeOpContext implements IIndexOperationContext {
     public IndexOperation getOperation() {
         return op;
     }
+
+    public void setCallbacks(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        this.modificationCallback = modificationCallback;
+        this.searchCallback = searchCallback;
+    }
 }

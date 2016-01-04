@@ -26,6 +26,8 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext;
+import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
@@ -35,6 +37,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
@@ -60,10 +63,14 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final MultiComparator filterCmp;
     public final PermutingTupleReference filterTuple;
     public ISearchPredicate searchPredicate;
+    public BTreeRangeSearchCursor memCursor;
+    public LSMBTreeCursorInitialState searchInitialState;
+    public LSMBTreePointSearchCursor insertSearchCursor;
 
     public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields, int[] filterFields) {
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields, int[] filterFields,
+            ILSMHarness lsmHarness) {
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
         IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
@@ -110,6 +117,14 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             filterCmp = null;
             filterTuple = null;
         }
+        searchPredicate = new RangePredicate(null, null, true, true, cmp, cmp);
+        if (insertLeafFrame != null) {
+            memCursor = new BTreeRangeSearchCursor(insertLeafFrame, false);
+        }
+
+        searchInitialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, cmp, bloomFilterCmp, lsmHarness,
+                null, searchCallback, null);
+        insertSearchCursor = new LSMBTreePointSearchCursor(this);
     }
 
     @Override
@@ -135,6 +150,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
         componentsToBeReplicated.clear();
     }
 
+    @Override
     public IndexOperation getOperation() {
         return op;
     }

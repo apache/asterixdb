@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
@@ -46,10 +47,12 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
     private final List<ILSMComponent> componentsToBeReplicated;
     private final int targetIndexVersion;
     public ISearchPredicate searchPredicate;
+    public LSMBTreeCursorInitialState searchInitialState;
 
     public ExternalBTreeOpContext(ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ISearchOperationCallback searchCallback,
-            int numBloomFilterKeyFields, IBinaryComparatorFactory[] cmpFactories, int targetIndexVersion) {
+            int numBloomFilterKeyFields, IBinaryComparatorFactory[] cmpFactories, int targetIndexVersion,
+            ILSMHarness lsmHarness) {
         if (cmpFactories != null) {
             this.cmp = MultiComparator.create(cmpFactories);
         } else {
@@ -71,6 +74,8 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
         this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
         this.searchCallback = searchCallback;
         this.targetIndexVersion = targetIndexVersion;
+        searchInitialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, cmp, bloomFilterCmp, lsmHarness,
+                null, searchCallback, null);
     }
 
     @Override
@@ -86,6 +91,7 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
         componentsToBeReplicated.clear();
     }
 
+    @Override
     public IndexOperation getOperation() {
         return op;
     }
@@ -130,7 +136,7 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
     }
-    
+
     @Override
     public List<ILSMComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;

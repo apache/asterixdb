@@ -82,16 +82,15 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     private int version = -1;
     private final int fieldCount;
 
-    public ExternalRTree(ITreeIndexFrameFactory rtreeInteriorFrameFactory,
-            ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
-            ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileNameManager,
-            TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<BTree> diskBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
-            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            int[] buddyBTreeFields, int version, boolean durable) {
+    public ExternalRTree(ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
+            ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
+            ILSMIndexFileManager fileNameManager, TreeIndexFactory<RTree> diskRTreeFactory,
+            TreeIndexFactory<BTree> diskBTreeFactory, BloomFilterFactory bloomFilterFactory,
+            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields, int version, boolean durable) {
         super(rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate,
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
@@ -267,12 +266,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             throws HyracksDataException, IndexException {
         ExternalRTreeOpContext ctx = (ExternalRTreeOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
+        ctx.initialState.setOperationalComponents(operationalComponents);
 
-        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(rtreeLeafFrameFactory,
-                rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), lsmHarness,
-                comparatorFields, linearizerArray, ctx.searchCallback, operationalComponents);
-
-        cursor.open(initialState, pred);
+        cursor.open(ctx.initialState, pred);
     }
 
     // The only reason for overriding the merge method is the way to determine
@@ -559,8 +555,8 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             // Create the three loaders
             rtreeBulkLoader = ((LSMRTreeDiskComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
                     numElementsHint, false, true);
-            btreeBulkLoader = (BTreeBulkLoader) ((LSMRTreeDiskComponent) component).getBTree().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint, false, true);
+            btreeBulkLoader = (BTreeBulkLoader) ((LSMRTreeDiskComponent) component).getBTree()
+                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true);
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
                     bloomFilterFalsePositiveRate);
@@ -681,11 +677,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         // set the keepDeletedTuples flag
         boolean keepDeleteTuples = false;
         if (version == 0) {
-            keepDeleteTuples = mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
-                    .get(diskComponents.size() - 1);
+            keepDeleteTuples = mergeOp.getMergingComponents()
+                    .get(mergeOp.getMergingComponents().size() - 1) != diskComponents.get(diskComponents.size() - 1);
         } else {
-            keepDeleteTuples = mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != secondDiskComponents
-                    .get(secondDiskComponents.size() - 1);
+            keepDeleteTuples = mergeOp.getMergingComponents()
+                    .get(mergeOp.getMergingComponents().size() - 1) != secondDiskComponents
+                            .get(secondDiskComponents.size() - 1);
         }
         mergeOp.setKeepDeletedTuples(keepDeleteTuples);
 
@@ -700,7 +697,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // This method creates the appropriate opContext for the targeted version
     public ExternalRTreeOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
-        return new ExternalRTreeOpContext(rtreeCmpFactories, btreeCmpFactories, searchCallback, targetVersion);
+        return new ExternalRTreeOpContext(rtreeCmpFactories, btreeCmpFactories, searchCallback, targetVersion,
+                lsmHarness, comparatorFields, linearizerArray, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
+                btreeLeafFrameFactory);
     }
 
     // The accessor for disk only indexes don't use modification callback and

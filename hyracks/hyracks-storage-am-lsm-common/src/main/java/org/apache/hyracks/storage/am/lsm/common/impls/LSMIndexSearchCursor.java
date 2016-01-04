@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueElement outputElement;
     protected IIndexCursor[] rangeCursors;
+    protected PriorityQueueElement[] pqes;
     protected PriorityQueue<PriorityQueueElement> outputPriorityQueue;
     protected PriorityQueueComparator pqCmp;
     protected MultiComparator cmp;
@@ -63,9 +64,30 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
 
     public void initPriorityQueue() throws HyracksDataException, IndexException {
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
-        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
-        for (int i = 0; i < rangeCursors.length; i++) {
-            pushIntoPriorityQueue(new PriorityQueueElement(i));
+        if (outputPriorityQueue == null) {
+            outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
+            pqes = new PriorityQueueElement[pqInitSize];
+            for (int i = 0; i < rangeCursors.length; i++) {
+                pqes[i] = new PriorityQueueElement(i);
+                pushIntoPriorityQueue(pqes[i]);
+            }
+        } else {
+            outputPriorityQueue.clear();
+            // did size change?
+            if (pqInitSize == pqes.length) {
+                // size is the same -> re-use
+                for (int i = 0; i < rangeCursors.length; i++) {
+                    pqes[i].reset(null);
+                    pushIntoPriorityQueue(pqes[i]);
+                }
+            } else {
+                // size changed (due to flushes, merges, etc) -> re-create
+                pqes = new PriorityQueueElement[pqInitSize];
+                for (int i = 0; i < rangeCursors.length; i++) {
+                    pqes[i] = new PriorityQueueElement(i);
+                    pushIntoPriorityQueue(pqes[i]);
+                }
+            }
         }
     }
 
@@ -265,6 +287,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     }
 
     protected void setPriorityQueueComparator() {
+        // is there a case where cmp != pqCmp ??
         if (pqCmp == null || cmp != pqCmp.getMultiComparator()) {
             pqCmp = new PriorityQueueComparator(cmp);
         }

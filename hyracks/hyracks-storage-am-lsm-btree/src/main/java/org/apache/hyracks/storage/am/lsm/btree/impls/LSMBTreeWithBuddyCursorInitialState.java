@@ -29,89 +29,88 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMBTreeWithBuddyCursorInitialState implements ICursorInitialState {
-	private final ITreeIndexFrameFactory btreeInteriorFrameFactory;
-	private final ITreeIndexFrameFactory btreeLeafFrameFactory;
-	private final ITreeIndexFrameFactory buddyBtreeLeafFrameFactory;
-	private MultiComparator btreeCmp;
-	private MultiComparator buddyBtreeCmp;
-	private final ILSMHarness lsmHarness;
+    private final ITreeIndexFrameFactory btreeInteriorFrameFactory;
+    private final ITreeIndexFrameFactory btreeLeafFrameFactory;
+    private final ITreeIndexFrameFactory buddyBtreeLeafFrameFactory;
+    private MultiComparator btreeCmp;
+    private MultiComparator buddyBtreeCmp;
+    private final ILSMHarness lsmHarness;
 
-	private ISearchOperationCallback searchCallback;
-	private final List<ILSMComponent> operationalComponents;
+    private ISearchOperationCallback searchCallback;
+    private List<ILSMComponent> operationalComponents;
 
-	public LSMBTreeWithBuddyCursorInitialState(
-			ITreeIndexFrameFactory btreeInteriorFrameFactory,
-			ITreeIndexFrameFactory btreeLeafFrameFactory,
-			ITreeIndexFrameFactory buddyBtreeLeafFrameFactory,
-			ILSMHarness lsmHarness,
-			MultiComparator btreeCmp, MultiComparator buddyBtreeCmp,
-			ISearchOperationCallback searchCallback,
-			List<ILSMComponent> operationalComponents) {
-		this.btreeLeafFrameFactory = btreeLeafFrameFactory;
-		this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
-		this.buddyBtreeLeafFrameFactory = buddyBtreeLeafFrameFactory;
-		this.btreeCmp = btreeCmp;
-		this.buddyBtreeCmp = buddyBtreeCmp;
-		this.lsmHarness = lsmHarness;
-		this.searchCallback = searchCallback;
-		this.operationalComponents = operationalComponents;
-	}
+    public LSMBTreeWithBuddyCursorInitialState(ITreeIndexFrameFactory btreeInteriorFrameFactory,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, ITreeIndexFrameFactory buddyBtreeLeafFrameFactory,
+            ILSMHarness lsmHarness, MultiComparator btreeCmp, MultiComparator buddyBtreeCmp,
+            ISearchOperationCallback searchCallback, List<ILSMComponent> operationalComponents) {
+        this.btreeLeafFrameFactory = btreeLeafFrameFactory;
+        this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
+        this.buddyBtreeLeafFrameFactory = buddyBtreeLeafFrameFactory;
+        this.btreeCmp = btreeCmp;
+        this.buddyBtreeCmp = buddyBtreeCmp;
+        this.lsmHarness = lsmHarness;
+        this.searchCallback = searchCallback;
+        this.operationalComponents = operationalComponents;
+    }
 
-	public ITreeIndexFrameFactory getBTreeInteriorFrameFactory() {
-		return btreeInteriorFrameFactory;
-	}
+    public ITreeIndexFrameFactory getBTreeInteriorFrameFactory() {
+        return btreeInteriorFrameFactory;
+    }
 
-	public ITreeIndexFrameFactory getBTreeLeafFrameFactory() {
-		return btreeLeafFrameFactory;
-	}
+    public ITreeIndexFrameFactory getBTreeLeafFrameFactory() {
+        return btreeLeafFrameFactory;
+    }
 
-	public ITreeIndexFrameFactory getBuddyBTreeLeafFrameFactory() {
-		return buddyBtreeLeafFrameFactory;
-	}
+    public ITreeIndexFrameFactory getBuddyBTreeLeafFrameFactory() {
+        return buddyBtreeLeafFrameFactory;
+    }
 
-	public MultiComparator getBTreeCmp() {
-		return btreeCmp;
-	}
+    public MultiComparator getBTreeCmp() {
+        return btreeCmp;
+    }
 
-	public MultiComparator getBuddyBTreeCmp() {
-		return buddyBtreeCmp;
-	}
+    public MultiComparator getBuddyBTreeCmp() {
+        return buddyBtreeCmp;
+    }
 
-	public List<ILSMComponent> getOperationalComponents() {
-		return operationalComponents;
-	}
+    public List<ILSMComponent> getOperationalComponents() {
+        return operationalComponents;
+    }
 
-	public ILSMHarness getLSMHarness() {
-		return lsmHarness;
-	}
+    public ILSMHarness getLSMHarness() {
+        return lsmHarness;
+    }
 
-	@Override
-	public ICachedPage getPage() {
-		return null;
-	}
+    @Override
+    public ICachedPage getPage() {
+        return null;
+    }
 
-	@Override
-	public void setPage(ICachedPage page) {
-	}
+    @Override
+    public void setPage(ICachedPage page) {
+    }
 
-	@Override
-	public ISearchOperationCallback getSearchOperationCallback() {
-		return searchCallback;
-	}
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchCallback;
+    }
 
-	@Override
-	public void setSearchOperationCallback(
-			ISearchOperationCallback searchCallback) {
-		this.searchCallback = searchCallback;
-	}
+    @Override
+    public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
+        this.searchCallback = searchCallback;
+    }
 
-	@Override
-	public MultiComparator getOriginalKeyComparator() {
-		return btreeCmp;
-	}
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return btreeCmp;
+    }
 
-	@Override
-	public void setOriginialKeyComparator(MultiComparator originalCmp) {
-		this.btreeCmp = originalCmp;
-	}
+    @Override
+    public void setOriginialKeyComparator(MultiComparator originalCmp) {
+        this.btreeCmp = originalCmp;
+    }
+
+    public void setOperationalComponents(List<ILSMComponent> operationalComponents) {
+        this.operationalComponents = operationalComponents;
+    }
 }

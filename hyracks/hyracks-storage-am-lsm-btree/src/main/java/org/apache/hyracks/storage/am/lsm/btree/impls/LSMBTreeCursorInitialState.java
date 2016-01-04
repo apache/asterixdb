@@ -37,10 +37,10 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private final MultiComparator bloomFilterCmp;
     private final ILSMHarness lsmHarness;
 
-    private final ISearchPredicate predicate;
+    private ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
 
-    private final List<ILSMComponent> operationalComponents;
+    private List<ILSMComponent> operationalComponents;
 
     public LSMBTreeCursorInitialState(ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
             MultiComparator bloomFilterCmp, ILSMHarness lsmHarness, ISearchPredicate predicate,
@@ -101,5 +101,11 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         this.cmp = originalCmp;
+    }
+
+    // make the cursor initial state re-usable
+    public void reset(ISearchPredicate predicate, List<ILSMComponent> operationalComponents) {
+        this.predicate = predicate;
+        this.operationalComponents = operationalComponents;
     }
 }

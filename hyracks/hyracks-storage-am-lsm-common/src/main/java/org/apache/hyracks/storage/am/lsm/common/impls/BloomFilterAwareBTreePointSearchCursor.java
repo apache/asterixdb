@@ -25,7 +25,7 @@ import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 
 public class BloomFilterAwareBTreePointSearchCursor extends BTreeRangeSearchCursor {
-    private final BloomFilter bloomFilter;
+    private BloomFilter bloomFilter;
     private long[] hashes = new long[2];
 
     public BloomFilterAwareBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes,
@@ -40,5 +40,14 @@ public class BloomFilterAwareBTreePointSearchCursor extends BTreeRangeSearchCurs
             return super.hasNext();
         }
         return false;
+    }
+
+    @Override
+    public boolean isBloomFilterAware() {
+        return true;
+    }
+
+    public void resetBloomFilter(BloomFilter bloomFilter) {
+        this.bloomFilter = bloomFilter;
     }
 }

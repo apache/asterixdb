@@ -30,6 +30,7 @@ public class LSMBTreeWithBuddySortedCursor extends
 	// TODO: This class can be removed and instead use a search cursor that uses
 	// a logic similar
 	// to the one in LSMRTreeWithAntiMatterTuplesSearchCursor
+    // currently, this cursor is only used when doing merge operations.
 	private boolean[] depletedBtreeCursors;
 	private int foundIn = -1;
 	private PermutingTupleReference buddyBtreeTuple;
@@ -64,7 +65,7 @@ public class LSMBTreeWithBuddySortedCursor extends
 					depletedBtreeCursors[i] = true;
 				}
 			}
-		} catch (IndexException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new HyracksDataException(
 					"error while reseting the btrees of the lsm btree with buddy btree",

@@ -27,14 +27,13 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.util.TupleUtils;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
-import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -48,7 +47,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
 
     private ISearchOperationCallback searchCallback;
     private RangePredicate predicate;
-    private IIndexAccessor[] btreeAccessors;
+    private BTreeAccessor[] btreeAccessors;
     private ArrayTupleBuilder tupleBuilder;
     private boolean proceed = true;
 
@@ -75,6 +74,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         proceed = false;
     }
 
+    @Override
     protected void checkPriorityQueue() throws HyracksDataException, IndexException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
@@ -178,8 +178,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException,
-            IndexException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred)
+            throws HyracksDataException, IndexException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
         operationalComponents = lsmInitialState.getOperationalComponents();
@@ -192,21 +192,36 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         includeMutableComponent = false;
 
         int numBTrees = operationalComponents.size();
-        rangeCursors = new IIndexCursor[numBTrees];
-
-        btreeAccessors = new ITreeIndexAccessor[numBTrees];
+        if (rangeCursors == null || rangeCursors.length != numBTrees) {
+            // object creation: should be relatively low
+            rangeCursors = new IIndexCursor[numBTrees];
+            btreeAccessors = new BTreeAccessor[numBTrees];
+        }
         for (int i = 0; i < numBTrees; i++) {
             ILSMComponent component = operationalComponents.get(i);
             BTree btree;
-            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
-            rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
+            if (rangeCursors[i] == null) {
+                // create, should be relatively rare
+                IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
+                rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
+            } else {
+                // re-use
+                rangeCursors[i].reset();
+            }
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                btree = (BTree) ((LSMBTreeMemoryComponent) component).getBTree();
+                btree = ((LSMBTreeMemoryComponent) component).getBTree();
             } else {
-                btree = (BTree) ((LSMBTreeDiskComponent) component).getBTree();
+                btree = ((LSMBTreeDiskComponent) component).getBTree();
             }
-            btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+
+            if (btreeAccessors[i] == null) {
+                btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+            } else {
+                // re-use
+                btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            }
             btreeAccessors[i].search(rangeCursors[i], searchPred);
         }
         setPriorityQueueComparator();

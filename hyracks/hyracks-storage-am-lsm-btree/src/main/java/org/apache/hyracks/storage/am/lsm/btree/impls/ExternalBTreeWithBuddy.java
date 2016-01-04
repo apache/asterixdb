@@ -316,13 +316,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             throws HyracksDataException, IndexException {
         ExternalBTreeWithBuddyOpContext ctx = (ExternalBTreeWithBuddyOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
-
-        LSMBTreeWithBuddyCursorInitialState initialState = new LSMBTreeWithBuddyCursorInitialState(
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, buddyBtreeLeafFrameFactory, lsmHarness,
-                MultiComparator.create(btreeCmpFactories), MultiComparator.create(buddyBtreeCmpFactories),
-                ctx.searchCallback, operationalComponents);
-
-        cursor.open(initialState, pred);
+        ctx.searchInitialState.setOperationalComponents(operationalComponents);
+        cursor.open(ctx.searchInitialState, pred);
     }
 
     @Override
@@ -378,7 +373,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     // This method creates the appropriate opContext for the targeted version
     public ExternalBTreeWithBuddyOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
         return new ExternalBTreeWithBuddyOpContext(btreeCmpFactories, buddyBtreeCmpFactories, searchCallback,
-                targetVersion);
+                targetVersion, lsmHarness, btreeInteriorFrameFactory, btreeLeafFrameFactory, buddyBtreeLeafFrameFactory);
     }
 
     @Override

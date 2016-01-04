@@ -25,9 +25,12 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContext {
@@ -40,11 +43,12 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
     public final ISearchOperationCallback searchCallback;
     private final int targetIndexVersion;
     public ISearchPredicate searchPredicate;
+    public LSMBTreeWithBuddyCursorInitialState searchInitialState;
 
     public ExternalBTreeWithBuddyOpContext(IBinaryComparatorFactory[] btreeCmpFactories,
             IBinaryComparatorFactory[] buddyBtreeCmpFactories, ISearchOperationCallback searchCallback,
-            int targetIndexVersion) {
-
+            int targetIndexVersion, ILSMHarness lsmHarness, ITreeIndexFrameFactory btreeInteriorFrameFactory,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, ITreeIndexFrameFactory buddyBtreeLeafFrameFactory) {
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
@@ -52,8 +56,12 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
         this.targetIndexVersion = targetIndexVersion;
         this.bTreeCmp = MultiComparator.create(btreeCmpFactories);
         this.buddyBTreeCmp = MultiComparator.create(buddyBtreeCmpFactories);
+        searchInitialState = new LSMBTreeWithBuddyCursorInitialState(btreeInteriorFrameFactory, btreeLeafFrameFactory,
+                buddyBtreeLeafFrameFactory, lsmHarness, MultiComparator.create(btreeCmpFactories),
+                MultiComparator.create(buddyBtreeCmpFactories), NoOpOperationCallback.INSTANCE, null);
     }
 
+    @Override
     public void setOperation(IndexOperation newOp) {
         reset();
         this.op = newOp;

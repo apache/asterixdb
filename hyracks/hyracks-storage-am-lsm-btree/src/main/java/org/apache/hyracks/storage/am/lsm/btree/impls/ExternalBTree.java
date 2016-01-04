@@ -32,8 +32,19 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
-import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IIndexCursor;
+import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeRefrencingTupleWriterFactory;
@@ -86,10 +97,10 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             ILSMIOOperationCallback ioOpCallback, TreeIndexFactory<BTree> transactionBTreeFactory, int version,
             boolean durable) {
         super(interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider,
-                fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
-        this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory,
-                bloomFilterFactory, null);
+                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, fieldCount,
+                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
+        this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory,
+                null);
         this.secondDiskComponents = new LinkedList<ILSMComponent>();
         this.interiorFrameFactory = interiorFrameFactory;
         this.version = version;
@@ -154,9 +165,14 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             throws HyracksDataException, IndexException {
         ExternalBTreeOpContext ctx = (ExternalBTreeOpContext) ictx;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, ctx.cmp,
-                ctx.bloomFilterCmp, lsmHarness, pred, ctx.searchCallback, operationalComponents);
-        cursor.open(initialState, pred);
+        ctx.searchInitialState.reset(pred, operationalComponents);
+        cursor.open(ctx.searchInitialState, pred);
+    }
+
+    // This method creates the appropriate opContext for the targeted version
+    public ExternalBTreeOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
+        return new ExternalBTreeOpContext(insertLeafFrameFactory, deleteLeafFrameFactory, searchCallback,
+                componentFactory.getBloomFilterKeyFields().length, cmpFactories, targetVersion, lsmHarness);
     }
 
     // The only reason to override the following method is that it uses a different context object
@@ -169,8 +185,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         boolean returnDeletedTuples = false;
         if (version == 0) {
-            if (ctx.getComponentHolder().get(ctx.getComponentHolder().size() - 1) != diskComponents.get(diskComponents
-                    .size() - 1)) {
+            if (ctx.getComponentHolder().get(ctx.getComponentHolder().size() - 1) != diskComponents
+                    .get(diskComponents.size() - 1)) {
                 returnDeletedTuples = true;
             }
         } else {
@@ -184,12 +200,12 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getBTree();
         FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
         FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
-        LSMComponentFileReferences relMergeFileRefs = fileManager.getRelMergeFileReference(firstFile.getFile()
-                .getName(), lastFile.getFile().getName());
+        LSMComponentFileReferences relMergeFileRefs = fileManager
+                .getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
         ILSMIndexAccessorInternal accessor = new LSMBTreeAccessor(lsmHarness, opCtx);
-        ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor, relMergeFileRefs
-                .getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager
-                .getBaseDir()));
+        ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor,
+                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
+                callback, fileManager.getBaseDir()));
     }
 
     // This function should only be used when a transaction fail. it doesn't
@@ -611,12 +627,6 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new LSMBTreeAccessor(lsmHarness, createOpContext(searchCallback, version));
-    }
-
-    // This method creates the appropriate opContext for the targeted version
-    public ExternalBTreeOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
-        return new ExternalBTreeOpContext(insertLeafFrameFactory, deleteLeafFrameFactory, searchCallback,
-                componentFactory.getBloomFilterKeyFields().length, cmpFactories, targetVersion);
     }
 
     @Override
