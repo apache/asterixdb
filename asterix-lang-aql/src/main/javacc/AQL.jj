@@ -772,7 +772,7 @@ CreateChannelStatement ChannelSpecification() throws ParseException:
 {
   (
     "repetitive channel"  nameComponents = QualifiedName()
-    "using function" appliedFunction = FunctionSignature()
+    "using" appliedFunction = FunctionSignature()
     "period" period = FunctionCallExpr()
     {
     	ccs = new CreateChannelStatement(nameComponents.first,
@@ -1192,7 +1192,7 @@ Statement ChannelSubscriptionStatement() throws ParseException:
 }
 {
   (
-    "subscribe" "to" "channel" nameComponents = QualifiedName()
+    "subscribe" "to" nameComponents = QualifiedName()
     	<LEFTPAREN> (tmp = Expression()
     	{
       		argList.add(tmp);
@@ -1205,7 +1205,7 @@ Statement ChannelSubscriptionStatement() throws ParseException:
       {
         stmt = new ChannelSubscribeStatement(nameComponents.first, nameComponents.second, argList, getVarCounter(), brokerName);
       }
-    | "unsubscribe" "subscription" id = StringLiteral() <FROM> "channel" nameComponents = QualifiedName()
+    | "unsubscribe" id = StringLiteral() <FROM> nameComponents = QualifiedName()
 
       {
         setDataverses(new ArrayList<String>());

@@ -31,8 +31,8 @@ create function NearbyTweetsContainingText($location, $text) {
 	return $tweet.message-text 
 };
 
-create repetitive channel nearbyTweetChannel using function NearbyTweetsContainingText@2 period duration("PT10M");
+create repetitive channel nearbyTweetChannel using NearbyTweetsContainingText@2 period duration("PT10M");
 
 write output to nc1:"rttest/channel-unsubscribe.adm";
 
-unsubscribe subscription "c45ef6d0-c5ae-4b9e-b5da-cf1932718296" from channel nearbyTweetChannel;
+unsubscribe "c45ef6d0-c5ae-4b9e-b5da-cf1932718296" from nearbyTweetChannel;
