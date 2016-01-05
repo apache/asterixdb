@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.active.api.IActiveManager;
@@ -177,7 +178,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
     @Override
     public void initialize() throws HyracksDataException {
         ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
-                ActiveRuntimeId.DEFAULT_OPERAND_ID);
+                ActiveRuntimeId.DEFAULT_OPERAND_ID, ActiveObjectType.CHANNEL);
         try {
             activeRuntime = (ChannelRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
                     runtimeId);
@@ -225,7 +226,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
     private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         this.setOutputFrameWriter(0, writer, recordDesc);
         ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
-                ActiveRuntimeId.DEFAULT_OPERAND_ID);
+                ActiveRuntimeId.DEFAULT_OPERAND_ID, ActiveObjectType.CHANNEL);
         activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query);
         activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }

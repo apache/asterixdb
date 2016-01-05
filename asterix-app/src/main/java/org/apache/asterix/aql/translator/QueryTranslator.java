@@ -2848,7 +2848,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
         //Need a condition to say subscription-id = sid
         OperatorExpr condition = new OperatorExpr();
-        FieldAccessor fa = new FieldAccessor(vars, new Identifier("subscription-id"));
+        FieldAccessor fa = new FieldAccessor(vars, new Identifier("subscriptionId"));
         condition.addOperand(fa);
         condition.setCurrentop(true);
         condition.addOperator("=");

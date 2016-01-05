@@ -19,8 +19,8 @@
 package org.apache.asterix.common.channels;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 
 /*
@@ -39,9 +39,9 @@ public class ProcedureRuntimeId extends ActiveRuntimeId {
         this.activeId = activeId;
     }
     */
-    public ProcedureRuntimeId(String dataverse, String name, int partition, String operandId) {
+    public ProcedureRuntimeId(String dataverse, String name, int partition, String operandId, ActiveObjectType type) {
         super(ActiveRuntimeType.PROCEDURE, partition, operandId);
-        this.activeId = new ActiveObjectId(dataverse, name, ActiveObjectType.PROCEDURE);
+        this.activeId = new ActiveObjectId(dataverse, name, type);
     }
 
     public ProcedureRuntimeId(ActiveObjectId activeId, int partition, String operandId) {

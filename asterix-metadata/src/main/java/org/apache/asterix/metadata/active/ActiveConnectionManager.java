@@ -76,6 +76,7 @@ public class ActiveConnectionManager implements IActiveConnectionManager {
             runtimeMgr = new ActiveRuntimeManager(activeJobId, this);
             activeRuntimeManagers.put(activeJobId, runtimeMgr);
         }
+
         runtimeMgr.registerRuntime(activeRuntime.getRuntimeId(), activeRuntime);
     }
 
