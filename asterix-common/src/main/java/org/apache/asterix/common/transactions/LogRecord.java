@@ -356,7 +356,7 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public void deserialize(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId) {
+    public void readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId) {
         readLogHeader(buffer);
         if (!remoteRecoveryLog || !nodeId.equals(localNodeId)) {
             readLogBody(buffer, false);
@@ -369,6 +369,11 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.FLUSH) {
             LSN = buffer.getLong();
             numOfFlushedIndexes = buffer.getInt();
+        }
+
+        //remote recovery logs need to have the LSN to check which should be replayed
+        if (remoteRecoveryLog && nodeId.equals(localNodeId)) {
+            LSN = buffer.getLong();
         }
     }
 
@@ -499,15 +504,14 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public int serialize(ByteBuffer buffer) {
+    public int writeRemoteRecoveryLog(ByteBuffer buffer) {
         int bufferBegin = buffer.position();
         writeLogRecordCommonFields(buffer);
-
         if (logType == LogType.FLUSH) {
             buffer.putLong(LSN);
             buffer.putInt(numOfFlushedIndexes);
         }
-
+        //LSN must be included in all remote recovery logs (not only FLUSH)
         buffer.putLong(LSN);
         return buffer.position() - bufferBegin;
     }

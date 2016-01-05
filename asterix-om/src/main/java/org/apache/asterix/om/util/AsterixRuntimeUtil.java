@@ -52,4 +52,8 @@ public class AsterixRuntimeUtil {
         AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
+
+    public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) throws Exception {
+        AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+    }
 }

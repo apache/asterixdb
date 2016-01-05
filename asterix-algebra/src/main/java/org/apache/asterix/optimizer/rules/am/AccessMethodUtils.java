@@ -29,11 +29,12 @@ import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.external.IndexingConstants;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
@@ -278,7 +279,8 @@ public class AccessMethodUtils {
                     throws AlgebricksException {
         int numPrimaryKeys = 0;
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+            numPrimaryKeys = IndexingConstants
+                    .getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         } else {
             numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         }
@@ -293,7 +295,8 @@ public class AccessMethodUtils {
             ILogicalOperator unnestMapOp) {
         int numPrimaryKeys;
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+            numPrimaryKeys = IndexingConstants
+                    .getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         } else {
             numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         }
@@ -567,7 +570,8 @@ public class AccessMethodUtils {
     }
 
     private static void appendExternalRecPrimaryKeys(Dataset dataset, List<Object> target) throws AsterixException {
-        int numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+        int numPrimaryKeys = IndexingConstants
+                .getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         for (int i = 0; i < numPrimaryKeys; i++) {
             target.add(IndexingConstants.getFieldType(i));
         }

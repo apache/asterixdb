@@ -119,9 +119,9 @@ public interface ILogRecord {
 
     public void setNodeId(String nodeId);
 
-    public int serialize(ByteBuffer buffer);
+    public int writeRemoteRecoveryLog(ByteBuffer buffer);
 
-    public void deserialize(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId);
+    public void readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId);
 
     public void setReplicationThread(IReplicationThread replicationThread);
 

@@ -31,7 +31,7 @@ import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.metadata.feeds.FeedPolicyEnforcer;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;

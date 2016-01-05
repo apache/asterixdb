@@ -22,6 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IJListAccessor;
+import org.apache.asterix.external.api.IJObject;
+import org.apache.asterix.external.api.IJObjectAccessor;
+import org.apache.asterix.external.api.IJRecordAccessor;
 import org.apache.asterix.external.library.TypeInfo;
 import org.apache.asterix.external.library.java.JObjectAccessors.JListAccessor;
 import org.apache.asterix.external.library.java.JObjectAccessors.JRecordAccessor;

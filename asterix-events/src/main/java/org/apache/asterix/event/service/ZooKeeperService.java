@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.event.error.EventException;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.installer.schema.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -38,10 +42,6 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
-import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
-import org.apache.asterix.event.error.EventException;
-import org.apache.asterix.event.model.AsterixInstance;
-import org.apache.asterix.installer.schema.conf.Configuration;
 
 public class ZooKeeperService implements ILookupService {
 
@@ -63,6 +63,7 @@ public class ZooKeeperService implements ILookupService {
     private LinkedBlockingQueue<String> msgQ = new LinkedBlockingQueue<String>();
     private ZooKeeperWatcher watcher = new ZooKeeperWatcher(msgQ);
 
+    @Override
     public boolean isRunning(Configuration conf) throws Exception {
         List<String> servers = conf.getZookeeper().getServers().getServer();
         int clientPort = conf.getZookeeper().getClientPort().intValue();
@@ -92,6 +93,7 @@ public class ZooKeeperService implements ILookupService {
         return isRunning;
     }
 
+    @Override
     public void startService(Configuration conf) throws Exception {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Starting ZooKeeper at " + zkConnectionString);
@@ -107,22 +109,29 @@ public class ZooKeeperService implements ILookupService {
         for (String zkServer : zkServers) {
             cmdBuffer.append(zkServer + " ");
         }
-        Runtime.getRuntime().exec(cmdBuffer.toString());
+        //TODO: Create a better way to interact with zookeeper
+        Process zkProcess = Runtime.getRuntime().exec(cmdBuffer.toString());
+        int output = zkProcess.waitFor();
+        if (output != 0) {
+            throw new Exception("Error starting zookeeper server. output code = " + output);
+        }
         zk = new ZooKeeper(zkConnectionString, ZOOKEEPER_SESSION_TIME_OUT, watcher);
-        String head = msgQ.poll(10, TimeUnit.SECONDS);
+        String head = msgQ.poll(60, TimeUnit.SECONDS);
         if (head == null) {
             StringBuilder msg = new StringBuilder(
                     "Unable to start Zookeeper Service. This could be because of the following reasons.\n");
             msg.append("1) Managix is incorrectly configured. Please run " + "managix validate"
                     + " to run a validation test and correct the errors reported.");
-            msg.append("\n2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
-                    + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
+            msg.append(
+                    "\n2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
+                            + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
             throw new Exception(msg.toString());
         }
         msgQ.take();
         createRootIfNotExist();
     }
 
+    @Override
     public void stopService(Configuration conf) throws Exception {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Stopping ZooKeeper running at " + zkConnectionString);
@@ -141,6 +150,7 @@ public class ZooKeeperService implements ILookupService {
         }
     }
 
+    @Override
     public void writeAsterixInstance(AsterixInstance asterixInstance) throws Exception {
         String instanceBasePath = ASTERIX_INSTANCE_BASE_PATH + File.separator + asterixInstance.getName();
         ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -166,6 +176,7 @@ public class ZooKeeperService implements ILookupService {
         }
     }
 
+    @Override
     public AsterixInstance getAsterixInstance(String name) throws Exception {
         String path = ASTERIX_INSTANCE_BASE_PATH + File.separator + name;
         Stat stat = zk.exists(ASTERIX_INSTANCE_BASE_PATH + File.separator + name, false);
@@ -176,10 +187,12 @@ public class ZooKeeperService implements ILookupService {
         return readAsterixInstanceObject(asterixInstanceBytes);
     }
 
+    @Override
     public boolean exists(String path) throws Exception {
         return zk.exists(ASTERIX_INSTANCE_BASE_PATH + File.separator + path, false) != null;
     }
 
+    @Override
     public void removeAsterixInstance(String name) throws Exception {
         if (!exists(name)) {
             throw new EventException("Asterix instance by name " + name + " does not exists.");
@@ -195,6 +208,7 @@ public class ZooKeeperService implements ILookupService {
         zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name, DEFAULT_NODE_VERSION);
     }
 
+    @Override
     public List<AsterixInstance> getAsterixInstances() throws Exception {
         List<String> instanceNames = zk.getChildren(ASTERIX_INSTANCE_BASE_PATH, false);
         List<AsterixInstance> asterixInstances = new ArrayList<AsterixInstance>();
@@ -207,13 +221,14 @@ public class ZooKeeperService implements ILookupService {
         return asterixInstances;
     }
 
-    private AsterixInstance readAsterixInstanceObject(byte[] asterixInstanceBytes) throws IOException,
-            ClassNotFoundException {
+    private AsterixInstance readAsterixInstanceObject(byte[] asterixInstanceBytes)
+            throws IOException, ClassNotFoundException {
         ByteArrayInputStream b = new ByteArrayInputStream(asterixInstanceBytes);
         ObjectInputStream ois = new ObjectInputStream(b);
         return (AsterixInstance) ois.readObject();
     }
 
+    @Override
     public void updateAsterixInstance(AsterixInstance updatedInstance) throws Exception {
         removeAsterixInstance(updatedInstance.getName());
         writeAsterixInstance(updatedInstance);
@@ -249,6 +264,7 @@ class ZooKeeperWatcher implements Watcher {
         this.msgQ = msgQ;
     }
 
+    @Override
     public void process(WatchedEvent wEvent) {
         if (wEvent.getState() == KeeperState.SyncConnected) {
             msgQ.add("connected");
@@ -276,7 +292,8 @@ class ZookeeperUtil {
         List<String> servers = conf.getZookeeper().getServers().getServer();
         int serverId = 1;
         for (String server : servers) {
-            buffer.append("server" + "." + serverId + "=" + server + ":" + leaderConnPort + ":" + leaderElecPort + "\n");
+            buffer.append(
+                    "server" + "." + serverId + "=" + server + ":" + leaderConnPort + ":" + leaderElecPort + "\n");
             serverId++;
         }
         AsterixEventServiceUtil.dumpToFile(zooKeeperConfigPath, buffer.toString());

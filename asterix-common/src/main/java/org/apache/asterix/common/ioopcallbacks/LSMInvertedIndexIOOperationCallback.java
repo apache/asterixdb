@@ -22,6 +22,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexDiskComponent;
@@ -55,17 +56,18 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
         long maxLSN = -1;
         for (Object o : diskComponents) {
             LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) o;
-            maxLSN = Math.max(getTreeIndexLSN(invIndexComponent.getDeletedKeysBTree()), maxLSN);
+            maxLSN = Math.max(AbstractLSMIOOperationCallback.getTreeIndexLSN(invIndexComponent.getDeletedKeysBTree()), maxLSN);
         }
         return maxLSN;
     }
 
     @Override
-    public boolean componentFileHasLSN(String componentFilePath) {
-        if (componentFilePath.endsWith(LSMInvertedIndexFileManager.DELETED_KEYS_BTREE_SUFFIX)) {
-            return true;
+    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+            throws HyracksDataException {
+        if (diskComponentFilePath.endsWith(LSMInvertedIndexFileManager.DELETED_KEYS_BTREE_SUFFIX)) {
+            LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) diskComponent;
+            return invIndexComponent.getDeletedKeysBTree().getMetaManager().getLSNOffset();
         }
-
-        return false;
+        return IMetaDataPageManager.INVALID_LSN_OFFSET;
     }
 }

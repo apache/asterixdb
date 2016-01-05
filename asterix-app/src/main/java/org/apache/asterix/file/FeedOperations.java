@@ -21,13 +21,13 @@ package org.apache.asterix.file;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.asterix.active.ActiveJobLifecycleListener;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.active.message.EndFeedMessage;
 import org.apache.asterix.common.active.message.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.active.message.ThrottlingEnabledFeedMessage;
-import org.apache.asterix.active.ActiveJobLifecycleListener;
-import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectionId;
@@ -35,10 +35,10 @@ import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.metadata.active.ActiveMessageOperatorDescriptor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.metadata.feeds.PrepareStallMessage;
 import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -65,17 +65,17 @@ public class FeedOperations {
      * @return JobSpecification the Hyracks job specification for receiving data from external source
      * @throws Exception
      */
-    public static Pair<JobSpecification, IFeedAdapterFactory> buildFeedIntakeJobSpec(PrimaryFeed primaryFeed,
+    public static Pair<JobSpecification, IAdapterFactory> buildFeedIntakeJobSpec(PrimaryFeed primaryFeed,
             AqlMetadataProvider metadataProvider, FeedPolicyAccessor policyAccessor) throws Exception {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         spec.setFrameSize(FeedConstants.JobConstants.DEFAULT_FRAME_SIZE);
-        IFeedAdapterFactory adapterFactory = null;
+        IAdapterFactory adapterFactory = null;
         IOperatorDescriptor feedIngestor;
         AlgebricksPartitionConstraint ingesterPc;
 
         try {
-            Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IFeedAdapterFactory> t = metadataProvider
+            Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> t = metadataProvider
                     .buildFeedIntakeRuntime(spec, primaryFeed, policyAccessor);
             feedIngestor = t.first;
             ingesterPc = t.second;
@@ -91,11 +91,11 @@ public class FeedOperations {
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, nullSink, ingesterPc);
         spec.connect(new OneToOneConnectorDescriptor(spec), feedIngestor, 0, nullSink, 0);
         spec.addRoot(nullSink);
-        return new Pair<JobSpecification, IFeedAdapterFactory>(spec, adapterFactory);
+        return new Pair<JobSpecification, IAdapterFactory>(spec, adapterFactory);
     }
 
-    public static JobSpecification buildDiscontinueFeedSourceSpec(AqlMetadataProvider metadataProvider, ActiveObjectId feedId)
-            throws AsterixException, AlgebricksException {
+    public static JobSpecification buildDiscontinueFeedSourceSpec(AqlMetadataProvider metadataProvider,
+            ActiveObjectId feedId) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IOperatorDescriptor feedMessenger = null;
@@ -248,7 +248,7 @@ public class FeedOperations {
     private static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDisconnectFeedMessengerRuntime(
             JobSpecification jobSpec, FeedConnectionId feedConenctionId, List<String> locations,
             ActiveRuntimeType sourceFeedRuntimeType, boolean completeDisconnection, ActiveObjectId sourceFeedId)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IFeedMessage feedMessage = new EndFeedMessage(feedConenctionId, sourceFeedRuntimeType, sourceFeedId,
                 completeDisconnection, EndFeedMessage.EndMessageType.DISCONNECT_FEED);
         return buildSendFeedMessageRuntime(jobSpec, feedConenctionId, feedMessage, locations);

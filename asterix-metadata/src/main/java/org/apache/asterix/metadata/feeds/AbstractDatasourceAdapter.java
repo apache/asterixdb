@@ -20,7 +20,7 @@ package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -29,7 +29,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
  * Represents the base class that is required to be extended by every
  * implementation of the IDatasourceAdapter interface.
  */
-public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
+public abstract class AbstractDatasourceAdapter implements IDataSourceAdapter {
 
     private static final long serialVersionUID = 1L;
 

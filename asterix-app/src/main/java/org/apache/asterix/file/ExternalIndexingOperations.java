@@ -40,13 +40,17 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
-import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
-import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
-import org.apache.asterix.external.adapter.factory.HiveAdapterFactory;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesAbortOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesCommitOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.ExternalDatasetIndexesRecoverOperatorDescriptor;
-import org.apache.asterix.external.indexing.operators.IndexInfoOperatorDescriptor;
+import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.indexing.FilesIndexDescription;
+import org.apache.asterix.external.indexing.IndexingConstants;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesAbortOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesCommitOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDatasetIndexesRecoverOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalFilesIndexOperatorDescriptor;
+import org.apache.asterix.external.operators.IndexInfoOperatorDescriptor;
+import org.apache.asterix.external.provider.AdapterFactoryProvider;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
@@ -55,10 +59,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
-import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.external.FilesIndexDescription;
-import org.apache.asterix.metadata.external.IndexingConstants;
 import org.apache.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
@@ -68,7 +69,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.asterix.tools.external.data.ExternalFilesIndexOperatorDescriptor;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.ExternalBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -79,6 +79,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -114,9 +115,7 @@ public class ExternalIndexingOperations {
 
     public static boolean isIndexible(ExternalDatasetDetails ds) {
         String adapter = ds.getAdapter();
-        if (adapter.equalsIgnoreCase("hdfs") || adapter.equalsIgnoreCase("hive")
-                || adapter.equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HDFSAdapter")
-                || adapter.equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HIVEAdapter")) {
+        if (adapter.equalsIgnoreCase(ExternalDataConstants.ALIAS_HDFS_ADAPTER)) {
             return true;
         }
         return false;
@@ -124,12 +123,6 @@ public class ExternalIndexingOperations {
 
     public static boolean isRefereshActive(ExternalDatasetDetails ds) {
         return ds.getState() != ExternalDatasetTransactionState.COMMIT;
-    }
-
-    public static boolean datasetUsesHiveAdapter(ExternalDatasetDetails ds) {
-        String adapter = ds.getAdapter();
-        return (adapter.equalsIgnoreCase("hive")
-                || adapter.equalsIgnoreCase("org.apache.asterix.external.dataset.adapter.HIVEAdapter"));
     }
 
     public static boolean isValidIndexName(String datasetName, String indexName) {
@@ -161,12 +154,8 @@ public class ExternalIndexingOperations {
         try {
             // Create the file system object
             FileSystem fs = getFileSystemObject(datasetDetails.getProperties());
-            // If dataset uses hive adapter, add path to the dataset properties
-            if (datasetUsesHiveAdapter(datasetDetails)) {
-                HiveAdapterFactory.populateConfiguration(datasetDetails.getProperties());
-            }
             // Get paths of dataset
-            String path = datasetDetails.getProperties().get(HDFSAdapterFactory.KEY_PATH);
+            String path = datasetDetails.getProperties().get(ExternalDataConstants.KEY_PATH);
             String[] paths = path.split(",");
 
             // Add fileStatuses to files
@@ -217,8 +206,8 @@ public class ExternalIndexingOperations {
 
     public static FileSystem getFileSystemObject(Map<String, String> map) throws IOException {
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", map.get(HDFSAdapterFactory.KEY_HDFS_URL).trim());
-        conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI, map.get(ExternalDataConstants.KEY_HDFS_URL).trim());
+        conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_CLASS, DistributedFileSystem.class.getName());
         return FileSystem.get(conf);
     }
 
@@ -261,7 +250,10 @@ public class ExternalIndexingOperations {
 
     /**
      * This method create an indexing operator that index records in HDFS
-     *
+     * <<<<<<< HEAD
+     * =======
+     * >>>>>>> master
+     * 
      * @param jobSpec
      * @param itemType
      * @param dataset
@@ -273,10 +265,10 @@ public class ExternalIndexingOperations {
     private static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> getExternalDataIndexingOperator(
             JobSpecification jobSpec, IAType itemType, Dataset dataset, List<ExternalFile> files,
             RecordDescriptor indexerDesc, AqlMetadataProvider metadataProvider) throws Exception {
-        HDFSIndexingAdapterFactory adapterFactory = new HDFSIndexingAdapterFactory();
-        adapterFactory.setFiles(files);
-        adapterFactory.configure(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties(),
-                (ARecordType) itemType);
+        ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+        Map<String, String> configuration = externalDatasetDetails.getProperties();
+        IAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(externalDatasetDetails.getAdapter(),
+                configuration, (ARecordType) itemType, files, true);
         return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
                 new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());
@@ -298,7 +290,10 @@ public class ExternalIndexingOperations {
      * deleteedFiles should contain files that are no longer there in the file system
      * appendedFiles should have the new file information of existing files
      * The method should return false in case of zero delta
-     *
+     * <<<<<<< HEAD
+     * =======
+     * >>>>>>> master
+     * 
      * @param dataset
      * @param metadataFiles
      * @param addedFiles

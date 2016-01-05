@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixRuntimeException;
-import org.apache.asterix.common.parse.IParseFileSplitsDecl;
 import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
@@ -313,8 +312,6 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.PrintTimeDescrip
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -359,7 +356,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
-import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class NonTaggedDataFormat implements IDataFormat {
 
@@ -1163,34 +1159,6 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
         return AqlBinaryIntegerInspector.FACTORY;
-    }
-
-    @Override
-    public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl) {
-        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar(), decl.getQuote(),
-                decl.getHasHeader());
-    }
-
-    @Override
-    public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter,
-            char quote, boolean hasHeader) {
-        Map<String, String> conf = new HashMap<String, String>();
-        AsterixTupleParserFactory.InputDataFormat inputFormat = null;
-        if (delimitedFormat) {
-            conf.put(AsterixTupleParserFactory.KEY_FORMAT, AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT);
-            conf.put(AsterixTupleParserFactory.KEY_DELIMITER, "" + delimiter);
-            inputFormat = InputDataFormat.DELIMITED;
-        } else {
-            conf.put(AsterixTupleParserFactory.KEY_FORMAT, AsterixTupleParserFactory.FORMAT_ADM);
-            inputFormat = InputDataFormat.ADM;
-        }
-
-        if (hasHeader) {
-            conf.put(AsterixTupleParserFactory.HAS_HEADER,
-                    hasHeader ? Boolean.TRUE.toString() : Boolean.FALSE.toString());
-        }
-        conf.put(AsterixTupleParserFactory.KEY_QUOTE, "" + quote);
-        return new AsterixTupleParserFactory(conf, recType, inputFormat);
     }
 
     @Override

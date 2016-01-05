@@ -65,10 +65,7 @@ public class SqlppExecutionTest {
     @AfterClass
     public static void tearDown() throws Exception {
         ExecutionTestUtil.tearDown();
-        // clean up the files written by the ASTERIX storage manager
-        for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
-            testExecutor.deleteRec(new File(d));
-        }
+        AsterixHyracksIntegrationUtil.removeTestStorageFiles();
     }
 
     @Parameters

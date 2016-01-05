@@ -19,7 +19,7 @@
 package org.apache.asterix.common.active.api;
 
 import org.apache.asterix.common.active.ActiveObjectId;
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 
 public interface IAdapterRuntimeManager {
@@ -67,7 +67,7 @@ public interface IAdapterRuntimeManager {
     /**
      * @return the instance of the feed adapter (an implementation of {@code IFeedAdapter}) in use.
      */
-    public IFeedAdapter getFeedAdapter();
+    public IDataSourceAdapter getFeedAdapter();
 
     /**
      * @return state associated with the AdapterRuntimeManager. See {@code State}.

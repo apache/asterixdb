@@ -241,10 +241,13 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             return false;
         }
         joinCond = (AbstractFunctionCallExpression) condExpr;
-        boolean leftSubTreeMatched = leftSubTree.initFromSubTree(join.getInputs().get(0));
-        boolean rightSubTreeMatched = rightSubTree.initFromSubTree(join.getInputs().get(1));
-        if (!leftSubTreeMatched || !rightSubTreeMatched)
+
+        boolean leftSubTreeInitialized = leftSubTree.initFromSubTree(join.getInputs().get(0));
+        boolean rightSubTreeInitialized = rightSubTree.initFromSubTree(join.getInputs().get(1));
+        if (!leftSubTreeInitialized || !rightSubTreeInitialized) {
             return false;
+        }
+
         // One of the subtrees must have a datasource scan.
         if (leftSubTree.hasDataSourceScan() || rightSubTree.hasDataSourceScan()) {
             return true;

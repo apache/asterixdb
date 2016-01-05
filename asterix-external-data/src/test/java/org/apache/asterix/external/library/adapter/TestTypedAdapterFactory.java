@@ -18,24 +18,29 @@
  */
 package org.apache.asterix.external.library.adapter;
 
+import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
-import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
+import org.apache.asterix.common.parse.ITupleForwarder;
+import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.parser.ADMDataParser;
+import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapterFactory implements IFeedAdapterFactory {
+public class TestTypedAdapterFactory implements IAdapterFactory {
 
     private static final long serialVersionUID = 1L;
-
-    public static final String NAME = "test_typed_adapter";
 
     private ARecordType outputType;
 
@@ -44,13 +49,8 @@ public class TestTypedAdapterFactory implements IFeedAdapterFactory {
     private Map<String, String> configuration;
 
     @Override
-    public SupportedOperation getSupportedOperations() {
-        return SupportedOperation.READ;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
+    public String getAlias() {
+        return "test_typed";
     }
 
     @Override
@@ -59,9 +59,47 @@ public class TestTypedAdapterFactory implements IFeedAdapterFactory {
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        ITupleParserFactory tupleParserFactory = new AsterixTupleParserFactory(configuration, outputType,
-                InputDataFormat.ADM);
+    public IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        ITupleParserFactory tupleParserFactory = new ITupleParserFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ITupleParser createTupleParser(final IHyracksCommonContext ctx) throws HyracksDataException {
+                ADMDataParser parser;
+                ITupleForwarder forwarder;
+                ArrayTupleBuilder tb;
+                try {
+                    parser = new ADMDataParser();
+                    forwarder = DataflowUtils.getTupleForwarder(configuration);
+                    forwarder.configure(configuration);
+                    tb = new ArrayTupleBuilder(1);
+                } catch (AsterixException e) {
+                    throw new HyracksDataException(e);
+                }
+                return new ITupleParser() {
+
+                    @Override
+                    public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
+                        try {
+                            parser.configure(configuration, outputType);
+                            parser.setInputStream(in);
+                            forwarder.initialize(ctx, writer);
+                            while (true) {
+                                tb.reset();
+                                if (!parser.parse(tb.getDataOutput())) {
+                                    break;
+                                }
+                                tb.addFieldEndOffset();
+                                forwarder.addTuple(tb);
+                            }
+                            forwarder.close();
+                        } catch (Exception e) {
+                            throw new HyracksDataException(e);
+                        }
+                    }
+                };
+            }
+        };
         return new TestTypedAdapter(tupleParserFactory, outputType, ctx, configuration, partition);
     }
 
@@ -74,16 +112,6 @@ public class TestTypedAdapterFactory implements IFeedAdapterFactory {
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         this.outputType = outputType;
-    }
-
-    @Override
-    public boolean isRecordTrackingEnabled() {
-        return false;
-    }
-
-    @Override
-    public IIntakeProgressTracker createIntakeProgressTracker() {
-        return null;
     }
 
 }

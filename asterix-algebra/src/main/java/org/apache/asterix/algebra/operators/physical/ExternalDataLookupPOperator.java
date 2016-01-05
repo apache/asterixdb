@@ -21,12 +21,11 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.external.indexing.dataflow.HDFSLookupAdapterFactory;
 import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -70,7 +69,8 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     private boolean retainNull;
 
     public ExternalDataLookupPOperator(AqlSourceId datasetId, Dataset dataset, ARecordType recordType,
-            Index secondaryIndex, List<LogicalVariable> ridVarList, boolean requiresBroadcast, boolean retainInput, boolean retainNull) {
+            Index secondaryIndex, List<LogicalVariable> ridVarList, boolean requiresBroadcast, boolean retainInput,
+            boolean retainNull) {
         this.datasetId = datasetId;
         this.dataset = dataset;
         this.recordType = recordType;
@@ -123,7 +123,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         ExternalDataLookupOperator edabro = (ExternalDataLookupOperator) op;
         ILogicalExpression expr = edabro.getExpressionRef().getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -144,7 +144,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         }
 
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = HDFSLookupAdapterFactory
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = AqlMetadataProvider
                 .buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, secondaryIndex, ridIndexes, retainInput,
                         typeEnv, outputVars, opSchema, context, metadataProvider, retainNull);
         builder.contributeHyracksOperator(edabro, externalLoopup.first);
@@ -164,6 +164,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         return keyIndexes;
     }
 
+    @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         if (requiresBroadcast) {

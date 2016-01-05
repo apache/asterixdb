@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.external.library.IExternalScalarFunction;
-import org.apache.asterix.external.library.IFunctionFactory;
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionFactory;
 
 public class ParseTweetFactory implements IFunctionFactory {
 

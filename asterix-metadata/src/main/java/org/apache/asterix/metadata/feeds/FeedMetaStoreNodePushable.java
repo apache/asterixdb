@@ -32,6 +32,7 @@ import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -129,11 +130,10 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         }
         this.fta = new FrameTupleAccessor(recordDesc);
         this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
-                policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager,
-                nPartitions);
-        if(coreOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable){
+                policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager, nPartitions);
+        if (coreOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable) {
             AsterixLSMInsertDeleteOperatorNodePushable indexOp = (AsterixLSMInsertDeleteOperatorNodePushable) coreOperator;
-            if(!indexOp.isPrimary()){
+            if (!indexOp.isPrimary()) {
                 inputSideHandler.setBufferingEnabled(false);
             }
         }
@@ -148,8 +148,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.inputSideHandler.setCoreOperator(coreOperator);
         feedRuntime.setMode(Mode.PROCESS);
         if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("Retreived state from the zombie instance from previous execution for " + runtimeType
-                    + " node.");
+            LOGGER.warning(
+                    "Retreived state from the zombie instance from previous execution for " + runtimeType + " node.");
         }
     }
 

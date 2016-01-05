@@ -48,14 +48,11 @@ public class InstallerUtil {
         String storeDataSubDir = asterixInstanceName + File.separator + "data" + File.separator;
         String[] storeDirs = null;
         StringBuffer nodeDataStore = new StringBuffer();
-        String storeDirValue = node.getStore();
+        String storeDirValue = cluster.getStore();
         if (storeDirValue == null) {
-            storeDirValue = cluster.getStore();
-            if (storeDirValue == null) {
-                throw new IllegalStateException(" Store not defined for node " + node.getId());
-            }
-            storeDataSubDir = node.getId() + File.separator + storeDataSubDir;
+            throw new IllegalStateException(" Store not defined for node " + node.getId());
         }
+        storeDataSubDir = node.getId() + File.separator + storeDataSubDir;
 
         storeDirs = storeDirValue.split(",");
         for (String ns : storeDirs) {
@@ -66,8 +63,8 @@ public class InstallerUtil {
         return nodeDataStore.toString();
     }
 
-    public static AsterixConfiguration getAsterixConfiguration(String asterixConf) throws FileNotFoundException,
-            IOException, JAXBException {
+    public static AsterixConfiguration getAsterixConfiguration(String asterixConf)
+            throws FileNotFoundException, IOException, JAXBException {
         if (asterixConf == null) {
             asterixConf = InstallerDriver.getManagixHome() + File.separator + DEFAULT_ASTERIX_CONFIGURATION_PATH;
         }

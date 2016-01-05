@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -54,7 +53,8 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -110,16 +110,18 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
     private void push(Mutable<ILogicalOperator> opRefGby, Mutable<ILogicalOperator> opRefJoin, int branch,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorToPush,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorNotToPush, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         GroupByOperator gby = (GroupByOperator) opRefGby.getValue();
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) opRefJoin.getValue();
         gby.getDecorList().clear();
         gby.getDecorList().addAll(decorToPush);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorNotToPush) {
             LogicalVariable v1 = p.first;
-            VariableReferenceExpression varRef = (VariableReferenceExpression) p.second.getValue();
-            LogicalVariable v2 = varRef.getVariableReference();
-            OperatorManipulationUtil.substituteVarRec(join, v2, v1, true, context);
+            if (v1 != null) {
+                VariableReferenceExpression varRef = (VariableReferenceExpression) p.second.getValue();
+                LogicalVariable v2 = varRef.getVariableReference();
+                OperatorManipulationUtil.substituteVarRec(join, v2, v1, true, context);
+            }
         }
         Mutable<ILogicalOperator> branchRef = join.getInputs().get(branch);
         ILogicalOperator opBranch = branchRef.getValue();

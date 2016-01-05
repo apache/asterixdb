@@ -65,11 +65,6 @@ public class MetadataTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-
-        // clean up the files written by the ASTERIX storage manager
-        for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
-            testExecutor.deleteRec(new File(d));
-        }
     }
 
     @Parameters

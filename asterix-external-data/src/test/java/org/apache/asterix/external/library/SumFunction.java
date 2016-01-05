@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.external.library.IExternalScalarFunction;
-import org.apache.asterix.external.library.IFunctionHelper;
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JObjects.JInt;
 
 public class SumFunction implements IExternalScalarFunction {

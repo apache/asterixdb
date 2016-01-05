@@ -64,8 +64,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private boolean isReplicationEnabled = false;
     private Set<String> filesToBeReplicated;
 
-    public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId)
-            throws HyracksDataException {
+    public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId) throws HyracksDataException {
         mountPoints = new String[devices.size()];
         this.nodeId = nodeId;
         for (int i = 0; i < mountPoints.length; i++) {
@@ -123,7 +122,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
 
             LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
-                    storageMetadataFile.getAbsolutePath(), 0, 0, storageRootDirPath);
+                    storageMetadataFile.getAbsolutePath(), 0, storageMetadataFile.getAbsolutePath(), 0,
+                    storageRootDirPath);
             insert(rootLocalResource);
             LOGGER.log(Level.INFO, "created the root-metadata-file: " + storageMetadataFile.getAbsolutePath());
         }
@@ -131,13 +131,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     @Override
-    public LocalResource getResourceByName(String name) throws HyracksDataException {
-        LocalResource resource = resourceCache.getIfPresent(name);
+    public LocalResource getResourceByPath(String path) throws HyracksDataException {
+        LocalResource resource = resourceCache.getIfPresent(path);
         if (resource == null) {
-            File resourceFile = getLocalResourceFileByName(name);
+            File resourceFile = getLocalResourceFileByName(path);
             if (resourceFile.exists()) {
                 resource = readLocalResource(resourceFile);
-                resourceCache.put(name, resource);
+                resourceCache.put(path, resource);
             }
         }
         return resource;
@@ -145,13 +145,15 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     @Override
     public synchronized void insert(LocalResource resource) throws HyracksDataException {
-        File resourceFile = new File(getFileName(resource.getResourceName(), resource.getResourceId()));
+        File resourceFile = new File(getFileName(resource.getResourcePath(), resource.getResourceId()));
         if (resourceFile.exists()) {
             throw new HyracksDataException("Duplicate resource: " + resourceFile.getAbsolutePath());
+        } else {
+            resourceFile.getParentFile().mkdirs();
         }
 
         if (resource.getResourceId() != STORAGE_LOCAL_RESOURCE_ID) {
-            resourceCache.put(resource.getResourceName(), resource);
+            resourceCache.put(resource.getResourcePath(), resource);
         }
 
         FileOutputStream fos = null;
@@ -182,18 +184,18 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
             //if replication enabled, send resource metadata info to remote nodes
             if (isReplicationEnabled && resource.getResourceId() != STORAGE_LOCAL_RESOURCE_ID) {
-                String filePath = getFileName(resource.getResourceName(), resource.getResourceId());
+                String filePath = getFileName(resource.getResourcePath(), resource.getResourceId());
                 createReplicationJob(ReplicationOperation.REPLICATE, filePath);
             }
         }
     }
 
     @Override
-    public synchronized void deleteResourceByName(String name) throws HyracksDataException {
-        File resourceFile = getLocalResourceFileByName(name);
+    public synchronized void deleteResourceByPath(String resourcePath) throws HyracksDataException {
+        File resourceFile = getLocalResourceFileByName(resourcePath);
         if (resourceFile.exists()) {
             resourceFile.delete();
-            resourceCache.invalidate(name);
+            resourceCache.invalidate(resourcePath);
 
             //if replication enabled, delete resource from remote replicas
             if (isReplicationEnabled && !resourceFile.getName().startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
@@ -204,8 +206,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private static File getLocalResourceFileByName(String resourceName) {
-        return new File(resourceName + File.separator + METADATA_FILE_NAME);
+    private static File getLocalResourceFileByName(String resourcePath) {
+        return new File(resourcePath + File.separator + METADATA_FILE_NAME);
     }
 
     public HashMap<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
@@ -220,25 +222,21 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
 
             //load all local resources.
-            File[] dataverseFileList = storageRootDir.listFiles();
-            if (dataverseFileList != null) {
-                for (File dataverseFile : dataverseFileList) {
-                    if (dataverseFile.isDirectory()) {
-                        File[] indexFileList = dataverseFile.listFiles();
-                        if (indexFileList != null) {
-                            for (File indexFile : indexFileList) {
-                                if (indexFile.isDirectory()) {
-                                    File[] ioDevicesList = indexFile.listFiles();
-                                    if (ioDevicesList != null) {
-                                        for (File ioDeviceFile : ioDevicesList) {
-                                            if (ioDeviceFile.isDirectory()) {
-                                                File[] metadataFiles = ioDeviceFile.listFiles(METADATA_FILES_FILTER);
-                                                if (metadataFiles != null) {
-                                                    for (File metadataFile : metadataFiles) {
-                                                        LocalResource localResource = readLocalResource(metadataFile);
-                                                        resourcesMap.put(localResource.getResourceId(), localResource);
-                                                    }
-                                                }
+            File[] partitions = storageRootDir.listFiles();
+            for (File partition : partitions) {
+                File[] dataverseFileList = partition.listFiles();
+                if (dataverseFileList != null) {
+                    for (File dataverseFile : dataverseFileList) {
+                        if (dataverseFile.isDirectory()) {
+                            File[] indexFileList = dataverseFile.listFiles();
+                            if (indexFileList != null) {
+                                for (File indexFile : indexFileList) {
+                                    if (indexFile.isDirectory()) {
+                                        File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
+                                        if (metadataFiles != null) {
+                                            for (File metadataFile : metadataFiles) {
+                                                LocalResource localResource = readLocalResource(metadataFile);
+                                                resourcesMap.put(localResource.getResourceId(), localResource);
                                             }
                                         }
                                     }
@@ -263,27 +261,23 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 continue;
             }
 
-            //traverse all local resources.
-            File[] dataverseFileList = storageRootDir.listFiles();
-            if (dataverseFileList != null) {
-                for (File dataverseFile : dataverseFileList) {
-                    if (dataverseFile.isDirectory()) {
-                        File[] indexFileList = dataverseFile.listFiles();
-                        if (indexFileList != null) {
-                            for (File indexFile : indexFileList) {
-                                if (indexFile.isDirectory()) {
-                                    File[] ioDevicesList = indexFile.listFiles();
-                                    if (ioDevicesList != null) {
-                                        for (File ioDeviceFile : ioDevicesList) {
-                                            if (ioDeviceFile.isDirectory()) {
-                                                File[] metadataFiles = ioDeviceFile.listFiles(METADATA_FILES_FILTER);
-                                                if (metadataFiles != null) {
-                                                    for (File metadataFile : metadataFiles) {
-                                                        LocalResource localResource = readLocalResource(metadataFile);
-                                                        maxResourceId = Math.max(maxResourceId,
-                                                                localResource.getResourceId());
-                                                    }
-                                                }
+            //load all local resources.
+            File[] partitions = storageRootDir.listFiles();
+            for (File partition : partitions) {
+                //traverse all local resources.
+                File[] dataverseFileList = partition.listFiles();
+                if (dataverseFileList != null) {
+                    for (File dataverseFile : dataverseFileList) {
+                        if (dataverseFile.isDirectory()) {
+                            File[] indexFileList = dataverseFile.listFiles();
+                            if (indexFileList != null) {
+                                for (File indexFile : indexFileList) {
+                                    if (indexFile.isDirectory()) {
+                                        File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
+                                        if (metadataFiles != null) {
+                                            for (File metadataFile : metadataFiles) {
+                                                LocalResource localResource = readLocalResource(metadataFile);
+                                                maxResourceId = Math.max(maxResourceId, localResource.getResourceId());
                                             }
                                         }
                                     }
@@ -305,8 +299,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             if (!baseDir.endsWith(System.getProperty("file.separator"))) {
                 baseDir += System.getProperty("file.separator");
             }
-            String fileName = new String(baseDir + METADATA_FILE_NAME);
-            return fileName;
+            return new String(baseDir + METADATA_FILE_NAME);
         }
     }
 
@@ -376,6 +369,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     /**
      * Deletes physical files of all data verses.
+     *
      * @param deleteStorageMetadata
      * @throws IOException
      */

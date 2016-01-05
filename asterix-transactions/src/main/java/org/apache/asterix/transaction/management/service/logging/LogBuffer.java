@@ -179,6 +179,7 @@ public class LogBuffer implements ILogBuffer {
         appendOffset = 0;
         flushOffset = 0;
         isLastPage = false;
+        stop = false;
     }
 
     ////////////////////////////////////

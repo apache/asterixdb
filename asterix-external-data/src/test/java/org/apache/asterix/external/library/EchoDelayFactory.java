@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionFactory;
 
 public class EchoDelayFactory implements IFunctionFactory {
 

@@ -93,6 +93,7 @@ public class AsterixInstallerIntegrationUtil {
         String command = "shutdown";
         cmdHandler.processCommand(command.split(" "));
 
+        //TODO: This must be fixed, an arbitrary wait for 2s is not a reliable way to make sure the process have completed successfully.
         Thread.sleep(2000);
 
         // start zookeeper

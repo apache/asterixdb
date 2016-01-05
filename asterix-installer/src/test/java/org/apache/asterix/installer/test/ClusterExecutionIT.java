@@ -18,10 +18,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
@@ -31,20 +33,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.testframework.context.TestCaseContext;
-
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.
  */
 @RunWith(Parameterized.class)
-public class ClusterExecutionIT extends AbstractExecutionIT{
+public class ClusterExecutionIT extends AbstractExecutionIT {
 
     private static final String CLUSTER_CC_ADDRESS = "10.10.0.2";
     private static final int CLUSTER_CC_API_PORT = 19002;
 
-    private final static TestExecutor testExecutor = new TestExecutor(CLUSTER_CC_ADDRESS,CLUSTER_CC_API_PORT);
+    private final static TestExecutor testExecutor = new TestExecutor(CLUSTER_CC_ADDRESS, CLUSTER_CC_API_PORT);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -60,13 +58,14 @@ public class ClusterExecutionIT extends AbstractExecutionIT{
         AsterixClusterLifeCycleIT.setUp();
 
         FileUtils.copyDirectoryStructure(
-                new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)), new File(
-                StringUtils.join(new String[] { "src", "test", "resources", "clusterts", "managix-working", "data" },
+                new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
+                new File(StringUtils.join(
+                        new String[] { "src", "test", "resources", "clusterts", "managix-working", "data" },
                         File.separator)));
 
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
-        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
+        System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
     }
 
@@ -100,6 +99,7 @@ public class ClusterExecutionIT extends AbstractExecutionIT{
         this.tcCtx = tcCtx;
     }
 
+    @Override
     @Test
     public void test() throws Exception {
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);

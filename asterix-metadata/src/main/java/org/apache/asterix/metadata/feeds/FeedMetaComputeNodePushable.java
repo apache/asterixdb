@@ -35,6 +35,7 @@ import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.SubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.util;
 
+import org.apache.asterix.external.api.INodeResolver;
+import org.apache.asterix.external.api.INodeResolverFactory;
+
 /**
  * Factory for creating an instance of @see {IdentityResolver}.
  * Identity resolver simply resolves a value to itself and is useful when value being resolved
