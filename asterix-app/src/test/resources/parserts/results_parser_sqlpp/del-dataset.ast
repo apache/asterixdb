@@ -1,4 +1,11 @@
 DataverseUse demo0927
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
 TypeDecl CustomerType [
   closed RecordType {
     cid : int32,
@@ -12,11 +19,4 @@ TypeDecl CustomerType [
 
   }
 ]
-TypeDecl AddressType [
-  closed RecordType {
-    number : int32,
-    street : string,
-    city : string
-  }
-]
-DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+DatasetDecl Customers(demo0927.CustomerType) partitioned by [[cid]]

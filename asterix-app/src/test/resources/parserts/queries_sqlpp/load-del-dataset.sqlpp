@@ -22,6 +22,12 @@ create  database demo0927;
 
 use demo0927;
 
+create type demo0927.AddressType as
+ closed {
+  number : int32,
+  street : string,
+  city : string
+}
 
 create type demo0927.CustomerType as
  closed {
@@ -34,13 +40,6 @@ create type demo0927.CustomerType as
       total : float
   }
 
-}
-
-create type demo0927.AddressType as
- closed {
-  number : int32,
-  street : string,
-  city : string
 }
 
 create  nodegroup group1 if not exists  on 
