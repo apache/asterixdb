@@ -70,6 +70,7 @@ import org.apache.asterix.replication.storage.LSMComponentLSNSyncTask;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
@@ -272,7 +273,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             Set<Long> requestedIndexesToBeFlushed = request.getLaggingRescouresIds();
 
             //2. check which indexes can be flushed (open indexes) and which cannot be flushed (closed or have empty memory component)
-            IDatasetLifecycleManager datasetLifeCycleManager = asterixAppRuntimeContextProvider.getDatasetLifecycleManager();
+            IDatasetLifecycleManager datasetLifeCycleManager = asterixAppRuntimeContextProvider
+                    .getDatasetLifecycleManager();
             List<IndexInfo> openIndexesInfo = datasetLifeCycleManager.getOpenIndexesInfo();
             Set<Integer> datasetsToForceFlush = new HashSet<Integer>();
             for (IndexInfo iInfo : openIndexesInfo) {
@@ -336,9 +338,9 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 }
                 if (afp.isLSMComponentFile()) {
                     String compoentId = LSMComponentProperties.getLSMComponentID(afp.getFilePath(), afp.getNodeId());
-                    if (afp.isRequireLSNSync()) {
+                    if (afp.getLSNByteOffset() != IMetaDataPageManager.INVALID_LSN_OFFSET) {
                         LSMComponentLSNSyncTask syncTask = new LSMComponentLSNSyncTask(compoentId,
-                                destFile.getAbsolutePath());
+                                destFile.getAbsolutePath(), afp.getLSNByteOffset());
                         lsmComponentRemoteLSN2LocalLSNMappingTaskQ.offer(syncTask);
                     } else {
                         updateLSMComponentRemainingFiles(compoentId);
@@ -384,8 +386,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     try (RandomAccessFile fromFile = new RandomAccessFile(filePath, "r");
                             FileChannel fileChannel = fromFile.getChannel();) {
                         long fileSize = fileChannel.size();
-                        fileProperties.initialize(filePath, fileSize, replicaId, false, false, false);
-
+                        fileProperties.initialize(filePath, fileSize, replicaId, false,
+                                IMetaDataPageManager.INVALID_LSN_OFFSET, false);
                         outBuffer = AsterixReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
                                 ReplicationRequestType.REPLICATE_FILE);
 
@@ -437,7 +439,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
                         //set log source to REMOTE_RECOVERY to avoid re-logging on the recipient side
                         logRecord.setLogSource(LogSource.REMOTE_RECOVERY);
-                        AsterixReplicationProtocol.writeReplicateLogRequest(outBuffer, logRecord);
+                        AsterixReplicationProtocol.writeRemoteRecoveryLogRequest(outBuffer, logRecord);
                         NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
                     }
                     logRecord = logReader.next();
@@ -475,7 +477,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             inBuffer = AsterixReplicationProtocol.readRequest(socketChannel, inBuffer);
 
             //Deserialize log
-            remoteLog.deserialize(inBuffer, false, localNodeID);
+            remoteLog.readRemoteLog(inBuffer, false, localNodeID);
             remoteLog.setLogSource(LogSource.REMOTE);
 
             if (remoteLog.getLogType() == LogType.JOB_COMMIT) {
@@ -547,7 +549,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     LSMComponentLSNSyncTask syncTask = lsmComponentRemoteLSN2LocalLSNMappingTaskQ.take();
                     LSMComponentProperties lsmCompProp = lsmComponentId2PropertiesMap.get(syncTask.getComponentId());
                     try {
-                        syncLSMComponentFlushLSN(lsmCompProp, syncTask.getComponentFilePath());
+                        syncLSMComponentFlushLSN(lsmCompProp, syncTask);
                         updateLSMComponentRemainingFiles(lsmCompProp.getComponentId());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -558,7 +560,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             }
         }
 
-        private void syncLSMComponentFlushLSN(LSMComponentProperties lsmCompProp, String filePath) throws Exception {
+        private void syncLSMComponentFlushLSN(LSMComponentProperties lsmCompProp, LSMComponentLSNSyncTask syncTask)
+                throws Exception {
             long remoteLSN = lsmCompProp.getOriginalLSN();
             //LSN=0 (bulkload) does not need to be updated and there is no flush log corresponding to it
             if (remoteLSN == 0) {
@@ -611,7 +614,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 }
             }
 
-            Path path = Paths.get(filePath);
+            Path path = Paths.get(syncTask.getComponentFilePath());
             if (Files.notExists(path)) {
                 /*
                  * This could happen when a merged component arrives and deletes the flushed 
@@ -621,7 +624,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 return;
             }
 
-            File destFile = new File(filePath);
+            File destFile = new File(syncTask.getComponentFilePath());
             ByteBuffer metadataBuffer = ByteBuffer.allocate(Long.BYTES);
             metadataBuffer.putLong(lsmCompProp.getReplicaLSN());
             metadataBuffer.flip();
@@ -629,12 +632,12 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             //replace the remote LSN value by the local one
             try (RandomAccessFile fileOutputStream = new RandomAccessFile(destFile, "rw");
                     FileChannel fileChannel = fileOutputStream.getChannel()) {
+                long lsnStartOffset = syncTask.getLSNByteOffset();
                 while (metadataBuffer.hasRemaining()) {
-                    fileChannel.write(metadataBuffer, lsmCompProp.getLSNOffset());
+                    lsnStartOffset += fileChannel.write(metadataBuffer, lsnStartOffset);
                 }
                 fileChannel.force(true);
             }
         }
     }
-
 }

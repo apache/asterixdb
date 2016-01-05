@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -31,7 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public abstract class StreamBasedAdapter implements IDatasourceAdapter {
+public abstract class StreamBasedAdapter implements IDataSourceAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,8 +43,8 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
 
     protected final IAType sourceDatatype;
 
-    public StreamBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
+    public StreamBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx,
+            int partition) throws HyracksDataException {
         this.tupleParser = parserFactory.createTupleParser(ctx);
         this.sourceDatatype = sourceDatatype;
     }
@@ -56,7 +56,8 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
             tupleParser.parse(in, writer);
         } else {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
+                LOGGER.warning(
+                        "Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
             }
         }
     }

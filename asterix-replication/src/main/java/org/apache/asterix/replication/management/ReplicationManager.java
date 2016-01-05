@@ -81,6 +81,8 @@ import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
@@ -296,13 +298,16 @@ public class ReplicationManager implements IReplicationManager {
                             long fileSize = fileChannel.size();
 
                             if (LSMComponentJob != null) {
-                                boolean requireLSNSync = AsterixLSMIndexUtil.lsmComponentFileHasLSN(
-                                        (AbstractLSMIndex) LSMComponentJob.getLSMIndex(), filePath);
+                                //since this is LSM_COMPONENT REPLICATE job, the job will contain only the component being replicated.
+                                ILSMComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
+                                        .getComponentsToBeReplicated().get(0);
+                                long LSNByteOffset = AsterixLSMIndexUtil.getComponentFileLSNOffset(
+                                        (AbstractLSMIndex) LSMComponentJob.getLSMIndex(), diskComponent, filePath);
                                 asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
-                                        requireLSNSync, remainingFiles == 0);
+                                        LSNByteOffset, remainingFiles == 0);
                             } else {
-                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile, false,
-                                        remainingFiles == 0);
+                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
+                                        IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
                             }
 
                             requestBuffer = AsterixReplicationProtocol.writeFileReplicationRequest(requestBuffer,
@@ -343,8 +348,8 @@ public class ReplicationManager implements IReplicationManager {
             } else if (job.getOperation() == ReplicationOperation.DELETE) {
                 for (String filePath : job.getJobFiles()) {
                     remainingFiles--;
-                    asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile, false,
-                            remainingFiles == 0);
+                    asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile,
+                            IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
                     AsterixReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
                             ReplicationRequestType.DELETE_FILE);
 
@@ -1068,7 +1073,7 @@ public class ReplicationManager implements IReplicationManager {
             ILogRecord logRecord = new LogRecord();
             while (responseType != ReplicationRequestType.GOODBYE) {
                 dataBuffer = AsterixReplicationProtocol.readRequest(socketChannel, dataBuffer);
-                logRecord.deserialize(dataBuffer, true, nodeId);
+                logRecord.readRemoteLog(dataBuffer, true, nodeId);
 
                 if (logRecord.getNodeId().equals(nodeId)) {
                     //store log in memory to replay it for recovery
@@ -1243,5 +1248,4 @@ public class ReplicationManager implements IReplicationManager {
             }
         }
     }
-
 }

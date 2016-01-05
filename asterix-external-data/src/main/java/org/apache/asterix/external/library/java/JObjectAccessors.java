@@ -43,6 +43,10 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import org.apache.asterix.external.api.IJListAccessor;
+import org.apache.asterix.external.api.IJObject;
+import org.apache.asterix.external.api.IJObjectAccessor;
+import org.apache.asterix.external.api.IJRecordAccessor;
 import org.apache.asterix.external.library.TypeInfo;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
 import org.apache.asterix.external.library.java.JObjects.JByte;

@@ -32,7 +32,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.ResourceIdFactory;
+import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppRuntimeContextProvider {
 
@@ -78,7 +78,7 @@ public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ResourceIdFactory getResourceIdFactory() {
+    public IResourceIdFactory getResourceIdFactory() {
         return asterixAppRuntimeContext.getResourceIdFactory();
     }
 

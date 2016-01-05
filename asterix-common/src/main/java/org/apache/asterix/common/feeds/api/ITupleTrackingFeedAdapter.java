@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-public interface ITupleTrackingFeedAdapter extends IFeedAdapter {
+public interface ITupleTrackingFeedAdapter extends IDataSourceAdapter {
 
     public void tuplePersistedTimeCallback(long timestamp);
 }

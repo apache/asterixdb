@@ -18,12 +18,15 @@
  */
 package org.apache.asterix.external.util;
 
+import org.apache.asterix.external.api.INodeResolver;
+import org.apache.asterix.external.api.INodeResolverFactory;
+
 /**
- * Factory for creating instance of {@link DNSResolver}
+ * Factory for creating instance of {@link NodeResolver}
  */
 public class DNSResolverFactory implements INodeResolverFactory {
 
-    private static final INodeResolver INSTANCE = new DNSResolver();
+    private static final INodeResolver INSTANCE = new NodeResolver();
 
     @Override
     public INodeResolver createNodeResolver() {

@@ -35,6 +35,8 @@ import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
+import org.apache.asterix.common.feeds.api.IFramePostProcessor;
+import org.apache.asterix.common.feeds.api.IFramePreprocessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;

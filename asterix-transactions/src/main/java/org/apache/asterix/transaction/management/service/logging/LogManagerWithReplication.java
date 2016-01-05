@@ -31,7 +31,7 @@ public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
 
-    public LogManagerWithReplication(TransactionSubsystem txnSubsystem) throws ACIDException {
+    public LogManagerWithReplication(TransactionSubsystem txnSubsystem) {
         super(txnSubsystem);
     }
 
@@ -41,7 +41,8 @@ public class LogManagerWithReplication extends LogManager {
             throw new IllegalStateException();
         }
 
-        if (logRecord.getLogType() == LogType.FLUSH) {
+        //Remote flush logs do not need to be flushed separately since they may not trigger local flush
+        if (logRecord.getLogType() == LogType.FLUSH && logRecord.getLogSource() == LogSource.LOCAL) {
             flushLogsQ.offer(logRecord);
             return;
         }

@@ -27,8 +27,6 @@ import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.kohsuke.args4j.Option;
-
 import org.apache.asterix.event.management.EventUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.MasterNode;
@@ -37,6 +35,7 @@ import org.apache.asterix.event.service.AsterixEventServiceUtil;
 import org.apache.asterix.installer.driver.InstallerDriver;
 import org.apache.asterix.installer.schema.conf.Configuration;
 import org.apache.asterix.installer.schema.conf.Zookeeper;
+import org.kohsuke.args4j.Option;
 
 public class ValidateCommand extends AbstractCommand {
 
@@ -97,7 +96,7 @@ public class ValidateCommand extends AbstractCommand {
             valid = false;
         } else {
             cluster = EventUtil.getCluster(clusterPath);
-            validateClusterProperties(cluster);
+            valid = valid & validateClusterProperties(cluster);
 
             Set<String> servers = new HashSet<String>();
             Set<String> serverIds = new HashSet<String>();
@@ -106,7 +105,7 @@ public class ValidateCommand extends AbstractCommand {
 
             MasterNode masterNode = cluster.getMasterNode();
             Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(),
-                    masterNode.getLogDir(), null, null, null, null);
+                    masterNode.getLogDir(), null, null, null);
             ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);
@@ -158,7 +157,7 @@ public class ValidateCommand extends AbstractCommand {
         return true;
     }
 
-    private void validateClusterProperties(Cluster cluster) {
+    private boolean validateClusterProperties(Cluster cluster) {
         List<String> tempDirs = new ArrayList<String>();
         if (cluster.getLogDir() != null && checkTemporaryPath(cluster.getLogDir())) {
             tempDirs.add("Log directory: " + cluster.getLogDir());
@@ -176,6 +175,11 @@ public class ValidateCommand extends AbstractCommand {
             LOGGER.warn(msg);
         }
 
+        if (cluster.getStore() == null || cluster.getStore().length() == 0) {
+            LOGGER.fatal("store not defined at cluster" + ERROR);
+            return false;
+        }
+        return true;
     }
 
     private boolean validateNodeConfiguration(Node node, Cluster cluster) {
@@ -198,14 +202,6 @@ public class ValidateCommand extends AbstractCommand {
             if (cluster.getTxnLogDir() == null || cluster.getTxnLogDir().length() == 0) {
                 valid = false;
                 LOGGER.fatal("txn_log_dir not defined at cluster/node level for node: " + node.getId() + ERROR);
-            }
-        }
-
-        if (node.getStore() == null || node.getStore().length() == 0) {
-            if (!cluster.getMasterNode().getId().equals(node.getId())
-                    && (cluster.getStore() == null || cluster.getStore().length() == 0)) {
-                valid = false;
-                LOGGER.fatal("store not defined at cluster/node level for node: " + node.getId() + ERROR);
             }
         }
 

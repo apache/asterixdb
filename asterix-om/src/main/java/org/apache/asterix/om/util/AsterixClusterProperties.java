@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +34,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -50,7 +52,7 @@ public class AsterixClusterProperties {
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
 
     private static final String IO_DEVICES = "iodevices";
-
+    private static final String DEFAULT_STORAGE_DIR_NAME = "storage";
     private Map<String, Map<String, String>> ncConfiguration = new HashMap<String, Map<String, String>>();
 
     private final Cluster cluster;
@@ -59,6 +61,9 @@ public class AsterixClusterProperties {
 
     private boolean globalRecoveryCompleted = false;
 
+    private Map<String, ClusterPartition[]> node2PartitionsMap = null;
+    private SortedMap<Integer, ClusterPartition> clusterPartitions = null;
+
     private AsterixClusterProperties() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
         if (is != null) {
@@ -66,37 +71,73 @@ public class AsterixClusterProperties {
                 JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
                 Unmarshaller unmarshaller = ctx.createUnmarshaller();
                 cluster = (Cluster) unmarshaller.unmarshal(is);
-
             } catch (JAXBException e) {
                 throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE);
             }
         } else {
             cluster = null;
         }
+        //if this is the CC process
+        if (AsterixAppContextInfo.getInstance() != null) {
+            if (AsterixAppContextInfo.getInstance().getCCApplicationContext() != null) {
+                node2PartitionsMap = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodePartitions();
+                clusterPartitions = AsterixAppContextInfo.getInstance().getMetadataProperties().getClusterPartitions();
+            }
+        }
     }
 
     private ClusterState state = ClusterState.UNUSABLE;
 
     public synchronized void removeNCConfiguration(String nodeId) {
+        updateNodePartitions(nodeId, false);
         ncConfiguration.remove(nodeId);
-        if (ncConfiguration.keySet().size() != AsterixAppContextInfo.getInstance().getMetadataProperties()
-                .getNodeNames().size()) {
-            state = ClusterState.UNUSABLE;
-            LOGGER.info("Cluster now is in UNSABLE state");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(" Removing configuration parameters for node id " + nodeId);
         }
-        resetClusterPartitionConstraint();
+        //TODO implement fault tolerance as follows:
+        //1. collect the partitions of the failed NC
+        //2. For each partition, request a remote replica to take over. 
+        //3. wait until each remote replica completes the recovery for the lost partitions
+        //4. update the cluster state
     }
 
     public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration) {
         ncConfiguration.put(nodeId, configuration);
-        if (ncConfiguration.keySet().size() == AsterixAppContextInfo.getInstance().getMetadataProperties()
-                .getNodeNames().size()) {
-            state = ClusterState.ACTIVE;
-        }
+        updateNodePartitions(nodeId, true);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" Registering configuration parameters for node id " + nodeId);
         }
-        resetClusterPartitionConstraint();
+    }
+
+    private synchronized void updateNodePartitions(String nodeId, boolean added) {
+        ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
+        //if this isn't a storage node, it will not have cluster partitions
+        if (nodePartitions != null) {
+            for (ClusterPartition p : nodePartitions) {
+                //set the active node for this node's partitions
+                p.setActive(added);
+                if (added) {
+                    p.setActiveNodeId(nodeId);
+                } else {
+                    p.setActiveNodeId(null);
+                }
+            }
+            resetClusterPartitionConstraint();
+            updateClusterState();
+        }
+    }
+
+    private synchronized void updateClusterState() {
+        for (ClusterPartition p : clusterPartitions.values()) {
+            if (!p.isActive()) {
+                state = ClusterState.UNUSABLE;
+                LOGGER.info("Cluster is in UNSABLE state");
+                return;
+            }
+        }
+        //if all storage partitions are active, then the cluster is active
+        state = ClusterState.ACTIVE;
+        LOGGER.info("Cluster is now ACTIVE");
     }
 
     /**
@@ -162,20 +203,14 @@ public class AsterixClusterProperties {
     }
 
     private synchronized void resetClusterPartitionConstraint() {
-        Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
-        ArrayList<String> locs = new ArrayList<String>();
-        for (String i : stores.keySet()) {
-            String[] nodeStores = stores.get(i);
-            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
-            for (int j = 0; j < nodeStores.length; j++) {
-                for (int k = 0; k < numIODevices; k++) {
-                    locs.add(i);
-                }
+        ArrayList<String> clusterActiveLocations = new ArrayList<>();
+        for (ClusterPartition p : clusterPartitions.values()) {
+            if (p.isActive()) {
+                clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
-        String[] cluster = new String[locs.size()];
-        cluster = locs.toArray(cluster);
-        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(cluster);
+        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                clusterActiveLocations.toArray(new String[] {}));
     }
 
     public boolean isGlobalRecoveryCompleted() {
@@ -184,5 +219,44 @@ public class AsterixClusterProperties {
 
     public void setGlobalRecoveryCompleted(boolean globalRecoveryCompleted) {
         this.globalRecoveryCompleted = globalRecoveryCompleted;
+    }
+
+    public static boolean isClusterActive() {
+        if (AsterixClusterProperties.INSTANCE.getCluster() == null) {
+            //this is a virtual cluster
+            return true;
+        }
+        return AsterixClusterProperties.INSTANCE.getState() == ClusterState.ACTIVE;
+    }
+
+    public static int getNumberOfNodes() {
+        return AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames().size();
+    }
+
+    public synchronized ClusterPartition[] getNodePartitions(String nodeId) {
+        return node2PartitionsMap.get(nodeId);
+    }
+
+    public synchronized int getNodePartitionsCount(String node) {
+        if (node2PartitionsMap.containsKey(node)) {
+            return node2PartitionsMap.get(node).length;
+        }
+        return 0;
+    }
+
+    public synchronized ClusterPartition[] getClusterPartitons() {
+        ArrayList<ClusterPartition> partitons = new ArrayList<>();
+        for (ClusterPartition cluster : clusterPartitions.values()) {
+            partitons.add(cluster);
+        }
+        return partitons.toArray(new ClusterPartition[] {});
+    }
+
+    public String getStorageDirectoryName() {
+        if (cluster != null) {
+            return cluster.getStore();
+        }
+        //virtual cluster without cluster config file
+        return DEFAULT_STORAGE_DIR_NAME;
     }
 }

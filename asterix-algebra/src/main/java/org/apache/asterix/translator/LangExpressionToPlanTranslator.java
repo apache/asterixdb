@@ -1107,35 +1107,40 @@ class LangExpressionToPlanTranslator
     }
 
     protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> aqlExprToAlgExpression(Expression expr,
-            Mutable<ILogicalOperator> topOp) throws AsterixException {
+            Mutable<ILogicalOperator> topOpRef) throws AsterixException {
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION: {
                 VariableReferenceExpression ve = new VariableReferenceExpression(
                         context.getVar(((VariableExpr) expr).getVar().getId()));
-                return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(ve, topOp);
+                return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(ve, topOpRef);
             }
             case LITERAL_EXPRESSION: {
                 LiteralExpr val = (LiteralExpr) expr;
                 return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(new ConstantExpression(
-                        new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue()))), topOp);
+                        new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue()))), topOpRef);
             }
             default: {
                 if (expressionNeedsNoNesting(expr)) {
-                    Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, topOp);
+                    Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, topOpRef);
                     ILogicalExpression exp = ((AssignOperator) p.first).getExpressions().get(0).getValue();
                     return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(exp, p.first.getInputs().get(0));
                 } else {
-                    Mutable<ILogicalOperator> src = new MutableObject<ILogicalOperator>();
-                    Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, src);
-                    if (((AbstractLogicalOperator) p.first).getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                        src.setValue(topOp.getValue());
+                    Mutable<ILogicalOperator> srcRef = new MutableObject<ILogicalOperator>();
+                    Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, srcRef);
+                    if (p.first.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+                        if (topOpRef.getValue() != null) {
+                            srcRef.setValue(topOpRef.getValue());
+                        } else {
+                            // Re-binds the bottom operator reference to {@code topOpRef}.
+                            rebindBottomOpRef(p.first, srcRef, topOpRef);
+                        }
                         Mutable<ILogicalOperator> top2 = new MutableObject<ILogicalOperator>(p.first);
                         return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(
                                 new VariableReferenceExpression(p.second), top2);
                     } else {
                         SubplanOperator s = new SubplanOperator();
-                        s.getInputs().add(topOp);
-                        src.setValue(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(s)));
+                        s.getInputs().add(topOpRef);
+                        srcRef.setValue(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(s)));
                         Mutable<ILogicalOperator> planRoot = new MutableObject<ILogicalOperator>(p.first);
                         s.setRootOp(planRoot);
                         return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(
@@ -1144,7 +1149,6 @@ class LangExpressionToPlanTranslator
                 }
             }
         }
-
     }
 
     protected Pair<ILogicalOperator, LogicalVariable> aggListifyForSubquery(LogicalVariable var,
@@ -1236,6 +1240,23 @@ class LangExpressionToPlanTranslator
                 return expr;
             }
         }
+    }
+
+    private boolean rebindBottomOpRef(ILogicalOperator currentOp, Mutable<ILogicalOperator> opRef,
+            Mutable<ILogicalOperator> replacementOpRef) {
+        int index = 0;
+        for (Mutable<ILogicalOperator> childRef : currentOp.getInputs()) {
+            if (childRef == opRef) {
+                currentOp.getInputs().set(index, replacementOpRef);
+                return true;
+            } else {
+                if (rebindBottomOpRef(childRef.getValue(), opRef, replacementOpRef)) {
+                    return true;
+                }
+            }
+            ++index;
+        }
+        return false;
     }
 
 }

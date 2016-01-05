@@ -43,16 +43,21 @@ public class AsterixExternalLibraryIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        AsterixInstallerIntegrationUtil.init();
-        File asterixInstallerProjectDir = new File(System.getProperty("user.dir"));
-        String asterixExternalLibraryPath = asterixInstallerProjectDir.getParentFile().getAbsolutePath()
-                + File.separator + LIBRARY_PATH;
-        LOGGER.info("Installing library :" + LIBRARY_NAME + " located at " + asterixExternalLibraryPath
-                + " in dataverse " + LIBRARY_DATAVERSE);
-        AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, asterixExternalLibraryPath);
-        AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
-        TestCaseContext.Builder b = new TestCaseContext.Builder();
-        testCaseCollection = b.build(new File(PATH_BASE));
+        try {
+            AsterixInstallerIntegrationUtil.init();
+            File asterixInstallerProjectDir = new File(System.getProperty("user.dir"));
+            String asterixExternalLibraryPath = asterixInstallerProjectDir.getParentFile().getAbsolutePath()
+                    + File.separator + LIBRARY_PATH;
+            LOGGER.info("Installing library :" + LIBRARY_NAME + " located at " + asterixExternalLibraryPath
+                    + " in dataverse " + LIBRARY_DATAVERSE);
+            AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, asterixExternalLibraryPath);
+            AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
+            TestCaseContext.Builder b = new TestCaseContext.Builder();
+            testCaseCollection = b.build(new File(PATH_BASE));
+        } catch (Throwable th) {
+            th.printStackTrace();
+            throw th;
+        }
     }
 
     @AfterClass

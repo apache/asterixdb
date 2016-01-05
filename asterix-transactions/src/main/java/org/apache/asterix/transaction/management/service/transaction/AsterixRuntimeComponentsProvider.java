@@ -28,7 +28,7 @@ import org.apache.hyracks.storage.common.IStorageManagerInterface;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.ResourceIdFactory;
+import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerProvider, IStorageManagerInterface,
         ILSMIOOperationSchedulerProvider {
@@ -71,7 +71,7 @@ public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerP
     }
 
     @Override
-    public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+    public IResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
         return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
                 .getResourceIdFactory();
     }

@@ -22,6 +22,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponent;
@@ -39,7 +40,6 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
         if (newComponent != null) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) newComponent;
             putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
-            putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
         }
     }
 
@@ -56,18 +56,18 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
         long maxLSN = -1;
         for (Object o : diskComponents) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) o;
-            maxLSN = Math.max(getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
+            maxLSN = Math.max(AbstractLSMIOOperationCallback.getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
         }
         return maxLSN;
     }
 
     @Override
-    public boolean componentFileHasLSN(String componentFilePath) {
-        if (componentFilePath.endsWith(LSMRTreeFileManager.RTREE_STRING)
-                || componentFilePath.endsWith(LSMRTreeFileManager.BTREE_STRING)) {
-            return true;
+    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+            throws HyracksDataException {
+        if (diskComponentFilePath.endsWith(LSMRTreeFileManager.RTREE_STRING)) {
+            LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) diskComponent;
+            return rtreeComponent.getRTree().getMetaManager().getLSNOffset();
         }
-
-        return false;
+        return IMetaDataPageManager.INVALID_LSN_OFFSET;
     }
 }

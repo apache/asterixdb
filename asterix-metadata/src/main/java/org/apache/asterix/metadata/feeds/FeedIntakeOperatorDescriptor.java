@@ -28,8 +28,9 @@ import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -54,7 +55,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private final FeedPolicyAccessor policyAccessor;
 
     /** The adaptor factory that is used to create an instance of the feed adaptor **/
-    private IFeedAdapterFactory adaptorFactory;
+    private IAdapterFactory adaptorFactory;
 
     /** The library that contains the adapter in use. **/
     private String adaptorLibraryName;
@@ -70,8 +71,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private ARecordType adapterOutputType;
 
-    public FeedIntakeOperatorDescriptor(JobSpecification spec, PrimaryFeed primaryFeed,
-            IFeedAdapterFactory adapterFactory, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
+    public FeedIntakeOperatorDescriptor(JobSpecification spec, PrimaryFeed primaryFeed, IAdapterFactory adapterFactory,
+            ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
         super(spec, 0, 1);
         this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
         this.adaptorFactory = adapterFactory;
@@ -112,16 +113,16 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                 policyAccessor);
     }
 
-    private IFeedAdapterFactory createExtenralAdapterFactory(IHyracksTaskContext ctx, int partition) throws Exception {
-        IFeedAdapterFactory adapterFactory = null;
+    private IAdapterFactory createExtenralAdapterFactory(IHyracksTaskContext ctx, int partition) throws Exception {
+        IAdapterFactory adapterFactory = null;
         ClassLoader classLoader = ExternalLibraryManager.getLibraryClassLoader(feedId.getDataverse(),
                 adaptorLibraryName);
         if (classLoader != null) {
-            adapterFactory = ((IFeedAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance()));
+            adapterFactory = ((IAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance()));
             adapterFactory.configure(adaptorConfiguration, adapterOutputType);
         } else {
-            String message = "Unable to create adapter as class loader not configured for library "
-                    + adaptorLibraryName + " in dataverse " + feedId.getDataverse();
+            String message = "Unable to create adapter as class loader not configured for library " + adaptorLibraryName
+                    + " in dataverse " + feedId.getDataverse();
             LOGGER.severe(message);
             throw new IllegalArgumentException(message);
         }

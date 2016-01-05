@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 
 public class AdapterExecutor implements Runnable {
 
@@ -32,11 +32,11 @@ public class AdapterExecutor implements Runnable {
 
     private final DistributeFeedFrameWriter writer;
 
-    private final IFeedAdapter adapter;
+    private final IDataSourceAdapter adapter;
 
     private final IAdapterRuntimeManager adapterManager;
 
-    public AdapterExecutor(int partition, DistributeFeedFrameWriter writer, IFeedAdapter adapter,
+    public AdapterExecutor(int partition, DistributeFeedFrameWriter writer, IDataSourceAdapter adapter,
             IAdapterRuntimeManager adapterManager) {
         this.writer = writer;
         this.adapter = adapter;

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.external.library.java.IJObject;
+import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;

@@ -33,7 +33,7 @@ public class PersistentLocalResourceFactory implements ILocalResourceFactory {
     }
 
     @Override
-    public LocalResource createLocalResource(long resourceId, String resourceName, int partition) {
-        return new LocalResource(resourceId, resourceName, partition, resourceType, localResourceMetadata);
+    public LocalResource createLocalResource(long resourceId, String resourceName, int partition, String resourcePath) {
+        return new LocalResource(resourceId, resourceName, partition, resourcePath, resourceType, localResourceMetadata);
     }
 }

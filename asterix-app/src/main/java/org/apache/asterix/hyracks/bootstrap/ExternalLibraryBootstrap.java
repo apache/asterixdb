@@ -37,6 +37,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.library.ExternalLibrary;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.library.LibraryAdapter;
 import org.apache.asterix.external.library.LibraryFunction;
 import org.apache.asterix.metadata.MetadataManager;
@@ -45,8 +46,8 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
-import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryBootstrap {
@@ -221,8 +222,7 @@ public class ExternalLibraryBootstrap {
                 LOGGER.info("Installed adapters contain in library :" + libraryName);
             }
 
-            MetadataManager.INSTANCE.addLibrary(mdTxnCtx,
-                    new org.apache.asterix.metadata.entities.Library(dataverse, libraryName));
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new Library(dataverse, libraryName));
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Added library " + libraryName + "to Metadata");

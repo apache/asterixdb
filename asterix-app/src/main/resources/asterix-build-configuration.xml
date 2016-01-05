@@ -20,11 +20,11 @@
 	<metadataNode>asterix_nc1</metadataNode>
 	<store>
 		<ncId>asterix_nc1</ncId>
-		<storeDirs>asterix_nc1data</storeDirs>
+		<storeDirs>iodevice0,iodevice1</storeDirs>
 	</store>
 	<store>
 		<ncId>asterix_nc2</ncId>
-		<storeDirs>asterix_nc2data</storeDirs>
+		<storeDirs>iodevice0,iodevice1</storeDirs>
 	</store>
 	<transactionLogDir>
 		<ncId>asterix_nc1</ncId>

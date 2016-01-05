@@ -79,9 +79,9 @@ public final class MetadataIndex implements IMetadataIndex {
     // PrimaryKeyField indexes used for secondary index operations
     protected final int[] primaryKeyIndexes;
 
-    public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes,
-            List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, int datasetId,
-            boolean isPrimaryIndex, int[] primaryKeyIndexes) throws AsterixRuntimeException {
+    public MetadataIndex(MetadataIndexImmutableProperties indexImmutableProperties, int numFields, IAType[] keyTypes,
+            List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, boolean isPrimaryIndex,
+            int[] primaryKeyIndexes) throws AsterixRuntimeException {
         // Sanity checks.
         if (keyTypes.length != keyNames.size()) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
@@ -90,12 +90,8 @@ public final class MetadataIndex implements IMetadataIndex {
             throw new AsterixRuntimeException("Number of keys given is greater than total number of fields.");
         }
         // Set simple fields.
-        this.datasetName = datasetName;
-        if (indexName == null) {
-            this.indexName = datasetName;
-        } else {
-            this.indexName = indexName;
-        }
+        this.datasetName = indexImmutableProperties.getDatasetName();
+        this.indexName = indexImmutableProperties.getIndexName();
         this.keyTypes = keyTypes;
         this.keyNames = keyNames;
         this.payloadType = payloadType;
@@ -147,11 +143,12 @@ public final class MetadataIndex implements IMetadataIndex {
             }
         }
 
-        this.datasetId = new DatasetId(datasetId);
+        this.datasetId = new DatasetId(indexImmutableProperties.getDatasetId());
         this.isPrimaryIndex = isPrimaryIndex;
 
         //PrimaryKeyFieldIndexes
         this.primaryKeyIndexes = primaryKeyIndexes;
+        this.resourceId = indexImmutableProperties.getResourceId();
     }
 
     @Override

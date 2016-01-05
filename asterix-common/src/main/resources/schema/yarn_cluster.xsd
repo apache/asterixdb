@@ -138,9 +138,6 @@
                     ref="cl:txn_log_dir"
                     minOccurs="0" />
                 <xs:element
-                    ref="cl:store"
-                    minOccurs="0" />
-                <xs:element
                     ref="cl:iodevices"
                     minOccurs="0" />
                 <xs:element

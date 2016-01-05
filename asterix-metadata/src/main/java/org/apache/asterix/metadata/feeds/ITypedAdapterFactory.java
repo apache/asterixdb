@@ -20,7 +20,7 @@ package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 
-import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.om.types.ARecordType;
 
 public interface ITypedAdapterFactory extends IAdapterFactory {

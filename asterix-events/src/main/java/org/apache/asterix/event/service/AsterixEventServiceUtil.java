@@ -45,7 +45,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Coredump;
 import org.apache.asterix.common.configuration.Store;
@@ -59,6 +58,7 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Env;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.event.schema.cluster.Property;
+import org.apache.commons.io.IOUtils;
 
 public class AsterixEventServiceUtil {
 
@@ -90,8 +90,8 @@ public class AsterixEventServiceUtil {
         return instance;
     }
 
-    public static void createAsterixZip(AsterixInstance asterixInstance) throws IOException, InterruptedException,
-            JAXBException, EventException {
+    public static void createAsterixZip(AsterixInstance asterixInstance)
+            throws IOException, InterruptedException, JAXBException, EventException {
         String asterixInstanceDir = asterixInstanceDir(asterixInstance);
         unzip(AsterixEventService.getAsterixZip(), asterixInstanceDir);
 
@@ -128,18 +128,18 @@ public class AsterixEventServiceUtil {
 
         clusterProperties.add(new Property(EventUtil.CC_JAVA_OPTS, ccJavaOpts));
         clusterProperties.add(new Property(EventUtil.NC_JAVA_OPTS, ncJavaOpts));
-        clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
-                + "asterix"));
+        clusterProperties
+                .add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator + "asterix"));
         clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
         clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
         clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
 
-        int clusterNetPort = cluster.getMasterNode().getClusterPort() != null ? cluster.getMasterNode()
-                .getClusterPort().intValue() : CLUSTER_NET_PORT_DEFAULT;
-        int clientNetPort = cluster.getMasterNode().getClientPort() != null ? cluster.getMasterNode().getClientPort()
-                .intValue() : CLIENT_NET_PORT_DEFAULT;
+        int clusterNetPort = cluster.getMasterNode().getClusterPort() != null
+                ? cluster.getMasterNode().getClusterPort().intValue() : CLUSTER_NET_PORT_DEFAULT;
+        int clientNetPort = cluster.getMasterNode().getClientPort() != null
+                ? cluster.getMasterNode().getClientPort().intValue() : CLIENT_NET_PORT_DEFAULT;
         int httpPort = cluster.getMasterNode().getHttpPort() != null ? cluster.getMasterNode().getHttpPort().intValue()
                 : HTTP_PORT_DEFAULT;
 
@@ -151,8 +151,8 @@ public class AsterixEventServiceUtil {
     }
 
     private static String asterixZipName() {
-        return AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+        return AsterixEventService.getAsterixZip()
+                .substring(AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
     }
 
     private static String asterixJarPath(AsterixInstance asterixInstance, String asterixInstanceDir) {
@@ -174,8 +174,8 @@ public class AsterixEventServiceUtil {
         new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE).delete();
     }
 
-    private static void injectAsterixClusterConfigurationFile(String asterixInstanceDir, AsterixInstance asterixInstance)
-            throws IOException, EventException, JAXBException {
+    private static void injectAsterixClusterConfigurationFile(String asterixInstanceDir,
+            AsterixInstance asterixInstance) throws IOException, EventException, JAXBException {
         File sourceJar = new File(asterixJarPath(asterixInstance, asterixInstanceDir));
         writeAsterixClusterConfigurationFile(asterixInstance);
 
@@ -185,8 +185,8 @@ public class AsterixEventServiceUtil {
         new File(asterixInstanceDir + File.separator + CLUSTER_CONFIGURATION_FILE).delete();
     }
 
-    private static void writeAsterixClusterConfigurationFile(AsterixInstance asterixInstance) throws IOException,
-            EventException, JAXBException {
+    private static void writeAsterixClusterConfigurationFile(AsterixInstance asterixInstance)
+            throws IOException, EventException, JAXBException {
         String asterixInstanceName = asterixInstance.getName();
         Cluster cluster = asterixInstance.getCluster();
 
@@ -197,8 +197,8 @@ public class AsterixEventServiceUtil {
                 + asterixInstanceName + File.separator + "cluster.xml"));
     }
 
-    public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName,
-            String libraryName, String libraryPath) throws IOException {
+    public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName, String libraryName,
+            String libraryPath) throws IOException {
         File instanceDir = new File(asterixInstanceDir(asterixInstance));
         if (!instanceDir.exists()) {
             instanceDir.mkdirs();
@@ -235,30 +235,8 @@ public class AsterixEventServiceUtil {
         return metadataNode;
     }
 
-    public static String getNodeDirectories(String asterixInstanceName, Node node, Cluster cluster) {
-        String storeDataSubDir = asterixInstanceName + File.separator + "data" + File.separator;
-        String[] storeDirs = null;
-        StringBuffer nodeDataStore = new StringBuffer();
-        String storeDirValue = node.getStore();
-        if (storeDirValue == null) {
-            storeDirValue = cluster.getStore();
-            if (storeDirValue == null) {
-                throw new IllegalStateException(" Store not defined for node " + node.getId());
-            }
-            storeDataSubDir = node.getId() + File.separator + storeDataSubDir;
-        }
-
-        storeDirs = storeDirValue.split(",");
-        for (String ns : storeDirs) {
-            nodeDataStore.append(ns + File.separator + storeDataSubDir.trim());
-            nodeDataStore.append(",");
-        }
-        nodeDataStore.deleteCharAt(nodeDataStore.length() - 1);
-        return nodeDataStore.toString();
-    }
-
-    private static void writeAsterixConfigurationFile(AsterixInstance asterixInstance) throws IOException,
-            JAXBException {
+    private static void writeAsterixConfigurationFile(AsterixInstance asterixInstance)
+            throws IOException, JAXBException {
         String asterixInstanceName = asterixInstance.getName();
         Cluster cluster = asterixInstance.getCluster();
         String metadataNodeId = asterixInstance.getMetadataNodeId();
@@ -266,29 +244,34 @@ public class AsterixEventServiceUtil {
         AsterixConfiguration configuration = asterixInstance.getAsterixConfiguration();
         configuration.setInstanceName(asterixInstanceName);
         configuration.setMetadataNode(asterixInstanceName + "_" + metadataNodeId);
-        String storeDir = null;
         List<Store> stores = new ArrayList<Store>();
+        String storeDir = cluster.getStore().trim();
         for (Node node : cluster.getNode()) {
-            storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
-            stores.add(new Store(asterixInstanceName + "_" + node.getId(), storeDir));
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+            String[] nodeIdDevice = iodevices.split(",");
+            StringBuilder nodeStores = new StringBuilder();
+            for (int i = 0; i < nodeIdDevice.length; i++) {
+                nodeStores.append(nodeIdDevice[i] + File.separator + storeDir + ",");
+            }
+            //remove last comma
+            nodeStores.deleteCharAt(nodeStores.length() - 1);
+            stores.add(new Store(asterixInstanceName + "_" + node.getId(), nodeStores.toString()));
         }
         configuration.setStore(stores);
-
         List<Coredump> coredump = new ArrayList<Coredump>();
         String coredumpDir = null;
         List<TransactionLogDir> txnLogDirs = new ArrayList<TransactionLogDir>();
         String txnLogDir = null;
         for (Node node : cluster.getNode()) {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir + File.separator
-                    + asterixInstanceName + "_" + node.getId()));
+            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(),
+                    coredumpDir + File.separator + asterixInstanceName + "_" + node.getId()));
 
             txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));
         }
         configuration.setCoredump(coredump);
         configuration.setTransactionLogDir(txnLogDirs);
-
         File asterixConfDir = new File(AsterixEventService.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
 
@@ -299,8 +282,6 @@ public class AsterixEventServiceUtil {
         marshaller.marshal(configuration, os);
         os.close();
     }
-
-
 
     public static void unzip(String sourceFile, String destDir) throws IOException {
         BufferedOutputStream dest = null;
@@ -432,8 +413,8 @@ public class AsterixEventServiceUtil {
             }
         }
         if (!valid) {
-            throw new EventException("Asterix instance by the name " + name + " is in " + instance.getState()
-                    + " state ");
+            throw new EventException(
+                    "Asterix instance by the name " + name + " is in " + instance.getState() + " state ");
         }
         return instance;
     }

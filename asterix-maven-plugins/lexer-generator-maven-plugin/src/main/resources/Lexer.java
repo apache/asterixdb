@@ -72,9 +72,32 @@ public class [LEXER_NAME] {
 // ================================================================================
 //  Public interface
 // ================================================================================
-    
+
     public [LEXER_NAME](java.io.Reader stream) throws IOException{
         reInit(stream);
+    }
+
+    public [LEXER_NAME]() throws IOException{
+        reInit();
+    }
+
+    public void setBuffer(char[] buffer){
+        this.buffer = buffer;
+        tokenBegin = bufpos = 0;
+        containsEscapes = false;
+        line++;
+        tokenBegin = -1;
+    }
+
+    public void reInit(){
+        bufsize        = Integer.MAX_VALUE;
+        endOf_UNUSED_Buffer = bufsize;
+        endOf_USED_Buffer = bufsize;
+        line           = 0;
+        prevCharIsCR   = false;
+        prevCharIsLF   = false;
+        tokenBegin     = -1;
+        maxUnusedBufferSize = bufsize;
     }
 
     public void reInit(java.io.Reader stream) throws IOException{
@@ -239,5 +262,5 @@ public class [LEXER_NAME] {
       bufsize += maxUnusedBufferSize;
       endOf_UNUSED_Buffer = bufsize;
       tokenBegin = 0;
-    }    
+    }
 }

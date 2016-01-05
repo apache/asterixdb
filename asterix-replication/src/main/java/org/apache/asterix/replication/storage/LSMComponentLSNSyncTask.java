@@ -21,10 +21,12 @@ package org.apache.asterix.replication.storage;
 public class LSMComponentLSNSyncTask {
     private String componentFilePath;
     private String componentId;
+    private long LSNByteOffset;
 
-    public LSMComponentLSNSyncTask(String componentId, String componentFilePath) {
+    public LSMComponentLSNSyncTask(String componentId, String componentFilePath, long LSNByteOffset) {
         this.componentId = componentId;
         this.componentFilePath = componentFilePath;
+        this.setLSNByteOffset(LSNByteOffset);
     }
 
     public String getComponentFilePath() {
@@ -41,5 +43,13 @@ public class LSMComponentLSNSyncTask {
 
     public void setComponentId(String componentId) {
         this.componentId = componentId;
+    }
+
+    public long getLSNByteOffset() {
+        return LSNByteOffset;
+    }
+
+    public void setLSNByteOffset(long lSNByteOffset) {
+        LSNByteOffset = lSNByteOffset;
     }
 }

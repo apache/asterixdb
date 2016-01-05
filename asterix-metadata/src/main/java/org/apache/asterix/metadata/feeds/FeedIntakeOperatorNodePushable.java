@@ -33,12 +33,13 @@ import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
-import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.common.feeds.api.IFeedManager;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -58,14 +59,14 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private final IFeedSubscriptionManager feedSubscriptionManager;
     private final IFeedManager feedManager;
     private final IHyracksTaskContext ctx;
-    private final IFeedAdapterFactory adapterFactory;
+    private final IAdapterFactory adapterFactory;
 
     private IngestionRuntime ingestionRuntime;
-    private IFeedAdapter adapter;
+    private IDataSourceAdapter adapter;
     private IIntakeProgressTracker tracker;
     private DistributeFeedFrameWriter feedFrameWriter;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IFeedAdapterFactory adapterFactory,
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IAdapterFactory adapterFactory,
             int partition, IngestionRuntime ingestionRuntime, FeedPolicyAccessor policyAccessor) {
         this.ctx = ctx;
         this.feedId = feedId;
@@ -84,12 +85,13 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         try {
             if (ingestionRuntime == null) {
                 try {
-                    adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
-                    if (adapterFactory.isRecordTrackingEnabled()) {
-                        tracker = adapterFactory.createIntakeProgressTracker();
-                    }
+                    adapter = adapterFactory.createAdapter(ctx, partition);
+                    //TODO: Fix record tracking
+                    //                    if (adapterFactory.isRecordTrackingEnabled()) {
+                    //                        tracker = adapterFactory.createIntakeProgressTracker();
+                    //                    }
                 } catch (Exception e) {
-                    LOGGER.severe("Unable to create adapter : " + adapterFactory.getName() + "[" + partition + "]"
+                    LOGGER.severe("Unable to create adapter : " + adapterFactory.getAlias() + "[" + partition + "]"
                             + " Exception " + e);
                     throw new HyracksDataException(e);
                 }

@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.metadata.feeds;
 
-import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
-import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -55,7 +55,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
 
             @Override
             public void initialize() throws HyracksDataException {
-                IDatasourceAdapter adapter = null;
+                IDataSourceAdapter adapter = null;
                 try {
                     writer.open();
                     adapter = adapterFactory.createAdapter(ctx, partition);

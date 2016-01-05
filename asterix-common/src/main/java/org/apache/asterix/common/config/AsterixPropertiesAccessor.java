@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +37,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Coredump;
 import org.apache.asterix.common.configuration.Property;
@@ -53,12 +56,15 @@ public class AsterixPropertiesAccessor {
     private final Map<String, Property> asterixConfigurationParams;
     private final Map<String, String> transactionLogDirs;
     private final Map<String, String> asterixBuildProperties;
+    private final Map<String, ClusterPartition[]> nodePartitionsMap;
+    private SortedMap<Integer, ClusterPartition> clusterPartitions;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
         if (fileName == null) {
             fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
         }
+
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName);
         if (is == null) {
             try {
@@ -82,9 +88,20 @@ public class AsterixPropertiesAccessor {
         stores = new HashMap<String, String[]>();
         List<Store> configuredStores = asterixConfiguration.getStore();
         nodeNames = new HashSet<String>();
+        nodePartitionsMap = new HashMap<>();
+        clusterPartitions = new TreeMap<>();
+        int uniquePartitionId = 0;
         for (Store store : configuredStores) {
             String trimmedStoreDirs = store.getStoreDirs().trim();
-            stores.put(store.getNcId(), trimmedStoreDirs.split(","));
+            String[] nodeStores = trimmedStoreDirs.split(",");
+            ClusterPartition[] nodePartitions = new ClusterPartition[nodeStores.length];
+            for (int i = 0; i < nodePartitions.length; i++) {
+                ClusterPartition partition = new ClusterPartition(uniquePartitionId++, store.getNcId(), i);
+                clusterPartitions.put(partition.getPartitionId(), partition);
+                nodePartitions[i] = partition;
+            }
+            stores.put(store.getNcId(), nodeStores);
+            nodePartitionsMap.put(store.getNcId(), nodePartitions);
             nodeNames.add(store.getNcId());
         }
         asterixConfigurationParams = new HashMap<String, Property>();
@@ -114,10 +131,6 @@ public class AsterixPropertiesAccessor {
 
     public String getMetadataNodeName() {
         return metadataNodeName;
-    }
-
-    public String getMetadataStore() {
-        return stores.get(metadataNodeName)[0];
     }
 
     public Map<String, String[]> getStores() {
@@ -172,7 +185,7 @@ public class AsterixPropertiesAccessor {
         }
     }
 
-    private <T> void logConfigurationError(Property p, T defaultValue) {
+    private static <T> void logConfigurationError(Property p, T defaultValue) {
         if (LOGGER.isLoggable(Level.SEVERE)) {
             LOGGER.severe("Invalid property value '" + p.getValue() + "' for property '" + p.getName()
                     + "'.\n See the description: \n" + p.getDescription() + "\nDefault = " + defaultValue);
@@ -181,5 +194,18 @@ public class AsterixPropertiesAccessor {
 
     public String getInstanceName() {
         return instanceName;
+    }
+
+    public ClusterPartition getMetadataPartiton() {
+        //metadata partition is always the first partition on the metadata node
+        return nodePartitionsMap.get(metadataNodeName)[0];
+    }
+
+    public Map<String, ClusterPartition[]> getNodePartitions() {
+        return nodePartitionsMap;
+    }
+
+    public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
+        return clusterPartitions;
     }
 }

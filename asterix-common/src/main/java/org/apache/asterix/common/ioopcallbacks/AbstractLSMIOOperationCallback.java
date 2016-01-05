@@ -21,13 +21,12 @@ package org.apache.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
-import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
@@ -96,7 +95,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         treeIndex.getMetaManager().setLSN(componentLSN);
     }
 
-    protected long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
+    public static long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
         return treeIndex.getMetaManager().getLSN();
     }
 
@@ -104,7 +103,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         mutableLastLSNs[writeIndex] = lastLSN;
     }
 
-    public void setFirstLSN(long firstLSN) throws AsterixException {
+    public void setFirstLSN(long firstLSN) {
         // We make sure that this method is only called on an empty component so the first LSN is not set incorrectly
         firstLSNs[writeIndex] = firstLSN;
     }
@@ -124,7 +123,13 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
         return false;
     }
-    
-    public abstract boolean componentFileHasLSN(String componentFilePath);
 
+    /**
+     * @param component
+     * @param componentFilePath
+     * @return The LSN byte offset in the LSM disk component if the index is valid, otherwise {@link IMetaDataPageManager#INVALID_LSN_OFFSET}.
+     * @throws HyracksDataException
+     */
+    public abstract long getComponentFileLSNOffset(ILSMComponent component, String componentFilePath)
+            throws HyracksDataException;
 }

@@ -43,6 +43,7 @@ import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.event.service.ILookupService;
 import org.apache.asterix.feeds.CentralFeedManager;
 import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
@@ -55,6 +56,8 @@ import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -72,9 +75,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
+    private IMessageBroker messageBroker;
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
+        messageBroker = new CCMessageBroker((ClusterControllerService)ccAppCtx.getControllerService());
         this.appCtx = ccAppCtx;
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -118,6 +123,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         }
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
+        ccAppCtx.setMessageBroker(messageBroker);
     }
 
     @Override

@@ -19,11 +19,10 @@
 package org.apache.asterix.api.common;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Set;
 
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
 import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
@@ -41,22 +40,18 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 public class AsterixHyracksIntegrationUtil {
 
     private static final String IO_DIR_KEY = "java.io.tmpdir";
-    public static final int NODES = 2;
-    public static final int PARTITONS = 2;
-
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
-
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
     public static ClusterControllerService cc;
-    public static NodeControllerService[] ncs = new NodeControllerService[NODES];
+    public static NodeControllerService[] ncs;
     public static IHyracksClientConnection hcc;
 
-    protected static AsterixTransactionProperties txnProperties;
+    private static AsterixPropertiesAccessor propertiesAccessor;
 
     public static void init(boolean deleteOldInstanceData) throws Exception {
-        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
-        txnProperties = new AsterixTransactionProperties(apa);
+        propertiesAccessor = new AsterixPropertiesAccessor();
+        ncs = new NodeControllerService[propertiesAccessor.getNodeNames().size()];
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
@@ -77,7 +72,8 @@ public class AsterixHyracksIntegrationUtil {
 
         // Starts ncs.
         int n = 0;
-        for (String ncName : getNcNames()) {
+        Set<String> nodes = propertiesAccessor.getNodeNames();
+        for (String ncName : nodes) {
             NCConfig ncConfig1 = new NCConfig();
             ncConfig1.ccHost = "localhost";
             ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
@@ -87,13 +83,28 @@ public class AsterixHyracksIntegrationUtil {
             ncConfig1.nodeId = ncName;
             ncConfig1.resultTTL = 30000;
             ncConfig1.resultSweepThreshold = 1000;
-            for (int p = 0; p < PARTITONS; ++p) {
+            String tempPath = System.getProperty(IO_DIR_KEY);
+            if (tempPath.endsWith(File.separator)) {
+                tempPath = tempPath.substring(0, tempPath.length() - 1);
+            }
+            //get initial partitions from properties
+            String[] nodeStores = propertiesAccessor.getStores().get(ncName);
+            if (nodeStores == null) {
+                throw new Exception("Coudn't find stores for NC: " + ncName);
+            }
+            String tempDirPath = System.getProperty(IO_DIR_KEY);
+            if (!tempDirPath.endsWith(File.separator)) {
+                tempDirPath += File.separator;
+            }
+            for (int p = 0; p < nodeStores.length; p++) {
+                //create IO devices based on stores
+                String iodevicePath = tempDirPath + ncConfig1.nodeId + File.separator + nodeStores[p];
+                File ioDeviceDir = new File(iodevicePath);
+                ioDeviceDir.mkdirs();
                 if (p == 0) {
-                    ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + ncConfig1.nodeId
-                            + "/iodevice" + p;
+                    ncConfig1.ioDevices = iodevicePath;
                 } else {
-                    ncConfig1.ioDevices += "," + System.getProperty("java.io.tmpdir") + File.separator
-                            + ncConfig1.nodeId + "/iodevice" + p;
+                    ncConfig1.ioDevices += "," + iodevicePath;
                 }
             }
             ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
@@ -105,19 +116,7 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static String[] getNcNames() {
-        String[] names = new String[NODES];
-        for (int n = 0; n < NODES; ++n) {
-            names[n] = "asterix_nc" + (n + 1);
-        }
-        return names;
-    }
-
-    public static String[] getDataDirs() {
-        String[] names = new String[NODES];
-        for (int n = 0; n < NODES; ++n) {
-            names[n] = "asterix_nc" + (n + 1) + "data";
-        }
-        return names;
+        return propertiesAccessor.getNodeNames().toArray(new String[propertiesAccessor.getNodeNames().size()]);
     }
 
     public static IHyracksClientConnection getHyracksClientConnection() {
@@ -147,17 +146,17 @@ public class AsterixHyracksIntegrationUtil {
         hcc.waitForCompletion(jobId);
     }
 
-    private static void removeTestStorageFiles() throws IOException {
+    public static void removeTestStorageFiles() {
         File dir = new File(System.getProperty(IO_DIR_KEY));
-        for (String ncName : AsterixHyracksIntegrationUtil.getNcNames()) {
+        for (String ncName : propertiesAccessor.getNodeNames()) {
             File ncDir = new File(dir, ncName);
             FileUtils.deleteQuietly(ncDir);
         }
     }
 
     private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
-            File log = new File(txnProperties.getLogDirectory(ncId));
+        for (String ncId : propertiesAccessor.getNodeNames()) {
+            File log = new File(propertiesAccessor.getTransactionLogDirs().get(ncId));
             if (log.exists()) {
                 FileUtils.deleteDirectory(log);
             }
@@ -185,7 +184,7 @@ public class AsterixHyracksIntegrationUtil {
         try {
             System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
 
-            init(false);
+            init(true);
             while (true) {
                 Thread.sleep(10000);
             }

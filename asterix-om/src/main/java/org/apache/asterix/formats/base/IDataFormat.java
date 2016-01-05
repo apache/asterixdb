@@ -20,7 +20,6 @@ package org.apache.asterix.formats.base;
 
 import java.util.List;
 
-import org.apache.asterix.common.parse.IParseFileSplitsDecl;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -43,7 +42,6 @@ import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
-import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public interface IDataFormat {
     public void registerRuntimeFunctions() throws AlgebricksException;
@@ -74,12 +72,8 @@ public interface IDataFormat {
     public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
             ARecordType recType, List<String> fldName) throws AlgebricksException;
 
-    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, List<String> fldName, int recordColumn)
-            throws AlgebricksException;
-
-    public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl);
-
-    public ITupleParserFactory createTupleParser(ARecordType recType, boolean isDelimited, char delimiter, char quote, boolean hasHeader);
+    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, List<String> fldName,
+            int recordColumn) throws AlgebricksException;
 
     public IFunctionDescriptor resolveFunction(ILogicalExpression expr, IVariableTypeEnvironment typeEnvironment)
             throws AlgebricksException;

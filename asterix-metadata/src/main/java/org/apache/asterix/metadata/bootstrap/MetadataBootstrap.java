@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import java.io.File;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,13 +32,19 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
+import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory;
+import org.apache.asterix.external.runtime.SocketClientAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -52,7 +57,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.entities.ExternalFile;
 import org.apache.asterix.metadata.entities.FeedPolicy;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -60,11 +64,12 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
-import org.apache.asterix.metadata.external.IAdapterFactory;
 import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -72,15 +77,16 @@ import org.apache.asterix.transaction.management.service.transaction.Transaction
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
@@ -110,7 +116,6 @@ public class MetadataBootstrap {
     private static IIOManager ioManager;
 
     private static String metadataNodeName;
-    private static String metadataStore;
     private static Set<String> nodeNames;
     private static String outputDir;
 
@@ -143,9 +148,7 @@ public class MetadataBootstrap {
 
         AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
         metadataNodeName = metadataProperties.getMetadataNodeName();
-        metadataStore = metadataProperties.getMetadataStore();
         nodeNames = metadataProperties.getNodeNames();
-        // nodeStores = asterixProperity.getStores();
 
         dataLifecycleManager = runtimeContext.getDatasetLifecycleManager();
         localResourceRepository = runtimeContext.getLocalResourceRepository();
@@ -209,7 +212,7 @@ public class MetadataBootstrap {
         }
     }
 
-    public static void stopUniverse() throws HyracksDataException {
+    public static void stopUniverse() {
         // Close all BTree files in BufferCache.
         // metadata datasets will be closed when the dataset life cycle manger is closed
     }
@@ -295,19 +298,8 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
-        String[] builtInAdapterClassNames = new String[] {
-                "org.apache.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.HDFSAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.HiveAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.PushBasedTwitterAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.RSSFeedAdapterFactory",
-                "org.apache.asterix.external.adapter.factory.CNNFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
-                "org.apache.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
-                "org.apache.asterix.tools.external.data.SocketClientAdapterFactory" };
+        String[] builtInAdapterClassNames = new String[] { GenericAdapterFactory.class.getName(),
+                GenericSocketFeedAdapterFactory.class.getName(), SocketClientAdapterFactory.class.getName() };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);
@@ -328,11 +320,9 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialCompactionPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
-        String[] builtInCompactionPolicyClassNames = new String[] {
-                "org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",
-                "org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory",
-                "org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory",
-                "org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory" };
+        String[] builtInCompactionPolicyClassNames = new String[] { ConstantMergePolicyFactory.class.getName(),
+                PrefixMergePolicyFactory.class.getName(), NoMergePolicyFactory.class.getName(),
+                CorrelatedPrefixMergePolicyFactory.class.getName() };
         CompactionPolicy compactionPolicy;
         for (String policyClassName : builtInCompactionPolicyClassNames) {
             compactionPolicy = getCompactionPolicyEntity(policyClassName);
@@ -341,7 +331,7 @@ public class MetadataBootstrap {
     }
 
     private static DatasourceAdapter getAdapter(String adapterFactoryClassName) throws Exception {
-        String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getName();
+        String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
         return new DatasourceAdapter(new AdapterIdentifier(MetadataConstants.METADATA_DATAVERSE_NAME, adapterName),
                 adapterFactoryClassName, DatasourceAdapter.AdapterType.INTERNAL);
     }
@@ -354,11 +344,13 @@ public class MetadataBootstrap {
 
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create, MetadataTransactionContext mdTxnCtx)
             throws Exception {
-        String filePath = ioManager.getIODevices().get(runtimeContext.getMetaDataIODeviceId()).getPath()
-                + File.separator
-                + IndexFileNameUtil.prepareFileName(metadataStore + File.separator + index.getFileNameRelativePath(),
-                        runtimeContext.getMetaDataIODeviceId());
-        FileReference file = new FileReference(new File(filePath));
+        ClusterPartition metadataPartition = propertiesProvider.getMetadataProperties().getMetadataPartition();
+        int metadataDeviceId = metadataPartition.getIODeviceNum();
+        String metadataPartitionPath = SplitsAndConstraintsUtil.prepareStoragePartitionPath(
+                AsterixClusterProperties.INSTANCE.getStorageDirectoryName(), metadataPartition.getPartitionId());
+        String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
+        FileReference file = ioManager.getAbsoluteFileRef(metadataDeviceId, resourceName);
+
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContext
                 .getVirtualBufferCaches(index.getDatasetId().getId());
         ITypeTraits[] typeTraits = index.getTypeTraits();
@@ -370,7 +362,7 @@ public class MetadataBootstrap {
                 ? runtimeContext.getLSMBTreeOperationTracker(index.getDatasetId().getId())
                 : new BaseOperationTracker(index.getDatasetId().getId(),
                         dataLifecycleManager.getDatasetInfo(index.getDatasetId().getId()));
-        final String path = file.getFile().getPath();
+        final String absolutePath = file.getFile().getPath();
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider, typeTraits,
                     comparatorFactories, bloomFilterKeyFields, runtimeContext.getBloomFilterFalsePositiveRate(),
@@ -380,7 +372,7 @@ public class MetadataBootstrap {
                     LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                     null, null, null, null, true);
             lsmBtree.create();
-            resourceID = runtimeContext.getResourceIdFactory().createId();
+            resourceID = index.getResourceID();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(), index.getDatasetId().getId(),
                     runtimeContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES,
@@ -388,12 +380,13 @@ public class MetadataBootstrap {
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, path, 0));
-            dataLifecycleManager.register(path, lsmBtree);
+            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
+                    metadataPartition.getPartitionId(), absolutePath));
+            dataLifecycleManager.register(absolutePath, lsmBtree);
         } else {
-            final LocalResource resource = localResourceRepository.getResourceByName(path);
+            final LocalResource resource = localResourceRepository.getResourceByPath(absolutePath);
             resourceID = resource.getResourceId();
-            lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(resource.getResourceName());
+            lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(absolutePath);
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider,
                         typeTraits, comparatorFactories, bloomFilterKeyFields,
@@ -403,7 +396,7 @@ public class MetadataBootstrap {
                         opTracker, runtimeContext.getLSMIOScheduler(),
                         LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                         null, null, null, null, true);
-                dataLifecycleManager.register(path, lsmBtree);
+                dataLifecycleManager.register(absolutePath, lsmBtree);
             }
         }
 
@@ -419,8 +412,8 @@ public class MetadataBootstrap {
         return metadataNodeName;
     }
 
-    public static void startDDLRecovery() throws RemoteException, ACIDException, MetadataException {
-        //#. clean up any record which has pendingAdd/DelOp flag
+    public static void startDDLRecovery() throws MetadataException {
+        //#. clean up any record which has pendingAdd/DelOp flag 
         //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
         String dataverseName = null;
         String datasetName = null;

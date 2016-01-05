@@ -20,6 +20,9 @@ package org.apache.asterix.common.config;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+
+import org.apache.asterix.common.cluster.ClusterPartition;
 
 public class AsterixMetadataProperties extends AbstractAsterixProperties {
 
@@ -35,8 +38,8 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
         return accessor.getMetadataNodeName();
     }
 
-    public String getMetadataStore() {
-        return accessor.getMetadataStore();
+    public ClusterPartition getMetadataPartition() {
+        return accessor.getMetadataPartiton();
     }
 
     public Map<String, String[]> getStores() {
@@ -53,5 +56,13 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
 
     public Map<String, String> getCoredumpPaths() {
         return accessor.getCoredumpConfig();
+    }
+
+    public Map<String, ClusterPartition[]> getNodePartitions() {
+        return accessor.getNodePartitions();
+    }
+
+    public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
+        return accessor.getClusterPartitions();
     }
 }

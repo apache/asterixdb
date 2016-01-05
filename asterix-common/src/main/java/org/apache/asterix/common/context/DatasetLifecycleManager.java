@@ -78,9 +78,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized IIndex getIndex(String resourceName) throws HyracksDataException {
-        int datasetID = getDIDfromResourceName(resourceName);
-        long resourceID = getResourceIDfromResourceName(resourceName);
+    public synchronized IIndex getIndex(String resourcePath) throws HyracksDataException {
+        int datasetID = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
         return getIndex(datasetID, resourceID);
     }
 
@@ -98,9 +98,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void register(String resourceName, IIndex index) throws HyracksDataException {
-        int did = getDIDfromResourceName(resourceName);
-        long resourceID = getResourceIDfromResourceName(resourceName);
+    public synchronized void register(String resourcePath, IIndex index) throws HyracksDataException {
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
             dsInfo = getDatasetInfo(did);
@@ -116,16 +116,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index, dsInfo.datasetID, resourceID));
     }
 
-    public int getDIDfromResourceName(String resourceName) throws HyracksDataException {
-        LocalResource lr = resourceRepository.getResourceByName(resourceName);
+    public int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
+        LocalResource lr = resourceRepository.getResourceByPath(resourcePath);
         if (lr == null) {
             return -1;
         }
         return ((ILocalResourceMetadata) lr.getResourceObject()).getDatasetID();
     }
 
-    public long getResourceIDfromResourceName(String resourceName) throws HyracksDataException {
-        LocalResource lr = resourceRepository.getResourceByName(resourceName);
+    public long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
+        LocalResource lr = resourceRepository.getResourceByPath(resourcePath);
         if (lr == null) {
             return -1;
         }
@@ -133,9 +133,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void unregister(String resourceName) throws HyracksDataException {
-        int did = getDIDfromResourceName(resourceName);
-        long resourceID = getResourceIDfromResourceName(resourceName);
+    public synchronized void unregister(String resourcePath) throws HyracksDataException {
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
 
         DatasetInfo dsInfo = datasetInfos.get(did);
         IndexInfo iInfo = dsInfo.indexes.get(resourceID);
@@ -180,9 +180,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void open(String resourceName) throws HyracksDataException {
-        int did = getDIDfromResourceName(resourceName);
-        long resourceID = getResourceIDfromResourceName(resourceName);
+    public synchronized void open(String resourcePath) throws HyracksDataException {
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
 
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null || !dsInfo.isRegistered) {
@@ -262,9 +262,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void close(String resourceName) throws HyracksDataException {
-        int did = getDIDfromResourceName(resourceName);
-        long resourceID = getResourceIDfromResourceName(resourceName);
+    public synchronized void close(String resourcePath) throws HyracksDataException {
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
 
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
@@ -704,9 +704,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void allocateMemory(String resourceName) throws HyracksDataException {
+    public synchronized void allocateMemory(String resourcePath) throws HyracksDataException {
         //a resource name in the case of DatasetLifecycleManager is a dataset id which is passed to the ResourceHeapBufferAllocator.
-        int did = Integer.parseInt(resourceName);
+        int did = Integer.parseInt(resourcePath);
         allocateDatasetMemory(did);
     }
 }

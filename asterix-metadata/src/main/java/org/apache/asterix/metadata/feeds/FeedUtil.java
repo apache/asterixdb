@@ -38,11 +38,14 @@ import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.library.ExternalLibraryManager;
+import org.apache.asterix.external.provider.AdapterFactoryProvider;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
@@ -52,8 +55,6 @@ import org.apache.asterix.metadata.entities.FeedPolicy;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.entities.SecondaryFeed;
-import org.apache.asterix.metadata.external.IAdapterFactory;
-import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -465,18 +466,21 @@ public class FeedUtil {
         return preProcessingRequired;
     }
 
-    public static Triple<IFeedAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(PrimaryFeed feed,
+    public static Triple<IAdapterFactory, ARecordType, AdapterType> getPrimaryFeedFactoryAndOutput(PrimaryFeed feed,
             FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
         String adapterFactoryClassname = null;
-        IFeedAdapterFactory adapterFactory = null;
+        IAdapterFactory adapterFactory = null;
         ARecordType adapterOutputType = null;
-        Triple<IFeedAdapterFactory, ARecordType, AdapterType> feedProps = null;
+        Triple<IAdapterFactory, ARecordType, AdapterType> feedProps = null;
         AdapterType adapterType = null;
         try {
             adapterName = feed.getAdaptorName();
+            Map<String, String> configuration = feed.getAdaptorConfiguration();
+            configuration.putAll(policyAccessor.getFeedPolicy());
+            adapterOutputType = getOutputType(feed, configuration);
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     adapterName);
             if (adapterEntity == null) {
@@ -487,30 +491,24 @@ public class FeedUtil {
                 adapterFactoryClassname = adapterEntity.getClassname();
                 switch (adapterType) {
                     case INTERNAL:
-                        adapterFactory = (IFeedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
                         break;
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
                         ClassLoader cl = ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(),
                                 libraryName);
-                        adapterFactory = (IFeedAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                 }
+                adapterFactory.configure(configuration, adapterOutputType);
             } else {
-                adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
-                if (adapterFactoryClassname == null) {
-                    adapterFactoryClassname = adapterName;
-                }
-                adapterFactory = (IFeedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                configuration.put(ExternalDataConstants.KEY_DATAVERSE, feed.getDataverseName());
+                adapterFactory = AdapterFactoryProvider.getAdapterFactory(adapterName, configuration,
+                        adapterOutputType);
                 adapterType = AdapterType.INTERNAL;
             }
-
-            Map<String, String> configuration = feed.getAdaptorConfiguration();
-            configuration.putAll(policyAccessor.getFeedPolicy());
-            adapterOutputType = getOutputType(feed, configuration);
-            adapterFactory.configure(configuration, adapterOutputType);
-            feedProps = new Triple<IFeedAdapterFactory, ARecordType, AdapterType>(adapterFactory, adapterOutputType,
+            feedProps = new Triple<IAdapterFactory, ARecordType, AdapterType>(adapterFactory, adapterOutputType,
                     adapterType);
         } catch (Exception e) {
             e.printStackTrace();
@@ -521,7 +519,7 @@ public class FeedUtil {
 
     private static ARecordType getOutputType(PrimaryFeed feed, Map<String, String> configuration) throws Exception {
         ARecordType outputType = null;
-        String fqOutputType = configuration.get(IAdapterFactory.KEY_TYPE_NAME);
+        String fqOutputType = configuration.get(ExternalDataConstants.KEY_TYPE_NAME);
 
         if (fqOutputType == null) {
             throw new IllegalArgumentException("No output type specified");
@@ -537,7 +535,8 @@ public class FeedUtil {
             dataverseName = dataverseAndType[0];
             datatypeName = dataverseAndType[1];
         } else
-            throw new IllegalArgumentException("Invalid value for the parameter " + IAdapterFactory.KEY_TYPE_NAME);
+            throw new IllegalArgumentException(
+                    "Invalid value for the parameter " + ExternalDataConstants.KEY_TYPE_NAME);
 
         MetadataTransactionContext ctx = null;
         MetadataManager.INSTANCE.acquireReadLatch();
@@ -568,7 +567,7 @@ public class FeedUtil {
         Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feed.getDataverseName(), primaryFeedName);
         FunctionSignature appliedFunction = primaryFeed.getAppliedFunction();
         if (appliedFunction == null) {
-            Triple<IFeedAdapterFactory, ARecordType, AdapterType> result = getPrimaryFeedFactoryAndOutput(
+            Triple<IAdapterFactory, ARecordType, AdapterType> result = getPrimaryFeedFactoryAndOutput(
                     (PrimaryFeed) primaryFeed, policyAccessor, mdTxnCtx);
             outputType = result.second.getTypeName();
         } else {
