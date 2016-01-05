@@ -12,11 +12,11 @@ licenses.
  The MIT License
 -----------------------------------------------------------------------
 
- - jQuery
- - Bootstrap
- - Smoothie Charts
- - Bottle
- - geostats
+ - jQuery (src/main/resources/admaql101-demo/static/js)
+ - Bootstrap (src/main/resources/admaql101-demo/static/js/bootstrap.min.js),
+             (src/main/resources/tweetbook-demo/static/js/bootstrap.min.js)
+ - Bottle (src/main/resources/tweetbook-demo/bottle.py, src/main/resources/admaql101-demo/bottle.py)
+ - geostats (src/main/resources/tweetbook-demo/static/js/geostats.js)
 
 The text of The MIT License is below for convenience. Refer to the website of each project for exact details.
 

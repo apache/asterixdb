@@ -12,11 +12,11 @@ licenses.
  The MIT License
 -----------------------------------------------------------------------
 
- - jQuery
- - Bootstrap
- - Smoothie Charts
- - Bottle
- - geostats
+ - jQuery (src/main/resources/webui/static/js/jquery.min.js)
+ - Bootstrap (src/main/resources/webui/static/js/bootstrap.min.js),
+   (src/main/resources/webui/static/js/bootstrap.min.css),
+   (src/main/resources/webui/static/js/bootstrap-responsive.min.css)
+ - Smoothie Charts (src/main/resources/webui/static/js/smoothie.js)
 
 The text of The MIT License is below for convenience. Refer to the website of each project for exact details.
 

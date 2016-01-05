@@ -28,13 +28,24 @@
         <directory>target/classes/META-INF</directory>
         <outputDirectory>.</outputDirectory>
         <includes>
-            <include>LICENSE*</include>
-            <include>NOTICE*</include>
             <include>DISCLAIMER*</include>
-            <include>DEPENDENCIES*</include>
         </includes>
     </fileSet>
-
+    <fileSet>
+        <directory>src/main/licenses</directory>
+        <outputDirectory>.</outputDirectory>
+        <includes>
+            <include>LICENSE*</include>
+            <include>NOTICE*</include>
+        </includes>
+    </fileSet>
+    <fileSet>
+        <directory>src/main/resources</directory>
+        <outputDirectory>.</outputDirectory>
+        <includes>
+            <include>LICENSE*</include>
+        </includes>
+    </fileSet>
     <fileSet>
       <directory>target/appassembler/repo</directory>
       <outputDirectory>repo</outputDirectory>
