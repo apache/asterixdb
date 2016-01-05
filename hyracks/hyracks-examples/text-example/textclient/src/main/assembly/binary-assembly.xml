@@ -34,5 +34,15 @@
       <directory>target/appassembler/lib</directory>
       <outputDirectory>lib</outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>target/classes/META-INF</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+        <include>DISCLAIMER*</include>
+        <include>DEPENDENCIES*</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </assembly>
