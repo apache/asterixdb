@@ -24,10 +24,6 @@
  * Date         : 29th Aug 2012
  */
 
-use student;
-
-
-use teacher;
 
 
 insert into student.ugdstd
