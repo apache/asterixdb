@@ -19,4 +19,4 @@ TypeDecl CustomerType [
 
   }
 ]
-DatasetDecl Customers(demo0927.CustomerType) partitioned by [[cid]]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
