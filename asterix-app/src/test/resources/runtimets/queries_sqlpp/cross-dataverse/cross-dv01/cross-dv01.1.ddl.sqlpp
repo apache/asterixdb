@@ -30,7 +30,6 @@ create  database student;
 
 create  database teacher;
 
-
 use teacher;
 
 

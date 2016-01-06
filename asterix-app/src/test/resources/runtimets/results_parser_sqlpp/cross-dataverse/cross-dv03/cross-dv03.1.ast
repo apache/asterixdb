@@ -1,5 +1,3 @@
-DataverseUse student
-DataverseUse teacher
 TypeDecl stdType [
   open RecordType {
     id : int64,
