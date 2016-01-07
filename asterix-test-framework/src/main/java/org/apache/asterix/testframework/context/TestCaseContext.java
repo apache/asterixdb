@@ -175,6 +175,18 @@ public class TestCaseContext {
                 cUnit.getOutputDir().getValue() + "." + OutputFormat.forCompilationUnit(cUnit).extension());
     }
 
+    @Override
+    public String toString() {
+        final TestCase testCase = getTestCase();
+        StringBuilder sb = new StringBuilder(testCase.getFilePath());
+        sb.append(':');
+        for (CompilationUnit cu : testCase.getCompilationUnit()) {
+            sb.append(' ');
+            sb.append(cu.getName());
+        }
+        return sb.toString();
+    }
+
     public static class Builder {
         private final boolean m_doSlow;
         private final Pattern m_re;

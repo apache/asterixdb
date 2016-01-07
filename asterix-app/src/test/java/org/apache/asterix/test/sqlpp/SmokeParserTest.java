@@ -81,7 +81,7 @@ public class SmokeParserTest {
         }
     }
 
-    @Parameters
+    @Parameters(name = "SmokeParserTest {index}: {0}")
     public static Collection<Object[]> tests() {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         suiteBuild(new File(PATH_QUERIES), testArgs, "");
