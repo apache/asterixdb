@@ -174,26 +174,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
-      <compilation-unit name="meta16">
-        <output-dir compare="Text">meta16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
-      <compilation-unit name="meta17">
-        <output-dir compare="Text">meta17</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
-      <compilation-unit name="meta18">
-        <output-dir compare="Text">meta18</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
-      <compilation-unit name="meta19">
-        <output-dir compare="Text">meta19</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
       <compilation-unit name="meta20">
         <output-dir compare="Text">meta20</output-dir>
       </compilation-unit>
