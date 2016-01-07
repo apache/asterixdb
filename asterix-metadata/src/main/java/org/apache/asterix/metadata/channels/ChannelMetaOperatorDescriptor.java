@@ -67,9 +67,11 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
 
     private final String resultsName;
 
+    private final JobSpecification channeljobSpec;
+
     public ChannelMetaOperatorDescriptor(JobSpecification spec, ActiveJobId channelJobId,
             IOperatorDescriptor coreOperatorDescriptor, ActiveRuntimeType runtimeType, FunctionSignature function,
-            String duration, String subscriptionsName, String resultsName) {
+            String duration, String subscriptionsName, String resultsName, JobSpecification channeljobSpec) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.channelJobId = channelJobId;
         if (coreOperatorDescriptor.getOutputRecordDescriptors().length == 1) {
@@ -81,6 +83,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         this.duration = duration;
         this.subscriptionsName = subscriptionsName;
         this.resultsName = resultsName;
+        this.channeljobSpec = channeljobSpec;
     }
 
     @Override
@@ -90,7 +93,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         switch (runtimeType) {
             case REPETITIVE:
                 nodePushable = new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration,
-                        subscriptionsName, resultsName);
+                        subscriptionsName, resultsName, channeljobSpec);
                 break;
             default:
                 throw new HyracksDataException(new IllegalArgumentException("Invalid channel runtime: " + runtimeType));

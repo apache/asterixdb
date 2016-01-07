@@ -346,7 +346,8 @@ public class ActiveUtil {
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getFunction(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getDuration(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getSubscriptionsName(),
-                        ((RepetitiveChannelOperatorDescriptor) opDesc).getResultsName());
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getResultsName(),
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getChanneljobSpec());
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else {
                 NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(altered);

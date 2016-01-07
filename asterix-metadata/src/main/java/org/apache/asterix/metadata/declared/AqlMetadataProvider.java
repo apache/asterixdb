@@ -624,9 +624,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildChannelRuntime(JobSpecification jobSpec,
             String dataverseName, String channelName, String duration, FunctionSignature function, String subName,
-            String resultsName) throws Exception {
+            String resultsName, JobSpecification channeljobSpec) throws Exception {
         RepetitiveChannelOperatorDescriptor channelOp = new RepetitiveChannelOperatorDescriptor(jobSpec, dataverseName,
-                channelName, duration, function, subName, resultsName);
+                channelName, duration, function, subName, resultsName, channeljobSpec);
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksCountPartitionConstraint(1);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(channelOp, partitionConstraint);
     }

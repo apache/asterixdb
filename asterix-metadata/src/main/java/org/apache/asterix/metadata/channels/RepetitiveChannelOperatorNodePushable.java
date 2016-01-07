@@ -38,6 +38,7 @@ import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.asterix.metadata.active.ActiveMetaNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
@@ -94,10 +95,11 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
     private final ProcedureRuntimeId channelRuntimeId;
     private final long duration;
     private final String query;
+    private final JobSpecification channeljobSpec;
 
     public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
-            FunctionSignature function, String duration, String subscriptionsName, String resultsName)
-                    throws HyracksDataException {
+            FunctionSignature function, String duration, String subscriptionsName, String resultsName,
+            JobSpecification channeljobSpec) throws HyracksDataException {
         this.ctx = ctx;
         this.activeJobId = channelJobId;
         this.operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
@@ -110,6 +112,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.activeManager = runtimeCtx.getActiveManager();
+        this.channeljobSpec = channeljobSpec;
 
     }
 
@@ -227,7 +230,8 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
         this.setOutputFrameWriter(0, writer, recordDesc);
         ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
                 ActiveRuntimeId.DEFAULT_OPERAND_ID, ActiveObjectType.CHANNEL);
-        activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query);
+        activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query,
+                channeljobSpec);
         activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }
 

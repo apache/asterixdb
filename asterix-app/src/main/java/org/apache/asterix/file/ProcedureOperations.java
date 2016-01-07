@@ -46,19 +46,20 @@ public class ProcedureOperations {
      * @param dataverseName
      * @param channelName
      * @param metadataProvider
+     * @param channeljobSpec
      * @return JobSpecification the Hyracks job specification for receiving data from external source
      * @throws Exception
      */
     public static JobSpecification buildChannelJobSpec(String dataverseName, String channelName, String duration,
-            FunctionSignature function, String subName, String resultsName, AqlMetadataProvider metadataProvider)
-            throws AsterixException, AlgebricksException {
+            FunctionSignature function, String subName, String resultsName, AqlMetadataProvider metadataProvider,
+            JobSpecification channeljobSpec) throws AsterixException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IOperatorDescriptor channelQueryExecuter;
         AlgebricksPartitionConstraint executerPc;
 
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildChannelRuntime(spec,
-                    dataverseName, channelName, duration, function, subName, resultsName);
+                    dataverseName, channelName, duration, function, subName, resultsName, channeljobSpec);
             channelQueryExecuter = p.first;
             executerPc = p.second;
         } catch (Exception e) {
@@ -80,15 +81,16 @@ public class ProcedureOperations {
         JobSpecification messageJobSpec = JobSpecificationUtils.createJobSpecification();
 
         ActiveMessageOperatorDescriptor activeMessenger = new ActiveMessageOperatorDescriptor(messageJobSpec,
-                new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(), terminateMessage
-                        .getChannelId().getName(), ActiveObjectType.CHANNEL)), terminateMessage);
+                new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(),
+                        terminateMessage.getChannelId().getName(), ActiveObjectType.CHANNEL)),
+                terminateMessage);
 
         ProcedureJobInfo cInfo = (ProcedureJobInfo) ActiveJobLifecycleListener.INSTANCE
                 .getActiveJobInfo(new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(),
                         terminateMessage.getChannelId().getName(), ActiveObjectType.CHANNEL)));
 
-        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(cInfo
-                .getLocation().toArray(new String[] {}));
+        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                cInfo.getLocation().toArray(new String[] {}));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, activeMessenger,
                 partitionConstraint);
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(messageJobSpec);
@@ -105,16 +107,17 @@ public class ProcedureOperations {
         JobSpecification messageJobSpec = JobSpecificationUtils.createJobSpecification();
 
         ActiveMessageOperatorDescriptor activeMessenger = new ActiveMessageOperatorDescriptor(messageJobSpec,
-                new ActiveJobId(new ActiveObjectId(executeMessage.getProcedureId().getDataverse(), executeMessage
-                        .getProcedureId().getName(), ActiveObjectType.PROCEDURE)), executeMessage);
+                new ActiveJobId(new ActiveObjectId(executeMessage.getProcedureId().getDataverse(),
+                        executeMessage.getProcedureId().getName(), ActiveObjectType.PROCEDURE)),
+                executeMessage);
 
         ProcedureJobInfo jInfo = (ProcedureJobInfo) ActiveJobLifecycleListener.INSTANCE
                 .getActiveJobInfo(new ActiveJobId(new ActiveObjectId(executeMessage.getProcedureId().getDataverse(),
                         executeMessage.getProcedureId().getName(), ActiveObjectType.PROCEDURE)));
 
         //TODO: THis message currently goes to every operator involved in the job. It should only go to the head
-        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(jInfo
-                .getLocation().toArray(new String[] {}));
+        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                jInfo.getLocation().toArray(new String[] {}));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, activeMessenger,
                 partitionConstraint);
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(messageJobSpec);

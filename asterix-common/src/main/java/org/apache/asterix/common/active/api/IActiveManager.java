@@ -28,6 +28,7 @@ import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * Provides access to services related to feed management within a node controller
@@ -98,5 +99,7 @@ public interface IActiveManager {
     public AsterixFeedProperties getAsterixFeedProperties();
 
     public void sendHttpForChannel() throws RemoteException, ACIDException, AsterixException;
+
+    void runChannelJob(JobSpecification channeljobSpec) throws Exception;
 
 }

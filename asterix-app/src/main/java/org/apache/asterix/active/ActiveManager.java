@@ -46,8 +46,10 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.active.ActiveConnectionManager;
 import org.apache.asterix.metadata.entities.Broker;
 import org.apache.asterix.metadata.feeds.FeedSubscriptionManager;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * An implementation of the IFeedManager interface.
@@ -150,6 +152,12 @@ public class ActiveManager implements IActiveManager {
     @Override
     public AsterixFeedProperties getAsterixFeedProperties() {
         return asterixFeedProperties;
+    }
+
+    //TODO: Move these to a new Procedure Runner class
+    @Override
+    public void runChannelJob(JobSpecification channeljobSpec) throws Exception {
+        AsterixAppContextInfo.getInstance().getHcc().startJob(channeljobSpec);
     }
 
     //TODO: Move these things to a new class for sending messages to Brokers

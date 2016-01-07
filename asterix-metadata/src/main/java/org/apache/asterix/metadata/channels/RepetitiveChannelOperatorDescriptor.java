@@ -45,22 +45,25 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
     private final String subscriptionsName;
 
     private final String resultsName;
+    private final JobSpecification channeljobSpec;
 
     public RepetitiveChannelOperatorDescriptor(JobSpecification spec, String dataverseName, String channelName,
-            String duration, FunctionSignature function, String subscriptionsName, String resultsName) {
+            String duration, FunctionSignature function, String subscriptionsName, String resultsName,
+            JobSpecification channeljobSpec) {
         super(spec, 0, 1);
         this.channelJobId = new ActiveJobId(dataverseName, channelName, ActiveObjectType.CHANNEL);
         this.duration = duration;
         this.function = function;
         this.subscriptionsName = subscriptionsName;
         this.resultsName = resultsName;
+        this.channeljobSpec = channeljobSpec;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration, subscriptionsName,
-                resultsName);
+                resultsName, channeljobSpec);
     }
 
     public ActiveJobId getChannelJobId() {
@@ -81,6 +84,10 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
 
     public FunctionSignature getFunction() {
         return function;
+    }
+
+    public JobSpecification getChanneljobSpec() {
+        return channeljobSpec;
     }
 
 }

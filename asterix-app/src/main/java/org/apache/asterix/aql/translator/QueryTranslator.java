@@ -418,7 +418,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
 
                 case CREATE_CHANNEL: {
-                    handleCreateChannelStatement(metadataProvider, stmt, hcc);
+                    handleCreateChannelStatement(metadataProvider, stmt, hcc, hdc);
                     break;
                 }
 
@@ -2633,7 +2633,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     }
 
     private void handleCreateChannelStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IHyracksDataset hdc) throws Exception {
 
         CreateChannelStatement ccs = (CreateChannelStatement) stmt;
         String dataverseName = getActiveDataverse(ccs.getDataverseName());
@@ -2643,8 +2643,6 @@ public class QueryTranslator extends AbstractLangTranslator {
         Identifier resultsTypeName = null;
         Identifier resultsName = null;
         String channelName = ccs.getChannelName().getValue();
-
-        //check if things are avail
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2683,7 +2681,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             fieldNames = new ArrayList<String>();
             fieldNames.add("resultId");
             partitionFields.add(fieldNames);
-            idd = new InternalDetailsDecl(partitionFields, false, null, false);
+            idd = new InternalDetailsDecl(partitionFields, true, null, false);
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseIdentifier, resultsName,
                     new Identifier("Metadata"), resultsTypeName, null, null, new HashMap<String, String>(),
                     new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
@@ -2696,6 +2694,29 @@ public class QueryTranslator extends AbstractLangTranslator {
                     new AqlCompilationProvider());
             translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                     QueryTranslator.ResultDelivery.SYNC);
+
+            StringBuilder builder = new StringBuilder();
+            builder.append("insert into dataset " + dataverseName + "." + resultsName + " ");
+            builder.append(" (" + " for $sub in dataset " + dataverseName + "." + subscriptionsName + "\n");
+            builder.append(
+                    " for $result in " + ccs.getFunction().getNamespace() + "." + ccs.getFunction().getName() + "(");
+            int i = 0;
+            for (; i < ccs.getFunction().getArity() - 1; i++) {
+                builder.append("$sub.param" + i + ",");
+            }
+            builder.append("$sub.param" + i + ")\n");
+            builder.append("return {\n");
+            builder.append("\"subscriptionId\":$sub.subscriptionId,");
+            builder.append("\"deliveryTime\":current-datetime(),");
+            builder.append("\"result\":$result");
+            builder.append("}");
+            builder.append(")");
+            builder.append(";");
+            AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+            List<Statement> fStatements = null;
+            fStatements = parser.parse();
+            JobSpecification ChanneljobSpec = handleInsertStatement(metadataProvider, fStatements.get(0), hcc, hdc,
+                    ResultDelivery.ASYNC, true);
 
             //Channel Transaction Begin
             //mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2710,7 +2731,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                     ccs.getFunction(), ccs.getDuration());
             JobSpecification jobSpec = ProcedureOperations.buildChannelJobSpec(dataverseName, channelName,
                     ccs.getDuration(), ccs.getFunction(), ccs.getSubscriptionsName(), ccs.getResultsName(),
-                    metadataProvider);
+                    metadataProvider, ChanneljobSpec);
 
             JobSpecification alteredJobSpec = ActiveUtil.alterJobSpecificationForChannel(jobSpec,
                     new ActiveJobId(dataverseName, channelName, ActiveObjectType.CHANNEL));

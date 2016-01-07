@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.common.channels;
 
-import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
@@ -29,12 +27,9 @@ import org.apache.asterix.common.active.ActiveRuntime;
 import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.active.api.IActiveManager;
-import org.apache.asterix.common.active.message.RepetitiveChannelXAQLMessage;
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.json.JSONException;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class ChannelRuntime extends ActiveRuntime {
 
@@ -45,19 +40,27 @@ public class ChannelRuntime extends ActiveRuntime {
     protected IActiveManager activeManager;
     protected ActiveJobId activeJobId;
     private final String query;
+    private final JobSpecification channeljobSpec;
 
     public ChannelRuntime(ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
-            IActiveManager activeManager, ActiveJobId activeJobId, String query) {
+            IActiveManager activeManager, ActiveJobId activeJobId, String query, JobSpecification channeljobSpec) {
         super(runtimeId, inputHandler, frameWriter);
         this.activeJobId = activeJobId;
         this.query = query;
         this.activeManager = activeManager;
         timer = new Timer();
+        this.channeljobSpec = channeljobSpec;
     }
 
     private class AQLTask extends TimerTask {
         public void run() {
             LOGGER.info("Executing Channel: " + activeJobId.toString());
+            try {
+                activeManager.runChannelJob(channeljobSpec);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+            /*
             RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(activeJobId, query);
             activeManager.getFeedMessageService().sendMessage(xAqlMessage);
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -66,13 +69,13 @@ public class ChannelRuntime extends ActiveRuntime {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
+            
             }
             try {
                 activeManager.sendHttpForChannel();
             } catch (RemoteException | ACIDException | AsterixException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
     }
 
