@@ -2052,7 +2052,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * Calculate an estimate size of the bloom filter. Note that this is an
      * estimation which assumes that the data is going to be uniformly
      * distributed across all partitions.
-     * 
+     *
      * @param dataset
      * @return Number of elements that will be used to create a bloom filter per
      *         dataset per partition

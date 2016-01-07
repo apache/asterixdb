@@ -250,9 +250,6 @@ public class ExternalIndexingOperations {
 
     /**
      * This method create an indexing operator that index records in HDFS
-     * <<<<<<< HEAD
-     * =======
-     * >>>>>>> master
      * 
      * @param jobSpec
      * @param itemType
@@ -290,9 +287,6 @@ public class ExternalIndexingOperations {
      * deleteedFiles should contain files that are no longer there in the file system
      * appendedFiles should have the new file information of existing files
      * The method should return false in case of zero delta
-     * <<<<<<< HEAD
-     * =======
-     * >>>>>>> master
      * 
      * @param dataset
      * @param metadataFiles
