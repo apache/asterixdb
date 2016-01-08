@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.junit.Test;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -723,6 +724,7 @@ public abstract class OrderedIndexExamplesTest {
                         fail("Unexpected exception: " + e.getMessage());
                     }
                     // Success.
+
                     break;
                 } catch (TreeIndexDuplicateKeyException e2) {
                     if (j != i) {
@@ -732,7 +734,6 @@ public abstract class OrderedIndexExamplesTest {
                     break;
                 }
             }
-
             treeIndex.deactivate();
             treeIndex.destroy();
         }

@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.common.impls;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -317,6 +318,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         protected boolean releasedLatches;
         public boolean appendOnly = false;
         protected final IFIFOPageQueue queue;
+        protected List<ICachedPage> pagesToWrite;
 
         public AbstractTreeIndexBulkLoader(float fillFactor, boolean appendOnly) throws TreeIndexException,
                 HyracksDataException {
@@ -346,8 +348,8 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
             NodeFrontier leafFrontier = new NodeFrontier(leafFrame.createTupleReference());
             leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
-            leafFrontier.page = bufferCache.confiscatePage(BufferedFileHandle
-                    .getDiskPageId(fileId, leafFrontier.pageId));
+            leafFrontier.page = bufferCache.confiscatePage(
+                    BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId));
 
             interiorFrame.setPage(leafFrontier.page);
             interiorFrame.initBuffer((byte) 0);
@@ -359,6 +361,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             slotSize = leafFrame.getSlotSize();
 
             nodeFrontiers.add(leafFrontier);
+            pagesToWrite = new ArrayList<>();
         }
 
         public abstract void add(ITupleReference tuple) throws IndexException, HyracksDataException;
@@ -370,6 +373,9 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 if (frontierPage.confiscated()) {
                     bufferCache.returnPage(frontierPage,false);
                 }
+            }
+            for(ICachedPage pageToDiscard: pagesToWrite){
+                bufferCache.returnPage(pageToDiscard, false);
             }
             releasedLatches = true;
         }

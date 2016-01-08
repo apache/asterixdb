@@ -19,7 +19,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 
 public interface IFIFOPageWriter {
-    public void write(ICachedPage page, IBufferCache bufferCache) throws HyracksDataException;
+    public void write(ICachedPage page, BufferCache bufferCache) throws HyracksDataException;
 
-    void sync(int fileId, IBufferCache ibufferCache) throws HyracksDataException;
+    void sync(int fileId, BufferCache bufferCache) throws HyracksDataException;
 }

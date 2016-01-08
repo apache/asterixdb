@@ -30,25 +30,20 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
     }
 
     @Override
-    public void write(ICachedPage page, IBufferCache ibufferCache) throws HyracksDataException {
-        BufferCache bufferCache = (BufferCache)ibufferCache;
+    public void write(ICachedPage page, BufferCache bufferCache) throws HyracksDataException {
         CachedPage cPage = (CachedPage)page;
-        BufferedFileHandle fInfo = bufferCache.getFileInfo(cPage);
-        if (fInfo.fileHasBeenDeleted()) {
-            return;
+        try {
+            bufferCache.write(cPage);
+        } finally {
+            bufferCache.returnPage(cPage);
+            if (DEBUG) {
+                System.out.println("[FIFO] Return page: " + cPage.cpid + "," + cPage.dpid);
+            }
         }
-        cPage.buffer.position(0);
-        cPage.buffer.limit(bufferCache.getPageSize());
-        bufferCache.ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * bufferCache.getPageSize(),
-                cPage.buffer);
-        bufferCache.returnPage(cPage);
-        if(DEBUG) System.out.println("[FIFO] Return page: " + cPage.cpid + "," + cPage.dpid);
     }
     
     @Override
-    public void sync(int fileId, IBufferCache ibufferCache) throws HyracksDataException {
-        BufferCache bufferCache = (BufferCache)ibufferCache;
-        BufferedFileHandle fInfo = bufferCache.getFileInfo(fileId);
-        bufferCache.ioManager.sync(fInfo.getFileHandle(), true);
+    public void sync(int fileId, BufferCache bufferCache) throws HyracksDataException {
+        bufferCache.force(fileId,true);
     }
 }
