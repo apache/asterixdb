@@ -81,7 +81,7 @@ public class DatasetDecl implements Statement {
         return itemTypeDataverse;
     }
 
-    public String getPrettyTypeName() {
+    public String getQualifiedTypeName() {
         if (itemTypeDataverse == dataverse) {
             return itemTypeName.getValue();
         } else {

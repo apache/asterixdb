@@ -759,25 +759,6 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public String getDatatypeNameUsingThisAnonymousDatatype(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
-        //Find the first datatype that uses this datatype
-        //Anonymous means there will be only one
-        List<Datatype> dataverseDatatypes;
-        dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
-        for (Datatype type : dataverseDatatypes) {
-            ARecordType recType = (ARecordType) type.getDatatype();
-            for (IAType subType : recType.getFieldTypes()) {
-                if (subType.getTypeName().equals(datatypeName)) {
-                    return type.getDatatypeName();
-                }
-            }
-        }
-
-        throw new MetadataException(
-                "Anonymous subtype " + dataverseName + "." + datatypeName + " is missing parent type");
-    }
-
     private List<String> getNestedComplexDatatypeNamesForThisDatatype(JobId jobId, String dataverseName,
             String datatypeName) throws Exception {
         //Return all field types that aren't builtin types

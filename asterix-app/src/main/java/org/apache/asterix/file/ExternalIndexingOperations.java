@@ -250,7 +250,7 @@ public class ExternalIndexingOperations {
 
     /**
      * This method create an indexing operator that index records in HDFS
-     * 
+     *
      * @param jobSpec
      * @param itemType
      * @param dataset
@@ -284,10 +284,10 @@ public class ExternalIndexingOperations {
      * At the end of this method, we expect to have 4 sets as follows:
      * metadataFiles should contain only the files that are appended in their original state
      * addedFiles should contain new files that has number assigned starting after the max original file number
-     * deleteedFiles should contain files that are no longer there in the file system
+     * deletedFiles should contain files that are no longer there in the file system
      * appendedFiles should have the new file information of existing files
      * The method should return false in case of zero delta
-     * 
+     *
      * @param dataset
      * @param metadataFiles
      * @param addedFiles
