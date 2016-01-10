@@ -129,3 +129,49 @@
                 <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
+        <!-- RECORD MANIPULATION TESTS -->
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
+            </compilation-unit>
+        </test-case>
