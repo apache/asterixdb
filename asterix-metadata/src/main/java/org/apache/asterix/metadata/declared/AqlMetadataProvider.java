@@ -48,7 +48,6 @@ import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
@@ -623,10 +622,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildChannelRuntime(JobSpecification jobSpec,
-            String dataverseName, String channelName, String duration, FunctionSignature function, String subName,
-            String resultsName, JobSpecification channeljobSpec) throws Exception {
+            String dataverseName, String channelName, String duration, JobSpecification channeljobSpec)
+                    throws Exception {
         RepetitiveChannelOperatorDescriptor channelOp = new RepetitiveChannelOperatorDescriptor(jobSpec, dataverseName,
-                channelName, duration, function, subName, resultsName, channeljobSpec);
+                channelName, duration, channeljobSpec);
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksCountPartitionConstraint(1);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(channelOp, partitionConstraint);
     }

@@ -2695,6 +2695,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                     QueryTranslator.ResultDelivery.SYNC);
 
+            //Create Channel Internal Job
             StringBuilder builder = new StringBuilder();
             builder.append("insert into dataset " + dataverseName + "." + resultsName + " ");
             builder.append(" (" + " for $sub in dataset " + dataverseName + "." + subscriptionsName + "\n");
@@ -2717,10 +2718,9 @@ public class QueryTranslator extends AbstractLangTranslator {
             fStatements = parser.parse();
             JobSpecification ChanneljobSpec = handleInsertStatement(metadataProvider, fStatements.get(0), hcc, hdc,
                     ResultDelivery.ASYNC, true);
+            JobSpecification alteredChannelJobSpec = ActiveUtil.insertBrokerNotificationIntoJob(ChanneljobSpec);
 
-            //Channel Transaction Begin
-            //mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            //metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            //Create Channel Operator
             MetadataLockManager.INSTANCE.createChannelBegin(dataverseName, dataverseName + "." + channelName,
                     ccs.getFunction().getName(), subscriptionsTypeName.getValue(), subscriptionsName.getValue(),
                     resultsTypeName.getValue(), resultsName.getValue());
@@ -2730,8 +2730,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             channel = new Channel(dataverseName, channelName, subscriptionsName.getValue(), resultsName.getValue(),
                     ccs.getFunction(), ccs.getDuration());
             JobSpecification jobSpec = ProcedureOperations.buildChannelJobSpec(dataverseName, channelName,
-                    ccs.getDuration(), ccs.getFunction(), ccs.getSubscriptionsName(), ccs.getResultsName(),
-                    metadataProvider, ChanneljobSpec);
+                    ccs.getDuration(), metadataProvider, ChanneljobSpec);
 
             JobSpecification alteredJobSpec = ActiveUtil.alterJobSpecificationForChannel(jobSpec,
                     new ActiveJobId(dataverseName, channelName, ActiveObjectType.CHANNEL));

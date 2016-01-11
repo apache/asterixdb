@@ -343,10 +343,7 @@ public class ActiveUtil {
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof RepetitiveChannelOperatorDescriptor) {
                 metaOp = new ChannelMetaOperatorDescriptor(altered, channelJobId, opDesc, ActiveRuntimeType.REPETITIVE,
-                        ((RepetitiveChannelOperatorDescriptor) opDesc).getFunction(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getDuration(),
-                        ((RepetitiveChannelOperatorDescriptor) opDesc).getSubscriptionsName(),
-                        ((RepetitiveChannelOperatorDescriptor) opDesc).getResultsName(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getChanneljobSpec());
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else {
@@ -887,6 +884,11 @@ public class ActiveUtil {
             }
         }
         return outputType;
+    }
+
+    public static JobSpecification insertBrokerNotificationIntoJob(JobSpecification channeljobSpec) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

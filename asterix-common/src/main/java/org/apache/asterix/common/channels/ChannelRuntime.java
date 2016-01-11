@@ -20,6 +20,7 @@ package org.apache.asterix.common.channels;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
@@ -39,14 +40,12 @@ public class ChannelRuntime extends ActiveRuntime {
     private boolean complete = false;
     protected IActiveManager activeManager;
     protected ActiveJobId activeJobId;
-    private final String query;
     private final JobSpecification channeljobSpec;
 
     public ChannelRuntime(ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
-            IActiveManager activeManager, ActiveJobId activeJobId, String query, JobSpecification channeljobSpec) {
+            IActiveManager activeManager, ActiveJobId activeJobId, JobSpecification channeljobSpec) {
         super(runtimeId, inputHandler, frameWriter);
         this.activeJobId = activeJobId;
-        this.query = query;
         this.activeManager = activeManager;
         timer = new Timer();
         this.channeljobSpec = channeljobSpec;
@@ -57,25 +56,14 @@ public class ChannelRuntime extends ActiveRuntime {
             LOGGER.info("Executing Channel: " + activeJobId.toString());
             try {
                 activeManager.runChannelJob(channeljobSpec);
+                activeManager.sendHttpForChannel();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(" Sent Job for channel " + activeJobId);
+
+                }
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
-            /*
-            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(activeJobId, query);
-            activeManager.getFeedMessageService().sendMessage(xAqlMessage);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                try {
-                    LOGGER.info(" Sent " + xAqlMessage.toJSON());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            
-            }
-            try {
-                activeManager.sendHttpForChannel();
-            } catch (RemoteException | ACIDException | AsterixException e) {
-                e.printStackTrace();
-            }*/
         }
     }
 

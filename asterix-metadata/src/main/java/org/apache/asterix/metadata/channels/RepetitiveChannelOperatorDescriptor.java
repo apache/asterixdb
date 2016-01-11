@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -38,32 +37,22 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
     /** The unique identifier of the channel. **/
     private final ActiveJobId channelJobId;
 
-    private final FunctionSignature function;
-
     private final String duration;
 
-    private final String subscriptionsName;
-
-    private final String resultsName;
     private final JobSpecification channeljobSpec;
 
     public RepetitiveChannelOperatorDescriptor(JobSpecification spec, String dataverseName, String channelName,
-            String duration, FunctionSignature function, String subscriptionsName, String resultsName,
-            JobSpecification channeljobSpec) {
+            String duration, JobSpecification channeljobSpec) {
         super(spec, 0, 1);
         this.channelJobId = new ActiveJobId(dataverseName, channelName, ActiveObjectType.CHANNEL);
         this.duration = duration;
-        this.function = function;
-        this.subscriptionsName = subscriptionsName;
-        this.resultsName = resultsName;
         this.channeljobSpec = channeljobSpec;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration, subscriptionsName,
-                resultsName, channeljobSpec);
+        return new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, duration, channeljobSpec);
     }
 
     public ActiveJobId getChannelJobId() {
@@ -72,18 +61,6 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
 
     public String getDuration() {
         return duration;
-    }
-
-    public String getSubscriptionsName() {
-        return subscriptionsName;
-    }
-
-    public String getResultsName() {
-        return resultsName;
-    }
-
-    public FunctionSignature getFunction() {
-        return function;
     }
 
     public JobSpecification getChanneljobSpec() {

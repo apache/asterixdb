@@ -33,7 +33,6 @@ import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelRuntime;
 import org.apache.asterix.common.channels.ProcedureRuntimeId;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feeds.FeedPolicyEnforcer;
 import org.apache.asterix.metadata.active.ActiveMetaNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -94,11 +93,9 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     private final ProcedureRuntimeId channelRuntimeId;
     private final long duration;
-    private final String query;
     private final JobSpecification channeljobSpec;
 
-    public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
-            FunctionSignature function, String duration, String subscriptionsName, String resultsName,
+    public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId, String duration,
             JobSpecification channeljobSpec) throws HyracksDataException {
         this.ctx = ctx;
         this.activeJobId = channelJobId;
@@ -108,7 +105,6 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
         this.channelRuntimeId = new ProcedureRuntimeId(channelJobId.getActiveId(), 0,
                 ActiveRuntimeId.DEFAULT_OPERAND_ID);
         this.duration = findPeriod(duration);
-        this.query = produceQuery(function, subscriptionsName, resultsName);
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.activeManager = runtimeCtx.getActiveManager();
@@ -144,38 +140,6 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
         }
         return (long) (seconds * 1000);
-    }
-
-    private String produceQuery(FunctionSignature function, String subscriptionsName, String resultsName) {
-        //insert into resultsTableName(
-        //for $sub in dataset subscriptionsTableName
-        //for $result in Function(parameters...)
-        //return {
-        //    "subscription-id":$sub.subscription-id,
-        //    "execution-time":current-datetime(),
-        //    "result":$result
-        //}
-        //);
-        StringBuilder builder = new StringBuilder();
-        builder.append("use dataverse " + activeJobId.getDataverse() + ";" + "\n");
-        builder.append("insert into dataset " + resultsName + " ");
-        builder.append(" (" + " for $sub in dataset " + subscriptionsName + "\n");
-        builder.append(" for $result in " + function.getName() + "(");
-
-        int i = 0;
-        for (; i < function.getArity() - 1; i++) {
-            builder.append("$sub.param" + i + ",");
-        }
-        builder.append("$sub.param" + i + ")\n");
-        builder.append("return {\n");
-        builder.append("\"subscription-id\":$sub.subscription-id,");
-        builder.append("\"execution-time\":current-datetime(),");
-        builder.append("\"result\":$result");
-
-        builder.append("}");
-        builder.append(")");
-        builder.append(";");
-        return builder.toString();
     }
 
     @Override
@@ -230,8 +194,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
         this.setOutputFrameWriter(0, writer, recordDesc);
         ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName(), 0,
                 ActiveRuntimeId.DEFAULT_OPERAND_ID, ActiveObjectType.CHANNEL);
-        activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query,
-                channeljobSpec);
+        activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, channeljobSpec);
         activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }
 

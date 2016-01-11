@@ -16,7 +16,6 @@ package org.apache.asterix.metadata.channels;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -59,19 +58,13 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
      **/
     private final ActiveRuntimeType runtimeType;
 
-    private final FunctionSignature function;
-
     private final String duration;
-
-    private final String subscriptionsName;
-
-    private final String resultsName;
 
     private final JobSpecification channeljobSpec;
 
     public ChannelMetaOperatorDescriptor(JobSpecification spec, ActiveJobId channelJobId,
-            IOperatorDescriptor coreOperatorDescriptor, ActiveRuntimeType runtimeType, FunctionSignature function,
-            String duration, String subscriptionsName, String resultsName, JobSpecification channeljobSpec) {
+            IOperatorDescriptor coreOperatorDescriptor, ActiveRuntimeType runtimeType, String duration,
+            JobSpecification channeljobSpec) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.channelJobId = channelJobId;
         if (coreOperatorDescriptor.getOutputRecordDescriptors().length == 1) {
@@ -79,10 +72,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         }
         this.coreOperator = coreOperatorDescriptor;
         this.runtimeType = runtimeType;
-        this.function = function;
         this.duration = duration;
-        this.subscriptionsName = subscriptionsName;
-        this.resultsName = resultsName;
         this.channeljobSpec = channeljobSpec;
     }
 
@@ -92,8 +82,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         IOperatorNodePushable nodePushable = null;
         switch (runtimeType) {
             case REPETITIVE:
-                nodePushable = new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration,
-                        subscriptionsName, resultsName, channeljobSpec);
+                nodePushable = new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, duration, channeljobSpec);
                 break;
             default:
                 throw new HyracksDataException(new IllegalArgumentException("Invalid channel runtime: " + runtimeType));

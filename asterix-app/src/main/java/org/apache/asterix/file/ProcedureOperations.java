@@ -22,7 +22,6 @@ import org.apache.asterix.common.active.message.DropChannelMessage;
 import org.apache.asterix.common.active.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.active.ActiveMessageOperatorDescriptor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -51,15 +50,15 @@ public class ProcedureOperations {
      * @throws Exception
      */
     public static JobSpecification buildChannelJobSpec(String dataverseName, String channelName, String duration,
-            FunctionSignature function, String subName, String resultsName, AqlMetadataProvider metadataProvider,
-            JobSpecification channeljobSpec) throws AsterixException, AlgebricksException {
+            AqlMetadataProvider metadataProvider, JobSpecification channeljobSpec)
+                    throws AsterixException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IOperatorDescriptor channelQueryExecuter;
         AlgebricksPartitionConstraint executerPc;
 
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildChannelRuntime(spec,
-                    dataverseName, channelName, duration, function, subName, resultsName, channeljobSpec);
+                    dataverseName, channelName, duration, channeljobSpec);
             channelQueryExecuter = p.first;
             executerPc = p.second;
         } catch (Exception e) {
