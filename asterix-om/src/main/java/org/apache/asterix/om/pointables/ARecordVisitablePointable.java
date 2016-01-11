@@ -19,11 +19,6 @@
 
 package org.apache.asterix.om.pointables;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
@@ -39,6 +34,11 @@ import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.INullWriter;
 import org.apache.hyracks.util.string.UTF8StringWriter;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class interprets the binary data representation of a record. One can

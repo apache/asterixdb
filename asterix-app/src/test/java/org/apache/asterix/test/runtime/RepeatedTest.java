@@ -86,7 +86,7 @@ public class RepeatedTest extends ExecutionTest {
     private int count;
     private final TestExecutor testExecutor = new TestExecutor();
 
-    @Parameters
+    @Parameters(name = "RepeatedTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.DEFAULT_REPEADED_TESTSUITE_XML_NAME);
         return testArgs;

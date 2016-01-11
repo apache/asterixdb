@@ -251,7 +251,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     private final IRewriterFactory rewriterFactory;
 
     public QueryTranslator(List<Statement> aqlStatements, SessionConfig conf,
-            ILangCompilationProvider compliationProvider) throws MetadataException, AsterixException {
+            ILangCompilationProvider compliationProvider) {
         this.statements = aqlStatements;
         this.sessionConfig = conf;
         this.declaredFunctions = getDeclaredFunctions(aqlStatements);
@@ -491,8 +491,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         }
     }
 
-    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config)
-            throws RemoteException, ACIDException {
+    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config) {
         SetStatement ss = (SetStatement) stmt;
         String pname = ss.getPropName();
         String pvalue = ss.getPropValue();
@@ -3021,6 +3020,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 hcc.waitForCompletion(jobId);
                 break;
             case SYNC:
+                hcc.waitForCompletion(jobId);
                 ResultReader resultReader = new ResultReader(hcc, hdc);
                 resultReader.open(jobId, metadataProvider.getResultSetId());
 
@@ -3031,8 +3031,6 @@ public class QueryTranslator extends AbstractLangTranslator {
                     ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
                 }
                 ResultUtils.displayResults(resultReader, sessionConfig);
-
-                hcc.waitForCompletion(jobId);
                 break;
             case ASYNC_DEFERRED:
                 handle = new JSONArray();

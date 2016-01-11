@@ -45,13 +45,6 @@ import org.apache.hyracks.data.std.primitive.ShortPointable;
 
 public class ATypeHierarchy {
 
-    public static enum Domain {
-        SPATIAL,
-        NUMERIC,
-        LIST,
-        ANY
-    }
-
     private static BitSet typePromotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
     private static BitSet typeDemotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
     private static HashMap<Integer, ITypeConvertComputer> promoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
@@ -123,6 +116,10 @@ public class ATypeHierarchy {
         hierarchyDomains.put(ATypeTag.DOUBLE, Domain.NUMERIC);
         hierarchyDomains.put(ATypeTag.ORDEREDLIST, Domain.LIST);
         hierarchyDomains.put(ATypeTag.UNORDEREDLIST, Domain.LIST);
+    }
+
+    public static Domain getTypeDomain(ATypeTag tag) {
+        return hierarchyDomains.get(tag);
     }
 
     public static boolean isSameTypeDomain(ATypeTag tag1, ATypeTag tag2, boolean useListDomain) {
@@ -803,6 +800,13 @@ public class ATypeHierarchy {
         }
 
         return value;
+    }
+
+    public static enum Domain {
+        SPATIAL,
+        NUMERIC,
+        LIST,
+        ANY
     }
 
 }

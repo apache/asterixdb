@@ -18,9 +18,10 @@
  !-->
 <!DOCTYPE test-suite [
 
-        <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+<!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+<!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
+]>
 
-        ]>
 <test-suite
         xmlns="urn:xml.testframework.asterix.apache.org"
         ResultOffsetPath="results"
@@ -4417,6 +4418,9 @@
     <test-group name="records">
         &RecordsQueries;
     </test-group>
+    <test-group name="deep-equal">
+        &DeepEqualQueries;
+    </test-group>
     <test-group name="scan">
         <test-case FilePath="scan">
             <compilation-unit name="10">
@@ -6239,7 +6243,12 @@
         </test-case>
     </test-group>
     <test-group name="hdfs">
-      <test-case FilePath="hdfs">
+        <test-case FilePath="hdfs">
+            <compilation-unit name="large-record">
+                <output-dir compare="Text">large-record</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="hdfs">
             <compilation-unit name="hdfs_shortcircuit">
                 <output-dir compare="Text">hdfs_shortcircuit</output-dir>
             </compilation-unit>

@@ -18,11 +18,6 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-
 import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
@@ -65,6 +60,11 @@ import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
 
 public class AqlSerializerDeserializerProvider implements ISerializerDeserializerProvider, Serializable {
 

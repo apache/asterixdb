@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
@@ -44,21 +43,6 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
     private RecordMergeTypeComputer() {
     }
 
-    public static ARecordType extractRecordType(IAType t) {
-        if (t.getTypeTag() == ATypeTag.RECORD) {
-            return (ARecordType) t;
-        }
-
-        if (t.getTypeTag() == ATypeTag.UNION) {
-            IAType innerType = ((AUnionType) t).getNullableType();
-            if (innerType.getTypeTag() == ATypeTag.RECORD) {
-                return (ARecordType) innerType;
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
@@ -66,12 +50,12 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         IAType t0 = (IAType) env.getType(f.getArguments().get(0).getValue());
         IAType t1 = (IAType) env.getType(f.getArguments().get(1).getValue());
         boolean nullable = TypeHelper.canBeNull(t0) || TypeHelper.canBeNull(t1);
-        ARecordType recType0 = extractRecordType(t0);
-        ARecordType recType1 = extractRecordType(t1);
+        ARecordType recType0 = TypeComputerUtils.extractRecordType(t0);
+        ARecordType recType1 = TypeComputerUtils.extractRecordType(t1);
 
         if (recType0 == null || recType1 == null) {
-            throw new AlgebricksException(
-                    "record-merge expects possibly NULL records as arguments, but got (" + t0 + ", " + t1 + ")");
+            throw new AlgebricksException("record-merge expects possibly NULL records as arguments, but got (" + t0
+                    + ", " + t1 + ")");
         }
 
         List<String> resultFieldNames = new ArrayList<>();
@@ -79,6 +63,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             resultFieldNames.add(fieldName);
         }
         Collections.sort(resultFieldNames);
+
         List<IAType> resultFieldTypes = new ArrayList<>();
         for (String fieldName : resultFieldNames) {
             try {
@@ -96,20 +81,27 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
 
         List<String> additionalFieldNames = new ArrayList<>();
         List<IAType> additionalFieldTypes = new ArrayList<>();
-        for (int i = 0; i < recType1.getFieldNames().length; ++i) {
-            String fieldName = recType1.getFieldNames()[i];
-            IAType fieldType = recType1.getFieldTypes()[i];
-            int pos = Collections.binarySearch(resultFieldNames, fieldName);
+        String fieldNames[] = recType1.getFieldNames();
+        IAType fieldTypes[] = recType1.getFieldTypes();
+        for (int i = 0; i < fieldNames.length; ++i) {
+            int pos = Collections.binarySearch(resultFieldNames, fieldNames[i]);
             if (pos >= 0) {
+                IAType resultFieldType = resultFieldTypes.get(pos);
+                if (resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag()) {
+                    throw new AlgebricksException("Duplicate field " + fieldNames[i] + " encountered");
+                }
                 try {
-                    resultFieldTypes.set(pos, mergedNestedType(fieldType, resultFieldTypes.get(pos)));
+                    // Assuming fieldTypes[i].getTypeTag() = resultFieldType.getTypeTag()
+                    if (fieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
+                        resultFieldTypes.set(pos, mergedNestedType(fieldTypes[i], resultFieldType));
+                    }
                 } catch (AsterixException e) {
                     throw new AlgebricksException(e);
                 }
 
             } else {
-                additionalFieldNames.add(fieldName);
-                additionalFieldTypes.add(fieldType);
+                additionalFieldNames.add(fieldNames[i]);
+                additionalFieldTypes.add(fieldTypes[i]);
             }
         }
 
@@ -117,9 +109,9 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         resultFieldTypes.addAll(additionalFieldTypes);
         String resultTypeName = "merged(" + recType0.getTypeName() + ", " + recType1.getTypeName() + ")";
         boolean isOpen = recType0.isOpen() || recType1.isOpen();
-        IAType resultType = null;
-        resultType = new ARecordType(resultTypeName, resultFieldNames.toArray(new String[] {}),
-                resultFieldTypes.toArray(new IAType[] {}), isOpen);
+
+        IAType resultType = new ARecordType(resultTypeName, resultFieldNames.toArray(new String[] {}),
+                    resultFieldTypes.toArray(new IAType[] {}), isOpen);
 
         if (nullable) {
             resultType = AUnionType.createNullableType(resultType);
@@ -127,32 +119,32 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         return resultType;
     }
 
-    IAType mergedNestedType(IAType fieldType1, IAType fieldType0) throws AlgebricksException, AsterixException {
+    private IAType mergedNestedType(IAType fieldType1, IAType fieldType0) throws AlgebricksException, AsterixException {
         if (fieldType1.getTypeTag() != ATypeTag.RECORD || fieldType0.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("Duplicate field \"" + fieldType1.getTypeName() + "\" encountered");
+            throw new AlgebricksException("Duplicate field " + fieldType1.getTypeName() + " encountered");
         }
 
-        ARecordType returnType = (ARecordType) fieldType0;
+        ARecordType resultType = (ARecordType) fieldType0;
         ARecordType fieldType1Copy = (ARecordType) fieldType1;
 
         for (int i = 0; i < fieldType1Copy.getFieldTypes().length; i++) {
             try {
-                int pos = returnType.getFieldIndex(fieldType1Copy.getFieldNames()[i]);
+                int pos = resultType.getFieldIndex(fieldType1Copy.getFieldNames()[i]);
                 if (pos >= 0) {
-                    if (fieldType1Copy.getFieldTypes()[i].getTypeTag() != ATypeTag.RECORD) {
-                        break;
+                    // If a sub-record do merge, else ignore and let the values decide what to do
+                    if (fieldType1Copy.getFieldTypes()[i].getTypeTag() == ATypeTag.RECORD) {
+                        IAType[] oldTypes = resultType.getFieldTypes();
+                        oldTypes[pos] = mergedNestedType(fieldType1Copy.getFieldTypes()[i],
+                                resultType.getFieldTypes()[pos]);
+                        resultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(), oldTypes,
+                                resultType.isOpen());
                     }
-                    IAType[] oldTypes = returnType.getFieldTypes();
-                    oldTypes[pos] = mergedNestedType(fieldType1Copy.getFieldTypes()[i],
-                            returnType.getFieldTypes()[pos]);
-                    returnType = new ARecordType(returnType.getTypeName(), returnType.getFieldNames(), oldTypes,
-                            returnType.isOpen());
                 } else {
-                    IAType[] combinedFieldTypes = ArrayUtils.addAll(returnType.getFieldTypes().clone(),
+                    IAType[] combinedFieldTypes = ArrayUtils.addAll(resultType.getFieldTypes().clone(),
                             fieldType1Copy.getFieldTypes()[i]);
-                    returnType = new ARecordType(returnType.getTypeName(),
-                            ArrayUtils.addAll(returnType.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
-                            combinedFieldTypes, returnType.isOpen());
+                    resultType = new ARecordType(resultType.getTypeName(), ArrayUtils.addAll(
+                            resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]), combinedFieldTypes,
+                            resultType.isOpen());
                 }
 
             } catch (IOException | AsterixException e) {
@@ -160,6 +152,6 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             }
         }
 
-        return returnType;
+        return resultType;
     }
 }
