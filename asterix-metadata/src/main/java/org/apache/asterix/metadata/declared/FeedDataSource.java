@@ -41,8 +41,8 @@ public class FeedDataSource extends AqlDataSource {
 
     public FeedDataSource(AqlSourceId id, String targetDataset, IAType itemType, AqlDataSourceType dataSourceType,
             FeedId sourceFeedId, FeedType sourceFeedType, ConnectionLocation location, String[] locations)
-            throws AlgebricksException {
-        super(id, id.getDataverseName(), id.getDatasourceName(), itemType, dataSourceType);
+                    throws AlgebricksException {
+        super(id, itemType, dataSourceType);
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
         this.sourceFeedType = sourceFeedType;
@@ -73,16 +73,6 @@ public class FeedDataSource extends AqlDataSource {
 
     public Feed getFeed() {
         return feed;
-    }
-
-    @Override
-    public IAType[] getSchemaTypes() {
-        return schemaTypes;
-    }
-
-    @Override
-    public INodeDomain getDomain() {
-        return domain;
     }
 
     public String getTargetDataset() {

@@ -47,11 +47,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitione
 public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     private final AqlSourceId id;
-   private final IAType itemType;
+    private final IAType itemType;
     private final AqlDataSourceType datasourceType;
     protected IAType[] schemaTypes;
     protected INodeDomain domain;
-    private Map<String, Serializable> properties = new HashMap<String, Serializable>();
+    private Map<String, Serializable> properties = new HashMap<>();
 
     public enum AqlDataSourceType {
         INTERNAL_DATASET,
@@ -60,25 +60,16 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         LOADABLE
     }
 
-    public AqlDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName,
-            IAType itemType, AqlDataSourceType datasourceType) throws AlgebricksException {
+    public AqlDataSource(AqlSourceId id, IAType itemType, AqlDataSourceType datasourceType) throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
         this.datasourceType = datasourceType;
     }
 
-    public String getDatasourceDataverse() {
-        return id.getDataverseName();
-    }
-
-    public String getDatasourceName() {
-        return id.getDatasourceName();
-    }
-
     @Override
-    public abstract IAType[] getSchemaTypes();
-
-    public abstract INodeDomain getDomain();
+    public IAType[] getSchemaTypes() {
+        return schemaTypes;
+    }
 
     public void computeLocalStructuralProperties(List<ILocalStructuralProperty> localProps,
             List<LogicalVariable> variables) {
@@ -104,8 +95,8 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList) {
         int n = scanVariables.size();
         if (n > 1) {
-            List<LogicalVariable> head = new ArrayList<LogicalVariable>(scanVariables.subList(0, n - 1));
-            List<LogicalVariable> tail = new ArrayList<LogicalVariable>(1);
+            List<LogicalVariable> head = new ArrayList<>(scanVariables.subList(0, n - 1));
+            List<LogicalVariable> tail = new ArrayList<>(1);
             tail.addAll(scanVariables);
             FunctionalDependency fd = new FunctionalDependency(head, tail);
             fdList.add(fd);
@@ -198,10 +189,11 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     public Map<String, Serializable> getProperties() {
         return properties;
     }
-    
+
     public IAType getItemType() {
         return itemType;
     }
+
     public void setProperties(Map<String, Serializable> properties) {
         this.properties = properties;
     }

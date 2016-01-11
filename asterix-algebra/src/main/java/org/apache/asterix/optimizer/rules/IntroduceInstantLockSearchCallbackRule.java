@@ -85,7 +85,7 @@ public class IntroduceInstantLockSearchCallbackRule implements IAlgebraicRewrite
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
-                String datasourceName = ((AqlDataSource) dataSourceScanOp.getDataSource()).getDatasourceName();
+                String datasourceName = ((AqlDataSource) dataSourceScanOp.getDataSource()).getId().getDatasourceName();
                 if (dataSourcesMap.containsKey(datasourceName)) {
                     ++(dataSourcesMap.get(datasourceName).first);
                 } else {
