@@ -196,24 +196,26 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     private void runInParallel(OperatorNodePushableAction opAction) throws HyracksDataException {
         List<Future<Void>> initializationTasks = new ArrayList<Future<Void>>();
-        // Run one action for all OperatorNodePushables in parallel through a thread pool.
-        for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
-            initializationTasks.add(ctx.getExecutorService().submit(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    opAction.runAction(op);
-                    return null;
-                }
-            }));
-        }
-
-        // Waits until all parallel actions to finish.
-        for (Future<Void> initializationTask : initializationTasks) {
-            try {
-                initializationTask.get();
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
+        try {
+            // Run one action for all OperatorNodePushables in parallel through a thread pool.
+            for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
+                initializationTasks.add(ctx.getExecutorService().submit(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        opAction.runAction(op);
+                        return null;
+                    }
+                }));
             }
+            // Waits until all parallel actions to finish.
+            for (Future<Void> initializationTask : initializationTasks) {
+                initializationTask.get();
+            }
+        } catch (Throwable th) {
+            for (Future<Void> initializationTask : initializationTasks) {
+                initializationTask.cancel(true);
+            }
+            throw new HyracksDataException(th);
         }
     }
 }

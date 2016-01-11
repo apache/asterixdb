@@ -255,8 +255,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         addPendingThread(ct);
         try {
             ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
-            operator.initialize();
             try {
+                operator.initialize();
                 if (collectors.length > 0) {
                     final Semaphore sem = new Semaphore(collectors.length - 1);
                     for (int i = 1; i < collectors.length; ++i) {
