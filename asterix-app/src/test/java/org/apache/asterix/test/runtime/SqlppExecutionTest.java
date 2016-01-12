@@ -68,7 +68,7 @@ public class SqlppExecutionTest {
         AsterixHyracksIntegrationUtil.removeTestStorageFiles();
     }
 
-    @Parameters
+    @Parameters(name = "SqlppExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml("only_sqlpp.xml");
         if (testArgs.size() == 0) {

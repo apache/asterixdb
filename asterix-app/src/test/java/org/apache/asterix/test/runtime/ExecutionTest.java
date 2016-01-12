@@ -66,7 +66,7 @@ public class ExecutionTest {
         ExecutionTestUtil.tearDown();
     }
 
-    @Parameters
+    @Parameters(name = "ExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.ONLY_TESTSUITE_XML_NAME);
         if (testArgs.size() == 0) {

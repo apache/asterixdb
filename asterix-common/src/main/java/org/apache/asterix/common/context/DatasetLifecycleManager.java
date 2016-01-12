@@ -146,7 +146,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID);
         if (iInfo.referenceCount != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            throw new HyracksDataException("Cannot remove index while it is open.");
+            throw new HyracksDataException("Cannot remove index while it is open. (Dataset reference count = "
+                    + iInfo.referenceCount + ", Operation tracker number of active operations = "
+                    + opTracker.getNumActiveOperations() + ")");
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
@@ -301,6 +303,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return openIndexesInfo;
     }
 
+    @Override
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
         synchronized (datasetVirtualBufferCaches) {
             List<IVirtualBufferCache> vbcs = datasetVirtualBufferCaches.get(datasetID);
@@ -607,6 +610,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         removeDatasetFromCache(dsInfo.datasetID);
     }
 
+    @Override
     public void closeAllDatasets() throws HyracksDataException {
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             closeDataset(dsInfo);

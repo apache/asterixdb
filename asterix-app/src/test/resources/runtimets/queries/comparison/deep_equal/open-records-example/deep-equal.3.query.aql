@@ -16,15 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : create a dataset providingi an invalid value for a hint and an unknown hint
- * Expected Res : Failure
- * Date         : 29 Jan 2013
- * Issue        : 251
- */
-
-use dataverse Metadata;
-
-for $x in dataset('Metadata.Dataset')
-where $x.DataverseName='test'
-return $x
+use dataverse feeds;
+for $x in dataset StreamDocuments
+for $extra in dataset SourceInfo
+return deep-equal($x,$extra);

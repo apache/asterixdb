@@ -23,4 +23,6 @@
  * Date         : 19th May 2013
  */
 
+use dataverse test;
+
 printName();

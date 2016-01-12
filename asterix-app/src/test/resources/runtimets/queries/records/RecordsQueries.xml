@@ -114,7 +114,7 @@
         <test-case FilePath="records">
             <compilation-unit name="closed-closed-fieldname-conflict_issue173">
                 <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>java.lang.IllegalStateException: Closed fields 0 and 1 have the same field name "name"</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="records">
@@ -127,5 +127,51 @@
             <compilation-unit name="open-open-fieldname-conflict_issue173">
                 <output-dir compare="Text">open-open-fieldname-conflict_issue173</output-dir>
                 <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+            </compilation-unit>
+        </test-case>
+        <!-- RECORD MANIPULATION TESTS -->
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-merge">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-add-fields">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="documentation-example">
+                <output-dir compare="Text">documentation-example</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="tiny-social-example-only-records">
+                <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="records/record-remove-fields">
+            <compilation-unit name="highly-nested-open">
+                <output-dir compare="Text">highly-nested-open</output-dir>
             </compilation-unit>
         </test-case>

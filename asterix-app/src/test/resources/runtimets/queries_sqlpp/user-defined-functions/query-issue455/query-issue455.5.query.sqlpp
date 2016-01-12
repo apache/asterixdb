@@ -22,8 +22,6 @@
  * Expected Res : Failure
  * Date         : 19th May 2013
  */
+use test;
 
-select element l
-from  "Metadata.Function" as l
-;
 select element printName();

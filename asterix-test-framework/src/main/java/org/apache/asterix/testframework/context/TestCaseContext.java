@@ -91,7 +91,7 @@ public class TestCaseContext {
 
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
     public static final String ONLY_TESTSUITE_XML_NAME = "only.xml";
-    public static final String DEFAULT_REPEADED_TESTSUITE_XML_NAME = "repeatedtestsuite.xml";
+    public static final String DEFAULT_REPEATED_TESTSUITE_XML_NAME = "repeatedtestsuite.xml";
 
     private File tsRoot;
 
@@ -173,6 +173,18 @@ public class TestCaseContext {
         path = new File(path, testCase.getFilePath());
         return new File(path,
                 cUnit.getOutputDir().getValue() + "." + OutputFormat.forCompilationUnit(cUnit).extension());
+    }
+
+    @Override
+    public String toString() {
+        final TestCase testCase = getTestCase();
+        StringBuilder sb = new StringBuilder(testCase.getFilePath());
+        sb.append(':');
+        for (CompilationUnit cu : testCase.getCompilationUnit()) {
+            sb.append(' ');
+            sb.append(cu.getName());
+        }
+        return sb.toString();
     }
 
     public static class Builder {

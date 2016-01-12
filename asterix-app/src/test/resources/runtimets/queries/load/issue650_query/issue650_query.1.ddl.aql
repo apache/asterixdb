@@ -34,3 +34,6 @@ create type UserType as open {
 }
 
 create dataset Users(UserType) primary key uid;
+
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;

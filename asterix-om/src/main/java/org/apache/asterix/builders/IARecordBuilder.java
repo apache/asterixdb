@@ -52,7 +52,7 @@ public interface IARecordBuilder {
     /**
      * @param name
      *            The field name.
-     * @param out
+     * @param value
      *            The field value.
      * @throws AsterixException
      *             if the field name conflicts with a closed field name
