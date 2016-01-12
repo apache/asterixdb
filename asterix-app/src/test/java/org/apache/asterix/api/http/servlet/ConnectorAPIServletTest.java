@@ -36,14 +36,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import junit.extensions.PA;
-import junit.framework.Assert;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.junit.Test;
-
 import org.apache.asterix.feeds.CentralFeedManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -58,6 +50,13 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.junit.Test;
+
+import junit.extensions.PA;
+import junit.framework.Assert;
 
 @SuppressWarnings("deprecation")
 public class ConnectorAPIServletTest {
@@ -99,8 +98,8 @@ public class ConnectorAPIServletTest {
         servlet.doGet(mockRequest, mockResponse);
 
         // Constructs the actual response.
-        JSONTokener tokener = new JSONTokener(new InputStreamReader(
-                new ByteArrayInputStream(outputStream.toByteArray())));
+        JSONTokener tokener = new JSONTokener(
+                new InputStreamReader(new ByteArrayInputStream(outputStream.toByteArray())));
         JSONObject actualResponse = new JSONObject(tokener);
 
         // Checks the temp-or-not, primary key, data type of the dataset.
@@ -108,8 +107,8 @@ public class ConnectorAPIServletTest {
         Assert.assertFalse(temp);
         String primaryKey = actualResponse.getString("keys");
         Assert.assertEquals("DataverseName,DatasetName", primaryKey);
-        ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON((JSONObject) actualResponse
-                .get("type"));
+        ARecordType recordType = (ARecordType) JSONDeserializerForTypes
+                .convertFromJSON((JSONObject) actualResponse.get("type"));
         Assert.assertEquals(getMetadataRecordType("Metadata", "Dataset"), recordType);
 
         // Checks the correctness of results.
@@ -177,7 +176,8 @@ public class ConnectorAPIServletTest {
         AqlMetadataProvider metadataProvider = new AqlMetadataProvider(null, CentralFeedManager.getInstance());
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-        ARecordType recordType = (ARecordType) metadataProvider.findType(dataverseName, dataset.getItemTypeName());
+        ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
         // Metadata transaction commits.
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         return recordType;

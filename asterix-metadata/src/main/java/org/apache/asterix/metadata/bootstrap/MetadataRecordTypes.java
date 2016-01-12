@@ -237,22 +237,23 @@ public final class MetadataRecordTypes {
 
     public static final int DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
     public static final int DATASET_ARECORD_DATASETNAME_FIELD_INDEX = 1;
-    public static final int DATASET_ARECORD_DATATYPENAME_FIELD_INDEX = 2;
-    public static final int DATASET_ARECORD_DATASETTYPE_FIELD_INDEX = 3;
-    public static final int DATASET_ARECORD_GROUPNAME_FIELD_INDEX = 4;
-    public static final int DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX = 5;
-    public static final int DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX = 6;
-    public static final int DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX = 7;
-    public static final int DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX = 8;
-    public static final int DATASET_ARECORD_HINTS_FIELD_INDEX = 9;
-    public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 10;
-    public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 11;
-    public static final int DATASET_ARECORD_PENDINGOP_FIELD_INDEX = 12;
+    public static final int DATASET_ARECORD_DATATYPEDATAVERSENAME_FIELD_INDEX = 2;
+    public static final int DATASET_ARECORD_DATATYPENAME_FIELD_INDEX = 3;
+    public static final int DATASET_ARECORD_DATASETTYPE_FIELD_INDEX = 4;
+    public static final int DATASET_ARECORD_GROUPNAME_FIELD_INDEX = 5;
+    public static final int DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX = 6;
+    public static final int DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX = 7;
+    public static final int DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX = 8;
+    public static final int DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX = 9;
+    public static final int DATASET_ARECORD_HINTS_FIELD_INDEX = 10;
+    public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 11;
+    public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 12;
+    public static final int DATASET_ARECORD_PENDINGOP_FIELD_INDEX = 13;
 
     private static final ARecordType createDatasetRecordType() throws AsterixException {
-        String[] fieldNames = { "DataverseName", "DatasetName", "DatatypeName", "DatasetType", "GroupName",
-                "CompactionPolicy", "CompactionPolicyProperties", "InternalDetails", "ExternalDetails", "Hints",
-                "Timestamp", "DatasetId", "PendingOp" };
+        String[] fieldNames = { "DataverseName", "DatasetName", "DatatypeDataverseName", "DatatypeName", "DatasetType",
+                "GroupName", "CompactionPolicy", "CompactionPolicyProperties", "InternalDetails", "ExternalDetails",
+                "Hints", "Timestamp", "DatasetId", "PendingOp" };
 
         AUnionType internalRecordUnion = AUnionType.createNullableType(INTERNAL_DETAILS_RECORDTYPE);
         AUnionType externalRecordUnion = AUnionType.createNullableType(EXTERNAL_DETAILS_RECORDTYPE);
@@ -262,9 +263,9 @@ public final class MetadataRecordTypes {
         AUnorderedListType unorderedListOfHintsType = new AUnorderedListType(DATASET_HINTS_RECORDTYPE, null);
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                BuiltinType.ASTRING, BuiltinType.ASTRING, compactionPolicyPropertyListType, internalRecordUnion,
-                externalRecordUnion, unorderedListOfHintsType, BuiltinType.ASTRING, BuiltinType.AINT32,
-                BuiltinType.AINT32 };
+                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, compactionPolicyPropertyListType,
+                internalRecordUnion, externalRecordUnion, unorderedListOfHintsType, BuiltinType.ASTRING,
+                BuiltinType.AINT32, BuiltinType.AINT32 };
         return new ARecordType("DatasetRecordType", fieldNames, fieldTypes, true);
     }
 

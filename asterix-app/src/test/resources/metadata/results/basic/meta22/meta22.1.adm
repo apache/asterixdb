@@ -1,2 +1,0 @@
-{ "DataverseName": "testdv", "DatasetName": "t1", "IndexName": "idx1", "IndexStructure": "BTREE", "SearchKey": [ [ "name" ] ], "IsPrimary": false, "Timestamp": "Mon Sep 17 23:21:46 PDT 2012", "SearchKeyType": [ "string" ] }
-{ "DataverseName": "testdv", "DatasetName": "t1", "IndexName": "t1", "IndexStructure": "BTREE", "SearchKey": [ [ "id" ] ], "IsPrimary": true, "Timestamp": "Mon Sep 17 23:21:46 PDT 2012" }

@@ -16,3 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create primary index & secondary index on open field & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 30 Sep 2013
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+create type testdv.testtype as open {
+id : int32
+}
+
+create dataset testdv.t1(testtype) primary key id;
+
+create index idx1 on testdv.t1(name: string) enforced;
+
+/* drop index testdv.t1.idx1; */

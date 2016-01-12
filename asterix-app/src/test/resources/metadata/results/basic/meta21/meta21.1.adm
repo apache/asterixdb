@@ -1,2 +1,0 @@
-{ "GroupName": "DEFAULT_NG_ALL_NODES", "NodeNames": {{ "asterix_nc1", "asterix_nc2" }}, "Timestamp": "Thu Sep 13 11:42:20 PDT 2012" }
-{ "GroupName": "MetadataGroup", "NodeNames": {{ "asterix_nc1" }}, "Timestamp": "Thu Sep 13 11:42:20 PDT 2012" }

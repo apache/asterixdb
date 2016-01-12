@@ -93,8 +93,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         ARecordType recType = null;
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtils.getFilterField(dataset);
-            IAType itemType = ((AqlMetadataProvider) context.getMetadataProvider()).findType(dataset.getDataverseName(),
-                    dataset.getItemTypeName());
+            IAType itemType = ((AqlMetadataProvider) context.getMetadataProvider())
+                    .findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             if (itemType.getTypeTag() == ATypeTag.RECORD) {
                 recType = (ARecordType) itemType;
             }

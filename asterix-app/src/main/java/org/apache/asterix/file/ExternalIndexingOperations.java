@@ -250,6 +250,7 @@ public class ExternalIndexingOperations {
 
     /**
      * This method create an indexing operator that index records in HDFS
+     *
      * @param jobSpec
      * @param itemType
      * @param dataset
@@ -283,9 +284,10 @@ public class ExternalIndexingOperations {
      * At the end of this method, we expect to have 4 sets as follows:
      * metadataFiles should contain only the files that are appended in their original state
      * addedFiles should contain new files that has number assigned starting after the max original file number
-     * deleteedFiles should contain files that are no longer there in the file system
+     * deletedFiles should contain files that are no longer there in the file system
      * appendedFiles should have the new file information of existing files
      * The method should return false in case of zero delta
+     *
      * @param dataset
      * @param metadataFiles
      * @param addedFiles
@@ -340,8 +342,9 @@ public class ExternalIndexingOperations {
                         uptodate = false;
                     }
                 }
-                if (fileFound)
+                if (fileFound) {
                     break;
+                }
             }
             if (!fileFound) {
                 // File not stored previously in metadata -> pending add op
@@ -385,9 +388,9 @@ public class ExternalIndexingOperations {
         ExternalDatasetDetails dsd = new ExternalDatasetDetails(originalDsd.getAdapter(), originalDsd.getProperties(),
                 originalDsd.getTimestamp(), ExternalDatasetTransactionState.BEGIN);
         Dataset transactionDatset = new Dataset(dataset.getDataverseName(), dataset.getDatasetName(),
-                dataset.getItemTypeName(), dataset.getNodeGroupName(), dataset.getCompactionPolicy(),
-                dataset.getCompactionPolicyProperties(), dsd, dataset.getHints(), DatasetType.EXTERNAL,
-                dataset.getDatasetId(), dataset.getPendingOp());
+                dataset.getItemTypeDataverseName(), dataset.getItemTypeName(), dataset.getNodeGroupName(),
+                dataset.getCompactionPolicy(), dataset.getCompactionPolicyProperties(), dsd, dataset.getHints(),
+                DatasetType.EXTERNAL, dataset.getDatasetId(), dataset.getPendingOp());
         return transactionDatset;
     }
 
@@ -428,9 +431,9 @@ public class ExternalIndexingOperations {
             AqlMetadataProvider metadataProvider) throws MetadataException, AlgebricksException {
         ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
         for (ExternalFile file : metadataFiles) {
-            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP)
+            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
                 files.add(file);
-            else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
+            } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
                 for (ExternalFile appendedFile : appendedFiles) {
                     if (appendedFile.getFileName().equals(file.getFileName())) {
                         files.add(new ExternalFile(file.getDataverseName(), file.getDatasetName(), file.getFileNumber(),
@@ -560,7 +563,8 @@ public class ExternalIndexingOperations {
         int numPrimaryKeys = getRIDSize(ds);
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         secondaryKeyFields.size();
-        ARecordType itemType = (ARecordType) metadataProvider.findType(ds.getDataverseName(), ds.getItemTypeName());
+        ARecordType itemType = (ARecordType) metadataProvider.findType(ds.getItemTypeDataverseName(),
+                ds.getItemTypeName());
         Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         if (spatialType == null) {

@@ -16,9 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use dataverse Metadata;
+/*
+ * Description  : Create primary index & secondary index on open field & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 30 Sep 2013
+ */
 
-for $c in dataset('Dataset')
-where $c.DataverseName='Metadata'
-return $c
+for $l in dataset('Metadata.Index')
+where $l.DataverseName='testdv'
+return $l
 

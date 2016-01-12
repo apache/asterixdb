@@ -77,8 +77,9 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
 
     protected String skip(int step) {
         StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < step; i++)
+        for (int i = 0; i < step; i++) {
             sb.append("  ");
+        }
         return sb.toString();
     }
 

@@ -33,10 +33,7 @@ public enum MetadataIndexImmutableProperties {
     FEED_ACTIVITY_DATASET_ID("FeedActivity", 11, 11),
     FEED_POLICY("FeedPolicy", 12, 12),
     COMPACTION_POLICY("CompactionPolicy", 13, 13),
-    EXTERNAL_FILE("ExternalFile", 14, 14),
-    GROUPNAME_ON_DATASET("GroupName", DATASET, 15),
-    DATATYPE_NAME_ON_DATASET("DatatypeName", DATASET, 16),
-    DATATYPE_NAME_ON_DATATYPE("DatatypeName", DATATYPE, 17);
+    EXTERNAL_FILE("ExternalFile", 14, 14);
 
     private final String indexName;
     private final int datasetId;

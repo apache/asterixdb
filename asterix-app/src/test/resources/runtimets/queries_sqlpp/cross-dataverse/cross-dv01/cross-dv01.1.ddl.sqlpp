@@ -30,9 +30,6 @@ create  database student;
 
 create  database teacher;
 
-use student;
-
-
 use teacher;
 
 
@@ -54,9 +51,9 @@ create type teacher.tchrType as
   dept : string
 }
 
-create  table student.ugdstd(stdType) primary key id;
+create  table student.ugdstd(student.stdType) primary key id;
 
-create  table student.gdstd(stdType) primary key id;
+create  table student.gdstd(student.stdType) primary key id;
 
 create  table teacher.prof(tchrType) primary key id;
 

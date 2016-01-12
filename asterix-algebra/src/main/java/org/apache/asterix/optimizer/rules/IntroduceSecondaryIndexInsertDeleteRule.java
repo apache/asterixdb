@@ -150,7 +150,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         // Create operators for secondary index insert/delete.
         String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = mp.findType(dataset.getDataverseName(), itemTypeName);
+        IAType itemType = mp.findType(dataset.getItemTypeDataverseName(), itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
@@ -172,8 +172,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         // Check whether multiple keyword or n-gram indexes exist
         int secondaryIndexTotalCnt = 0;
         for (Index index : indexes) {
-            if (index.isSecondaryIndex())
+            if (index.isSecondaryIndex()) {
                 secondaryIndexTotalCnt++;
+            }
         }
 
         // Initialize inputs to the SINK operator
@@ -275,10 +276,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             }
 
             // Only apply replicate operator when doing bulk-load
-            if (secondaryIndexTotalCnt > 1 && insertOp.isBulkload())
+            if (secondaryIndexTotalCnt > 1 && insertOp.isBulkload()) {
                 project.getInputs().add(new MutableObject<ILogicalOperator>(replicateOp));
-            else
+            } else {
                 project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+            }
 
             context.computeAndSetTypeEnvironmentForOperator(project);
 
@@ -316,8 +318,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // filtering operator.
                     boolean isPartitioned = false;
                     if (index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
-                            || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)
+                            || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
                         isPartitioned = true;
+                    }
 
                     // Create a new logical variable - token
                     List<LogicalVariable> tokenizeKeyVars = new ArrayList<LogicalVariable>();
@@ -377,8 +380,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     currentTop = indexUpdate;
                     context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
 
-                    if (insertOp.isBulkload())
+                    if (insertOp.isBulkload()) {
                         op0.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+                    }
 
                 }
 
@@ -424,8 +428,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
 
-                if (insertOp.isBulkload())
+                if (insertOp.isBulkload()) {
                     op0.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+                }
 
             }
 

@@ -16,3 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create primary index & secondary index on open union field & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 30 Sep 2013
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+create type testdv.testtype as open {
+id : int32,
+name : string?
+}
+
+create dataset testdv.t1(testtype) primary key id;
+
+create index idx1 on testdv.t1(location: point) type rtree enforced;

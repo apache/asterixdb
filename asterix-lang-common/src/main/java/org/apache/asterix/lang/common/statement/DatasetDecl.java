@@ -30,6 +30,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 public class DatasetDecl implements Statement {
     protected final Identifier name;
     protected final Identifier dataverse;
+    protected final Identifier itemTypeDataverse;
     protected final Identifier itemTypeName;
     protected final Identifier nodegroupName;
     protected final String compactionPolicy;
@@ -39,12 +40,17 @@ public class DatasetDecl implements Statement {
     protected final Map<String, String> hints;
     protected final boolean ifNotExists;
 
-    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeName, Identifier nodeGroupName,
-            String compactionPolicy, Map<String, String> compactionPolicyProperties, Map<String, String> hints,
-            DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
+    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
+            Identifier nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
+            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
         this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
+        if (itemTypeDataverse.getValue() == null) {
+            this.itemTypeDataverse = dataverse;
+        } else {
+            this.itemTypeDataverse = itemTypeDataverse;
+        }
         this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
                 : nodeGroupName;
         this.compactionPolicy = compactionPolicy;
@@ -69,6 +75,18 @@ public class DatasetDecl implements Statement {
 
     public Identifier getItemTypeName() {
         return itemTypeName;
+    }
+
+    public Identifier getItemTypeDataverse() {
+        return itemTypeDataverse;
+    }
+
+    public String getQualifiedTypeName() {
+        if (itemTypeDataverse == dataverse) {
+            return itemTypeName.getValue();
+        } else {
+            return itemTypeDataverse.getValue() + "." + itemTypeName.getValue();
+        }
     }
 
     public Identifier getNodegroupName() {

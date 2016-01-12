@@ -609,11 +609,11 @@ The next example creates a new ADM record type called FbUserType. Note that the 
 
 #### Datasets
 
-    DatasetSpecification ::= "internal"? "dataset" QualifiedName "(" Identifier ")" IfNotExists
+    DatasetSpecification ::= "internal"? "dataset" QualifiedName "(" QualifiedName ")" IfNotExists
                              PrimaryKey ( "on" Identifier )? ( "hints" Properties )?
                              ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )?
                              ( "with filter on" Identifier )?
-                           | "external" "dataset" QualifiedName "(" Identifier ")" IfNotExists
+                           | "external" "dataset" QualifiedName "(" QualifiedName ")" IfNotExists
                              "using" AdapterName Configuration ( "hints" Properties )?
                              ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )?
     AdapterName          ::= Identifier

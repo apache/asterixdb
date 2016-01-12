@@ -523,6 +523,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         String dataverseName = getActiveDataverse(dd.getDataverse());
         String datasetName = dd.getName().getValue();
         DatasetType dsType = dd.getDatasetType();
+        String itemTypeDataverseName = dd.getItemTypeDataverse().getValue();
         String itemTypeName = dd.getItemTypeName().getValue();
         Identifier ngNameId = dd.getNodegroupName();
         String nodegroupName = getNodeGroupName(ngNameId, dd, dataverseName);
@@ -535,8 +536,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-        MetadataLockManager.INSTANCE.createDatasetBegin(dataverseName, dataverseName + "." + itemTypeName,
-                nodegroupName, compactionPolicy, dataverseName + "." + datasetName, defaultCompactionPolicy);
+        MetadataLockManager.INSTANCE.createDatasetBegin(dataverseName, itemTypeDataverseName,
+                itemTypeDataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
+                dataverseName + "." + datasetName, defaultCompactionPolicy);
         Dataset dataset = null;
         try {
 
@@ -551,8 +553,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     throw new AlgebricksException("A dataset with this name " + datasetName + " already exists.");
                 }
             }
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    itemTypeDataverseName, itemTypeName);
             if (dt == null) {
                 throw new AlgebricksException(": type " + itemTypeName + " could not be found.");
             }
@@ -612,8 +614,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
 
             //#. add a new dataset with PendingAddOp
-            dataset = new Dataset(dataverseName, datasetName, itemTypeName, ngName, compactionPolicy,
-                    compactionPolicyProperties, datasetDetails, dd.getHints(), dsType,
+            dataset = new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, ngName,
+                    compactionPolicy, compactionPolicyProperties, datasetDetails, dd.getHints(), dsType,
                     DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
@@ -687,8 +689,9 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.createDatasetEnd(dataverseName, dataverseName + "." + itemTypeName,
-                    nodegroupName, compactionPolicy, dataverseName + "." + datasetName, defaultCompactionPolicy);
+            MetadataLockManager.INSTANCE.createDatasetEnd(dataverseName, itemTypeDataverseName,
+                    itemTypeDataverseName + "." + itemTypeName, nodegroupName, compactionPolicy,
+                    dataverseName + "." + datasetName, defaultCompactionPolicy);
         }
     }
 
@@ -812,8 +815,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     datasetName, indexName);
 
             String itemTypeName = ds.getItemTypeName();
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    ds.getItemTypeDataverseName(), itemTypeName);
             IAType itemType = dt.getDatatype();
             ARecordType aRecordType = (ARecordType) itemType;
 
@@ -837,19 +840,22 @@ public class QueryTranslator extends AbstractLangTranslator {
                 if (fieldExpr.second == null) {
                     fieldType = subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size()));
                 } else {
-                    if (!stmtCreateIndex.isEnforced())
+                    if (!stmtCreateIndex.isEnforced()) {
                         throw new AlgebricksException("Cannot create typed index on \"" + fieldExpr.first
                                 + "\" field without enforcing it's type");
-                    if (!isOpen)
+                    }
+                    if (!isOpen) {
                         throw new AlgebricksException("Typed index on \"" + fieldExpr.first
                                 + "\" field could be created only for open datatype");
+                    }
                     Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(mdTxnCtx, fieldExpr.second,
                             indexName, dataverseName);
                     TypeSignature typeSignature = new TypeSignature(dataverseName, indexName);
                     fieldType = typeMap.get(typeSignature);
                 }
-                if (fieldType == null)
+                if (fieldType == null) {
                     throw new AlgebricksException("Unknown type " + fieldExpr.second);
+                }
 
                 indexFields.add(fieldExpr.first);
                 indexFieldTypes.add(fieldType);
@@ -951,10 +957,11 @@ public class QueryTranslator extends AbstractLangTranslator {
                         .getDatasetIndexes(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName);
                 for (Index index : indexes) {
                     if (index.getKeyFieldNames().equals(indexFields)
-                            && !index.getKeyFieldTypes().equals(indexFieldTypes) && index.isEnforcingKeyFileds())
+                            && !index.getKeyFieldTypes().equals(indexFieldTypes) && index.isEnforcingKeyFileds()) {
                         throw new AsterixException(
                                 "Cannot create index " + indexName + " , enforced index " + index.getIndexName()
                                         + " on field \"" + StringUtils.join(indexFields, ',') + "\" already exist");
+                    }
                 }
             }
 
@@ -1366,9 +1373,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //#. mark the existing dataset as PendingDropOp
                 MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx,
-                        new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getNodeGroupName(),
-                                ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(), ds.getDatasetDetails(),
-                                ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
+                        new Dataset(dataverseName, datasetName, ds.getItemTypeDataverseName(), ds.getItemTypeName(),
+                                ds.getNodeGroupName(), ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(),
+                                ds.getDatasetDetails(), ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
                                 IMetadataEntity.PENDING_DROP_OP));
 
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1409,9 +1416,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                 //#. mark the existing dataset as PendingDropOp
                 MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx,
-                        new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getNodeGroupName(),
-                                ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(), ds.getDatasetDetails(),
-                                ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
+                        new Dataset(dataverseName, datasetName, ds.getItemTypeDataverseName(), ds.getItemTypeName(),
+                                ds.getNodeGroupName(), ds.getCompactionPolicy(), ds.getCompactionPolicyProperties(),
+                                ds.getDatasetDetails(), ds.getHints(), ds.getDatasetType(), ds.getDatasetId(),
                                 IMetadataEntity.PENDING_DROP_OP));
 
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1686,8 +1693,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         try {
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt == null) {
-                if (!stmtTypeDrop.getIfExists())
+                if (!stmtTypeDrop.getIfExists()) {
                     throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
+                }
             } else {
                 MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, dataverseName, typeName);
             }
@@ -1710,8 +1718,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         try {
             NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodegroupName);
             if (ng == null) {
-                if (!stmtDelete.getIfExists())
+                if (!stmtDelete.getIfExists()) {
                     throw new AlgebricksException("There is no nodegroup with this name " + nodegroupName + ".");
+                }
             } else {
                 MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodegroupName);
             }
@@ -1763,8 +1772,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
             if (function == null) {
-                if (!stmtDropFunction.getIfExists())
+                if (!stmtDropFunction.getIfExists()) {
                     throw new AlgebricksException("Unknonw function " + signature);
+                }
             } else {
                 MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             }
@@ -2399,8 +2409,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
 
             String itemTypeName = ds.getItemTypeName();
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                    itemTypeName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                    ds.getItemTypeDataverseName(), itemTypeName);
 
             // Prepare jobs to compact the datatset and its indexes
             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
@@ -2538,8 +2548,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         try {
             NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, ngName);
             if (ng != null) {
-                if (!stmtCreateNodegroup.getIfNotExists())
+                if (!stmtCreateNodegroup.getIfNotExists()) {
                     throw new AlgebricksException("A nodegroup with this name " + ngName + " already exists.");
+                }
             } else {
                 List<Identifier> ncIdentifiers = stmtCreateNodegroup.getNodeControllerNames();
                 List<String> ncNames = new ArrayList<String>(ncIdentifiers.size());
@@ -2895,10 +2906,10 @@ public class QueryTranslator extends AbstractLangTranslator {
             IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(), false, null,
                     toDataset.getDatasetDetails().isTemp());
             DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
-                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeName()),
-                    new Identifier(toDataset.getNodeGroupName()), toDataset.getCompactionPolicy(),
-                    toDataset.getCompactionPolicyProperties(), toDataset.getHints(), toDataset.getDatasetType(), idd,
-                    false);
+                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeDataverseName()),
+                    new Identifier(toDataset.getItemTypeName()), new Identifier(toDataset.getNodeGroupName()),
+                    toDataset.getCompactionPolicy(), toDataset.getCompactionPolicyProperties(), toDataset.getHints(),
+                    toDataset.getDatasetType(), idd, false);
             this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc);
         } catch (Exception e) {
             e.printStackTrace();

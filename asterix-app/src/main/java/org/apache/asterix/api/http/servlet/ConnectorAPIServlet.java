@@ -29,10 +29,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.feeds.CentralFeedManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -44,6 +40,9 @@ import org.apache.asterix.util.FlushDatasetUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /***
  * The REST API that takes a dataverse name and a dataset name as the input
@@ -89,8 +88,8 @@ public class ConnectorAPIServlet extends HttpServlet {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
             if (dataset == null) {
-                jsonResponse.put("error", "Dataset " + datasetName + " does not exist in " + "dataverse "
-                        + dataverseName);
+                jsonResponse.put("error",
+                        "Dataset " + datasetName + " does not exist in " + "dataverse " + dataverseName);
                 out.write(jsonResponse.toString());
                 out.flush();
                 return;
@@ -98,7 +97,8 @@ public class ConnectorAPIServlet extends HttpServlet {
             boolean temp = dataset.getDatasetDetails().isTemp();
             FileSplit[] fileSplits = metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName,
                     datasetName, temp);
-            ARecordType recordType = (ARecordType) metadataProvider.findType(dataverseName, dataset.getItemTypeName());
+            ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName());
             List<List<String>> primaryKeys = DatasetUtils.getPartitioningKeys(dataset);
             StringBuilder pkStrBuf = new StringBuilder();
             for (List<String> keys : primaryKeys) {

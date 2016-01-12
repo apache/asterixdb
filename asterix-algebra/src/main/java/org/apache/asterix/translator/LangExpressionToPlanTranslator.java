@@ -174,7 +174,7 @@ class LangExpressionToPlanTranslator
             throw new AlgebricksException(
                     "Unable to load dataset " + clffs.getDatasetName() + " since it does not exist");
         }
-        IAType itemType = metadataProvider.findType(clffs.getDataverseName(), dataset.getItemTypeName());
+        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                 stmt.getDatasetName());
         List<List<String>> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
@@ -426,7 +426,7 @@ class LangExpressionToPlanTranslator
         }
         AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
         String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = metadataProvider.findType(dataverseName, itemTypeName);
+        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), itemTypeName);
         DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset.getDataverseName(),
                 dataset.getDatasetName(), itemType, AqlDataSourceType.INTERNAL_DATASET);
 

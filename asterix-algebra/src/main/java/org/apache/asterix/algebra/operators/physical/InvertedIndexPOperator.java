@@ -106,7 +106,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         UnnestMapOperator unnestMapOp = (UnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -155,22 +155,20 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         try {
             IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
             IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
-                    dataset.getDataverseName(), dataset.getItemTypeName()).getDatatype();
+                    dataset.getItemTypeDataverseName(), dataset.getItemTypeName()).getDatatype();
             int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                     dataset.getDataverseName(), dataset.getDatasetName(), indexName);
             if (secondaryIndex == null) {
-                throw new AlgebricksException("Code generation error: no index " + indexName + " for dataset "
-                        + datasetName);
+                throw new AlgebricksException(
+                        "Code generation error: no index " + indexName + " for dataset " + datasetName);
             }
             List<List<String>> secondaryKeyFieldEntries = secondaryIndex.getKeyFieldNames();
             List<IAType> secondaryKeyTypeEntries = secondaryIndex.getKeyFieldTypes();
             int numSecondaryKeys = secondaryKeyFieldEntries.size();
             if (numSecondaryKeys != 1) {
-                throw new AlgebricksException(
-                        "Cannot use "
-                                + numSecondaryKeys
-                                + " fields as a key for an inverted index. There can be only one field as a key for the inverted index index.");
+                throw new AlgebricksException("Cannot use " + numSecondaryKeys
+                        + " fields as a key for an inverted index. There can be only one field as a key for the inverted index index.");
             }
             if (itemType.getTypeTag() != ATypeTag.RECORD) {
                 throw new AlgebricksException("Only record types can be indexed.");
@@ -180,8 +178,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     secondaryKeyFieldEntries.get(0), recordType);
             IAType secondaryKeyType = keyPairType.first;
             if (secondaryKeyType == null) {
-                throw new AlgebricksException("Could not find field " + secondaryKeyFieldEntries.get(0)
-                        + " in the schema.");
+                throw new AlgebricksException(
+                        "Could not find field " + secondaryKeyFieldEntries.get(0) + " in the schema.");
             }
 
             // TODO: For now we assume the type of the generated tokens is the
@@ -217,8 +215,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     typeEnv, context);
 
             ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recordType);
-            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
-                    dataset, recordType, context.getBinaryComparatorFactoryProvider());
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
+                    recordType, context.getBinaryComparatorFactoryProvider());
 
             int[] filterFields = null;
             int[] invertedIndexFields = null;
@@ -249,13 +247,13 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             // Get tokenizer and search modifier factories.
             IInvertedIndexSearchModifierFactory searchModifierFactory = InvertedIndexAccessMethod
                     .getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
-            IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(
-                    searchModifierType, searchKeyType, secondaryIndex);
+            IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod
+                    .getBinaryTokenizerFactory(searchModifierType, searchKeyType, secondaryIndex);
             IIndexDataflowHelperFactory dataflowHelperFactory;
 
             AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
-                    dataset, metadataProvider.getMetadataTxnContext());
+            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils
+                    .getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
             boolean temp = dataset.getDatasetDetails().isTemp();
             if (!isPartitioned) {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
