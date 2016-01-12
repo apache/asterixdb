@@ -27,6 +27,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
 create function printName()
 {
 "AsterixDB Shared nothing parallel BDMS"

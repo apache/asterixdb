@@ -80,10 +80,10 @@
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="temp_primary_plus_keyword_secondary_index">
         <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
-        <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset Fragile in dataverse recovery</expected-error>
       </compilation-unit>
     </test-case>
-      
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="temp_primary_plus_ngram_index">
         <output-dir compare="Text">primary_plus_ngram_index</output-dir>
@@ -92,9 +92,9 @@
     </test-case>
 
     <test-case FilePath="recover_after_abort">
-      <compilation-unit name="primary_plus_multiple_secondary_indices">
+      <compilation-unit name="primary_plus_multiple_secondary_indices"><!-- The only exception here is during the kill command which is in a different JVM, hence not caught -->
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
  </test-group>
@@ -152,14 +152,15 @@
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="temp_dataset_recovery">
         <output-dir compare="Text">dataset_recovery</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
 
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="temp_delete_after_recovery">
         <output-dir compare="Text">delete_after_recovery</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot find dataset Fragile_raw in dataverse recovery</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset Fragile_raw in dataverse recovery</expected-error>
       </compilation-unit>
     </test-case>
 
@@ -167,6 +168,7 @@
       <compilation-unit name="temp_insert_after_recovery">
         <output-dir compare="Text">insert_after_recovery</output-dir>
         <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset Fragile in dataverse recovery</expected-error>
       </compilation-unit>
     </test-case>
 
@@ -174,13 +176,14 @@
       <compilation-unit name="temp_load_after_recovery">
         <output-dir compare="Text">load_after_recovery</output-dir>
         <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset Fragile_raw in dataverse recovery</expected-error>
       </compilation-unit>
     </test-case>
 
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="temp_secondary_index_recovery">
         <output-dir compare="Text">secondary_index_recovery</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
  

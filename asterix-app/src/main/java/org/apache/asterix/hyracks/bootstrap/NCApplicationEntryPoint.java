@@ -281,13 +281,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext.getIOManager().deleteWorkspaceFiles();
 
         //reclaim storage for temporary datasets.
-        //get node stores
-        String[] nodeStores = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties().getStores()
-                .get(nodeId);
-        for (String store : nodeStores) {
-            String tempDatasetFolder = store + File.separator
+        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
+                .getStorageMountingPoints();
+        for (String ioDevice : ioDevices) {
+            String tempDatasetsDir = ioDevice + storageDirName + File.separator
                     + SplitsAndConstraintsUtil.TEMP_DATASETS_STORAGE_FOLDER;
-            FileUtils.deleteQuietly(new File(tempDatasetFolder));
+            FileUtils.deleteQuietly(new File(tempDatasetsDir));
         }
 
         // TODO

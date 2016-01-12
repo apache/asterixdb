@@ -184,10 +184,13 @@ public class ResultUtils {
         errorArray.put(errorMessage);
         try {
             errorResp.put("error-code", errorArray);
-            if (!errorSummary.equals(""))
+            if (errorSummary != "") {
                 errorResp.put("summary", errorSummary);
-            if (!errorStackTrace.equals(""))
-                errorResp.put("stacktrace", errorStackTrace);
+            } else {
+                //parse exception
+                errorResp.put("summary", errorMessage);
+            }
+            errorResp.put("stacktrace", errorStackTrace);
         } catch (JSONException e) {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }

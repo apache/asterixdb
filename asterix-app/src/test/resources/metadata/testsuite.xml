@@ -313,61 +313,61 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_7">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>AsterixException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>AsterixException</expected-error>
+        <expected-error>SyntaxError: Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
@@ -382,70 +382,73 @@
         <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
+    <!-- This case should be fixed to return a proper message rather than NPE -->
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>java.lang.NullPointerException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The partitioning key "[open-type]" cannot be of type RECORD.</expected-error>
       </compilation-unit>
     </test-case>
+    <!-- Feed datasets are not supported anymore
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_feed_error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.json.JSONException: JSONObject["summary"] not found</expected-error>
       </compilation-unit>
-    </test-case>
+    </test-case> -->
+    <!-- This case should be fixed to return a proper message rather than NPE -->
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>java.lang.NullPointerException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The partitioning key "[id]" cannot be nullable</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the BTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[age]" which is of type INT32 cannot be indexed using the RTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -453,7 +456,7 @@
     <test-case FilePath="transaction">
       <compilation-unit name="failure_previous_success">
         <output-dir compare="Text">failure_previous_success</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: A datatype with this name StreetType already exists</expected-error>
       </compilation-unit>
       <compilation-unit name="verify_failure_previous_success">
         <output-dir compare="Text">verify_failure_previous_success</output-dir>
@@ -462,7 +465,7 @@
     <test-case FilePath="transaction">
       <compilation-unit name="failure_subsequent_no_execution">
         <output-dir compare="Text">failure_subsequent_no_execution</output-dir>
-        <expected-error>MetadataException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: A nodegroup with this name group1 already exists</expected-error>
       </compilation-unit>
       <compilation-unit name="verify_failure_subsequent_no_execution">
         <output-dir compare="Text">verify_failure_subsequent_no_execution</output-dir>

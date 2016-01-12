@@ -16,6 +16,7 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
+ <test-group name="records">
         <test-case FilePath="records">
             <compilation-unit name="access-nested-fields">
                 <output-dir compare="Text">access-nested-fields</output-dir>
@@ -114,7 +115,7 @@
         <test-case FilePath="records">
             <compilation-unit name="closed-closed-fieldname-conflict_issue173">
                 <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>java.lang.IllegalStateException: Closed fields 0 and 1 have the same field name "name"</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="records">
@@ -129,3 +130,4 @@
                 <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
+    </test-group>

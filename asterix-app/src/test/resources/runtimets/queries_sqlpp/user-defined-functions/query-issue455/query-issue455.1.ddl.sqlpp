@@ -25,7 +25,8 @@
 
 
 drop database test if exists;
-create test;
+create database test;
+use test;
 
 create function printName()
 {

@@ -23,7 +23,6 @@
  * Date         : 19th May 2013
  */
 
-for $l in dataset Metadata.Function
-return $l
+use dataverse test;
 
 printName();
