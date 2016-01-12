@@ -23,6 +23,3 @@
  * Expected Res : Failure
  * Date         : 2015 Steven Jacobs
  */
-
-
-drop type c.a;

@@ -38,3 +38,5 @@ create type c.b as {
 id:int32,
 a:a
 }
+
+drop type c.a;

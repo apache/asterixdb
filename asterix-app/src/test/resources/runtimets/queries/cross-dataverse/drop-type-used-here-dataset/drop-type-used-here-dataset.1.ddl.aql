@@ -36,3 +36,5 @@ id:int32
 }
 
 create dataset a1(c.a) primary key id;
+
+drop type c.a;
