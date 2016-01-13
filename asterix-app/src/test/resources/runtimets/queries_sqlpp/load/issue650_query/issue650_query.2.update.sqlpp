@@ -22,11 +22,6 @@
  * Date         : 17 Oct 2013
  */
 
-drop  database fuzzyjoin if exists;
-create  database fuzzyjoin;
-
 use fuzzyjoin;
 
-
 load  table Users using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));
-

@@ -22,6 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,6 +41,7 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.ExpectedError;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
@@ -197,15 +199,8 @@ public class TestExecutor {
 
     // For tests where you simply want the byte-for-byte output.
     private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
-        byte[] buffer = new byte[10240];
-        int len;
-        java.io.FileOutputStream out = new java.io.FileOutputStream(actualFile);
-        try {
-            while ((len = resultStream.read(buffer)) != -1) {
-                out.write(buffer, 0, len);
-            }
-        } finally {
-            out.close();
+        try (FileOutputStream out = new FileOutputStream(actualFile)) {
+            IOUtils.copy(resultStream, out);
         }
     }
 
@@ -224,16 +219,13 @@ public class TestExecutor {
             // In future this may be changed depending on the requested
             // output format sent to the servlet.
             String errorBody = method.getResponseBodyAsString();
-            try {
-                JSONObject result = new JSONObject(errorBody);
-                String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                        result.getString("stacktrace") };
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-                throw new Exception("HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + method.getStatusLine()
-                        + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
-            } catch (Exception e) {
-                throw new Exception(errorBody);
-            }
+            JSONObject result = new JSONObject(errorBody);
+            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                    result.getString("stacktrace") };
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            String exceptionMsg = "HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + method.getStatusLine()
+                    + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
+            throw new Exception(exceptionMsg);
         }
         return statusCode;
     }
@@ -418,6 +410,8 @@ public class TestExecutor {
         File qbcFile = null;
         File qarFile = null;
         int queryCount = 0;
+        int numOfErrors = 0;
+        int numOfFiles = 0;
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
@@ -426,6 +420,7 @@ public class TestExecutor {
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             for (TestFileContext ctx : testFileCtxs) {
+                numOfFiles++;
                 testFile = ctx.getFile();
                 statement = readTestFile(testFile);
                 boolean failed = false;
@@ -566,8 +561,7 @@ public class TestExecutor {
                                 e.printStackTrace();
                             }
                             if (!failed) {
-                                throw new Exception(
-                                        "Test \"" + testFile + "\" FAILED!\n  An exception" + "is expected.");
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
                             }
                             System.err.println("...but that was expected.");
                             break;
@@ -576,22 +570,36 @@ public class TestExecutor {
                     }
 
                 } catch (Exception e) {
-
                     System.err.println("testFile " + testFile.toString() + " raised an exception:");
-
-                    e.printStackTrace();
-                    if (cUnit.getExpectedError().isEmpty()) {
+                    boolean unExpectedFailure = false;
+                    numOfErrors++;
+                    if (cUnit.getExpectedError().size() < numOfErrors) {
+                        unExpectedFailure = true;
+                    } else {
+                        // Get the expected exception
+                        ExpectedError expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
+                        if (e.toString().contains(expectedError.getValue())) {
+                            System.err.println("...but that was expected.");
+                        } else {
+                            unExpectedFailure = true;
+                        }
+                    }
+                    if (unExpectedFailure) {
+                        e.printStackTrace();
                         System.err.println("...Unexpected!");
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
-                    } else {
-                        LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
-                                + " failed as expected: " + e.getMessage());
-                        System.err.println("...but that was expected.");
                     }
-
+                } finally {
+                    if (numOfFiles == testFileCtxs.size() && numOfErrors < cUnit.getExpectedError().size()) {
+                        System.err.println("...Unexpected!");
+                        Exception e = new Exception(
+                                "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
+                        e.printStackTrace();
+                        throw e;
+                    }
                 }
             }
         }

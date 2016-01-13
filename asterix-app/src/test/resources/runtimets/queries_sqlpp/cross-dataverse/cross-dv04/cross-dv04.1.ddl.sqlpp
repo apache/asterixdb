@@ -33,11 +33,6 @@ create  database student;
 
 create  database teacher;
 
-use student;
-
-
-use teacher;
-
 
 create type student.stdType as
 {

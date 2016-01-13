@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -193,15 +192,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             matchedExpressions.clear();
             numMatchedKeys = 0;
 
-            // Remove the candidate if the dataset is a metadata dataset and the index is secondary
-            // TODO: fix the way secondary metadata indexes are implemented and remove this check
-            if (accessMethod.matchPrefixIndexExprs()) {
-                if (index.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
-                        && !index.isPrimaryIndex()) {
-                    indexExprAndVarIt.remove();
-                    continue;
-                }
-            }
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 List<String> keyField = index.getKeyFieldNames().get(i);
                 final IAType keyType = index.getKeyFieldTypes().get(i);

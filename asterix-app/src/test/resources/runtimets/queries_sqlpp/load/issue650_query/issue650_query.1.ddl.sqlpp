@@ -38,3 +38,6 @@ create type fuzzyjoin.UserType as
 
 create  table Users(UserType) primary key uid;
 
+drop  database fuzzyjoin if exists;
+create  database fuzzyjoin;
+

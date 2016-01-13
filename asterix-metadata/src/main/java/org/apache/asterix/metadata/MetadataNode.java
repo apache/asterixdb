@@ -34,10 +34,10 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
-import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataNode;
@@ -111,7 +111,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
 
-    private static final DatasetId METADATA_DATASET_ID = new DatasetId(MetadataIndexImmutableProperties.METADATA.getDatasetId());
+    private static final DatasetId METADATA_DATASET_ID = new DatasetId(
+            MetadataIndexImmutableProperties.METADATA.getDatasetId());
 
     private IDatasetLifecycleManager datasetLifecycleManager;
     private ITransactionSubsystem transactionSubsystem;
@@ -789,6 +790,7 @@ public class MetadataNode implements IMetadataNode {
     private void confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
             throws MetadataException, RemoteException {
         //If any datatype uses this type, throw an error
+        //TODO: Currently this loads all types into memory. This will need to be fixed for large numbers of types
         List<Datatype> datatypes = getAllDatatypes(jobId);
         for (Datatype type : datatypes) {
             if (!type.getDataverseName().equals(dataverseName)) {
@@ -802,25 +804,6 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         }
-    }
-
-    public String getDatatypeNameUsingThisAnonymousDatatype(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
-        //Find the first datatype that uses this datatype
-        //Anonymous means there will be only one
-        List<Datatype> dataverseDatatypes;
-        dataverseDatatypes = getDataverseDatatypes(jobId, dataverseName);
-        for (Datatype type : dataverseDatatypes) {
-            ARecordType recType = (ARecordType) type.getDatatype();
-            for (IAType subType : recType.getFieldTypes()) {
-                if (subType.getTypeName().equals(datatypeName)) {
-                    return type.getDatatypeName();
-                }
-            }
-        }
-
-        throw new MetadataException(
-                "Anonymous subtype " + dataverseName + "." + datatypeName + " is missing parent type");
     }
 
     private List<String> getNestedComplexDatatypeNamesForThisDatatype(JobId jobId, String dataverseName,

@@ -39,11 +39,11 @@ public class DatasetDataSource extends AqlDataSource {
 
     public DatasetDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
             AqlDataSourceType datasourceType) throws AlgebricksException {
-        super(id, datasourceDataverse, datasourceName, itemType, datasourceType);
+        super(id, itemType, datasourceType);
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            dataset = MetadataManager.INSTANCE.getDataset(ctx, datasourceDataverse, datasourceName);
+            dataset = MetadataManager.INSTANCE.getDataset(ctx, id.getDataverseName(), id.getDatasourceName());
             if (dataset == null) {
                 throw new AlgebricksException("Unknown dataset " + datasourceName + " in dataverse "
                         + datasourceDataverse);
@@ -103,22 +103,6 @@ public class DatasetDataSource extends AqlDataSource {
             }
         };
         domain = domainForExternalData;
-    }
-
-    @Override
-    public IAType[] getSchemaTypes() {
-        return schemaTypes;
-    }
-
-    @Override
-    public INodeDomain getDomain() {
-        return domain;
-    }
-
-    @Override
-    public void computeLocalStructuralProperties(List<ILocalStructuralProperty> localProps,
-            List<LogicalVariable> variables) {
-        // do nothing
     }
 
 }

@@ -30,15 +30,10 @@ drop dataverse b if exists;
 create dataverse a;
 create dataverse b;
 
-
 create type a.a as {
 id:int32
 }
 
-create type b.b as {
-id:int32,
-ap:a,
-bp: { "hi":int32}
-}
-
 create dataset b.b1(a.a) primary key id;
+
+drop dataverse a;

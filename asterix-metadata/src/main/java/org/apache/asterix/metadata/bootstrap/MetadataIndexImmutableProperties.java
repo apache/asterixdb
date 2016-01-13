@@ -34,11 +34,8 @@ public enum MetadataIndexImmutableProperties {
     FEED_POLICY("FeedPolicy", 12, 12),
     COMPACTION_POLICY("CompactionPolicy", 13, 13),
     EXTERNAL_FILE("ExternalFile", 14, 14),
-    GROUPNAME_ON_DATASET("GroupName", DATASET, 15),
-    DATATYPE_NAME_ON_DATASET("DatatypeName", DATASET, 16),
-    DATATYPE_NAME_ON_DATATYPE("DatatypeName", DATATYPE, 17),
-    CHANNEL("Channel", 18, 18),
-    BROKER("Broker", 19, 19);
+    CHANNEL("Channel", 15, 15),
+    BROKER("Broker", 16, 16);
 
     private final String indexName;
     private final int datasetId;
