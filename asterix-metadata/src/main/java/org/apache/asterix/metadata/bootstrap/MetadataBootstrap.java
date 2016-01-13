@@ -133,7 +133,6 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.FEED_POLICY_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET,
                 MetadataPrimaryIndexes.CHANNEL_DATASET, MetadataPrimaryIndexes.BROKER_DATASET,
                 MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
-
     }
 
     public static void startUniverse(IAsterixPropertiesProvider asterixPropertiesProvider,

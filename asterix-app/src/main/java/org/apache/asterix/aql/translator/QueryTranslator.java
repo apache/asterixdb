@@ -1945,7 +1945,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             if (function.getKind().equalsIgnoreCase("PROCEDURE")) {
-                //Send kill message to procedure
+                //TODO: Send kill message to procedure
             }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
