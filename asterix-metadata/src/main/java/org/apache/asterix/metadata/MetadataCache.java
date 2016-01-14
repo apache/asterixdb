@@ -29,6 +29,8 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.Broker;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -66,13 +68,17 @@ public class MetadataCache {
     protected final Map<FunctionSignature, Function> functions = new HashMap<FunctionSignature, Function>();
     // Key is adapter dataverse. Key of value map is the adapter name  
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
-  
+
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
     // Key is library dataverse. Key of value map is the library name
     protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
     // Key is library dataverse. Key of value map is the feed name  
     protected final Map<String, Map<String, Feed>> feeds = new HashMap<String, Map<String, Feed>>();
+    // Key is library dataverse. Key of value map is the channel name  
+    protected final Map<String, Map<String, Channel>> channels = new HashMap<String, Map<String, Channel>>();
+    // Key is the broker name  
+    protected final Map<String, Broker> brokers = new HashMap<String, Broker>();
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, CompactionPolicy>> compactionPolicies = new HashMap<String, Map<String, CompactionPolicy>>();
 
@@ -108,8 +114,9 @@ public class MetadataCache {
                 synchronized (datasets) {
                     synchronized (indexes) {
                         synchronized (datatypes) {
-                            synchronized (functions) {
-                                synchronized (adapters) {
+                            synchronized (channels) {
+                                synchronized (functions) {
+                                    synchronized (adapters) {
                                         synchronized (libraries) {
                                             synchronized (compactionPolicies) {
                                                 dataverses.clear();
@@ -117,6 +124,7 @@ public class MetadataCache {
                                                 datasets.clear();
                                                 indexes.clear();
                                                 datatypes.clear();
+                                                channels.clear();
                                                 functions.clear();
                                                 adapters.clear();
                                                 libraries.clear();
@@ -131,7 +139,7 @@ public class MetadataCache {
                 }
             }
         }
-    
+    }
 
     public Object addDataverseIfNotExists(Dataverse dataverse) {
         synchronized (dataverses) {
@@ -235,9 +243,10 @@ public class MetadataCache {
             synchronized (datasets) {
                 synchronized (indexes) {
                     synchronized (datatypes) {
-                        synchronized (functions) {
-                            synchronized (adapters) {
-                                synchronized (libraries) {
+                        synchronized (channels) {
+                            synchronized (functions) {
+                                synchronized (adapters) {
+                                    synchronized (libraries) {
                                         synchronized (feeds) {
                                             synchronized (compactionPolicies) {
                                                 datasets.remove(dataverse.getDataverseName());
@@ -256,6 +265,7 @@ public class MetadataCache {
                                                 }
                                                 libraries.remove(dataverse.getDataverseName());
                                                 feeds.remove(dataverse.getDataverseName());
+                                                channels.remove(dataverse.getDataverseName());
                                                 return dataverses.remove(dataverse.getDataverseName());
                                             }
                                         }
@@ -267,7 +277,7 @@ public class MetadataCache {
                 }
             }
         }
-    
+    }
 
     public Object dropDataset(Dataset dataset) {
         synchronized (datasets) {
@@ -483,8 +493,8 @@ public class MetadataCache {
 
     public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse == null) {
                 adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
                 adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
@@ -499,17 +509,14 @@ public class MetadataCache {
 
     public Object dropAdapter(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse != null) {
                 return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getName());
             }
             return null;
         }
     }
-
-  
-
 
     public Object addLibraryIfNotExists(Library library) {
         synchronized (libraries) {
@@ -548,6 +555,52 @@ public class MetadataCache {
                 return feedsInDataverse.remove(feed.getFeedName());
             }
             return null;
+        }
+    }
+
+    public Object addChannelIfNotExists(Channel channel) {
+        synchronized (channels) {
+            Map<String, Channel> channelsInDataverse = channels.get(channel.getChannelId().getDataverse());
+            if (channelsInDataverse == null) {
+                channelsInDataverse = new HashMap<String, Channel>();
+                channels.put(channel.getChannelId().getDataverse(), channelsInDataverse);
+            }
+            if (!channelsInDataverse.containsKey(channel.getChannelId().getName())) {
+                return channelsInDataverse.put(channel.getChannelId().getDataverse(), channel);
+            }
+            return null;
+        }
+
+    }
+
+    public Object dropChannel(Channel channel) {
+        synchronized (channels) {
+            Map<String, Channel> channelsInDataverse = channels.get(channel.getChannelId().getDataverse());
+            if (channelsInDataverse != null) {
+                return channelsInDataverse.remove(channel.getChannelId().getName());
+            }
+            return null;
+        }
+    }
+
+    public Object addBrokerIfNotExists(Broker broker) {
+        synchronized (brokers) {
+            Broker existingBroker = brokers.get(broker.getBrokerName());
+            if (existingBroker == null) {
+                return brokers.put(broker.getBrokerName(), broker);
+            }
+            return null;
+        }
+
+    }
+
+    public Object dropBroker(Broker broker) {
+        synchronized (brokers) {
+            Broker existingBroker = brokers.get(broker.getBrokerName());
+            if (existingBroker == null) {
+                return null;
+            }
+            return brokers.remove(existingBroker);
         }
     }
 

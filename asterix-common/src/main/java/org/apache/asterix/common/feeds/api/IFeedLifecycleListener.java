@@ -20,9 +20,11 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveLifecycleEventSubscriber;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 
@@ -37,20 +39,20 @@ public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterE
 
     public boolean isFeedJointAvailable(FeedJointKey feedJoinKey);
 
-    public List<FeedConnectionId> getActiveFeedConnections(FeedId feedId);
+    public List<FeedConnectionId> getActiveFeedConnections(ActiveObjectId feedId);
 
-    public List<String> getComputeLocations(FeedId feedId);
+    public List<String> getComputeLocations(ActiveObjectId feedId);
 
-    public List<String> getIntakeLocations(FeedId feedId);
+    public List<String> getIntakeLocations(ActiveObjectId feedId);
 
-    public List<String> getStoreLocations(FeedConnectionId feedId);
+    public List<String> getStoreLocations(ActiveJobId feedId);
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber);
+    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IActiveLifecycleEventSubscriber subscriber);
 
-    public void deregisterFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber);
+    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IActiveLifecycleEventSubscriber subscriber);
 
-    public List<String> getCollectLocations(FeedConnectionId feedConnectionId);
+    public List<String> getCollectLocations(ActiveJobId feedConnectionId);
 
-    boolean isFeedConnectionActive(FeedConnectionId connectionId);
+    boolean isFeedConnectionActive(ActiveJobId connectionId);
 
 }

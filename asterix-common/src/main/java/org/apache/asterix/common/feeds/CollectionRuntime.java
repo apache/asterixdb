@@ -20,6 +20,10 @@ package org.apache.asterix.common.feeds;
 
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntime;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
@@ -31,16 +35,16 @@ import org.apache.hyracks.api.comm.IFrameWriter;
  * intake job. For a secondary feed, tuples are collected from the intake/compute
  * runtime associated with the source feed.
  */
-public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime {
+public class CollectionRuntime extends ActiveRuntime implements ISubscriberRuntime {
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final ISubscribableRuntime sourceRuntime;
     private final Map<String, String> feedPolicy;
     private FeedFrameCollector frameCollector;
 
-    public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter, ISubscribableRuntime sourceRuntime,
-            Map<String, String> feedPolicy) {
+    public CollectionRuntime(ActiveJobId connectionId, ActiveRuntimeId runtimeId,
+            ActiveRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter,
+            ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy) {
         super(runtimeId, inputSideHandler, outputSideWriter);
         this.connectionId = connectionId;
         this.sourceRuntime = sourceRuntime;
@@ -73,7 +77,7 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
         return feedPolicy;
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

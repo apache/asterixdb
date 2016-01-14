@@ -41,7 +41,8 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
     public static IMetadataIndex LIBRARY_DATASET;
     public static IMetadataIndex FEED_DATASET;
-    public static IMetadataIndex FEED_ACTIVITY_DATASET;
+    public static IMetadataIndex CHANNEL_DATASET;
+    public static IMetadataIndex BROKER_DATASET;
     public static IMetadataIndex FEED_POLICY_DATASET;
     public static IMetadataIndex COMPACTION_POLICY_DATASET;
     public static IMetadataIndex EXTERNAL_FILE_DATASET;
@@ -49,6 +50,7 @@ public class MetadataPrimaryIndexes {
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
      * have been initialized before calling this init.
+     * 
      * @throws MetadataException
      *             If MetadataRecordTypes have not been initialized.
      */
@@ -95,13 +97,21 @@ public class MetadataPrimaryIndexes {
         DATASOURCE_ADAPTER_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.DATASOURCE_ADAPTER, 3,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("Name"))), 0,
-                MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, true,
-                new int[] { 0, 1 });
+                MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, true, new int[] { 0, 1 });
 
         FEED_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.FEED, 3,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("FeedName"))), 0,
                 MetadataRecordTypes.FEED_RECORDTYPE, true, new int[] { 0, 1 });
+
+        CHANNEL_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.CHANNEL, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("ChannelName")), 0,
+                MetadataRecordTypes.CHANNEL_RECORDTYPE, true, new int[] { 0, 1 });
+
+        BROKER_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.BROKER, 2,
+                new IAType[] { BuiltinType.ASTRING }, Arrays.asList(Arrays.asList("BrokerName")), 0,
+                MetadataRecordTypes.BROKER_RECORDTYPE, true, new int[] { 0 });
 
         LIBRARY_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.LIBRARY, 3,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
@@ -116,13 +126,13 @@ public class MetadataPrimaryIndexes {
         COMPACTION_POLICY_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.COMPACTION_POLICY, 3,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("CompactionPolicy"))), 0,
-                MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE, true,
-                new int[] { 0, 1 });
+                MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE, true, new int[] { 0, 1 });
 
         EXTERNAL_FILE_DATASET = new MetadataIndex(MetadataIndexImmutableProperties.EXTERNAL_FILE, 4,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("DatasetName"),
                         Arrays.asList("FileNumber"))),
                 0, MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE, true, new int[] { 0, 1, 2 });
+
     }
 }

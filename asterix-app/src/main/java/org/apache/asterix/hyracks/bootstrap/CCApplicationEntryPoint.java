@@ -21,6 +21,8 @@ package org.apache.asterix.hyracks.bootstrap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveJobLifecycleListener;
+import org.apache.asterix.active.CentralActiveManager;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
@@ -32,17 +34,15 @@ import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
+import org.apache.asterix.common.active.api.ICentralActiveManager;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.event.service.ILookupService;
-import org.apache.asterix.feeds.CentralFeedManager;
-import org.apache.asterix.feeds.FeedLifecycleListener;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -71,7 +71,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private Server webServer;
     private Server jsonAPIServer;
     private Server feedServer;
-    private ICentralFeedManager centralFeedManager;
+    private ICentralActiveManager centralActiveManager;
 
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
@@ -79,7 +79,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
-        messageBroker = new CCMessageBroker((ClusterControllerService)ccAppCtx.getControllerService());
+        messageBroker = new CCMessageBroker((ClusterControllerService) ccAppCtx.getControllerService());
         this.appCtx = ccAppCtx;
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -96,7 +96,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
         AsterixAppContextInfo.getInstance().getCCApplicationContext()
-                .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
+                .addJobLifecycleListener(ActiveJobLifecycleListener.INSTANCE);
 
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
@@ -108,8 +108,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         feedServer.start();
 
         ExternalLibraryBootstrap.setUpExternaLibraries(false);
-        centralFeedManager = CentralFeedManager.getInstance();
-        centralFeedManager.start();
+
+        centralActiveManager = CentralActiveManager.getInstance();
+        centralActiveManager.start();
 
         AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(
                 (HyracksConnection) getNewHyracksClientConnection());

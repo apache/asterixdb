@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveActivity;
+import org.apache.asterix.common.active.api.ICentralActiveManager;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -46,7 +48,6 @@ import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
@@ -69,7 +70,9 @@ import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.active.ActiveUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -87,7 +90,6 @@ import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -113,6 +115,7 @@ import org.apache.asterix.transaction.management.opcallbacks.TempDatasetPrimaryI
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -187,7 +190,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
-    private final ICentralFeedManager centralFeedManager;
+    private final ICentralActiveManager centralActiveManager;
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
@@ -212,11 +215,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return config;
     }
 
-    public AqlMetadataProvider(Dataverse defaultDataverse, ICentralFeedManager centralFeedManager) {
+    public AqlMetadataProvider(Dataverse defaultDataverse, ICentralActiveManager centralFeedManager) {
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-        this.centralFeedManager = centralFeedManager;
+        this.centralActiveManager = centralFeedManager;
     }
 
     public void setJobId(JobId jobId) {
@@ -343,7 +346,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     String itemTypeName = dataset.getItemTypeName();
                     IAType itemType = MetadataManager.INSTANCE
                             .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
-
                     ExternalDatasetDetails edd = (ExternalDatasetDetails) dataset.getDatasetDetails();
                     IAdapterFactory adapterFactory = getConfiguredAdapterFactory(dataset, edd.getAdapter(),
                             edd.getProperties(), itemType, false, null);
@@ -419,16 +421,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         if (feedDataSource.getFeed().getFeedId().equals(feedDataSource.getSourceFeedId())) {
                             locationArray = feedDataSource.getLocations();
                         } else {
-                            Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager()
-                                    .getFeedActivities();
-                            Iterator<FeedActivity> it = activities.iterator();
-                            FeedActivity activity = null;
+                            Collection<ActiveActivity> activities = centralActiveManager.getLoadManager()
+                                    .getActivities();
+                            Iterator<ActiveActivity> it = activities.iterator();
+                            ActiveActivity activity = null;
                             while (it.hasNext()) {
                                 activity = it.next();
-                                if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
-                                        && activity.getFeedName()
-                                                .equals(feedDataSource.getSourceFeedId().getFeedName())) {
-                                    locations = activity.getFeedActivityDetails()
+                                if (activity instanceof FeedActivity
+                                        && activity.getDataverseName()
+                                                .equals(feedDataSource.getSourceFeedId().getDataverse())
+                                        && activity.getObjectName()
+                                                .equals(feedDataSource.getSourceFeedId().getName())) {
+                                    locations = activity.getActivityDetails()
                                             .get(FeedActivityDetails.COMPUTE_LOCATIONS);
                                     locationArray = locations.split(",");
                                     break;
@@ -442,21 +446,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 break;
             case SECONDARY:
-                Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager().getFeedActivities();
-                Iterator<FeedActivity> it = activities.iterator();
-                FeedActivity activity = null;
+                Collection<ActiveActivity> activities = centralActiveManager.getLoadManager().getActivities();
+                Iterator<ActiveActivity> it = activities.iterator();
+                ActiveActivity activity = null;
                 while (it.hasNext()) {
                     activity = it.next();
-                    if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
-                            && activity.getFeedName().equals(feedDataSource.getSourceFeedId().getFeedName())) {
+                    if (activity instanceof FeedActivity
+                            && activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
+                            && activity.getObjectName().equals(feedDataSource.getSourceFeedId().getName())) {
                         switch (feedDataSource.getLocation()) {
                             case SOURCE_FEED_INTAKE_STAGE:
-                                locations = activity.getFeedActivityDetails()
-                                        .get(FeedActivityDetails.COLLECT_LOCATIONS);
+                                locations = activity.getActivityDetails().get(FeedActivityDetails.COLLECT_LOCATIONS);
                                 break;
                             case SOURCE_FEED_COMPUTE_STAGE:
-                                locations = activity.getFeedActivityDetails()
-                                        .get(FeedActivityDetails.COMPUTE_LOCATIONS);
+                                locations = activity.getActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
                                 break;
                         }
                         break;
@@ -596,8 +599,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
             JobSpecification jobSpec, PrimaryFeed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
         Triple<IAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
-        factoryOutput = FeedUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
+        factoryOutput = ActiveUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
         IAdapterFactory adapterFactory = factoryOutput.first;
+
         FeedIntakeOperatorDescriptor feedIngestor = null;
         switch (factoryOutput.third) {
             case INTERNAL:
@@ -615,6 +619,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         AlgebricksPartitionConstraint partitionConstraint = adapterFactory.getPartitionConstraint();
         return new Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory>(feedIngestor,
                 partitionConstraint, adapterFactory);
+    }
+
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildChannelRuntime(JobSpecification jobSpec,
+            String dataverseName, String channelName, String duration, JobSpecification channeljobSpec)
+                    throws Exception {
+        RepetitiveChannelOperatorDescriptor channelOp = new RepetitiveChannelOperatorDescriptor(jobSpec, dataverseName,
+                channelName, duration, channeljobSpec);
+        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksCountPartitionConstraint(1);
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(channelOp, partitionConstraint);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,
@@ -2052,7 +2065,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * Calculate an estimate size of the bloom filter. Note that this is an
      * estimation which assumes that the data is going to be uniformly
      * distributed across all partitions.
-     *
+     * 
      * @param dataset
      * @return Number of elements that will be used to create a bloom filter per
      *         dataset per partition

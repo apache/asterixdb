@@ -27,6 +27,8 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.entities.Broker;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -490,8 +492,7 @@ public interface IMetadataManager {
      */
     public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
 
-   
-   /**
+    /**
      * @param ctx
      * @param policy
      * @throws MetadataException
@@ -508,7 +509,33 @@ public interface IMetadataManager {
     public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
             throws MetadataException;
 
-   
+    /**
+     * @param ctx
+     * @param channel
+     * @throws MetadataException
+     */
+    public void addChannel(MetadataTransactionContext ctx, Channel channel) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param channelName
+     * @return
+     * @throws MetadataException
+     */
+    public Channel getChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param channelName
+     * @return
+     * @throws MetadataException
+     */
+    public void dropChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException;
+
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 
     public int getMostRecentDatasetId() throws MetadataException;
@@ -653,5 +680,13 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     public void cleanupTempDatasets() throws MetadataException;
+
+    Broker getBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException;
+
+    void dropBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException;
+
+    void addBroker(MetadataTransactionContext ctx, Broker broker) throws MetadataException;
+
+    List<Broker> getBrokers(MetadataTransactionContext ctx) throws MetadataException;
 
 }

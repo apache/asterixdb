@@ -21,12 +21,13 @@ package org.apache.asterix.metadata.feeds;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.library.ExternalLibraryManager;
@@ -50,7 +51,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
     /** The unique identifier of the feed that is being ingested. **/
-    private final FeedId feedId;
+    private final ActiveObjectId feedId;
 
     private final FeedPolicyAccessor policyAccessor;
 
@@ -74,7 +75,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public FeedIntakeOperatorDescriptor(JobSpecification spec, PrimaryFeed primaryFeed, IAdapterFactory adapterFactory,
             ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
         super(spec, 0, 1);
-        this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
+        this.feedId = new ActiveObjectId(primaryFeed.getDataverseName(), primaryFeed.getFeedName(), ActiveObjectType.FEED);
         this.adaptorFactory = adapterFactory;
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
@@ -83,7 +84,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public FeedIntakeOperatorDescriptor(JobSpecification spec, PrimaryFeed primaryFeed, String adapterLibraryName,
             String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
         super(spec, 0, 1);
-        this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
+        this.feedId = new ActiveObjectId(primaryFeed.getDataverseName(), primaryFeed.getFeedName(), ActiveObjectType.FEED);
         this.adaptorFactoryClassName = adapterFactoryClassName;
         this.adaptorLibraryName = adapterLibraryName;
         this.adaptorConfiguration = primaryFeed.getAdaptorConfiguration();
@@ -96,8 +97,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        IFeedSubscriptionManager feedSubscriptionManager = runtimeCtx.getFeedManager().getFeedSubscriptionManager();
-        SubscribableFeedRuntimeId feedIngestionId = new SubscribableFeedRuntimeId(feedId, FeedRuntimeType.INTAKE,
+        IFeedSubscriptionManager feedSubscriptionManager = runtimeCtx.getActiveManager().getFeedSubscriptionManager();
+        SubscribableFeedRuntimeId feedIngestionId = new SubscribableFeedRuntimeId(feedId, ActiveRuntimeType.INTAKE,
                 partition);
         IngestionRuntime ingestionRuntime = (IngestionRuntime) feedSubscriptionManager
                 .getSubscribableRuntime(feedIngestionId);
@@ -129,7 +130,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         return adapterFactory;
     }
 
-    public FeedId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

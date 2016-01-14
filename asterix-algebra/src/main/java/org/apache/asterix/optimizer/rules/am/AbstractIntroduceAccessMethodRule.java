@@ -603,6 +603,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return null;
+            }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
         } else {
             UnnestOperator unnestOp = (UnnestOperator) op;
@@ -615,9 +618,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 return null;
             }
             expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
-        }
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return null;
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return null;
+            }
+
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();

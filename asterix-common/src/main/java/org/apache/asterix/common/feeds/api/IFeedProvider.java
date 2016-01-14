@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.active.ActiveObjectId;
 
 public interface IFeedProvider {
 
-    public void subscribeFeed(FeedId sourceDeedId);
+    public void subscribeFeed(ActiveObjectId sourceDeedId);
 }

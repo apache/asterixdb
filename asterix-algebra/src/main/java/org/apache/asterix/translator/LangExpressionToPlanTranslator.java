@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
+import org.apache.asterix.algebra.operators.ReplaceableSinkOperator;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -83,6 +84,7 @@ import org.apache.asterix.om.functions.AsterixFunctionInfo;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.formats.FormatUtils;
+import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -348,8 +350,65 @@ class LangExpressionToPlanTranslator
                             varRefsForLoading, InsertDeleteOperator.Kind.INSERT, false);
                     insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    leafOperator = new SinkOperator();
-                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    if (((CompiledInsertStatement) stmt).getReturnRecord()
+                            || ((CompiledInsertStatement) stmt).getReturnField() != null) {
+                        FileSplit outputFileSplit = metadataProvider.getOutputFile();
+                        if (outputFileSplit == null) {
+                            outputFileSplit = getDefaultOutputFileLocation();
+                        }
+
+                        metadataProvider.setOutputFile(outputFileSplit);
+                        List<Mutable<ILogicalExpression>> varRefList = new ArrayList<Mutable<ILogicalExpression>>();
+
+                        varRefList.add(varRef);
+
+                        ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
+                        ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
+
+                        ReplaceableSinkOperator commitSink = new ReplaceableSinkOperator();
+                        commitSink.setPipelineEndFalse();
+                        commitSink.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+
+                        if (((CompiledInsertStatement) stmt).getReturnField() != null) {
+                            List<LogicalVariable> assignVars = new ArrayList<LogicalVariable>();
+                            List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
+                            Mutable<ILogicalExpression> nameRef = new MutableObject<ILogicalExpression>(
+                                    new ConstantExpression(new AsterixConstantValue(
+                                            new AString(((CompiledInsertStatement) stmt).getReturnField().get(0)))));
+                            AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
+                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME), varRef,
+                                    nameRef);
+                            expressions.add(new MutableObject<ILogicalExpression>(func));
+                            LogicalVariable newVar = context.newVar();
+                            assignVars.add(newVar);
+
+                            varRefList = new ArrayList<Mutable<ILogicalExpression>>();
+                            Mutable<ILogicalExpression> mVarRef = new MutableObject<ILogicalExpression>(
+                                    new VariableReferenceExpression(newVar));
+                            varRefList.add(mVarRef);
+
+                            AssignOperator accessAssign = new AssignOperator(assignVars, expressions);
+                            accessAssign.getInputs().add(new MutableObject<ILogicalOperator>(commitSink));
+
+                            leafOperator = new DistributeResultOperator(varRefList, sink);
+                            leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(accessAssign));
+
+                        } else {
+                            leafOperator = new DistributeResultOperator(varRefList, sink);
+                            leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(commitSink));
+                        }
+                        // Retrieve the Output RecordType (if any) and store it on
+                        // the DistributeResultOperator
+                        IAType outputRecordType = metadataProvider.findOutputRecordType();
+                        if (outputRecordType != null) {
+                            leafOperator.getAnnotations().put("output-record-type", outputRecordType);
+                        }
+
+                    } else {
+                        leafOperator = new SinkOperator();
+                        leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    }
+
                     break;
                 }
                 case DELETE: {

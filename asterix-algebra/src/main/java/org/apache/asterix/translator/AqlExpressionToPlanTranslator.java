@@ -193,5 +193,4 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             return aggListifyForSubquery(resVar, resOpRef, false);
         }
     }
-
 }

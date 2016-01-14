@@ -43,11 +43,13 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> primaryKeyLogicalVars;
     private final JobId jobId;
     private final int datasetId;
+    private final boolean isSink;
 
-    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars) {
+    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars, boolean isSink) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+        this.isSink = isSink;
     }
 
     @Override
@@ -84,7 +86,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
 
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
         CommitRuntimeFactory runtime = new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
-                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction());
+                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), isSink);
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

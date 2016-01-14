@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.common.feeds;
 
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
@@ -30,11 +33,12 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class BasicMonitoredBuffer extends MonitoredBuffer {
 
-    public BasicMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter, FrameTupleAccessor fta,
-            RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, FeedRuntimeId runtimeId, IExceptionHandler exceptionHandler,
-            IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
-        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
+    public BasicMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
+            IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
+            IFeedMetricCollector metricCollector, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
+            IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
+            FeedPolicyAccessor policyAccessor) {
+        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, activeJobId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);
     }
 

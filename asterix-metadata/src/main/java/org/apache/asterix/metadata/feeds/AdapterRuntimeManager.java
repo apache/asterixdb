@@ -23,10 +23,10 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
-import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.IngestionRuntime;
-import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 
@@ -34,7 +34,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterRuntimeManager.class.getName());
 
-    private final FeedId feedId;
+    private final ActiveObjectId feedId;
 
     private final IDataSourceAdapter feedAdapter;
 
@@ -50,7 +50,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private State state;
 
-    public AdapterRuntimeManager(FeedId feedId, IDataSourceAdapter feedAdapter, IIntakeProgressTracker tracker,
+    public AdapterRuntimeManager(ActiveObjectId feedId, IDataSourceAdapter feedAdapter, IIntakeProgressTracker tracker,
             DistributeFeedFrameWriter writer, int partition) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -82,7 +82,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
     }
 
     @Override
-    public FeedId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

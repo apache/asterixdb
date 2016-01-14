@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.message.FeedTupleCommitAckMessage;
 
 public interface IFeedTrackingManager {
 
     public void submitAckReport(FeedTupleCommitAckMessage ackMessage);
 
-    public void disableAcking(FeedConnectionId connectionId);
+    public void disableAcking(ActiveJobId connectionId);
 }

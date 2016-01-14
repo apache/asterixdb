@@ -24,10 +24,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveManager;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,7 +46,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(DistributeFeedFrameWriter.class.getName());
 
     /** A unique identifier for the feed to which the incoming tuples belong. **/
-    private final FeedId feedId;
+    private final ActiveObjectId feedId;
 
     /** An instance of FrameDistributor that provides the mechanism for distributing a frame to multiple readers, each operating in isolation. **/
     private final FrameDistributor frameDistributor;
@@ -53,13 +55,13 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private IFrameWriter writer;
 
     /** The feed operation whose output is being distributed by the DistributeFeedFrameWriter **/
-    private final FeedRuntimeType feedRuntimeType;
+    private final ActiveRuntimeType feedRuntimeType;
 
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer,
-            FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IFeedManager feedManager)
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveObjectId feedId, IFrameWriter writer,
+            ActiveRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IActiveManager feedManager)
                     throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor(feedId, feedRuntimeType, partition, true,
@@ -69,8 +71,8 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
         this.writer = writer;
     }
 
-    public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter,
-            FeedConnectionId connectionId) throws Exception {
+    public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter, ActiveJobId connectionId)
+            throws Exception {
         FeedFrameCollector collector = null;
         if (!frameDistributor.isRegistered(frameWriter)) {
             collector = new FeedFrameCollector(frameDistributor, fpa, frameWriter, connectionId);

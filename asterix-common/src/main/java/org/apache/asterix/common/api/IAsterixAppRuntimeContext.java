@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -79,7 +79,7 @@ public interface IAsterixAppRuntimeContext {
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
-    public IFeedManager getFeedManager();
+    public IActiveManager getActiveManager();
 
     public IRemoteRecoveryManager getRemoteRecoveryManager();
 

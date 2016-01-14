@@ -33,6 +33,8 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.asterix.metadata.entities.Broker;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -200,6 +202,15 @@ public class MetadataManager implements IMetadataManager {
     public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException {
         try {
             return metadataNode.getDataverses(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<Broker> getBrokers(MetadataTransactionContext ctx) throws MetadataException {
+        try {
+            return metadataNode.getBrokers(ctx.getJobId());
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -829,6 +840,70 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         ctx.addFeed(feed);
+    }
+
+    @Override
+    public void addChannel(MetadataTransactionContext ctx, Channel channel) throws MetadataException {
+        try {
+            metadataNode.addChannel(ctx.getJobId(), channel);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addChannel(channel);
+    }
+
+    @Override
+    public Channel getChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException {
+        Channel channel = null;
+        try {
+            channel = metadataNode.getChannel(ctx.getJobId(), dataverse, channelName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return channel;
+    }
+
+    @Override
+    public void dropChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException {
+        try {
+            metadataNode.dropChannel(ctx.getJobId(), dataverse, channelName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropChannel(dataverse, channelName);
+    }
+
+    @Override
+    public void addBroker(MetadataTransactionContext ctx, Broker broker) throws MetadataException {
+        try {
+            metadataNode.addBroker(ctx.getJobId(), broker);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addBroker(broker);
+    }
+
+    @Override
+    public Broker getBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException {
+        Broker broker = null;
+        try {
+            broker = metadataNode.getBroker(ctx.getJobId(), brokerName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return broker;
+    }
+
+    @Override
+    public void dropBroker(MetadataTransactionContext ctx, String brokerName) throws MetadataException {
+        try {
+            metadataNode.dropBroker(ctx.getJobId(), brokerName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropBroker(brokerName);
     }
 
     public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)

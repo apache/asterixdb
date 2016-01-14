@@ -20,6 +20,7 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.api.IActiveRuntime;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
@@ -28,7 +29,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 /**
  * Represent a feed runtime whose output can be routed along other parallel path(s).
  */
-public interface ISubscribableRuntime extends IFeedRuntime {
+public interface ISubscribableRuntime extends IActiveRuntime {
 
     /**
      * @param collectionRuntime
@@ -51,7 +52,7 @@ public interface ISubscribableRuntime extends IFeedRuntime {
     /**
      * @return
      */
-    public DistributeFeedFrameWriter getFeedFrameWriter();
+    public DistributeFeedFrameWriter getActiveFrameWriter();
 
     /**
      * @return

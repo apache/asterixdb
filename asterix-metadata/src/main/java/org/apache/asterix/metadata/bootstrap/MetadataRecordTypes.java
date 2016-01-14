@@ -54,6 +54,8 @@ public final class MetadataRecordTypes {
     public static ARecordType PRIMARY_FEED_DETAILS_RECORDTYPE;
     public static ARecordType SECONDARY_FEED_DETAILS_RECORDTYPE;
     public static ARecordType FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
+    public static ARecordType CHANNEL_RECORDTYPE;
+    public static ARecordType BROKER_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
     public static ARecordType LIBRARY_RECORDTYPE;
@@ -99,6 +101,8 @@ public final class MetadataRecordTypes {
             FEED_RECORDTYPE = createFeedRecordType();
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
             LIBRARY_RECORDTYPE = createLibraryRecordType();
+            CHANNEL_RECORDTYPE = createChannelRecordType();
+            BROKER_RECORDTYPE = createBrokerRecordType();
 
             COMPACTION_POLICY_RECORDTYPE = createCompactionPolicyRecordType();
 
@@ -408,15 +412,33 @@ public final class MetadataRecordTypes {
         return new ARecordType("DatasourceAdapterRecordType", fieldNames, fieldTypes, true);
     }
 
-    // Helper constants for accessing fields in an ARecord of type
-    // FeedActivityRecordType.
-    public static final int FEED_ACTIVITY_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
-    public static final int FEED_ACTIVITY_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 2;
-    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX = 3;
-    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 4;
-    public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 5;
-    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 6;
+    public static final int CHANNEL_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
+    public static final int CHANNEL_ARECORD_CHANNEL_NAME_FIELD_INDEX = 1;
+    public static final int CHANNEL_ARECORD_SUBSCRIPTIONS_NAME_FIELD_INDEX = 2;
+    public static final int CHANNEL_ARECORD_RESULTS_NAME_FIELD_INDEX = 3;
+    public static final int CHANNEL_ARECORD_FUNCTION_FIELD_INDEX = 4;
+    public static final int CHANNEL_ARECORD_DURATION_FIELD_INDEX = 5;
+
+    private static ARecordType createChannelRecordType() throws AsterixException {
+
+        String[] fieldNames = { "DataverseName", "ChannelName", "SubscriptionsDatasetName", "ResultsDatasetName",
+                "Function", "Duration" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.ASTRING };
+
+        return new ARecordType("ChannelRecordType", fieldNames, fieldTypes, true);
+    }
+
+    public static final int BROKER_NAME_FIELD_INDEX = 0;
+    public static final int BROKER_ENDPOINT_FIELD_INDEX = 1;
+
+    private static ARecordType createBrokerRecordType() throws AsterixException {
+
+        String[] fieldNames = { "BrokerName", "EndPoint" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING };
+
+        return new ARecordType("BrokerRecordType", fieldNames, fieldTypes, true);
+    }
 
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ARECORD_FEED_NAME_FIELD_INDEX = 1;

@@ -24,6 +24,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.active.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.LogInputOutputRateTask;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitorInputQueueLengthTimerTask;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitoreProcessRateTimerTask;
@@ -32,7 +36,6 @@ import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.MetricType;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
 import org.apache.asterix.common.feeds.api.IFramePostProcessor;
@@ -52,11 +55,11 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     protected static final int PROCESS_RATE_REFRESH = 2; // refresh processing rate every 10th frame
 
     protected final IHyracksTaskContext ctx;
-    protected final FeedConnectionId connectionId;
-    protected final FeedRuntimeId runtimeId;
+    protected final ActiveJobId connectionId;
+    protected final ActiveRuntimeId runtimeId;
     protected final FrameTupleAccessor inflowFta;
     protected final FrameTupleAccessor outflowFta;
-    protected final FeedRuntimeInputHandler inputHandler;
+    protected final ActiveRuntimeInputHandler inputHandler;
     protected final IFrameEventCallback callback;
     protected final Timer timer;
     private final IExceptionHandler exceptionHandler;
@@ -87,31 +90,32 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     IFramePostProcessor postProcessor = null;
     IFramePreprocessor preProcessor = null;
 
-    public static MonitoredBuffer getMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler,
+    public static MonitoredBuffer getMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
             IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedMetricCollector metricCollector, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+            IFeedMetricCollector metricCollector, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
             IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
             FeedPolicyAccessor policyAccessor) {
-        switch (runtimeId.getFeedRuntimeType()) {
+        switch (runtimeId.getRuntimeType()) {
             case COMPUTE:
                 return new ComputeSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             case STORE:
                 return new StorageSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             case COLLECT:
                 return new IntakeSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             default:
                 return new BasicMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
         }
     }
 
-    protected MonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
-            FrameTupleAccessor fta, RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, FeedRuntimeId runtimeId, IExceptionHandler exceptionHandler,
-            IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
+    protected MonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
+            IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
+            IFeedMetricCollector metricCollector, ActiveJobId connectionId, ActiveRuntimeId runtimeId,
+            IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
+            FeedPolicyAccessor policyAccessor) {
         this.ctx = ctx;
         this.connectionId = connectionId;
         this.frameWriter = frameWriter;
@@ -268,7 +272,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
         }
     }
 
-    public FeedRuntimeInputHandler getInputHandler() {
+    public ActiveRuntimeInputHandler getInputHandler() {
         return inputHandler;
     }
 
@@ -353,7 +357,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
         return inputHandler.getMode();
     }
 
-    public FeedRuntimeId getRuntimeId() {
+    public ActiveRuntimeId getRuntimeId() {
         return runtimeId;
     }
 

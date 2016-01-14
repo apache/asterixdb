@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 
 public class FeedMetricCollector implements IFeedMetricCollector {
@@ -41,7 +43,7 @@ public class FeedMetricCollector implements IFeedMetricCollector {
     }
 
     @Override
-    public synchronized int createReportSender(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+    public synchronized int createReportSender(ActiveJobId connectionId, ActiveRuntimeId runtimeId,
             ValueType valueType, MetricType metricType) {
         Sender sender = new Sender(globalSenderId.getAndIncrement(), connectionId, runtimeId, valueType, metricType);
         senders.put(sender.senderId, sender);
@@ -110,7 +112,7 @@ public class FeedMetricCollector implements IFeedMetricCollector {
         private final MetricType mType;
         private final String displayName;
 
-        public Sender(int senderId, FeedConnectionId connectionId, FeedRuntimeId runtimeId, ValueType valueType,
+        public Sender(int senderId, ActiveJobId connectionId, ActiveRuntimeId runtimeId, ValueType valueType,
                 MetricType mType) {
             this.senderId = senderId;
             this.mType = mType;
@@ -138,10 +140,9 @@ public class FeedMetricCollector implements IFeedMetricCollector {
             return senderId;
         }
 
-        public static String createDisplayName(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-                ValueType valueType) {
-            return connectionId + " (" + runtimeId.getFeedRuntimeType() + " )" + "[" + runtimeId.getPartition() + "]"
-                    + "{" + valueType + "}";
+        public static String createDisplayName(ActiveJobId connectionId, ActiveRuntimeId runtimeId, ValueType valueType) {
+            return connectionId + " (" + runtimeId.getRuntimeType() + " )" + "[" + runtimeId.getPartition() + "]" + "{"
+                    + valueType + "}";
         }
 
         public String getDisplayName() {
@@ -160,7 +161,7 @@ public class FeedMetricCollector implements IFeedMetricCollector {
     }
 
     @Override
-    public int getMetric(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ValueType valueType) {
+    public int getMetric(ActiveJobId connectionId, ActiveRuntimeId runtimeId, ValueType valueType) {
         String displayName = Sender.createDisplayName(connectionId, runtimeId, valueType);
         Sender sender = sendersByName.get(displayName);
         return getMetric(sender);

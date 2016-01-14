@@ -21,12 +21,12 @@ package org.apache.asterix.metadata.feeds;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.message.ActiveMessage;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.message.FeedMessage;
 
-public class TerminateDataFlowMessage extends FeedMessage {
+public class TerminateDataFlowMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,13 +41,13 @@ public class TerminateDataFlowMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getFeedName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         return obj;
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

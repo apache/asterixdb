@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 
 /**
  * A request for connecting a feed to a dataset.
@@ -65,12 +65,11 @@ public class FeedConnectionRequest {
     /** Target dataset associated with the connection request **/
     private final String targetDataset;
 
-    private final FeedId receivingFeedId;
+    private final ActiveObjectId receivingFeedId;
 
-    
     public FeedConnectionRequest(FeedJointKey feedPointKey, ConnectionLocation connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
-            FeedId receivingFeedId) {
+            ActiveObjectId receivingFeedId) {
         this.feedJointKey = feedPointKey;
         this.connectionLocation = connectionLocation;
         this.functionsToApply = functionsToApply;
@@ -105,7 +104,7 @@ public class FeedConnectionRequest {
         return connectionLocation;
     }
 
-    public FeedId getReceivingFeedId() {
+    public ActiveObjectId getReceivingFeedId() {
         return receivingFeedId;
     }
 

@@ -32,6 +32,7 @@ public class CreateFunctionStatement implements Statement {
     private final FunctionSignature signature;
     private final String functionBody;
     private final boolean ifNotExists;
+    private final boolean isProcedure;
     private final List<String> paramList;
 
     public FunctionSignature getaAterixFunction() {
@@ -43,10 +44,11 @@ public class CreateFunctionStatement implements Statement {
     }
 
     public CreateFunctionStatement(FunctionSignature signature, List<VarIdentifier> parameterList, String functionBody,
-            boolean ifNotExists) {
+            boolean ifNotExists, boolean isProcedure) {
         this.signature = signature;
         this.functionBody = functionBody;
         this.ifNotExists = ifNotExists;
+        this.isProcedure = isProcedure;
         this.paramList = new ArrayList<String>();
         for (VarIdentifier varId : parameterList) {
             this.paramList.add(varId.getValue());
@@ -55,6 +57,10 @@ public class CreateFunctionStatement implements Statement {
 
     public boolean getIfNotExists() {
         return this.ifNotExists;
+    }
+
+    public boolean getIsProcedure() {
+        return this.isProcedure;
     }
 
     @Override

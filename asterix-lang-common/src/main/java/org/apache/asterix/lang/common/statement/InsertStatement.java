@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -29,12 +31,17 @@ public class InsertStatement implements Statement {
     private final Identifier datasetName;
     private final Query query;
     private final int varCounter;
+    private final boolean returnRecord;
+    private final List<String> returnField;
 
-    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter) {
+    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter,
+            boolean returnRecord, List<String> returnField) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
+        this.returnField = returnField;
+        this.returnRecord = returnRecord;
     }
 
     @Override
@@ -56,6 +63,14 @@ public class InsertStatement implements Statement {
 
     public int getVarCounter() {
         return varCounter;
+    }
+
+    public boolean getReturnRecord() {
+        return returnRecord;
+    }
+
+    public List<String> getReturnField() {
+        return returnField;
     }
 
     @Override

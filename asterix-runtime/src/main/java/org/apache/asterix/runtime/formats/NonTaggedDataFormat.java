@@ -481,6 +481,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DeepEqualityDescriptor.FACTORY);
 
         temp.add(CreateUUIDDescriptor.FACTORY);
+
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
         temp.add(CreateLineDescriptor.FACTORY);
@@ -703,8 +704,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                         .createEvaluatorFactory(factories);
             }
             return evalFactory;
-        } else
+        } else {
             throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -842,11 +844,12 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } else {
                     IAType itemType = (IAType) context.getType(f.getArguments().get(0).getValue());
                     if (itemType instanceof AUnionType) {
-                        if (((AUnionType) itemType).isNullableType())
+                        if (((AUnionType) itemType).isNullableType()) {
                             itemType = ((AUnionType) itemType).getNullableType();
-                        else
+                        } else {
                             // Convert UNION types into ANY.
                             itemType = BuiltinType.ANY;
+                        }
                     }
                     ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
                 }

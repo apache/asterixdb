@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.common.active.api.IActiveManager;
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -39,7 +41,6 @@ import org.apache.asterix.common.context.AsterixFileMapManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -48,7 +49,6 @@ import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.feeds.FeedManager;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexImmutableProperties;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.replication.management.ReplicationChannel;
@@ -122,7 +122,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IIOManager ioManager;
     private boolean isShuttingdown;
 
-    private IFeedManager feedManager;
+    private IActiveManager feedManager;
 
     private IReplicationChannel replicationChannel;
     private IReplicationManager replicationManager;
@@ -142,6 +142,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 AsterixClusterProperties.INSTANCE.getCluster());
     }
 
+    @Override
     public void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException {
         Logger.getLogger("org.apache").setLevel(externalProperties.getLogLevel());
 
@@ -180,7 +181,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         isShuttingdown = false;
 
-        feedManager = new FeedManager(ncApplicationContext.getNodeId(), feedProperties,
+        feedManager = new ActiveManager(ncApplicationContext.getNodeId(), feedProperties,
                 compilerProperties.getFrameSize());
 
         if (replicationProperties.isReplicationEnabled()) {
@@ -241,53 +242,66 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
     }
 
+    @Override
     public boolean isShuttingdown() {
         return isShuttingdown;
     }
 
+    @Override
     public void setShuttingdown(boolean isShuttingdown) {
         this.isShuttingdown = isShuttingdown;
     }
 
+    @Override
     public void deinitialize() throws HyracksDataException {
     }
 
+    @Override
     public IBufferCache getBufferCache() {
         return bufferCache;
     }
 
+    @Override
     public IFileMapProvider getFileMapManager() {
         return fileMapManager;
     }
 
+    @Override
     public ITransactionSubsystem getTransactionSubsystem() {
         return txnSubsystem;
     }
 
+    @Override
     public IDatasetLifecycleManager getDatasetLifecycleManager() {
         return datasetLifecycleManager;
     }
 
+    @Override
     public double getBloomFilterFalsePositiveRate() {
         return storageProperties.getBloomFilterFalsePositiveRate();
     }
 
+    @Override
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return lsmIOScheduler;
     }
 
+    @Override
     public ILocalResourceRepository getLocalResourceRepository() {
         return localResourceRepository;
     }
 
+    @Override
     public IResourceIdFactory getResourceIdFactory() {
         return resourceIdFactory;
     }
 
+    @Override
     public IIOManager getIOManager() {
         return ioManager;
     }
 
+    @Override
     public int getMetaDataIODeviceId() {
         return METADATA_IO_DEVICE_ID;
     }
@@ -342,12 +356,13 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return threadExecutor;
     }
 
+    @Override
     public ILSMMergePolicyFactory getMetadataMergePolicyFactory() {
         return metadataMergePolicyFactory;
     }
 
     @Override
-    public IFeedManager getFeedManager() {
+    public IActiveManager getActiveManager() {
         return feedManager;
     }
 

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.hyracks.api.comm.IFrameWriter;
 
 public interface IFeedOperatorOutputSideHandler extends IFrameWriter {
@@ -29,7 +29,7 @@ public interface IFeedOperatorOutputSideHandler extends IFrameWriter {
         COLLECT_TRANSFORM_FEED_OUTPUT_HANDLER
     }
 
-    public FeedId getFeedId();
+    public ActiveObjectId getFeedId();
 
     public Type getType();
 

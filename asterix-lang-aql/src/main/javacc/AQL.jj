@@ -91,8 +91,14 @@ import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -106,6 +112,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -135,7 +142,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpre
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 
-class AQLParser extends ScopeChecker implements IParser {
+public class AQLParser extends ScopeChecker implements IParser {
 
     // optimizer hints
     private static final String AUTO_HINT = "auto";
@@ -297,10 +304,12 @@ Statement SingleStatement() throws ParseException:
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()
     | stmt = FeedStatement()
+    | stmt = ChannelSubscriptionStatement()
     | stmt = CompactStatement()
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
     | stmt = RunStatement()
+    | stmt = ExecuteProcedureStatement()
   )
   {
     return stmt;
@@ -339,9 +348,11 @@ Statement CreateStatement() throws ParseException:
     | stmt = DatasetSpecification()
     | stmt = IndexSpecification()
     | stmt = DataverseSpecification()
-    | stmt = FunctionSpecification()
+    | stmt = ExecutableSpecification()
     | stmt = FeedSpecification()
     | stmt = FeedPolicySpecification()
+    | stmt = ChannelSpecification()
+    | stmt = BrokerSpecification()
   )
   {
     return stmt;
@@ -617,7 +628,25 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
     }
 }
 
-CreateFunctionStatement FunctionSpecification() throws ParseException:
+CreateFunctionStatement ExecutableSpecification() throws ParseException:
+{
+	CreateFunctionStatement st;
+}
+{
+  ("function" 
+  {
+  	st = FunctionSpecification(false);
+  }
+  | "procedure" 
+  {
+  	st = FunctionSpecification(true);
+  })
+  {
+  	return st;
+  }
+}
+
+CreateFunctionStatement FunctionSpecification(boolean isProcedure) throws ParseException:
 {
   FunctionSignature signature;
   boolean ifNotExists = false;
@@ -625,6 +654,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   String functionBody;
   VarIdentifier var = null;
   Expression functionBodyExpr;
+  Statement functionBodyStmnt;
   Token beginPos;
   Token endPos;
   FunctionName fctName = null;
@@ -632,14 +662,15 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   createNewScope();
 }
 {
-  "function" fctName = FunctionName()
+  fctName = FunctionName()
   ifNotExists = IfNotExists()
   paramList = ParameterList()
   <LEFTBRACE>
   {
      beginPos = token;
   }
-  functionBodyExpr = Expression() <RIGHTBRACE>
+ (functionBodyStmnt = DeleteStatement() | functionBodyStmnt = InsertStatement() |functionBodyExpr = Expression() )
+  <RIGHTBRACE>
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
@@ -647,8 +678,24 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists, isProcedure);
     }
+}
+
+ExecuteProcedureStatement ExecuteProcedureStatement() throws ParseException:
+{
+	ExecuteProcedureStatement st;
+	Expression callExpr;
+}
+{
+  "execute" 
+  {
+  	callExpr = FunctionCallExpr();
+  	st = new ExecuteProcedureStatement(callExpr);
+  }
+  {
+  	return st;
+  }
 }
 
 CreateFeedStatement FeedSpecification() throws ParseException:
@@ -714,6 +761,47 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
     }
 }
 
+CreateChannelStatement ChannelSpecification() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;  
+  FunctionSignature appliedFunction = null;
+  CreateChannelStatement ccs = null;
+  String fqFunctionName = null;
+  Expression period = null;
+}
+{
+  (
+    "repetitive channel"  nameComponents = QualifiedName()
+    "using" appliedFunction = FunctionSignature()
+    "period" period = FunctionCallExpr()
+    {
+    	ccs = new CreateChannelStatement(nameComponents.first,
+                                   nameComponents.second, appliedFunction, period);
+    }
+  )
+    {
+      return ccs;
+    }
+}
+
+CreateBrokerStatement BrokerSpecification() throws ParseException:
+{
+  CreateBrokerStatement cbs = null;
+  String name = null;
+  String endPoint = null;
+}
+{
+  (
+    "broker"  name = Identifier()
+    <AT>  endPoint = StringLiteral()
+    {
+    	cbs = new CreateBrokerStatement(name,endPoint);
+    }
+  )
+    {
+      return cbs;
+    }
+}
 
 
 List<VarIdentifier> ParameterList() throws ParseException:
@@ -854,11 +942,23 @@ Statement DropStatement() throws ParseException:
       }
     | "function" funcSig = FunctionSignature() ifExists = IfExists()
       {
-        stmt = new FunctionDropStatement(funcSig, ifExists);
+        stmt = new FunctionDropStatement(funcSig, ifExists, false);
+      }
+    | "procedure" funcSig = FunctionSignature() ifExists = IfExists()
+      {
+        stmt = new FunctionDropStatement(funcSig, ifExists, true);
       }
     | "feed" pairId = QualifiedName() ifExists = IfExists()
       {
         stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | "channel" pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new ChannelDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | "broker" id = Identifier() ifExists = IfExists()
+      {
+        stmt = new BrokerDropStatement(id, ifExists);
       }
   )
   {
@@ -883,13 +983,15 @@ boolean IfExists() throws ParseException :
 InsertStatement InsertStatement() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;
+  List<String> returnField = null;
+  boolean returnRecord = false;
   Query query;
 }
 {
-  "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query()
+    "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query() (<RETURN> "records"{returnRecord = true;} | "returning" returnField = NestedField())?
     {
       query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), returnRecord, returnField);
     }
 }
 
@@ -1071,6 +1173,54 @@ Statement FeedStatement() throws ParseException:
     | "disconnect" "feed" feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
       {
         stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
+      }
+  )
+    {
+      return stmt;
+    }
+}
+
+Statement ChannelSubscriptionStatement() throws ParseException:
+{
+
+  Statement stmt = null;
+  Pair<Identifier,Identifier> nameComponents = null;  
+  List<Expression> argList = new ArrayList<Expression>();
+  Expression tmp = null;
+  String id = null;
+  String brokerName = null;
+}
+{
+  (
+    "subscribe" "to" nameComponents = QualifiedName()
+    	<LEFTPAREN> (tmp = Expression()
+    	{
+      		argList.add(tmp);
+    	}
+  		(<COMMA> tmp = Expression()
+    	{
+      			argList.add(tmp);
+    	}
+  		)*)? <RIGHTPAREN> "on" brokerName = Identifier()
+      {
+        stmt = new ChannelSubscribeStatement(nameComponents.first, nameComponents.second, argList, getVarCounter(), brokerName);
+      }
+    | "unsubscribe" id = StringLiteral() <FROM> nameComponents = QualifiedName()
+
+      {
+        setDataverses(new ArrayList<String>());
+  		setDatasets(new ArrayList<String>());
+      	VariableExpr varExp = new VariableExpr();
+      	VarIdentifier var = new VarIdentifier();
+      	varExp.setVar(var);
+     	var.setValue("$subscriptionPlaceholder");
+     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+     	List<String> dataverses = getDataverses();
+      	List<String> datasets = getDatasets();
+      	// we remove the pointer to the dataverses and datasets
+      	setDataverses(null);
+      	setDatasets(null);
+        stmt = new ChannelUnsubscribeStatement(varExp, nameComponents.first, nameComponents.second, id, getVarCounter(), dataverses, datasets);
       }
   )
     {
@@ -1471,6 +1621,8 @@ FunctionDecl FunctionDeclaration() throws ParseException:
       return funcDecl;
     }
 }
+
+
 
 
 Query Query() throws ParseException:

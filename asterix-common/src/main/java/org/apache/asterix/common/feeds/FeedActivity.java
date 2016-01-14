@@ -21,14 +21,11 @@ package org.apache.asterix.common.feeds;
 
 import java.util.Map;
 
-public class FeedActivity implements Comparable<FeedActivity> {
+import org.apache.asterix.common.active.ActiveActivity;
 
-    private int activityId;
+public class FeedActivity extends ActiveActivity {
 
-    private final String dataverseName;
     private final String datasetName;
-    private final String feedName;
-    private final Map<String, String> feedActivityDetails;
 
     public static class FeedActivityDetails {
         public static final String INTAKE_LOCATIONS = "intake-locations";
@@ -42,22 +39,12 @@ public class FeedActivity implements Comparable<FeedActivity> {
 
     public FeedActivity(String dataverseName, String feedName, String datasetName,
             Map<String, String> feedActivityDetails) {
-        this.dataverseName = dataverseName;
-        this.feedName = feedName;
+        super(dataverseName, feedName, feedActivityDetails);
         this.datasetName = datasetName;
-        this.feedActivityDetails = feedActivityDetails;
-    }
-
-    public String getDataverseName() {
-        return dataverseName;
     }
 
     public String getDatasetName() {
         return datasetName;
-    }
-
-    public String getFeedName() {
-        return feedName;
     }
 
     @Override
@@ -75,7 +62,7 @@ public class FeedActivity implements Comparable<FeedActivity> {
         if (!((FeedActivity) other).datasetName.equals(datasetName)) {
             return false;
         }
-        if (!((FeedActivity) other).getFeedName().equals(feedName)) {
+        if (!((FeedActivity) other).getObjectName().equals(objectName)) {
             return false;
         }
         if (((FeedActivity) other).getActivityId() != (activityId)) {
@@ -92,28 +79,11 @@ public class FeedActivity implements Comparable<FeedActivity> {
 
     @Override
     public String toString() {
-        return dataverseName + "." + feedName + " --> " + datasetName + " " + activityId;
+        return dataverseName + "." + objectName + " --> " + datasetName + " " + activityId;
     }
 
     public String getConnectTimestamp() {
-        return feedActivityDetails.get(FeedActivityDetails.FEED_CONNECT_TIMESTAMP);
-    }
-
-    public int getActivityId() {
-        return activityId;
-    }
-
-    public void setActivityId(int activityId) {
-        this.activityId = activityId;
-    }
-
-    public Map<String, String> getFeedActivityDetails() {
-        return feedActivityDetails;
-    }
-
-    @Override
-    public int compareTo(FeedActivity o) {
-        return o.getActivityId() - this.activityId;
+        return activityDetails.get(FeedActivityDetails.FEED_CONNECT_TIMESTAMP);
     }
 
 }

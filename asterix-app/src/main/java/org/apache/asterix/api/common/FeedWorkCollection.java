@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.FeedCollectInfo;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -32,7 +33,6 @@ import org.apache.asterix.common.feeds.api.IFeedWork;
 import org.apache.asterix.common.feeds.api.IFeedWorkEventListener;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.feeds.FeedCollectInfo;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -88,6 +88,7 @@ public class FeedWorkCollection {
                     List<Statement> statements = new ArrayList<Statement>();
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
+
                     QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
                     translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                             QueryTranslator.ResultDelivery.SYNC);
@@ -184,15 +185,15 @@ public class FeedWorkCollection {
                         }
                         for (FeedCollectInfo finfo : feedsToRevive) {
                             try {
-                                JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.jobSpec);
+                                JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                                 if (LOGGER.isLoggable(Level.INFO)) {
-                                    LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
-                                    LOGGER.info("Job:" + finfo.jobSpec);
+                                    LOGGER.info("Resumed feed :" + finfo.getActiveJobId() + " job id " + jobId);
+                                    LOGGER.info("Job:" + finfo.getSpec());
                                 }
                             } catch (Exception e) {
                                 if (LOGGER.isLoggable(Level.WARNING)) {
                                     LOGGER.warning(
-                                            "Unable to resume feed " + finfo.feedConnectionId + " " + e.getMessage());
+                                            "Unable to resume feed " + finfo.getActiveJobId() + " " + e.getMessage());
                                 }
                             }
                         }

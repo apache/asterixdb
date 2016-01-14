@@ -20,14 +20,16 @@ package org.apache.asterix.common.feeds;
 
 import java.util.logging.Level;
 
-import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.api.IAdapterRuntimeManager;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class IngestionRuntime extends SubscribableRuntime {
 
     private final IAdapterRuntimeManager adapterRuntimeManager;
 
-    public IngestionRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
+    public IngestionRuntime(ActiveObjectId feedId, ActiveRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
             RecordDescriptor recordDesc, IAdapterRuntimeManager adaptorRuntimeManager) {
         super(feedId, runtimeId, null, feedWriter, recordDesc);
         this.adapterRuntimeManager = adaptorRuntimeManager;

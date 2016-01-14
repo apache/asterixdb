@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.algebra.operators.ReplaceableSinkOperator;
 import org.apache.asterix.algebra.operators.physical.CommitPOperator;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -55,9 +56,15 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        boolean isPipelineEnd = true;
         if (op.getOperatorTag() != LogicalOperatorTag.SINK) {
             return false;
         }
+        if (op instanceof ReplaceableSinkOperator) {
+            ReplaceableSinkOperator rsinkOperator = (ReplaceableSinkOperator) op;
+            isPipelineEnd = rsinkOperator.isPipelineEnd();
+        }
+
         SinkOperator sinkOperator = (SinkOperator) op;
 
         List<Mutable<ILogicalExpression>> primaryKeyExprs = null;
@@ -103,7 +110,7 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
 
         //create the logical and physical operator
         CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars);
-        CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars);
+        CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars, isPipelineEnd);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

@@ -28,8 +28,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,10 +37,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
-public class CommitRuntime implements IPushRuntime {
+public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
     private final static long SEED = 0L;
 
+    private final IHyracksTaskContext hyracksTaskCtx;
     private final ITransactionManager transactionManager;
     private final ILogManager logMgr;
     private final JobId jobId;
@@ -51,13 +51,14 @@ public class CommitRuntime implements IPushRuntime {
     private final boolean isWriteTransaction;
     private final long[] longHashes;
     private final LogRecord logRecord;
+    private final boolean isSink;
 
     private ITransactionContext transactionContext;
-    private FrameTupleAccessor frameTupleAccessor;
-    private final FrameTupleReference frameTupleReference;
+    private boolean first = true;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction) {
+            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, boolean isSink) {
+        this.hyracksTaskCtx = ctx;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
@@ -65,12 +66,14 @@ public class CommitRuntime implements IPushRuntime {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
-        this.frameTupleReference = new FrameTupleReference();
+        this.tRef = new FrameTupleReference();
         this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
         this.longHashes = new long[2];
         this.logRecord = new LogRecord();
+        this.isSink = isSink;
         logRecord.setNodeId(logMgr.getNodeId());
+
     }
 
     @Override
@@ -78,6 +81,12 @@ public class CommitRuntime implements IPushRuntime {
         try {
             transactionContext = transactionManager.getTransactionContext(jobId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
+            if (isSink) {
+                return;
+            }
+            initAccessAppend(hyracksTaskCtx);
+            writer.open();
+
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -86,9 +95,10 @@ public class CommitRuntime implements IPushRuntime {
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         int pkHash = 0;
-        frameTupleAccessor.reset(buffer);
-        int nTuple = frameTupleAccessor.getTupleCount();
-        for (int t = 0; t < nTuple; t++) {
+        tAccess.reset(buffer);
+        int nTuple = tAccess.getTupleCount();
+        int t = 0;
+        for (; t < nTuple; t++) {
             if (isTemporaryDatasetWriteJob) {
                 /**
                  * This "if branch" is for writes over temporary datasets.
@@ -102,12 +112,15 @@ public class CommitRuntime implements IPushRuntime {
                  */
                 transactionContext.notifyOptracker(false);
             } else {
-                frameTupleReference.reset(frameTupleAccessor, t);
-                pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
-                logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, frameTupleReference,
-                        primaryKeyFields);
+                tRef.reset(tAccess, t);
+                pkHash = computePrimaryKeyHashValue(tRef, primaryKeyFields);
+                logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, tRef, primaryKeyFields);
+
                 try {
                     logMgr.log(logRecord);
+                    if (!isSink) {
+                        appendTupleToFrame(t);
+                    }
                 } catch (ACIDException e) {
                     throw new HyracksDataException(e);
                 }
@@ -121,22 +134,18 @@ public class CommitRuntime implements IPushRuntime {
     }
 
     @Override
-    public void fail() throws HyracksDataException {
-
-    }
-
-    @Override
     public void close() throws HyracksDataException {
-
-    }
-
-    @Override
-    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-        throw new IllegalStateException();
+        if (isSink) {
+            return;
+        }
+        flushIfNotFailed();
+        writer.close();
+        appender.reset(frame, true);
     }
 
     @Override
     public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
-        this.frameTupleAccessor = new FrameTupleAccessor(recordDescriptor);
+        this.inputRecordDesc = recordDescriptor;
+        this.tAccess = new FrameTupleAccessor(recordDescriptor);
     }
 }

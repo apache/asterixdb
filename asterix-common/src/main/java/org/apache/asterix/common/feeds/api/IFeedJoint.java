@@ -20,11 +20,12 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
-import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.common.feeds.FeedJointKey;
 
 public interface IFeedJoint {
 
@@ -85,7 +86,7 @@ public interface IFeedJoint {
      *            the unique id of a feed connection
      * @return an instance of feedConnectionId {@link FeedConnectionId}
      */
-    public FeedConnectionId getReceiver(FeedConnectionId feedConnectionId);
+    public ActiveJobId getReceiver(ActiveJobId feedConnectionId);
 
     /**
      * @param active
@@ -98,9 +99,9 @@ public interface IFeedJoint {
      * @param connectionId
      *            the connectionId that needs to be removed
      */
-    public void removeReceiver(FeedConnectionId connectionId);
+    public void removeReceiver(ActiveJobId connectionId);
 
-    public FeedId getOwnerFeedId();
+    public ActiveObjectId getOwnerFeedId();
 
     /**
      * Add a feed connectionId to the set of registered subscribers
@@ -116,6 +117,6 @@ public interface IFeedJoint {
      */
     public void addConnectionRequest(FeedConnectionRequest request);
 
-    public FeedConnectionId getProvider();
+    public ActiveJobId getProvider();
 
 }

@@ -1,0 +1,7 @@
+use dataverse channels;
+
+for $result in dataset Metadata.Channel
+for $x in dataset Metadata.Dataset 
+where $x.DatasetName = $result.SubscriptionsDatasetName
+or $x.DatasetName = $result.ResultsDatasetName
+return $x;

@@ -45,6 +45,11 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -197,6 +202,31 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(FunctionDecl fd, Void arg) throws AsterixException {
+        return null;
+    }
+
+    @Override
+    public Void visit(ChannelUnsubscribeStatement channelUnsubscribeStatement, Void arg) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ChannelSubscribeStatement channelSubscribeStatement, Void arg) throws AsterixException {
+        return null;
+    }
+
+    @Override
+    public Void visit(ChannelDropStatement channelDropStatement, Void arg) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ExecuteProcedureStatement executeProcedureStatement, Void arg) throws AsterixException {
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateChannelStatement createChannelStatement, Void arg) {
         return null;
     }
 

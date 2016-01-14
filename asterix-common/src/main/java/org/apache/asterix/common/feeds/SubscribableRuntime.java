@@ -22,20 +22,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveRuntime;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
-public class SubscribableRuntime extends FeedRuntime implements ISubscribableRuntime {
+public class SubscribableRuntime extends ActiveRuntime implements ISubscribableRuntime {
 
     protected static final Logger LOGGER = Logger.getLogger(SubscribableRuntime.class.getName());
 
-    protected final FeedId feedId;
+    protected final ActiveObjectId feedId;
     protected final List<ISubscriberRuntime> subscribers;
     protected final RecordDescriptor recordDescriptor;
     protected final DistributeFeedFrameWriter dWriter;
 
-    public SubscribableRuntime(FeedId feedId, FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler,
+    public SubscribableRuntime(ActiveObjectId feedId, ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler,
             DistributeFeedFrameWriter dWriter, RecordDescriptor recordDescriptor) {
         super(runtimeId, inputHandler, dWriter);
         this.feedId = feedId;
@@ -44,7 +48,7 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
         this.subscribers = new ArrayList<ISubscriberRuntime>();
     }
 
-    public FeedId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 
@@ -64,7 +68,7 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
 
     @Override
     public synchronized void unsubscribeFeed(CollectionRuntime collectionRuntime) throws Exception {
-        dWriter.unsubscribeFeed(collectionRuntime.getFeedFrameWriter());
+        dWriter.unsubscribeFeed(collectionRuntime.getActiveFrameWriter());
         subscribers.remove(collectionRuntime);
     }
 
@@ -74,12 +78,12 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
     }
 
     @Override
-    public DistributeFeedFrameWriter getFeedFrameWriter() {
+    public DistributeFeedFrameWriter getActiveFrameWriter() {
         return dWriter;
     }
 
-    public FeedRuntimeType getFeedRuntimeType() {
-        return runtimeId.getFeedRuntimeType();
+    public ActiveRuntimeType getFeedRuntimeType() {
+        return runtimeId.getRuntimeType();
     }
 
     @Override

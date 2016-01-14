@@ -21,13 +21,13 @@ package org.apache.asterix.common.feeds;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedConnectJobInfo extends FeedJobInfo {
+public class FeedConnectJobInfo extends ActiveJobInfo {
 
-    private final FeedConnectionId connectionId;
     private final Map<String, String> feedPolicy;
     private final IFeedJoint sourceFeedJoint;
     private IFeedJoint computeFeedJoint;
@@ -36,18 +36,12 @@ public class FeedConnectJobInfo extends FeedJobInfo {
     private List<String> computeLocations;
     private List<String> storageLocations;
 
-    public FeedConnectJobInfo(JobId jobId, FeedJobState state, FeedConnectionId connectionId,
-            IFeedJoint sourceFeedJoint, IFeedJoint computeFeedJoint, JobSpecification spec,
-            Map<String, String> feedPolicy) {
-        super(jobId, state, FeedJobInfo.JobType.FEED_CONNECT, spec);
-        this.connectionId = connectionId;
+    public FeedConnectJobInfo(JobId jobId, JobState state, FeedConnectionId connectionId, IFeedJoint sourceFeedJoint,
+            IFeedJoint computeFeedJoint, JobSpecification spec, Map<String, String> feedPolicy) {
+        super(jobId, state, ActiveJopType.FEED_CONNECT, spec, connectionId);
         this.sourceFeedJoint = sourceFeedJoint;
         this.computeFeedJoint = computeFeedJoint;
         this.feedPolicy = feedPolicy;
-    }
-
-    public FeedConnectionId getConnectionId() {
-        return connectionId;
     }
 
     public List<String> getCollectLocations() {
@@ -88,6 +82,10 @@ public class FeedConnectJobInfo extends FeedJobInfo {
 
     public void setComputeFeedJoint(IFeedJoint computeFeedJoint) {
         this.computeFeedJoint = computeFeedJoint;
+    }
+
+    public FeedConnectionId getConnectionId() {
+        return (FeedConnectionId) this.getActiveJobId();
     }
 
 }

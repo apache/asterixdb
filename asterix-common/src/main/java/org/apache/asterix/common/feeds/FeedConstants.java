@@ -34,7 +34,9 @@ public class FeedConstants {
         public static final String NODE_ID = "nodeId";
         public static final String DATAVERSE = "dataverse";
         public static final String FEED = "feed";
+        public static final String CHANNEL = "channel";
         public static final String DATASET = "dataset";
+        public static final String PROCEDURE = "procedure";
         public static final String AQL = "aql";
         public static final String RUNTIME_TYPE = "runtime-type";
         public static final String PARTITION = "partition";
@@ -58,7 +60,7 @@ public class FeedConstants {
         public static final String MAX_WINDOW_ACKED = "max-window-acked";
         public static final String BASE = "base";
         public static final String NOT_APPLICABLE = "N/A";
-        
+
     }
 
     public static final class NamingConstants {

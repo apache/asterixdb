@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds;
 
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 
 public class NodeLoad implements Comparable<NodeLoad> {
 
@@ -35,7 +35,7 @@ public class NodeLoad implements Comparable<NodeLoad> {
         nRuntimes++;
     }
 
-    public void removeLoad(FeedRuntimeType runtimeType) {
+    public void removeLoad(ActiveRuntimeType runtimeType) {
         nRuntimes--;
     }
 

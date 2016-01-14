@@ -20,8 +20,8 @@ package org.apache.asterix.metadata.feeds;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.hyracks.api.comm.IFrame;
@@ -37,7 +37,7 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideHandler {
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private IFrameWriter downstreamWriter;
     private final FrameTupleAccessor inputFrameTupleAccessor;
     private final FrameTupleAppender tupleAppender;
@@ -46,7 +46,7 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
     private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
 
     public CollectTransformFeedFrameWriter(IHyracksTaskContext ctx, IFrameWriter downstreamWriter,
-            ISubscribableRuntime sourceRuntime, RecordDescriptor outputRecordDescriptor, FeedConnectionId connectionId)
+            ISubscribableRuntime sourceRuntime, RecordDescriptor outputRecordDescriptor, ActiveJobId connectionId)
             throws HyracksDataException {
         this.downstreamWriter = downstreamWriter;
         RecordDescriptor inputRecordDescriptor = sourceRuntime.getRecordDescriptor();
@@ -96,8 +96,8 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
     }
 
     @Override
-    public FeedId getFeedId() {
-        return connectionId.getFeedId();
+    public ActiveObjectId getFeedId() {
+        return connectionId.getActiveId();
     }
 
     @Override
@@ -109,7 +109,7 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
         return downstreamWriter;
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

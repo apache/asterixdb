@@ -49,10 +49,17 @@ public interface Statement extends ILangExpression {
         SUBSCRIBE_FEED,
         CREATE_FEED_POLICY,
         DROP_FEED_POLICY,
+        CREATE_CHANNEL,
+        DROP_CHANNEL,
+        SUBSCRIBE_CHANNEL,
+        UNSUBSCRIBE_CHANNEL,
+        CREATE_BROKER,
+        DROP_BROKER,
         CREATE_FUNCTION,
         FUNCTION_DROP,
         COMPACT,
         EXTERNAL_DATASET_REFRESH,
+        EXECUTE_PROCEDURE,
         RUN
     }
 

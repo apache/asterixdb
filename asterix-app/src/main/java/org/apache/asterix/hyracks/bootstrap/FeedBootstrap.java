@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.active.CentralActiveManager;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -57,7 +57,7 @@ public class FeedBootstrap {
                     + "primary key " + FAILED_TUPLE_DATASET_KEY + " on  " + MetadataConstants.METADATA_NODEGROUP_NAME
                     + ";");
 
-            CentralFeedManager.AQLExecutor.executeAQL(builder.toString());
+            CentralActiveManager.AQLExecutor.executeAQL(builder.toString());
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error: " + builder.toString());

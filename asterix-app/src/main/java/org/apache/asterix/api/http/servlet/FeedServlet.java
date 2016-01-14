@@ -26,19 +26,23 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.HashSet;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.active.CentralActiveManager;
+import org.apache.asterix.common.active.ActiveActivity;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.api.IActiveLoadManager;
+import org.apache.asterix.common.active.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
-import org.apache.asterix.common.feeds.api.IFeedLoadManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.feeds.CentralFeedManager;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -89,7 +93,12 @@ public class FeedServlet extends HttpServlet {
         if (requestURI.startsWith("/webui/static")) {
             outStr = sb.toString();
         } else {
-            Collection<FeedActivity> lfa = CentralFeedManager.getInstance().getFeedLoadManager().getFeedActivities();
+            Collection<FeedActivity> lfa = new HashSet<FeedActivity>();
+            for (ActiveActivity activity : CentralActiveManager.getInstance().getLoadManager().getActivities()) {
+                if (activity instanceof FeedActivity) {
+                    lfa.add((FeedActivity) activity);
+                }
+            }
             StringBuilder ldStr = new StringBuilder();
             ldStr.append("<br />");
             ldStr.append("<br />");
@@ -123,18 +132,19 @@ public class FeedServlet extends HttpServlet {
     }
 
     private void insertRow(StringBuilder html, FeedActivity activity) {
-        String intake = activity.getFeedActivityDetails().get(FeedActivityDetails.INTAKE_LOCATIONS);
-        String compute = activity.getFeedActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
-        String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
+        String intake = activity.getActivityDetails().get(FeedActivityDetails.INTAKE_LOCATIONS);
+        String compute = activity.getActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
+        String store = activity.getActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
-        IFeedLoadManager loadManager = CentralFeedManager.getInstance().getFeedLoadManager();
-        FeedConnectionId connectionId = new FeedConnectionId(
-                new FeedId(activity.getDataverseName(), activity.getFeedName()), activity.getDatasetName());
-        int intakeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.COLLECT) * intake.split(",").length;
-        int storeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.STORE) * store.split(",").length;
+        IActiveLoadManager loadManager = CentralActiveManager.getInstance().getLoadManager();
+        ActiveJobId connectionId = new FeedConnectionId(
+                new ActiveObjectId(activity.getDataverseName(), activity.getObjectName(), ActiveObjectType.FEED),
+                activity.getDatasetName());
+        int intakeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.COLLECT) * intake.split(",").length;
+        int storeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.STORE) * store.split(",").length;
 
         html.append("<tr>");
-        html.append("<td>" + activity.getFeedName() + "</td>");
+        html.append("<td>" + activity.getObjectName() + "</td>");
         html.append("<td>" + activity.getDatasetName() + "</td>");
         html.append("<td>" + activity.getConnectTimestamp() + "</td>");
         //html.append("<td>" + insertLink(html, FeedDashboardServlet.getParameterizedURL(activity), "Details") + "</td>");

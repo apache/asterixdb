@@ -44,6 +44,8 @@ import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexImmutableProperties;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.entities.Broker;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -57,6 +59,8 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entitytupletranslators.BrokerTupleTranslator;
+import org.apache.asterix.metadata.entitytupletranslators.ChannelTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
@@ -370,6 +374,17 @@ public class MetadataNode implements IMetadataNode {
                 dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
             }
 
+            List<Channel> dataverseChannels;
+            Channel channel;
+            dataverseChannels = getDataverseChannels(jobId, dataverseName);
+            if (dataverseChannels != null && dataverseChannels.size() > 0) {
+                // Drop all channels in this dataverse.
+                for (int i = 0; i < dataverseChannels.size(); i++) {
+                    channel = dataverseChannels.get(i);
+                    dropChannel(jobId, dataverseName, channel.getChannelId().getName());
+                }
+            }
+
             // Delete the dataverse entry from the 'dataverse' dataset.
             ITupleReference searchKey = createTuple(dataverseName);
             // As a side effect, acquires an S lock on the 'dataverse' dataset
@@ -585,6 +600,23 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Broker> getBrokers(JobId jobId) throws MetadataException, RemoteException {
+        try {
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(false);
+            IValueExtractor<Broker> valueExtractor = new MetadataEntityValueExtractor<Broker>(tupleReaderWriter);
+            List<Broker> results = new ArrayList<Broker>();
+            searchIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, null, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
     public Dataverse getDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
 
         try {
@@ -626,6 +658,21 @@ public class MetadataNode implements IMetadataNode {
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<Feed>(tupleReaderWriter);
             List<Feed> results = new ArrayList<Feed>();
             searchIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<Channel> getDataverseChannels(JobId jobId, String dataverseName)
+            throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName);
+            ChannelTupleTranslator tupleReaderWriter = new ChannelTupleTranslator(false);
+            IValueExtractor<Channel> valueExtractor = new MetadataEntityValueExtractor<Channel>(tupleReaderWriter);
+            List<Channel> results = new ArrayList<Channel>();
+            searchIndex(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, searchKey, valueExtractor, results);
             return results;
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -1431,6 +1478,111 @@ public class MetadataNode implements IMetadataNode {
         } catch (Exception e) {
             throw new MetadataException(e);
         }
+    }
+
+    @Override
+    public void addChannel(JobId jobId, Channel channel) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'Channel' dataset.
+            ChannelTupleTranslator tupleReaderWriter = new ChannelTupleTranslator(true);
+            ITupleReference channelTuple = tupleReaderWriter.getTupleFromMetadataEntity(channel);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, channelTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A channel with this name " + channel.getChannelId().getName()
+                    + " already exists in dataverse '" + channel.getChannelId().getDataverse() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public Channel getChannel(JobId jobId, String dataverse, String channelName)
+            throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverse, channelName);
+            ChannelTupleTranslator tupleReaderWriter = new ChannelTupleTranslator(false);
+            List<Channel> results = new ArrayList<Channel>();
+            IValueExtractor<Channel> valueExtractor = new MetadataEntityValueExtractor<Channel>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropChannel(JobId jobId, String dataverse, String channelName)
+            throws MetadataException, RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(dataverse, channelName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'nodegroup' dataset.
+            ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, tuple);
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop feed '" + channelName + "' because it doesn't exist", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public void addBroker(JobId jobId, Broker broker) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'Broker' dataset.
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(true);
+            ITupleReference brokerTuple = tupleReaderWriter.getTupleFromMetadataEntity(broker);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, brokerTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A broker with this name " + broker.getBrokerName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public Broker getBroker(JobId jobId, String brokerName) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(brokerName);
+            BrokerTupleTranslator tupleReaderWriter = new BrokerTupleTranslator(false);
+            List<Broker> results = new ArrayList<Broker>();
+            IValueExtractor<Broker> valueExtractor = new MetadataEntityValueExtractor<Broker>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropBroker(JobId jobId, String brokerName) throws MetadataException, RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(brokerName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'nodegroup' dataset.
+            ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.BROKER_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.BROKER_DATASET, tuple);
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop broker '" + brokerName + "' because it doesn't exist", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
     }
 
     @Override

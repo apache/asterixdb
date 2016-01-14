@@ -40,8 +40,14 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
@@ -54,6 +60,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -171,5 +178,19 @@ public interface ILangVisitor<R, T> {
     R visit(FunctionDropStatement del, T arg) throws AsterixException;
 
     R visit(CompactStatement del, T arg) throws AsterixException;
+
+    R visit(ChannelUnsubscribeStatement channelUnsubscribeStatement, T arg);
+
+    R visit(ChannelSubscribeStatement channelSubscribeStatement, T arg) throws AsterixException;
+
+    R visit(ChannelDropStatement channelDropStatement, T arg);
+
+    R visit(ExecuteProcedureStatement executeProcedureStatement, T arg) throws AsterixException;
+
+    R visit(CreateChannelStatement createChannelStatement, T arg);
+
+    R visit(CreateBrokerStatement createBrokerStatement, T arg);
+
+    R visit(BrokerDropStatement brokerDropStatement, T arg);
 
 }

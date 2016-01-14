@@ -1,0 +1,2 @@
+[ { "DataverseName": "channels", "ChannelName": "nearbyTweetChannel", "SubscriptionsDatasetName": "nearbyTweetChannelSubscriptions", "ResultsDatasetName": "nearbyTweetChannelResults", "Function": "channels.NearbyTweetsContainingText@2", "Duration": "PT10M" }
+ ]

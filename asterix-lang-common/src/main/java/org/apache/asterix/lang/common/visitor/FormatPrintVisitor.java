@@ -60,8 +60,14 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.BrokerDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateBrokerStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
@@ -74,6 +80,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
@@ -105,6 +112,8 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     protected final static String SEMICOLON = ";";
     private final static String CREATE = "create ";
     private final static String FEED = " feed ";
+    private final static String CHANNEL = " channel ";
+    private final static String BROKER = " broker ";
     private final static String DEFAULT_DATAVERSE_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
     protected Set<Character> validIdentifierChars = new HashSet<Character>();
     protected Set<Character> validIdentifierStartChars = new HashSet<Character>();
@@ -1057,5 +1066,91 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
                 out.print(" /*+ " + annotation + " */ ");
             }
         }
+    }
+
+    @Override
+    public Void visit(ChannelUnsubscribeStatement channelUnsubscribeStatement, Integer step) {
+        out.print(skip(step) + "unsubscribe subscription ");
+        out.print(" \"");
+        out.println(channelUnsubscribeStatement.getsubScriptionId());
+        out.print(" \"");
+        out.println(" from " + CHANNEL);
+        out.println(" " + this.generateFullName(channelUnsubscribeStatement.getDataverseName(),
+                channelUnsubscribeStatement.getChannelName()));
+        out.println(SEMICOLON);
+        out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(ChannelSubscribeStatement channelSubscribeStatement, Integer step) throws AsterixException {
+        out.print(skip(step) + "subscribe to " + CHANNEL);
+        out.print(" \"");
+        out.println(" " + this.generateFullName(channelSubscribeStatement.getDataverseName(),
+                channelSubscribeStatement.getChannelName()));
+        out.print(" \"");
+        out.print("(");
+        printDelimitedExpressions(channelSubscribeStatement.getArgList(), COMMA, step);
+        out.println(")");
+        out.println(SEMICOLON);
+        out.println();
+        return null;
+
+    }
+
+    @Override
+    public Void visit(ChannelDropStatement channelDropStatement, Integer step) {
+        out.print(skip(step) + "drop " + CHANNEL);
+        out.print(" \"");
+        out.println(" " + this.generateFullName(channelDropStatement.getDataverseName(),
+                channelDropStatement.getChannelName()));
+        out.print(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(ExecuteProcedureStatement executeProcedureStatement, Integer step) throws AsterixException {
+        out.print(skip(step) + "execute ");
+        out.println(" " + this.generateFullName(executeProcedureStatement.getFunctionSignature().getNamespace(),
+                executeProcedureStatement.getFunctionSignature().getName()));
+        out.print("(");
+        printDelimitedExpressions(executeProcedureStatement.getExprList(), COMMA, step);
+        out.println(")");
+        out.print(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateChannelStatement createChannelStatement, Integer step) {
+        out.print(skip(step) + "create repetitive " + CHANNEL);
+        out.print(" \"");
+        out.println(" " + this.generateFullName(createChannelStatement.getDataverseName(),
+                createChannelStatement.getChannelName()));
+        out.print(skip(step) + " using function ");
+        out.println(createChannelStatement.getFunction());
+        out.print(skip(step) + " period duration(\"");
+        out.println(createChannelStatement.getDuration());
+        out.println("\")");
+        out.print(SEMICOLON);
+        return null;
+
+    }
+
+    @Override
+    public Void visit(CreateBrokerStatement createBrokerStatement, Integer step) {
+        out.print(skip(step) + "create " + BROKER);
+        out.println(" " + createBrokerStatement.getBrokerName());
+        out.print(skip(step) + " at ");
+        out.println(" " + createBrokerStatement.getEndPointName());
+        out.print(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(BrokerDropStatement brokerDropStatement, Integer step) {
+        out.print(skip(step) + "drop " + BROKER);
+        out.println(" " + brokerDropStatement.getBrokerName());
+        out.print(SEMICOLON);
+        return null;
     }
 }

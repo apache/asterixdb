@@ -21,9 +21,9 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.active.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
@@ -63,7 +63,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -107,8 +108,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 String datasetName = datasetReference.second;
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
                 if (dataset == null) {
-                    throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse "
-                            + dataverseName);
+                    throw new AlgebricksException(
+                            "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
 
                 AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
@@ -193,11 +194,10 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
     }
 
     private AqlDataSource createFeedDataSource(AqlSourceId aqlId, String targetDataset, String sourceFeedName,
-            String subscriptionLocation, AqlMetadataProvider metadataProvider, FeedPolicy feedPolicy,
-            String outputType, String locations) throws AlgebricksException {
-        if (!aqlId.getDataverseName().equals(
-                metadataProvider.getDefaultDataverse() == null ? null : metadataProvider.getDefaultDataverse()
-                        .getDataverseName())) {
+            String subscriptionLocation, AqlMetadataProvider metadataProvider, FeedPolicy feedPolicy, String outputType,
+            String locations) throws AlgebricksException {
+        if (!aqlId.getDataverseName().equals(metadataProvider.getDefaultDataverse() == null ? null
+                : metadataProvider.getDefaultDataverse().getDataverseName())) {
             return null;
         }
         IAType feedOutputType = metadataProvider.findType(aqlId.getDataverseName(), outputType);

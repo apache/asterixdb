@@ -269,10 +269,20 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             ProjectOperator project = new ProjectOperator(projectVars);
 
             if (additionalFilteringAssign != null) {
-                additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+                // Only apply replicate operator when doing bulk-load
+                if (secondaryIndexTotalCnt > 1 && insertOp.isBulkload()) {
+                    additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(replicateOp));
+                } else {
+                    additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+                }
                 assign.getInputs().add(new MutableObject<ILogicalOperator>(additionalFilteringAssign));
             } else {
-                assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+                // Only apply replicate operator when doing bulk-load
+                if (secondaryIndexTotalCnt > 1 && insertOp.isBulkload()) {
+                    assign.getInputs().add(new MutableObject<ILogicalOperator>(replicateOp));
+                } else {
+                    assign.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+                }
             }
 
             // Only apply replicate operator when doing bulk-load

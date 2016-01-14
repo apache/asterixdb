@@ -658,7 +658,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists, false);
     }
 }
 
@@ -863,7 +863,7 @@ Statement DropStatement() throws ParseException:
       }
     | <FUNCTION> funcSig = FunctionSignature() ifExists = IfExists()
       {
-        stmt = new FunctionDropStatement(funcSig, ifExists);
+        stmt = new FunctionDropStatement(funcSig, ifExists, false);
       }
     | <FEED> pairId = QualifiedName() ifExists = IfExists()
       {
@@ -897,8 +897,8 @@ InsertStatement InsertStatement() throws ParseException:
 {
   <INSERT> <INTO> nameComponents = QualifiedName() query = Query()
     {
-      query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      query.setTopLevel(false);
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), false, null);
     }
 }
 

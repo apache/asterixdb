@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -41,12 +41,12 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.active.ActiveUtil;
 import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.entities.SecondaryFeed;
-import org.apache.asterix.metadata.feeds.FeedUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -74,10 +74,10 @@ public class SubscribeFeedStatement implements Statement {
 
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         this.query = new Query();
-        FeedId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
+        ActiveObjectId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
         Feed subscriberFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx,
                 connectionRequest.getReceivingFeedId().getDataverse(),
-                connectionRequest.getReceivingFeedId().getFeedName());
+                connectionRequest.getReceivingFeedId().getName());
         if (subscriberFeed == null) {
             throw new IllegalStateException(" Subscriber feed " + subscriberFeed + " not found.");
         }
@@ -103,8 +103,8 @@ public class SubscribeFeedStatement implements Statement {
 
         builder.append("insert into dataset " + connectionRequest.getTargetDataset() + " ");
         builder.append(" (" + " for $x in feed-collect ('" + sourceFeedId.getDataverse() + "'" + "," + "'"
-                + sourceFeedId.getFeedName() + "'" + "," + "'" + connectionRequest.getReceivingFeedId().getFeedName()
-                + "'" + "," + "'" + connectionRequest.getSubscriptionLocation().name() + "'" + "," + "'"
+                + sourceFeedId.getName() + "'" + "," + "'" + connectionRequest.getReceivingFeedId().getName() + "'"
+                + "," + "'" + connectionRequest.getSubscriptionLocation().name() + "'" + "," + "'"
                 + connectionRequest.getTargetDataset() + "'" + "," + "'" + feedOutputType + "'" + ")");
 
         List<String> functionsToApply = connectionRequest.getFunctionsToApply();
@@ -182,20 +182,20 @@ public class SubscribeFeedStatement implements Statement {
 
     private String getOutputType(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         String outputType = null;
-        FeedId feedId = connectionRequest.getReceivingFeedId();
-        Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getFeedName());
+        ActiveObjectId feedId = connectionRequest.getReceivingFeedId();
+        Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getName());
         FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(connectionRequest.getPolicyParameters());
         try {
             switch (feed.getFeedType()) {
                 case PRIMARY:
                     Triple<IAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
 
-                    factoryOutput = FeedUtil.getPrimaryFeedFactoryAndOutput((PrimaryFeed) feed, policyAccessor,
+                    factoryOutput = ActiveUtil.getPrimaryFeedFactoryAndOutput((PrimaryFeed) feed, policyAccessor,
                             mdTxnCtx);
                     outputType = factoryOutput.second.getTypeName();
                     break;
                 case SECONDARY:
-                    outputType = FeedUtil.getSecondaryFeedOutput((SecondaryFeed) feed, policyAccessor, mdTxnCtx);
+                    outputType = ActiveUtil.getSecondaryFeedOutput((SecondaryFeed) feed, policyAccessor, mdTxnCtx);
                     break;
             }
             return outputType;

@@ -1,0 +1,16 @@
+/*
+ * Test case Name  : insert-return-records
+ * Description     : Check records returned on insert
+ * Expected Result : Success
+ * Date            : Mar 2015
+ */
+
+use dataverse test;
+
+insert into dataset TweetMessageuuids(
+[{ "tweetid":1,"message-text":"hello"},
+{"tweetid":2,"message-text":"goodbye"},
+{"tweetid":3,"message-text":"the end"},
+{"tweetid":4,"message-text":"what"},
+{"tweetid":5,"message-text":"good"}]
+) return records;

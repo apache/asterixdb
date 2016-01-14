@@ -20,6 +20,9 @@ package org.apache.asterix.common.feeds;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveRuntimeId;
+import org.apache.asterix.common.active.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.FeedConstants.StatisticsConstants;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
@@ -39,19 +42,19 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
     private boolean ackingEnabled;
     private final boolean timeTrackingEnabled;
 
-    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler,
+    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
             IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedMetricCollector metricCollector, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+            IFeedMetricCollector metricCollector, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
             IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
             FeedPolicyAccessor policyAccessor) {
-        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
+        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, activeJobId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);
         timeTrackingEnabled = policyAccessor.isTimeTrackingEnabled();
         ackingEnabled = policyAccessor.atleastOnceSemantics();
         if (ackingEnabled || timeTrackingEnabled) {
             storageFromeHandler = new StorageFrameHandler();
             this.storageTimeTrackingRateTask = new MonitoredBufferTimerTasks.MonitoredBufferStorageTimerTask(this,
-                    inputHandler.getFeedManager(), connectionId, runtimeId.getPartition(), policyAccessor,
+                    inputHandler.getFeedManager(), activeJobId, runtimeId.getPartition(), policyAccessor,
                     storageFromeHandler);
             this.timer.scheduleAtFixedRate(storageTimeTrackingRateTask, 0, STORAGE_TIME_TRACKING_FREQUENCY);
         }
