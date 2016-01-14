@@ -21,7 +21,6 @@ package org.apache.asterix.external.api;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;

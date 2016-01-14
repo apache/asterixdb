@@ -49,10 +49,11 @@ public class ExternalDataCompatibilityUtils {
     }
 
     //TODO:Add remaining aliases
-    public static void addCompatabilityParameters(String adapterClassname, ARecordType itemType,
+    public static void addCompatabilityParameters(String adapterName, ARecordType itemType,
             Map<String, String> configuration) throws AsterixException {
-        if (adapterClassname.equals(ExternalDataConstants.ALIAS_HDFS_ADAPTER)
-                || adapterClassname.equalsIgnoreCase(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME)) {
+        // HDFS
+        if (adapterName.equals(ExternalDataConstants.ALIAS_HDFS_ADAPTER)
+                || adapterName.equalsIgnoreCase(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME)) {
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
                 throw new AsterixException("Unspecified format parameter for HDFS adapter");
             }
@@ -65,21 +66,45 @@ public class ExternalDataCompatibilityUtils {
                 configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.ALIAS_HDFS_ADAPTER);
             }
         }
-        if (adapterClassname.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)
-                || adapterClassname.contains(ExternalDataConstants.ADAPTER_LOCALFS_CLASSNAME)) {
+
+        // Local Filesystem
+        if (adapterName.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)
+                || adapterName.contains(ExternalDataConstants.ADAPTER_LOCALFS_CLASSNAME)
+                || adapterName.contains(ExternalDataConstants.ALIAS_LOCALFS_PUSH_ADAPTER)) {
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
                 throw new AsterixException("Unspecified format parameter for local file system adapter");
             }
             configuration.put(ExternalDataConstants.KEY_READER, configuration.get(ExternalDataConstants.KEY_FORMAT));
             configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.ALIAS_LOCALFS_ADAPTER);
         }
+
+        // Twitter (Pull)
+        if (adapterName.equals(ExternalDataConstants.ALIAS_TWITTER_PULL_ADAPTER)) {
+            configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_TWITTER_PULL);
+            configuration.put(ExternalDataConstants.KEY_PULL, ExternalDataConstants.TRUE);
+            ExternalDataUtils.setRecordFormat(configuration, ExternalDataConstants.FORMAT_TWEET);
+        }
+
+        // Twitter (Push)
+        if (adapterName.equals(ExternalDataConstants.ALIAS_TWITTER_PUSH_ADAPTER)) {
+            configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_TWITTER_PUSH);
+            configuration.put(ExternalDataConstants.KEY_PUSH, ExternalDataConstants.TRUE);
+            ExternalDataUtils.setRecordFormat(configuration, ExternalDataConstants.FORMAT_TWEET);
+        }
+
+        // Hive Parser
         if (configuration.get(ExternalDataConstants.KEY_PARSER) != null
                 && configuration.get(ExternalDataConstants.KEY_PARSER).equals(ExternalDataConstants.PARSER_HIVE)) {
             configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_HIVE);
         }
+
+        // FileSystem for Feed adapter
         if (configuration.get(ExternalDataConstants.KEY_FILESYSTEM) != null) {
             configuration.put(ExternalDataConstants.KEY_STREAM,
                     configuration.get(ExternalDataConstants.KEY_FILESYSTEM));
+            if (adapterName.equalsIgnoreCase(ExternalDataConstants.ALIAS_FILE_FEED_ADAPTER)) {
+                configuration.put(ExternalDataConstants.KEY_WAIT_FOR_DATA, ExternalDataConstants.FALSE);
+            }
         }
     }
 }

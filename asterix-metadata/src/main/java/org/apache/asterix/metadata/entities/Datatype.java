@@ -26,7 +26,7 @@ import org.apache.asterix.om.types.IAType;
 /**
  * Metadata describing a datatype.
  */
-public class Datatype implements IMetadataEntity {
+public class Datatype implements IMetadataEntity<Datatype> {
 
     private static final long serialVersionUID = 1L;
 
@@ -60,12 +60,12 @@ public class Datatype implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Datatype addToCache(MetadataCache cache) {
         return cache.addDatatypeIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Datatype dropFromCache(MetadataCache cache) {
         return cache.dropDatatype(this);
     }
 }

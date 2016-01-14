@@ -35,7 +35,7 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
@@ -52,7 +52,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 /**
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
-public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolicy> {
+public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolicyEntity> {
     // Field indexes of serialized FeedPolicy in a tuple.
     // Key field.
     public static final int FEED_POLICY_DATAVERSE_NAME_FIELD_INDEX = 0;
@@ -74,7 +74,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     }
 
     @Override
-    public FeedPolicy getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
+    public FeedPolicyEntity getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -84,8 +84,8 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         return createFeedPolicyFromARecord(feedPolicyRecord);
     }
 
-    private FeedPolicy createFeedPolicyFromARecord(ARecord feedPolicyRecord) {
-        FeedPolicy feedPolicy = null;
+    private FeedPolicyEntity createFeedPolicyFromARecord(ARecord feedPolicyRecord) {
+        FeedPolicyEntity feedPolicy = null;
         String dataverseName = ((AString) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
         String policyName = ((AString) feedPolicyRecord
@@ -106,12 +106,12 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
             policyParamters.put(key, value);
         }
 
-        feedPolicy = new FeedPolicy(dataverseName, policyName, description, policyParamters);
+        feedPolicy = new FeedPolicyEntity(dataverseName, policyName, description, policyParamters);
         return feedPolicy;
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(FeedPolicy feedPolicy) throws IOException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy) throws IOException, MetadataException {
         // write the key in the first three fields of the tuple
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
 

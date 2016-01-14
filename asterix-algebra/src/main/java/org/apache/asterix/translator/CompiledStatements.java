@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 import org.apache.asterix.lang.common.expression.VariableExpr;

@@ -23,6 +23,9 @@ import java.util.ArrayList;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.external.feed.api.IFeed;
+import org.apache.asterix.external.feed.api.IFeed.FeedType;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -30,15 +33,11 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.Feed.FeedType;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
-import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.entities.SecondaryFeed;
-import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -223,7 +222,7 @@ public class MetadataTransactionContext extends MetadataCache {
         return opLog;
     }
 
-    public void addFeedPolicy(FeedPolicy feedPolicy) {
+    public void addFeedPolicy(FeedPolicyEntity feedPolicy) {
         droppedCache.dropFeedPolicy(feedPolicy);
         logAndApply(new MetadataLogicalOperation(feedPolicy, true));
 
@@ -235,16 +234,10 @@ public class MetadataTransactionContext extends MetadataCache {
 
     }
 
-    public void dropFeed(String dataverseName, String feedName, FeedType feedType) {
+    public void dropFeed(String dataverseName, String feedName, IFeed.FeedType feedType) {
         Feed feed = null;
-        switch (feedType) {
-            case PRIMARY:
-                feed = new PrimaryFeed(dataverseName, feedName, null, null, null);
-                break;
-            case SECONDARY:
-                feed = new SecondaryFeed(dataverseName, feedName, null, null);
-                break;
-        }
+        feed = new Feed(dataverseName, feedName, null, feedType, (feedType == FeedType.PRIMARY) ? feedName : null, null,
+                null);
         droppedCache.addFeedIfNotExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, false));
     }

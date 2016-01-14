@@ -117,6 +117,7 @@ public class ResultCollector implements IResultCollector {
         return reusableResultObjectHolder;
     }
 
+    @SuppressWarnings("unchecked")
     private void serializeResult(IAObject object) throws AsterixException {
         try {
             AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(finfo.getReturnType())

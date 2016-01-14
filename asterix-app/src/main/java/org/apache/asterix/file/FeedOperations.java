@@ -22,24 +22,24 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedConnectJobInfo;
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.FeedId;
-import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
-import org.apache.asterix.common.feeds.api.IFeedJoint;
-import org.apache.asterix.common.feeds.api.IFeedMessage;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.common.feeds.message.EndFeedMessage;
-import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.external.feed.api.IFeedJoint;
+import org.apache.asterix.external.feed.api.IFeedMessage;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.message.EndFeedMessage;
+import org.apache.asterix.external.feed.message.FeedTupleCommitResponseMessage;
+import org.apache.asterix.external.feed.message.PrepareStallMessage;
+import org.apache.asterix.external.feed.message.TerminateDataFlowMessage;
+import org.apache.asterix.external.feed.message.ThrottlingEnabledFeedMessage;
+import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.external.feed.watch.FeedConnectJobInfo;
+import org.apache.asterix.external.operators.FeedMessageOperatorDescriptor;
+import org.apache.asterix.external.util.FeedConstants;
+import org.apache.asterix.feed.FeedLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.PrepareStallMessage;
-import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
+import org.apache.asterix.metadata.entities.Feed;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -63,7 +63,7 @@ public class FeedOperations {
      * @return JobSpecification the Hyracks job specification for receiving data from external source
      * @throws Exception
      */
-    public static Pair<JobSpecification, IAdapterFactory> buildFeedIntakeJobSpec(PrimaryFeed primaryFeed,
+    public static Pair<JobSpecification, IAdapterFactory> buildFeedIntakeJobSpec(Feed primaryFeed,
             AqlMetadataProvider metadataProvider, FeedPolicyAccessor policyAccessor) throws Exception {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();

@@ -19,21 +19,24 @@
 package org.apache.asterix.external.library.adapter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.asterix.external.dataset.adapter.StreamBasedAdapter;
+import org.apache.asterix.external.api.IFeedAdapter;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapter extends StreamBasedAdapter {
+public class TestTypedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -45,25 +48,34 @@ public class TestTypedAdapter extends StreamBasedAdapter {
 
     private DummyGenerator generator;
 
+    protected final ITupleParser tupleParser;
+
+    protected final IAType sourceDatatype;
+
+    protected static final Logger LOGGER = Logger.getLogger(TestTypedAdapter.class.getName());
+
     public TestTypedAdapter(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
             Map<String, String> configuration, int partition) throws IOException {
-        super(parserFactory, sourceDatatype, ctx, partition);
         pos = new PipedOutputStream();
         pis = new PipedInputStream(pos);
         this.configuration = configuration;
+        this.tupleParser = parserFactory.createTupleParser(ctx);
+        this.sourceDatatype = sourceDatatype;
     }
 
     @Override
-    public InputStream getInputStream(int partition) throws IOException {
-        return pis;
-    }
-
-    @Override
-    public void start(int partition, IFrameWriter frameWriter) throws Exception {
+    public void start(int partition, IFrameWriter writer) throws Exception {
         generator = new DummyGenerator(configuration, pos);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(generator);
-        super.start(partition, frameWriter);
+        if (pis != null) {
+            tupleParser.parse(pis, writer);
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning(
+                        "Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
+            }
+        }
     }
 
     private static class DummyGenerator implements Runnable {
@@ -135,4 +147,13 @@ public class TestTypedAdapter extends StreamBasedAdapter {
         return false;
     }
 
+    @Override
+    public boolean pause() {
+        return false;
+    }
+
+    @Override
+    public boolean resume() {
+        return false;
+    }
 }

@@ -22,7 +22,6 @@ public class Datatypes {
 
     /*
         The following assumes this DDL (but ignoring the field name orders):
-
         create type TwitterUser if not exists as open{
             screen_name: string,
             language: string,
@@ -31,7 +30,6 @@ public class Datatypes {
             name: string,
             followers_count: int32
         };
-
         create type Tweet if not exists as open{
             id: string,
             user: TwitterUser,
@@ -40,7 +38,6 @@ public class Datatypes {
             created_at:string,
             message_text:string
         };
-
     */
     public static class Tweet {
         public static final String ID = "id";
@@ -62,10 +59,8 @@ public class Datatypes {
 
     }
 
-
     /*
         The following assumes this DDL (but ignoring the field name orders):
-
         create type ProcessedTweet if not exists as open {
             id: string,
             user_name:string,
@@ -75,13 +70,11 @@ public class Datatypes {
             country: string,
             topics: [string]
         };
-
     */
     public static final class ProcessedTweet {
         public static final String USER_NAME = "user_name";
         public static final String LOCATION = "location";
         public static final String TOPICS = "topics";
     }
-
 
 }

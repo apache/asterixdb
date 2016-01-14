@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
-public class Function implements IMetadataEntity {
+public class Function implements IMetadataEntity<Function> {
     private static final long serialVersionUID = 1L;
     public static final String LANGUAGE_AQL = "AQL";
     public static final String LANGUAGE_JAVA = "JAVA";
@@ -85,12 +85,12 @@ public class Function implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Function addToCache(MetadataCache cache) {
         return cache.addFunctionIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Function dropFromCache(MetadataCache cache) {
         return cache.dropFunction(this);
     }
 

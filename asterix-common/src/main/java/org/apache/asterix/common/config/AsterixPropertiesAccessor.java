@@ -197,7 +197,7 @@ public class AsterixPropertiesAccessor {
     }
 
     public ClusterPartition getMetadataPartiton() {
-        //metadata partition is always the first partition on the metadata node
+        // metadata partition is always the first partition on the metadata node
         return nodePartitionsMap.get(metadataNodeName)[0];
     }
 

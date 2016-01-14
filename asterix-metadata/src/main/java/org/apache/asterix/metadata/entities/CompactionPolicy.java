@@ -25,7 +25,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 /**
  * Metadata describing a compaction policy record.
  */
-public class CompactionPolicy implements IMetadataEntity {
+public class CompactionPolicy implements IMetadataEntity<CompactionPolicy> {
 
     private static final long serialVersionUID = 1L;
 
@@ -71,12 +71,12 @@ public class CompactionPolicy implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public CompactionPolicy addToCache(MetadataCache cache) {
         return cache.addCompactionPolicyIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public CompactionPolicy dropFromCache(MetadataCache cache) {
         return cache.dropCompactionPolicy(this);
     }
 }

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.metadata.bootstrap;
 
 import java.io.File;
@@ -37,14 +36,16 @@ import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory;
-import org.apache.asterix.external.runtime.SocketClientAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -57,16 +58,14 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
-import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixClusterProperties;
@@ -105,7 +104,7 @@ import org.apache.hyracks.storage.common.file.LocalResource;
  */
 public class MetadataBootstrap {
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
-    public static final boolean IS_DEBUG_MODE = false;//true
+    public static final boolean IS_DEBUG_MODE = false;// true
 
     private static IAsterixAppRuntimeContext runtimeContext;
 
@@ -193,7 +192,7 @@ public class MetadataBootstrap {
                 }
             }
 
-            //#. initialize datasetIdFactory
+            // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -204,8 +203,8 @@ public class MetadataBootstrap {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);
-                //TODO
-                //change the exception type to AbortFailureException
+                // TODO
+                // change the exception type to AbortFailureException
                 throw new MetadataException(e);
             }
             throw e;
@@ -278,8 +277,8 @@ public class MetadataBootstrap {
             // Map.Entry<String, String[]> me = (Map.Entry<String,
             // String[]>)im.next();
             MetadataManager.INSTANCE.addNode(mdTxnCtx, new Node(iter.next(), 0, 0/*
-                                                                                 * , me . getValue ( )
-                                                                                 */));
+                                                                                  * , me . getValue ( )
+                                                                                  */));
         }
     }
 
@@ -298,8 +297,7 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
-        String[] builtInAdapterClassNames = new String[] { GenericAdapterFactory.class.getName(),
-                GenericSocketFeedAdapterFactory.class.getName(), SocketClientAdapterFactory.class.getName() };
+        String[] builtInAdapterClassNames = new String[] { GenericAdapterFactory.class.getName() };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);
@@ -311,7 +309,7 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
-        for (FeedPolicy feedPolicy : BuiltinFeedPolicies.policies) {
+        for (FeedPolicyEntity feedPolicy : BuiltinFeedPolicies.policies) {
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -333,7 +331,7 @@ public class MetadataBootstrap {
     private static DatasourceAdapter getAdapter(String adapterFactoryClassName) throws Exception {
         String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
         return new DatasourceAdapter(new AdapterIdentifier(MetadataConstants.METADATA_DATAVERSE_NAME, adapterName),
-                adapterFactoryClassName, DatasourceAdapter.AdapterType.INTERNAL);
+                adapterFactoryClassName, IDataSourceAdapter.AdapterType.INTERNAL);
     }
 
     private static CompactionPolicy getCompactionPolicyEntity(String compactionPolicyClassName) throws Exception {
@@ -346,7 +344,7 @@ public class MetadataBootstrap {
             throws Exception {
         ClusterPartition metadataPartition = propertiesProvider.getMetadataProperties().getMetadataPartition();
         int metadataDeviceId = metadataPartition.getIODeviceNum();
-        String metadataPartitionPath = SplitsAndConstraintsUtil.prepareStoragePartitionPath(
+        String metadataPartitionPath = StoragePathUtil.prepareStoragePartitionPath(
                 AsterixClusterProperties.INSTANCE.getStorageDirectoryName(), metadataPartition.getPartitionId());
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
         FileReference file = ioManager.getAbsoluteFileRef(metadataDeviceId, resourceName);
@@ -413,8 +411,8 @@ public class MetadataBootstrap {
     }
 
     public static void startDDLRecovery() throws MetadataException {
-        //#. clean up any record which has pendingAdd/DelOp flag 
-        //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
+        // #. clean up any record which has pendingAdd/DelOp flag
+        // as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
         String dataverseName = null;
         String datasetName = null;
         String indexName = null;
@@ -433,7 +431,7 @@ public class MetadataBootstrap {
             for (Dataverse dataverse : dataverses) {
                 dataverseName = dataverse.getDataverseName();
                 if (dataverse.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
-                    //drop pending dataverse
+                    // drop pending dataverse
                     MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverseName);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Dropped a pending dataverse: " + dataverseName);
@@ -443,7 +441,7 @@ public class MetadataBootstrap {
                     for (Dataset dataset : datasets) {
                         datasetName = dataset.getDatasetName();
                         if (dataset.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
-                            //drop pending dataset
+                            // drop pending dataset
                             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.info("Dropped a pending dataset: " + dataverseName + "." + datasetName);
@@ -454,7 +452,7 @@ public class MetadataBootstrap {
                             for (Index index : indexes) {
                                 indexName = index.getIndexName();
                                 if (index.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
-                                    //drop pending index
+                                    // drop pending index
                                     MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                                     if (LOGGER.isLoggable(Level.INFO)) {
                                         LOGGER.info("Dropped a pending index: " + dataverseName + "." + datasetName

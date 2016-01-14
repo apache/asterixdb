@@ -50,7 +50,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -364,10 +364,12 @@ public class MetadataNode implements IMetadataNode {
                 dropFeed(jobId, dataverseName, feed.getFeedName());
             }
 
-            List<FeedPolicy> feedPolicies = getDataversePolicies(jobId, dataverseName);
-            // Drop all feed ingestion policies in this dataverse.
-            for (FeedPolicy feedPolicy : feedPolicies) {
-                dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
+            List<FeedPolicyEntity> feedPolicies = getDataversePolicies(jobId, dataverseName);
+            if (feedPolicies != null && feedPolicies.size() > 0) {
+                // Drop all feed ingestion policies in this dataverse.
+                for (FeedPolicyEntity feedPolicy : feedPolicies) {
+                    dropFeedPolicy(jobId, dataverseName, feedPolicy.getPolicyName());
+                }
             }
 
             // Delete the dataverse entry from the 'dataverse' dataset.
@@ -1315,7 +1317,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addFeedPolicy(JobId jobId, FeedPolicy feedPolicy) throws MetadataException, RemoteException {
+    public void addFeedPolicy(JobId jobId, FeedPolicyEntity feedPolicy) throws MetadataException, RemoteException {
         try {
             // Insert into the 'FeedPolicy' dataset.
             FeedPolicyTupleTranslator tupleReaderWriter = new FeedPolicyTupleTranslator(true);
@@ -1332,14 +1334,14 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedPolicy getFeedPolicy(JobId jobId, String dataverse, String policyName)
+    public FeedPolicyEntity getFeedPolicy(JobId jobId, String dataverse, String policyName)
             throws MetadataException, RemoteException {
 
         try {
             ITupleReference searchKey = createTuple(dataverse, policyName);
             FeedPolicyTupleTranslator tupleReaderWriter = new FeedPolicyTupleTranslator(false);
-            List<FeedPolicy> results = new ArrayList<FeedPolicy>();
-            IValueExtractor<FeedPolicy> valueExtractor = new MetadataEntityValueExtractor<FeedPolicy>(
+            List<FeedPolicyEntity> results = new ArrayList<FeedPolicyEntity>();
+            IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<FeedPolicyEntity>(
                     tupleReaderWriter);
             searchIndex(jobId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, searchKey, valueExtractor, results);
             if (!results.isEmpty()) {
@@ -1418,14 +1420,14 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<FeedPolicy> getDataversePolicies(JobId jobId, String dataverse)
+    public List<FeedPolicyEntity> getDataversePolicies(JobId jobId, String dataverse)
             throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(dataverse);
             FeedPolicyTupleTranslator tupleReaderWriter = new FeedPolicyTupleTranslator(false);
-            IValueExtractor<FeedPolicy> valueExtractor = new MetadataEntityValueExtractor<FeedPolicy>(
+            IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<FeedPolicyEntity>(
                     tupleReaderWriter);
-            List<FeedPolicy> results = new ArrayList<FeedPolicy>();
+            List<FeedPolicyEntity> results = new ArrayList<FeedPolicyEntity>();
             searchIndex(jobId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, searchKey, valueExtractor, results);
             return results;
         } catch (Exception e) {

@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.operators;
 
-import java.io.File;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;

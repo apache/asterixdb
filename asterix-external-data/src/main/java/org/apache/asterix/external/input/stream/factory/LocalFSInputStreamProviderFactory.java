@@ -29,8 +29,10 @@ import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.api.INodeResolver;
 import org.apache.asterix.external.api.INodeResolverFactory;
 import org.apache.asterix.external.input.stream.LocalFSInputStreamProvider;
-import org.apache.asterix.external.util.DNSResolverFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.FeedUtils;
+import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -41,15 +43,21 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
 
     private static final long serialVersionUID = 1L;
 
-    protected static final INodeResolver DEFAULT_NODE_RESOLVER = new DNSResolverFactory().createNodeResolver();
+    protected static final INodeResolver DEFAULT_NODE_RESOLVER = new NodeResolverFactory().createNodeResolver();
     protected static final Logger LOGGER = Logger.getLogger(LocalFSInputStreamProviderFactory.class.getName());
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
-    protected FileSplit[] fileSplits;
+    protected FileSplit[] inputFileSplits;
+    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log storage
+    protected boolean isFeed;
+    protected String expression;
+    // transient fields (They don't need to be serialized and transferred)
+    private transient AlgebricksAbsolutePartitionConstraint constraints;
 
     @Override
     public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new LocalFSInputStreamProvider(fileSplits, ctx, configuration, partition);
+        return new LocalFSInputStreamProvider(inputFileSplits, ctx, configuration, partition, expression, isFeed,
+                feedLogFileSplits);
     }
 
     @Override
@@ -67,16 +75,23 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
         this.configuration = configuration;
         String[] splits = configuration.get(ExternalDataConstants.KEY_PATH).split(",");
         configureFileSplits(splits);
+        configurePartitionConstraint();
+        this.isFeed = ExternalDataUtils.isFeed(configuration) && ExternalDataUtils.keepDataSourceOpen(configuration);
+        if (isFeed) {
+            feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
+                    ExternalDataUtils.getFeedName(configuration), constraints);
+        }
+        this.expression = configuration.get(ExternalDataConstants.KEY_EXPRESSION);
     }
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return configurePartitionConstraint();
+        return constraints;
     }
 
     private void configureFileSplits(String[] splits) throws AsterixException {
-        if (fileSplits == null) {
-            fileSplits = new FileSplit[splits.length];
+        if (inputFileSplits == null) {
+            inputFileSplits = new FileSplit[splits.length];
             String nodeName;
             String nodeLocalPath;
             int count = 0;
@@ -90,19 +105,19 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
                 nodeName = trimmedValue.split(":")[0];
                 nodeLocalPath = trimmedValue.split("://")[1];
                 FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
-                fileSplits[count++] = fileSplit;
+                inputFileSplits[count++] = fileSplit;
             }
         }
     }
 
-    private AlgebricksPartitionConstraint configurePartitionConstraint() throws AsterixException {
-        String[] locs = new String[fileSplits.length];
+    private void configurePartitionConstraint() throws AsterixException {
+        String[] locs = new String[inputFileSplits.length];
         String location;
-        for (int i = 0; i < fileSplits.length; i++) {
-            location = getNodeResolver().resolveNode(fileSplits[i].getNodeName());
+        for (int i = 0; i < inputFileSplits.length; i++) {
+            location = getNodeResolver().resolveNode(inputFileSplits[i].getNodeName());
             locs[i] = location;
         }
-        return new AlgebricksAbsolutePartitionConstraint(locs);
+        constraints = new AlgebricksAbsolutePartitionConstraint(locs);
     }
 
     protected INodeResolver getNodeResolver() {

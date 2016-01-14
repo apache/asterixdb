@@ -18,18 +18,14 @@
  */
 package org.apache.asterix.metadata.entities;
 
+import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 
-public class DatasourceAdapter implements IMetadataEntity {
+public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
     private static final long serialVersionUID = 1L;
-
-    public enum AdapterType {
-        INTERNAL,
-        EXTERNAL
-    }
 
     private final AdapterIdentifier adapterIdentifier;
     private final String classname;
@@ -42,12 +38,12 @@ public class DatasourceAdapter implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public DatasourceAdapter addToCache(MetadataCache cache) {
         return cache.addAdapterIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public DatasourceAdapter dropFromCache(MetadataCache cache) {
         return cache.dropAdapter(this);
     }
 

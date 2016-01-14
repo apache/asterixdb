@@ -25,7 +25,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 /**
  * Metadata describing a dataverse.
  */
-public class Dataverse implements IMetadataEntity {
+public class Dataverse implements IMetadataEntity<Dataverse> {
 
     private static final long serialVersionUID = 1L;
     // Enforced to be unique within an Asterix cluster..
@@ -52,12 +52,12 @@ public class Dataverse implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Dataverse addToCache(MetadataCache cache) {
         return cache.addDataverseIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Dataverse dropFromCache(MetadataCache cache) {
         return cache.dropDataverse(this);
     }
 }

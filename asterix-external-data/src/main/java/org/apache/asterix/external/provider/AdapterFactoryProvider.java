@@ -30,10 +30,6 @@ import org.apache.asterix.external.api.IIndexingAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.library.ExternalLibraryManager;
-import org.apache.asterix.external.runtime.GenericSocketFeedAdapter;
-import org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory;
-import org.apache.asterix.external.runtime.SocketClientAdapter;
-import org.apache.asterix.external.runtime.SocketClientAdapterFactory;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
@@ -47,16 +43,16 @@ public class AdapterFactoryProvider {
         Map<String, Class<? extends IAdapterFactory>> adapterFactories = new HashMap<String, Class<? extends IAdapterFactory>>();
         // Class names
         adapterFactories.put(GenericAdapter.class.getName(), GenericAdapterFactory.class);
-        adapterFactories.put(GenericSocketFeedAdapter.class.getName(), GenericSocketFeedAdapterFactory.class);
-        adapterFactories.put(SocketClientAdapter.class.getName(), SocketClientAdapterFactory.class);
-
         // Aliases
         adapterFactories.put(ExternalDataConstants.ALIAS_GENERIC_ADAPTER, GenericAdapterFactory.class);
         adapterFactories.put(ExternalDataConstants.ALIAS_HDFS_ADAPTER, GenericAdapterFactory.class);
         adapterFactories.put(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_ADAPTER, GenericSocketFeedAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_CLIENT_ADAPTER, SocketClientAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_ADAPTER, GenericAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_CLIENT_ADAPTER, GenericAdapterFactory.class);
         adapterFactories.put(ExternalDataConstants.ALIAS_FILE_FEED_ADAPTER, GenericAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_PULL_ADAPTER, GenericAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_PUSH_ADAPTER, GenericAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_LOCALFS_PUSH_ADAPTER, GenericAdapterFactory.class);
 
         // Compatability
         adapterFactories.put(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME, GenericAdapterFactory.class);

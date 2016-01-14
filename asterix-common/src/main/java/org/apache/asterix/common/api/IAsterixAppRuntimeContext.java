@@ -24,7 +24,6 @@ import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -79,7 +78,7 @@ public interface IAsterixAppRuntimeContext {
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
-    public IFeedManager getFeedManager();
+    public Object getFeedManager();
 
     public IRemoteRecoveryManager getRemoteRecoveryManager();
 

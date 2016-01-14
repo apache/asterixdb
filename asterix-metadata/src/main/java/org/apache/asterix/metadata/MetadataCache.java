@@ -35,7 +35,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -66,9 +66,9 @@ public class MetadataCache {
     protected final Map<FunctionSignature, Function> functions = new HashMap<FunctionSignature, Function>();
     // Key is adapter dataverse. Key of value map is the adapter name  
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
-  
+
     // Key is DataverseName, Key of the value map is the Policy name   
-    protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
+    protected final Map<String, Map<String, FeedPolicyEntity>> feedPolicies = new HashMap<String, Map<String, FeedPolicyEntity>>();
     // Key is library dataverse. Key of value map is the library name
     protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
     // Key is library dataverse. Key of value map is the feed name  
@@ -110,18 +110,17 @@ public class MetadataCache {
                         synchronized (datatypes) {
                             synchronized (functions) {
                                 synchronized (adapters) {
-                                        synchronized (libraries) {
-                                            synchronized (compactionPolicies) {
-                                                dataverses.clear();
-                                                nodeGroups.clear();
-                                                datasets.clear();
-                                                indexes.clear();
-                                                datatypes.clear();
-                                                functions.clear();
-                                                adapters.clear();
-                                                libraries.clear();
-                                                compactionPolicies.clear();
-                                            }
+                                    synchronized (libraries) {
+                                        synchronized (compactionPolicies) {
+                                            dataverses.clear();
+                                            nodeGroups.clear();
+                                            datasets.clear();
+                                            indexes.clear();
+                                            datatypes.clear();
+                                            functions.clear();
+                                            adapters.clear();
+                                            libraries.clear();
+                                            compactionPolicies.clear();
                                         }
                                     }
                                 }
@@ -131,9 +130,9 @@ public class MetadataCache {
                 }
             }
         }
-    
+    }
 
-    public Object addDataverseIfNotExists(Dataverse dataverse) {
+    public Dataverse addDataverseIfNotExists(Dataverse dataverse) {
         synchronized (dataverses) {
             synchronized (datasets) {
                 synchronized (datatypes) {
@@ -149,7 +148,7 @@ public class MetadataCache {
         }
     }
 
-    public Object addDatasetIfNotExists(Dataset dataset) {
+    public Dataset addDatasetIfNotExists(Dataset dataset) {
         synchronized (datasets) {
             synchronized (indexes) {
                 // Add the primary index associated with the dataset, if the dataset is an
@@ -175,13 +174,13 @@ public class MetadataCache {
         }
     }
 
-    public Object addIndexIfNotExists(Index index) {
+    public Index addIndexIfNotExists(Index index) {
         synchronized (indexes) {
             return addIndexIfNotExistsInternal(index);
         }
     }
 
-    public Object addDatatypeIfNotExists(Datatype datatype) {
+    public Datatype addDatatypeIfNotExists(Datatype datatype) {
         synchronized (datatypes) {
             Map<String, Datatype> m = datatypes.get(datatype.getDataverseName());
             if (m == null) {
@@ -195,7 +194,7 @@ public class MetadataCache {
         }
     }
 
-    public Object addNodeGroupIfNotExists(NodeGroup nodeGroup) {
+    public NodeGroup addNodeGroupIfNotExists(NodeGroup nodeGroup) {
         synchronized (nodeGroups) {
             if (!nodeGroups.containsKey(nodeGroup.getNodeGroupName())) {
                 return nodeGroups.put(nodeGroup.getNodeGroupName(), nodeGroup);
@@ -204,7 +203,7 @@ public class MetadataCache {
         }
     }
 
-    public Object addCompactionPolicyIfNotExists(CompactionPolicy compactionPolicy) {
+    public CompactionPolicy addCompactionPolicyIfNotExists(CompactionPolicy compactionPolicy) {
         synchronized (compactionPolicy) {
             Map<String, CompactionPolicy> p = compactionPolicies.get(compactionPolicy.getDataverseName());
             if (p == null) {
@@ -220,17 +219,17 @@ public class MetadataCache {
         }
     }
 
-    public Object dropCompactionPolicy(CompactionPolicy compactionPolicy) {
+    public CompactionPolicy dropCompactionPolicy(CompactionPolicy compactionPolicy) {
         synchronized (compactionPolicies) {
             Map<String, CompactionPolicy> p = compactionPolicies.get(compactionPolicy.getDataverseName());
             if (p != null && p.get(compactionPolicy.getPolicyName()) != null) {
-                return p.remove(compactionPolicy).getPolicyName();
+                return p.remove(compactionPolicy);
             }
             return null;
         }
     }
 
-    public Object dropDataverse(Dataverse dataverse) {
+    public Dataverse dropDataverse(Dataverse dataverse) {
         synchronized (dataverses) {
             synchronized (datasets) {
                 synchronized (indexes) {
@@ -238,26 +237,25 @@ public class MetadataCache {
                         synchronized (functions) {
                             synchronized (adapters) {
                                 synchronized (libraries) {
-                                        synchronized (feeds) {
-                                            synchronized (compactionPolicies) {
-                                                datasets.remove(dataverse.getDataverseName());
-                                                indexes.remove(dataverse.getDataverseName());
-                                                datatypes.remove(dataverse.getDataverseName());
-                                                adapters.remove(dataverse.getDataverseName());
-                                                compactionPolicies.remove(dataverse.getDataverseName());
-                                                List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<FunctionSignature>();
-                                                for (FunctionSignature signature : functions.keySet()) {
-                                                    if (signature.getNamespace().equals(dataverse.getDataverseName())) {
-                                                        markedFunctionsForRemoval.add(signature);
-                                                    }
+                                    synchronized (feeds) {
+                                        synchronized (compactionPolicies) {
+                                            datasets.remove(dataverse.getDataverseName());
+                                            indexes.remove(dataverse.getDataverseName());
+                                            datatypes.remove(dataverse.getDataverseName());
+                                            adapters.remove(dataverse.getDataverseName());
+                                            compactionPolicies.remove(dataverse.getDataverseName());
+                                            List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<FunctionSignature>();
+                                            for (FunctionSignature signature : functions.keySet()) {
+                                                if (signature.getNamespace().equals(dataverse.getDataverseName())) {
+                                                    markedFunctionsForRemoval.add(signature);
                                                 }
-                                                for (FunctionSignature signature : markedFunctionsForRemoval) {
-                                                    functions.remove(signature);
-                                                }
-                                                libraries.remove(dataverse.getDataverseName());
-                                                feeds.remove(dataverse.getDataverseName());
-                                                return dataverses.remove(dataverse.getDataverseName());
                                             }
+                                            for (FunctionSignature signature : markedFunctionsForRemoval) {
+                                                functions.remove(signature);
+                                            }
+                                            libraries.remove(dataverse.getDataverseName());
+                                            feeds.remove(dataverse.getDataverseName());
+                                            return dataverses.remove(dataverse.getDataverseName());
                                         }
                                     }
                                 }
@@ -267,9 +265,9 @@ public class MetadataCache {
                 }
             }
         }
-    
+    }
 
-    public Object dropDataset(Dataset dataset) {
+    public Dataset dropDataset(Dataset dataset) {
         synchronized (datasets) {
             synchronized (indexes) {
 
@@ -289,7 +287,7 @@ public class MetadataCache {
         }
     }
 
-    public Object dropIndex(Index index) {
+    public Index dropIndex(Index index) {
         synchronized (indexes) {
             Map<String, Map<String, Index>> datasetMap = indexes.get(index.getDataverseName());
             if (datasetMap == null) {
@@ -304,7 +302,7 @@ public class MetadataCache {
         }
     }
 
-    public Object dropDatatype(Datatype datatype) {
+    public Datatype dropDatatype(Datatype datatype) {
         synchronized (datatypes) {
             Map<String, Datatype> m = datatypes.get(datatype.getDataverseName());
             if (m == null) {
@@ -314,7 +312,7 @@ public class MetadataCache {
         }
     }
 
-    public Object dropNodeGroup(NodeGroup nodeGroup) {
+    public NodeGroup dropNodeGroup(NodeGroup nodeGroup) {
         synchronized (nodeGroups) {
             return nodeGroups.remove(nodeGroup.getNodeGroupName());
         }
@@ -405,11 +403,11 @@ public class MetadataCache {
      */
     protected class MetadataLogicalOperation {
         // Entity to be added/dropped.
-        public final IMetadataEntity entity;
+        public final IMetadataEntity<?> entity;
         // True for add, false for drop.
         public final boolean isAdd;
 
-        public MetadataLogicalOperation(IMetadataEntity entity, boolean isAdd) {
+        public MetadataLogicalOperation(IMetadataEntity<?> entity, boolean isAdd) {
             this.entity = entity;
             this.isAdd = isAdd;
         }
@@ -431,7 +429,7 @@ public class MetadataCache {
         }
     }
 
-    public Object addFunctionIfNotExists(Function function) {
+    public Function addFunctionIfNotExists(Function function) {
         synchronized (functions) {
             FunctionSignature signature = new FunctionSignature(function.getDataverseName(), function.getName(),
                     function.getArity());
@@ -443,7 +441,7 @@ public class MetadataCache {
         }
     }
 
-    public Object dropFunction(Function function) {
+    public Function dropFunction(Function function) {
         synchronized (functions) {
             FunctionSignature signature = new FunctionSignature(function.getDataverseName(), function.getName(),
                     function.getArity());
@@ -455,11 +453,11 @@ public class MetadataCache {
         }
     }
 
-    public Object addFeedPolicyIfNotExists(FeedPolicy feedPolicy) {
+    public Object addFeedPolicyIfNotExists(FeedPolicyEntity feedPolicy) {
         synchronized (feedPolicy) {
-            Map<String, FeedPolicy> p = feedPolicies.get(feedPolicy.getDataverseName());
+            Map<String, FeedPolicyEntity> p = feedPolicies.get(feedPolicy.getDataverseName());
             if (p == null) {
-                p = new HashMap<String, FeedPolicy>();
+                p = new HashMap<String, FeedPolicyEntity>();
                 p.put(feedPolicy.getPolicyName(), feedPolicy);
                 feedPolicies.put(feedPolicy.getDataverseName(), p);
             } else {
@@ -471,9 +469,9 @@ public class MetadataCache {
         }
     }
 
-    public Object dropFeedPolicy(FeedPolicy feedPolicy) {
+    public Object dropFeedPolicy(FeedPolicyEntity feedPolicy) {
         synchronized (feedPolicies) {
-            Map<String, FeedPolicy> p = feedPolicies.get(feedPolicy.getDataverseName());
+            Map<String, FeedPolicyEntity> p = feedPolicies.get(feedPolicy.getDataverseName());
             if (p != null && p.get(feedPolicy.getPolicyName()) != null) {
                 return p.remove(feedPolicy).getPolicyName();
             }
@@ -481,10 +479,10 @@ public class MetadataCache {
         }
     }
 
-    public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
+    public DatasourceAdapter addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse == null) {
                 adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
                 adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
@@ -497,10 +495,10 @@ public class MetadataCache {
         }
     }
 
-    public Object dropAdapter(DatasourceAdapter adapter) {
+    public DatasourceAdapter dropAdapter(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                    .getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters
+                    .get(adapter.getAdapterIdentifier().getNamespace());
             if (adaptersInDataverse != null) {
                 return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getName());
             }
@@ -508,10 +506,7 @@ public class MetadataCache {
         }
     }
 
-  
-
-
-    public Object addLibraryIfNotExists(Library library) {
+    public Library addLibraryIfNotExists(Library library) {
         synchronized (libraries) {
             Map<String, Library> libsInDataverse = libraries.get(library.getDataverseName());
             boolean needToAddd = (libsInDataverse == null || libsInDataverse.get(library.getName()) != null);
@@ -526,7 +521,7 @@ public class MetadataCache {
         }
     }
 
-    public Object dropLibrary(Library library) {
+    public Library dropLibrary(Library library) {
         synchronized (libraries) {
             Map<String, Library> librariesInDataverse = libraries.get(library.getDataverseName());
             if (librariesInDataverse != null) {
@@ -536,12 +531,11 @@ public class MetadataCache {
         }
     }
 
-    public Object addFeedIfNotExists(Feed feed) {
-        // TODO Auto-generated method stub
+    public Feed addFeedIfNotExists(Feed feed) {
         return null;
     }
 
-    public Object dropFeed(Feed feed) {
+    public Feed dropFeed(Feed feed) {
         synchronized (feeds) {
             Map<String, Feed> feedsInDataverse = feeds.get(feed.getDataverseName());
             if (feedsInDataverse != null) {
@@ -551,7 +545,7 @@ public class MetadataCache {
         }
     }
 
-    private Object addIndexIfNotExistsInternal(Index index) {
+    private Index addIndexIfNotExistsInternal(Index index) {
         Map<String, Map<String, Index>> datasetMap = indexes.get(index.getDataverseName());
         if (datasetMap == null) {
             datasetMap = new HashMap<String, Map<String, Index>>();

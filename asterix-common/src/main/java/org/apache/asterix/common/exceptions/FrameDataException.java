@@ -26,7 +26,7 @@ public class FrameDataException extends HyracksDataException {
 
     private final int tupleIndex;
 
-    public FrameDataException(int tupleIndex, Exception cause) {
+    public FrameDataException(int tupleIndex, Throwable cause) {
         super(cause);
         this.tupleIndex = tupleIndex;
     }

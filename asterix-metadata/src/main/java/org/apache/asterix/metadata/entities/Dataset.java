@@ -29,7 +29,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 /**
  * Metadata describing a dataset.
  */
-public class Dataset implements IMetadataEntity {
+public class Dataset implements IMetadataEntity<Dataset> {
 
     private static final long serialVersionUID = 1L;
 
@@ -122,12 +122,12 @@ public class Dataset implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Dataset addToCache(MetadataCache cache) {
         return cache.addDatasetIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Dataset dropFromCache(MetadataCache cache) {
         return cache.dropDataset(this);
     }
 

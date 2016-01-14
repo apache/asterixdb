@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 /**
  * Metadata describing an index.
  */
-public class Index implements IMetadataEntity, Comparable<Index> {
+public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     private static final long serialVersionUID = 1L;
 
@@ -202,12 +202,12 @@ public class Index implements IMetadataEntity, Comparable<Index> {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Index addToCache(MetadataCache cache) {
         return cache.addIndexIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Index dropFromCache(MetadataCache cache) {
         return cache.dropIndex(this);
     }
 

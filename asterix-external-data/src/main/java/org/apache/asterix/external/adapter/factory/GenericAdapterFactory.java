@@ -21,10 +21,10 @@ package org.apache.asterix.external.adapter.factory;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
+import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;

@@ -26,13 +26,14 @@ import java.io.IOException;
 import java.util.Calendar;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
-import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
-import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -76,7 +77,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX)).getStringValue();
         String classname = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_CLASSNAME_FIELD_INDEX)).getStringValue();
-        AdapterType adapterType = AdapterType.valueOf(((AString) adapterRecord
+        IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType.valueOf(((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX)).getStringValue());
 
         return new DatasourceAdapter(new AdapterIdentifier(dataverseName, adapterName), classname, adapterType);

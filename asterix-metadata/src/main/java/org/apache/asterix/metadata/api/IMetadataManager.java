@@ -33,7 +33,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
@@ -56,7 +56,6 @@ public interface IMetadataManager {
 
     /**
      * Initializes the metadata manager, e.g., finds the remote metadata node.
-     * 
      * @throws RemoteException
      *             If an error occurred while contacting the proxy for finding
      *             the metadata node.
@@ -65,7 +64,6 @@ public interface IMetadataManager {
 
     /**
      * Begins a transaction on the metadata node.
-     * 
      * @return A globally unique transaction id.
      * @throws ACIDException
      * @throws RemoteException
@@ -74,7 +72,6 @@ public interface IMetadataManager {
 
     /**
      * Commits a remote transaction on the metadata node.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @throws ACIDException
@@ -84,7 +81,6 @@ public interface IMetadataManager {
 
     /**
      * Aborts a remote transaction running on the metadata node.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @throws ACIDException
@@ -95,7 +91,6 @@ public interface IMetadataManager {
     /**
      * Locks the metadata in given mode. The lock acquisition is delegated to
      * the metadata node. This method blocks until the lock can be acquired.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param lockMode
@@ -107,7 +102,6 @@ public interface IMetadataManager {
 
     /**
      * Releases all locks on the metadata held by the given transaction id.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @throws ACIDException
@@ -117,7 +111,6 @@ public interface IMetadataManager {
 
     /**
      * Inserts a new dataverse into the metadata.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverse
@@ -129,7 +122,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves all dataverses
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @return A list of dataverse instances.
@@ -139,7 +131,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves a dataverse with given name.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -152,7 +143,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves all datasets belonging to the given dataverse.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -167,7 +157,6 @@ public interface IMetadataManager {
     /**
      * Deletes the dataverse with given name, and all it's associated datasets,
      * indexes, and types.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @return A list of dataset instances.
@@ -178,7 +167,6 @@ public interface IMetadataManager {
 
     /**
      * Inserts a new dataset into the metadata.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataset
@@ -190,7 +178,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves a dataset within a given dataverse.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -206,7 +193,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves all indexes of a dataset.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -222,7 +208,6 @@ public interface IMetadataManager {
 
     /**
      * Deletes the dataset with given name, and all it's associated indexes.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -238,7 +223,6 @@ public interface IMetadataManager {
     /**
      * Inserts an index into the metadata. The index itself knows its name, and
      * which dataset it belongs to.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param index
@@ -250,7 +234,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves the index with given name, in given dataverse and dataset.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -267,7 +250,6 @@ public interface IMetadataManager {
 
     /**
      * Deletes the index with given name, in given dataverse and dataset.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -283,7 +265,6 @@ public interface IMetadataManager {
 
     /**
      * Inserts a datatype.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param datatype
@@ -295,7 +276,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves the datatype with given name in given dataverse.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -311,7 +291,6 @@ public interface IMetadataManager {
 
     /**
      * Deletes the given datatype in given dataverse.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -327,7 +306,6 @@ public interface IMetadataManager {
 
     /**
      * Inserts a node group.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param nodeGroup
@@ -339,7 +317,6 @@ public interface IMetadataManager {
 
     /**
      * Retrieves a node group.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param nodeGroupName
@@ -351,7 +328,6 @@ public interface IMetadataManager {
 
     /**
      * Deletes a node group.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param nodeGroupName
@@ -364,7 +340,6 @@ public interface IMetadataManager {
 
     /**
      * Inserts a node (machine).
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param node
@@ -490,13 +465,12 @@ public interface IMetadataManager {
      */
     public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
 
-   
-   /**
+    /**
      * @param ctx
      * @param policy
      * @throws MetadataException
      */
-    public void addFeedPolicy(MetadataTransactionContext ctx, FeedPolicy policy) throws MetadataException;
+    public void addFeedPolicy(MetadataTransactionContext ctx, FeedPolicyEntity policy) throws MetadataException;
 
     /**
      * @param ctx
@@ -505,10 +479,9 @@ public interface IMetadataManager {
      * @return
      * @throws MetadataException
      */
-    public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+    public FeedPolicyEntity getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
             throws MetadataException;
 
-   
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 
     public int getMostRecentDatasetId() throws MetadataException;
@@ -524,7 +497,6 @@ public interface IMetadataManager {
     /**
      * Removes a library , acquiring local locks on behalf of the given
      * transaction id.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -540,7 +512,6 @@ public interface IMetadataManager {
     /**
      * Adds a library, acquiring local locks on behalf of the given
      * transaction id.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param library
@@ -567,7 +538,6 @@ public interface IMetadataManager {
 
     /**
      * Retireve libraries installed in a given dataverse.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -624,7 +594,6 @@ public interface IMetadataManager {
 
     /**
      * Get en external file
-     * 
      * @param mdTxnCtx
      * @param dataverseName
      * @param datasetName
@@ -637,7 +606,6 @@ public interface IMetadataManager {
 
     /**
      * update an existing dataset in metadata.
-     * 
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataset
@@ -649,7 +617,6 @@ public interface IMetadataManager {
 
     /**
      * Clean up temporary datasets that have not been active for a long time.
-     * 
      * @throws MetadataException
      */
     public void cleanupTempDatasets() throws MetadataException;

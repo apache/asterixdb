@@ -28,14 +28,19 @@ import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
+import org.apache.asterix.external.api.IRecordFlowController;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.api.IStreamDataParserFactory;
+import org.apache.asterix.external.api.IStreamFlowController;
+import org.apache.asterix.external.dataflow.FeedRecordDataFlowController;
+import org.apache.asterix.external.dataflow.FeedStreamDataFlowController;
 import org.apache.asterix.external.dataflow.IndexingDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
 import org.apache.asterix.external.util.DataflowUtils;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -60,9 +65,11 @@ public class DataflowControllerProvider {
             Map<String, String> configuration, boolean indexingOp) throws Exception {
         switch (dataSourceFactory.getDataSourceType()) {
             case RECORDS:
-                RecordDataFlowController recordDataFlowController;
+                IRecordFlowController recordDataFlowController = null;
                 if (indexingOp) {
                     recordDataFlowController = new IndexingDataFlowController();
+                } else if (ExternalDataUtils.isFeed(configuration)) {
+                    recordDataFlowController = new FeedRecordDataFlowController();
                 } else {
                     recordDataFlowController = new RecordDataFlowController();
                 }
@@ -77,7 +84,12 @@ public class DataflowControllerProvider {
                 recordDataFlowController.setRecordParser(dataParser);
                 return recordDataFlowController;
             case STREAM:
-                StreamDataFlowController streamDataFlowController = new StreamDataFlowController();
+                IStreamFlowController streamDataFlowController = null;
+                if (ExternalDataUtils.isFeed(configuration)) {
+                    streamDataFlowController = new FeedStreamDataFlowController();
+                } else {
+                    streamDataFlowController = new StreamDataFlowController();
+                }
                 streamDataFlowController.configure(configuration, ctx);
                 streamDataFlowController.setTupleForwarder(DataflowUtils.getTupleForwarder(configuration));
                 IInputStreamProviderFactory streamProviderFactory = (IInputStreamProviderFactory) dataSourceFactory;

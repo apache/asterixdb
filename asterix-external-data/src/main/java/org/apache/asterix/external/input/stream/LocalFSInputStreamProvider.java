@@ -19,38 +19,44 @@
 package org.apache.asterix.external.input.stream;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
+import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class LocalFSInputStreamProvider implements IInputStreamProvider {
 
-    private FileSplit[] fileSplits;
-    private int partition;
+    private String expression;
+    private boolean isFeed;
+    private Path path;
+    private File feedLogFile;
 
     public LocalFSInputStreamProvider(FileSplit[] fileSplits, IHyracksTaskContext ctx,
-            Map<String, String> configuration, int partition) {
-        this.partition = partition;
-        this.fileSplits = fileSplits;
-    }
+            Map<String, String> configuration, int partition, String expression, boolean isFeed,
+            FileSplit[] feedLogFileSplits) {
+        this.expression = expression;
+        this.isFeed = isFeed;
+        this.path = fileSplits[partition].getLocalFile().getFile().toPath();
+        if (feedLogFileSplits != null) {
+            this.feedLogFile = FeedUtils
+                    .getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
+                            feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager())
+                    .getFile();
 
-    @Override
-    public AInputStream getInputStream() throws Exception {
-        FileSplit split = fileSplits[partition];
-        File inputFile = split.getLocalFile().getFile();
-        InputStream in;
-        try {
-            in = new FileInputStream(inputFile);
-            return new BasicInputStream(in);
-        } catch (FileNotFoundException e) {
-            throw new IOException(e);
         }
     }
 
+    @Override
+    public AInputStream getInputStream() throws IOException {
+        FeedLogManager feedLogManager = null;
+        if (isFeed && feedLogFile != null) {
+            feedLogManager = new FeedLogManager(feedLogFile);
+        }
+        return new LocalFileSystemInputStream(path, expression, feedLogManager, isFeed);
+    }
 }

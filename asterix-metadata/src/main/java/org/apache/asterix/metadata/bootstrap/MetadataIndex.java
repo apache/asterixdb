@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;

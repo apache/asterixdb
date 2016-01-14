@@ -63,7 +63,7 @@ public class HDFSInputStreamProvider<K> extends HDFSRecordReader<K, Text> implem
                 }
             } else if (value.getLength() == pos) {
                 pos++;
-                return ExternalDataConstants.EOL;
+                return ExternalDataConstants.BYTE_LF;
             }
             return value.getBytes()[pos++];
         }

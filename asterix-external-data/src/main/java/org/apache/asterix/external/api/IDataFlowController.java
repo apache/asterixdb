@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.api;
 
-import java.io.IOException;
 import java.util.Map;
 
 import org.apache.asterix.common.parse.ITupleForwarder;
@@ -39,11 +38,21 @@ public interface IDataFlowController {
      * 3. setTupleForwarder(forwarder)
      * 4. configure(configuration,ctx)
      * 5. start(writer)
+     *
+     * pause(), resume(), and stop() are only used with feeds
+     * pause is called after start when a feed is running and the system is overwhelmed with data.
+     * resume is called after the load goes down and we are ready to receive more data.
+     * stop is called to disconnect the feed. once stop is called, no other method is called.
+     *
      */
 
     public void start(IFrameWriter writer) throws HyracksDataException;
 
-    public boolean stop();
+    public boolean stop() throws HyracksDataException;
+
+    public boolean pause() throws HyracksDataException;
+
+    public boolean resume() throws HyracksDataException;
 
     public boolean handleException(Throwable th);
 
@@ -51,5 +60,5 @@ public interface IDataFlowController {
 
     public void setTupleForwarder(ITupleForwarder forwarder);
 
-    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) throws IOException;
+    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) throws HyracksDataException;
 }

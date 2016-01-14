@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.stream;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class AInputStreamReader extends InputStreamReader {
@@ -30,5 +31,13 @@ public class AInputStreamReader extends InputStreamReader {
 
     public boolean skipError() throws Exception {
         return in.skipError();
+    }
+
+    public void stop() throws IOException {
+        try {
+            in.stop();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 }

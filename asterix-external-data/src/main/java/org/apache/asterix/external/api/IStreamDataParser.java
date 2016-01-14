@@ -19,6 +19,7 @@
 package org.apache.asterix.external.api;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.io.InputStream;
 
 public interface IStreamDataParser extends IDataParser {
@@ -30,10 +31,17 @@ public interface IStreamDataParser extends IDataParser {
     /**
      * Parse data into output AsterixDataModel binary records.
      * Used with parsers that support stream sources
-     *
      * @param out
      *            DataOutput instance that for writing the parser output.
      */
-
     public boolean parse(DataOutput out) throws Exception;
+
+    /**
+     * reset the parser state. this is called when a failure takes place
+     * and the job needs to continue and to do that, the parser need to
+     * be in a consistent state
+     * @return true if reset was successful, false, otherwise
+     * @throws IOException
+     */
+    public boolean reset(InputStream in) throws IOException;
 }

@@ -198,11 +198,17 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     }
 
     @Override
-    public void setInputStream(InputStream in) throws Exception {
+    public void setInputStream(InputStream in) throws IOException {
         cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
         if (in != null && hasHeader) {
             cursor.nextRecord();
             while (cursor.nextField());
         }
+    }
+
+    @Override
+    public boolean reset(InputStream in) throws IOException {
+        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
+        return true;
     }
 }

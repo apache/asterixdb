@@ -48,26 +48,30 @@ import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransaction
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.FeedId;
-import org.apache.asterix.common.feeds.FeedJointKey;
-import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.api.IFeedJoint;
-import org.apache.asterix.common.feeds.api.IFeedJoint.FeedJointType;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.feed.api.IFeed;
+import org.apache.asterix.external.feed.api.IFeed.FeedType;
+import org.apache.asterix.external.feed.api.IFeedJoint;
+import org.apache.asterix.external.feed.api.IFeedJoint.FeedJointType;
+import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
+import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.feed.management.FeedConnectionRequest;
+import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.management.FeedJointKey;
+import org.apache.asterix.external.feed.management.FeedLifecycleEventSubscriber;
+import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.feeds.CentralFeedManager;
-import org.apache.asterix.feeds.FeedJoint;
-import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.feed.CentralFeedManager;
+import org.apache.asterix.feed.FeedJoint;
+import org.apache.asterix.feed.FeedLifecycleListener;
 import org.apache.asterix.file.DatasetOperations;
 import org.apache.asterix.file.DataverseOperations;
 import org.apache.asterix.file.ExternalIndexingOperations;
@@ -120,7 +124,6 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -130,16 +133,12 @@ import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.Feed.FeedType;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.NodeGroup;
-import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.entities.SecondaryFeed;
-import org.apache.asterix.metadata.feeds.FeedLifecycleEventSubscriber;
-import org.apache.asterix.metadata.feeds.FeedUtil;
+import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.MetadataLockManager;
@@ -239,11 +238,11 @@ public class QueryTranslator extends AbstractLangTranslator {
     /**
      * Compiles and submits for execution a list of AQL statements.
      * @param hcc
-     *        A Hyracks client connection that is used to submit a jobspec to Hyracks.
+     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
-     *        A Hyracks dataset client object that is used to read the results.
+     *            A Hyracks dataset client object that is used to read the results.
      * @param resultDelivery
-     *        True if the results should be read asynchronously or false if we should wait for results to be read.
+     *            True if the results should be read asynchronously or false if we should wait for results to be read.
      * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
      * @throws Exception
      */
@@ -1933,13 +1932,13 @@ public class QueryTranslator extends AbstractLangTranslator {
                 case CREATE_PRIMARY_FEED:
                     CreatePrimaryFeedStatement cpfs = (CreatePrimaryFeedStatement) stmt;
                     String adaptorName = cpfs.getAdaptorName();
-                    feed = new PrimaryFeed(dataverseName, feedName, adaptorName, cpfs.getAdaptorConfiguration(),
-                            cfs.getAppliedFunction());
+                    feed = new Feed(dataverseName, feedName, cfs.getAppliedFunction(), FeedType.PRIMARY, feedName,
+                            adaptorName, cpfs.getAdaptorConfiguration());
                     break;
                 case CREATE_SECONDARY_FEED:
                     CreateSecondaryFeedStatement csfs = (CreateSecondaryFeedStatement) stmt;
-                    feed = new SecondaryFeed(dataverseName, feedName, csfs.getSourceFeedName(),
-                            csfs.getAppliedFunction());
+                    feed = new Feed(dataverseName, feedName, csfs.getAppliedFunction(), FeedType.SECONDARY,
+                            csfs.getSourceFeedName(), null, null);
                     break;
                 default:
                     throw new IllegalStateException();
@@ -1961,14 +1960,14 @@ public class QueryTranslator extends AbstractLangTranslator {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         String dataverse;
         String policy;
-        FeedPolicy newPolicy = null;
+        FeedPolicyEntity newPolicy = null;
         CreateFeedPolicyStatement cfps = (CreateFeedPolicyStatement) stmt;
         dataverse = getActiveDataverse(null);
         policy = cfps.getPolicyName();
         MetadataLockManager.INSTANCE.createFeedPolicyBegin(dataverse, dataverse + "." + policy);
         try {
-            FeedPolicy feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(metadataProvider.getMetadataTxnContext(),
-                    dataverse, policy);
+            FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE
+                    .getFeedPolicy(metadataProvider.getMetadataTxnContext(), dataverse, policy);
             if (feedPolicy != null) {
                 if (cfps.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1980,7 +1979,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             boolean extendingExisting = cfps.getSourcePolicyName() != null;
             String description = cfps.getDescription() == null ? "" : cfps.getDescription();
             if (extendingExisting) {
-                FeedPolicy sourceFeedPolicy = MetadataManager.INSTANCE
+                FeedPolicyEntity sourceFeedPolicy = MetadataManager.INSTANCE
                         .getFeedPolicy(metadataProvider.getMetadataTxnContext(), dataverse, cfps.getSourcePolicyName());
                 if (sourceFeedPolicy == null) {
                     sourceFeedPolicy = MetadataManager.INSTANCE.getFeedPolicy(metadataProvider.getMetadataTxnContext(),
@@ -1991,7 +1990,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
                 Map<String, String> policyProperties = sourceFeedPolicy.getProperties();
                 policyProperties.putAll(cfps.getProperties());
-                newPolicy = new FeedPolicy(dataverse, policy, description, policyProperties);
+                newPolicy = new FeedPolicyEntity(dataverse, policy, description, policyProperties);
             } else {
                 Properties prop = new Properties();
                 try {
@@ -2004,7 +2003,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 for (Entry<Object, Object> entry : prop.entrySet()) {
                     policyProperties.put((String) entry.getKey(), (String) entry.getValue());
                 }
-                newPolicy = new FeedPolicy(dataverse, policy, description, policyProperties);
+                newPolicy = new FeedPolicyEntity(dataverse, policy, description, policyProperties);
             }
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, newPolicy);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2071,7 +2070,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         MetadataLockManager.INSTANCE.dropFeedPolicyBegin(dataverseName, dataverseName + "." + policyName);
 
         try {
-            FeedPolicy feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);
+            FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);
             if (feedPolicy == null) {
                 if (!stmtFeedPolicyDrop.getIfExists()) {
                     throw new AlgebricksException("Unknown policy " + policyName + " in dataverse " + dataverseName);
@@ -2112,10 +2111,10 @@ public class QueryTranslator extends AbstractLangTranslator {
             CompiledConnectFeedStatement cbfs = new CompiledConnectFeedStatement(dataverseName, cfs.getFeedName(),
                     cfs.getDatasetName().getValue(), cfs.getPolicy(), cfs.getQuery(), cfs.getVarCounter());
 
-            FeedUtil.validateIfDatasetExists(dataverseName, cfs.getDatasetName().getValue(),
+            FeedMetadataUtil.validateIfDatasetExists(dataverseName, cfs.getDatasetName().getValue(),
                     metadataProvider.getMetadataTxnContext());
 
-            Feed feed = FeedUtil.validateIfFeedExists(dataverseName, cfs.getFeedName(),
+            Feed feed = FeedMetadataUtil.validateIfFeedExists(dataverseName, cfs.getFeedName(),
                     metadataProvider.getMetadataTxnContext());
 
             feedConnId = new FeedConnectionId(dataverseName, cfs.getFeedName(), cfs.getDatasetName().getValue());
@@ -2125,7 +2124,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                         + cfs.getDatasetName().getValue());
             }
 
-            FeedPolicy feedPolicy = FeedUtil.validateIfPolicyExists(dataverseName, cbfs.getPolicyName(), mdTxnCtx);
+            FeedPolicyEntity feedPolicy = FeedMetadataUtil.validateIfPolicyExists(dataverseName, cbfs.getPolicyName(),
+                    mdTxnCtx);
 
             // All Metadata checks have passed. Feed connect request is valid. //
 
@@ -2139,8 +2139,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             subscriberRegistered = true;
             if (createFeedIntakeJob) {
                 FeedId feedId = connectionRequest.getFeedJointKey().getFeedId();
-                PrimaryFeed primaryFeed = (PrimaryFeed) MetadataManager.INSTANCE.getFeed(mdTxnCtx,
-                        feedId.getDataverse(), feedId.getFeedName());
+                Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(),
+                        feedId.getFeedName());
                 Pair<JobSpecification, IAdapterFactory> pair = FeedOperations.buildFeedIntakeJobSpec(primaryFeed,
                         metadataProvider, policyAccessor);
                 // adapter configuration are valid at this stage
@@ -2205,7 +2205,7 @@ public class QueryTranslator extends AbstractLangTranslator {
      * @throws MetadataException
      */
     private Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse,
-            Feed feed, String dataset, FeedPolicy feedPolicy, MetadataTransactionContext mdTxnCtx)
+            Feed feed, String dataset, FeedPolicyEntity feedPolicy, MetadataTransactionContext mdTxnCtx)
                     throws MetadataException {
         IFeedJoint sourceFeedJoint = null;
         FeedConnectionRequest request = null;
@@ -2269,12 +2269,12 @@ public class QueryTranslator extends AbstractLangTranslator {
     private FeedJointKey getFeedJointKey(Feed feed, MetadataTransactionContext ctx) throws MetadataException {
         Feed sourceFeed = feed;
         List<String> appliedFunctions = new ArrayList<String>();
-        while (sourceFeed.getFeedType().equals(FeedType.SECONDARY)) {
+        while (sourceFeed.getFeedType().equals(IFeed.FeedType.SECONDARY)) {
             if (sourceFeed.getAppliedFunction() != null) {
                 appliedFunctions.add(0, sourceFeed.getAppliedFunction().getName());
             }
             Feed parentFeed = MetadataManager.INSTANCE.getFeed(ctx, feed.getDataverseName(),
-                    ((SecondaryFeed) sourceFeed).getSourceFeedName());
+                    sourceFeed.getSourceFeedName());
             sourceFeed = parentFeed;
         }
 
@@ -2295,8 +2295,8 @@ public class QueryTranslator extends AbstractLangTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-        FeedUtil.validateIfDatasetExists(dataverseName, cfs.getDatasetName().getValue(), mdTxnCtx);
-        Feed feed = FeedUtil.validateIfFeedExists(dataverseName, cfs.getFeedName().getValue(), mdTxnCtx);
+        FeedMetadataUtil.validateIfDatasetExists(dataverseName, cfs.getDatasetName().getValue(), mdTxnCtx);
+        Feed feed = FeedMetadataUtil.validateIfFeedExists(dataverseName, cfs.getFeedName().getValue(), mdTxnCtx);
 
         FeedConnectionId connectionId = new FeedConnectionId(feed.getFeedId(), cfs.getDatasetName().getValue());
         boolean isFeedConnectionActive = FeedLifecycleListener.INSTANCE.isFeedConnectionActive(connectionId);
@@ -2369,7 +2369,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
         try {
 
-            JobSpecification alteredJobSpec = FeedUtil.alterJobSpecificationForFeed(compiled, feedConnectionId,
+            JobSpecification alteredJobSpec = FeedMetadataUtil.alterJobSpecificationForFeed(compiled, feedConnectionId,
                     bfs.getSubscriptionRequest().getPolicyParameters());
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;

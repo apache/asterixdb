@@ -18,14 +18,11 @@
  */
 package org.apache.asterix.external.library;
 
-import java.util.Random;
-
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JObjects.JInt;
 import org.apache.asterix.external.library.java.JObjects.JRecord;
 import org.apache.asterix.external.library.java.JObjects.JString;
-import org.apache.asterix.external.api.IExternalScalarFunction;
-import org.apache.asterix.external.api.IFunctionHelper;
-import org.apache.asterix.external.library.java.JTypeTag;
 
 /**
  * Accepts an input record of type Open{ id: int32, text: string }
@@ -35,11 +32,8 @@ import org.apache.asterix.external.library.java.JTypeTag;
  */
 public class UpperCaseFunction implements IExternalScalarFunction {
 
-    private Random random;
-
     @Override
     public void initialize(IFunctionHelper functionHelper) {
-        random = new Random();
     }
 
     @Override

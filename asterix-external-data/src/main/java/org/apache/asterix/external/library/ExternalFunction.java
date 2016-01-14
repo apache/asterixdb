@@ -75,7 +75,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         }
     }
 
-    public static ISerializerDeserializer getSerDe(Object typeInfo) {
+    public static ISerializerDeserializer<?> getSerDe(Object typeInfo) {
         return AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(typeInfo);
     }
 

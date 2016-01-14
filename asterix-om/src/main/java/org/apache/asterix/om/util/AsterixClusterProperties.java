@@ -77,7 +77,7 @@ public class AsterixClusterProperties {
         } else {
             cluster = null;
         }
-        //if this is the CC process
+        // if this is the CC process
         if (AsterixAppContextInfo.getInstance() != null) {
             if (AsterixAppContextInfo.getInstance().getCCApplicationContext() != null) {
                 node2PartitionsMap = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodePartitions();
@@ -94,11 +94,11 @@ public class AsterixClusterProperties {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" Removing configuration parameters for node id " + nodeId);
         }
-        //TODO implement fault tolerance as follows:
-        //1. collect the partitions of the failed NC
-        //2. For each partition, request a remote replica to take over. 
-        //3. wait until each remote replica completes the recovery for the lost partitions
-        //4. update the cluster state
+        // TODO implement fault tolerance as follows:
+        // 1. collect the partitions of the failed NC
+        // 2. For each partition, request a remote replica to take over.
+        // 3. wait until each remote replica completes the recovery for the lost partitions
+        // 4. update the cluster state
     }
 
     public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration) {
@@ -111,10 +111,10 @@ public class AsterixClusterProperties {
 
     private synchronized void updateNodePartitions(String nodeId, boolean added) {
         ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
-        //if this isn't a storage node, it will not have cluster partitions
+        // if this isn't a storage node, it will not have cluster partitions
         if (nodePartitions != null) {
             for (ClusterPartition p : nodePartitions) {
-                //set the active node for this node's partitions
+                // set the active node for this node's partitions
                 p.setActive(added);
                 if (added) {
                     p.setActiveNodeId(nodeId);
@@ -135,14 +135,13 @@ public class AsterixClusterProperties {
                 return;
             }
         }
-        //if all storage partitions are active, then the cluster is active
+        // if all storage partitions are active, then the cluster is active
         state = ClusterState.ACTIVE;
         LOGGER.info("Cluster is now ACTIVE");
     }
 
     /**
      * Returns the number of IO devices configured for a Node Controller
-     *
      * @param nodeId
      *            unique identifier of the Node Controller
      * @return number of IO devices. -1 if the node id is not valid. A node id
@@ -156,7 +155,6 @@ public class AsterixClusterProperties {
 
     /**
      * Returns the IO devices configured for a Node Controller
-     *
      * @param nodeId
      *            unique identifier of the Node Controller
      * @return a list of IO devices. null if node id is not valid. A node id is not valid
@@ -223,7 +221,7 @@ public class AsterixClusterProperties {
 
     public static boolean isClusterActive() {
         if (AsterixClusterProperties.INSTANCE.getCluster() == null) {
-            //this is a virtual cluster
+            // this is a virtual cluster
             return true;
         }
         return AsterixClusterProperties.INSTANCE.getState() == ClusterState.ACTIVE;
@@ -256,7 +254,7 @@ public class AsterixClusterProperties {
         if (cluster != null) {
             return cluster.getStore();
         }
-        //virtual cluster without cluster config file
+        // virtual cluster without cluster config file
         return DEFAULT_STORAGE_DIR_NAME;
     }
 }

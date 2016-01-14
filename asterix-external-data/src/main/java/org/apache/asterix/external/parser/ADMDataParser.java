@@ -21,6 +21,7 @@ package org.apache.asterix.external.parser;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
@@ -1144,5 +1145,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         listBuilderPool.reset();
         recordBuilderPool.reset();
         abvsBuilderPool.reset();
+    }
+
+    @Override
+    public boolean reset(InputStream in) throws IOException {
+        admLexer.reInit(new InputStreamReader(in));
+        return true;
     }
 }

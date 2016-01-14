@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.Arrays;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class ExternalDataExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
     public static final String MISSING_PARAMETER = "Missing parameter.\n";
@@ -28,5 +32,23 @@ public class ExternalDataExceptionUtils {
     public static String incorrectParameterMessage(String parameterName, String expectedValue, String passedValue) {
         return INCORRECT_PARAMETER + PARAMETER_NAME + parameterName + ExternalDataConstants.LF + EXPECTED_VALUE
                 + expectedValue + ExternalDataConstants.LF + PASSED_VALUE + passedValue;
+    }
+
+    public static String concat(String... vals) {
+        return Arrays.toString(vals);
+    }
+
+    // For now, we are accepting all exceptions as resolvable by adapter.
+    public static boolean isResolvable(Exception e) {
+        return true;
+    }
+
+    public static HyracksDataException suppress(HyracksDataException hde, Throwable th) {
+        if (hde == null) {
+            return new HyracksDataException(th);
+        } else {
+            hde.addSuppressed(th);
+            return hde;
+        }
     }
 }

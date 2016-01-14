@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
@@ -134,6 +133,15 @@ public class ExternalDataUtils {
         return parserFormat != null ? parserFormat : configuration.get(ExternalDataConstants.KEY_FORMAT);
     }
 
+    public static void setRecordFormat(Map<String, String> configuration, String format) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_DATA_PARSER)) {
+            configuration.put(ExternalDataConstants.KEY_DATA_PARSER, format);
+        }
+        if (!configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
+            configuration.put(ExternalDataConstants.KEY_FORMAT, format);
+        }
+    }
+
     private static Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = initializeValueParserFactoryMap();
 
     private static Map<ATypeTag, IValueParserFactory> initializeValueParserFactoryMap() {
@@ -218,5 +226,32 @@ public class ExternalDataUtils {
                 .loadClass(parserFactoryName
                         .substring(parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR) + 1))
                 .newInstance();
+    }
+
+    public static boolean isFeed(Map<String, String> configuration) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
+            return false;
+        } else {
+            return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_IS_FEED));
+        }
+    }
+
+    public static void prepareFeed(Map<String, String> configuration, String dataverseName, String feedName) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
+            configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
+        }
+        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName);
+        configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
+    }
+
+    public static boolean keepDataSourceOpen(Map<String, String> configuration) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_WAIT_FOR_DATA)) {
+            return true;
+        }
+        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_WAIT_FOR_DATA));
+    }
+
+    public static String getFeedName(Map<String, String> configuration) {
+        return configuration.get(ExternalDataConstants.KEY_FEED_NAME);
     }
 }

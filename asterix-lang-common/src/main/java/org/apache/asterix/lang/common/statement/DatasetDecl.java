@@ -20,12 +20,12 @@ package org.apache.asterix.lang.common.statement;
 
 import java.util.Map;
 
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 
 public class DatasetDecl implements Statement {
     protected final Identifier name;

@@ -24,7 +24,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 public class ExternalDataConstants {
-    //TODO: Remove unused variables.
+    // TODO: Remove unused variables.
     /**
      * Keys
      */
@@ -70,6 +70,9 @@ public class ExternalDataConstants {
     public static final String KEY_INTERVAL = "interval";
     public static final String KEY_PULL = "pull";
     public static final String KEY_PUSH = "push";
+    public static final String KEY_IS_FEED = "is-feed";
+    public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
+    public static final String KEY_FEED_NAME = "feed";
     /**
      * HDFS class names
      */
@@ -94,6 +97,8 @@ public class ExternalDataConstants {
     public static final String READER_ADM = "adm";
     public static final String READER_SEMISTRUCTURED = "semi-structured";
     public static final String READER_DELIMITED = "delimited-text";
+    public static final String READER_TWITTER_PUSH = "twitter-push";
+    public static final String READER_TWITTER_PULL = "twitter-pull";
 
     public static final String CLUSTER_LOCATIONS = "cluster-locations";
     public static final String SCHEDULER = "hdfs-scheduler";
@@ -128,6 +133,7 @@ public class ExternalDataConstants {
      */
     public static final String ALIAS_GENERIC_ADAPTER = "adapter";
     public static final String ALIAS_LOCALFS_ADAPTER = "localfs";
+    public static final String ALIAS_LOCALFS_PUSH_ADAPTER = "push_localfs";
     public static final String ALIAS_HDFS_ADAPTER = "hdfs";
     public static final String ALIAS_SOCKET_ADAPTER = "socket_adapter";
     public static final String ALIAS_TWITTER_FIREHOSE_ADAPTER = "twitter_firehose";
@@ -136,7 +142,6 @@ public class ExternalDataConstants {
     public static final String ALIAS_FILE_FEED_ADAPTER = "file_feed";
     public static final String ALIAS_TWITTER_PUSH_ADAPTER = "push_twitter";
     public static final String ALIAS_TWITTER_PULL_ADAPTER = "pull_twitter";
-    public static final String ALIAS_TWITTER_AZURE_ADAPTER = "azure_twitter";
     public static final String ALIAS_CNN_ADAPTER = "cnn_feed";
 
     /**
@@ -144,6 +149,12 @@ public class ExternalDataConstants {
      */
     public static final String ADAPTER_LOCALFS_CLASSNAME = "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter";
     public static final String ADAPTER_HDFS_CLASSNAME = "org.apache.asterix.external.dataset.adapter.HDFSAdapter";
+
+    /**
+     * Constant String values
+     */
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
 
     /**
      * Constant characters
@@ -160,7 +171,7 @@ public class ExternalDataConstants {
     /**
      * Constant byte characters
      */
-    public static final byte EOL = '\n';
+    public static final byte BYTE_LF = '\n';
     public static final byte BYTE_CR = '\r';
     /**
      * Size default values
@@ -172,5 +183,4 @@ public class ExternalDataConstants {
      * Expected parameter values
      */
     public static final String PARAMETER_OF_SIZE_ONE = "Value of size 1";
-
 }

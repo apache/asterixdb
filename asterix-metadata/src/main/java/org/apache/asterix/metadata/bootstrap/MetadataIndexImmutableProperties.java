@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.bootstrap;
 
+import org.apache.asterix.common.config.MetadataConstants;
+
 public enum MetadataIndexImmutableProperties {
     METADATA(MetadataConstants.METADATA_DATAVERSE_NAME, 0, 0),
     DATAVERSE("Dataverse", 1, 1),

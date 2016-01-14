@@ -1,3 +1,1 @@
-{ "DataverseName": "Metadata", "Name": "adapter", "Classname": "org.apache.asterix.external.adapter.factory.GenericAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }
-{ "DataverseName": "Metadata", "Name": "socket_adapter", "Classname": "org.apache.asterix.external.runtime.GenericSocketFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }
-{ "DataverseName": "Metadata", "Name": "socket_client", "Classname": "org.apache.asterix.external.runtime.SocketClientAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 03 15:39:35 AST 2016" }
+{ "DataverseName": "Metadata", "Name": "adapter", "Classname": "org.apache.asterix.external.adapter.factory.GenericAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 10 16:13:18 AST 2016" }

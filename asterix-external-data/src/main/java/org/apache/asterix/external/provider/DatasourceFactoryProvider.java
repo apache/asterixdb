@@ -27,6 +27,7 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.factory.LineRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.factory.SemiStructuredRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.factory.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamProviderFactory;
 import org.apache.asterix.external.input.stream.factory.SocketInputStreamProviderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -92,8 +93,12 @@ public class DatasourceFactoryProvider {
                             .setInputStreamFactoryProvider(DatasourceFactoryProvider.getInputStreamFactory(
                                     ExternalDataUtils.getRecordReaderStreamName(configuration), configuration));;
                     break;
+                case ExternalDataConstants.READER_TWITTER_PULL:
+                case ExternalDataConstants.READER_TWITTER_PUSH:
+                    readerFactory = new TwitterRecordReaderFactory();
+                    break;
                 default:
-                    throw new AsterixException("unknown input stream factory");
+                    throw new AsterixException("unknown record reader factory");
             }
         }
         return readerFactory;

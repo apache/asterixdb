@@ -24,6 +24,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.parse.ITupleForwarder;
 import org.apache.asterix.common.parse.ITupleForwarder.TupleForwardPolicy;
 import org.apache.asterix.external.dataflow.CounterTimerTupleForwarder;
+import org.apache.asterix.external.dataflow.FeedTupleForwarder;
 import org.apache.asterix.external.dataflow.FrameFullTupleForwarder;
 import org.apache.asterix.external.dataflow.RateControlledTupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -37,7 +38,7 @@ public class DataflowUtils {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
             appender.flush(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException();
+                throw new HyracksDataException("Tuple is too large for a frame");
             }
         }
     }
@@ -46,12 +47,18 @@ public class DataflowUtils {
         ITupleForwarder policy = null;
         ITupleForwarder.TupleForwardPolicy policyType = null;
         String propValue = configuration.get(ITupleForwarder.FORWARD_POLICY);
-        if (propValue == null) {
+        if (ExternalDataUtils.isFeed(configuration)) {
+            //TODO pass this value in the configuration and avoid this check for feeds
+            policyType = TupleForwardPolicy.FEED;
+        } else if (propValue == null) {
             policyType = TupleForwardPolicy.FRAME_FULL;
         } else {
             policyType = TupleForwardPolicy.valueOf(propValue.trim().toUpperCase());
         }
         switch (policyType) {
+            case FEED:
+                policy = new FeedTupleForwarder();
+                break;
             case FRAME_FULL:
                 policy = new FrameFullTupleForwarder();
                 break;

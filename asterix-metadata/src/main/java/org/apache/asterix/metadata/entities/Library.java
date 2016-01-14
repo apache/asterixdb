@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.entities;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
-public class Library implements IMetadataEntity {
+public class Library implements IMetadataEntity<Library> {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,12 +42,12 @@ public class Library implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public Library addToCache(MetadataCache cache) {
         return cache.addLibraryIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public Library dropFromCache(MetadataCache cache) {
         return cache.dropLibrary(this);
     }
 

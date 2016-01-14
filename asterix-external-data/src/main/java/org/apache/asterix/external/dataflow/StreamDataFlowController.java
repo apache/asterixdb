@@ -61,4 +61,14 @@ public class StreamDataFlowController extends AbstractDataFlowController impleme
     public void setStreamParser(IStreamDataParser dataParser) {
         this.dataParser = dataParser;
     }
+
+    @Override
+    public boolean pause() throws HyracksDataException {
+        return false;
+    }
+
+    @Override
+    public boolean resume() throws HyracksDataException {
+        return false;
+    }
 }

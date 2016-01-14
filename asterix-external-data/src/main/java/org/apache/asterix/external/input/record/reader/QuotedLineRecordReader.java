@@ -44,6 +44,9 @@ public class QuotedLineRecordReader extends LineRecordReader {
 
     @Override
     public boolean hasNext() throws IOException {
+        if (done) {
+            return false;
+        }
         newlineLength = 0;
         prevCharCR = false;
         prevCharEscape = false;
@@ -65,6 +68,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
                             recordNumber++;
                             return true;
                         }
+                        close();
                         return false;
                     }
                 }

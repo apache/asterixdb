@@ -38,11 +38,16 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
     private LinkedBlockingQueue<Status> inputQ;
     private TwitterStream twitterStream;
     private GenericRecord<Status> record;
+    private boolean closed = false;
 
     @Override
     public void close() throws IOException {
-        twitterStream.clearListeners();
-        twitterStream.cleanUp();
+        if (!closed) {
+            twitterStream.clearListeners();
+            twitterStream.cleanUp();
+            twitterStream = null;
+            closed = true;
+        }
     }
 
     @Override
@@ -61,7 +66,7 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
 
     @Override
     public boolean hasNext() throws Exception {
-        return true;
+        return !closed;
     }
 
     @Override
@@ -81,7 +86,12 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
 
     @Override
     public boolean stop() {
-        return false;
+        try {
+            close();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     private class TweetListener implements StatusListener {

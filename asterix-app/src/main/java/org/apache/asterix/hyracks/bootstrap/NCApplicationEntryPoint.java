@@ -38,6 +38,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.NCMessageBroker;
@@ -46,7 +47,6 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
-import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
@@ -114,7 +114,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
 
-        //if replication is enabled, check if there is a replica for this node
+        //If replication is enabled, check if there is a replica for this node
         AsterixReplicationProperties asterixReplicationProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getReplicationProperties();
 
@@ -123,7 +123,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (initialRun) {
             LOGGER.info("System is being initialized. (first run)");
         } else {
-            // #. recover if the system is corrupted by checking system state.
+            //#. recover if the system is corrupted by checking system state.
             IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
             systemState = recoveryMgr.getSystemState();
 
@@ -133,7 +133,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
             if (replicationEnabled) {
                 if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
-                    //try to perform remote recovery
+                    //Try to perform remote recovery
                     IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();
                     remoteRecoveryMgr.performRemoteRecovery();
                     performedRemoteRecovery = true;
@@ -152,20 +152,20 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     private void startReplicationService() throws IOException {
-        //open replication channel
+        //Open replication channel
         runtimeContext.getReplicationChannel().start();
 
-        //check the state of remote replicas
+        //Check the state of remote replicas
         runtimeContext.getReplicationManager().initializeReplicasState();
 
         if (performedRemoteRecovery) {
-            //notify remote replicas about the new IP Address if changed
+            //Notify remote replicas about the new IP Address if changed
             //Note: this is a hack since each node right now maintains its own copy of the cluster configuration.
             //Once the configuration is centralized on the CC, this step wont be needed.
             runtimeContext.getReplicationManager().broadcastNewIPAddress();
         }
 
-        //start replication after the state of remote replicas has been initialized. 
+        //Start replication after the state of remote replicas has been initialized.
         runtimeContext.getReplicationManager().startReplicationThreads();
     }
 
@@ -182,7 +182,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 MetadataBootstrap.stopUniverse();
             }
 
-            //clean any temporary files
+            //Clean any temporary files
             performLocalCleanUp();
 
             //Note: stopping recovery manager will make a sharp checkpoint
@@ -197,7 +197,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void notifyStartupComplete() throws Exception {
-        //send max resource id on this NC to the CC
+        //Send max resource id on this NC to the CC
         ((INCMessageBroker) ncApplicationContext.getMessageBroker()).reportMaxResourceId();
 
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
@@ -228,9 +228,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 throw new IllegalStateException("Metadata node cannot access distributed state");
             }
 
-            // This is a special case, we just give the metadataNode directly.
-            // This way we can delay the registration of the metadataNode until
-            // it is completely initialized.
+            //This is a special case, we just give the metadataNode directly.
+            //This way we can delay the registration of the metadataNode until
+            //it is completely initialized.
             MetadataManager.INSTANCE = new MetadataManager(proxy, MetadataNode.INSTANCE);
             MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
@@ -272,26 +272,26 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             proxy.setMetadataNode(stub);
         }
 
-        //clean any temporary files
+        //Clean any temporary files
         performLocalCleanUp();
     }
 
     private void performLocalCleanUp() {
-        //delete working area files from failed jobs
+        //Delete working area files from failed jobs
         runtimeContext.getIOManager().deleteWorkspaceFiles();
 
-        //reclaim storage for temporary datasets.
+        //Reclaim storage for temporary datasets.
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
         String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
                 .getStorageMountingPoints();
         for (String ioDevice : ioDevices) {
             String tempDatasetsDir = ioDevice + storageDirName + File.separator
-                    + SplitsAndConstraintsUtil.TEMP_DATASETS_STORAGE_FOLDER;
+                    + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
             FileUtils.deleteQuietly(new File(tempDatasetsDir));
         }
 
-        // TODO
-        //reclaim storage for orphaned index artifacts in NCs.
+        //TODO
+        //Reclaim storage for orphaned index artifacts in NCs.
         //Note: currently LSM indexes invalid components are deleted when an index is activated.
     }
 
@@ -321,7 +321,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                     String nodeIoDevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
                     String[] ioDevicePaths = nodeIoDevices.trim().split(",");
                     for (int i = 0; i < ioDevicePaths.length; i++) {
-                        //construct full store path
+                        // construct full store path
                         ioDevicePaths[i] += File.separator + storeDir;
                     }
                     metadataProperties.getStores().put(nodeId, ioDevicePaths);

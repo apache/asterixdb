@@ -37,6 +37,7 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     protected int bufferLength = 0;
     protected int bufferPosn = 0;
     protected IExternalIndexer indexer;
+    protected boolean done = false;
 
     @Override
     public IRawRecord<char[]> next() throws IOException {
@@ -45,7 +46,10 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
 
     @Override
     public void close() throws IOException {
-        reader.close();
+        if (!done) {
+            reader.close();
+        }
+        done = true;
     }
 
     public void setInputStream(AInputStream inputStream) throws IOException {
@@ -71,5 +75,16 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     @Override
     public void setIndexer(IExternalIndexer indexer) {
         this.indexer = indexer;
+    }
+
+    @Override
+    public boolean stop() {
+        try {
+            reader.stop();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

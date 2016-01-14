@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.io.IOException;
 import java.util.Map;
 
 import org.apache.asterix.common.parse.ITupleForwarder;
@@ -48,7 +47,7 @@ public abstract class AbstractDataFlowController implements IDataFlowController 
     }
 
     @Override
-    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) throws IOException {
+    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) {
         this.configuration = configuration;
         this.ctx = ctx;
     }

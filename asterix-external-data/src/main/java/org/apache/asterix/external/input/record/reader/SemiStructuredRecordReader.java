@@ -67,6 +67,9 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
 
     @Override
     public boolean hasNext() throws Exception {
+        if (done) {
+            return false;
+        }
         record.reset();
         boolean hasStarted = false;
         boolean hasFinished = false;
@@ -79,6 +82,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
                 startPosn = bufferPosn = 0;
                 bufferLength = reader.read(inputBuffer);
                 if (bufferLength <= 0) {
+                    close();
                     return false; // EOF
                 }
             }
@@ -142,6 +146,12 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
 
     @Override
     public boolean stop() {
-        return false;
+        try {
+            reader.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

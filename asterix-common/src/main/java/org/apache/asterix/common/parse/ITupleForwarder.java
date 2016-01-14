@@ -32,10 +32,11 @@ public interface ITupleForwarder {
     public enum TupleForwardPolicy {
         FRAME_FULL,
         COUNTER_TIMER_EXPIRED,
-        RATE_CONTROLLED
+        RATE_CONTROLLED,
+        FEED
     }
 
-    public void configure(Map<String, String> configuration);
+    public void configure(Map<String, String> configuration) throws HyracksDataException;
 
     public void initialize(IHyracksCommonContext ctx, IFrameWriter frameWriter) throws HyracksDataException;
 

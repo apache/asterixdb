@@ -32,6 +32,9 @@ public class LineRecordReader extends AbstractStreamRecordReader {
 
     @Override
     public boolean hasNext() throws IOException {
+        if (done) {
+            return false;
+        }
         /* We're reading data from in, but the head of the stream may be
          * already buffered in buffer, so we have several cases:
          * 1. No newline characters are in the buffer, so we need to copy
@@ -63,7 +66,7 @@ public class LineRecordReader extends AbstractStreamRecordReader {
                         recordNumber++;
                         return true;
                     }
-                    reader.close();
+                    close();
                     return false; //EOF
                 }
             }
@@ -89,11 +92,6 @@ public class LineRecordReader extends AbstractStreamRecordReader {
         } while (newlineLength == 0);
         recordNumber++;
         return true;
-    }
-
-    @Override
-    public boolean stop() {
-        return false;
     }
 
     @Override

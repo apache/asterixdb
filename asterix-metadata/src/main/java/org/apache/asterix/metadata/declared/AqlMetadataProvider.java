@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.metadata.declared;
 
 import java.io.File;
@@ -34,6 +33,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
@@ -41,27 +41,32 @@ import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOpe
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedActivity;
-import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.feed.api.ICentralFeedManager;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.external.feed.watch.FeedActivity;
+import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalBTreeSearchOperatorDescriptor;
+import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalLookupOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalRTreeSearchOperatorDescriptor;
+import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
+import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
+import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlLinearizeComparatorFactoryProvider;
@@ -69,25 +74,19 @@ import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
-import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedUtil;
+import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -388,7 +387,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     .getSerializerDeserializer(feedOutputType);
             RecordDescriptor feedDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
-            FeedPolicy feedPolicy = (FeedPolicy) ((AqlDataSource) dataSource).getProperties()
+            FeedPolicyEntity feedPolicy = (FeedPolicyEntity) ((AqlDataSource) dataSource).getProperties()
                     .get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
             if (feedPolicy == null) {
                 throw new AlgebricksException("Feed not configured with a policy");
@@ -560,7 +559,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     }
                 }
                 // TODO Check this call, result of merge from master!
-                //  ((IGenericAdapterFactory) adapterFactory).setFiles(files);
+                // ((IGenericAdapterFactory) adapterFactory).setFiles(files);
             }
 
             return adapterFactory;
@@ -594,9 +593,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
-            JobSpecification jobSpec, PrimaryFeed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
-        Triple<IAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
-        factoryOutput = FeedUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
+            JobSpecification jobSpec, Feed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
+        Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType> factoryOutput = null;
+        factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
         IAdapterFactory adapterFactory = factoryOutput.first;
         FeedIntakeOperatorDescriptor feedIngestor = null;
         switch (factoryOutput.third) {
@@ -605,7 +604,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         factoryOutput.second, policyAccessor);
                 break;
             case EXTERNAL:
-                String libraryName = primaryFeed.getAdaptorName().trim()
+                String libraryName = primaryFeed.getAdapterName().trim()
                         .split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
                 feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, primaryFeed, libraryName,
                         adapterFactory.getClass().getName(), factoryOutput.second, policyAccessor);
@@ -2084,7 +2083,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataset(
             String dataverseName, String datasetName, String targetIdxName, boolean temp) throws AlgebricksException {
         FileSplit[] splits = splitsForDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName, temp);
-        return SplitsAndConstraintsUtil.splitProviderAndPartitionConstraints(splits);
+        return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataverse(
@@ -2140,7 +2139,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
     }
 
-    public FeedPolicy findFeedPolicy(String dataverse, String policyName) throws AlgebricksException {
+    public FeedPolicyEntity findFeedPolicy(String dataverse, String policyName) throws AlgebricksException {
         try {
             return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverse, policyName);
         } catch (MetadataException e) {
@@ -2193,7 +2192,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     dataset.getDataverseName(), dataset.getItemTypeName()).getDatatype();
 
-            // Create the adapter factory <- right now there is only one. if there are more in the future, we can create a map->
+            // Create the adapter factory <- right now there is only one. if there are more in the future, we can create
+            // a map->
             ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
             LookupAdapterFactory<?> adapterFactory = AdapterFactoryProvider.getAdapterFactory(
                     datasetDetails.getProperties(), (ARecordType) itemType, ridIndexes, retainInput, retainNull,

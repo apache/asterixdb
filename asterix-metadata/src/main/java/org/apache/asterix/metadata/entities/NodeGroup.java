@@ -27,7 +27,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 /**
  * Metadata describing a named group of compute nodes.
  */
-public class NodeGroup implements IMetadataEntity {
+public class NodeGroup implements IMetadataEntity<NodeGroup> {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,12 +49,12 @@ public class NodeGroup implements IMetadataEntity {
     }
 
     @Override
-    public Object addToCache(MetadataCache cache) {
+    public NodeGroup addToCache(MetadataCache cache) {
         return cache.addNodeGroupIfNotExists(this);
     }
 
     @Override
-    public Object dropFromCache(MetadataCache cache) {
+    public NodeGroup dropFromCache(MetadataCache cache) {
         return cache.dropNodeGroup(this);
     }
 }

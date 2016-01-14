@@ -57,7 +57,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController impl
 
     @Override
     public boolean stop() {
-        return false;
+        return recordReader.stop();
     }
 
     @Override
@@ -73,5 +73,15 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController impl
     @Override
     public void setRecordReader(IRecordReader<T> recordReader) throws Exception {
         this.recordReader = recordReader;
+    }
+
+    @Override
+    public boolean pause() throws HyracksDataException {
+        return false;
+    }
+
+    @Override
+    public boolean resume() throws HyracksDataException {
+        return false;
     }
 }

@@ -39,7 +39,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
@@ -651,7 +651,8 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addFeedPolicy(MetadataTransactionContext mdTxnCtx, FeedPolicy feedPolicy) throws MetadataException {
+    public void addFeedPolicy(MetadataTransactionContext mdTxnCtx, FeedPolicyEntity feedPolicy)
+            throws MetadataException {
         try {
             metadataNode.addFeedPolicy(mdTxnCtx.getJobId(), feedPolicy);
         } catch (RemoteException e) {
@@ -786,10 +787,10 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+    public FeedPolicyEntity getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
             throws MetadataException {
 
-        FeedPolicy FeedPolicy = null;
+        FeedPolicyEntity FeedPolicy = null;
         try {
             FeedPolicy = metadataNode.getFeedPolicy(ctx.getJobId(), dataverse, policyName);
         } catch (RemoteException e) {
@@ -844,7 +845,7 @@ public class MetadataManager implements IMetadataManager {
 
     public void dropFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverseName, String policyName)
             throws MetadataException {
-        FeedPolicy feedPolicy = null;
+        FeedPolicyEntity feedPolicy = null;
         try {
             feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getJobId(), dataverseName, policyName);
             metadataNode.dropFeedPolicy(mdTxnCtx.getJobId(), dataverseName, policyName);
@@ -854,9 +855,9 @@ public class MetadataManager implements IMetadataManager {
         mdTxnCtx.dropFeedPolicy(feedPolicy);
     }
 
-    public List<FeedPolicy> getDataversePolicies(MetadataTransactionContext mdTxnCtx, String dataverse)
+    public List<FeedPolicyEntity> getDataversePolicies(MetadataTransactionContext mdTxnCtx, String dataverse)
             throws MetadataException {
-        List<FeedPolicy> dataverseFeedPolicies;
+        List<FeedPolicyEntity> dataverseFeedPolicies;
         try {
             dataverseFeedPolicies = metadataNode.getDataversePolicies(mdTxnCtx.getJobId(), dataverse);
         } catch (RemoteException e) {

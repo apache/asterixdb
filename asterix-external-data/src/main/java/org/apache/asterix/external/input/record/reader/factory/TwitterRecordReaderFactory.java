@@ -97,7 +97,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
             pull = false;
         } else {
             throw new AsterixException("One of boolean parameters " + ExternalDataConstants.KEY_PULL + " and "
-                    + ExternalDataConstants.KEY_PUSH + "must be specified as part of adaptor configuration");
+                    + ExternalDataConstants.KEY_PUSH + " must be specified as part of adaptor configuration");
         }
     }
 
