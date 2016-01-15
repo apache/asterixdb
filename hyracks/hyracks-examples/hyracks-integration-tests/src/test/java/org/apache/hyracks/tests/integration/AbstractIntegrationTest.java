@@ -145,7 +145,6 @@ public abstract class AbstractIntegrationTest {
         hcc.waitForCompletion(jobId);
     }
 
-
     protected List<String> readResults(JobSpecification spec, JobId jobId, ResultSetId resultSetId) throws Exception {
         int nReaders = 1;
 
@@ -190,6 +189,10 @@ public abstract class AbstractIntegrationTest {
             results = readResults(spec, jobId, spec.getResultSetIds().get(i));
             BufferedReader expectedFile = new BufferedReader(new FileReader(expectedFileNames[i]));
 
+            //We're expecting some sort of result.
+            Assert.assertTrue(results != null);
+            Assert.assertTrue(results.size() > 0);
+
             String expectedLine, actualLine;
             int j = 0;
             while ((expectedLine = expectedFile.readLine()) != null) {
@@ -197,6 +200,7 @@ public abstract class AbstractIntegrationTest {
                 Assert.assertEquals(expectedLine, actualLine);
                 j++;
             }
+            //We also expect the same amount of results.
             Assert.assertEquals(j, results.size());
             expectedFile.close();
         }
@@ -212,7 +216,7 @@ public abstract class AbstractIntegrationTest {
         List<String> results;
         for (int i = 0; i < spec.getResultSetIds().size(); i++) {
             results = readResults(spec, jobId, spec.getResultSetIds().get(i));
-            for(String str : results) {
+            for (String str : results) {
                 output.write(str);
             }
         }
