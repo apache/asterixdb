@@ -5447,13 +5447,12 @@
                 <output-dir compare="Text">cross-dv15</output-dir>
             </compilation-unit>
         </test-case>
-        <!--ASTERIXDB-1258
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv16">
                 <output-dir compare="Text">cross-dv16</output-dir>
                 <expected-error>SyntaxError: ERROR:Recursive invocation testdv1.fun04@0</expected-error>
             </compilation-unit>
-        </test-case>  -->
+        </test-case>
         <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
         <test-case FilePath="cross-dataverse">
           <compilation-unit name="cross-dv17">
@@ -5510,13 +5509,12 @@
                 <output-dir compare="Text">query-issue172</output-dir>
             </compilation-unit>
         </test-case>
-        <!-- ASTERIXDB-1259 
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="query-issue455">
                 <output-dir compare="Text">query-issue455</output-dir>
                 <expected-error>SyntaxError:  function test.printName@0 is undefined</expected-error>
             </compilation-unit>
-        </test-case>-->
+        </test-case>
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="query-issue489">
                 <output-dir compare="Text">query-issue489</output-dir>

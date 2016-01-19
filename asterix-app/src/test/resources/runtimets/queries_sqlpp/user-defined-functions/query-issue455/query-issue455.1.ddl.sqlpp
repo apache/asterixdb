@@ -30,5 +30,5 @@ use test;
 
 create function printName()
 {
-"AsterixDB Shared nothing parallel BDMS"
+'AsterixDB Shared nothing parallel BDMS'
 }
