@@ -42,11 +42,17 @@
       <directory>target/classes/META-INF</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
         <include>DISCLAIMER*</include>
         <include>DEPENDENCIES*</include>
       </includes>
     </fileSet>
-  </fileSets>
+      <fileSet>
+      <directory>src/main/licenses</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+      </includes>
+    </fileSet>
+ </fileSets>
 </assembly>

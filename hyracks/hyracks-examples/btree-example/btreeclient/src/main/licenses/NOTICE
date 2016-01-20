@@ -1,0 +1,61 @@
+Apache AsterixDB
+Copyright 2016 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
+
+ - lib/hyracks-api-0.2.17-incubating.jar
+
+    hyracks-api
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-dataflow-common-0.2.17-incubating.jar
+
+    hyracks-dataflow-common
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-dataflow-std-0.2.17-incubating.jar
+
+    hyracks-dataflow-std
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-storage-am-btree-0.2.17-incubating.jar
+
+    hyracks-storage-am-btree
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-storage-am-common-0.2.17-incubating.jar
+
+    hyracks-storage-am-common
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-storage-common-0.2.17-incubating.jar
+
+    hyracks-storage-common
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-data-std-0.2.17-incubating.jar
+
+    hyracks-data-std
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/hyracks-ipc-0.2.17-incubating.jar
+
+    hyracks-ipc
+    Copyright 2016 The Apache Software Foundation
+
+ - lib/mockito-all-2.0.2-beta.jar
+
+    Mockito license - MIT.
+
+    Libraries used:
+
+    Cglib - Apache License 2.0
+    ASM - BSD license
+
+    Mockito all distribution:
+
+    Objenesis - MIT license
+    Hamcrest - BSD license
