@@ -90,6 +90,10 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                         addPartition(partitionIndex, map);
                         ++partitionIndex;
                     }
+                    partitionIndex = rangeMap.getSplitCount();
+                    if (compareSlotAndFields(accessor, tIndex, partitionIndex - 1) == 0) {
+                        addPartition(partitionIndex, map);
+                    }
                 }
             }
 

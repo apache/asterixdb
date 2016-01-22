@@ -31,4 +31,6 @@ public interface IMergeJoinCheckerFactory extends Serializable {
 
     RangePartitioningType getRightPartitioningType();
 
+    boolean isOrderAsc();
+
 }

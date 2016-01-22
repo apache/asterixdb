@@ -104,13 +104,13 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
 
         ArrayList<OrderColumn> orderLeft = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysLeftBranch) {
-            orderLeft.add(new OrderColumn(v, OrderKind.ASC));
+            orderLeft.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         ispLeft.add(new LocalOrderProperty(orderLeft));
 
         ArrayList<OrderColumn> orderRight = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysRightBranch) {
-            orderRight.add(new OrderColumn(v, OrderKind.ASC));
+            orderRight.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         ispRight.add(new LocalOrderProperty(orderRight));
 
