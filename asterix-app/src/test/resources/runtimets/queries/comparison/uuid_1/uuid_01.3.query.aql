@@ -16,30 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.asterix.dataflow.data.nontagged.printers.csv;
-
-import java.io.PrintStream;
-
-import org.apache.asterix.om.base.AUUID;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.data.std.primitive.LongPointable;
-
-public class AUUIDPrinter implements IPrinter {
-
-    public static final AUUIDPrinter INSTANCE = new AUUIDPrinter();
-
-    @Override
-    public void init() throws AlgebricksException {
-    }
-
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long msb = LongPointable.getLong(b, s + 1);
-        long lsb = LongPointable.getLong(b, s + 9);
-
-        ps.print("\"" + AUUID.toStringLiteralOnly(msb, lsb) + "\"");
-    }
-
-}
+use dataverse channels;
+for $result in dataset nearbyTweetChannelResults
+where $result.subscriptionId=uuid("d0b6fac0-3903-43dc-8ef6-7b0923ffc759")
+return $result.subscriptionId;

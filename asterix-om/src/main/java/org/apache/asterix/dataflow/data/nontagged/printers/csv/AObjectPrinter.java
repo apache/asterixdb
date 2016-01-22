@@ -148,7 +148,6 @@ public class AObjectPrinter implements IPrinter {
             case UNION:
             case UNORDEREDLIST:
             case UUID:
-            case UUID_STRING:
                 throw new NotImplementedException("No printer for type " + typeTag);
         }
     }

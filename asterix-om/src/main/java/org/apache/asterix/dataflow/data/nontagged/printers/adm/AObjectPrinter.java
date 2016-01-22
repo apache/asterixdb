@@ -169,7 +169,6 @@ public class AObjectPrinter implements IPrinter {
             case UINT64:
             case UINT8:
             case UNION:
-            case UUID_STRING:
                 // These are internal types and do not need a printer.
                 throw new NotImplementedException("No printer for type " + typeTag);
         }

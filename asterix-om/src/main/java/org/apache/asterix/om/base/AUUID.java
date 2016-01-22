@@ -22,13 +22,12 @@ package org.apache.asterix.om.base;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AUUID implements IAObject {
 
@@ -135,14 +134,18 @@ public class AUUID implements IAObject {
 
     @Override
     public String toString() {
-        return "AUUID: {"
-                + (digits(msb >> 32, 8) + "-" + digits(msb >> 16, 4) + "-" + digits(msb, 4) + "-"
-                        + digits(lsb >> 48, 4) + "-" + digits(lsb, 12)) + "}";
+        return "AUUID: {" + toStringLiteralOnly(msb, lsb) + "}";
+
     }
 
     public String toStringLiteralOnly() {
-        return digits(msb >> 32, 8) + "-" + digits(msb >> 16, 4) + "-" + digits(msb, 4) + "-" + digits(lsb >> 48, 4)
-                + "-" + digits(lsb, 12);
+        return toStringLiteralOnly(msb, lsb);
+    }
+
+    public static String toStringLiteralOnly(long msbValue, long lsbValue) {
+        return digits(msbValue >> 32, 8) + "-" + digits(msbValue >> 16, 4) + "-" + digits(msbValue, 4) + "-"
+                + digits(lsbValue >> 48, 4) + "-" + digits(lsbValue, 12);
+
     }
 
     // Since AUUID is a wrapper of java.util.uuid,

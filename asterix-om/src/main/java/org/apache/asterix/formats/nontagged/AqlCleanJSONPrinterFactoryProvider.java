@@ -144,7 +144,6 @@ public class AqlCleanJSONPrinterFactoryProvider implements IPrinterFactoryProvid
                 case UINT32:
                 case UINT64:
                 case UINT8:
-                case UUID_STRING:
                     // These types are not intended to be printed to the user.
                     break;
             }

@@ -1160,6 +1160,11 @@
                 <output-dir compare="Text">binary_null</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="comparison">
+            <compilation-unit name="uuid_1">
+                <output-dir compare="Text">uuid_1</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="constructor">
         <test-case FilePath="constructor">

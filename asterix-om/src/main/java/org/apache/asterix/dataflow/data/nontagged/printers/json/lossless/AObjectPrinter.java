@@ -103,7 +103,7 @@ public class AObjectPrinter implements IPrinter {
                 AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
-             case POINT: {
+            case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
@@ -166,7 +166,6 @@ public class AObjectPrinter implements IPrinter {
             case UINT64:
             case UINT8:
             case UNION:
-            case UUID_STRING:
                 throw new NotImplementedException("No printer for type " + typeTag);
         }
     }

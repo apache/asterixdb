@@ -67,7 +67,6 @@ public enum ATypeTag implements IEnumSerializer {
     YEARMONTHDURATION(36),
     DAYTIMEDURATION(37),
     UUID(38),
-    UUID_STRING(39),
     SHORTWITHOUTTYPEINFO(40);
 
     private byte value;

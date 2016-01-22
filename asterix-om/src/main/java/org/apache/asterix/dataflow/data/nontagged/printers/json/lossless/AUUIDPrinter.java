@@ -19,18 +19,16 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
-import org.apache.asterix.om.base.AMutableUUID;
+import java.io.PrintStream;
+
+import org.apache.asterix.om.base.AUUID;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
-import java.io.PrintStream;
-
 public class AUUIDPrinter implements IPrinter {
 
     public static final AUUIDPrinter INSTANCE = new AUUIDPrinter();
-    // We use mutable UUID not to create a UUID object multiple times.
-    AMutableUUID uuid = new AMutableUUID(0, 0);
 
     @Override
     public void init() throws AlgebricksException {
@@ -40,9 +38,8 @@ public class AUUIDPrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long msb = LongPointable.getLong(b, s + 1);
         long lsb = LongPointable.getLong(b, s + 9);
-        uuid.setValue(msb, lsb);
 
-        ps.print("\"" + uuid.toStringLiteralOnly() + "\"");
+        ps.print("\"" + AUUID.toStringLiteralOnly(msb, lsb) + "\"");
     }
 
 }
