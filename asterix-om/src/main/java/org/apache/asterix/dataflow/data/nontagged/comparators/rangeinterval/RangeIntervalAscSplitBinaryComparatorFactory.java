@@ -23,13 +23,13 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public class RangeIntervalSplitBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class RangeIntervalAscSplitBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public static final RangeIntervalSplitBinaryComparatorFactory INSTANCE = new RangeIntervalSplitBinaryComparatorFactory();
+    public static final RangeIntervalAscSplitBinaryComparatorFactory INSTANCE = new RangeIntervalAscSplitBinaryComparatorFactory();
 
-    private RangeIntervalSplitBinaryComparatorFactory() {
+    private RangeIntervalAscSplitBinaryComparatorFactory() {
 
     }
 

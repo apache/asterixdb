@@ -24,4 +24,6 @@ public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
 
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1);
 
+    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1);
+
 }

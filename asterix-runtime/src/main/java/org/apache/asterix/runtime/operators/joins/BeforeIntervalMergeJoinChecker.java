@@ -19,6 +19,9 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
     private static final long serialVersionUID = 1L;
@@ -28,8 +31,35 @@ public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChe
     }
 
     @Override
+    public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
+            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
+        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        return (start0 < start1);
+    }
+
+    @Override
+    public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
+            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
+        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        return (start1 < end0);
+    }
+
+    @Override
+    public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
+            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
+        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        return (start0 < start1);
+    }
+
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
         return IntervalLogic.before(start0, end0, start1, end1);
+    }
+
+    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
+        return IntervalPartitionLogic.before(start0, end0, start1, end1);
     }
 
 }

@@ -18,24 +18,12 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
-
-public class OverlappedByIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
+public class OverlappedByIntervalMergeJoinCheckerFactory extends AbstractIntervalInverseMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
     public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
         return new OverlappedByIntervalMergeJoinChecker(keys0, keys1);
-    }
-
-    @Override
-    public RangePartitioningType getLeftPartitioningType() {
-        return RangePartitioningType.PROJECT;
-    }
-
-    @Override
-    public RangePartitioningType getRightPartitioningType() {
-        return RangePartitioningType.SPLIT;
     }
 
 }

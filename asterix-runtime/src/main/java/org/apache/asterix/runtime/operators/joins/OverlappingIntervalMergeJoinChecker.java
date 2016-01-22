@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -47,9 +48,12 @@ public class OverlappingIntervalMergeJoinChecker extends AbstractIntervalMergeJo
         return compareInterval(start0, end0, start1, end1);
     }
 
-    @Override
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
         return IntervalLogic.overlapping(start0, end0, start1, end1);
+    }
+
+    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
+        return IntervalPartitionLogic.overlapping(start0, end0, start1, end1);
     }
 
 }

@@ -35,9 +35,12 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialB
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalProjectBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalReplicateBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalSplitBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalAscProjectBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalAscReplicateBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalAscSplitBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalDescProjectBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalDescReplicateBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.RangeIntervalDescSplitBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -94,11 +97,11 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case INTERVAL: {
                 switch (rangeType) {
                     case PROJECT:
-                        return addOffset(RangeIntervalProjectBinaryComparatorFactory.INSTANCE, ascending);
+                        return addOffset(rangeIntervalProjectBinaryComparatorFactory(ascending), ascending);
                     case REPLICATE:
-                        return addOffset(RangeIntervalReplicateBinaryComparatorFactory.INSTANCE, ascending);
+                        return addOffset(rangeIntervalReplicateBinaryComparatorFactory(ascending), ascending);
                     case SPLIT:
-                        return addOffset(RangeIntervalSplitBinaryComparatorFactory.INSTANCE, ascending);
+                        return addOffset(rangeIntervalSplitBinaryComparatorFactory(ascending), ascending);
                 }
             }
             default: {
@@ -124,6 +127,13 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) {
         // During a comparison, since proper type promotion among several numeric types are required,
         // we will use AObjectAscBinaryComparatorFactory, instead of using a specific comparator
+        if (type == null) {
+            return anyBinaryComparatorFactory(ascending);
+        }
+        IAType aqlType = (IAType) type;
+        if (aqlType.getTypeTag() == ATypeTag.INTERVAL) {
+            return addOffset(intervalBinaryComparatorFactory(ascending), ascending);
+        }
         return anyBinaryComparatorFactory(ascending);
     }
 
@@ -260,6 +270,30 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             return AIntervalAscPartialBinaryComparatorFactory.INSTANCE;
         } else {
             return AIntervalDescPartialBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryComparatorFactory rangeIntervalProjectBinaryComparatorFactory(boolean ascending) {
+        if (ascending) {
+            return RangeIntervalAscProjectBinaryComparatorFactory.INSTANCE;
+        } else {
+            return RangeIntervalDescProjectBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryComparatorFactory rangeIntervalSplitBinaryComparatorFactory(boolean ascending) {
+        if (ascending) {
+            return RangeIntervalAscSplitBinaryComparatorFactory.INSTANCE;
+        } else {
+            return RangeIntervalDescSplitBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryComparatorFactory rangeIntervalReplicateBinaryComparatorFactory(boolean ascending) {
+        if (ascending) {
+            return RangeIntervalAscReplicateBinaryComparatorFactory.INSTANCE;
+        } else {
+            return RangeIntervalDescReplicateBinaryComparatorFactory.INSTANCE;
         }
     }
 

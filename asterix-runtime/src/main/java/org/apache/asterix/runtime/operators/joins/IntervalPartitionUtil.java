@@ -32,19 +32,65 @@ import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 
 public class IntervalPartitionUtil {
 
-    public static void main(String[] args) {
-        int k = 3;
-        printPartitionMap(k);
-        IIntervalMergeJoinChecker test = new OverlappingIntervalMergeJoinChecker(new int[1], new int[1], 0);
-        //        printJoinPartitionMap(getJoinPartitionIntArray(k, test));
-        test = new CoversIntervalMergeJoinChecker(new int[1], new int[1]);
-        //        printJoinPartitionMap(getJoinPartitionIntArray(k, test));
-        //        printJoinPartitionMap(getJoinPartitionIntArray(k, test));
-        ArrayList<HashSet<Integer>> map = getJoinPartitionListOfSets(k, test);
-        printJoinPartitionMap(map);
-        printPartitionSpillOrder(getPartitionSpillOrder(map));
-        printJoinPartitionMap(map);
+    public static int determineK() {
+        return 4;
+    }
 
+    public static void main(String[] args) {
+        int k = 4;
+        printPartitionMap(k);
+        IIntervalMergeJoinChecker test = null;
+        //        test = new OverlappingIntervalMergeJoinChecker(new int[1], new int[1], 0);
+        //        System.err.println("Build - Overlapping");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new OverlapsIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Overlaps");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new BeforeIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Before");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new CoversIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Covers");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new CoveredByIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Covered By");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new EndsIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Ends");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new EndedByIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Ended By");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new StartsIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Starts");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new MeetsIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Meets");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+
+        test = new EqualsIntervalMergeJoinChecker(new int[1], new int[1]);
+        System.err.println("Build - Equal");
+        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+
+        ArrayList<HashSet<Integer>> mapBuild = getJoinPartitionListOfSets(k, test);
+        System.err.println("Build");
+        printJoinPartitionMap(mapBuild);
+        System.err.println("Spill Order");
+        printPartitionSpillOrder(getPartitionSpillOrder(mapBuild));
+        System.err.println("Build");
+        printJoinPartitionMap(mapBuild);
+
+        System.err.println("Probe");
+        ArrayList<HashSet<Integer>> mapProbe = getProbeJoinPartitionListOfSets(mapBuild);
+        printJoinPartitionMap(mapProbe);
     }
 
     public static int getMaxPartitions(int k) {
@@ -87,7 +133,7 @@ public class IntervalPartitionUtil {
                 for (int probeStart = 0; probeStart < k; ++probeStart) {
                     for (int probeEnd = probeStart; probeEnd < k; ++probeEnd) {
                         // Join partitions
-                        if (imjc.compareInterval(buildStart, buildEnd + 1, probeStart, probeEnd + 1)) {
+                        if (imjc.compareIntervalPartition(buildStart, buildEnd, probeStart, probeEnd)) {
                             buildPartitionMap.get(intervalPartitionMap(buildStart, buildEnd, k))
                                     .add(intervalPartitionMap(probeStart, probeEnd, k));
                         }
@@ -110,7 +156,7 @@ public class IntervalPartitionUtil {
 
     public static void printJoinPartitionMap(ArrayList<HashSet<Integer>> partitionMap) {
         for (int i = 0; i < partitionMap.size(); ++i) {
-            System.out.print("(hashset) Build partition " + i + " must join with prode partition(s): ");
+            System.out.print("(hashset) Partition " + i + " must join with partition(s): ");
             for (Integer map : partitionMap.get(i)) {
                 System.out.print(map + " ");
             }
@@ -126,7 +172,6 @@ public class IntervalPartitionUtil {
         System.out.println("");
     }
 
-    @SuppressWarnings("unchecked")
     public static ArrayList<Integer> getPartitionSpillOrder(ArrayList<HashSet<Integer>> partitionMap) {
         // Make a copy of the partitionMap.
         ArrayList<HashSet<Integer>> tempMap = new ArrayList<HashSet<Integer>>();
@@ -201,9 +246,8 @@ public class IntervalPartitionUtil {
     }
 
     public static int intervalPartitionMap(long i, long j, int k) {
-        long duration = j - i;
-        int p;
-        for (p = 0; p <= duration - 1; ++p) {
+        int p = 0;
+        for (long duration = j - i; duration > 0; --duration) {
             p += k - duration + 1;
         }
         p += i;
@@ -211,27 +255,31 @@ public class IntervalPartitionUtil {
     }
 
     public static long getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId, long partitionStart,
-            long partitionDuration) throws HyracksDataException {
-        return Math.floorDiv((getIntervalStart(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
+            long partitionDuration, int k) throws HyracksDataException {
+        long i = Math.floorDiv((getIntervalStart(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
+        return Math.max(0, Math.min(i, k - 1l));
     }
 
     public static long getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId, long partitionStart,
-            long partitionDuration) throws HyracksDataException {
-        return Math.floorDiv((getIntervalEnd(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
+            long partitionDuration, int k) throws HyracksDataException {
+        long j = Math.floorDiv((getIntervalEnd(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
+        return Math.max(0, Math.min(j, k - 1l));
     }
 
     public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId)
             throws HyracksDataException {
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        return AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
+        long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
+        return intervalStart;
     }
 
     public static long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId)
             throws HyracksDataException {
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        return AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
+        long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
+        return intervalEnd;
     }
 
     public static long getStartOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {

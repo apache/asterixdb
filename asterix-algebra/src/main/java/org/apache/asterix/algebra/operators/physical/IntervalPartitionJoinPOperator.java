@@ -36,9 +36,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -53,7 +55,6 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 
 public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
 
@@ -61,8 +62,6 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
     private final List<LogicalVariable> keysRightBranch;
     private final int memSizeInFrames;
     private final int maxInputBuildSizeInFrames;
-    private final int aveRecordsPerFrame;
-    private final double fudgeFactor;
     private final IIntervalMergeJoinCheckerFactory mjcf;
     private final IRangeMap rangeMap;
 
@@ -70,23 +69,20 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
 
     public IntervalPartitionJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, int maxInputSizeInFrames, int aveRecordsPerFrame, double fudgeFactor,
-            IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            int memSizeInFrames, int maxInputSizeInFrames, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
         super(kind, partitioningType);
         this.keysLeftBranch = sideLeftOfEqualities;
         this.keysRightBranch = sideRightOfEqualities;
         this.memSizeInFrames = memSizeInFrames;
         this.maxInputBuildSizeInFrames = maxInputSizeInFrames;
-        this.aveRecordsPerFrame = aveRecordsPerFrame;
-        this.fudgeFactor = fudgeFactor;
         this.mjcf = mjcf;
         this.rangeMap = rangeMap;
 
         LOGGER.fine("IntervalPartitionJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
                 + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int maxInputSizeInFrames="
-                + maxInputSizeInFrames + ", int aveRecordsPerFrame=" + aveRecordsPerFrame + ", double fudgeFactor="
-                + fudgeFactor + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
+                + maxInputSizeInFrames + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap
+                + ".");
     }
 
     @Override
@@ -96,7 +92,7 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
 
     @Override
     public String toString() {
-        return "INTERVAL_PARTITION_JOIN " + keysLeftBranch + keysRightBranch;
+        return "INTERVAL_PARTITION_JOIN " + keysLeftBranch + " " + keysRightBranch;
     }
 
     @Override
@@ -112,6 +108,8 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
             order.add(new OrderColumn(v, OrderKind.ASC));
         }
         pp = new OrderedPartitionedProperty(order, null, rangeMap, RangePartitioningType.PROJECT);
+        List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
+        propsLocal.add(new LocalOrderProperty(order));
         deliveredProperties = new StructuralPropertiesVector(pp, null);
     }
 
@@ -122,17 +120,21 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
         IPartitioningProperty ppLeft = null;
+        List<ILocalStructuralProperty> ispLeft = new ArrayList<ILocalStructuralProperty>();
         IPartitioningProperty ppRight = null;
+        List<ILocalStructuralProperty> ispRight = new ArrayList<ILocalStructuralProperty>();
 
         ArrayList<OrderColumn> orderLeft = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysLeftBranch) {
             orderLeft.add(new OrderColumn(v, OrderKind.ASC));
         }
+        ispLeft.add(new LocalOrderProperty(orderLeft));
 
         ArrayList<OrderColumn> orderRight = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysRightBranch) {
             orderRight.add(new OrderColumn(v, OrderKind.ASC));
         }
+        ispRight.add(new LocalOrderProperty(orderRight));
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
             ppLeft = new OrderedPartitionedProperty(orderLeft, null, rangeMap, mjcf.getLeftPartitioningType());
@@ -170,8 +172,8 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
                 : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight));
 
         IntervalPartitionJoinOperatorDescriptor opDesc = new IntervalPartitionJoinOperatorDescriptor(spec,
-                memSizeInFrames, maxInputBuildSizeInFrames, aveRecordsPerFrame, fudgeFactor, keysLeft, keysRight,
-                recordDescriptor, comparatorFactories, mjcf, rangeMap, predEvaluatorFactory);
+                memSizeInFrames, maxInputBuildSizeInFrames, keysLeft, keysRight, recordDescriptor, comparatorFactories,
+                mjcf, rangeMap, predEvaluatorFactory);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();

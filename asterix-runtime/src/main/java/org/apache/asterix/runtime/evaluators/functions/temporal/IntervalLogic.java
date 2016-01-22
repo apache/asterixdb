@@ -159,7 +159,7 @@ public class IntervalLogic {
     }
 
     public static <T extends Comparable<T>> boolean equals(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s1) == 0 && e1.compareTo(e2) == 0;
+        return s1.compareTo(s2) == 0 && e1.compareTo(e2) == 0;
     }
 
 }

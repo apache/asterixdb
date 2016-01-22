@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
 
 public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMergeJoinChecker {
 
@@ -35,23 +34,21 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
 
     public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        return (start1 < end0);
+        return checkToLoadNextRightTuple(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
     }
 
     public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
         long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
-        return (end1 < start0);
+        return !(start0 <= end1);
     }
 
     public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
         long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        return (start1 < end0);
+        return (start1 <= end0);
     }
 
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
@@ -66,4 +63,6 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
     }
 
     public abstract <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1);
+
+    public abstract <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1);
 }

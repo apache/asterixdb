@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 
 public class OverlapsIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
     private static final long serialVersionUID = 1L;
@@ -27,9 +28,12 @@ public class OverlapsIntervalMergeJoinChecker extends AbstractIntervalMergeJoinC
         super(keysLeft[0], keysRight[0]);
     }
 
-    @Override
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
         return IntervalLogic.overlaps(start0, end0, start1, end1);
+    }
+
+    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
+        return IntervalPartitionLogic.overlaps(start0, end0, start1, end1);
     }
 
 }

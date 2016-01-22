@@ -23,22 +23,22 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public class RangeIntervalReplicateBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class RangeIntervalDescSplitBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public static final RangeIntervalReplicateBinaryComparatorFactory INSTANCE = new RangeIntervalReplicateBinaryComparatorFactory();
+    public static final RangeIntervalDescSplitBinaryComparatorFactory INSTANCE = new RangeIntervalDescSplitBinaryComparatorFactory();
 
-    private RangeIntervalReplicateBinaryComparatorFactory() {
+    private RangeIntervalDescSplitBinaryComparatorFactory() {
 
     }
 
     /*
      * The comparator uses the interval (1st argument) to compare with the range map split value (2nd argument).
      *
-     * -1: split point is less than the interval start point.
-     * 0: split point is equal to or greater than the interval start point
-     * 1: never happens
+     * -1: split point is less than the interval end point.
+     * 0: split point is in the interval
+     * 1: split point is greater than the interval start point.
      */
     @Override
     public IBinaryComparator createBinaryComparator() {
@@ -48,10 +48,16 @@ public class RangeIntervalReplicateBinaryComparatorFactory implements IBinaryCom
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
                 int c = Long.compare(
                         AInt64SerializerDeserializer.getLong(b1,
-                                s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
+                                s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
                         AInt64SerializerDeserializer.getLong(b2, s2));
-                if (c > 0) {
-                    c = 0;
+                if (c < 0) {
+                    c = Long.compare(
+                            AInt64SerializerDeserializer.getLong(b1,
+                                    s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
+                            AInt64SerializerDeserializer.getLong(b2, s2));
+                    if (c > 0) {
+                        c = 0;
+                    }
                 }
                 return c;
             }

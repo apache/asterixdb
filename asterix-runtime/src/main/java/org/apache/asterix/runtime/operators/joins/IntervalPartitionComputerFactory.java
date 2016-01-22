@@ -41,12 +41,12 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
     public ITuplePartitionComputer createPartitioner() {
         return new ITuplePartitionComputer() {
             @Override
-            public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int k) throws HyracksDataException {
                 long partitionI = IntervalPartitionUtil.getIntervalPartitionI(accessor, tIndex, intervalFieldId, partitionStart,
-                        partitionDuration);
+                        partitionDuration, k);
                 long partitionJ = IntervalPartitionUtil.getIntervalPartitionJ(accessor, tIndex, intervalFieldId, partitionStart,
-                        partitionDuration);
-                return IntervalPartitionUtil.intervalPartitionMap(partitionJ, partitionI, k);
+                        partitionDuration, k);
+                return IntervalPartitionUtil.intervalPartitionMap(partitionI, partitionJ, k);
             }
         };
     }

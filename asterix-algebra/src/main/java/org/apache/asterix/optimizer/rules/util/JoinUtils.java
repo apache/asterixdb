@@ -27,12 +27,20 @@ import java.util.logging.Logger;
 import org.apache.asterix.algebra.operators.physical.IntervalPartitionJoinPOperator;
 import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.runtime.operators.joins.AfterIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.BeforeIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.CoveredByIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.CoversIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.EndedByIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.EndsIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.MeetsIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.MetByIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.OverlappedByIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.OverlappingIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.OverlapsIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.StartedByIntervalMergeJoinCheckerFactory;
+import org.apache.asterix.runtime.operators.joins.StartsIntervalMergeJoinCheckerFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -99,16 +107,7 @@ public class JoinUtils {
     private static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
-        IMergeJoinCheckerFactory mjcf = (IMergeJoinCheckerFactory) new OverlapsIntervalMergeJoinCheckerFactory();
-        if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
-            mjcf = (IMergeJoinCheckerFactory) new OverlappedByIntervalMergeJoinCheckerFactory();
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
-            mjcf = (IMergeJoinCheckerFactory) new OverlappingIntervalMergeJoinCheckerFactory(rangeMap);
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
-            mjcf = (IMergeJoinCheckerFactory) new CoversIntervalMergeJoinCheckerFactory();
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
-            mjcf = (IMergeJoinCheckerFactory) new CoveredByIntervalMergeJoinCheckerFactory();
-        }
+        IMergeJoinCheckerFactory mjcf = (IMergeJoinCheckerFactory) getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), sideLeft, sideRight, mjcf, rangeMap));
     }
@@ -116,21 +115,12 @@ public class JoinUtils {
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
-        IIntervalMergeJoinCheckerFactory mjcf = new OverlapsIntervalMergeJoinCheckerFactory();
-        if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
-            mjcf = new OverlappedByIntervalMergeJoinCheckerFactory();
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
-            mjcf = new OverlappingIntervalMergeJoinCheckerFactory(rangeMap);
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
-            mjcf = new CoversIntervalMergeJoinCheckerFactory();
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
-            mjcf = new CoveredByIntervalMergeJoinCheckerFactory();
-        }
+        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new IntervalPartitionJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
                 context.getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(),
-                context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame(),
-                context.getPhysicalOptimizationConfig().getFudgeFactor(), mjcf, rangeMap));
+                mjcf,
+                rangeMap));
     }
 
     private static FunctionIdentifier isIntervalJoinCondition(ILogicalExpression e,
@@ -179,12 +169,51 @@ public class JoinUtils {
         }
     }
 
+    private static IIntervalMergeJoinCheckerFactory getIntervalMergeJoinCheckerFactory(FunctionIdentifier fi,
+            IRangeMap rangeMap) {
+        IIntervalMergeJoinCheckerFactory mjcf = new OverlappingIntervalMergeJoinCheckerFactory(rangeMap);
+        if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
+            mjcf = new OverlappedByIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)) {
+            mjcf = new OverlapsIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
+            mjcf = new CoversIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
+            mjcf = new CoveredByIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTS)) {
+            mjcf = new StartsIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)) {
+            mjcf = new StartedByIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDS)) {
+            mjcf = new EndsIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY)) {
+            mjcf = new EndedByIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MEETS)) {
+            mjcf = new MeetsIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)) {
+            mjcf = new MetByIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
+            mjcf = new BeforeIntervalMergeJoinCheckerFactory();
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_AFTER)) {
+            mjcf = new AfterIntervalMergeJoinCheckerFactory();
+        }
+        return mjcf;
+    }
+
     private static boolean isIntervalFunction(FunctionIdentifier fi) {
         return fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)
                 || fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)
                 || fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)
                 || fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY);
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_AFTER)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_MEETS)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTS)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDS)
+                || fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
     }
 
     private static FunctionIdentifier reverseIntervalExpression(FunctionIdentifier fi) {
@@ -192,12 +221,28 @@ public class JoinUtils {
             return AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY;
         } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
             return AsterixBuiltinFunctions.INTERVAL_OVERLAPS;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
+            return AsterixBuiltinFunctions.INTERVAL_OVERLAPPING;
         } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
             return AsterixBuiltinFunctions.INTERVAL_COVERED_BY;
         } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
             return AsterixBuiltinFunctions.INTERVAL_COVERS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
-            return AsterixBuiltinFunctions.INTERVAL_OVERLAPPING;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTS)) {
+            return AsterixBuiltinFunctions.INTERVAL_STARTED_BY;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)) {
+            return AsterixBuiltinFunctions.INTERVAL_STARTS;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDS)) {
+            return AsterixBuiltinFunctions.INTERVAL_ENDED_BY;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY)) {
+            return AsterixBuiltinFunctions.INTERVAL_ENDS;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_AFTER)) {
+            return AsterixBuiltinFunctions.INTERVAL_BEFORE;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
+            return AsterixBuiltinFunctions.INTERVAL_AFTER;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)) {
+            return AsterixBuiltinFunctions.INTERVAL_MEETS;
+        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MEETS)) {
+            return AsterixBuiltinFunctions.INTERVAL_MET_BY;
         }
         return null;
     }

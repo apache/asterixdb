@@ -23,22 +23,22 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public class RangeIntervalProjectBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class RangeIntervalDescProjectBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public static final RangeIntervalProjectBinaryComparatorFactory INSTANCE = new RangeIntervalProjectBinaryComparatorFactory();
+    public static final RangeIntervalDescProjectBinaryComparatorFactory INSTANCE = new RangeIntervalDescProjectBinaryComparatorFactory();
 
-    private RangeIntervalProjectBinaryComparatorFactory() {
+    private RangeIntervalDescProjectBinaryComparatorFactory() {
 
     }
 
     /*
      * The comparator uses the interval (1st argument) to compare with the range map split value (2nd argument).
      *
-     * -1: split point is less than the interval start point.
-     * 0: split point is equal to the interval start point
-     * 1: split point is greater than the interval start point.
+     * -1: split point is less than the interval end point.
+     * 0: split point is equal to the interval end point
+     * 1: split point is greater than the interval end point.
      */
     @Override
     public IBinaryComparator createBinaryComparator() {
@@ -48,7 +48,7 @@ public class RangeIntervalProjectBinaryComparatorFactory implements IBinaryCompa
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
                 return Long.compare(
                         AInt64SerializerDeserializer.getLong(b1,
-                                s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
+                                s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
                         AInt64SerializerDeserializer.getLong(b2, s2));
             }
         };

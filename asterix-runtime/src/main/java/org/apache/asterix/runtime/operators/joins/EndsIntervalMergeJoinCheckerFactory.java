@@ -26,4 +26,9 @@ public class EndsIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJo
         return new EndsIntervalMergeJoinChecker(keys0, keys1);
     }
 
+    @Override
+    public boolean isOrderAsc() {
+        return false;
+    }
+
 }

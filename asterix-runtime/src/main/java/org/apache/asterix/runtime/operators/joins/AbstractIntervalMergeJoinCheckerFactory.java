@@ -32,4 +32,8 @@ public abstract class AbstractIntervalMergeJoinCheckerFactory implements IInterv
         return RangePartitioningType.PROJECT;
     }
 
+    public boolean isOrderAsc() {
+        return true;
+    }
+
 }

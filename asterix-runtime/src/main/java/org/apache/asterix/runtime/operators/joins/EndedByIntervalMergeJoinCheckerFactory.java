@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
-
-public class EndedByIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
+public class EndedByIntervalMergeJoinCheckerFactory extends AbstractIntervalInverseMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -29,13 +27,8 @@ public class EndedByIntervalMergeJoinCheckerFactory extends AbstractIntervalMerg
     }
 
     @Override
-    public RangePartitioningType getLeftPartitioningType() {
-        return RangePartitioningType.PROJECT;
-    }
-
-    @Override
-    public RangePartitioningType getRightPartitioningType() {
-        return RangePartitioningType.SPLIT;
+    public boolean isOrderAsc() {
+        return false;
     }
 
 }

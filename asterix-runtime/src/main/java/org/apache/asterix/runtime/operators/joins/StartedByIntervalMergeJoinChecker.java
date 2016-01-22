@@ -19,17 +19,21 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 
-public class StartedByIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
+public class StartedByIntervalMergeJoinChecker extends AbstractIntervalInverseMergeJoinChecker {
     private static final long serialVersionUID = 1L;
 
     public StartedByIntervalMergeJoinChecker(int[] keysLeft, int[] keysRight) {
         super(keysLeft[0], keysRight[0]);
     }
 
-    @Override
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
         return IntervalLogic.startedBy(start0, end0, start1, end1);
+    }
+
+    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
+        return IntervalPartitionLogic.startedBy(start0, end0, start1, end1);
     }
 
 }
