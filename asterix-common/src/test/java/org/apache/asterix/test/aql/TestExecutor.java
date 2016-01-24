@@ -24,12 +24,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +56,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -361,6 +364,14 @@ public class TestExecutor {
         return getProcessOutput(p);
     }
 
+    private static String executeVagrantScript(ProcessBuilder pb, String node, String scriptName) throws Exception {
+        pb.command("vagrant", "ssh", node, "--", pb.environment().get("SCRIPT_HOME") + scriptName);
+        Process p = pb.start();
+        p.waitFor();
+        InputStream input = p.getInputStream();
+        return IOUtils.toString(input, StandardCharsets.UTF_8.name());
+    }
+
     private static String getScriptPath(String queryPath, String scriptBasePath, String scriptFileName) {
         String targetWord = "queries" + File.separator;
         int targetWordSize = targetWord.lastIndexOf(File.separator);
@@ -564,6 +575,22 @@ public class TestExecutor {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
                             }
                             System.err.println("...but that was expected.");
+                            break;
+                        case "vagrant_script":
+                            try {
+                                String[] command = statement.trim().split(" ");
+                                if (command.length != 2) {
+                                    throw new Exception("invalid vagrant script format");
+                                }
+                                String nodeId = command[0];
+                                String scriptName = command[1];
+                                String output = executeVagrantScript(pb, nodeId, scriptName);
+                                if (output.contains("ERROR")) {
+                                    throw new Exception(output);
+                                }
+                            } catch (Exception e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
                             break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());

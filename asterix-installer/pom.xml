@@ -29,6 +29,7 @@
 		<failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
         <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
 		<cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
+        <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
 	</properties>
 
   <licenses>
@@ -123,6 +124,7 @@
 						<exclude>${failsafe.test.excludes}</exclude>
                         <exclude>${cluster.test.excludes}</exclude>
 					    <exclude>${cluster.extest.excludes}</exclude>
+                        <exclude>${replication.test.excludes}</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -194,6 +196,8 @@
                             <forkMode>pertest</forkMode>
                             <excludes>
                                 <exclude>${failsafe.test.excludes}</exclude>
+                                <exclude>${cluster.test.excludes}</exclude>
+                                <exclude>${cluster.extest.excludes}</exclude>
                             </excludes>
                         </configuration>
                         <executions>

@@ -23,13 +23,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.config.MetadataConstants;
+import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.feed.CentralFeedManager;
 import org.apache.asterix.file.ExternalIndexingOperations;
@@ -41,20 +42,19 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
+public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
 
     private static ClusterState state;
-    private static final Logger LOGGER = Logger.getLogger(AsterixGlobalRecoveryManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GlobalRecoveryManager.class.getName());
     private HyracksConnection hcc;
-    public static AsterixGlobalRecoveryManager INSTANCE;
+    public static GlobalRecoveryManager INSTANCE;
 
-    public AsterixGlobalRecoveryManager(HyracksConnection hcc) throws Exception {
-        state = AsterixClusterProperties.INSTANCE.getState();
+    public GlobalRecoveryManager(HyracksConnection hcc) throws Exception {
+        state = ClusterState.UNUSABLE;
         this.hcc = hcc;
     }
 
@@ -67,6 +67,28 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
 
     @Override
     public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId) {
+        startGlobalRecovery();
+        return null;
+    }
+
+    private void executeHyracksJob(JobSpecification spec) throws Exception {
+        spec.setMaxReattempts(0);
+        JobId jobId = hcc.startJob(spec);
+        hcc.waitForCompletion(jobId);
+    }
+
+    @Override
+    public void notifyRequestCompletion(IClusterManagementWorkResponse response) {
+        // Do nothing
+    }
+
+    @Override
+    public void notifyStateChange(ClusterState previousState, ClusterState newState) {
+        // Do nothing?
+    }
+
+    @Override
+    public void startGlobalRecovery() {
         // perform global recovery if state changed to active
         final ClusterState newState = AsterixClusterProperties.INSTANCE.getState();
         boolean needToRecover = !newState.equals(state) && (newState == ClusterState.ACTIVE);
@@ -84,7 +106,8 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
                         for (Dataverse dataverse : dataverses) {
                             if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse, CentralFeedManager.getInstance());
+                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse,
+                                        CentralFeedManager.getInstance());
                                 List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
                                         dataverse.getDataverseName());
                                 for (Dataset dataset : datasets) {
@@ -110,8 +133,8 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                                                 }
                                                 // 2. clean artifacts in NCs
                                                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                                                JobSpecification jobSpec = ExternalIndexingOperations.buildAbortOp(
-                                                        dataset, indexes, metadataProvider);
+                                                JobSpecification jobSpec = ExternalIndexingOperations
+                                                        .buildAbortOp(dataset, indexes, metadataProvider);
                                                 executeHyracksJob(jobSpec);
                                                 // 3. correct the dataset state
                                                 ((ExternalDatasetDetails) dataset.getDatasetDetails())
@@ -125,8 +148,8 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                                                 // if ready to commit, roll forward
                                                 // 1. commit indexes in NCs
                                                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                                                JobSpecification jobSpec = ExternalIndexingOperations.buildRecoverOp(
-                                                        dataset, indexes, metadataProvider);
+                                                JobSpecification jobSpec = ExternalIndexingOperations
+                                                        .buildRecoverOp(dataset, indexes, metadataProvider);
                                                 executeHyracksJob(jobSpec);
                                                 // 2. add pending files in metadata
                                                 for (ExternalFile file : files) {
@@ -134,7 +157,8 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                                                         MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx, file);
                                                         file.setPendingOp(ExternalFilePendingOp.PENDING_NO_OP);
                                                         MetadataManager.INSTANCE.addExternalFile(mdTxnCtx, file);
-                                                    } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
+                                                    } else if (file
+                                                            .getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
                                                         // find original file
                                                         for (ExternalFile originalFile : files) {
                                                             if (originalFile.getFileName().equals(file.getFileName())) {
@@ -145,7 +169,8 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                                                                 break;
                                                             }
                                                         }
-                                                    } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
+                                                    } else if (file
+                                                            .getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
                                                         // find original file
                                                         for (ExternalFile originalFile : files) {
                                                             if (originalFile.getFileName().equals(file.getFileName())) {
@@ -196,22 +221,5 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
             state = newState;
             recoveryThread.start();
         }
-        return null;
-    }
-
-    private void executeHyracksJob(JobSpecification spec) throws Exception {
-        spec.setMaxReattempts(0);
-        JobId jobId = hcc.startJob(spec);
-        hcc.waitForCompletion(jobId);
-    }
-
-    @Override
-    public void notifyRequestCompletion(IClusterManagementWorkResponse response) {
-        // Do nothing
-    }
-
-    @Override
-    public void notifyStateChange(ClusterState previousState, ClusterState newState) {
-        // Do nothing?
     }
 }

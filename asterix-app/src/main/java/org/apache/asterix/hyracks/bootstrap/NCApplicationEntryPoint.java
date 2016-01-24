@@ -20,7 +20,6 @@ package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +41,6 @@ import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.metadata.api.IAsterixStateProxy;
-import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
@@ -102,7 +97,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
-        runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
+        runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext, metadataRmiPort);
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
@@ -215,33 +210,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             localResourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 
-        IAsterixStateProxy proxy = null;
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Bootstrapping metadata");
-            }
-            MetadataNode.INSTANCE.initialize(runtimeContext);
-
-            proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
-            if (proxy == null) {
-                throw new IllegalStateException("Metadata node cannot access distributed state");
-            }
-
-            //This is a special case, we just give the metadataNode directly.
-            //This way we can delay the registration of the metadataNode until
-            //it is completely initialized.
-            MetadataManager.INSTANCE = new MetadataManager(proxy, MetadataNode.INSTANCE);
-            MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
-                    systemState == SystemState.NEW_UNIVERSE);
-            MetadataBootstrap.startDDLRecovery();
-
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Metadata node bound");
-            }
+            runtimeContext.initializeMetadata(systemState == SystemState.NEW_UNIVERSE);
         }
-
         ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
@@ -267,9 +241,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         recoveryMgr.checkpoint(true, RecoveryManager.NON_SHARP_CHECKPOINT_TARGET_LSN);
 
         if (isMetadataNode) {
-            IMetadataNode stub = null;
-            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, metadataRmiPort);
-            proxy.setMetadataNode(stub);
+            runtimeContext.exportMetadataNodeStub();
         }
 
         //Clean any temporary files

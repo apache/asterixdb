@@ -47,9 +47,10 @@ public class LSMComponentProperties {
 
     public LSMComponentProperties(ILSMIndexReplicationJob job, String nodeId) {
         this.nodeId = nodeId;
-        componentId = LSMComponentProperties.getLSMComponentID((String) job.getJobFiles().toArray()[0], nodeId);
+        componentId = LSMComponentProperties.getLSMComponentID((String) job.getJobFiles().toArray()[0]);
         numberOfFiles = new AtomicInteger(job.getJobFiles().size());
-        originalLSN = LSMComponentProperties.getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(), job.getLSMIndexOperationContext());
+        originalLSN = LSMComponentProperties.getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(),
+                job.getLSMIndexOperationContext());
         opType = job.getLSMOpType();
     }
 
@@ -94,7 +95,7 @@ public class LSMComponentProperties {
 
     public String getMaskPath(ReplicaResourcesManager resourceManager) {
         if (maskPath == null) {
-            AsterixLSMIndexFileProperties afp = new AsterixLSMIndexFileProperties(this);
+            LSMIndexFileProperties afp = new LSMIndexFileProperties(this);
             maskPath = getReplicaComponentPath(resourceManager) + File.separator + afp.getFileName()
                     + ReplicaResourcesManager.LSM_COMPONENT_MASK_SUFFIX;
         }
@@ -103,9 +104,8 @@ public class LSMComponentProperties {
 
     public String getReplicaComponentPath(ReplicaResourcesManager resourceManager) {
         if (replicaPath == null) {
-            AsterixLSMIndexFileProperties afp = new AsterixLSMIndexFileProperties(this);
-            replicaPath = resourceManager.getIndexPath(afp.getNodeId(), afp.getIoDeviceNum(), afp.getDataverse(),
-                    afp.getIdxName());
+            LSMIndexFileProperties afp = new LSMIndexFileProperties(this);
+            replicaPath = resourceManager.getIndexPath(afp);
         }
         return replicaPath;
     }
@@ -113,26 +113,23 @@ public class LSMComponentProperties {
     /***
      * @param filePath
      *            any file of the LSM component
-     * @param nodeId
      * @return a unique id based on the timestamp of the component
      */
-    public static String getLSMComponentID(String filePath, String nodeId) {
+    public static String getLSMComponentID(String filePath) {
         String[] tokens = filePath.split(File.separator);
 
         int arraySize = tokens.length;
         String fileName = tokens[arraySize - 1];
-        String ioDevoceName = tokens[arraySize - 2];
-        String idxName = tokens[arraySize - 3];
-        String dataverse = tokens[arraySize - 4];
+        String idxName = tokens[arraySize - 2];
+        String dataverse = tokens[arraySize - 3];
+        String partitionName = tokens[arraySize - 4];
 
         StringBuilder componentId = new StringBuilder();
-        componentId.append(nodeId);
+        componentId.append(partitionName);
         componentId.append(File.separator);
         componentId.append(dataverse);
         componentId.append(File.separator);
         componentId.append(idxName);
-        componentId.append(File.separator);
-        componentId.append(ioDevoceName);
         componentId.append(File.separator);
         componentId.append(fileName.substring(0, fileName.lastIndexOf(AbstractLSMIndexFileManager.SPLIT_STRING)));
         return componentId.toString();
@@ -142,16 +139,8 @@ public class LSMComponentProperties {
         return componentId;
     }
 
-    public void setComponentId(String componentId) {
-        this.componentId = componentId;
-    }
-
     public long getOriginalLSN() {
         return originalLSN;
-    }
-
-    public void setOriginalLSN(long lSN) {
-        originalLSN = lSN;
     }
 
     public String getNodeId() {

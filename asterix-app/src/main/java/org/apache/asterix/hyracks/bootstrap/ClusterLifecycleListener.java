@@ -95,19 +95,12 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NC: " + deadNode + " left");
             }
-            AsterixClusterProperties.INSTANCE.removeNCConfiguration(deadNode);
-
             //if metadata node failed, we need to rebind the proxy connection when it joins again.
-            //Note: the format for the NC should be (INSTANCE-NAME)_(NC-ID)
-            if (AsterixClusterProperties.INSTANCE.getCluster() != null) {
-                String instanceName = AsterixClusterProperties.INSTANCE.getCluster().getInstanceName();
-                String metadataNodeName = AsterixClusterProperties.INSTANCE.getCluster().getMetadataNode();
-                String completeMetadataNodeName = instanceName + "_" + metadataNodeName;
-                if (deadNode.equals(completeMetadataNodeName)) {
-                    MetadataManager.INSTANCE.rebindMetadataNode = true;
-                }
+            String metadataNode = AsterixClusterProperties.INSTANCE.getCurrentMetadataNode();
+            if (deadNode.equals(metadataNode)) {
+                MetadataManager.INSTANCE.rebindMetadataNode = true;
             }
-
+            AsterixClusterProperties.INSTANCE.removeNCConfiguration(deadNode);
         }
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
         Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();
@@ -166,7 +159,8 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 case REMOVE_NODE:
                     nodesToRemove.addAll(((RemoveNodeWork) w).getNodesToBeRemoved());
                     nodeRemovalRequests.add(w);
-                    RemoveNodeWorkResponse response = new RemoveNodeWorkResponse((RemoveNodeWork) w, Status.IN_PROGRESS);
+                    RemoveNodeWorkResponse response = new RemoveNodeWorkResponse((RemoveNodeWork) w,
+                            Status.IN_PROGRESS);
                     pendingWorkResponses.add(response);
                     break;
             }

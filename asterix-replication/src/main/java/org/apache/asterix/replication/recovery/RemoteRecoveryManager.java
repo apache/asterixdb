@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.replication.recovery;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,10 +31,12 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 
 public class RemoteRecoveryManager implements IRemoteRecoveryManager {
@@ -55,13 +58,20 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
     @Override
     public void performRemoteRecovery() {
+        //TODO this method needs to be adapted to perform failback when autoFailover is enabled.
+        //Currently we will not allow a node to perform remote recovery since another replica
+        //already tookover its workload and might not resync correctly if there are on on-going
+        //jobs on the replica.
+        if (AsterixClusterProperties.INSTANCE.isAutoFailoverEnabled()) {
+            throw new IllegalStateException("Cannot perform remote recovery when auto failover is enabled.");
+        }
         //The whole remote recovery process should be atomic.
         //Any error happens, we should start the recovery from the start until the recovery is complete or an illegal state is reached (cannot recovery).
         int maxRecoveryAttempts = 10;
         PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
                 .getLocalResourceRepository();
         while (true) {
-            //start recovery recovery steps
+            //start recovery steps
             try {
                 maxRecoveryAttempts--;
 
@@ -76,7 +86,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 int activeReplicasCount = replicationManager.getActiveReplicasCount();
 
                 if (activeReplicasCount == 0) {
-                    throw new IllegalStateException("no ACTIVE remote replica(s) exists to performe remote recovery");
+                    throw new IllegalStateException("no ACTIVE remote replica(s) exists to perform remote recovery");
                 }
 
                 //2. clean any memory data that could've existed from previous failed recovery attempt
@@ -90,8 +100,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 Map<String, Set<String>> selectedRemoteReplicas = constructRemoteRecoveryPlan();
 
                 //5. get max LSN from selected remote replicas
-                long maxRemoteLSN = 0;
-                maxRemoteLSN = replicationManager.getMaxRemoteLSN(selectedRemoteReplicas.keySet());
+                long maxRemoteLSN = replicationManager.getMaxRemoteLSN(selectedRemoteReplicas.keySet());
 
                 //6. force LogManager to start from a partition > maxLSN in selected remote replicas
                 logManager.renewLogFilesAndStartFromLSN(maxRemoteLSN);
@@ -107,8 +116,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                     //2. Initialize local resources based on the newly received files (if we are recovering the primary replica on this node)
                     if (replicasDataToRecover.contains(logManager.getNodeId())) {
                         ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
-                                .initializeNewUniverse(
-                                        runtimeContext.getReplicaResourcesManager().getLocalStorageFolder());
+                                .initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
                         //initialize resource id factor to correct max resource id
                         runtimeContext.initializeResourceIdFactory();
                     }
@@ -140,7 +148,6 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
     }
 
     private Map<String, Set<String>> constructRemoteRecoveryPlan() {
-
         //1. identify which replicas reside in this node
         String localNodeId = logManager.getNodeId();
         Set<String> nodes = replicationProperties.getNodeReplicasIds(localNodeId);
@@ -204,5 +211,15 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         }
 
         return recoveryList;
+    }
+
+    @Override
+    public void takeoverPartitons(String failedNode, Integer[] partitions) throws IOException, ACIDException {
+        long minLSN = runtimeContext.getReplicaResourcesManager().getPartitionsMinLSN(partitions);
+        //reply logs > minLSN that belong to these partitions
+        //TODO (mhubail) currently we assume the logs for these partitions belong to the failed node
+        //this needs to be updated once log formats are updated to include the partition id
+        runtimeContext.getTransactionSubsystem().getRecoveryManager().replayPartitionsLogs(partitions, minLSN,
+                failedNode);
     }
 }

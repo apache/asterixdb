@@ -288,12 +288,6 @@ public class ValidateCommand extends AbstractCommand {
                 valid = false;
             }
 
-            if (cluster.getDataReplication().getReplicationStore() == null
-                    || cluster.getDataReplication().getReplicationStore().length() == 0) {
-                valid = false;
-                LOGGER.fatal("Replication store not defined. " + ERROR);
-            }
-
             if (cluster.getDataReplication().getReplicationPort() == null
                     || cluster.getDataReplication().getReplicationPort().toString().length() == 0) {
                 valid = false;

@@ -25,9 +25,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.messaging.AbstractApplicationMessage;
 import org.apache.asterix.common.messaging.ReportMaxResourceIdMessage;
+import org.apache.asterix.common.messaging.TakeoverMetadataNodeResponseMessage;
+import org.apache.asterix.common.messaging.TakeoverPartitionsRequestMessage;
+import org.apache.asterix.common.messaging.TakeoverPartitionsResponseMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessageCallback;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
@@ -75,9 +79,38 @@ public class NCMessageBroker implements INCMessageBroker {
             case REPORT_MAX_RESOURCE_ID_REQUEST:
                 reportMaxResourceId();
                 break;
+            case TAKEOVER_PARTITIONS_REQUEST:
+                handleTakeoverPartitons(message);
+                break;
+            case TAKEOVER_METADATA_NODE_REQUEST:
+                handleTakeoverMetadataNode(message);
+                break;
             default:
                 break;
         }
+    }
+
+    private void handleTakeoverPartitons(IMessage message) throws Exception {
+        TakeoverPartitionsRequestMessage msg = (TakeoverPartitionsRequestMessage) message;
+        IAsterixAppRuntimeContext appContext = (IAsterixAppRuntimeContext) ncs.getApplicationContext()
+                .getApplicationObject();
+        IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
+        remoteRecoeryManager.takeoverPartitons(msg.getFailedNode(), msg.getPartitions());
+        //send response after takeover is completed
+        TakeoverPartitionsResponseMessage reponse = new TakeoverPartitionsResponseMessage(msg.getRequestId(),
+                appContext.getTransactionSubsystem().getId(), msg.getPartitions());
+        sendMessage(reponse, null);
+    }
+
+    private void handleTakeoverMetadataNode(IMessage message) throws Exception {
+        IAsterixAppRuntimeContext appContext = (IAsterixAppRuntimeContext) ncs.getApplicationContext()
+                .getApplicationObject();
+        appContext.initializeMetadata(false);
+        appContext.exportMetadataNodeStub();
+        //send response after takeover is completed
+        TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
+                appContext.getTransactionSubsystem().getId());
+        sendMessage(reponse, null);
     }
 
     @Override

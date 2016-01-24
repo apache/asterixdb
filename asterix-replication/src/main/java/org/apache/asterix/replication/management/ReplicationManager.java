@@ -66,17 +66,16 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.event.schema.cluster.Node;
-import org.apache.asterix.replication.functions.AsterixReplicationProtocol;
-import org.apache.asterix.replication.functions.AsterixReplicationProtocol.ReplicationRequestType;
+import org.apache.asterix.replication.functions.ReplicationProtocol;
+import org.apache.asterix.replication.functions.ReplicationProtocol.ReplicationRequestType;
 import org.apache.asterix.replication.functions.ReplicaFilesRequest;
 import org.apache.asterix.replication.functions.ReplicaIndexFlushRequest;
 import org.apache.asterix.replication.functions.ReplicaLogsRequest;
 import org.apache.asterix.replication.logging.ReplicationLogBuffer;
 import org.apache.asterix.replication.logging.ReplicationLogFlusher;
-import org.apache.asterix.replication.storage.AsterixLSMIndexFileProperties;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
+import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
@@ -129,7 +128,8 @@ public class ReplicationManager implements IReplicationManager {
     private ReplicationLogFlusher txnlogsReplicator;
     private Future<? extends Object> txnLogReplicatorTask;
     private Map<String, SocketChannel> logsReplicaSockets = null;
-
+    //TODO this class needs to be refactored by moving its private classes to separate files
+    //and possibly using MessageBroker to send/receive remote replicas events.
     public ReplicationManager(String nodeId, AsterixReplicationProperties replicationProperties,
             IReplicaResourcesManager remoteResoucesManager, ILogManager logManager,
             IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
@@ -255,7 +255,7 @@ public class ReplicationManager implements IReplicationManager {
             throws IOException {
         boolean isLSMComponentFile;
         ByteBuffer responseBuffer = null;
-        AsterixLSMIndexFileProperties asterixFileProperties = new AsterixLSMIndexFileProperties();
+        LSMIndexFileProperties asterixFileProperties = new LSMIndexFileProperties();
         if (requestBuffer == null) {
             requestBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         }
@@ -277,7 +277,7 @@ public class ReplicationManager implements IReplicationManager {
                         //send LSMComponent properties
                         LSMComponentJob = (ILSMIndexReplicationJob) job;
                         LSMComponentProperties lsmCompProp = new LSMComponentProperties(LSMComponentJob, nodeId);
-                        requestBuffer = AsterixReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp,
+                        requestBuffer = ReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp,
                                 requestBuffer);
                         sendRequest(replicasSockets, requestBuffer);
                     }
@@ -310,7 +310,7 @@ public class ReplicationManager implements IReplicationManager {
                                         IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
                             }
 
-                            requestBuffer = AsterixReplicationProtocol.writeFileReplicationRequest(requestBuffer,
+                            requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
                                     asterixFileProperties, ReplicationRequestType.REPLICATE_FILE);
 
                             Iterator<Map.Entry<String, SocketChannel>> iterator = replicasSockets.entrySet().iterator();
@@ -350,7 +350,7 @@ public class ReplicationManager implements IReplicationManager {
                     remainingFiles--;
                     asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile,
                             IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
-                    AsterixReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
+                    ReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
                             ReplicationRequestType.DELETE_FILE);
 
                     Iterator<Map.Entry<String, SocketChannel>> iterator = replicasSockets.entrySet().iterator();
@@ -392,13 +392,13 @@ public class ReplicationManager implements IReplicationManager {
     private static ReplicationRequestType waitForResponse(SocketChannel socketChannel, ByteBuffer responseBuffer)
             throws IOException {
         if (responseBuffer == null) {
-            responseBuffer = ByteBuffer.allocate(AsterixReplicationProtocol.REPLICATION_REQUEST_TYPE_SIZE);
+            responseBuffer = ByteBuffer.allocate(ReplicationProtocol.REPLICATION_REQUEST_TYPE_SIZE);
         } else {
             responseBuffer.clear();
         }
 
         //read response from remote replicas
-        ReplicationRequestType responseFunction = AsterixReplicationProtocol.getRequestType(socketChannel,
+        ReplicationRequestType responseFunction = ReplicationProtocol.getRequestType(socketChannel,
                 responseBuffer);
         return responseFunction;
     }
@@ -519,7 +519,7 @@ public class ReplicationManager implements IReplicationManager {
         node.setClusterIp(newAddress);
         Replica replica = new Replica(node);
 
-        ByteBuffer buffer = AsterixReplicationProtocol.writeUpdateReplicaRequest(replica);
+        ByteBuffer buffer = ReplicationProtocol.writeUpdateReplicaRequest(replica);
         Map<String, SocketChannel> replicaSockets = getActiveRemoteReplicasSockets();
         sendRequest(replicaSockets, buffer);
         closeReplicaSockets(replicaSockets);
@@ -537,7 +537,7 @@ public class ReplicationManager implements IReplicationManager {
         node.setClusterIp(NetworkingUtil.getHostAddress(hostIPAddressFirstOctet));
         Replica replica = new Replica(node);
         ReplicaEvent event = new ReplicaEvent(replica, ReplicaEventType.SHUTDOWN);
-        ByteBuffer buffer = AsterixReplicationProtocol.writeReplicaEventRequest(event);
+        ByteBuffer buffer = ReplicationProtocol.writeReplicaEventRequest(event);
         Map<String, SocketChannel> replicaSockets = getActiveRemoteReplicasSockets();
         sendRequest(replicaSockets, buffer);
         closeReplicaSockets(replicaSockets);
@@ -581,7 +581,7 @@ public class ReplicationManager implements IReplicationManager {
      */
     private void closeReplicaSockets(Map<String, SocketChannel> replicaSockets) {
         //send goodbye
-        ByteBuffer goodbyeBuffer = AsterixReplicationProtocol.getGoodbyeBuffer();
+        ByteBuffer goodbyeBuffer = ReplicationProtocol.getGoodbyeBuffer();
         sendRequest(replicaSockets, goodbyeBuffer);
 
         Iterator<Map.Entry<String, SocketChannel>> iterator = replicaSockets.entrySet().iterator();
@@ -910,7 +910,7 @@ public class ReplicationManager implements IReplicationManager {
         ByteBuffer requestBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         for (String replicaId : replicaIds) {
             //1. identify replica indexes with LSN less than nonSharpCheckpointTargetLSN.
-            HashMap<Long, String> laggingIndexes = replicaResourcesManager.getLaggingReplicaIndexesId2PathMap(replicaId,
+            Map<Long, String> laggingIndexes = replicaResourcesManager.getLaggingReplicaIndexesId2PathMap(replicaId,
                     nonSharpCheckpointTargetLSN);
 
             if (laggingIndexes.size() > 0) {
@@ -919,7 +919,7 @@ public class ReplicationManager implements IReplicationManager {
                 try (SocketChannel socketChannel = getReplicaSocket(replicaId)) {
                     ReplicaIndexFlushRequest laggingIndexesRequest = new ReplicaIndexFlushRequest(
                             laggingIndexes.keySet());
-                    requestBuffer = AsterixReplicationProtocol.writeGetReplicaIndexFlushRequest(requestBuffer,
+                    requestBuffer = ReplicationProtocol.writeGetReplicaIndexFlushRequest(requestBuffer,
                             laggingIndexesRequest);
                     NetworkingUtil.transferBufferToChannel(socketChannel, requestBuffer);
 
@@ -927,19 +927,19 @@ public class ReplicationManager implements IReplicationManager {
                     ReplicationRequestType responseFunction = waitForResponse(socketChannel, requestBuffer);
 
                     if (responseFunction == ReplicationRequestType.FLUSH_INDEX) {
-                        requestBuffer = AsterixReplicationProtocol.readRequest(socketChannel, requestBuffer);
+                        requestBuffer = ReplicationProtocol.readRequest(socketChannel, requestBuffer);
                         //returning the indexes that were not flushed
-                        laggingIndexesResponse = AsterixReplicationProtocol.readReplicaIndexFlushRequest(requestBuffer);
+                        laggingIndexesResponse = ReplicationProtocol.readReplicaIndexFlushRequest(requestBuffer);
                     }
                     //send goodbye
-                    AsterixReplicationProtocol.sendGoodbye(socketChannel);
+                    ReplicationProtocol.sendGoodbye(socketChannel);
                 }
 
                 //4. update the LSN_MAP for indexes that were not flushed to the current append LSN to indicate no operations happend.
                 if (laggingIndexesResponse != null) {
                     for (Long resouceId : laggingIndexesResponse.getLaggingRescouresIds()) {
                         String indexPath = laggingIndexes.get(resouceId);
-                        HashMap<Long, Long> indexLSNMap = replicaResourcesManager.getReplicaIndexLSNMap(indexPath);
+                        Map<Long, Long> indexLSNMap = replicaResourcesManager.getReplicaIndexLSNMap(indexPath);
                         indexLSNMap.put(ReplicaResourcesManager.REPLICA_INDEX_CREATION_LSN, startLSN);
                         replicaResourcesManager.updateReplicaIndexLSNMap(indexPath, indexLSNMap);
                     }
@@ -953,7 +953,7 @@ public class ReplicationManager implements IReplicationManager {
     public long getMaxRemoteLSN(Set<String> remoteReplicas) throws IOException {
         long maxRemoteLSN = 0;
 
-        AsterixReplicationProtocol.writeGetReplicaMaxLSNRequest(dataBuffer);
+        ReplicationProtocol.writeGetReplicaMaxLSNRequest(dataBuffer);
         Map<String, SocketChannel> replicaSockets = new HashMap<String, SocketChannel>();
         try {
             for (String replicaId : remoteReplicas) {
@@ -988,26 +988,26 @@ public class ReplicationManager implements IReplicationManager {
     @Override
     public void requestReplicaFiles(String selectedReplicaId, Set<String> replicasDataToRecover) throws IOException {
         ReplicaFilesRequest request = new ReplicaFilesRequest(replicasDataToRecover);
-        AsterixReplicationProtocol.writeGetReplicaFilesRequest(dataBuffer, request);
+        ReplicationProtocol.writeGetReplicaFilesRequest(dataBuffer, request);
 
         try (SocketChannel socketChannel = getReplicaSocket(selectedReplicaId)) {
 
             //transfer request
             NetworkingUtil.transferBufferToChannel(socketChannel, dataBuffer);
 
-            String destFolder;
+            String indexPath;
             String destFilePath;
-
-            ReplicationRequestType responseFunction = AsterixReplicationProtocol.getRequestType(socketChannel,
+            ReplicationRequestType responseFunction = ReplicationProtocol.getRequestType(socketChannel,
                     dataBuffer);
-            AsterixLSMIndexFileProperties fileProperties;
+            LSMIndexFileProperties fileProperties;
             while (responseFunction != ReplicationRequestType.GOODBYE) {
-                dataBuffer = AsterixReplicationProtocol.readRequest(socketChannel, dataBuffer);
+                dataBuffer = ReplicationProtocol.readRequest(socketChannel, dataBuffer);
 
-                fileProperties = AsterixReplicationProtocol.readFileReplicationRequest(dataBuffer);
-                destFolder = replicaResourcesManager.getIndexPath(fileProperties.getNodeId(),
-                        fileProperties.getIoDeviceNum(), fileProperties.getDataverse(), fileProperties.getIdxName());
-                destFilePath = destFolder + File.separator + fileProperties.getFileName();
+                fileProperties = ReplicationProtocol.readFileReplicationRequest(dataBuffer);
+
+                //get index path
+                indexPath = replicaResourcesManager.getIndexPath(fileProperties);
+                destFilePath = indexPath + File.separator + fileProperties.getFileName();
 
                 //create file
                 File destFile = new File(destFilePath);
@@ -1024,14 +1024,14 @@ public class ReplicationManager implements IReplicationManager {
                 //we need to create LSN map for .metadata files that belong to remote replicas
                 if (!fileProperties.isLSMComponentFile() && !fileProperties.getNodeId().equals(nodeId)) {
                     //replica index
-                    replicaResourcesManager.initializeReplicaIndexLSNMap(destFolder, logManager.getAppendLSN());
+                    replicaResourcesManager.initializeReplicaIndexLSNMap(indexPath, logManager.getAppendLSN());
                 }
 
-                responseFunction = AsterixReplicationProtocol.getRequestType(socketChannel, dataBuffer);
+                responseFunction = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
             }
 
             //send goodbye
-            AsterixReplicationProtocol.sendGoodbye(socketChannel);
+            ReplicationProtocol.sendGoodbye(socketChannel);
         }
     }
 
@@ -1039,7 +1039,7 @@ public class ReplicationManager implements IReplicationManager {
     @Override
     public long requestReplicaMinLSN(String selectedReplicaId) throws IOException {
         long minLSN = 0;
-        AsterixReplicationProtocol.writeMinLSNRequest(dataBuffer);
+        ReplicationProtocol.writeMinLSNRequest(dataBuffer);
         try (SocketChannel socketChannel = getReplicaSocket(selectedReplicaId);) {
             //transfer request
             NetworkingUtil.transferBufferToChannel(socketChannel, dataBuffer);
@@ -1049,7 +1049,7 @@ public class ReplicationManager implements IReplicationManager {
             minLSN = dataBuffer.getLong();
 
             //send goodbye
-            AsterixReplicationProtocol.sendGoodbye(socketChannel);
+            ReplicationProtocol.sendGoodbye(socketChannel);
         }
 
         return minLSN;
@@ -1060,19 +1060,19 @@ public class ReplicationManager implements IReplicationManager {
     public ArrayList<ILogRecord> requestReplicaLogs(String remoteNode, Set<String> nodeIdsToRecoverFor, long fromLSN)
             throws IOException, ACIDException {
         ReplicaLogsRequest request = new ReplicaLogsRequest(nodeIdsToRecoverFor, fromLSN);
-        dataBuffer = AsterixReplicationProtocol.writeGetReplicaLogsRequest(dataBuffer, request);
+        dataBuffer = ReplicationProtocol.writeGetReplicaLogsRequest(dataBuffer, request);
 
         try (SocketChannel socketChannel = getReplicaSocket(remoteNode)) {
             //transfer request
             NetworkingUtil.transferBufferToChannel(socketChannel, dataBuffer);
 
             //read response type
-            ReplicationRequestType responseType = AsterixReplicationProtocol.getRequestType(socketChannel, dataBuffer);
+            ReplicationRequestType responseType = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
 
             ArrayList<ILogRecord> recoveryLogs = new ArrayList<ILogRecord>();
             ILogRecord logRecord = new LogRecord();
             while (responseType != ReplicationRequestType.GOODBYE) {
-                dataBuffer = AsterixReplicationProtocol.readRequest(socketChannel, dataBuffer);
+                dataBuffer = ReplicationProtocol.readRequest(socketChannel, dataBuffer);
                 logRecord.readRemoteLog(dataBuffer, true, nodeId);
 
                 if (logRecord.getNodeId().equals(nodeId)) {
@@ -1085,11 +1085,11 @@ public class ReplicationManager implements IReplicationManager {
                     logManager.log(logRecord);
                 }
 
-                responseType = AsterixReplicationProtocol.getRequestType(socketChannel, dataBuffer);
+                responseType = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
             }
 
             //send goodbye
-            AsterixReplicationProtocol.sendGoodbye(socketChannel);
+            ReplicationProtocol.sendGoodbye(socketChannel);
             return recoveryLogs;
         }
     }
@@ -1136,11 +1136,7 @@ public class ReplicationManager implements IReplicationManager {
             updateReplicaState(replicaId, ReplicaState.DEAD, true);
 
             //delete any invalid LSMComponents for this replica
-            try {
-                replicaResourcesManager.cleanInvalidLSMComponents(replicaId);
-            } catch (HyracksDataException e) {
-                e.printStackTrace();
-            }
+            replicaResourcesManager.cleanInvalidLSMComponents(replicaId);
         }
 
         public void handleShutdownEvent(String replicaId) {
@@ -1237,8 +1233,8 @@ public class ReplicationManager implements IReplicationManager {
                         break;
                     }
                     //read ACK for job commit log
-                    String replicaId = AsterixReplicationProtocol.getNodeIdFromLogAckMessage(responseLine);
-                    int jobId = AsterixReplicationProtocol.getJobIdFromLogAckMessage(responseLine);
+                    String replicaId = ReplicationProtocol.getNodeIdFromLogAckMessage(responseLine);
+                    int jobId = ReplicationProtocol.getJobIdFromLogAckMessage(responseLine);
                     addAckToJob(jobId, replicaId);
                 }
             } catch (AsynchronousCloseException e1) {

@@ -30,10 +30,10 @@ import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.management.NetworkingUtil;
-import org.apache.asterix.replication.storage.AsterixLSMIndexFileProperties;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
+import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 
-public class AsterixReplicationProtocol {
+public class ReplicationProtocol {
 
     /**
      * All replication messages start with ReplicationFunctions (4 bytes), then the length of the request in bytes
@@ -115,7 +115,7 @@ public class AsterixReplicationProtocol {
         //read replication request type
         NetworkingUtil.readBytes(socketChannel, byteBuffer, REPLICATION_REQUEST_TYPE_SIZE);
 
-        ReplicationRequestType requestType = AsterixReplicationProtocol.ReplicationRequestType.values()[byteBuffer
+        ReplicationRequestType requestType = ReplicationProtocol.ReplicationRequestType.values()[byteBuffer
                 .getInt()];
         return requestType;
     }
@@ -163,7 +163,7 @@ public class AsterixReplicationProtocol {
         requestBuffer.flip();
     }
 
-    public static ByteBuffer writeFileReplicationRequest(ByteBuffer requestBuffer, AsterixLSMIndexFileProperties afp,
+    public static ByteBuffer writeFileReplicationRequest(ByteBuffer requestBuffer, LSMIndexFileProperties afp,
             ReplicationRequestType requestType) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream oos = new DataOutputStream(outputStream);
@@ -183,10 +183,10 @@ public class AsterixReplicationProtocol {
         return requestBuffer;
     }
 
-    public static AsterixLSMIndexFileProperties readFileReplicationRequest(ByteBuffer buffer) throws IOException {
+    public static LSMIndexFileProperties readFileReplicationRequest(ByteBuffer buffer) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
         DataInputStream dis = new DataInputStream(bais);
-        return AsterixLSMIndexFileProperties.create(dis);
+        return LSMIndexFileProperties.create(dis);
     }
 
     public static ReplicaLogsRequest readReplicaLogsRequest(ByteBuffer buffer) throws IOException {
@@ -335,12 +335,12 @@ public class AsterixReplicationProtocol {
      * @throws IOException
      */
     public static void sendGoodbye(SocketChannel socketChannel) throws IOException {
-        ByteBuffer goodbyeBuffer = AsterixReplicationProtocol.getGoodbyeBuffer();
+        ByteBuffer goodbyeBuffer = ReplicationProtocol.getGoodbyeBuffer();
         NetworkingUtil.transferBufferToChannel(socketChannel, goodbyeBuffer);
     }
 
     public static void sendAck(SocketChannel socketChannel) throws IOException {
-        ByteBuffer ackBuffer = AsterixReplicationProtocol.getAckBuffer();
+        ByteBuffer ackBuffer = ReplicationProtocol.getAckBuffer();
         NetworkingUtil.transferBufferToChannel(socketChannel, ackBuffer);
     }
 }

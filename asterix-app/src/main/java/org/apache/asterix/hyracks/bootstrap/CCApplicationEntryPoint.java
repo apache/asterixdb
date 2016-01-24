@@ -79,7 +79,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
-        messageBroker = new CCMessageBroker((ClusterControllerService)ccAppCtx.getControllerService());
+        messageBroker = new CCMessageBroker((ClusterControllerService) ccAppCtx.getControllerService());
         this.appCtx = ccAppCtx;
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -87,7 +87,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         }
 
         appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
-        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection());
+        GlobalRecoveryManager.INSTANCE = new GlobalRecoveryManager(
+                (HyracksConnection) getNewHyracksClientConnection());
+
+        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(),
+                GlobalRecoveryManager.INSTANCE);
 
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
@@ -111,9 +115,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         centralFeedManager = CentralFeedManager.getInstance();
         centralFeedManager.start();
 
-        AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(
-                (HyracksConnection) getNewHyracksClientConnection());
-        ClusterManager.INSTANCE.registerSubscriber(AsterixGlobalRecoveryManager.INSTANCE);
+        ClusterManager.INSTANCE.registerSubscriber(GlobalRecoveryManager.INSTANCE);
 
         AsterixReplicationProperties asterixRepliactionProperties = AsterixAppContextInfo.getInstance()
                 .getReplicationProperties();

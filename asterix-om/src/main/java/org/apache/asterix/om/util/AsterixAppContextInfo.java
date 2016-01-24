@@ -20,10 +20,11 @@ package org.apache.asterix.om.util;
 
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
+import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
-import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
@@ -56,12 +57,13 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixFeedProperties feedProperties;
     private AsterixBuildProperties buildProperties;
     private AsterixReplicationProperties replicationProperties;
-
+    private final IGlobalRecoveryMaanger globalRecoveryMaanger;
     private IHyracksClientConnection hcc;
 
-    public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) throws AsterixException {
+    public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
+            IGlobalRecoveryMaanger globalRecoveryMaanger) throws AsterixException {
         if (INSTANCE == null) {
-            INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc);
+            INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger);
         }
         AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
         INSTANCE.compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
@@ -77,9 +79,11 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
-    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) {
+    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
+            IGlobalRecoveryMaanger globalRecoveryMaanger) {
         this.appCtx = ccAppCtx;
         this.hcc = hcc;
+        this.globalRecoveryMaanger = globalRecoveryMaanger;
     }
 
     public static AsterixAppContextInfo getInstance() {
@@ -143,5 +147,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public AsterixReplicationProperties getReplicationProperties() {
         return replicationProperties;
+    }
+
+    @Override
+    public IGlobalRecoveryMaanger getGlobalRecoveryManager() {
+        return globalRecoveryMaanger;
     }
 }

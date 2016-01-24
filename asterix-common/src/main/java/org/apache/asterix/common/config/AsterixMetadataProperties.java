@@ -65,4 +65,8 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
     public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
         return accessor.getClusterPartitions();
     }
+
+    public Map<String, String> getTransactionLogDirs() {
+        return accessor.getTransactionLogDirs();
+    }
 }

@@ -32,9 +32,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.replication.AsterixReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.commons.io.FileUtils;
@@ -63,10 +66,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private IReplicationManager replicationManager;
     private boolean isReplicationEnabled = false;
     private Set<String> filesToBeReplicated;
+    private final SortedMap<Integer, ClusterPartition> clusterPartitions;
 
-    public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId) throws HyracksDataException {
+    public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId,
+            AsterixMetadataProperties metadataProperties) throws HyracksDataException {
         mountPoints = new String[devices.size()];
         this.nodeId = nodeId;
+        this.clusterPartitions = metadataProperties.getClusterPartitions();
         for (int i = 0; i < mountPoints.length; i++) {
             String mountPoint = devices.get(i).getPath().getPath();
             File mountPointDir = new File(mountPoint);
@@ -156,37 +162,18 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             resourceCache.put(resource.getResourcePath(), resource);
         }
 
-        FileOutputStream fos = null;
-        ObjectOutputStream oosToFos = null;
-
-        try {
-            fos = new FileOutputStream(resourceFile);
-            oosToFos = new ObjectOutputStream(fos);
+        try (FileOutputStream fos = new FileOutputStream(resourceFile);
+                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(resource);
             oosToFos.flush();
         } catch (IOException e) {
             throw new HyracksDataException(e);
-        } finally {
-            if (oosToFos != null) {
-                try {
-                    oosToFos.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-            if (oosToFos == null && fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
+        }
 
-            //if replication enabled, send resource metadata info to remote nodes
-            if (isReplicationEnabled && resource.getResourceId() != STORAGE_LOCAL_RESOURCE_ID) {
-                String filePath = getFileName(resource.getResourcePath(), resource.getResourceId());
-                createReplicationJob(ReplicationOperation.REPLICATE, filePath);
-            }
+        //if replication enabled, send resource metadata info to remote nodes
+        if (isReplicationEnabled && resource.getResourceId() != STORAGE_LOCAL_RESOURCE_ID) {
+            String filePath = getFileName(resource.getResourcePath(), resource.getResourceId());
+            createReplicationJob(ReplicationOperation.REPLICATE, filePath);
         }
     }
 
@@ -304,31 +291,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     public static LocalResource readLocalResource(File file) throws HyracksDataException {
-        FileInputStream fis = null;
-        ObjectInputStream oisFromFis = null;
-
-        try {
-            fis = new FileInputStream(file);
-            oisFromFis = new ObjectInputStream(fis);
+        try (FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
             return resource;
         } catch (Exception e) {
             throw new HyracksDataException(e);
-        } finally {
-            if (oisFromFis != null) {
-                try {
-                    oisFromFis.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-            if (oisFromFis == null && fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
         }
     }
 
@@ -426,5 +394,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         }
         return storageRootDir;
+    }
+
+    /**
+     * @param partition
+     * @return The partition local path on this NC.
+     */
+    public String getPartitionPath(int partition) {
+        //currently each partition is replicated on the same IO device number on all NCs.
+        return mountPoints[clusterPartitions.get(partition).getIODeviceNum()];
     }
 }

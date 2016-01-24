@@ -383,6 +383,12 @@ public class MetadataBootstrap {
             dataLifecycleManager.register(absolutePath, lsmBtree);
         } else {
             final LocalResource resource = localResourceRepository.getResourceByPath(absolutePath);
+            if (resource == null) {
+                throw new Exception("Could not find required metadata indexes. Please delete "
+                        + propertiesProvider.getMetadataProperties().getTransactionLogDirs()
+                                .get(runtimeContext.getTransactionSubsystem().getId())
+                        + " to intialize as a new instance. (WARNING: all data will be lost.)");
+            }
             resourceID = resource.getResourceId();
             lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(absolutePath);
             if (lsmBtree == null) {

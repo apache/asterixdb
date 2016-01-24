@@ -38,91 +38,65 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
+import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
+import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class ReplicaResourcesManager implements IReplicaResourcesManager {
     private static final Logger LOGGER = Logger.getLogger(ReplicaResourcesManager.class.getName());
-    private final String[] mountPoints;
-    private final int numIODevices;
-    private static final String REPLICA_FOLDER_SUFFIX = "_replica";
-    private final String replicationStorageFolder;
-    public final String localStorageFolder;
-    private final String localNodeID;
     public final static String LSM_COMPONENT_MASK_SUFFIX = "_mask";
     private final static String REPLICA_INDEX_LSN_MAP_NAME = ".LSN_MAP";
     public static final long REPLICA_INDEX_CREATION_LSN = -1;
     private final AtomicLong lastMinRemoteLSN;
+    private final PersistentLocalResourceRepository localRepository;
+    private final Map<String, ClusterPartition[]> nodePartitions;
 
-    public ReplicaResourcesManager(List<IODeviceHandle> devices, String localStorageFolder, String localNodeID,
-            String replicationStorageFolder) throws HyracksDataException {
-        numIODevices = devices.size();
-        this.mountPoints = new String[numIODevices];
-        for (int i = 0; i < numIODevices; i++) {
-            String mountPoint = devices.get(i).getPath().getPath();
-            File mountPointDir = new File(mountPoint);
-            if (!mountPointDir.exists()) {
-                throw new HyracksDataException(mountPointDir.getAbsolutePath() + " doesn't exist.");
-            }
-            if (!mountPoint.endsWith(System.getProperty("file.separator"))) {
-                mountPoints[i] = new String(mountPoint + System.getProperty("file.separator"));
-            } else {
-                mountPoints[i] = new String(mountPoint);
-            }
-        }
-        this.localStorageFolder = localStorageFolder;
-        this.localNodeID = localNodeID;
-        this.replicationStorageFolder = replicationStorageFolder;
+    public ReplicaResourcesManager(ILocalResourceRepository localRepository,
+            AsterixMetadataProperties metadataProperties) {
+        this.localRepository = (PersistentLocalResourceRepository) localRepository;
+        nodePartitions = metadataProperties.getNodePartitions();
         lastMinRemoteLSN = new AtomicLong(-1);
     }
 
-    @Override
-    public String getLocalStorageFolder() {
-        return localStorageFolder;
-    }
-
-    private String getReplicaStorageFolder(String replicaId, int IODeviceNum) {
-        if (replicaId.equals(localNodeID)) {
-            return mountPoints[IODeviceNum] + localStorageFolder;
-        } else {
-            return mountPoints[IODeviceNum] + replicationStorageFolder + File.separator + replicaId
-                    + REPLICA_FOLDER_SUFFIX;
-        }
-    }
-
-    public void deleteRemoteFile(AsterixLSMIndexFileProperties afp) throws IOException {
-        String indexPath = getIndexPath(afp.getNodeId(), afp.getIoDeviceNum(), afp.getDataverse(), afp.getIdxName());
+    public void deleteIndexFile(LSMIndexFileProperties afp) {
+        String indexPath = getIndexPath(afp);
         if (indexPath != null) {
             if (afp.isLSMComponentFile()) {
                 String backupFilePath = indexPath + File.separator + afp.getFileName();
 
                 //delete file
                 File destFile = new File(backupFilePath);
-                if (destFile.exists()) {
-                    destFile.delete();
-                }
+                FileUtils.deleteQuietly(destFile);
             } else {
                 //delete index files
                 indexPath = indexPath.substring(0, indexPath.lastIndexOf(File.separator));
-                AsterixFilesUtil.deleteFolder(indexPath);
+                FileUtils.deleteQuietly(new File(indexPath));
             }
         }
     }
 
-    public String getIndexPath(String replicaId, int IODeviceNum, String dataverse, String dataset) {
-        //mounting point/backupNodeId_replica/Dataverse/Dataset/device_id_#/
-        String remoteIndexFolderPath = getReplicaStorageFolder(replicaId, IODeviceNum) + File.separator + dataverse
-                + File.separator + dataset + File.separator + IndexFileNameUtil.IO_DEVICE_NAME_PREFIX + IODeviceNum;
-        Path path = Paths.get(remoteIndexFolderPath);
+    public String getIndexPath(LSMIndexFileProperties fileProperties) {
+        fileProperties.splitFileName();
+        //get partition path in this node
+        String partitionPath = localRepository.getPartitionPath(fileProperties.getPartition());
+        //get index path
+        String indexPath = SplitsAndConstraintsUtil.getIndexPath(partitionPath, fileProperties.getPartition(),
+                fileProperties.getDataverse(), fileProperties.getIdxName());
+
+        Path path = Paths.get(indexPath);
         if (!Files.exists(path)) {
-            File indexFolder = new File(remoteIndexFolderPath);
+            File indexFolder = new File(indexPath);
             indexFolder.mkdirs();
         }
-        return remoteIndexFolderPath;
+        return indexPath;
     }
 
     public void initializeReplicaIndexLSNMap(String indexPath, long currentLSN) throws IOException {
@@ -144,14 +118,10 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         //remove mask to mark component as valid
         String maskPath = lsmComponentProperties.getMaskPath(this);
         Path path = Paths.get(maskPath);
-
-        if (Files.exists(path)) {
-            File maskFile = new File(maskPath);
-            maskFile.delete();
-        }
+        Files.deleteIfExists(path);
 
         //add component LSN to the index LSNs map
-        HashMap<Long, Long> lsnMap = getReplicaIndexLSNMap(lsmComponentProperties.getReplicaComponentPath(this));
+        Map<Long, Long> lsnMap = getReplicaIndexLSNMap(lsmComponentProperties.getReplicaComponentPath(this));
         lsnMap.put(lsmComponentProperties.getOriginalLSN(), lsmComponentProperties.getReplicaLSN());
 
         //update map on disk
@@ -159,73 +129,11 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
 
     }
 
-    public List<String> getResourcesForReplica(String nodeId) throws HyracksDataException {
-        List<String> resourcesList = new ArrayList<String>();
-        String rootFolder;
-        for (int i = 0; i < numIODevices; i++) {
-            rootFolder = getReplicaStorageFolder(nodeId, i);
-            File rootDirFile = new File(rootFolder);
-            if (!rootDirFile.exists()) {
-                continue;
-            }
-
-            File[] dataverseFileList = rootDirFile.listFiles();
-            for (File dataverseFile : dataverseFileList) {
-                if (dataverseFile.isDirectory()) {
-                    File[] indexFileList = dataverseFile.listFiles();
-                    if (indexFileList != null) {
-                        for (File indexFile : indexFileList) {
-                            if (indexFile.isDirectory()) {
-                                File[] ioDevicesList = indexFile.listFiles();
-                                if (ioDevicesList != null) {
-                                    for (File ioDeviceFile : ioDevicesList) {
-                                        if (ioDeviceFile.isDirectory()) {
-                                            File[] metadataFiles = ioDeviceFile.listFiles(LSM_INDEX_FILES_FILTER);
-                                            if (metadataFiles != null) {
-                                                for (File metadataFile : metadataFiles) {
-                                                    resourcesList.add(metadataFile.getAbsolutePath());
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return resourcesList;
-    }
-
-    public Set<File> getReplicaIndexes(String replicaId) throws HyracksDataException {
+    public Set<File> getReplicaIndexes(String replicaId) {
         Set<File> remoteIndexesPaths = new HashSet<File>();
-        for (int i = 0; i < numIODevices; i++) {
-            String rootReplicaFolder = getReplicaStorageFolder(replicaId, i);
-            File rootDirFile = new File(rootReplicaFolder);
-            if (!rootDirFile.exists()) {
-                continue;
-            }
-            File[] dataverseFileList = rootDirFile.listFiles();
-            for (File dataverseFile : dataverseFileList) {
-                if (dataverseFile.isDirectory()) {
-                    File[] indexFileList = dataverseFile.listFiles();
-                    if (indexFileList != null) {
-                        for (File indexFile : indexFileList) {
-                            if (indexFile.isDirectory()) {
-                                File[] ioDevicesList = indexFile.listFiles();
-                                if (ioDevicesList != null) {
-                                    for (File ioDeviceFile : ioDevicesList) {
-                                        if (ioDeviceFile.isDirectory()) {
-                                            remoteIndexesPaths.add(ioDeviceFile);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        ClusterPartition[] partitions = nodePartitions.get(replicaId);
+        for (ClusterPartition partition : partitions) {
+            remoteIndexesPaths.addAll(getPartitionIndexes(partition.getPartitionId()));
         }
         return remoteIndexesPaths;
     }
@@ -237,41 +145,60 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         }
         long minRemoteLSN = Long.MAX_VALUE;
         for (String replica : replicaIds) {
-            try {
-                //for every index in replica
-                Set<File> remoteIndexes = getReplicaIndexes(replica);
-                for (File indexFolder : remoteIndexes) {
-                    //read LSN map
-                    try {
-                        //get max LSN per index
-                        long remoteIndexMaxLSN = getReplicaIndexMaxLSN(indexFolder);
+            //for every index in replica
+            Set<File> remoteIndexes = getReplicaIndexes(replica);
+            for (File indexFolder : remoteIndexes) {
+                //read LSN map
+                try {
+                    //get max LSN per index
+                    long remoteIndexMaxLSN = getReplicaIndexMaxLSN(indexFolder);
 
-                        //get min of all maximums
-                        minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.INFO, indexFolder.getAbsolutePath() + " Couldn't read LSN map for index "
-                                + indexFolder);
-                        continue;
-                    }
+                    //get min of all maximums
+                    minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
+                } catch (IOException e) {
+                    LOGGER.log(Level.INFO,
+                            indexFolder.getAbsolutePath() + " Couldn't read LSN map for index " + indexFolder);
+                    continue;
                 }
-            } catch (HyracksDataException e) {
-                e.printStackTrace();
             }
         }
         lastMinRemoteLSN.set(minRemoteLSN);
         return minRemoteLSN;
     }
 
-    public HashMap<Long, String> getLaggingReplicaIndexesId2PathMap(String replicaId, long targetLSN)
-            throws IOException {
-        HashMap<Long, String> laggingReplicaIndexes = new HashMap<Long, String>();
+    @Override
+    public long getPartitionsMinLSN(Integer[] partitions) {
+        long minRemoteLSN = Long.MAX_VALUE;
+        for (Integer partition : partitions) {
+            //for every index in replica
+            Set<File> remoteIndexes = getPartitionIndexes(partition);
+            for (File indexFolder : remoteIndexes) {
+                //read LSN map
+                try {
+                    //get max LSN per index
+                    long remoteIndexMaxLSN = getReplicaIndexMaxLSN(indexFolder);
+
+                    //get min of all maximums
+                    minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
+                } catch (IOException e) {
+                    LOGGER.log(Level.INFO,
+                            indexFolder.getAbsolutePath() + " Couldn't read LSN map for index " + indexFolder);
+                    continue;
+                }
+            }
+        }
+        return minRemoteLSN;
+    }
+
+    public Map<Long, String> getLaggingReplicaIndexesId2PathMap(String replicaId, long targetLSN) throws IOException {
+        Map<Long, String> laggingReplicaIndexes = new HashMap<Long, String>();
         try {
             //for every index in replica
             Set<File> remoteIndexes = getReplicaIndexes(replicaId);
             for (File indexFolder : remoteIndexes) {
                 if (getReplicaIndexMaxLSN(indexFolder) < targetLSN) {
-                    File localResource = new File(indexFolder + File.separator
-                            + PersistentLocalResourceRepository.METADATA_FILE_NAME);
+                    File localResource = new File(
+                            indexFolder + File.separator + PersistentLocalResourceRepository.METADATA_FILE_NAME);
                     LocalResource resource = PersistentLocalResourceRepository.readLocalResource(localResource);
                     laggingReplicaIndexes.put(resource.getResourceId(), indexFolder.getAbsolutePath());
                 }
@@ -286,7 +213,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
     private long getReplicaIndexMaxLSN(File indexFolder) throws IOException {
         long remoteIndexMaxLSN = 0;
         //get max LSN per index
-        HashMap<Long, Long> lsnMap = getReplicaIndexLSNMap(indexFolder.getAbsolutePath());
+        Map<Long, Long> lsnMap = getReplicaIndexLSNMap(indexFolder.getAbsolutePath());
         if (lsnMap != null) {
             for (Long lsn : lsnMap.values()) {
                 remoteIndexMaxLSN = Math.max(remoteIndexMaxLSN, lsn);
@@ -296,7 +223,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         return remoteIndexMaxLSN;
     }
 
-    public void cleanInvalidLSMComponents(String replicaId) throws HyracksDataException {
+    public void cleanInvalidLSMComponents(String replicaId) {
         //for every index in replica
         Set<File> remoteIndexes = getReplicaIndexes(replicaId);
         for (File remoteIndexFile : remoteIndexes) {
@@ -312,7 +239,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         }
     }
 
-    private void deleteLSMComponentFilesForMask(File maskFile) {
+    private static void deleteLSMComponentFilesForMask(File maskFile) {
         String lsmComponentTimeStamp = maskFile.getName().substring(0,
                 maskFile.getName().length() - LSM_COMPONENT_MASK_SUFFIX.length());
         File indexFolder = maskFile.getParentFile();
@@ -325,78 +252,92 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public synchronized HashMap<Long, Long> getReplicaIndexLSNMap(String indexPath) throws IOException {
-        FileInputStream fis = null;
-        ObjectInputStream oisFromFis = null;
-        try {
-            fis = new FileInputStream(indexPath + File.separator + REPLICA_INDEX_LSN_MAP_NAME);
-            oisFromFis = new ObjectInputStream(fis);
+    @SuppressWarnings({ "unchecked" })
+    public synchronized Map<Long, Long> getReplicaIndexLSNMap(String indexPath) throws IOException {
+        try (FileInputStream fis = new FileInputStream(indexPath + File.separator + REPLICA_INDEX_LSN_MAP_NAME);
+                ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             Map<Long, Long> lsnMap = null;
             try {
                 lsnMap = (Map<Long, Long>) oisFromFis.readObject();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            return (HashMap<Long, Long>) lsnMap;
-        } finally {
-            if (oisFromFis != null) {
-                oisFromFis.close();
-            }
-            if (oisFromFis == null && fis != null) {
-                fis.close();
-            }
+            return lsnMap;
         }
     }
 
-    public synchronized void updateReplicaIndexLSNMap(String indexPath, HashMap<Long, Long> lsnMap) throws IOException {
-        FileOutputStream fos = null;
-        ObjectOutputStream oosToFos = null;
-        try {
-            fos = new FileOutputStream(indexPath + File.separator + REPLICA_INDEX_LSN_MAP_NAME);
-            oosToFos = new ObjectOutputStream(fos);
+    public synchronized void updateReplicaIndexLSNMap(String indexPath, Map<Long, Long> lsnMap) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(indexPath + File.separator + REPLICA_INDEX_LSN_MAP_NAME);
+                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(lsnMap);
             oosToFos.flush();
             lastMinRemoteLSN.set(-1);
-        } finally {
-            if (oosToFos != null) {
-                oosToFos.close();
-            }
-            if (oosToFos == null && fos != null) {
-                fos.close();
+        }
+    }
+
+    /**
+     * @param partition
+     * @return Set of file references to each index in the partition
+     */
+    public Set<File> getPartitionIndexes(int partition) {
+        Set<File> partitionIndexes = new HashSet<File>();
+        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String partitionStoragePath = localRepository.getPartitionPath(partition)
+                + StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition);
+        File partitionRoot = new File(partitionStoragePath);
+        if (partitionRoot.exists() && partitionRoot.isDirectory()) {
+            File[] dataverseFileList = partitionRoot.listFiles();
+            if (dataverseFileList != null) {
+                for (File dataverseFile : dataverseFileList) {
+                    if (dataverseFile.isDirectory()) {
+                        File[] indexFileList = dataverseFile.listFiles();
+                        if (indexFileList != null) {
+                            for (File indexFile : indexFileList) {
+                                partitionIndexes.add(indexFile);
+                            }
+                        }
+                    }
+                }
             }
         }
+        return partitionIndexes;
+    }
+
+    /**
+     * @param partition
+     * @return Absolute paths to all partition files
+     */
+    public List<String> getPartitionIndexesFiles(int partition) {
+        List<String> partitionFiles = new ArrayList<String>();
+        Set<File> partitionIndexes = getPartitionIndexes(partition);
+        for (File indexDir : partitionIndexes) {
+            if (indexDir.isDirectory()) {
+                File[] indexFiles = indexDir.listFiles(LSM_INDEX_FILES_FILTER);
+                if (indexFiles != null) {
+                    for (File file : indexFiles) {
+                        partitionFiles.add(file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        return partitionFiles;
     }
 
     private static final FilenameFilter LSM_COMPONENTS_MASKS_FILTER = new FilenameFilter() {
         public boolean accept(File dir, String name) {
-            if (name.endsWith(LSM_COMPONENT_MASK_SUFFIX)) {
-                return true;
-            } else {
-                return false;
-            }
+            return name.endsWith(LSM_COMPONENT_MASK_SUFFIX);
         }
     };
 
     private static final FilenameFilter LSM_COMPONENTS_NON_MASKS_FILTER = new FilenameFilter() {
         public boolean accept(File dir, String name) {
-            if (!name.endsWith(LSM_COMPONENT_MASK_SUFFIX)) {
-                return true;
-            } else {
-                return false;
-            }
+            return !name.endsWith(LSM_COMPONENT_MASK_SUFFIX);
         }
     };
 
     private static final FilenameFilter LSM_INDEX_FILES_FILTER = new FilenameFilter() {
         public boolean accept(File dir, String name) {
-            if (name.equalsIgnoreCase(PersistentLocalResourceRepository.METADATA_FILE_NAME)) {
-                return true;
-            } else if (!name.startsWith(".")) {
-                return true;
-            } else {
-                return false;
-            }
+            return name.equalsIgnoreCase(PersistentLocalResourceRepository.METADATA_FILE_NAME) || !name.startsWith(".");
         }
     };
 }

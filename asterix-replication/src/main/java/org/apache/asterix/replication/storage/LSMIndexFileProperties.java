@@ -24,31 +24,31 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
-import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 
-public class AsterixLSMIndexFileProperties {
+public class LSMIndexFileProperties {
 
     private String fileName;
     private long fileSize;
     private String nodeId;
     private String dataverse;
-    private int ioDeviceNum;
     private String idxName;
     private boolean lsmComponentFile;
     private String filePath;
     private boolean requiresAck = false;
     private long LSNByteOffset;
+    private int partition;
 
-    public AsterixLSMIndexFileProperties() {
+    public LSMIndexFileProperties() {
     }
 
-    public AsterixLSMIndexFileProperties(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
+    public LSMIndexFileProperties(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
             long LSNByteOffset, boolean requiresAck) {
         initialize(filePath, fileSize, nodeId, lsmComponentFile, LSNByteOffset, requiresAck);
     }
 
-    public AsterixLSMIndexFileProperties(LSMComponentProperties lsmComponentProperties) {
+    public LSMIndexFileProperties(LSMComponentProperties lsmComponentProperties) {
         initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false,
                 IMetaDataPageManager.INVALID_LSN_OFFSET, false);
     }
@@ -58,19 +58,22 @@ public class AsterixLSMIndexFileProperties {
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.nodeId = nodeId;
-        String[] tokens = filePath.split(File.separator);
-        int arraySize = tokens.length;
-        this.fileName = tokens[arraySize - 1];
-        this.ioDeviceNum = getDeviceIONumFromName(tokens[arraySize - 2]);
-        this.idxName = tokens[arraySize - 3];
-        this.dataverse = tokens[arraySize - 4];
         this.lsmComponentFile = lsmComponentFile;
         this.LSNByteOffset = LSNByteOffset;
         this.requiresAck = requiresAck;
     }
 
-    public static int getDeviceIONumFromName(String name) {
-        return Integer.parseInt(name.substring(IndexFileNameUtil.IO_DEVICE_NAME_PREFIX.length()));
+    public void splitFileName() {
+        String[] tokens = filePath.split(File.separator);
+        int arraySize = tokens.length;
+        this.fileName = tokens[arraySize - 1];
+        this.idxName = tokens[arraySize - 2];
+        this.dataverse = tokens[arraySize - 3];
+        this.partition = getPartitonNumFromName(tokens[arraySize - 4]);
+    }
+
+    private static int getPartitonNumFromName(String name) {
+        return Integer.parseInt(name.substring(StoragePathUtil.PARTITION_DIR_PREFIX.length()));
     }
 
     public void serialize(OutputStream out) throws IOException {
@@ -83,24 +86,20 @@ public class AsterixLSMIndexFileProperties {
         dos.writeBoolean(requiresAck);
     }
 
-    public static AsterixLSMIndexFileProperties create(DataInput input) throws IOException {
+    public static LSMIndexFileProperties create(DataInput input) throws IOException {
         String nodeId = input.readUTF();
         String filePath = input.readUTF();
         long fileSize = input.readLong();
         boolean lsmComponentFile = input.readBoolean();
         long LSNByteOffset = input.readLong();
         boolean requiresAck = input.readBoolean();
-        AsterixLSMIndexFileProperties fileProp = new AsterixLSMIndexFileProperties();
-        fileProp.initialize(filePath, fileSize, nodeId, lsmComponentFile, LSNByteOffset, requiresAck);
+        LSMIndexFileProperties fileProp = new LSMIndexFileProperties(filePath, fileSize, nodeId, lsmComponentFile,
+                LSNByteOffset, requiresAck);
         return fileProp;
     }
 
     public String getFilePath() {
         return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
     }
 
     public long getFileSize() {
@@ -109,10 +108,6 @@ public class AsterixLSMIndexFileProperties {
 
     public String getFileName() {
         return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
     }
 
     public String getNodeId() {
@@ -131,40 +126,16 @@ public class AsterixLSMIndexFileProperties {
         this.dataverse = dataverse;
     }
 
-    public void setFileSize(long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public int getIoDeviceNum() {
-        return ioDeviceNum;
-    }
-
-    public void setIoDeviceNum(int ioDevoceNum) {
-        this.ioDeviceNum = ioDevoceNum;
-    }
-
     public String getIdxName() {
         return idxName;
-    }
-
-    public void setIdxName(String idxName) {
-        this.idxName = idxName;
     }
 
     public boolean isLSMComponentFile() {
         return lsmComponentFile;
     }
 
-    public void setLsmComponentFile(boolean lsmComponentFile) {
-        this.lsmComponentFile = lsmComponentFile;
-    }
-
     public boolean requiresAck() {
         return requiresAck;
-    }
-
-    public void setRequiresAck(boolean requiresAck) {
-        this.requiresAck = requiresAck;
     }
 
     @Override
@@ -173,7 +144,7 @@ public class AsterixLSMIndexFileProperties {
         sb.append("File Name: " + fileName + "  ");
         sb.append("File Size: " + fileSize + "  ");
         sb.append("Node ID: " + nodeId + "  ");
-        sb.append("I/O Device: " + ioDeviceNum + "  ");
+        sb.append("Partition: " + partition + "  ");
         sb.append("IDX Name: " + idxName + "  ");
         sb.append("isLSMComponentFile : " + lsmComponentFile + "  ");
         sb.append("Dataverse: " + dataverse);
@@ -185,7 +156,7 @@ public class AsterixLSMIndexFileProperties {
         return LSNByteOffset;
     }
 
-    public void setLSNByteOffset(long lSNByteOffset) {
-        LSNByteOffset = lSNByteOffset;
+    public int getPartition() {
+        return partition;
     }
 }
