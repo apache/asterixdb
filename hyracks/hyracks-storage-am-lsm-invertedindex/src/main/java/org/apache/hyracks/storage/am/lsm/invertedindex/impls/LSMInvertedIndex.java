@@ -38,7 +38,16 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
-import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
+import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IIndexCursor;
+import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.am.common.api.IVirtualMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -128,7 +137,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             InMemoryInvertedIndex memInvIndex = createInMemoryInvertedIndex(virtualBufferCache,
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), i);
             BTree deleteKeysBTree = BTreeUtils.createBTree(virtualBufferCache, new VirtualMetaDataPageManager(
-                    virtualBufferCache.getNumPages()), ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(),
+                    virtualBufferCache.getNumPages()), virtualBufferCache.getFileMapProvider(),
                     invListTypeTraits, invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File(
                             fileManager.getBaseDir() + "_virtual_del_" + i)));
             LSMInvertedIndexMemoryComponent mutableComponent = new LSMInvertedIndexMemoryComponent(memInvIndex,
@@ -874,12 +883,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException {
         LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) lsmComponent;
         OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) invIndexComponent.getInvIndex();
-        // Flush the bloom filter first.
-        int fileId = invIndexComponent.getBloomFilter().getFileId();
         IBufferCache bufferCache = invIndex.getBufferCache();
-        int startPage = 0;
-        int maxPage = invIndexComponent.getBloomFilter().getNumPages();
-
         markAsValidInternal(invIndex.getBufferCache(),invIndexComponent.getBloomFilter());
 
         // Flush inverted index second.
@@ -919,15 +923,12 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
         Set<String> files = new HashSet<String>();
-
         LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) lsmComponent;
         OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) invIndexComponent.getInvIndex();
-
-        files.add(invIndex.getInvListsFile().toString());
-        files.add(invIndex.getBTree().toString());
-        files.add(invIndexComponent.getBloomFilter().getFileReference().toString());
-        files.add(invIndexComponent.getDeletedKeysBTree().getFileReference().toString());
-
+        files.add(invIndex.getInvListsFile().getFile().getAbsolutePath());
+        files.add(invIndex.getBTree().getFileReference().getFile().getAbsolutePath());
+        files.add(invIndexComponent.getBloomFilter().getFileReference().getFile().getAbsolutePath());
+        files.add(invIndexComponent.getDeletedKeysBTree().getFileReference().getFile().getAbsolutePath());
         return files;
     }
 

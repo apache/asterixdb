@@ -488,8 +488,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
         BTree firstBTree = ((LSMBTreeDiskComponent) mergingComponents.get(0)).getBTree();
         BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getBTree();
-        FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
-        FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
+        FileReference firstFile = firstBTree.getFileReference();
+        FileReference lastFile = lastBTree.getFileReference();
         LSMComponentFileReferences relMergeFileRefs = fileManager
                 .getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
         ILSMIndexAccessorInternal accessor = new LSMBTreeAccessor(lsmHarness, opCtx);
@@ -659,7 +659,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             }
         }
 
-        protected void cleanupArtifacts() throws HyracksDataException, IndexException {
+        protected void cleanupArtifacts() throws HyracksDataException {
             if (!cleanedUpArtifacts) {
                 cleanedUpArtifacts = true;
                 if (!endedBloomFilterLoad) {
@@ -835,10 +835,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
         Set<String> files = new HashSet<String>();
         LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) lsmComponent;
-
-        files.add(component.getBTree().getFileReference().toString());
-        files.add(component.getBloomFilter().getFileReference().toString());
-
+        files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
+        files.add(component.getBloomFilter().getFileReference().getFile().getAbsolutePath());
         return files;
     }
 

@@ -471,10 +471,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
         Set<String> files = new HashSet<String>();
-
         RTree rtree = ((LSMRTreeDiskComponent) lsmComponent).getRTree();
-        files.add(rtree.getFileReference().toString());
-
+        files.add(rtree.getFileReference().getFile().getAbsolutePath());
         return files;
     }
 }

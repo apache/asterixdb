@@ -287,8 +287,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
-            return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, 0, checkIfEmptyIndex,
-                    false);
+            return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, 0, checkIfEmptyIndex, false);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -336,8 +335,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         BTree firstTree = ((LSMBTreeWithBuddyDiskComponent) mergingDiskComponents.get(0)).getBTree();
         BTree lastTree = ((LSMBTreeWithBuddyDiskComponent) mergingDiskComponents.get(mergingDiskComponents.size() - 1))
                 .getBTree();
-        FileReference firstFile = diskFileMapProvider.lookupFileName(firstTree.getFileId());
-        FileReference lastFile = diskFileMapProvider.lookupFileName(lastTree.getFileId());
+        FileReference firstFile = firstTree.getFileReference();
+        FileReference lastFile = lastTree.getFileReference();
         LSMComponentFileReferences fileRefs = fileManager.getRelMergeFileReference(firstFile.getFile().getName(),
                 lastFile.getFile().getName());
         return fileRefs;
@@ -358,8 +357,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         // which list to check against and we need to synchronize for this
         boolean keepDeleteTuples = false;
         if (version == 0) {
-            keepDeleteTuples = mergingComponents.get(mergingComponents.size() - 1) != diskComponents.get(diskComponents
-                    .size() - 1);
+            keepDeleteTuples = mergingComponents.get(mergingComponents.size() - 1) != diskComponents
+                    .get(diskComponents.size() - 1);
         } else {
             keepDeleteTuples = mergingComponents.get(mergingComponents.size() - 1) != secondDiskComponents
                     .get(secondDiskComponents.size() - 1);
@@ -373,7 +372,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     // This method creates the appropriate opContext for the targeted version
     public ExternalBTreeWithBuddyOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
         return new ExternalBTreeWithBuddyOpContext(btreeCmpFactories, buddyBtreeCmpFactories, searchCallback,
-                targetVersion, lsmHarness, btreeInteriorFrameFactory, btreeLeafFrameFactory, buddyBtreeLeafFrameFactory);
+                targetVersion, lsmHarness, btreeInteriorFrameFactory, btreeLeafFrameFactory,
+                buddyBtreeLeafFrameFactory);
     }
 
     @Override
@@ -405,8 +405,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
             long numElements = 0L;
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
-                numElements += ((LSMBTreeWithBuddyDiskComponent) mergeOp.getMergingComponents().get(i))
-                        .getBloomFilter().getNumElements();
+                numElements += ((LSMBTreeWithBuddyDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter()
+                        .getNumElements();
             }
 
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
@@ -487,7 +487,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException {
         LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) lsmComponent;
         // Flush the bloom filter first.
-        markAsValidInternal(component.getBTree().getBufferCache(),component.getBloomFilter());
+        markAsValidInternal(component.getBTree().getBufferCache(), component.getBloomFilter());
         markAsValidInternal(component.getBTree());
         markAsValidInternal(component.getBuddyBTree());
     }
@@ -599,9 +599,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             FileReference insertFileRef, FileReference deleteFileRef, FileReference bloomFilterFileRef,
             boolean createComponent) throws HyracksDataException, IndexException {
         // Create new instance.
-        LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) factory
-                .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef,
-                        bloomFilterFileRef));
+        LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) factory.createLSMComponentInstance(
+                new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
         if (createComponent) {
             component.getBloomFilter().create();
         }
@@ -670,7 +669,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
             // Create the three loaders
             btreeBulkLoader = (BTreeBulkLoader) ((LSMBTreeWithBuddyDiskComponent) component).getBTree()
-                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false,true);
+                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true);
             buddyBtreeBulkLoader = (BTreeBulkLoader) ((LSMBTreeWithBuddyDiskComponent) component).getBuddyBTree()
                     .createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true);
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
@@ -864,25 +863,22 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
         Set<String> files = new HashSet<String>();
-
         LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) lsmComponent;
-        files.add(component.getBTree().getFileReference().toString());
-        files.add(component.getBuddyBTree().getFileReference().toString());
-        files.add(component.getBloomFilter().getFileReference().toString());
-
+        files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
+        files.add(component.getBuddyBTree().getFileReference().getFile().getAbsolutePath());
+        files.add(component.getBloomFilter().getFileReference().getFile().getAbsolutePath());
         return files;
     }
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        if(!appendOnly){
+        if (!appendOnly) {
             throw new IndexException("LSM Indices do not support in-place inserts");
+        } else {
+            return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
         }
-        else{
-            return createBulkLoader(fillFactor, verifyInput,numElementsHint,checkIfEmptyIndex);
-        }
-   }
+    }
 
     @Override
     public void allocateMemoryComponents() throws HyracksDataException {
