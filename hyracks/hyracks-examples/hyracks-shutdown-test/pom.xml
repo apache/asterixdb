@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <properties>
@@ -83,7 +83,7 @@
       <plugin>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.17-incubating</version>
         <configuration>
           <hyracksServerHome>${basedir}/target/hyracks-shutdown-test-${project.version}-binary-assembly</hyracksServerHome>
           <jvmOptions>${jvm.extraargs}</jvmOptions>
@@ -163,27 +163,27 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>texthelper</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.17-incubating</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.17-incubating</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.17-incubating</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>textclient</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.17-incubating</version>
       <type>jar</type>
       <scope>test</scope>
     </dependency>
