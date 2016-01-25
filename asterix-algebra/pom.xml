@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.8-incubating</version>
 	</parent>
 	<artifactId>asterix-algebra</artifactId>
 
@@ -109,31 +109,31 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-runtime</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-aql</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.8-incubating</version>
 	</parent>
 	<artifactId>asterix-installer</artifactId>
 	<properties>
@@ -252,42 +252,42 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-app</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

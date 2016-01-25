@@ -21,13 +21,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.asterix</groupId>
     <artifactId>asterix</artifactId>
-    <version>0.8.8-SNAPSHOT</version>
+    <version>0.8.8-incubating</version>
     <packaging>pom</packaging>
 
     <parent>
       <groupId>org.apache</groupId>
       <artifactId>apache</artifactId>
-      <version>LATEST</version>
+      <version>17</version>
     </parent>
 
     <licenses>
@@ -199,7 +199,7 @@
         <developerConnection>scm:git:ssh://asterix-gerrit.ics.uci.edu:29418/asterixdb</developerConnection>
         <url>https://github.com/apache/incubator-asterixdb</url>
 
-      <tag>HEAD</tag>
+      <tag>asterix-0.8.8-incubating-rc0</tag>
   </scm>
 
     <profiles>

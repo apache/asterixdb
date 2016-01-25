@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.8-incubating</version>
 	</parent>
 	<artifactId>asterix-runtime</artifactId>
 
@@ -54,7 +54,7 @@
 	      	<plugin>
 	        	<groupId>org.apache.asterix</groupId>
 	        	<artifactId>lexer-generator-maven-plugin</artifactId>
-	        	<version>0.8.8-SNAPSHOT</version>
+	        	<version>0.8.8-incubating</version>
 	        	<configuration>
 	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
 	        	  	<outputDir>${project.build.directory}/generated-sources/org/apache/asterix/runtime/operators/file/adm</outputDir>
@@ -151,13 +151,13 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-fuzzyjoin</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -167,7 +167,7 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
