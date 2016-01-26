@@ -30,6 +30,10 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
     private static final long serialVersionUID = 1L;
 
+    private static final int INTERVAL_START_POINT_OFFSET = 0;
+    private static final int INTERVAL_END_POINT_OFFSET = INTERVAL_START_POINT_OFFSET + Long.BYTES;
+    private static final int INTERVAL_TAG_OFFSET = INTERVAL_END_POINT_OFFSET + Long.BYTES;
+
     public static final AIntervalSerializerDeserializer INSTANCE = new AIntervalSerializerDeserializer();
 
     private AIntervalSerializerDeserializer() {
@@ -65,11 +69,15 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static int getIntervalStartOffset() {
-        return 0;
+        return INTERVAL_START_POINT_OFFSET;
     }
 
     public static int getIntervalEndOffset() {
-        return 8;
+        return INTERVAL_END_POINT_OFFSET;
+    }
+
+    public static int getIntervalTagOffset() {
+        return INTERVAL_TAG_OFFSET;
     }
 
     public static byte getIntervalTimeType(byte[] data, int offset) {

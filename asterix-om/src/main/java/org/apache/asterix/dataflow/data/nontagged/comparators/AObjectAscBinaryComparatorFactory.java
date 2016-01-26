@@ -89,7 +89,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
             final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             // INTERVAL
-            final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascIntervalComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             // LINE
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();

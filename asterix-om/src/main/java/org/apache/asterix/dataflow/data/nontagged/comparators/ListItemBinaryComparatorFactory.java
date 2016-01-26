@@ -67,7 +67,7 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     .createBinaryComparator();
             final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
-            final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascIntervalComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascPointComp = APointPartialBinaryComparatorFactory.INSTANCE
