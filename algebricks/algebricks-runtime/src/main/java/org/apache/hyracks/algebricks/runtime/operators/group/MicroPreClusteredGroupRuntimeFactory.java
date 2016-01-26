@@ -29,7 +29,6 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 
@@ -89,6 +88,11 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
             @Override
             public void close() throws HyracksDataException {
                 pgw.close();
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                pgw.flush();
             }
         };
 

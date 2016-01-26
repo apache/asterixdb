@@ -62,11 +62,12 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         if (!open) {
             throw new HyracksDataException("Closing SerializingDataWriter that has not been opened");
         }
-        tupleAppender.flush(frameWriter, true);
+        tupleAppender.write(frameWriter, true);
         frameWriter.close();
         open = false;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void writeData(Object[] data) throws HyracksDataException {
         if (!open) {
@@ -87,5 +88,10 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
     @Override
     public void fail() throws HyracksDataException {
         frameWriter.fail();
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        tupleAppender.flush(frameWriter);
     }
 }

@@ -121,6 +121,13 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                         }
                     }
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    synchronized (UnionOperator.this) {
+                        writer.flush();
+                    }
+                }
             };
         }
     }

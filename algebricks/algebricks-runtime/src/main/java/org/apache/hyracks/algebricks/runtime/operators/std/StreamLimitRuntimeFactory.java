@@ -147,6 +147,11 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 return lim;
             }
 
+            @Override
+            public void flush() throws HyracksDataException {
+                appender.flush(writer);
+            }
+
         };
     }
 }

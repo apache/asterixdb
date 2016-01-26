@@ -69,8 +69,9 @@ public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
             writer.fail();
         }
 
-        public void forceFlush() throws HyracksDataException {
-            appender.flush(writer, true);
+        @Override
+        public void flush() throws HyracksDataException {
+            writer.flush();
         }
     }
 }

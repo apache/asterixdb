@@ -22,13 +22,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Accepts data from data producers.
- * 
- * @author vinayakb
  */
 public interface IDataWriter<T> {
     /**
      * Pushes data to the acceptor.
-     * 
      * @param data
      *            - Data pushed to the acceptor. <code>null</code> indicates the
      *            end of stream.
@@ -38,14 +35,18 @@ public interface IDataWriter<T> {
 
     /**
      * Indicates that the stream has failed.
-     * 
      * @throws HyracksDataException
      */
     public void fail() throws HyracksDataException;
 
     /**
+     * Request the writer to flush its content
+     * @throws HyracksDataException
+     */
+    public void flush() throws HyracksDataException;
+
+    /**
      * Closes this writer.
-     * 
      * @throws Exception
      */
     public void close() throws HyracksDataException;

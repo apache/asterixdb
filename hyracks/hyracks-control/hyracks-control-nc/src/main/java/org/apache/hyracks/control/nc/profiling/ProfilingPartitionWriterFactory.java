@@ -80,9 +80,15 @@ public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory 
             @Override
             public void close() throws HyracksDataException {
                 closeTime = System.currentTimeMillis();
-                ((Task) ctx).setPartitionSendProfile(new PartitionProfile(new PartitionId(ctx.getJobletContext()
-                        .getJobId(), cd.getConnectorId(), senderIndex, receiverIndex), openTime, closeTime, mrep));
+                ((Task) ctx)
+                        .setPartitionSendProfile(new PartitionProfile(new PartitionId(ctx.getJobletContext().getJobId(),
+                                cd.getConnectorId(), senderIndex, receiverIndex), openTime, closeTime, mrep));
                 writer.close();
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                writer.flush();
             }
         };
     }

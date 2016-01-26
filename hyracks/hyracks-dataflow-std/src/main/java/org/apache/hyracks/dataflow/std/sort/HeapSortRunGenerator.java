@@ -65,8 +65,7 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     public void open() throws HyracksDataException {
         IFramePool framePool = new VariableFramePool(ctx, (frameLimit - 1) * ctx.getInitialFrameSize());
         ITupleBufferManager bufferManager = new VariableTupleMemoryManager(framePool, recordDescriptor);
-        tupleSorter = new TupleSorterHeapSort(ctx, bufferManager, topK, sortFields, nmkFactory,
-                comparatorFactories);
+        tupleSorter = new TupleSorterHeapSort(ctx, bufferManager, topK, sortFields, nmkFactory, comparatorFactories);
         super.open();
     }
 
@@ -77,8 +76,8 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
 
     @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                HeapSortRunGenerator.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(HeapSortRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIOManager());
     }
 
@@ -99,5 +98,4 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
             }
         }
     }
-
 }

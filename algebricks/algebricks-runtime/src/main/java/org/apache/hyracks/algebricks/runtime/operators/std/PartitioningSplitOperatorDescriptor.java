@@ -89,8 +89,7 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                     if (isOpen[i]) {
                         try {
                             tupleAppender.reset(writeBuffers[i], false);
-                            // ? by JF why didn't clear the buffer ?
-                            tupleAppender.flush(writers[i], false);
+                            tupleAppender.write(writers[i], false);
                         } catch (Throwable th) {
                             if (hde == null) {
                                 hde = new HyracksDataException();
@@ -110,6 +109,14 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 }
                 if (hde != null) {
                     throw hde;
+                }
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                for (int i = 0; i < outputArity; i++) {
+                    tupleAppender.reset(writeBuffers[i], false);
+                    tupleAppender.flush(writers[i]);
                 }
             }
 
@@ -172,6 +179,7 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
+                tupleAppender.reset(writeBuffers[outputIndex], false);
                 FrameUtils.appendToWriter(writers[outputIndex], tupleAppender, tupleBuilder.getFieldEndOffsets(),
                         tupleBuilder.getByteArray(), 0, tupleBuilder.getSize());
             }

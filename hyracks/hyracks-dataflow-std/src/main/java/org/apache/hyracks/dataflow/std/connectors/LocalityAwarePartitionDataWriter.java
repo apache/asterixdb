@@ -127,7 +127,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
         for (int i = 0; i < pWriters.length; ++i) {
             if (isWriterOpen[i]) {
                 try {
-                    appenders[i].flush(pWriters[i], true);
+                    appenders[i].write(pWriters[i], true);
                 } catch (Throwable th) {
                     if (closeException == null) {
                         closeException = new HyracksDataException(th);
@@ -149,6 +149,13 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
         }
         if (closeException != null) {
             throw closeException;
+        }
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        for (int i = 0; i < pWriters.length; ++i) {
+            appenders[i].flush(pWriters[i]);
         }
     }
 }

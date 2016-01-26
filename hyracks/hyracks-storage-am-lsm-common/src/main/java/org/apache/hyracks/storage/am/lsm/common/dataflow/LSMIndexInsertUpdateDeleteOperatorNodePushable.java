@@ -120,6 +120,6 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
         for (int i = startTupleIndex; i < endTupleIndex; i++) {
             FrameUtils.appendToWriter(writer, appender, accessor, i);
         }
-        appender.flush(writer, true);
+        appender.write(writer, true);
     }
 }

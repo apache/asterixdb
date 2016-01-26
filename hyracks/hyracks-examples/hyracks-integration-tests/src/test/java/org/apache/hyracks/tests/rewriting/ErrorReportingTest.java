@@ -187,6 +187,10 @@ class ExceptionRaisingOperatorDescriptor extends AbstractOperatorDescriptor {
                         public void close() throws HyracksDataException {
 
                         }
+
+                        @Override
+                        public void flush() throws HyracksDataException {
+                        }
                     };
                 }
 

@@ -127,8 +127,8 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
             }
 
             @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor,
-                    int tIndex, AggregateState state) throws HyracksDataException {
+            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
                 throw new IllegalStateException("this method should not be called");
             }
 
@@ -219,14 +219,14 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
                 for (int f = 0; f < w; f++) {
                     tb.addField(accessor, tIndex, f);
                 }
-                FrameUtils.appendToWriter(outputWriter, outputAppender, tb.getFieldEndOffsets(),
-                        tb.getByteArray(), 0, tb.getSize());
+                FrameUtils.appendToWriter(outputWriter, outputAppender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                        tb.getSize());
             }
         }
 
         @Override
         public void close() throws HyracksDataException {
-            outputAppender.flush(outputWriter, true);
+            outputAppender.write(outputWriter, true);
         }
 
         public void setInputIdx(int inputIdx) {
@@ -239,6 +239,11 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
         @Override
         public void fail() throws HyracksDataException {
+        }
+
+        @Override
+        public void flush() throws HyracksDataException {
+            outputAppender.flush(outputWriter);
         }
 
     }

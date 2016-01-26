@@ -75,6 +75,6 @@ public class SinkWriterRuntimeFactory implements IPushRuntimeFactory {
             throw new AlgebricksException(e);
         }
         IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
-        return new SinkWriterRuntime(w, ctx, filePrintStream, inputRecordDesc, true);
+        return new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true);
     }
 }

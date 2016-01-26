@@ -188,12 +188,17 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     }
 
     @Override
+    public void flush() throws HyracksDataException {
+        appender.flush(writer);
+    }
+
+    @Override
     public void close() throws HyracksDataException {
         HyracksDataException closeException = null;
         if (index != null) {
             // if index == null, then the index open was not successful
             try {
-                appender.flush(writer, true);
+                appender.write(writer, true);
             } catch (Throwable th) {
                 closeException = new HyracksDataException(th);
             }

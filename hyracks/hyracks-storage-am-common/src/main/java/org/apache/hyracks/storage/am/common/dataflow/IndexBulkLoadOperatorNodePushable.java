@@ -91,7 +91,6 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
             }
         }
         FrameUtils.flushFrame(buffer, writer);
-
     }
 
     @Override
@@ -110,6 +109,11 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
                 }
             }
         }
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        writer.flush();
     }
 
     @Override

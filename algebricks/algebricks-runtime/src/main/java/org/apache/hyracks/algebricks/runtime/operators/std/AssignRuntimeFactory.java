@@ -171,6 +171,11 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     writer.fail();
                 }
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                appender.flush(writer);
+            }
         };
     }
 }

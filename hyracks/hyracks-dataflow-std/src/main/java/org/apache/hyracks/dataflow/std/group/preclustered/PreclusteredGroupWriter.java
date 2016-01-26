@@ -176,7 +176,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             if (!isFailed && !first) {
                 assert (copyFrameAccessor.getTupleCount() > 0);
                 writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
-                appenderWrapper.flush();
+                appenderWrapper.write();
             }
             aggregator.close();
             aggregateState.close();

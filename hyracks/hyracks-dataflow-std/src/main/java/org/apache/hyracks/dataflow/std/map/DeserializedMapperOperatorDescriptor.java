@@ -62,6 +62,10 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
         public void writeData(Object[] data) throws HyracksDataException {
             mapper.map(data, writer);
         }
+
+        @Override
+        public void flush() throws HyracksDataException {
+        }
     }
 
     private static final long serialVersionUID = 1L;

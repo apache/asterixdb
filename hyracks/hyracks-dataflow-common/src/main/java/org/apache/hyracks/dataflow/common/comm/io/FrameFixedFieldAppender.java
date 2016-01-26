@@ -50,8 +50,8 @@ public class FrameFixedFieldAppender extends AbstractFrameAppender implements IF
     }
 
     @Override
-    public void flush(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
-        super.flush(outWriter, clearFrame);
+    public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
+        super.write(outWriter, clearFrame);
         if (clearFrame) {
             if (leftOverSize > 0) {
                 if (!canHoldNewTuple(0, leftOverSize)) {

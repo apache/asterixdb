@@ -46,8 +46,12 @@ public class FrameTupleAppenderWrapper {
         outputWriter.open();
     }
 
+    public void write() throws HyracksDataException {
+        frameTupleAppender.write(outputWriter, true);
+    }
+
     public void flush() throws HyracksDataException {
-        frameTupleAppender.flush(outputWriter, true);
+        frameTupleAppender.flush(outputWriter);
     }
 
     public void close() throws HyracksDataException {
@@ -64,8 +68,7 @@ public class FrameTupleAppenderWrapper {
 
     public void appendSkipEmptyField(int[] fieldSlots, byte[] bytes, int offset, int length)
             throws HyracksDataException {
-        FrameUtils.appendSkipEmptyFieldToWriter(outputWriter, frameTupleAppender,
-                fieldSlots, bytes, offset, length);
+        FrameUtils.appendSkipEmptyFieldToWriter(outputWriter, frameTupleAppender, fieldSlots, bytes, offset, length);
     }
 
     public void append(byte[] bytes, int offset, int length) throws HyracksDataException {
@@ -88,8 +91,8 @@ public class FrameTupleAppenderWrapper {
 
     public void appendConcat(IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1, int offset1,
             int dataLen1) throws HyracksDataException {
-        FrameUtils.appendConcatToWriter(outputWriter, frameTupleAppender, accessor0, tIndex0,
-                fieldSlots1, bytes1, offset1, dataLen1);
+        FrameUtils.appendConcatToWriter(outputWriter, frameTupleAppender, accessor0, tIndex0, fieldSlots1, bytes1,
+                offset1, dataLen1);
     }
 
     public void appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields) throws HyracksDataException {

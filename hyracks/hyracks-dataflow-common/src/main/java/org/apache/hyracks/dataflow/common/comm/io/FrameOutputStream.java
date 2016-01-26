@@ -58,6 +58,6 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
     }
 
     public void flush(IFrameWriter writer) throws HyracksDataException {
-        frameTupleAppender.flush(writer, true);
+        frameTupleAppender.write(writer, true);
     }
 }

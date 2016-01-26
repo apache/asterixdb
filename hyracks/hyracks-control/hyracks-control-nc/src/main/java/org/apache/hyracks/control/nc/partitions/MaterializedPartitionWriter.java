@@ -103,4 +103,9 @@ public class MaterializedPartitionWriter implements IFrameWriter {
 
         }
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // materialize writer is kind of a sink operator, hence, flush() is a no op.
+    }
 }

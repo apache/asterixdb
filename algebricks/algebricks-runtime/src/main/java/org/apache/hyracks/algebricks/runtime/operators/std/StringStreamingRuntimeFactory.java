@@ -188,6 +188,11 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                 // close the following operator in the chain
                 super.close();
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                ps.flush();
+            }
         };
     }
 }

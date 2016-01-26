@@ -108,6 +108,11 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
         public void fail() throws HyracksDataException {
             // do nothing
         }
+
+        @Override
+        public void flush() throws HyracksDataException {
+            // do nothing
+        }
     }
 
     @Override

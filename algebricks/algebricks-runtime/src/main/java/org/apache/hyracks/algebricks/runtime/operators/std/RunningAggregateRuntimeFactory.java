@@ -160,6 +160,10 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                 }
             }
 
+            @Override
+            public void flush() throws HyracksDataException {
+                appender.flush(writer);
+            }
         };
     }
 }

@@ -69,4 +69,9 @@ public class ConnectorSenderProfilingFrameWriter implements IFrameWriter {
     public void fail() throws HyracksDataException {
         writer.fail();
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        writer.flush();
+    }
 }

@@ -240,7 +240,7 @@ class GroupingHashTable {
                 }
             }
         }
-        appender.flush(writer, true);
+        appender.write(writer, true);
     }
 
     void close() throws HyracksDataException {

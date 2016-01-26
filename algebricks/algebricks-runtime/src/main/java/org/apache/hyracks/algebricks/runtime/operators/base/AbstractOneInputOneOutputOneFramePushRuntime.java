@@ -60,7 +60,7 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     protected void flushAndReset() throws HyracksDataException {
         if (appender.getTupleCount() > 0) {
-            appender.flush(writer, true);
+            appender.write(writer, true);
         }
     }
 

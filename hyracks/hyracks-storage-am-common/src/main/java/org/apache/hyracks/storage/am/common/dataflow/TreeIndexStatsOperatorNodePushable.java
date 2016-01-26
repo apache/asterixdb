@@ -84,7 +84,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
                 throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size ("
                         + appender.getBuffer().capacity() + ")");
             }
-            appender.flush(writer, false);
+            appender.write(writer, false);
         } catch (Exception e) {
             writer.fail();
             throw new HyracksDataException(e);

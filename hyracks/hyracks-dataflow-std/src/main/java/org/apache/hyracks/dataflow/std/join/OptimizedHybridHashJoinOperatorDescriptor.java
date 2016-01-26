@@ -138,8 +138,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
             boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) throws HyracksDataException {
 
         super(spec, 2, 1);
-        this.memsize = memsize;
         this.inputsize0 = inputsize0;
+        this.memsize = memsize;
         this.fudgeFactor = factor;
         this.probeKeys = keys0;
         this.buildKeys = keys1;
@@ -450,7 +450,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             }
                             //Build Side is smaller
                             applyInMemHashJoin(buildKeys, probeKeys, tabSize, probeRd, buildRd, probeHpc, buildHpc,
-                                    buildSideReader, probeSideReader, false, pid); //checked-confirmed
+                                    buildSideReader, probeSideReader, false, pid); // checked-confirmed
                         } else { //Case 1.2 - InMemHJ with Role Reversal
                             LOGGER.fine(
                                     "\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ WITH RoleReversal - [Level "
@@ -463,7 +463,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             }
                             //Probe Side is smaller
                             applyInMemHashJoin(probeKeys, buildKeys, tabSize, buildRd, probeRd, buildHpc, probeHpc,
-                                    probeSideReader, buildSideReader, true, pid); //checked-confirmed
+                                    probeSideReader, buildSideReader, true, pid); // checked-confirmed
                         }
                     }
                     //Apply (Recursive) HHJ
@@ -515,7 +515,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         continue;
                                     }
 
-                                    joinPartitionPair(rHHj, rbrfw, rprfw, rPid, afterMax, (level + 1), false); //checked-confirmed
+                                    joinPartitionPair(rHHj, rbrfw, rprfw, rPid, afterMax, (level + 1), false); // checked-confirmed
                                 }
 
                             } else { //Case 2.1.2 - Switch to NLJ
@@ -636,7 +636,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                     bReader.close();
                     rPartbuff.reset();
-                    // probe
+                    //probe
                     pReader.open();
                     while (pReader.nextFrame(rPartbuff)) {
                         joiner.join(rPartbuff.getBuffer(), writer);

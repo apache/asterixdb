@@ -113,6 +113,13 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
                     epWriters[i].open();
                 }
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                for (IFrameWriter writer : epWriters) {
+                    writer.flush();
+                }
+            }
         };
     }
 

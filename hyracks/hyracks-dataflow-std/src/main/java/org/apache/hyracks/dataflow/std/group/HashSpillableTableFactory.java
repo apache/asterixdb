@@ -287,7 +287,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                             if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                     outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                                outputAppender.flush(writer, true);
+                                outputAppender.write(writer, true);
                                 if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                         outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
                                     throw new HyracksDataException(
@@ -297,7 +297,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                         } while (true);
                     }
-                    outputAppender.flush(writer, true);
+                    outputAppender.write(writer, true);
                     aggregator.close();
                     return;
                 }
@@ -330,14 +330,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                     if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                             outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                        outputAppender.flush(writer, true);
+                        outputAppender.write(writer, true);
                         if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                 outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
                             throw new HyracksDataException("The output item is too large to be fit into a frame.");
                         }
                     }
                 }
-                outputAppender.flush(writer, true);
+                outputAppender.write(writer, true);
                 aggregator.close();
             }
 

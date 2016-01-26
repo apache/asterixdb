@@ -70,6 +70,11 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
                 throw new HyracksDataException(e);
             }
         }
+
+        @Override
+        public void flush() throws HyracksDataException {
+            // This is a kind of a sink operator and hence, flush() is a no op
+        }
     }
 
     private static final long serialVersionUID = 1L;

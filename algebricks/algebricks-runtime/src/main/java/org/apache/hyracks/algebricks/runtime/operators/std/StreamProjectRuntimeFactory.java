@@ -84,6 +84,11 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
 
             }
 
+            @Override
+            public void flush() throws HyracksDataException {
+                appender.flush(writer);
+            }
+
         };
     }
 }

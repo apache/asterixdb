@@ -57,6 +57,11 @@ public class SinkRuntimeFactory implements IPushRuntimeFactory {
             @Override
             public void close() throws HyracksDataException {
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                // flush() is meaningless for sink operators
+            }
         };
     }
 

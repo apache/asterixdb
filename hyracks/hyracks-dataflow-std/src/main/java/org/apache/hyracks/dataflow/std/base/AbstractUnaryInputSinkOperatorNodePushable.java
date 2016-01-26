@@ -20,10 +20,16 @@ package org.apache.hyracks.dataflow.std.base;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractUnaryInputSinkOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     @Override
     public final void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // Sink operator, nothing to flush
     }
 }

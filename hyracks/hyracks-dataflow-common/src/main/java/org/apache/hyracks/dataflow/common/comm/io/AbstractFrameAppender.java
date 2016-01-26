@@ -47,11 +47,10 @@ public class AbstractFrameAppender implements IFrameAppender {
 
     protected boolean hasEnoughSpace(int fieldCount, int tupleLength) {
         return tupleDataEndOffset + FrameHelper.calcSpaceInFrame(fieldCount, tupleLength)
-                + tupleCount * FrameConstants.SIZE_LEN
-                <= FrameHelper.getTupleCountOffset(frame.getFrameSize());
+                + tupleCount * FrameConstants.SIZE_LEN <= FrameHelper.getTupleCountOffset(frame.getFrameSize());
     }
 
-    private void reset(ByteBuffer buffer, boolean clear) {
+    protected void reset(ByteBuffer buffer, boolean clear) {
         array = buffer.array();
         if (clear) {
             IntSerDeUtils.putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), 0);
@@ -59,9 +58,8 @@ public class AbstractFrameAppender implements IFrameAppender {
             tupleDataEndOffset = FrameConstants.TUPLE_START_OFFSET;
         } else {
             tupleCount = IntSerDeUtils.getInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()));
-            tupleDataEndOffset = tupleCount == 0 ?
-                    FrameConstants.TUPLE_START_OFFSET :
-                    IntSerDeUtils.getInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize())
+            tupleDataEndOffset = tupleCount == 0 ? FrameConstants.TUPLE_START_OFFSET
+                    : IntSerDeUtils.getInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize())
                             - tupleCount * FrameConstants.SIZE_LEN);
         }
     }
@@ -77,7 +75,7 @@ public class AbstractFrameAppender implements IFrameAppender {
     }
 
     @Override
-    public void flush(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
+    public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         getBuffer().clear();
         if (getTupleCount() > 0) {
             outWriter.nextFrame(getBuffer());

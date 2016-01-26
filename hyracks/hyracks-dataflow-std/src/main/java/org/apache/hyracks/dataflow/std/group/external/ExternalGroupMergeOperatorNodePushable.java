@@ -325,14 +325,14 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
             if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                     finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
-                writerAppender.flush(writer, true);
+                writerAppender.write(writer, true);
                 if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                         finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
                     throw new HyracksDataException("Aggregation output is too large to be fit into a frame.");
                 }
             }
         }
-        writerAppender.flush(writer, true);
+        writerAppender.write(writer, true);
 
     }
 

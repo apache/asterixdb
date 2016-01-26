@@ -173,7 +173,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
             }
         }
         maxFrameSize = Math.max(maxFrameSize, outputFrame.getFrameSize());
-        outputAppender.flush(writer, true);
+        outputAppender.write(writer, true);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(
                     "Flushed records:" + limit + " out of " + tupleCount + "; Flushed through " + (io + 1) + " frames");

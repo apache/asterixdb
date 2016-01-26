@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.FixedSizeFrame;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -45,8 +43,9 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
-import org.apache.hyracks.dataflow.std.sort.HybridTopKSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.HeapSortRunGenerator;
+import org.apache.hyracks.dataflow.std.sort.HybridTopKSortRunGenerator;
+import org.junit.Test;
 
 public class TopKRunGeneratorTest {
 
@@ -90,14 +89,18 @@ public class TopKRunGeneratorTest {
         public void close() throws HyracksDataException {
             assertTrue(answer.isEmpty());
         }
+
+        @Override
+        public void flush() throws HyracksDataException {
+        }
     }
 
     @Test
     public void testReverseOrderedDataShouldNotGenerateAnyRuns() throws HyracksDataException {
         int topK = 1;
         IHyracksTaskContext ctx = AbstractRunGeneratorTest.testUtils.create(PAGE_SIZE);
-        HeapSortRunGenerator sorter = new HeapSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK,
-                SortFields, null, ComparatorFactories, RecordDesc);
+        HeapSortRunGenerator sorter = new HeapSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK, SortFields, null,
+                ComparatorFactories, RecordDesc);
 
         testInMemoryOnly(ctx, topK, ORDER.REVERSE, sorter);
     }
@@ -106,8 +109,8 @@ public class TopKRunGeneratorTest {
     public void testAlreadySortedDataShouldNotGenerateAnyRuns() throws HyracksDataException {
         int topK = SORT_FRAME_LIMIT;
         IHyracksTaskContext ctx = AbstractRunGeneratorTest.testUtils.create(PAGE_SIZE);
-        HeapSortRunGenerator sorter = new HeapSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK,
-                SortFields, null, ComparatorFactories, RecordDesc);
+        HeapSortRunGenerator sorter = new HeapSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK, SortFields, null,
+                ComparatorFactories, RecordDesc);
 
         testInMemoryOnly(ctx, topK, ORDER.INORDER, sorter);
     }
@@ -116,8 +119,8 @@ public class TopKRunGeneratorTest {
     public void testHybridTopKShouldNotGenerateAnyRuns() throws HyracksDataException {
         int topK = 1;
         IHyracksTaskContext ctx = AbstractRunGeneratorTest.testUtils.create(PAGE_SIZE);
-        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK,
-                SortFields, null, ComparatorFactories, RecordDesc);
+        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK, SortFields, null,
+                ComparatorFactories, RecordDesc);
 
         testInMemoryOnly(ctx, topK, ORDER.REVERSE, sorter);
     }
@@ -126,8 +129,8 @@ public class TopKRunGeneratorTest {
     public void testHybridTopKShouldSwitchToFrameSorterWhenFlushed() {
         int topK = 1;
         IHyracksTaskContext ctx = AbstractRunGeneratorTest.testUtils.create(PAGE_SIZE);
-        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK,
-                SortFields, null, ComparatorFactories, RecordDesc);
+        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(ctx, SORT_FRAME_LIMIT, topK, SortFields, null,
+                ComparatorFactories, RecordDesc);
 
     }
 
@@ -148,8 +151,8 @@ public class TopKRunGeneratorTest {
         int minRecordSize = 16;
         int maxRecordSize = 64;
 
-        AbstractRunGeneratorTest
-                .prepareData(ctx, frameList, minDataSize, minRecordSize, maxRecordSize, null, keyValuePair);
+        AbstractRunGeneratorTest.prepareData(ctx, frameList, minDataSize, minRecordSize, maxRecordSize, null,
+                keyValuePair);
 
         assert topK > 0;
 

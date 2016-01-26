@@ -48,12 +48,22 @@ public interface IFrameAppender {
     ByteBuffer getBuffer();
 
     /**
-     * Flush the frame content to the given writer.
-     * Clear the inner buffer after flush if {@code clear} is <code>true</code>.
+     * Write the frame content to the given writer.
+     * Clear the inner buffer after write if {@code clear} is <code>true</code>.
      *
      * @param outWriter the output writer
-     * @param clear     indicate whether to clear the inside frame after flushed or not.
+     * @param clear     indicate whether to clear the inside frame after writing or not.
      * @throws HyracksDataException
      */
-    void flush(IFrameWriter outWriter, boolean clear) throws HyracksDataException;
+    void write(IFrameWriter outWriter, boolean clear) throws HyracksDataException;
+
+    /**
+     * Write currently buffered records to {@code writer} then flushes {@code writer}. The inside frame is always cleared
+     * @param writer the FrameWriter to write to and flush
+     * @throws HyracksDataException
+     */
+    public default void flush(IFrameWriter writer) throws HyracksDataException {
+        write(writer, true);
+        writer.flush();
+    }
 }

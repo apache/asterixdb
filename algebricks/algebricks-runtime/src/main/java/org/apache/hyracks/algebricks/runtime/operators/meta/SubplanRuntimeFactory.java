@@ -136,7 +136,6 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                         tb.addFieldEndOffset();
                     }
                 }
-
             }
 
             IFrameWriter endPipe = new TupleOuterProduct();
@@ -166,6 +165,10 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 }
             }
 
+            @Override
+            public void flush() throws HyracksDataException {
+                writer.flush();
+            }
         };
     }
 }

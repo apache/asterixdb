@@ -30,6 +30,7 @@ import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 public class DeserializedPreclusteredGroupOperator implements IOpenableDataWriterOperator {
     private final int[] groupFields;
 
+    @SuppressWarnings("rawtypes")
     private final IComparator[] comparators;
 
     private final IGroupAggregator aggregator;
@@ -42,6 +43,7 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
 
     private IOpenableDataReader<Object[]> reader;
 
+    @SuppressWarnings("rawtypes")
     public DeserializedPreclusteredGroupOperator(int[] groupFields, IComparator[] comparators,
             IGroupAggregator aggregator) {
         this.groupFields = groupFields;
@@ -110,6 +112,7 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
         buffer.add(data);
     }
 
+    @SuppressWarnings("unchecked")
     private int compare(Object[] d1, Object[] d2) {
         for (int i = 0; i < groupFields.length; ++i) {
             int fIdx = groupFields[i];
@@ -125,5 +128,10 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
     public void fail() throws HyracksDataException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        throw new HyracksDataException("unsupported operation");
     }
 }

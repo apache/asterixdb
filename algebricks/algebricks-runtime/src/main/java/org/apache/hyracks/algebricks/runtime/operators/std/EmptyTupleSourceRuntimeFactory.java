@@ -52,12 +52,17 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                     throw new IllegalStateException();
                 }
-                appender.flush(writer, true);
+                appender.write(writer, true);
             }
 
             @Override
             public void close() throws HyracksDataException {
                 writer.close();
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                appender.flush(writer);
             }
         };
     }

@@ -26,9 +26,6 @@ import static org.junit.Assert.assertTrue;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
@@ -44,6 +41,8 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.junit.Before;
+import org.junit.Test;
 
 public class FrameFixedFieldTupleAppenderTest {
 
@@ -51,22 +50,19 @@ public class FrameFixedFieldTupleAppenderTest {
     static final int TEST_FRAME_SIZE = 256;
 
     FrameFixedFieldAppender appender;
-    static ISerializerDeserializer[] fields = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE,
-            new UTF8StringSerializerDeserializer(),
-            IntegerSerializerDeserializer.INSTANCE,
-            new UTF8StringSerializerDeserializer(),
-    };
+    static ISerializerDeserializer[] fields = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), };
     static RecordDescriptor recordDescriptor = new RecordDescriptor(fields);
     static ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
 
-    class SequetialDataVerifier implements IFrameWriter {
+    class SequentialDataVerifier implements IFrameWriter {
 
         private final IFrameTupleAccessor accessor;
         private IFrameTupleAccessor innerAccessor;
         private int tid;
 
-        public SequetialDataVerifier(IFrameTupleAccessor accessor) {
+        public SequentialDataVerifier(IFrameTupleAccessor accessor) {
             this.accessor = accessor;
             this.innerAccessor = new FrameTupleAccessor(recordDescriptor);
         }
@@ -87,7 +83,8 @@ public class FrameFixedFieldTupleAppenderTest {
         private void validate(IFrameTupleAccessor innerAccessor, int i) {
             assertTrue(tid < accessor.getTupleCount());
             assertEquals(accessor.getTupleLength(tid), innerAccessor.getTupleLength(i));
-            assertArrayEquals(Arrays.copyOfRange(accessor.getBuffer().array(), accessor.getTupleStartOffset(tid),
+            assertArrayEquals(
+                    Arrays.copyOfRange(accessor.getBuffer().array(), accessor.getTupleStartOffset(tid),
                             accessor.getTupleEndOffset(tid)),
                     Arrays.copyOfRange(innerAccessor.getBuffer().array(), innerAccessor.getTupleStartOffset(i),
                             innerAccessor.getTupleEndOffset(i)));
@@ -102,6 +99,10 @@ public class FrameFixedFieldTupleAppenderTest {
         @Override
         public void close() throws HyracksDataException {
             assertEquals(accessor.getTupleCount(), tid);
+        }
+
+        @Override
+        public void flush() throws HyracksDataException {
         }
     }
 
@@ -119,13 +120,13 @@ public class FrameFixedFieldTupleAppenderTest {
         for (int tid = 0; tid < accessor.getTupleCount(); tid++) {
             for (int fid = 0; fid < fields.length; fid++) {
                 if (!appender.appendField(accessor, tid, fid)) {
-                    appender.flush(writer, true);
+                    appender.write(writer, true);
                     if (!appender.appendField(accessor, tid, fid)) {
                     }
                 }
             }
         }
-        appender.flush(writer, true);
+        appender.write(writer, true);
         writer.close();
     }
 
@@ -143,7 +144,7 @@ public class FrameFixedFieldTupleAppenderTest {
     }
 
     private IFrameWriter prepareValidator(IFrameTupleAccessor accessor) throws HyracksDataException {
-        return new SequetialDataVerifier(accessor);
+        return new SequentialDataVerifier(accessor);
     }
 
     enum DATA_TYPE {
@@ -154,8 +155,8 @@ public class FrameFixedFieldTupleAppenderTest {
 
     private IFrameTupleAccessor prepareData(DATA_TYPE type) throws HyracksDataException {
         IFrameTupleAccessor accessor = new FrameTupleAccessor(recordDescriptor);
-        IFrameTupleAppender appender = new FrameTupleAppender(
-                new VSizeFrame(new FrameManager(INPUT_BUFFER_SIZE)), true);
+        IFrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(new FrameManager(INPUT_BUFFER_SIZE)),
+                true);
         int i = 0;
         do {
             switch (type) {
@@ -169,8 +170,8 @@ public class FrameFixedFieldTupleAppenderTest {
                     makeABigObjectTuple(tupleBuilder, i++);
                     break;
             }
-        } while (appender
-                .append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize()));
+        } while (appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                tupleBuilder.getSize()));
         accessor.reset(appender.getBuffer());
         return accessor;
     }

@@ -39,14 +39,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * <ul>
  * <li>{@link IFrameWriter#close()} to give up any resources owned by the {@link IFrameWriter} and enter the CLOSED state.</li>
  * <li>{@link IFrameWriter#nextFrame(ByteBuffer)} to provide data to the {@link IFrameWriter}. The call returns normally on success and the {@link IFrameWriter} remains in the OPENED state. On failure, the call throws a {@link HyracksDataException}, the {@link IFrameWriter} remains in the OPENED state.</li>
+ * <li>{@link IFrameWriter#flush()} to push tuples that are ready in the output frame. The {@link IFrameWriter} remains in the OPENED state.</li>
  * <li>{@link IFrameWriter#fail()} to indicate that stream is to be aborted. The {@link IFrameWriter} enters the FAILED state.</li>
  * </ul>
  * In the FAILED state, the only call allowed is the {@link IFrameWriter#close()} to move the {@link IFrameWriter} into the CLOSED
  * state and give up all resources.
  * No calls are allowed when the {@link IFrameWriter} is in the CLOSED state.
  * Note: If the call to {@link IFrameWriter#open()} failed, the {@link IFrameWriter#close()} must still be called by the producer.
- *
- * @author vinayakb
  */
 public interface IFrameWriter {
     /**
@@ -56,7 +55,6 @@ public interface IFrameWriter {
 
     /**
      * Provide data to the stream of this {@link IFrameWriter}.
-     *
      * @param buffer
      *            - Buffer containing data.
      * @throws HyracksDataException
@@ -64,16 +62,22 @@ public interface IFrameWriter {
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException;
 
     /**
+     * request the frame to push its content forward and flush its consumers
+     * @throws HyracksDataException
+     */
+    public default void flush() throws HyracksDataException {
+        throw new HyracksDataException("flush() is not supported in this IFrameWriter");
+    }
+
+    /**
      * Indicate that a failure was encountered and the current stream is to be
      * aborted.
-     *
      * @throws HyracksDataException
      */
     public void fail() throws HyracksDataException;
 
     /**
      * Close this {@link IFrameWriter} and give up all resources.
-     *
      * @throws HyracksDataException
      */
     public void close() throws HyracksDataException;

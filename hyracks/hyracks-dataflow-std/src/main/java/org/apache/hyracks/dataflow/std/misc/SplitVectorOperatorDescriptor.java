@@ -88,8 +88,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new CollectTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
-                            partition));
+                    state = new CollectTaskState(ctx.getJobletContext().getJobId(),
+                            new TaskId(getActivityId(), partition));
                     state.buffer = new ArrayList<Object[]>();
                 }
 
@@ -107,9 +107,14 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void fail() throws HyracksDataException {
 
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    // flush() is a no op since the frame writer's whole job is to write state data to a buffer
+                }
             };
-            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
-                    getActivityId(), 0));
+            return new DeserializedOperatorNodePushable(ctx, op,
+                    recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         }
     }
 
@@ -138,8 +143,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (CollectTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
-                            COLLECT_ACTIVITY_ID), partition));
+                    state = (CollectTaskState) ctx.getStateObject(
+                            new TaskId(new ActivityId(getOperatorId(), COLLECT_ACTIVITY_ID), partition));
                 }
 
                 @Override
@@ -161,9 +166,14 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void fail() throws HyracksDataException {
                     writer.fail();
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    writer.flush();
+                }
             };
-            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getOutputRecordDescriptor(
-                    getActivityId(), 0));
+            return new DeserializedOperatorNodePushable(ctx, op,
+                    recordDescProvider.getOutputRecordDescriptor(getActivityId(), 0));
         }
     }
 
@@ -171,7 +181,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private final int splits;
 
-    public SplitVectorOperatorDescriptor(IOperatorDescriptorRegistry spec, int splits, RecordDescriptor recordDescriptor) {
+    public SplitVectorOperatorDescriptor(IOperatorDescriptorRegistry spec, int splits,
+            RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.splits = splits;
         recordDescriptors[0] = recordDescriptor;

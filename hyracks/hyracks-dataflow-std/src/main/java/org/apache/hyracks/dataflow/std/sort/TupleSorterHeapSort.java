@@ -262,7 +262,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
             }
         }
         maxFrameSize = Math.max(maxFrameSize, outputFrame.getFrameSize());
-        outputAppender.flush(writer, true);
+        outputAppender.write(writer, true);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(
                     "Flushed records:" + numEntries + "; Flushed through " + (io + 1) + " frames");

@@ -60,7 +60,7 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
 
             @Override
             public void close(IFrameWriter writer) throws HyracksDataException {
-                appender.flush(writer, false);
+                appender.write(writer, false);
             }
 
         };

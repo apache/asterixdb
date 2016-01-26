@@ -142,7 +142,7 @@ public class FrameFixedFieldTupleAppender implements IFrameTupleAppender, IFrame
     }
 
     @Override
-    public void flush(IFrameWriter outWriter, boolean clear) throws HyracksDataException {
-        lastAppender.flush(outWriter, clear);
+    public void write(IFrameWriter outWriter, boolean clear) throws HyracksDataException {
+        lastAppender.write(outWriter, clear);
     }
 }

@@ -162,4 +162,9 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             writer.fail();
         }
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        writer.flush();
+    }
 }

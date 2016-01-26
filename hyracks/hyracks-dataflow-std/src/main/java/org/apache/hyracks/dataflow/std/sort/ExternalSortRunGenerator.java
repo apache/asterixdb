@@ -29,9 +29,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.EnumFreeSlotPolicy;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotSmallestFit;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotBiggestFirst;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotLastFit;
+import org.apache.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotSmallestFit;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.IFrameFreeSlotPolicy;
 import org.apache.hyracks.dataflow.std.sort.buffermanager.VariableFrameMemoryManager;
@@ -53,7 +53,7 @@ public class ExternalSortRunGenerator extends AbstractSortRunGenerator {
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, Algorithm alg, EnumFreeSlotPolicy policy, int framesLimit)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         this(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc, alg, policy, framesLimit,
                 Integer.MAX_VALUE);
     }
@@ -61,7 +61,7 @@ public class ExternalSortRunGenerator extends AbstractSortRunGenerator {
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, Algorithm alg, EnumFreeSlotPolicy policy, int framesLimit, int outputLimit)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         this.ctx = ctx;
         maxSortFrames = framesLimit - 1;
 
@@ -98,12 +98,14 @@ public class ExternalSortRunGenerator extends AbstractSortRunGenerator {
         }
     }
 
+    @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                ExternalSortRunGenerator.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(ExternalSortRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIOManager());
     }
 
+    @Override
     protected IFrameWriter getFlushableFrameWriter(RunFileWriter writer) throws HyracksDataException {
         return writer;
     }
@@ -112,5 +114,4 @@ public class ExternalSortRunGenerator extends AbstractSortRunGenerator {
     public ISorter getSorter() {
         return frameSorter;
     }
-
 }

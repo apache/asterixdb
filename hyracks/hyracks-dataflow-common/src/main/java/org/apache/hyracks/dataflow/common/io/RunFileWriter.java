@@ -86,4 +86,9 @@ public class RunFileWriter implements IFrameWriter {
         }
         return new RunFileReader(file, ioManager, size, true);
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // this is a kind of a sink operator and hence, flush() is a no op
+    }
 }

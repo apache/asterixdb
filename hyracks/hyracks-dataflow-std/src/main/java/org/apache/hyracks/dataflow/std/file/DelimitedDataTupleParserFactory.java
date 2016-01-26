@@ -87,7 +87,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                         FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
                                 tb.getSize());
                     }
-                    appender.flush(writer, true);
+                    appender.write(writer, true);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

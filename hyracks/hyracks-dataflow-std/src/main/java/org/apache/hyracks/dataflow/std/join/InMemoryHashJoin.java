@@ -147,7 +147,7 @@ public class InMemoryHashJoin {
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        appender.flush(writer, true);
+        appender.write(writer, true);
         int nFrames = buffers.size();
         buffers.clear();
         ctx.deallocateFrames(nFrames);

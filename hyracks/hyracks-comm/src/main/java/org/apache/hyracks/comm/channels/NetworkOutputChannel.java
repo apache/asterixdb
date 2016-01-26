@@ -118,4 +118,10 @@ public class NetworkOutputChannel implements IFrameWriter {
             }
         }
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // At the network boundary.
+        // This frame writer always pushes its content
+    }
 }

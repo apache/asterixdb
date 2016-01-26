@@ -178,7 +178,7 @@ public class FramewriterTest {
                 writer.nextFrame(EMPTY_BUFFER);
                 return null;
             }
-        }).when(appenders[0]).flush(Matchers.any(IFrameWriter.class), Matchers.anyBoolean());
+        }).when(appenders[0]).write(Matchers.any(IFrameWriter.class), Matchers.anyBoolean());
 
         appenders[1] = Mockito.mock(FrameTupleAppender.class);
         Mockito.doAnswer(new Answer<Object>() {
@@ -186,7 +186,7 @@ public class FramewriterTest {
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 throw new HyracksDataException("couldn't flush frame");
             }
-        }).when(appenders[1]).flush(Matchers.any(IFrameWriter.class), Matchers.anyBoolean());
+        }).when(appenders[1]).write(Matchers.any(IFrameWriter.class), Matchers.anyBoolean());
 
         return appenders;
     }

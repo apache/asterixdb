@@ -88,14 +88,14 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
                         }
 
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            appender.flush(writer, true);
+                            appender.write(writer, true);
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                                 throw new HyracksDataException("Record size (" + tb.getSize()
                                         + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                             }
                         }
                     }
-                    appender.flush(writer, true);
+                    appender.write(writer, true);
                 } catch (Throwable th) {
                     writer.fail();
                     throw new HyracksDataException(th);

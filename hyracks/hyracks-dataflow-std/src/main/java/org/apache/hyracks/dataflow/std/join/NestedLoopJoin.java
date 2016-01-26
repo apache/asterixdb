@@ -204,7 +204,7 @@ public class NestedLoopJoin {
         outBuffers.clear();
         currentMemSize = 0;
 
-        appender.flush(writer, true);
+        appender.write(writer, true);
     }
 
     private int compare(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1)

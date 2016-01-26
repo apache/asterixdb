@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -45,6 +43,7 @@ import org.apache.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.Test;
 
 public class SerializationDeserializationTest {
     private static final Logger LOGGER = Logger.getLogger(SerializationDeserializationTest.class.getName());
@@ -81,6 +80,10 @@ public class SerializationDeserializationTest {
 
                 @Override
                 public void fail() throws HyracksDataException {
+                }
+
+                @Override
+                public void flush() throws HyracksDataException {
                 }
             });
         }
