@@ -28,6 +28,7 @@ import org.apache.asterix.api.http.servlet.DDLAPIServlet;
 import org.apache.asterix.api.http.servlet.FeedServlet;
 import org.apache.asterix.api.http.servlet.QueryAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
+import org.apache.asterix.api.http.servlet.QueryServiceServlet;
 import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
@@ -194,6 +195,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new ConnectorAPIServlet()), "/connector");
         context.addServlet(new ServletHolder(new ShutdownAPIServlet()), "/admin/shutdown");
         context.addServlet(new ServletHolder(new VersionAPIServlet()), "/admin/version");
+
+        context.addServlet(new ServletHolder(new QueryServiceServlet()), "/query/service");
     }
 
     private void setupFeedServer(AsterixExternalProperties externalProperties) throws Exception {

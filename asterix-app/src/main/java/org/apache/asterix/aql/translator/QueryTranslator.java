@@ -203,7 +203,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
-    public static enum ResultDelivery {
+    public enum ResultDelivery {
         SYNC,
         ASYNC,
         ASYNC_DEFERRED
@@ -238,6 +238,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
     /**
      * Compiles and submits for execution a list of AQL statements.
+     *
      * @param hcc
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
@@ -249,6 +250,11 @@ public class QueryTranslator extends AbstractLangTranslator {
      */
     public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery)
             throws Exception {
+        compileAndExecute(hcc, hdc, resultDelivery, new ResultUtils.Stats());
+    }
+
+    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
+            ResultUtils.Stats stats) throws Exception {
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
@@ -381,7 +387,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                     metadataProvider.setResultAsyncMode(
                             resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
-                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery);
+                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, stats);
                     break;
                 }
 
@@ -2212,6 +2218,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     /**
      * Generates a subscription request corresponding to a connect feed request. In addition, provides a boolean
      * flag indicating if feed intake job needs to be started (source primary feed not found to be active).
+     *
      * @param dataverse
      * @param feed
      * @param dataset
@@ -2483,7 +2490,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     }
 
     private void handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, ResultDelivery resultDelivery) throws Exception {
+            IHyracksDataset hdc, ResultDelivery resultDelivery, ResultUtils.Stats stats) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -2523,7 +2530,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                                 && sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
                             ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
                         }
-                        ResultUtils.displayResults(resultReader, sessionConfig);
+                        ResultUtils.displayResults(resultReader, sessionConfig, stats);
                         break;
                     case ASYNC_DEFERRED:
                         handle = new JSONArray();

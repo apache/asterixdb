@@ -25,15 +25,15 @@ import java.util.Map;
 /**
  * SessionConfig captures several different parameters for controlling
  * the execution of an APIFramework call.
- * <li> It specifies how the execution will proceed (for instance,
+ * <li>It specifies how the execution will proceed (for instance,
  * whether to optimize, or whether to execute at all).
- * <li> It allows you specify where the primary execution output will
+ * <li>It allows you specify where the primary execution output will
  * be sent.
- * <li> It also allows you to request additional output for optional
+ * <li>It also allows you to request additional output for optional
  * out-of-band data about the execution (query plan, etc).
- * <li> It allows you to specify the output format for the primary
+ * <li>It allows you to specify the output format for the primary
  * execution output - LOSSLESS_JSON, CSV, etc.
- * <li> It allows you to specify output format-specific parameters.
+ * <li>It allows you to specify output format-specific parameters.
  */
 
 public class SessionConfig {
@@ -92,6 +92,10 @@ public class SessionConfig {
      */
     public static final String FORMAT_WRAPPER_ARRAY = "format-wrapper-array";
 
+    public interface ResultDecorator {
+        PrintWriter print(PrintWriter pw);
+    }
+
     // Standard execution flags.
     private final boolean executeQuery;
     private final boolean generateJobSpec;
@@ -103,43 +107,66 @@ public class SessionConfig {
     // Output format.
     private final OutputFormat fmt;
 
+    private final ResultDecorator preResultDecorator;
+    private final ResultDecorator postResultDecorator;
+
     // Flags.
-    private final Map<String,Boolean> flags;
+    private final Map<String, Boolean> flags;
 
     /**
      * Create a SessionConfig object with all default values:
-     *
      * - All format flags set to "false".
      * - All out-of-band outputs set to "null".
      * - "Optimize" set to "true".
      * - "Execute Query" set to "true".
      * - "Generate Job Spec" set to "true".
-     * @param out PrintWriter for execution output.
-     * @param fmt Output format for execution output.
+     *
+     * @param out
+     *            PrintWriter for execution output.
+     * @param fmt
+     *            Output format for execution output.
      */
     public SessionConfig(PrintWriter out, OutputFormat fmt) {
-        this(out, fmt, true, true, true);
+        this(out, fmt, null, null, true, true, true);
+    }
+
+    public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
+            ResultDecorator postResultDecorator) {
+        this(out, fmt, preResultDecorator, postResultDecorator, true, true, true);
+    }
+
+    public SessionConfig(PrintWriter out, OutputFormat fmt, boolean optimize, boolean executeQuery,
+            boolean generateJobSpec) {
+        this(out, fmt, null, null, optimize, executeQuery, generateJobSpec);
     }
 
     /**
      * Create a SessionConfig object with all optional values set to defaults:
-     *
      * - All format flags set to "false".
      * - All out-of-band outputs set to "false".
-     * @param out PrintWriter for execution output.
-     * @param fmt Output format for execution output.
-     * @param optimize Whether to optimize the execution.
-     * @param executeQuery Whether to execute the query or not.
-     * @param generateJobSpec Whether to generate the Hyracks job specification (if
-     *    false, job cannot be executed).
+     *
+     * @param out
+     *            PrintWriter for execution output.
+     * @param fmt
+     *            Output format for execution output.
+     * @param optimize
+     *            Whether to optimize the execution.
+     * @param executeQuery
+     *            Whether to execute the query or not.
+     * @param generateJobSpec
+     *            Whether to generate the Hyracks job specification (if
+     *            false, job cannot be executed).
      */
-    public SessionConfig(PrintWriter out, OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
+    public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
+            ResultDecorator postResultDecorator, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this.out = out;
         this.fmt = fmt;
+        this.preResultDecorator = preResultDecorator;
+        this.postResultDecorator = postResultDecorator;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
-        this.flags = new HashMap<String,Boolean>();
+        this.flags = new HashMap<String, Boolean>();
     }
 
     /**
@@ -155,6 +182,14 @@ public class SessionConfig {
     public OutputFormat fmt() {
         return this.fmt;
     }
+
+    public PrintWriter resultPrefix(PrintWriter pw) {
+        return this.preResultDecorator != null ? this.preResultDecorator.print(pw) : pw;
+    };
+
+    public PrintWriter resultPostfix(PrintWriter pw) {
+        return this.postResultDecorator != null ? this.postResultDecorator.print(pw) : pw;
+    };
 
     /**
      * Retrieve the value of the "execute query" flag.
@@ -180,9 +215,8 @@ public class SessionConfig {
     /**
      * Specify all out-of-band settings at once. For convenience of older code.
      */
-    public void setOOBData(boolean expr_tree, boolean rewritten_expr_tree,
-                           boolean logical_plan, boolean optimized_logical_plan,
-                           boolean hyracks_job) {
+    public void setOOBData(boolean expr_tree, boolean rewritten_expr_tree, boolean logical_plan,
+            boolean optimized_logical_plan, boolean hyracks_job) {
         this.set(OOB_EXPR_TREE, expr_tree);
         this.set(OOB_REWRITTEN_EXPR_TREE, rewritten_expr_tree);
         this.set(OOB_LOGICAL_PLAN, logical_plan);
@@ -192,8 +226,11 @@ public class SessionConfig {
 
     /**
      * Specify a flag.
-     * @param flag One of the OOB_ or FORMAT_ constants from this class.
-     * @param value Value for the flag (all flags default to "false").
+     *
+     * @param flag
+     *            One of the OOB_ or FORMAT_ constants from this class.
+     * @param value
+     *            Value for the flag (all flags default to "false").
      */
     public void set(String flag, boolean value) {
         flags.put(flag, Boolean.valueOf(value));
@@ -201,7 +238,9 @@ public class SessionConfig {
 
     /**
      * Retrieve the setting of a format-specific flag.
-     * @param flag One of the FORMAT_ constants from this class.
+     *
+     * @param flag
+     *            One of the FORMAT_ constants from this class.
      * @returns true or false (all flags default to "false").
      */
     public boolean is(String flag) {

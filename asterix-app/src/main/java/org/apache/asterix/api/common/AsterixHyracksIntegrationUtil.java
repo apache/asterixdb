@@ -190,6 +190,7 @@ public class AsterixHyracksIntegrationUtil {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
