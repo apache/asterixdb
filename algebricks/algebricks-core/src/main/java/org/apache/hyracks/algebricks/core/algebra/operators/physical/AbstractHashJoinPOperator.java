@@ -127,9 +127,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                     public Pair<Boolean, IPartitioningProperty> coordinateRequirements(
                             IPartitioningProperty requirements, IPartitioningProperty firstDeliveredPartitioning,
                             ILogicalOperator op, IOptimizationContext context) throws AlgebricksException {
-                        if (firstDeliveredPartitioning != null
-                                && firstDeliveredPartitioning.getPartitioningType() == requirements
-                                        .getPartitioningType()) {
+                        if (firstDeliveredPartitioning != null && firstDeliveredPartitioning
+                                .getPartitioningType() == requirements.getPartitioningType()) {
                             switch (requirements.getPartitioningType()) {
                                 case UNORDERED_PARTITIONED: {
                                     UnorderedPartitionedProperty upp1 = (UnorderedPartitionedProperty) firstDeliveredPartitioning;
@@ -139,8 +138,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
                                     Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
                                     Set<LogicalVariable> keysCurrent = uppreq.getColumnSet();
-                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent)) ? keysRightBranch
-                                            : keysLeftBranch;
+                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent))
+                                            ? keysRightBranch : keysLeftBranch;
                                     List<LogicalVariable> keysSecond = keysFirst == keysRightBranch ? keysLeftBranch
                                             : keysRightBranch;
                                     for (LogicalVariable r : uppreq.getColumnSet()) {
@@ -155,8 +154,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                             j++;
                                         }
                                         if (!found) {
-                                            throw new IllegalStateException("Did not find a variable equivalent to "
-                                                    + r + " among " + keysFirst);
+                                            throw new IllegalStateException("Did not find a variable equivalent to " + r
+                                                    + " among " + keysFirst);
                                         }
                                         LogicalVariable v2 = keysSecond.get(j);
                                         EquivalenceClass ecFst = eqmap.get(v2);
@@ -166,6 +165,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                                 modifuppreq.add(r);
                                                 break;
                                             }
+                                        }
+                                        if (covered.equals(set1)) {
+                                            break;
                                         }
                                     }
                                     if (!covered.equals(set1)) {

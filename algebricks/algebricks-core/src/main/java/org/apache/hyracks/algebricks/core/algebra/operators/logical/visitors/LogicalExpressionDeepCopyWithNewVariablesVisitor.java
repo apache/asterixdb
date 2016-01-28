@@ -52,6 +52,9 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
     }
 
     public ILogicalExpression deepCopy(ILogicalExpression expr) throws AlgebricksException {
+        if (expr == null) {
+            return null;
+        }
         return expr.accept(this, null);
     }
 

@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -45,7 +44,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * Pushes projections through its input operator, provided that operator does
  * not produce the projected variables.
- * 
+ *
  * @author Nicola
  */
 public class PushProjectDownRule implements IAlgebraicRewriteRule {
@@ -56,7 +55,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.PROJECT) {
             return false;
@@ -79,7 +79,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
     private static Pair<Boolean, Boolean> pushThroughOp(HashSet<LogicalVariable> toPush,
             Mutable<ILogicalOperator> opRef2, ILogicalOperator initialOp, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<LogicalVariable> initProjectList = new ArrayList<LogicalVariable>(toPush);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         do {
@@ -111,7 +111,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
         boolean canCommuteProjection = initProjectList.containsAll(toPush) && initProjectList.containsAll(produced2)
                 && initProjectList.containsAll(used2);
-        // if true, we can get rid of the initial projection
+                // if true, we can get rid of the initial projection
 
         // get rid of useless decor vars.
         if (!canCommuteProjection && op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
@@ -191,7 +191,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     // It does not try to push above another Projection.
     private static boolean pushAllProjectionsOnTopOf(Collection<LogicalVariable> toPush,
             Mutable<ILogicalOperator> opRef, IOptimizationContext context, ILogicalOperator initialOp)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (toPush.isEmpty()) {
             return false;
         }
@@ -201,15 +201,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        switch (op.getOperatorTag()) {
-            case EXCHANGE: {
-                opRef = opRef.getValue().getInputs().get(0);
-                op = (AbstractLogicalOperator) opRef.getValue();
-                break;
-            }
-            case PROJECT: {
-                return false;
-            }
+        if (op.getOperatorTag() == LogicalOperatorTag.PROJECT) {
+            return false;
         }
 
         ProjectOperator pi2 = new ProjectOperator(new ArrayList<LogicalVariable>(toPush));

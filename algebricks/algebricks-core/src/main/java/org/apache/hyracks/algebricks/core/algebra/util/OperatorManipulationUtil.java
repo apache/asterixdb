@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -239,7 +240,35 @@ public class OperatorManipulationUtil {
         for (Mutable<ILogicalOperator> children : op.getInputs()) {
             computeTypeEnvironmentBottomUp(children.getValue(), context);
         }
+        AbstractLogicalOperator abstractOp = (AbstractLogicalOperator) op;
+        if (abstractOp.hasNestedPlans()) {
+            for (ILogicalPlan p : ((AbstractOperatorWithNestedPlans) op).getNestedPlans()) {
+                for (Mutable<ILogicalOperator> rootRef : p.getRoots()) {
+                    computeTypeEnvironmentBottomUp(rootRef.getValue(), context);
+                }
+            }
+        }
         context.computeAndSetTypeEnvironmentForOperator(op);
+    }
+
+    /***
+     * Is the operator <code>>op</code> an ancestor of any operators with tags in the set <code>tags</code>?
+     *
+     * @param op
+     * @param tags
+     * @return True if yes; false other wise.
+     */
+    public static boolean ancestorOfOperators(ILogicalOperator op, Set<LogicalOperatorTag> tags) {
+        LogicalOperatorTag opTag = op.getOperatorTag();
+        if (tags.contains(opTag)) {
+            return true;
+        }
+        for (Mutable<ILogicalOperator> children : op.getInputs()) {
+            if (ancestorOfOperators(children.getValue(), tags)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

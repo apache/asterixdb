@@ -43,10 +43,10 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
     private final static int SPLITTER_MATERIALIZER_ACTIVITY_ID = 0;
     private final static int MATERIALIZE_READER_ACTIVITY_ID = 1;
 
-    private boolean[] outputMaterializationFlags;
-    private boolean requiresMaterialization;
-    private int numberOfNonMaterializedOutputs = 0;
-    private int numberOfActiveMaterializeReaders = 0;
+    private final boolean[] outputMaterializationFlags;
+    private final boolean requiresMaterialization;
+    private final int numberOfNonMaterializedOutputs;
+    private final int numberOfMaterializedOutputs;
 
     public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity) {
         this(spec, rDesc, outputArity, new boolean[outputArity]);
@@ -59,13 +59,22 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             recordDescriptors[i] = rDesc;
         }
         this.outputMaterializationFlags = outputMaterializationFlags;
-        requiresMaterialization = false;
+
+        boolean reqMaterialization = false;
+        int matOutputs = 0;
+        int nonMatOutputs = 0;
         for (boolean flag : outputMaterializationFlags) {
             if (flag) {
-                requiresMaterialization = true;
-                break;
+                reqMaterialization = true;
+                matOutputs++;
+            } else {
+                nonMatOutputs++;
             }
         }
+
+        this.requiresMaterialization = reqMaterialization;
+        this.numberOfMaterializedOutputs = matOutputs;
+        this.numberOfNonMaterializedOutputs = nonMatOutputs;
 
     }
 
@@ -75,27 +84,17 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                 new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
         builder.addActivity(this, sma);
         builder.addSourceEdge(0, sma, 0);
-        int taskOutputIndex = 0;
+        int pipelineOutputIndex = 0;
+        int activityId = MATERIALIZE_READER_ACTIVITY_ID;
         for (int i = 0; i < outputArity; i++) {
-            if (!outputMaterializationFlags[i]) {
-                builder.addTargetEdge(i, sma, taskOutputIndex);
-                taskOutputIndex++;
-            }
-        }
-        numberOfNonMaterializedOutputs = taskOutputIndex;
-
-        if (requiresMaterialization) {
-            int activityId = MATERIALIZE_READER_ACTIVITY_ID;
-            for (int i = 0; i < outputArity; i++) {
-                if (outputMaterializationFlags[i]) {
-                    MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(
-                            new ActivityId(odId, activityId));
-                    builder.addActivity(this, mra);
-                    builder.addTargetEdge(i, mra, 0);
-                    builder.addBlockingEdge(sma, mra);
-                    numberOfActiveMaterializeReaders++;
-                    activityId++;
-                }
+            if (outputMaterializationFlags[i]) {
+                MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(
+                        new ActivityId(odId, activityId++));
+                builder.addActivity(this, mra);
+                builder.addBlockingEdge(sma, mra);
+                builder.addTargetEdge(i, mra, 0);
+            } else {
+                builder.addTargetEdge(i, sma, pipelineOutputIndex++);
             }
         }
     }
@@ -119,7 +118,7 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void open() throws HyracksDataException {
                     if (requiresMaterialization) {
                         state = new MaterializerTaskState(ctx.getJobletContext().getJobId(),
-                                new TaskId(getActivityId(), partition));
+                                new TaskId(getActivityId(), partition), numberOfMaterializedOutputs);
                         state.open(ctx);
                     }
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
@@ -215,15 +214,6 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                     state.writeOut(writer, new VSizeFrame(ctx));
                 }
 
-                @Override
-                public void deinitialize() throws HyracksDataException {
-                    numberOfActiveMaterializeReaders--;
-                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(
-                            new TaskId(new ActivityId(getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
-                    if (numberOfActiveMaterializeReaders == 0) {
-                        state.deleteFile();
-                    }
-                }
             };
         }
     }

@@ -47,9 +47,10 @@ public class RandomPartitionPOperator extends AbstractExchangePOperator {
         this.domain = domain;
     }
 
+    @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         Pair<IConnectorDescriptor, TargetConstraint> connPair = createConnectorDescriptor(builder.getJobSpec(), op,
                 opSchema, context);
         builder.contributeConnectorWithTargetConstraint(op, connPair.first, connPair.second);
@@ -62,9 +63,10 @@ public class RandomPartitionPOperator extends AbstractExchangePOperator {
         return false;
     }
 
+    @Override
     public Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
-        ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory(domain.cardinality());
+        ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory();
         MToNPartitioningConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
         return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
     }
@@ -77,8 +79,8 @@ public class RandomPartitionPOperator extends AbstractExchangePOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        this.deliveredProperties = new StructuralPropertiesVector(new RandomPartitioningProperty(domain), op2
-                .getDeliveredPhysicalProperties().getLocalProperties());
+        this.deliveredProperties = new StructuralPropertiesVector(new RandomPartitioningProperty(domain),
+                op2.getDeliveredPhysicalProperties().getLocalProperties());
     }
 
     @Override

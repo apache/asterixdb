@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 import java.util.Iterator;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -37,7 +36,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -74,6 +74,7 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
                 InnerJoinOperator join = (InnerJoinOperator) op1;
                 Mutable<ILogicalOperator> leftRef = join.getInputs().get(0);
                 Mutable<ILogicalOperator> rightRef = join.getInputs().get(1);
+
                 Mutable<ILogicalOperator> ntsRef = getNtsAtEndOfPipeline(leftRef);
                 if (ntsRef == null) {
                     ntsRef = getNtsAtEndOfPipeline(rightRef);

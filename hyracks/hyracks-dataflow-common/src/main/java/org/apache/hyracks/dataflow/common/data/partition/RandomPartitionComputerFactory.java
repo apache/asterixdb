@@ -25,29 +25,21 @@ import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class RandomPartitionComputerFactory implements
-		ITuplePartitionComputerFactory {
+public class RandomPartitionComputerFactory implements ITuplePartitionComputerFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final int domainCardinality;
+    @Override
+    public ITuplePartitionComputer createPartitioner() {
+        return new ITuplePartitionComputer() {
 
-	public RandomPartitionComputerFactory(int domainCardinality) {
-		this.domainCardinality = domainCardinality;
-	}
+            private final Random random = new Random();
 
-	@Override
-	public ITuplePartitionComputer createPartitioner() {
-		return new ITuplePartitionComputer() {
-
-			private final Random random = new Random();
-
-			@Override
-			public int partition(IFrameTupleAccessor accessor, int tIndex,
-					int nParts) throws HyracksDataException {
-				return random.nextInt(domainCardinality);
-			}
-		};
-	}
+            @Override
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
+                return random.nextInt(nParts);
+            }
+        };
+    }
 
 }

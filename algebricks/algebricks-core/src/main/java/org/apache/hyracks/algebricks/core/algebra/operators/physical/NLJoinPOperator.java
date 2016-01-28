@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -105,8 +104,11 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             pp = IPartitioningProperty.UNPARTITIONED;
         }
 
-        List<ILocalStructuralProperty> localProps = new LinkedList<ILocalStructuralProperty>();
-        this.deliveredProperties = new StructuralPropertiesVector(pp, localProps);
+        // Nested loop join maintains the local structure property for the probe side.
+        AbstractLogicalOperator probeOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+        IPhysicalPropertiesVector probeSideProperties = probeOp.getPhysicalOperator().getDeliveredProperties();
+        List<ILocalStructuralProperty> probeSideLocalProperties = probeSideProperties.getLocalProperties();
+        this.deliveredProperties = new StructuralPropertiesVector(pp, probeSideLocalProperties);
     }
 
     @Override
@@ -125,7 +127,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
         RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
                 propagatedSchema, context);
@@ -221,8 +223,8 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             } catch (AlgebricksException ae) {
                 throw new HyracksDataException(ae);
             }
-            boolean result = binaryBooleanInspector
-                    .getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
+            boolean result = binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(),
+                    p.getLength());
             if (result)
                 return 0;
             else

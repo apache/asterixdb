@@ -98,7 +98,8 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     @Override
-    public void contributeGraphEdge(ILogicalOperator src, int srcOutputIndex, ILogicalOperator dest, int destInputIndex) {
+    public void contributeGraphEdge(ILogicalOperator src, int srcOutputIndex, ILogicalOperator dest,
+            int destInputIndex) {
         ArrayList<ILogicalOperator> outputs = outEdges.get(src);
         if (outputs == null) {
             outputs = new ArrayList<ILogicalOperator>();
@@ -144,7 +145,13 @@ public class JobBuilder implements IHyracksJobBuilder {
         List<OperatorDescriptorId> roots = jobSpec.getRoots();
         setSpecifiedPartitionConstraints();
         for (OperatorDescriptorId rootId : roots) {
-            setPartitionConstraintsDFS(rootId, tgtConstraints, null);
+            setPartitionConstraintsBottomup(rootId, tgtConstraints, null, false);
+        }
+        for (OperatorDescriptorId rootId : roots) {
+            setPartitionConstraintsTopdown(rootId, tgtConstraints, null);
+        }
+        for (OperatorDescriptorId rootId : roots) {
+            setPartitionConstraintsBottomup(rootId, tgtConstraints, null, true);
         }
     }
 
@@ -161,7 +168,7 @@ public class JobBuilder implements IHyracksJobBuilder {
         }
     }
 
-    private void setPartitionConstraintsDFS(OperatorDescriptorId opId,
+    private void setPartitionConstraintsTopdown(OperatorDescriptorId opId,
             Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp) {
         List<IConnectorDescriptor> opInputs = jobSpec.getOperatorInputMap().get(opId);
         AlgebricksPartitionConstraint opConstraint = null;
@@ -172,9 +179,39 @@ public class JobBuilder implements IHyracksJobBuilder {
                 org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p = jobSpec
                         .getConnectorOperatorMap().get(cid);
                 IOperatorDescriptor src = p.getLeft().getLeft();
-                // DFS
-                setPartitionConstraintsDFS(src.getOperatorId(), tgtConstraints, opDesc);
+                TargetConstraint constraint = tgtConstraints.get(conn);
+                if (constraint != null) {
+                    if (constraint == TargetConstraint.SAME_COUNT) {
+                        opConstraint = partitionConstraintMap.get(opDesc);
+                        if (partitionConstraintMap.get(src) == null) {
+                            if (opConstraint != null) {
+                                partitionConstraintMap.put(src, opConstraint);
+                                AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, src,
+                                        opConstraint);
+                            }
+                        }
+                    }
+                }
+                // Post Order DFS
+                setPartitionConstraintsTopdown(src.getOperatorId(), tgtConstraints, opDesc);
+            }
+        }
+    }
 
+    private void setPartitionConstraintsBottomup(OperatorDescriptorId opId,
+            Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp,
+            boolean finalPass) {
+        List<IConnectorDescriptor> opInputs = jobSpec.getOperatorInputMap().get(opId);
+        AlgebricksPartitionConstraint opConstraint = null;
+        IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(opId);
+        if (opInputs != null) {
+            for (IConnectorDescriptor conn : opInputs) {
+                ConnectorDescriptorId cid = conn.getConnectorId();
+                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p = jobSpec
+                        .getConnectorOperatorMap().get(cid);
+                IOperatorDescriptor src = p.getLeft().getLeft();
+                // Pre-order DFS
+                setPartitionConstraintsBottomup(src.getOperatorId(), tgtConstraints, opDesc, finalPass);
                 TargetConstraint constraint = tgtConstraints.get(conn);
                 if (constraint != null) {
                     switch (constraint) {
@@ -200,12 +237,14 @@ public class JobBuilder implements IHyracksJobBuilder {
                         opConstraint = new AlgebricksCountPartitionConstraint(1);
                     }
                 }
-                if (opConstraint == null) {
+                if (opConstraint == null && finalPass) {
                     opConstraint = clusterLocations;
                 }
             }
-            partitionConstraintMap.put(opDesc, opConstraint);
-            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc, opConstraint);
+            if (opConstraint != null) {
+                partitionConstraintMap.put(opDesc, opConstraint);
+                AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc, opConstraint);
+            }
         }
     }
 

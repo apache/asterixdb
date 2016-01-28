@@ -436,7 +436,9 @@ public class SubstituteVariableVisitor
             return;
         }
         IVariableTypeEnvironment env = ctx.getOutputTypeEnvironment(op);
-        env.substituteProducedVariable(arg.first, arg.second);
+        if (env != null) {
+            env.substituteProducedVariable(arg.first, arg.second);
+        }
     }
 
     @Override

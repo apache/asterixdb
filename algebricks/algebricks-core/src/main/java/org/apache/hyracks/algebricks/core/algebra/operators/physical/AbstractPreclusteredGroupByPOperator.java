@@ -20,12 +20,13 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
@@ -54,6 +55,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirement
 import org.apache.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysicalOperator {
 
@@ -155,7 +157,18 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                     IPhysicalOperator pop2 = op2.getPhysicalOperator();
                     if (pop2 instanceof AbstractPreclusteredGroupByPOperator) {
-                        List<LogicalVariable> sndOrder = ((AbstractPreclusteredGroupByPOperator) pop2).getGbyColumns();
+                        List<LogicalVariable> gbyColumns = ((AbstractPreclusteredGroupByPOperator) pop2)
+                                .getGbyColumns();
+                        List<LogicalVariable> sndOrder = new ArrayList<>();
+                        sndOrder.addAll(gbyColumns);
+                        Set<LogicalVariable> freeVars = new HashSet<>();
+                        try {
+                            OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc(op2, freeVars);
+                        } catch (AlgebricksException e) {
+                            throw new IllegalStateException(e);
+                        }
+                        // Only considers group key variables defined out-side the outer-most group-by operator.
+                        sndOrder.retainAll(freeVars);
                         groupProp.getColumnSet().addAll(sndOrder);
                         groupProp.getPreferredOrderEnforcer().addAll(sndOrder);
                         goon = false;
@@ -210,9 +223,8 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
-                if (allOk
-                        && PropertiesUtil.matchLocalProperties(localProps, props,
-                                new HashMap<LogicalVariable, EquivalenceClass>(), fdList)) {
+                if (allOk && PropertiesUtil.matchLocalProperties(localProps, props,
+                        new HashMap<LogicalVariable, EquivalenceClass>(), fdList)) {
                     localProps = props;
                 }
             }

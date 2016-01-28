@@ -104,7 +104,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         // wait for the physical operators to be set first
         if (op.getPhysicalOperator() == null) {
@@ -166,18 +167,17 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<IPartitioningProperty>();
         for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
             AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
-            deliveredPartitioningPropertiesFromChildren.add(child.getDeliveredPhysicalProperties()
-                    .getPartitioningProperty());
+            deliveredPartitioningPropertiesFromChildren
+                    .add(child.getDeliveredPhysicalProperties().getPartitioningProperty());
         }
         int partitioningCompatibleChild = 0;
         for (int i = 0; i < op.getInputs().size(); i++) {
             IPartitioningProperty deliveredPropertyFromChild = deliveredPartitioningPropertiesFromChildren.get(i);
-            if (reqdProperties == null
-                    || reqdProperties[i] == null
-                    || reqdProperties[i].getPartitioningProperty() == null
-                    || deliveredPropertyFromChild == null
-                    || reqdProperties[i].getPartitioningProperty().getPartitioningType() != deliveredPartitioningPropertiesFromChildren
-                            .get(i).getPartitioningType()) {
+            if (reqdProperties == null || reqdProperties[i] == null
+                    || reqdProperties[i].getPartitioningProperty() == null || deliveredPropertyFromChild == null
+                    || reqdProperties[i].getPartitioningProperty()
+                            .getPartitioningType() != deliveredPartitioningPropertiesFromChildren.get(i)
+                                    .getPartitioningType()) {
                 continue;
             }
             IPartitioningProperty requiredPropertyForChild = reqdProperties[i].getPartitioningProperty();
@@ -248,8 +248,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(childIndex).getValue();
             IPhysicalPropertiesVector delivered = child.getDeliveredPhysicalProperties();
 
-            AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> Properties delivered by " + child.getPhysicalOperator()
-                    + ": " + delivered + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER
+                    .finest(">>>> Properties delivered by " + child.getPhysicalOperator() + ": " + delivered + "\n");
             IPartitioningRequirementsCoordinator prc = pr.getPartitioningCoordinator();
             // Coordinates requirements by looking at the firstDeliveredPartitioning.
             Pair<Boolean, IPartitioningProperty> pbpp = prc.coordinateRequirements(
@@ -258,8 +258,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             IPhysicalPropertiesVector rqd = new StructuralPropertiesVector(pbpp.second,
                     requiredProperty.getLocalProperties());
 
-            AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> Required properties for " + child.getPhysicalOperator()
-                    + ": " + rqd + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER
+                    .finest(">>>> Required properties for " + child.getPhysicalOperator() + ": " + rqd + "\n");
             // The partitioning property of reqdProperties[childIndex] could be updated here because
             // rqd.getPartitioningProperty() is the same object instance as requiredProperty.getPartitioningProperty().
             IPhysicalPropertiesVector diff = delivered.getUnsatisfiedPropertiesFrom(rqd,
@@ -273,7 +273,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 changed = true;
                 addEnforcers(op, childIndex, diff, rqd, delivered, childrenDomain, nestedPlan, context);
 
-                AbstractLogicalOperator newChild = ((AbstractLogicalOperator) op.getInputs().get(childIndex).getValue());
+                AbstractLogicalOperator newChild = ((AbstractLogicalOperator) op.getInputs().get(childIndex)
+                        .getValue());
 
                 if (newChild != child) {
                     delivered = newChild.getDeliveredPhysicalProperties();
@@ -308,8 +309,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
         if (opIsRedundantSort) {
             if (AlgebricksConfig.DEBUG) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Removing redundant SORT operator "
-                        + op.getPhysicalOperator() + "\n");
+                AlgebricksConfig.ALGEBRICKS_LOGGER
+                        .fine(">>>> Removing redundant SORT operator " + op.getPhysicalOperator() + "\n");
                 printOp(op);
             }
             changed = true;
@@ -332,7 +333,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private IPhysicalPropertiesVector newPropertiesDiff(AbstractLogicalOperator newChild,
             IPhysicalPropertiesVector required, boolean mayExpandPartitioningProperties, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IPhysicalPropertiesVector newDelivered = newChild.getDeliveredPhysicalProperties();
 
         Map<LogicalVariable, EquivalenceClass> newChildEqClasses = context.getEquivalenceClassMap(newChild);
@@ -343,8 +344,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             newChildEqClasses = context.getEquivalenceClassMap(newChild);
             newChildFDs = context.getFDList(newChild);
         }
-        AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> Required properties for new op. "
-                + newChild.getPhysicalOperator() + ": " + required + "\n");
+        AlgebricksConfig.ALGEBRICKS_LOGGER.finest(
+                ">>>> Required properties for new op. " + newChild.getPhysicalOperator() + ": " + required + "\n");
 
         return newDelivered.getUnsatisfiedPropertiesFrom(required, mayExpandPartitioningProperties, newChildEqClasses,
                 newChildFDs);
@@ -418,16 +419,16 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             IPhysicalPropertiesVector diffOfProperties, IOptimizationContext context) {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.ORDER
-                || (op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.STABLE_SORT && op
-                        .getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.IN_MEMORY_STABLE_SORT)
+                || (op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.STABLE_SORT
+                        && op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.IN_MEMORY_STABLE_SORT)
                 || delivered.getLocalProperties() == null) {
             return false;
         }
         AbstractStableSortPOperator sortOp = (AbstractStableSortPOperator) op.getPhysicalOperator();
         sortOp.computeLocalProperties(op);
         ILocalStructuralProperty orderProp = sortOp.getOrderProperty();
-        return PropertiesUtil.matchLocalProperties(Collections.singletonList(orderProp),
-                delivered.getLocalProperties(), context.getEquivalenceClassMap(op), context.getFDList(op));
+        return PropertiesUtil.matchLocalProperties(Collections.singletonList(orderProp), delivered.getLocalProperties(),
+                context.getEquivalenceClassMap(op), context.getFDList(op));
     }
 
     private void addEnforcers(AbstractLogicalOperator op, int childIndex,
@@ -455,8 +456,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private void addLocalEnforcers(AbstractLogicalOperator op, int i, List<ILocalStructuralProperty> localProperties,
             boolean nestedPlan, IOptimizationContext context) throws AlgebricksException {
         if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Adding local enforcers for local props = " + localProperties
-                    + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER
+                    .fine(">>>> Adding local enforcers for local props = " + localProperties + "\n");
         }
 
         if (localProperties == null || localProperties.isEmpty()) {
@@ -475,8 +476,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 }
                 case LOCAL_GROUPING_PROPERTY: {
                     LocalGroupingProperty g = (LocalGroupingProperty) prop;
-                    Collection<LogicalVariable> vars = (g.getPreferredOrderEnforcer() != null) ? g
-                            .getPreferredOrderEnforcer() : g.getColumnSet();
+                    Collection<LogicalVariable> vars = (g.getPreferredOrderEnforcer() != null)
+                            ? g.getPreferredOrderEnforcer() : g.getColumnSet();
                     List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
                     for (LogicalVariable v : vars) {
                         OrderColumn oc = new OrderColumn(v, OrderKind.ASC);
@@ -502,7 +503,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private Mutable<ILogicalOperator> enforceOrderProperties(List<LocalOrderProperty> oList,
             Mutable<ILogicalOperator> topOp, boolean isMicroOp, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> oe = new LinkedList<Pair<IOrder, Mutable<ILogicalExpression>>>();
         for (LocalOrderProperty orderProperty : oList) {
             for (OrderColumn oc : orderProperty.getOrderColumns()) {
@@ -539,8 +540,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                         pop = new RandomMergeExchangePOperator();
                     } else {
                         if (op.getAnnotations().containsKey(OperatorAnnotations.USE_RANGE_CONNECTOR)) {
-                            IRangeMap rangeMap = (IRangeMap) op.getAnnotations().get(
-                                    OperatorAnnotations.USE_RANGE_CONNECTOR);
+                            IRangeMap rangeMap = (IRangeMap) op.getAnnotations()
+                                    .get(OperatorAnnotations.USE_RANGE_CONNECTOR);
                             pop = new RangePartitionMergePOperator(ordCols, domain, rangeMap);
                         } else {
                             OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
@@ -574,7 +575,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     break;
                 }
                 case ORDERED_PARTITIONED: {
-                    pop = new RangePartitionPOperator(((OrderedPartitionedProperty) pp).getOrderColumns(), domain, null);
+                    pop = new RangePartitionPOperator(((OrderedPartitionedProperty) pp).getOrderColumns(), domain,
+                            null);
                     break;
                 }
                 case BROADCAST: {
@@ -600,8 +602,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(exchg, context);
             context.computeAndSetTypeEnvironmentForOperator(exchg);
             if (AlgebricksConfig.DEBUG) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Added partitioning enforcer "
-                        + exchg.getPhysicalOperator() + ".\n");
+                AlgebricksConfig.ALGEBRICKS_LOGGER
+                        .fine(">>>> Added partitioning enforcer " + exchg.getPhysicalOperator() + ".\n");
                 printOp((AbstractLogicalOperator) op);
             }
         }
@@ -649,8 +651,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         newOp.recomputeSchema();
         newOp.computeDeliveredPhysicalProperties(context);
         context.computeAndSetTypeEnvironmentForOperator(newOp);
-        AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> Structural properties for " + newOp.getPhysicalOperator()
-                + ": " + newOp.getDeliveredPhysicalProperties() + "\n");
+        AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> Structural properties for " + newOp.getPhysicalOperator() + ": "
+                + newOp.getDeliveredPhysicalProperties() + "\n");
 
         PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(newOp, context);
     }

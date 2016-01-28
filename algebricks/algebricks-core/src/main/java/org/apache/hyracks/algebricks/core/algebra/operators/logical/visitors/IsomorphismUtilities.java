@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -45,14 +44,16 @@ public class IsomorphismUtilities {
             throws AlgebricksException {
         List<Mutable<ILogicalOperator>> inputs1 = op.getInputs();
         List<Mutable<ILogicalOperator>> inputs2 = arg.getInputs();
-        if (inputs1.size() != inputs2.size())
-            return Boolean.FALSE;
+        if (inputs1.size() != inputs2.size()) {
+            return false;
+        }
         for (int i = 0; i < inputs1.size(); i++) {
             ILogicalOperator input1 = inputs1.get(i).getValue();
             ILogicalOperator input2 = inputs2.get(i).getValue();
             boolean isomorphic = isOperatorIsomorphicPlanSegment(input1, input2);
-            if (!isomorphic)
-                return Boolean.FALSE;
+            if (!isomorphic) {
+                return false;
+            }
         }
         return IsomorphismUtilities.isOperatorIsomorphic(op, arg);
     }

@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -165,6 +164,9 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
                     for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
                         usedVariables.add(partCol.getColumn());
                     }
+                    break;
+                }
+                case RANDOM_PARTITION_EXCHANGE: {
                     break;
                 }
                 default: {

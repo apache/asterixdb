@@ -52,10 +52,13 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
         return new IFrameWriter() {
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                buffer.mark();
+                // Record the current position, instead of using buffer.mark().
+                // The latter will be problematic because epWriters[i].nextFrame(buffer)
+                // can flip or clear the buffer.
+                int pos = buffer.position();
                 for (int i = 0; i < epWriters.length; ++i) {
                     if (i != 0) {
-                        buffer.reset();
+                        buffer.position(pos);
                     }
                     epWriters[i].nextFrame(buffer);
                 }

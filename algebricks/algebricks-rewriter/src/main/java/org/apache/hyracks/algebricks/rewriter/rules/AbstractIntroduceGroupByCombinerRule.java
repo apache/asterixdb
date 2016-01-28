@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -45,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -186,7 +186,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
 
     private Pair<Boolean, ILogicalPlan> tryToPushSubplan(ILogicalPlan nestedPlan, GroupByOperator oldGbyOp,
             GroupByOperator newGbyOp, BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<Mutable<ILogicalOperator>> pushedRoots = new ArrayList<Mutable<ILogicalOperator>>();
         Set<SimilarAggregatesInfo> toReplaceSet = new HashSet<SimilarAggregatesInfo>();
         for (Mutable<ILogicalOperator> r : nestedPlan.getRoots()) {
@@ -215,7 +215,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
                     VariableUtilities.getProducedVariables(rootRef.getValue(), newVars);
                 }
 
-                // Replaces variable exprs referring to the variables produced by newPlan by 
+                // Replaces variable exprs referring to the variables produced by newPlan by
                 // those produced by plan.
                 Iterator<LogicalVariable> originalVarIter = originalVars.iterator();
                 Iterator<LogicalVariable> newVarIter = newVars.iterator();
@@ -246,7 +246,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
     private boolean tryToPushRoot(Mutable<ILogicalOperator> root, GroupByOperator oldGbyOp, GroupByOperator newGbyOp,
             BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context,
             List<Mutable<ILogicalOperator>> toPushAccumulate, Set<SimilarAggregatesInfo> toReplaceSet)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) root.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
@@ -273,6 +273,11 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         } else {
             GroupByOperator nestedGby = (GroupByOperator) op3;
             List<LogicalVariable> gbyVars2 = nestedGby.getGbyVarList();
+            Set<LogicalVariable> freeVars = new HashSet<>();
+            // Removes non-free variables defined in the nested plan.
+            OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc(nestedGby, freeVars);
+            gbyVars2.retainAll(freeVars);
+
             List<LogicalVariable> concatGbyVars = new ArrayList<LogicalVariable>(gbyVars);
             concatGbyVars.addAll(gbyVars2);
             for (ILogicalPlan p : nestedGby.getNestedPlans()) {
@@ -288,50 +293,99 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
              * Push the nested pipeline which provides the input to the nested group operator into newGbyOp (the combined gby op).
              * The change is to fix asterixdb issue 782.
              */
-            Mutable<ILogicalOperator> nestedGbyInputRef = nestedGby.getInputs().get(0);
-            Mutable<ILogicalOperator> startOfPipelineRef = nestedGbyInputRef;
-            if (startOfPipelineRef.getValue().getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            // Finds the reference of the bottom-most operator in the pipeline that
+            // should not be pushed to the combiner group-by.
+            Mutable<ILogicalOperator> currentOpRef = new MutableObject<ILogicalOperator>(nestedGby);
+            Mutable<ILogicalOperator> bottomOpRef = findBottomOpRefStayInOldGby(currentOpRef);
+
+            // Adds the used variables in the pipeline from <code>currentOpRef</code> to <code>bottomOpRef</code>
+            // into the group-by keys for the introduced combiner group-by operator.
+            Set<LogicalVariable> usedVars = collectUsedFreeVariables(currentOpRef, bottomOpRef);
+            for (LogicalVariable usedVar : usedVars) {
+                if (!concatGbyVars.contains(usedVar)) {
+                    concatGbyVars.add(usedVar);
+                }
+            }
+
+            // Retains the nested pipeline above the identified operator in the old group-by operator.
+            // Pushes the nested pipeline under the select operator into the new group-by operator.
+            Mutable<ILogicalOperator> oldNtsRef = findNtsRef(currentOpRef);
+            ILogicalOperator opToCombiner = bottomOpRef.getValue().getInputs().get(0).getValue();
+            if (opToCombiner.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                // No pipeline other than the aggregate operator needs to push to combiner.
                 return true;
             }
-
-            // move down the nested pipeline to find the start of the pipeline right upon the nested-tuple-source
-            boolean hasIsNullFunction = OperatorPropertiesUtil.isNullTest((AbstractLogicalOperator) startOfPipelineRef
-                    .getValue());
-            while (startOfPipelineRef.getValue().getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                startOfPipelineRef = startOfPipelineRef.getValue().getInputs().get(0);
-                hasIsNullFunction = OperatorPropertiesUtil.isNullTest((AbstractLogicalOperator) startOfPipelineRef
-                        .getValue());
-            }
-            //keep the old nested-tuple-source
-            Mutable<ILogicalOperator> oldNts = startOfPipelineRef.getValue().getInputs().get(0);
-
-            //move down the nested op in the new gby operator
-            Mutable<ILogicalOperator> newGbyNestedOpRef = toPushAccumulate.get(0);
-            while (newGbyNestedOpRef.getValue().getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                newGbyNestedOpRef = newGbyNestedOpRef.getValue().getInputs().get(0);
-            }
-
-            //insert the pipeline before nested gby into the new (combiner) gby's nested plan on top of the nested-tuple-source
-            startOfPipelineRef.getValue().getInputs().set(0, newGbyNestedOpRef.getValue().getInputs().get(0));
-            newGbyNestedOpRef.getValue().getInputs().set(0, nestedGbyInputRef);
-
-            //in the old gby operator, remove the nested pipeline since it is already pushed to the combiner gby
-            nestedGby.getInputs().set(0, oldNts);
-            List<LogicalVariable> aggProducedVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getProducedVariables(toPushAccumulate.get(0).getValue(), aggProducedVars);
-
-            if (hasIsNullFunction && aggProducedVars.size() != 0) {
-                // if the old nested pipeline contains a not-null-check, we need to convert it to a not-system-null-check in the non-local gby
-                processNullTest(context, nestedGby, aggProducedVars);
-            }
-
+            bottomOpRef.getValue().getInputs().set(0, new MutableObject<ILogicalOperator>(oldNtsRef.getValue()));
+            Mutable<ILogicalOperator> newGbyNestedOpRef = findNtsRef(toPushAccumulate.get(0));
+            NestedTupleSourceOperator newNts = (NestedTupleSourceOperator) newGbyNestedOpRef.getValue();
+            newGbyNestedOpRef.setValue(opToCombiner);
+            oldNtsRef.setValue(newNts);
             return true;
         }
     }
 
     /**
+     * Find the set of used free variables along the pipeline from <code>topOpRef</code> (exclusive)
+     * to <code>bottomOpRef</code> (inclusive).
+     *
+     * @param topOpRef,
+     *            the top root of the pipeline.
+     * @param bottomOpRef,
+     *            the bottom of the pipeline.
+     * @return the set of used variables.
+     * @throws AlgebricksException
+     */
+    private Set<LogicalVariable> collectUsedFreeVariables(Mutable<ILogicalOperator> topOpRef,
+            Mutable<ILogicalOperator> bottomOpRef) throws AlgebricksException {
+        Set<LogicalVariable> usedVars = new HashSet<>();
+        Mutable<ILogicalOperator> currentOpRef = topOpRef;
+        while (currentOpRef != bottomOpRef) {
+            currentOpRef = currentOpRef.getValue().getInputs().get(0);
+            VariableUtilities.getUsedVariables(currentOpRef.getValue(), usedVars);
+        }
+        Set<LogicalVariable> freeVars = new HashSet<>();
+        OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) topOpRef.getValue(), freeVars);
+        usedVars.retainAll(freeVars);
+        return usedVars;
+    }
+
+    /**
+     * Find the reference of a nested tuple source operator in the query pipeline rooted at <code>currentOpRef</code>
+     *
+     * @param currentOpRef
+     * @return the reference of a nested tuple source operator
+     */
+    private Mutable<ILogicalOperator> findNtsRef(Mutable<ILogicalOperator> currentOpRef) {
+        while (currentOpRef.getValue().getInputs().size() > 0) {
+            currentOpRef = currentOpRef.getValue().getInputs().get(0);
+        }
+        return currentOpRef;
+    }
+
+    /**
+     * Find the bottom-most nested operator reference in the query pipeline rooted at <code>currentOpRef</code>
+     * that cannot be pushed into the combiner group-by operator.
+     *
+     * @param currentOpRef
+     * @return the bottom-most reference of a select operator
+     */
+    private Mutable<ILogicalOperator> findBottomOpRefStayInOldGby(Mutable<ILogicalOperator> currentOpRef)
+            throws AlgebricksException {
+        Mutable<ILogicalOperator> bottomOpRef = currentOpRef;
+        while (currentOpRef.getValue().getInputs().size() > 0) {
+            Set<LogicalVariable> producedVars = new HashSet<>();
+            VariableUtilities.getProducedVariables(currentOpRef.getValue(), producedVars);
+            if (currentOpRef.getValue().getOperatorTag() == LogicalOperatorTag.SELECT || !producedVars.isEmpty()) {
+                bottomOpRef = currentOpRef;
+            }
+            currentOpRef = currentOpRef.getValue().getInputs().get(0);
+        }
+        return bottomOpRef;
+    }
+
+    /**
      * Deal with the case where the nested plan in the combiner gby operator has a null-test before invoking aggregation functions.
-     * 
+     *
      * @param context
      *            The optimization context.
      * @param nestedGby

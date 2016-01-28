@@ -134,7 +134,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Void arg)
             throws AlgebricksException {
-        return new NestedTupleSourceOperator(null);
+        return new NestedTupleSourceOperator(op.getDataSourceReference());
     }
 
     @Override

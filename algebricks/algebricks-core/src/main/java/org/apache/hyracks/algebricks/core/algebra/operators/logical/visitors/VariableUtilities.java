@@ -28,10 +28,8 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class VariableUtilities {
@@ -52,6 +50,14 @@ public class VariableUtilities {
             throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Void> visitor = new SchemaVariableVisitor(schemaVariables);
         op.accept(visitor, null);
+    }
+
+    public static void getSubplanLocalLiveVariables(ILogicalOperator op, Collection<LogicalVariable> liveVariables)
+            throws AlgebricksException {
+        VariableUtilities.getLiveVariables(op, liveVariables);
+        Set<LogicalVariable> locallyProducedVars = new HashSet<>();
+        VariableUtilities.getProducedVariablesInDescendantsAndSelf(op, locallyProducedVars);
+        liveVariables.retainAll(locallyProducedVars);
     }
 
     public static void getUsedVariablesInDescendantsAndSelf(ILogicalOperator op, Collection<LogicalVariable> vars)
@@ -77,6 +83,21 @@ public class VariableUtilities {
         substituteVariables(op, v1, v2, true, ctx);
     }
 
+    public static void substituteVariables(ILogicalOperator op, Map<LogicalVariable, LogicalVariable> varMap,
+            ITypingContext ctx) throws AlgebricksException {
+        for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
+            VariableUtilities.substituteVariables(op, entry.getKey(), entry.getValue(), ctx);
+        }
+    }
+
+    public static void substituteVariables(ILogicalOperator op,
+            List<Pair<LogicalVariable, LogicalVariable>> oldVarNewVarMapHistory, ITypingContext ctx)
+                    throws AlgebricksException {
+        for (Pair<LogicalVariable, LogicalVariable> entry : oldVarNewVarMapHistory) {
+            VariableUtilities.substituteVariables(op, entry.first, entry.second, ctx);
+        }
+    }
+
     public static void substituteVariablesInDescendantsAndSelf(ILogicalOperator op, LogicalVariable v1,
             LogicalVariable v2, ITypingContext ctx) throws AlgebricksException {
         for (Mutable<ILogicalOperator> childOp : op.getInputs()) {
@@ -98,34 +119,6 @@ public class VariableUtilities {
         varSet.addAll(var);
         varArgSet.addAll(varArg);
         return varSet.equals(varArgSet);
-    }
-
-    /**
-     * Recursively modifies the query plan to make sure every variable in {@code varsToEnforce}
-     * be part of the output schema of {@code opRef}.
-     *
-     * @param opRef,
-     *            the operator to enforce.
-     * @param varsToEnforce,
-     *            the variables that needs to be live after the operator of {@code opRef}.
-     * @param context,
-     *            the optimization context.
-     * @return a map that maps a variable in {@code varsToEnforce} to yet-another-variable if
-     *         a mapping happens in the query plan under {@code opRef}, e.g., by grouping and assigning.
-     * @throws AlgebricksException
-     */
-    public static Map<LogicalVariable, LogicalVariable> enforceVariablesInDescendantsAndSelf(
-            Mutable<ILogicalOperator> opRef, Collection<LogicalVariable> varsToEnforce, IOptimizationContext context)
-                    throws AlgebricksException {
-        Set<LogicalVariable> copiedVarsToEnforce = new HashSet<>();
-        copiedVarsToEnforce.addAll(varsToEnforce);
-        // Rewrites the query plan
-        EnforceVariablesVisitor visitor = new EnforceVariablesVisitor(context);
-        ILogicalOperator result = opRef.getValue().accept(visitor, copiedVarsToEnforce);
-        opRef.setValue(result);
-        // Re-computes the type environment bottom up.
-        OperatorManipulationUtil.computeTypeEnvironmentBottomUp(result, context);
-        return visitor.getInputVariableToOutputVariableMap();
     }
 
 }

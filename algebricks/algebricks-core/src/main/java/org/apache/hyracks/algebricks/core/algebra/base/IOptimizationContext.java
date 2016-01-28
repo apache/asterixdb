@@ -41,6 +41,7 @@ public interface IOptimizationContext extends ITypingContext {
 
     public abstract LogicalVariable newVar();
 
+    @Override
     public abstract IMetadataProvider<?, ?> getMetadataProvider();
 
     public abstract void setMetadataDeclarations(IMetadataProvider<?, ?> metadataProvider);
@@ -53,7 +54,7 @@ public interface IOptimizationContext extends ITypingContext {
      * returns true if op1 and op2 have already been compared
      */
     public abstract boolean checkAndAddToAlreadyCompared(ILogicalOperator op1, ILogicalOperator op2);
-    
+
     public abstract void removeFromAlreadyCompared(ILogicalOperator op1);
 
     public abstract void addNotToBeInlinedVar(LogicalVariable var);
@@ -72,6 +73,8 @@ public interface IOptimizationContext extends ITypingContext {
 
     public abstract List<FunctionalDependency> getFDList(ILogicalOperator op);
 
+    public void clearAllFDAndEquivalenceClasses();
+
     public abstract void putLogicalPropertiesVector(ILogicalOperator op, ILogicalPropertiesVector v);
 
     public abstract ILogicalPropertiesVector getLogicalPropertiesVector(ILogicalOperator op);
@@ -89,6 +92,6 @@ public interface IOptimizationContext extends ITypingContext {
     public abstract void computeAndSetTypeEnvironmentForOperator(ILogicalOperator op) throws AlgebricksException;
 
     public abstract void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
-    
+
     public abstract LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
 }

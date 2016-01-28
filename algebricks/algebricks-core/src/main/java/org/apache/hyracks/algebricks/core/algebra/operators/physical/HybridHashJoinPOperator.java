@@ -18,12 +18,14 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -34,6 +36,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -106,14 +110,14 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper.variablesToBinaryHashFunctionFactories(
-                keysLeftBranch, env, context);
-        IBinaryHashFunctionFamily[] hashFunFamilies = JobGenHelper.variablesToBinaryHashFunctionFamilies(
-                keysLeftBranch, env, context);
+        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper
+                .variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
+        IBinaryHashFunctionFamily[] hashFunFamilies = JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch,
+                env, context);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
         int i = 0;
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
@@ -173,9 +177,10 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     case INNER: {
                         opDesc = new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                                 maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                                comparatorFactories, recDescriptor, new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysLeft, keysRight), new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysRight, keysLeft), predEvaluatorFactory);
+                                comparatorFactories, recDescriptor,
+                                new JoinMultiComparatorFactory(comparatorFactories, keysLeft, keysRight),
+                                new JoinMultiComparatorFactory(comparatorFactories, keysRight, keysLeft),
+                                predEvaluatorFactory);
                         break;
                     }
                     case LEFT_OUTER: {
@@ -185,9 +190,10 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                         }
                         opDesc = new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                                 maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                                comparatorFactories, recDescriptor, new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysLeft, keysRight), new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysRight, keysLeft), predEvaluatorFactory, true, nullWriterFactories);
+                                comparatorFactories, recDescriptor,
+                                new JoinMultiComparatorFactory(comparatorFactories, keysLeft, keysRight),
+                                new JoinMultiComparatorFactory(comparatorFactories, keysRight, keysLeft),
+                                predEvaluatorFactory, true, nullWriterFactories);
                         break;
                     }
                     default: {
@@ -209,7 +215,31 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
     @Override
     protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        return new LinkedList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> deliveredLocalProperties = new ArrayList<ILocalStructuralProperty>();
+        // Inner join can kick off the "role reversal" optimization, which can kill data properties for the probe side.
+        if (kind == JoinKind.LEFT_OUTER) {
+            AbstractLogicalOperator probeOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            IPhysicalPropertiesVector probeSideProperties = probeOp.getPhysicalOperator().getDeliveredProperties();
+            List<ILocalStructuralProperty> probeSideLocalProperties = probeSideProperties.getLocalProperties();
+            if (probeSideLocalProperties != null) {
+                // The local grouping property in the probe side will be maintained
+                // and the local ordering property in the probe side will be turned into a local grouping property
+                // if the grouping variables (or sort columns) in the local property contain all the join key variables
+                // for the left branch:
+                // 1. in case spilling is not kicked off, the ordering property is maintained and hence local grouping property is maintained.
+                // 2. if spilling is kicked off, the grouping property is still maintained though the ordering property is destroyed.
+                for (ILocalStructuralProperty property : probeSideLocalProperties) {
+                    Set<LogicalVariable> groupingVars = new ListSet<LogicalVariable>();
+                    Set<LogicalVariable> leftBranchVars = new ListSet<LogicalVariable>();
+                    property.getVariables(groupingVars);
+                    leftBranchVars.addAll(getKeysLeftBranch());
+                    if (groupingVars.containsAll(leftBranchVars)) {
+                        deliveredLocalProperties.add(new LocalGroupingProperty(groupingVars));
+                    }
+                }
+            }
+        }
+        return deliveredLocalProperties;
     }
 
 }

@@ -22,6 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -36,9 +37,15 @@ import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 
 public class MaterializerTaskState extends AbstractStateObject {
     private RunFileWriter out;
+    private final AtomicInteger numConsumers = new AtomicInteger(1);
 
     public MaterializerTaskState(JobId jobId, TaskId taskId) {
         super(jobId, taskId);
+    }
+
+    public MaterializerTaskState(JobId jobId, TaskId taskId, int numConsumers) {
+        super(jobId, taskId);
+        this.numConsumers.set(numConsumers);
     }
 
     @Override
@@ -67,7 +74,7 @@ public class MaterializerTaskState extends AbstractStateObject {
     }
 
     public void writeOut(IFrameWriter writer, IFrame frame) throws HyracksDataException {
-        RunFileReader in = out.createDeleteOnCloseReader();
+        RunFileReader in = out.createReader();
         try {
             writer.open();
             try {
@@ -75,6 +82,8 @@ public class MaterializerTaskState extends AbstractStateObject {
                 while (in.nextFrame(frame)) {
                     writer.nextFrame(frame.getBuffer());
                 }
+            } catch (Throwable th) {
+                throw new HyracksDataException(th);
             } finally {
                 in.close();
             }
@@ -83,10 +92,9 @@ public class MaterializerTaskState extends AbstractStateObject {
             throw new HyracksDataException(th);
         } finally {
             writer.close();
+            if (numConsumers.decrementAndGet() == 0) {
+                out.getFileReference().delete();
+            }
         }
-    }
-
-    public void deleteFile() {
-        out.getFileReference().delete();
     }
 }
