@@ -197,7 +197,8 @@ abstract class RESTAPIServlet extends HttpServlet {
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
-            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "", "");
+            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "",
+                    ResultUtils.extractFullStackTrace(pe));
             sessionConfig.out().write(errorResp.toString());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (Exception e) {

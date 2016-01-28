@@ -305,7 +305,7 @@ public class ResultUtils {
      * @param e
      * @return the string containing the full stack trace of the error.
      */
-    private static String extractFullStackTrace(Throwable e) {
+    public static String extractFullStackTrace(Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         e.printStackTrace(printWriter);
