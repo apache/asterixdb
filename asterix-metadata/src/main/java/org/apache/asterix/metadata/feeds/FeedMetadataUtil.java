@@ -363,7 +363,7 @@ public class FeedMetadataUtil {
         spec.getConnectorMap().remove(connDesc.getConnectorId());
         connectorOpMap.remove(connDesc.getConnectorId());
 
-        ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory(requiredCardinality);
+        ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory();
         MToNPartitioningConnectorDescriptor newConnector = new MToNPartitioningConnectorDescriptor(spec, tpcf);
         spec.getConnectorMap().put(newConnector.getConnectorId(), newConnector);
         spec.connect(newConnector, sourceOp, 0, targetOp, 0);

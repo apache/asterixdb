@@ -4077,6 +4077,11 @@
                 <output-dir compare="Text">everysat_01</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="quantifiers">
+            <compilation-unit name="query-ASTERIXDB-1005">
+                <output-dir compare="Text">query-ASTERIXDB-1005</output-dir>
+            </compilation-unit>
+        </test-case>
         <!--
         <test-case FilePath="quantifiers">
           <compilation-unit name="everysat_02">
@@ -5044,6 +5049,11 @@
         <test-case FilePath="tpch">
             <compilation-unit name="nest_aggregate">
                 <output-dir compare="Text">nest_aggregate</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="nest_aggregate2">
+                <output-dir compare="Text">nest_aggregate2</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">

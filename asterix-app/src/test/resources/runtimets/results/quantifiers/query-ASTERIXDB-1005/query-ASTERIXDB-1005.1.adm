@@ -1,0 +1,15 @@
+{ "name": "Afo Seafood", "cuisines": {{ "American", "Italian" }} }
+{ "name": "Aig craspe", "cuisines": {{ "Italian" }} }
+{ "name": "Ano Argio", "cuisines": {{ "American", "Italian" }} }
+{ "name": "Cit Spicy", "cuisines": {{ "Italian" }} }
+{ "name": "Dan Urban Plates", "cuisines": {{ "Asian", "Indian", "Mexican" }} }
+{ "name": "Gar Chiden", "cuisines": {{ "Italian" }} }
+{ "name": "Ith Javie", "cuisines": {{ "Italian" }} }
+{ "name": "Ken Fish Grill", "cuisines": {{ "Italian", "Mexican" }} }
+{ "name": "Ley Cucina", "cuisines": {{ "Italian" }} }
+{ "name": "Lly taik", "cuisines": {{ "Italian" }} }
+{ "name": "Nor Kingchops", "cuisines": {{ "Italian" }} }
+{ "name": "Nye Boilin", "cuisines": {{ "Italian" }} }
+{ "name": "Pat Urban Seoul", "cuisines": {{ "American", "Mexican" }} }
+{ "name": "Rno Fukad", "cuisines": {{ "Italian" }} }
+{ "name": "Sar Tang 190", "cuisines": {{ "French", "Greek", "Italian" }} }

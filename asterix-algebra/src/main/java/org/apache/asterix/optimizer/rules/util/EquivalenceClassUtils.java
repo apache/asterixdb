@@ -20,8 +20,10 @@
 package org.apache.asterix.optimizer.rules.util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -31,6 +33,8 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
@@ -39,8 +43,13 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.mortbay.util.SingletonList;
 
 public class EquivalenceClassUtils {
@@ -99,4 +108,51 @@ public class EquivalenceClassUtils {
         }
     }
 
+    /**
+     * Find the header variables that can imply all subplan-local live variables at <code>operator</code>.
+     *
+     * @param context
+     *            the optimization context.
+     * @param operator
+     *            the operator of interest.
+     * @return a set of covering variables that can imply all subplan-local live variables at <code>operator</code>.
+     * @throws AlgebricksException
+     */
+    public static Set<LogicalVariable> findFDHeaderVariables(IOptimizationContext context, ILogicalOperator operator)
+            throws AlgebricksException {
+        PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses((AbstractLogicalOperator) operator, context);
+        List<FunctionalDependency> fds = context.getFDList(operator);
+        context.clearAllFDAndEquivalenceClasses();
+
+        Set<LogicalVariable> liveVars = new HashSet<>();
+        VariableUtilities.getSubplanLocalLiveVariables(operator, liveVars);
+
+        Set<LogicalVariable> key = new HashSet<>();
+        Set<LogicalVariable> cover = new HashSet<>();
+        for (FunctionalDependency fd : fds) {
+            List<LogicalVariable> head = fd.getHead();
+            head.retainAll(liveVars);
+            key.addAll(head);
+            cover.addAll(fd.getTail());
+            if (cover.containsAll(liveVars)) {
+                return key;
+            }
+        }
+        if (cover.containsAll(liveVars)) {
+            return key;
+        } else {
+            IVariableTypeEnvironment env = context.getOutputTypeEnvironment(operator);
+            Set<LogicalVariable> keyVars = new HashSet<>();
+            for (LogicalVariable var : liveVars) {
+                IAType type = (IAType) env.getVarType(var);
+                ATypeTag typeTag = type.getTypeTag();
+                if (typeTag == ATypeTag.RECORD || typeTag == ATypeTag.ORDEREDLIST
+                        || typeTag == ATypeTag.UNORDEREDLIST) {
+                    continue;
+                }
+                keyVars.add(var);
+            }
+            return keyVars;
+        }
+    }
 }

@@ -49,7 +49,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RunningAggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * This rule cancels the unnest with the nested listify. Formally, the following plan<br/>
@@ -192,6 +195,11 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         Mutable<ILogicalOperator> aggInputOpRef = agg.getInputs().get(0);
 
         if (agg.getVariables().size() > 1) {
+            return false;
+        }
+
+        if (OperatorManipulationUtil.ancestorOfOperators(agg, ImmutableSet.of(LogicalOperatorTag.LIMIT,
+                LogicalOperatorTag.ORDER, LogicalOperatorTag.GROUP, LogicalOperatorTag.DISTINCT))) {
             return false;
         }
 

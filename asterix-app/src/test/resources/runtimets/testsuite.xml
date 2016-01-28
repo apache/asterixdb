@@ -5220,6 +5220,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
+            <compilation-unit name="nest_aggregate2">
+                <output-dir compare="Text">nest_aggregate2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
             <compilation-unit name="query-issue638">
                 <output-dir compare="Text">query-issue638</output-dir>
             </compilation-unit>

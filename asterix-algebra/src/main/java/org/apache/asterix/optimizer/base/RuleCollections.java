@@ -118,8 +118,6 @@ import org.apache.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
 import org.apache.hyracks.algebricks.rewriter.rules.SimpleUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanWithInputCardinalityOneRule;
-import org.apache.hyracks.algebricks.rewriter.rules.subplan.IntroduceGroupByForSubplanRule;
-import org.apache.hyracks.algebricks.rewriter.rules.subplan.IntroduceLeftOuterJoinForSubplanRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.NestedSubplanToJoinRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.PushSubplanIntoGroupByRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.SubplanOutOfGroupRule;
@@ -190,9 +188,7 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroJoinInsideSubplanRule());
         condPushDownAndJoinInference.add(new PushMapOperatorDownThroughProductRule());
         condPushDownAndJoinInference.add(new PushSubplanWithAggregateDownThroughProductRule());
-        condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
-        condPushDownAndJoinInference.add(new IntroduceLeftOuterJoinForSubplanRule());
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
