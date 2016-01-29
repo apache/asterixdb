@@ -44,7 +44,6 @@ import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 
 /**
  * A holder class for properties related to the Asterix cluster.
@@ -229,7 +228,7 @@ public class AsterixClusterProperties {
         return participantNodes;
     }
 
-    public synchronized AlgebricksPartitionConstraint getClusterLocations() {
+    public synchronized AlgebricksAbsolutePartitionConstraint getClusterLocations() {
         if (clusterPartitionConstraint == null) {
             resetClusterPartitionConstraint();
         }

@@ -65,4 +65,8 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
         tupleForwarder.resume();
         return true;
     }
+
+    public void flush() throws HyracksDataException {
+        tupleForwarder.flush();
+    }
 }

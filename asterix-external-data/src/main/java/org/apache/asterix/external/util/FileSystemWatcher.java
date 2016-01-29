@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -50,6 +52,7 @@ public class FileSystemWatcher {
     private final boolean isFeed;
     private boolean done;
     private File current;
+    private AbstractFeedDataFlowController controller;
 
     public FileSystemWatcher(FeedLogManager logManager, Path inputResource, String expression, boolean isFeed)
             throws IOException {
@@ -199,7 +202,7 @@ public class FileSystemWatcher {
         return false;
     }
 
-    public boolean hasNext() {
+    public boolean hasNext() throws HyracksDataException {
         if (it.hasNext()) {
             return true;
         }
@@ -218,6 +221,9 @@ public class FileSystemWatcher {
             key = watcher.poll();
         }
         // No file was found, wait for the filesystem to push events
+        if (controller != null) {
+            controller.flush();
+        }
         while (files.isEmpty()) {
             try {
                 key = watcher.take();
@@ -240,5 +246,9 @@ public class FileSystemWatcher {
         // files were found, re-create the iterator and move it one step
         it = files.iterator();
         return it.hasNext();
+    }
+
+    public void setController(AbstractFeedDataFlowController controller) {
+        this.controller = controller;
     }
 }

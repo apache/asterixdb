@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.rss;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -96,11 +96,6 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
         } catch (Exception e) {
             throw new IOException(e);
         }
-    }
-
-    @Override
-    public Class<SyndEntryImpl> getRecordClass() throws IOException {
-        return SyndEntryImpl.class;
     }
 
     @Override

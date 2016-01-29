@@ -171,13 +171,17 @@ public class ExternalDataUtils {
             if (tag == null) {
                 throw new NotImplementedException("Failed to get the type information for field " + i + ".");
             }
-            IValueParserFactory vpf = valueParserFactoryMap.get(tag);
-            if (vpf == null) {
-                throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
-            }
-            fieldParserFactories[i] = vpf;
+            fieldParserFactories[i] = getParserFactory(tag);
         }
         return fieldParserFactories;
+    }
+
+    public static IValueParserFactory getParserFactory(ATypeTag tag) {
+        IValueParserFactory vpf = valueParserFactoryMap.get(tag);
+        if (vpf == null) {
+            throw new NotImplementedException("No value parser factory for fields of type " + tag);
+        }
+        return vpf;
     }
 
     public static String getRecordReaderStreamName(Map<String, String> configuration) {
@@ -253,5 +257,11 @@ public class ExternalDataUtils {
 
     public static String getFeedName(Map<String, String> configuration) {
         return configuration.get(ExternalDataConstants.KEY_FEED_NAME);
+    }
+
+    public static int getQueueSize(Map<String, String> configuration) {
+        return configuration.containsKey(ExternalDataConstants.KEY_QUEUE_SIZE)
+                ? Integer.parseInt(configuration.get(ExternalDataConstants.KEY_QUEUE_SIZE))
+                : ExternalDataConstants.DEFAULT_QUEUE_SIZE;
     }
 }

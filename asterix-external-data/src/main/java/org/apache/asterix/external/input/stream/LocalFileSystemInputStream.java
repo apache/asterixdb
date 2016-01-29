@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
@@ -36,6 +37,11 @@ public class LocalFileSystemInputStream extends AInputStream {
             throws IOException {
         this.watcher = new FileSystemWatcher(logManager, inputResource, expression, isFeed);
         this.watcher.init();
+    }
+
+    @Override
+    public void setController(AbstractFeedDataFlowController controller) {
+        watcher.setController(controller);
     }
 
     @Override

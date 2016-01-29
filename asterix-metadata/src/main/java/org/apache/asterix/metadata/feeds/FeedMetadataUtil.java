@@ -37,6 +37,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
@@ -510,7 +511,7 @@ public class FeedMetadataUtil {
         return feedProps;
     }
 
-    private static ARecordType getOutputType(Feed feed, Map<String, String> configuration) throws Exception {
+    public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration) throws Exception {
         ARecordType outputType = null;
         String fqOutputType = configuration.get(ExternalDataConstants.KEY_TYPE_NAME);
 

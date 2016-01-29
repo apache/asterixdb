@@ -139,4 +139,8 @@ public class CommitRuntime implements IPushRuntime {
     public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
         this.frameTupleAccessor = new FrameTupleAccessor(recordDescriptor);
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }
 }

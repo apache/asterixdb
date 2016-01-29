@@ -52,15 +52,16 @@ public interface IRecordReader<T> extends Closeable {
     public IRawRecord<T> next() throws IOException, InterruptedException;
 
     /**
-     * @return the class of the java objects representing the records. used to check compatibility between readers and
-     *         parsers.
-     * @throws IOException
-     */
-    public Class<? extends T> getRecordClass() throws IOException;
-
-    /**
      * used to stop reader from producing more records.
      * @return true if the connection to the external source has been suspended, false otherwise.
      */
     public boolean stop();
+
+    /**
+     * set a pointer to the controller of the feed. the controller can be used to flush()
+     * parsed records when waiting for more records to be pushed
+     */
+    public default void setController(IDataFlowController controller) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    };
 }

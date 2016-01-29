@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.factory;
+package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.util.Map;
 
@@ -24,9 +24,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.ILookupReaderFactory;
 import org.apache.asterix.external.api.ILookupRecordReader;
 import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
-import org.apache.asterix.external.input.record.reader.RCLookupReader;
-import org.apache.asterix.external.input.record.reader.SequenceLookupReader;
-import org.apache.asterix.external.input.record.reader.TextLookupReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.fs.FileSystem;

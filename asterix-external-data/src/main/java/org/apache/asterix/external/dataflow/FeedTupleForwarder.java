@@ -80,4 +80,8 @@ public class FeedTupleForwarder implements ITupleForwarder {
             FrameUtils.flushFrame(frame.getBuffer(), writer);
         }
     }
+
+    public void flush() throws HyracksDataException {
+        appender.flush(writer);
+    }
 }

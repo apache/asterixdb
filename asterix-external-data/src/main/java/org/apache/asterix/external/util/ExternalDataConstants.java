@@ -40,9 +40,13 @@ public class ExternalDataConstants {
     public static final String KEY_HDFS_URL = "hdfs";
     // specify the path when reading from a file system
     public static final String KEY_PATH = "path";
+    // specify the hdfs input format when reading data from HDFS
     public static final String KEY_INPUT_FORMAT = "input-format";
+    // specifies the filesystem (localfs or hdfs) when using a filesystem data source
     public static final String KEY_FILESYSTEM = "fs";
+    // specifies the address of the hdfs name node
     public static final String KEY_HADOOP_FILESYSTEM_URI = "fs.defaultFS";
+    // specifies the class implementation of the accessed instance of HDFS
     public static final String KEY_HADOOP_FILESYSTEM_CLASS = "fs.hdfs.impl";
     public static final String KEY_HADOOP_INPUT_DIR = "mapred.input.dir";
     public static final String KEY_HADOOP_INPUT_FORMAT = "mapred.input.format.class";
@@ -73,6 +77,20 @@ public class ExternalDataConstants {
     public static final String KEY_IS_FEED = "is-feed";
     public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
     public static final String KEY_FEED_NAME = "feed";
+    // a string representing external bucket name
+    public static final String KEY_BUCKET = "bucket";
+    // a comma delimited list of nodes
+    public static final String KEY_NODES = "nodes";
+    // a string representing the password used to authenticate with the external data source
+    public static final String KEY_PASSWORD = "password";
+    // an integer representing the number of raw records that can be bufferred in the parsing queue 
+    public static final String KEY_QUEUE_SIZE = "queue-size";
+    // a comma delimited integers representing the indexes of the meta fields in the raw record (i,e: "3,1,0,2" denotes that the first meta field is in index 3 in the actual record)
+    public static final String KEY_META_INDEXES = "meta-indexes";
+    // an integer representing the index of the value field in the data type
+    public static final String KEY_VALUE_INDEX = "value-index";
+    // a string representing the format of the raw record in the value field in the data type
+    public static final String KEY_VALUE_FORMAT = "value-format";
     /**
      * HDFS class names
      */
@@ -95,6 +113,7 @@ public class ExternalDataConstants {
      */
     public static final String READER_HDFS = "hdfs";
     public static final String READER_ADM = "adm";
+    public static final String READER_COUCHBASE = "couchbase";
     public static final String READER_SEMISTRUCTURED = "semi-structured";
     public static final String READER_DELIMITED = "delimited-text";
     public static final String READER_TWITTER_PUSH = "twitter-push";
@@ -120,6 +139,7 @@ public class ExternalDataConstants {
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_TWEET = "tweet";
     public static final String FORMAT_RSS = "rss";
+    public static final String FORMAT_RECORD_WITH_META = "record-with-meta";
 
     /**
      * input streams
@@ -178,6 +198,7 @@ public class ExternalDataConstants {
      */
     public static final int DEFAULT_BUFFER_SIZE = 4096;
     public static final int DEFAULT_BUFFER_INCREMENT = 4096;
+    public static final int DEFAULT_QUEUE_SIZE = 64;
 
     /**
      * Expected parameter values

@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.factory;
+package org.apache.asterix.external.input.record.reader.stream;
 
 import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.record.reader.AbstractStreamRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.SemiStructuredRecordReader;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class SemiStructuredRecordReaderFactory extends AbstractStreamRecordReaderFactory<char[]> {
+public class LineRecordReaderFactory extends AbstractStreamRecordReaderFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
 
     @Override
     public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition) throws Exception {
-        SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader();
+        String quoteString = configuration.get(ExternalDataConstants.KEY_QUOTE);
+        LineRecordReader recordReader;
+        if (quoteString != null) {
+            recordReader = new QuotedLineRecordReader();
+        } else {
+            recordReader = new LineRecordReader();
+        }
         return configureReader(recordReader, ctx, partition);
     }
 
@@ -43,4 +48,5 @@ public class SemiStructuredRecordReaderFactory extends AbstractStreamRecordReade
     @Override
     protected void configureStreamReaderFactory(Map<String, String> configuration) throws Exception {
     }
+
 }

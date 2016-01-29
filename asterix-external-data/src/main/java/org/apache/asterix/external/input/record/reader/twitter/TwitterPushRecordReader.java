@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.twitter;
 
 import java.io.IOException;
 import java.util.Map;
@@ -80,11 +80,6 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
     }
 
     @Override
-    public Class<? extends Status> getRecordClass() throws IOException {
-        return Status.class;
-    }
-
-    @Override
     public boolean stop() {
         try {
             close();
@@ -128,5 +123,4 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
         public void onTrackLimitationNotice(int arg0) {
         }
     }
-
 }

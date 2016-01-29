@@ -29,7 +29,7 @@ import org.apache.asterix.external.dataset.adapter.LookupAdapter;
 import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.asterix.external.indexing.RecordIdReader;
 import org.apache.asterix.external.indexing.RecordIdReaderFactory;
-import org.apache.asterix.external.input.record.reader.LookupReaderFactoryProvider;
+import org.apache.asterix.external.provider.LookupReaderFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.comm.IFrameWriter;

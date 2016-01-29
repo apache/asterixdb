@@ -112,7 +112,6 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         this.mBuffer = MonitoredBuffer.getMonitoredBuffer(ctx, this, coreOperator, fta, recordDesc,
                 feedManager.getFeedMetricCollector(), connectionId, runtimeId, exceptionHandler, frameEventCallback,
                 nPartitions, fpa);
-        this.mBuffer.start();
         this.throttlingEnabled = false;
     }
 
@@ -414,6 +413,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     @Override
     public void open() throws HyracksDataException {
         coreOperator.open();
+        mBuffer.start();
     }
 
     @Override
@@ -464,5 +464,13 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
 
     public void setBufferingEnabled(boolean bufferingEnabled) {
         this.bufferingEnabled = bufferingEnabled;
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // Only flush when in process mode.
+        if (mode == Mode.PROCESS) {
+            coreOperator.flush();
+        }
     }
 }

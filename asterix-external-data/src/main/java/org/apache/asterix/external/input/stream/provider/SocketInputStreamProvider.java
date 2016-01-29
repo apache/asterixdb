@@ -16,11 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream;
+package org.apache.asterix.external.input.stream.provider;
 
 import java.net.ServerSocket;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
+import org.apache.asterix.external.input.stream.AInputStream;
+import org.apache.asterix.external.input.stream.SocketInputStream;
 
 public class SocketInputStreamProvider implements IInputStreamProvider {
     private ServerSocket server;

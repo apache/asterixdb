@@ -25,9 +25,10 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
-import org.apache.asterix.external.input.record.reader.factory.LineRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.factory.SemiStructuredRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.factory.TwitterRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.couchbase.CouchbaseReaderFactory;
+import org.apache.asterix.external.input.record.reader.stream.LineRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamProviderFactory;
 import org.apache.asterix.external.input.stream.factory.SocketInputStreamProviderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -97,8 +98,11 @@ public class DatasourceFactoryProvider {
                 case ExternalDataConstants.READER_TWITTER_PUSH:
                     readerFactory = new TwitterRecordReaderFactory();
                     break;
+                case ExternalDataConstants.READER_COUCHBASE:
+                    readerFactory = new CouchbaseReaderFactory();
+                    break;
                 default:
-                    throw new AsterixException("unknown record reader factory");
+                    throw new AsterixException("unknown record reader factory: " + reader);
             }
         }
         return readerFactory;

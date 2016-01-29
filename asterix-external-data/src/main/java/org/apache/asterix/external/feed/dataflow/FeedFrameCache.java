@@ -169,4 +169,9 @@ public class FeedFrameCache extends MessageReceiver<ByteBuffer> {
             frameWriter.nextFrame(frame);
         }
     }
+
+    @Override
+    public void emptyInbox() throws HyracksDataException {
+        frameWriter.flush();
+    }
 }

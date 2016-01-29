@@ -20,7 +20,6 @@ package org.apache.asterix.feed;
 
 import java.util.logging.Level;
 
-import org.json.JSONObject;
 import org.apache.asterix.external.feed.api.IFeedLoadManager;
 import org.apache.asterix.external.feed.api.IFeedTrackingManager;
 import org.apache.asterix.external.feed.api.IFeedMessage.MessageType;
@@ -35,6 +34,8 @@ import org.apache.asterix.external.feed.watch.NodeLoadReport;
 import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.feed.CentralFeedManager.AQLExecutor;
 import org.apache.asterix.hyracks.bootstrap.FeedBootstrap;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.json.JSONObject;
 
 public class FeedMessageReceiver extends MessageReceiver<String> {
 
@@ -87,5 +88,9 @@ public class FeedMessageReceiver extends MessageReceiver<String> {
                 break;
         }
 
+    }
+
+    @Override
+    public void emptyInbox() throws HyracksDataException {
     }
 }

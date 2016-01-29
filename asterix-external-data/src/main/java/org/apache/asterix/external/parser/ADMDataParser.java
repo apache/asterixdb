@@ -39,7 +39,6 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
@@ -67,7 +66,6 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
     private AdmLexer admLexer;
     private ARecordType recordType;
-    private boolean datasetRec;
     private boolean isStreamParser = true;
 
     private int nullableFieldId = 0;
@@ -142,7 +140,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     public boolean parse(DataOutput out) throws AsterixException {
         try {
             resetPools();
-            return parseAdmInstance(recordType, datasetRec, out);
+            return parseAdmInstance(recordType, out);
         } catch (IOException e) {
             throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
@@ -163,12 +161,6 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     public void configure(Map<String, String> configuration, ARecordType recordType) throws IOException {
         this.recordType = recordType;
         this.configuration = configuration;
-        String isDatasetRecordString = configuration.get(ExternalDataConstants.KEY_DATASET_RECORD);
-        if (isDatasetRecordString == null) {
-            this.datasetRec = true;
-        } else {
-            this.datasetRec = Boolean.parseBoolean(isDatasetRecordString);
-        }
         this.isStreamParser = ExternalDataUtils.isDataSourceStreamProvider(configuration);
         if (!isStreamParser) {
             this.admLexer = new AdmLexer();
@@ -180,7 +172,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         try {
             resetPools();
             admLexer.setBuffer(record.get());
-            parseAdmInstance(recordType, datasetRec, out);
+            parseAdmInstance(recordType, out);
         } catch (IOException e) {
             throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
@@ -201,18 +193,18 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         admLexer = new AdmLexer(new java.io.InputStreamReader(in));
     }
 
-    protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out)
+    protected boolean parseAdmInstance(IAType objectType, DataOutput out)
             throws AsterixException, IOException, AdmLexerException {
         int token = admLexer.next();
         if (token == AdmLexer.TOKEN_EOF) {
             return false;
         } else {
-            admFromLexerStream(token, objectType, out, datasetRec);
+            admFromLexerStream(token, objectType, out);
             return true;
         }
     }
 
-    private void admFromLexerStream(int token, IAType objectType, DataOutput out, Boolean datasetRec)
+    private void admFromLexerStream(int token, IAType objectType, DataOutput out)
             throws AsterixException, IOException, AdmLexerException {
 
         switch (token) {
@@ -441,7 +433,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             case AdmLexer.TOKEN_START_RECORD: {
                 if (checkType(ATypeTag.RECORD, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
-                    parseRecord((ARecordType) objectType, out, datasetRec);
+                    parseRecord((ARecordType) objectType, out);
                 } else {
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 }
@@ -567,7 +559,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 
-    private void parseRecord(ARecordType recType, DataOutput out, Boolean datasetRec)
+    private void parseRecord(ARecordType recType, DataOutput out)
             throws IOException, AsterixException, AdmLexerException {
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
@@ -575,16 +567,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         IARecordBuilder recBuilder = getRecordBuilder();
 
         BitSet nulls = null;
-        if (datasetRec) {
-
-            if (recType != null) {
-                nulls = new BitSet(recType.getFieldNames().length);
-                recBuilder.reset(recType);
-            } else {
-                recBuilder.reset(null);
-            }
-
-        } else if (recType != null) {
+        if (recType != null) {
+            //TODO: use BitSet Pool
             nulls = new BitSet(recType.getFieldNames().length);
             recBuilder.reset(recType);
         } else {
@@ -650,7 +634,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     }
 
                     token = admLexer.next();
-                    this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput(), false);
+                    this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput());
                     if (openRecordField) {
                         if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
                             recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
@@ -752,7 +736,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 expectingListItem = false;
                 itemBuffer.reset();
 
-                admFromLexerStream(token, itemType, itemBuffer.getDataOutput(), false);
+                admFromLexerStream(token, itemType, itemBuffer.getDataOutput());
                 orderedListBuilder.addItem(itemBuffer);
             }
             first = false;
@@ -799,7 +783,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             } else {
                 expectingListItem = false;
                 itemBuffer.reset();
-                admFromLexerStream(token, itemType, itemBuffer.getDataOutput(), false);
+                admFromLexerStream(token, itemType, itemBuffer.getDataOutput());
                 unorderedListBuilder.addItem(itemBuffer);
             }
             first = false;

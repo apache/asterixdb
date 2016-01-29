@@ -181,4 +181,9 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
         }
     }
 
+    @Override
+    public void flush() throws HyracksDataException {
+        inputSideHandler.flush();
+    }
+
 }

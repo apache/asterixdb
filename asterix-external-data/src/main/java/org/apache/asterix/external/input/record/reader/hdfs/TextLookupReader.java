@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.io.IOException;
 
@@ -25,27 +25,21 @@ import org.apache.asterix.external.indexing.RecordId;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Reader;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.log4j.Logger;
 
-public class SequenceLookupReader extends AbstractCharRecordLookupReader {
+public class TextLookupReader extends AbstractCharRecordLookupReader {
 
-    public SequenceLookupReader(ExternalFileIndexAccessor snapshotAccessor, FileSystem fs, Configuration conf) {
+    public TextLookupReader(ExternalFileIndexAccessor snapshotAccessor, FileSystem fs, Configuration conf) {
         super(snapshotAccessor, fs, conf);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(SequenceLookupReader.class.getName());
-    private Reader reader;
-    private Writable key;
+    private static final Logger LOGGER = Logger.getLogger(TextLookupReader.class.getName());
+    private HDFSTextLineReader reader;
 
     @Override
     protected void readRecord(RecordId rid) throws IOException {
         reader.seek(rid.getOffset());
-        reader.next(key, value);
+        reader.readLine(value);
     }
 
     @Override
@@ -60,12 +54,11 @@ public class SequenceLookupReader extends AbstractCharRecordLookupReader {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected void openFile() throws IllegalArgumentException, IOException {
-        reader = new SequenceFile.Reader(fs, new Path(file.getFileName()), conf);
-        key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-        value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+        if (reader == null) {
+            reader = new HDFSTextLineReader();
+        }
+        reader.resetReader(fs.open(new Path(file.getFileName())));;
     }
-
 }

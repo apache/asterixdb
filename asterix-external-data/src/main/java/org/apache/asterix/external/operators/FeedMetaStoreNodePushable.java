@@ -188,6 +188,9 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
                 inputSideHandler.nextFrame(null); // signal end of data
                 while (!inputSideHandler.isFinished()) {
                     synchronized (coreOperator) {
+                        if (inputSideHandler.isFinished()) {
+                            break;
+                        }
                         coreOperator.wait();
                     }
                 }
@@ -195,8 +198,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
             }
             coreOperator.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            // ignore
+            throw new HyracksDataException(e);
         } finally {
             if (!stalled) {
                 deregister();
@@ -215,6 +217,11 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         if (feedRuntime != null) {
             feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, feedRuntime.getRuntimeId());
         }
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        inputSideHandler.flush();
     }
 
 }

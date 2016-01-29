@@ -2155,7 +2155,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
     }
 
-    public AlgebricksPartitionConstraint getClusterLocations() {
+    public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
         return AsterixClusterProperties.INSTANCE.getClusterLocations();
     }
 

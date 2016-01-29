@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record;
 
+import java.nio.CharBuffer;
 import java.util.Arrays;
 
 import org.apache.asterix.external.api.IRawRecord;
@@ -99,8 +100,21 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         size++;
     }
 
+    public void append(char[] recordBuffer) {
+        ensureCapacity(size + recordBuffer.length);
+        System.arraycopy(recordBuffer, 0, value, size, recordBuffer.length);
+        size += recordBuffer.length;
+    }
+
+    public void append(CharBuffer chars) {
+        ensureCapacity(size + chars.limit());
+        chars.get(value, size, chars.limit());
+        size += chars.limit();
+    }
+
     @Override
-    public Class<char[]> getRecordClass() {
-        return char[].class;
+    public void set(char[] value) {
+        this.value = value;
+        this.size = value.length;
     }
 }

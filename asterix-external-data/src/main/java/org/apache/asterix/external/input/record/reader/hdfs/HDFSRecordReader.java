@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +28,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.input.record.reader.EmptyRecordReader;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,16 +98,6 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
     public IRawRecord<Writable> next() throws IOException {
         record.set(value);
         return record;
-    }
-
-    @Override
-    public Class<? extends Writable> getRecordClass() throws IOException {
-        if (value == null) {
-            if (!nextInputSplit()) {
-                return null;
-            }
-        }
-        return value.getClass();
     }
 
     private boolean nextInputSplit() throws IOException {

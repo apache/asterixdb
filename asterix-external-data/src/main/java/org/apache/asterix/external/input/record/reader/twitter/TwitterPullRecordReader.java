@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.twitter;
 
 import java.io.IOException;
 import java.util.List;
@@ -94,13 +94,7 @@ public class TwitterPullRecordReader implements IRecordReader<Status> {
     }
 
     @Override
-    public Class<Status> getRecordClass() throws IOException {
-        return Status.class;
-    }
-
-    @Override
     public boolean stop() {
         return false;
     }
-
 }

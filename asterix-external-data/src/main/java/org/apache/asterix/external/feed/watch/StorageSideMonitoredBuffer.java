@@ -38,8 +38,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class StorageSideMonitoredBuffer extends MonitoredBuffer {
 
-    private static final long STORAGE_TIME_TRACKING_FREQUENCY = 5000; // 10
-                                                                      // seconds
+    private static final long STORAGE_TIME_TRACKING_FREQUENCY = 5000;
 
     private boolean ackingEnabled;
     private final boolean timeTrackingEnabled;
@@ -207,5 +206,4 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
     protected boolean reportInflowRate() {
         return false;
     }
-
 }

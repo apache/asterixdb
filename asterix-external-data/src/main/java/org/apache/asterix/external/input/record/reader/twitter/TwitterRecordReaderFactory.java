@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.factory;
+package org.apache.asterix.external.input.record.reader.twitter;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.TwitterPullRecordReader;
-import org.apache.asterix.external.input.record.reader.TwitterPushRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.TwitterUtil;

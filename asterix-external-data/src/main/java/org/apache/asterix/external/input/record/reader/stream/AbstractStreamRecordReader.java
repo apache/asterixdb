@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.input.stream.AInputStreamReader;
@@ -57,11 +59,6 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     }
 
     @Override
-    public Class<char[]> getRecordClass() {
-        return char[].class;
-    }
-
-    @Override
     public void configure(Map<String, String> configuration) throws Exception {
         record = new CharArrayRecord();
         inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
@@ -86,5 +83,10 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public void setController(IDataFlowController controller) {
+        reader.setController((AbstractFeedDataFlowController) controller);
     }
 }

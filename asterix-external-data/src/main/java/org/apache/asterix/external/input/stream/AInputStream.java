@@ -20,9 +20,14 @@ package org.apache.asterix.external.input.stream;
 
 import java.io.InputStream;
 
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+
 public abstract class AInputStream extends InputStream {
     public abstract boolean skipError() throws Exception;
 
     public abstract boolean stop() throws Exception;
 
+    public void setController(AbstractFeedDataFlowController controller) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
 }

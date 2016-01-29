@@ -28,6 +28,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
+import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -124,18 +125,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         }
     }
 
-    protected void fieldNameToBytes(String fieldName, AMutableString str, ArrayBackedValueStorage buffer)
-            throws HyracksDataException {
-        buffer.reset();
-        DataOutput out = buffer.getDataOutput();
-        str.setValue(fieldName);
-        try {
-            stringSerde.serialize(str, out);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
     @Override
     public DataSourceType getDataSourceType() {
         return isStreamParser ? DataSourceType.STREAM : DataSourceType.RECORDS;
@@ -173,7 +162,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     throw new HyracksDataException("Illegal field " + name + " in closed type " + recordType);
                 } else {
                     nameBuffers[i] = new ArrayBackedValueStorage();
-                    fieldNameToBytes(name, str, nameBuffers[i]);
+                    str.setValue(name);
+                    IDataParser.toBytes(str, nameBuffers[i], stringSerde);
                 }
             }
         }

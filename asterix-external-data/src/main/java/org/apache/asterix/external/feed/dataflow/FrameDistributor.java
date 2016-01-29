@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IFeedMemoryManager;
 import org.apache.asterix.external.feed.api.IFeedMemoryComponent.Type;
+import org.apache.asterix.external.feed.api.IFeedMemoryManager;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -356,6 +356,16 @@ public class FrameDistributor {
 
     public FrameTupleAccessor getFta() {
         return fta;
+    }
+
+    public void flush() throws HyracksDataException {
+        switch (distributionMode) {
+            case SINGLE:
+                FeedFrameCollector collector = registeredCollectors.values().iterator().next();
+                collector.flush();
+            default:
+                break;
+        }
     }
 
 }

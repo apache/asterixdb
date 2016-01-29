@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -69,9 +69,10 @@ public abstract class AbstractCharRecordLookupReader extends AbstractHDFSLookupR
         reusableByteBuffer.put(value.getBytes(), 0, value.getLength());
         reusableByteBuffer.flip();
         while (reusableByteBuffer.hasRemaining()) {
-            decoder.decode(reusableByteBuffer, reusableCharBuffer, false);
-            record.append(reusableCharBuffer.array(), 0, reusableCharBuffer.position());
             reusableCharBuffer.clear();
+            decoder.decode(reusableByteBuffer, reusableCharBuffer, false);
+            reusableCharBuffer.flip();
+            record.append(reusableCharBuffer);
         }
         record.endRecord();
     }
