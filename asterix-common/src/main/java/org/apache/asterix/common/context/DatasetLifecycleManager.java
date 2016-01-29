@@ -214,8 +214,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {
-        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory), 
-        // that is not being used (refcount == 0) and has been least recently used. The sort order defined 
+        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory),
+        // that is not being used (refcount == 0) and has been least recently used. The sort order defined
         // for DatasetInfo maintains this. See DatasetInfo.compareTo().
         List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
         Collections.sort(datasetInfosList);
@@ -572,7 +572,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
         } else {
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                // TODO: This is not efficient since we flush the indexes sequentially. 
+                // TODO: This is not efficient since we flush the indexes sequentially.
                 // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
                 // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
                 flushAndWaitForIO(dsInfo, iInfo);

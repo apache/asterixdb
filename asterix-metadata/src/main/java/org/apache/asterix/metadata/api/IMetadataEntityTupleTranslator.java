@@ -36,7 +36,7 @@ public interface IMetadataEntityTupleTranslator<T> {
      * Transforms a metadata entity of type T from a given tuple to a Java
      * object (deserializing the appropriate field(s) in the tuple as
      * necessary).
-     * 
+     *
      * @param tuple
      *            Tuple containing a serialized representation of a metadata
      *            entity of type T.
@@ -49,7 +49,7 @@ public interface IMetadataEntityTupleTranslator<T> {
     /**
      * Serializes the given metadata entity of type T into an appropriate tuple
      * representation (i.e., some number of fields containing bytes).
-     * 
+     *
      * @param metadataEntity
      *            Metadata entity to be written into a tuple.
      * @throws IOException

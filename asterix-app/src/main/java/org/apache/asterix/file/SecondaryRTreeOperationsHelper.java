@@ -240,7 +240,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         boolean temp = dataset.getDatasetDetails().isTemp();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-            // Create dummy key provider for feeding the primary index scan. 
+            // Create dummy key provider for feeding the primary index scan.
             AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
 
             // Create primary index scan op.

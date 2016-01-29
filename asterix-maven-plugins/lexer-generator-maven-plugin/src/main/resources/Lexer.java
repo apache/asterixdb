@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package [PACKAGE]; 
+package [PACKAGE];
 
 import java.io.IOException;
 import [PACKAGE].[LEXER_NAME]Exception;
@@ -28,18 +28,18 @@ public class [LEXER_NAME] {
 
     // Human representation of tokens. Useful for debug.
     // Is possible to convert a TOKEN_CONSTANT in its image through
-    // [LEXER_NAME].tokenKindToString(TOKEN_CONSTANT); 
+    // [LEXER_NAME].tokenKindToString(TOKEN_CONSTANT);
     private static final String[] tokenImage = {
             "<EOF>", "<AUX_NOT_FOUND>" [TOKENS_IMAGES]
           };
-    
+
     private static final char EOF_CHAR = 4;
     protected java.io.Reader inputStream;
     protected int column;
     protected int line;
     protected boolean prevCharIsCR;
     protected boolean prevCharIsLF;
-    protected boolean containsEscapes; 
+    protected boolean containsEscapes;
     protected char[] buffer;
     protected int bufsize;
     protected int bufpos;
@@ -56,12 +56,12 @@ public class [LEXER_NAME] {
 
 // ================================================================================
 //  Main method. Return a TOKEN_CONSTANT
-// ================================================================================            
-            
+// ================================================================================
+
     public int next() throws [LEXER_NAME]Exception, IOException {
         char currentChar = buffer[bufpos];
         while (currentChar == ' ' || currentChar=='\t' || currentChar == '\n' || currentChar=='\r')
-            currentChar = readNextChar(); 
+            currentChar = readNextChar();
         tokenBegin = bufpos;
         containsEscapes = false;
         if (currentChar==EOF_CHAR) return TOKEN_EOF;
@@ -124,21 +124,21 @@ public class [LEXER_NAME] {
             return new String(buffer, tokenBegin, bufsize - tokenBegin) +
                                   new String(buffer, 0, bufpos);
     }
-    
+
     public int getColumn() {
         return column;
     }
-    
+
     public int getLine() {
         return line;
     }
-    
+
     public boolean containsEscapes() {
         return containsEscapes;
     }
 
     public static String tokenKindToString(int token) {
-        return tokenImage[token]; 
+        return tokenImage[token];
     }
 
     public void done(){
@@ -147,8 +147,8 @@ public class [LEXER_NAME] {
 
 // ================================================================================
 //  Parse error management
-// ================================================================================    
-    
+// ================================================================================
+
     protected int parseError(int ... tokens) throws [LEXER_NAME]Exception {
         StringBuilder message = new StringBuilder();
         message.append("Parse error at (").append(line).append(", ").append(column).append(")");
@@ -160,10 +160,10 @@ public class [LEXER_NAME] {
         }
         throw new [LEXER_NAME]Exception(message.toString());
     }
-    
+
     protected void updateLineColumn(char c){
         column++;
-    
+
         if (prevCharIsLF)
         {
             prevCharIsLF = false;
@@ -181,17 +181,17 @@ public class [LEXER_NAME] {
                 line += (column = 1);
             }
         }
-        
+
         if (c=='\r') {
             prevCharIsCR = true;
         } else if(c == '\n') {
             prevCharIsLF = true;
         }
     }
-    
+
 // ================================================================================
 //  Read data, buffer management. It uses a circular (and expandable) buffer
-// ================================================================================    
+// ================================================================================
 
     protected char readNextChar() throws IOException {
         if (++bufpos >= endOf_USED_Buffer)
@@ -202,13 +202,13 @@ public class [LEXER_NAME] {
     }
 
     protected boolean fillBuff() throws IOException {
-        if (endOf_UNUSED_Buffer == endOf_USED_Buffer) // If no more unused buffer space 
+        if (endOf_UNUSED_Buffer == endOf_USED_Buffer) // If no more unused buffer space
         {
           if (endOf_UNUSED_Buffer == bufsize)         // -- If the previous unused space was
           {                                           // -- at the end of the buffer
             if (tokenBegin > maxUnusedBufferSize)     // -- -- If the first N bytes before
             {                                         //       the current token are enough
-              bufpos = endOf_USED_Buffer = 0;         // -- -- -- setup buffer to use that fragment 
+              bufpos = endOf_USED_Buffer = 0;         // -- -- -- setup buffer to use that fragment
               endOf_UNUSED_Buffer = tokenBegin;
             }
             else if (tokenBegin < 0)                  // -- -- If no token yet
@@ -220,9 +220,9 @@ public class [LEXER_NAME] {
             endOf_UNUSED_Buffer = bufsize;            // -- set endOf_UNUSED_Buffer to the end of the buffer
           else if ((tokenBegin - endOf_UNUSED_Buffer) < maxUnusedBufferSize)
           {                                           // If between endOf_UNUSED_Buffer and the token
-            ExpandBuff(true);                         // there is NOT enough space expand the buffer                          
+            ExpandBuff(true);                         // there is NOT enough space expand the buffer
           }                                           // reorganizing it
-          else 
+          else
             endOf_UNUSED_Buffer = tokenBegin;         // Otherwise there is enough space at the start
         }                                             // so we set the buffer to use that fragment
         int i;

@@ -80,7 +80,7 @@ public interface IFeedJoint {
 
     /**
      * Returns the feed subscriber {@link FeedSubscriber} corresponding to a given feed connection id.
-     * 
+     *
      * @param feedConnectionId
      *            the unique id of a feed connection
      * @return an instance of feedConnectionId {@link FeedConnectionId}
@@ -94,7 +94,7 @@ public interface IFeedJoint {
 
     /**
      * Remove the subscriber from the set of registered subscribers to the FeedJoint
-     * 
+     *
      * @param connectionId
      *            the connectionId that needs to be removed
      */
@@ -104,14 +104,14 @@ public interface IFeedJoint {
 
     /**
      * Add a feed connectionId to the set of registered subscribers
-     * 
+     *
      * @param connectionId
      */
     public void addReceiver(FeedConnectionId connectionId);
 
     /**
      * Add a feed subscription request {@link FeedConnectionRequest} for the FeedJoint
-     * 
+     *
      * @param request
      */
     public void addConnectionRequest(FeedConnectionRequest request);

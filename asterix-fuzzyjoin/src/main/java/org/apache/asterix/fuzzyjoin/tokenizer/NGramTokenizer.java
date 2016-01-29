@@ -26,7 +26,7 @@ import java.util.List;
 public class NGramTokenizer implements Tokenizer {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

@@ -32,7 +32,7 @@ public class ClusterManagementWorkResponse implements IClusterManagementWorkResp
         this.status = Status.IN_PROGRESS;
     }
 
-   
+
     @Override
     public IClusterManagementWork getWork() {
         return work;

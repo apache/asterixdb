@@ -571,7 +571,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             long remoteLSN = lsmCompProp.getOriginalLSN();
             //LSN=0 (bulkload) does not need to be updated and there is no flush log corresponding to it
             if (remoteLSN == 0) {
-                //since this is the first LSM component of this index, 
+                //since this is the first LSM component of this index,
                 //then set the mapping in the LSN_MAP to the current log LSN because
                 //no other log could've been received for this index since bulkload replication is synchronous.
                 lsmCompProp.setReplicaLSN(logManager.getAppendLSN());
@@ -606,12 +606,12 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     Long mappingLSN = lsmMap.get(lsmCompProp.getOriginalLSN());
                     if (mappingLSN == null) {
                         /*
-                         * this shouldn't happen unless this node just recovered and the first component it received 
+                         * this shouldn't happen unless this node just recovered and the first component it received
                          * is a merged component due to an on-going merge operation while recovery on the remote replica.
                          * In this case, we use the current append LSN since no new records exist for this index,
                          * otherwise they would've been flushed.
                          * This could be prevented by waiting for any IO to finish on the remote replica during recovery.
-                         * 
+                         *
                          */
                         mappingLSN = logManager.getAppendLSN();
                     } else {
@@ -623,8 +623,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             Path path = Paths.get(syncTask.getComponentFilePath());
             if (Files.notExists(path)) {
                 /*
-                 * This could happen when a merged component arrives and deletes the flushed 
-                 * component (which we are trying to update) before its flush log arrives since logs and components are received 
+                 * This could happen when a merged component arrives and deletes the flushed
+                 * component (which we are trying to update) before its flush log arrives since logs and components are received
                  * on different threads.
                  */
                 return;

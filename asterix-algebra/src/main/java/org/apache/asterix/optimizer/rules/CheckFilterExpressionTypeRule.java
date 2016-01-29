@@ -70,7 +70,7 @@ public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
 
     /**
      * Check if the type is optional boolean or not
-     * 
+     *
      * @param type
      * @return true if it is; false otherwise.
      */

@@ -26,7 +26,7 @@ import org.apache.asterix.fuzzyjoin.tokenizer.Token;
 
 public class TokenRankBufferedFrequency implements TokenRank {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

@@ -361,7 +361,7 @@ public class AsterixApplicationMaster {
         dfsBasePath = envs.get(AConstants.DFS_BASE);
         //If the NM has an odd environment where the proper hadoop XML configs dont get imported, we can end up not being able to talk to the RM
         // this solves that!
-        //in a testing environment these can be null however. 
+        //in a testing environment these can be null however.
         if (envs.get(AConstants.RMADDRESS) != null) {
             conf.set("yarn.resourcemanager.address", envs.get(AConstants.RMADDRESS));
             LOG.info("RM Address: " + envs.get(AConstants.RMADDRESS));
@@ -402,7 +402,7 @@ public class AsterixApplicationMaster {
 
     /**
      * Sets up the parameters for the Asterix config.
-     * 
+     *
      * @throws IOException
      */
     private void distributeAsterixConfig() throws IOException {
@@ -447,7 +447,7 @@ public class AsterixApplicationMaster {
         LOG.info("Asked for CC: " + Arrays.toString(ccAsk.getNodes().toArray()));
         numNodes++;
         //now we wait to be given the CC before starting the NCs...
-        //we will wait a minute. 
+        //we will wait a minute.
         int deathClock = 60;
         while (ccUp.get() == false && deathClock > 0) {
             try {
@@ -486,7 +486,7 @@ public class AsterixApplicationMaster {
 
     /**
      * Asks the RM for a particular host, nicely.
-     * 
+     *
      * @param host
      *            The host to request
      * @param cc
@@ -515,7 +515,7 @@ public class AsterixApplicationMaster {
 
     /**
      * Determines whether or not a container is the one on which the CC should reside
-     * 
+     *
      * @param c
      *            The container in question
      * @return True if the container should have the CC process on it, false otherwise.
@@ -535,7 +535,7 @@ public class AsterixApplicationMaster {
 
     /**
      * Attempts to find the Node in the Cluster Description that matches this container
-     * 
+     *
      * @param c
      *            The container to resolve
      * @return The node this container corresponds to
@@ -559,14 +559,14 @@ public class AsterixApplicationMaster {
     /**
      * Here I am just pointing the Containers to the exisiting HDFS resources given by the Client
      * filesystem of the nodes.
-     * 
+     *
      * @throws IOException
      */
     private void localizeDFSResources() throws IOException {
         //if performing an 'offline' task, skip a lot of resource distribution
         if (obliterate || backup || restore) {
             if (appMasterJar == null || ("").equals(appMasterJar)) {
-                //this can happen in a jUnit testing environment. we don't need to set it there. 
+                //this can happen in a jUnit testing environment. we don't need to set it there.
                 if (!conf.getBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, false)) {
                     throw new IllegalStateException("AM jar not provided in environment.");
                 } else {
@@ -616,7 +616,7 @@ public class AsterixApplicationMaster {
             LOG.error("Error locating Asterix config" + " in env, path=" + asterixConfPath);
             throw new IOException(e);
         }
-        //TODO: I could avoid localizing this everywhere by only calling this block on the metadata node. 
+        //TODO: I could avoid localizing this everywhere by only calling this block on the metadata node.
         asterixConf.setTimestamp(asterixConfTimestamp);
         asterixConf.setSize(asterixConfLen);
         localResources.put("cluster-config.xml", asterixConf);
@@ -661,7 +661,7 @@ public class AsterixApplicationMaster {
 
     /**
      * Start the AM and request all necessary resources.
-     * 
+     *
      * @return True if the run fully succeeded, false otherwise.
      * @throws YarnException
      * @throws IOException
@@ -823,7 +823,7 @@ public class AsterixApplicationMaster {
                         containerListener);
                 Thread launchThread = new Thread(runnableLaunchContainer, "Asterix CC/NC");
 
-                // I want to know if this node is the CC, because it must start before the NCs. 
+                // I want to know if this node is the CC, because it must start before the NCs.
                 LOG.info("Allocated: " + allocatedContainer.getNodeId().getHost());
                 LOG.info("CC : " + cC.getId());
                 synchronized(pendingNCs){
@@ -1013,7 +1013,7 @@ public class AsterixApplicationMaster {
         /**
          * Determines for a given container what the necessary command line
          * arguments are to start the Asterix processes on that instance
-         * 
+         *
          * @param container
          *            The container to produce the commands for
          * @return A list of the commands that should be executed
@@ -1081,7 +1081,7 @@ public class AsterixApplicationMaster {
         }
 
         private List<String> produceObliterateCommand(Container container) {
-            //if this container has no NCs on it, nothing will be there to delete. 
+            //if this container has no NCs on it, nothing will be there to delete.
             Node local = null;
             List<String> iodevices = null;
             try {

@@ -87,7 +87,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
 
     /**
      * Recursively check whether the list of expressions contains an aggregate function.
-     * 
+     *
      * @param exprRefs
      * @return true if the list contains an aggregate function and false otherwise.
      */
@@ -117,7 +117,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
      * Check whether the join is aggregate-pushable, that is,
      * 1) the join condition is true;
      * 2) each join branch produces only one tuple.
-     * 
+     *
      * @param join
      * @return true if pushable
      */
@@ -145,7 +145,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
 
     /**
      * Does the actual push of aggregates for qualified joins.
-     * 
+     *
      * @param join
      * @param assignOp
      *            that contains aggregate function calls.
@@ -213,7 +213,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
             FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr
                     .getFunctionIdentifier());
 
-            // Push the agg func into the agg op.                
+            // Push the agg func into the agg op.
 
             List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
             aggArgs.add(aggOpExpr.getArguments().get(0));

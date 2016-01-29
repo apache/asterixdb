@@ -347,7 +347,7 @@ public class AsterixYARNClient {
 
         this.conf = conf;
         yarnClient = YarnClient.createYarnClient();
-        //If the HDFS jars aren't on the classpath this won't be set 
+        //If the HDFS jars aren't on the classpath this won't be set
         if (conf.get("fs.hdfs.impl", null) == conf.get("fs.file.impl", null)) { //only would happen if both are null
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
             conf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
@@ -400,7 +400,7 @@ public class AsterixYARNClient {
 
     /**
      * Initialize the client's arguments and parameters before execution.
-     * 
+     *
      * @param args
      *            - Standard command-line arguments.
      * @throws ParseException
@@ -458,7 +458,7 @@ public class AsterixYARNClient {
 
     /**
      * Cursory sanity checks for argument sanity, without considering the mode of the client
-     * 
+     *
      * @param args
      * @param cliParser
      *            The parsed arguments.
@@ -467,7 +467,7 @@ public class AsterixYARNClient {
     private void checkConfSanity(String[] args, CommandLine cliParser) throws ParseException {
         String message = null;
 
-        //Sanity check for no args 
+        //Sanity check for no args
         if (args.length == 0) {
             message = "No args specified for client to initialize";
         }
@@ -486,7 +486,7 @@ public class AsterixYARNClient {
 
     /**
      * Initialize the mode of the client from the arguments.
-     * 
+     *
      * @param args
      * @param cliParser
      * @throws ParseException
@@ -515,7 +515,7 @@ public class AsterixYARNClient {
 
     /**
      * Determine if the command line arguments are sufficient for the requested client mode.
-     * 
+     *
      * @param args
      *            The command line arguments.
      * @param cliParser
@@ -550,7 +550,7 @@ public class AsterixYARNClient {
 
     /**
      * Find the distributable asterix bundle, be it in the default location or in a user-specified location.
-     * 
+     *
      * @return
      */
     private File getAsterixDistributableLocation() {
@@ -571,7 +571,7 @@ public class AsterixYARNClient {
 
     /**
      * Initialize and register the application attempt with the YARN ResourceManager.
-     * 
+     *
      * @return
      * @throws IOException
      * @throws YarnException
@@ -626,7 +626,7 @@ public class AsterixYARNClient {
 
     /**
      * Upload the Asterix cluster description on to the DFS. This will persist the state of the instance.
-     * 
+     *
      * @return
      * @throws YarnException
      * @throws IOException
@@ -664,7 +664,7 @@ public class AsterixYARNClient {
 
     /**
      * Install the current Asterix parameters to the DFS. This can be modified via alter.
-     * 
+     *
      * @throws YarnException
      * @throws IOException
      */
@@ -691,7 +691,7 @@ public class AsterixYARNClient {
 
     /**
      * Upload External libraries and functions to HDFS for an instance to use when started
-     * 
+     *
      * @throws IllegalStateException
      * @throws IOException
      */
@@ -716,7 +716,7 @@ public class AsterixYARNClient {
 
     /**
      * Finds the minimal classes and JARs needed to start the AM only.
-     * 
+     *
      * @return Resources the AM needs to start on the initial container.
      * @throws IllegalStateException
      * @throws IOException

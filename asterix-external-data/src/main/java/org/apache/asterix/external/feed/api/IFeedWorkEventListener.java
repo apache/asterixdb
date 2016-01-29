@@ -33,7 +33,7 @@ public interface IFeedWorkEventListener {
     /**
      * A call back that is invokved after a failed execution of a feed
      * management task.
-     * 
+     *
      * @param e
      *            exception encountered during execution of the task.
      */

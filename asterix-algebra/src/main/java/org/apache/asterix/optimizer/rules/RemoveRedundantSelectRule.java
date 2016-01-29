@@ -66,7 +66,7 @@ public class RemoveRedundantSelectRule implements IAlgebraicRewriteRule {
 
     /**
      * Whether the condition expression always returns true.
-     * 
+     *
      * @param cond
      * @return true if the condition always holds; false otherwise.
      */

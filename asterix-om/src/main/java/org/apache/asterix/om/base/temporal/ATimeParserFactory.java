@@ -55,7 +55,7 @@ public class ATimeParserFactory implements IValueParserFactory {
 
     /**
      * Parse the given string as a time string, and return the milliseconds represented by the time.
-     * 
+     *
      * @param timeString
      * @param start
      * @param length
@@ -160,7 +160,7 @@ public class ATimeParserFactory implements IValueParserFactory {
 
     /**
      * Parse the given string as a time string, and parse the timezone field.
-     * 
+     *
      * @param timeString
      * @param start
      * @return
@@ -209,7 +209,7 @@ public class ATimeParserFactory implements IValueParserFactory {
     /**
      * Similar to {@link #parseTimePart(String, int, int)} but use a char array as input; although this is almost
      * a copy-and-past code but it avoids object creation.
-     * 
+     *
      * @param timeString
      * @param start
      * @param length
@@ -314,7 +314,7 @@ public class ATimeParserFactory implements IValueParserFactory {
     /**
      * Similar to {@link #parseTimezonePart(String, int)} but use a char array as input; although this is almost
      * a copy-and-past code but it avoids object creation.
-     * 
+     *
      * @param timeString
      * @param start
      * @param length
@@ -363,7 +363,7 @@ public class ATimeParserFactory implements IValueParserFactory {
     /**
      * Similar to {@link #parseTimePart(String, int, int)} but use a byte array as input; although this is almost
      * a copy-and-past code but it avoids object creation.
-     * 
+     *
      * @param timeString
      * @param start
      * @param length
@@ -468,7 +468,7 @@ public class ATimeParserFactory implements IValueParserFactory {
     /**
      * Similar to {@link #parseTimezonePart(String, int)} but use a byte array as input; although this is almost
      * a copy-and-past code but it avoids object creation.
-     * 
+     *
      * @param timeString
      * @param start
      * @param length

@@ -30,7 +30,7 @@ public interface IFeedMemoryManager {
 
     /**
      * Gets a memory component allocated from the feed memory budget
-     * 
+     *
      * @param type
      *            the kind of memory component that needs to be allocated
      * @return
@@ -40,7 +40,7 @@ public interface IFeedMemoryManager {
 
     /**
      * Expand a memory component by the default increment
-     * 
+     *
      * @param memoryComponent
      * @return true if the expansion succeeded
      *         false if the requested expansion violates the configured budget
@@ -49,7 +49,7 @@ public interface IFeedMemoryManager {
 
     /**
      * Releases the given memory component to reclaim the memory allocated for the component
-     * 
+     *
      * @param memoryComponent
      *            the memory component that is being reclaimed/released
      */

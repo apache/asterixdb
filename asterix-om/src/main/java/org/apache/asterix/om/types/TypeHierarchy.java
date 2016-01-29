@@ -22,7 +22,7 @@ import java.util.Hashtable;
 
 /*
  * Author: Guangqiang Li
- * Created on Sep 24, 2009 
+ * Created on Sep 24, 2009
  */
 public class TypeHierarchy {
     private static Hashtable<String, String> parentMap = new Hashtable<String, String>();

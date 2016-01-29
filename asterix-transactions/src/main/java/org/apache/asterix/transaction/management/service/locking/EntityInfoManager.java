@@ -127,7 +127,7 @@ public class EntityInfoManager {
     //            System.out.println(eiMgr.prettyPrint());
     //        }
     //    }
-    //    
+    //
     //    ////////////////////////////////////////////////
     //    // end of unit test
     //    ////////////////////////////////////////////////
@@ -200,7 +200,7 @@ public class EntityInfoManager {
      * pArray status : O O x x x x x
      * However, in the above case, if we subtract the deinitialized children's slots,
      * needShrink() will return false even if we shrink the pArray at this case.
-     * 
+     *
      * @return
      */
     private boolean needShrink() {
@@ -514,7 +514,7 @@ class ChildEntityInfoArrayManager {
     //public static final int DATASET_ACTOR_OFFSET = 28;
 
     //byte offset of nextFreeSlotNum which shares the same space of JobId
-    //If a slot is in use, the space is used for JobId. Otherwise, it is used for nextFreeSlotNum. 
+    //If a slot is in use, the space is used for JobId. Otherwise, it is used for nextFreeSlotNum.
     public static final int NEXT_FREE_SLOT_OFFSET = 0;
 
     private ByteBuffer buffer;

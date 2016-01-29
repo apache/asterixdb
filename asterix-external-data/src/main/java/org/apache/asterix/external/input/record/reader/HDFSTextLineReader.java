@@ -45,7 +45,7 @@ public class HDFSTextLineReader {
     /**
      * Create a line reader that reads from the given stream using the
      * default buffer-size (32k).
-     * 
+     *
      * @param in
      *            The input stream
      * @throws IOException
@@ -57,7 +57,7 @@ public class HDFSTextLineReader {
     /**
      * Create a line reader that reads from the given stream using the
      * given buffer-size.
-     * 
+     *
      * @param in
      *            The input stream
      * @param bufferSize
@@ -78,7 +78,7 @@ public class HDFSTextLineReader {
 
     /**
      * Create a line reader that reads from the given stream using the <code>io.file.buffer.size</code> specified in the given <code>Configuration</code>.
-     * 
+     *
      * @param in
      *            input stream
      * @param conf
@@ -176,7 +176,7 @@ public class HDFSTextLineReader {
 
     /**
      * Read from the InputStream into the given Text.
-     * 
+     *
      * @param str
      *            the object to store the given line
      * @param maxLineLength
@@ -191,7 +191,7 @@ public class HDFSTextLineReader {
 
     /**
      * Read from the InputStream into the given Text.
-     * 
+     *
      * @param str
      *            the object to store the given line
      * @return the number of bytes read including the newline

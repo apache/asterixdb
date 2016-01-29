@@ -104,7 +104,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
         //create storage metadata file (This file is used to locate the root storage directory after instance restarts).
         //TODO with the existing cluster configuration file being static and distributed on all NCs, we can find out the storage root
-        //directory without looking at this file. This file could potentially store more information, otherwise no need to keep it. 
+        //directory without looking at this file. This file could potentially store more information, otherwise no need to keep it.
         for (int i = 0; i < mountPoints.length; i++) {
             File storageMetadataFile = getStorageMetadataFile(mountPoints[i], nodeId, i);
             File storageMetadataDir = storageMetadataFile.getParentFile();

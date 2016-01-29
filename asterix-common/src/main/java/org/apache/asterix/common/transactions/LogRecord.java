@@ -41,7 +41,7 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * NodeIdLength(4)
  * NodeId(?)
  * ---------------------------
- * [Header2] (12 bytes + PKValueSize) : for entity_commit and update log types 
+ * [Header2] (12 bytes + PKValueSize) : for entity_commit and update log types
  * DatasetId(4) //stored in dataset_dataset in Metadata Node
  * PKHashValue(4)
  * PKValueSize(4)
@@ -230,7 +230,7 @@ public class LogRecord implements ILogRecord {
 
     private void writeTuple(ByteBuffer buffer, ITupleReference tuple, int size) {
         tupleWriter.writeTuple(tuple, buffer.array(), buffer.position());
-        //writeTuple() doesn't change the position of the buffer. 
+        //writeTuple() doesn't change the position of the buffer.
         buffer.position(buffer.position() + size);
     }
 
@@ -614,7 +614,7 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.FLUSH) {
             //LSN
             logSize += (Long.SIZE / 8);
-            //num of indexes 
+            //num of indexes
             logSize += (Integer.SIZE / 8);
         }
 

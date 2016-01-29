@@ -41,7 +41,7 @@ import org.apache.hyracks.storage.common.IStorageManagerInterface;
 
 /*
  * Acts as an holder class for IndexRegistryProvider, AsterixStorageManager
- * instances that are accessed from the NCs. In addition an instance of ICCApplicationContext 
+ * instances that are accessed from the NCs. In addition an instance of ICCApplicationContext
  * is stored for access by the CC.
  */
 public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IAsterixPropertiesProvider {

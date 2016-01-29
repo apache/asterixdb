@@ -32,5 +32,5 @@ public interface ITransactionSubsystem {
     public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
 
     public String getId();
-    
+
 }

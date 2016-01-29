@@ -20,8 +20,8 @@
  */
 
 /*
- *Portions of this code are based off of Joda API 
- * (http://joda-time.sourceforge.net/) 
+ *Portions of this code are based off of Joda API
+ * (http://joda-time.sourceforge.net/)
  *
  * Copyright 2001-2005 Stephen Colebourne
  *
@@ -115,7 +115,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Check whether the given date time value is a valid date time following the gregorian calendar system.
-     * 
+     *
      * @param fields
      * @return
      */
@@ -167,7 +167,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * <p/>
      * Reference: http://www.timeanddate.com/library/abbreviations/timezones/
      * <p/>
-     * 
+     *
      * @param timezone
      * @return
      */
@@ -182,7 +182,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Validate the given chronon time and time zone.
-     * 
+     *
      * @param year
      * @param month
      * @param day
@@ -199,7 +199,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the UTC chronon time of the given date time and time zone.
-     * 
+     *
      * @param year
      * @param month
      * @param day
@@ -215,7 +215,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         long chrononTime = chrononizeBeginningOfYear(year) + hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec
                 * CHRONON_OF_SECOND + millis + timezone;
 
-        // Added milliseconds for days of the month. 
+        // Added milliseconds for days of the month.
         chrononTime += (day - 1 + DAYS_SINCE_MONTH_BEGIN_ORDI[month - 1]) * CHRONON_OF_DAY;
 
         // Adjust the leap year
@@ -228,7 +228,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the chronon time (number of milliseconds) of the given time and time zone.
-     * 
+     *
      * @param hour
      * @param min
      * @param sec
@@ -266,7 +266,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * <p/>
      * The extended string representation is like:<br/>
      * [-]YYYY-MM-DDThh:mm:ss.xxx[Z|[+|-]hh:mm]
-     * 
+     *
      * @param chrononTime
      * @param timezone
      * @param sbder
@@ -344,7 +344,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the basic string representation of a chronon time with the given time zone.
-     * 
+     *
      * @param chrononTime
      * @param timezone
      * @param sbder
@@ -408,7 +408,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * <p/>
      * The extended and simple string representation is like:<br/>
      * [-]PnYnMnDTnHnMnS
-     * 
+     *
      * @param milliseconds
      * @param months
      * @param sbder
@@ -452,7 +452,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Check whether a given year is a leap year.
-     * 
+     *
      * @param year
      * @return
      */
@@ -464,7 +464,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * From Joda library GregorianChronology class: The basic calculation is
      * (y / 4) - (y / 100) + (y / 400). <br/>
      * Use y >> 2 ( (y + 3) >> 2 for negative y value) to replace y / 4 reveals eliminates two divisions.
-     * 
+     *
      * @param year
      * @return
      */
@@ -489,7 +489,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * <p/>
      * This code is directly from the Joda library BadicChronology.java.<br/>
      * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012.
-     * 
+     *
      * @param chrononTime
      * @return
      */
@@ -537,7 +537,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * This code is directly from the Joda library BasicGJChronology.java.<br/>
      * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012 and commented by Theodoros Ioannou on July 2012.
      * <p/>
-     * 
+     *
      * @param millis
      * @param year
      * @return
@@ -601,7 +601,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * This function is directly from Joda Library BasicChronology.java.<br/>
      * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012.
      * <p/>
-     * 
+     *
      * @param millis
      * @param year
      * @param month
@@ -618,7 +618,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the hour of the day for the given chronon time.
-     * 
+     *
      * @param millis
      * @return
      */
@@ -640,7 +640,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the minute of the hour for the given chronon time.
-     * 
+     *
      * @param millis
      * @return
      */
@@ -660,7 +660,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the second of the minute for the given chronon time.
-     * 
+     *
      * @param millis
      * @return
      */
@@ -680,7 +680,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Get the millisecond of the second for the given chronon time.
-     * 
+     *
      * @param millis
      * @return
      */

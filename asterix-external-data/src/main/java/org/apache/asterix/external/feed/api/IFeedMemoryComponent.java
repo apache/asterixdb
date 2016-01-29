@@ -45,7 +45,7 @@ public interface IFeedMemoryComponent {
 
     /**
      * Expands this memory component by the speficied number of frames
-     * 
+     *
      * @param delta
      *            the amount (measured in number of frames) by which this memory component
      *            should be expanded

@@ -27,19 +27,19 @@ import java.io.InputStreamReader;
 import org.apache.asterix.recordmanagergenerator.RecordType.Field;
 
 public class Generator {
-    
+
     public enum TemplateType {
         RECORD_MANAGER,
         ARENA_MANAGER,
         SUPPORT
     }
-    
+
     public static void generateSource(
-            TemplateType tmplType, 
+            TemplateType tmplType,
             String packageName,
-            RecordType rec, 
-            InputStream is, 
-            StringBuilder sb, 
+            RecordType rec,
+            InputStream is,
+            StringBuilder sb,
             boolean debug) {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
@@ -56,7 +56,7 @@ public class Generator {
                     break;
                 default:
                     throw new IllegalArgumentException();
-            }        
+            }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
@@ -65,9 +65,9 @@ public class Generator {
 
     private static void generateMemoryManagerSource(
             String packageName,
-            RecordType resource, 
-            BufferedReader in, 
-            StringBuilder sb, 
+            RecordType resource,
+            BufferedReader in,
+            StringBuilder sb,
             boolean debug) throws IOException {
         String line = null;
         String indent = "    ";
@@ -96,12 +96,12 @@ public class Generator {
                     }
                 }
             } else if (line.contains("@INIT_SLOT@")) {
-                for (int i = 0; i < resource.size(); ++i) {                        
+                for (int i = 0; i < resource.size(); ++i) {
                     final Field field = resource.fields.get(i);
                     field.appendInitializers(sb, indent, 3);
                 }
             } else if (line.contains("@CHECK_SLOT@")) {
-                for (int i = 0; i < resource.size(); ++i) {                        
+                for (int i = 0; i < resource.size(); ++i) {
                     final Field field = resource.fields.get(i);
                     field.appendChecks(sb, indent, 3);
                 }
@@ -116,9 +116,9 @@ public class Generator {
 
     private static void generateArenaManagerSource(
             String packageName,
-            RecordType resource, 
-            BufferedReader in, 
-            StringBuilder sb, 
+            RecordType resource,
+            BufferedReader in,
+            StringBuilder sb,
             boolean debug) throws IOException {
         String line = null;
         String indent = "    ";
@@ -154,7 +154,7 @@ public class Generator {
 
     private static void generateSupportFileSource(
             String packageName,
-            BufferedReader in, 
+            BufferedReader in,
             StringBuilder sb,
             boolean debug) throws IOException {
         String line = null;

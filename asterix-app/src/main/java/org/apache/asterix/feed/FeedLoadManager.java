@@ -122,7 +122,7 @@ public class FeedLoadManager implements IFeedLoadManager {
                 // Step 2) send prepare to  stall message
                 gracefullyTerminateDataFlow(message.getConnectionId(), Integer.MAX_VALUE);
 
-                // Step 3) run the altered job specification 
+                // Step 3) run the altered job specification
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("New Job after adjusting to the workload " + jobSpec);
                 }

@@ -33,7 +33,7 @@ public interface IFeedConnectionManager {
 
     /**
      * Allows registration of a feedRuntime.
-     * 
+     *
      * @param feedRuntime
      * @throws Exception
      */
@@ -41,7 +41,7 @@ public interface IFeedConnectionManager {
 
     /**
      * Obtain feed runtime corresponding to a feedRuntimeId
-     * 
+     *
      * @param feedRuntimeId
      * @return
      */
@@ -49,7 +49,7 @@ public interface IFeedConnectionManager {
 
     /**
      * De-register a feed
-     * 
+     *
      * @param feedConnection
      * @throws IOException
      */
@@ -57,7 +57,7 @@ public interface IFeedConnectionManager {
 
     /**
      * Obtain the feed runtime manager associated with a feed.
-     * 
+     *
      * @param feedConnection
      * @return
      */
@@ -65,7 +65,7 @@ public interface IFeedConnectionManager {
 
     /**
      * Allows de-registration of a feed runtime.
-     * 
+     *
      * @param feedRuntimeId
      */
     void deRegisterFeedRuntime(FeedConnectionId connectionId, FeedRuntimeId feedRuntimeId);

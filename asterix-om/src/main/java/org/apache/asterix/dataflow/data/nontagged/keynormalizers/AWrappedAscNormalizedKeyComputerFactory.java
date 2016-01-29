@@ -42,7 +42,7 @@ public class AWrappedAscNormalizedKeyComputerFactory implements INormalizedKeyCo
 
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                // start +1, length -1 is because in ASTERIX data format, there is always a type tag before the value 
+                // start +1, length -1 is because in ASTERIX data format, there is always a type tag before the value
                 return nkc.normalize(bytes, start + 1, length - 1);
             }
         };

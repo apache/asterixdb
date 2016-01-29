@@ -163,7 +163,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         LOGGER.info("[Warning] ---------------------------------------------------");
                         LOGGER.info("[Warning] Some(or all) of transaction log files are lost.");
                         LOGGER.info("[Warning] ---------------------------------------------------");
-                        //No choice but continuing when the log files are lost. 
+                        //No choice but continuing when the log files are lost.
                     }
                 }
                 state = SystemState.HEALTHY;
@@ -210,7 +210,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         //-------------------------------------------------------------------------
         //  [ analysis phase ]
-        //  - collect all committed Lsn 
+        //  - collect all committed Lsn
         //-------------------------------------------------------------------------
         LOGGER.log(Level.INFO, "[RecoveryMgr] in analysis phase");
 
@@ -431,7 +431,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         //-------------------------------------------------------------------------
         //  [ analysis phase ]
-        //  - collect all committed Lsn 
+        //  - collect all committed Lsn
         //-------------------------------------------------------------------------
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in analysis phase");
@@ -499,7 +499,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         Map<Long, Long> resourceId2MaxLSNMap = new HashMap<Long, Long>();
         boolean foundWinner = false;
 
-        //#. get indexLifeCycleManager 
+        //#. get indexLifeCycleManager
         IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
         IDatasetLifecycleManager datasetLifecycleManager = appRuntimeContext.getDatasetLifecycleManager();
         PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) appRuntimeContext
@@ -625,7 +625,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
         String logDir = logMgr.getLogManagerProperties().getLogDir();
 
-        //get the filename of the previous checkpoint files which are about to be deleted 
+        //get the filename of the previous checkpoint files which are about to be deleted
         //right after the new checkpoint file is written.
         File[] prevCheckpointFiles = getPreviousCheckpointFiles();
 
@@ -650,7 +650,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         minMCTFirstLSN = remoteResourcesManager.getMinRemoteLSN(deadReplicaIds);
                     }
                 } else {
-                    //start up complete checkpoint. Avoid deleting remote recovery logs. 
+                    //start up complete checkpoint. Avoid deleting remote recovery logs.
                     minMCTFirstLSN = getMinFirstLSN();
                 }
             }
@@ -900,7 +900,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     /**
      * Rollback a transaction
-     * 
+     *
      * @see org.apache.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (org.apache.TransactionContext.management.service.transaction .TransactionContext)
      */
     @Override
@@ -997,7 +997,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
             IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                     .getDatasetLifecycleManager();
-            //TODO sort loser entities by smallest LSN to undo in one pass. 
+            //TODO sort loser entities by smallest LSN to undo in one pass.
             Iterator<Entry<TxnId, List<Long>>> iter = jobLoserEntity2LSNsMap.entrySet().iterator();
             int undoCount = 0;
             while (iter.hasNext()) {
@@ -1406,7 +1406,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             ArrayList<File> candidiatePartitions = new ArrayList<File>();
             for (File partition : jobEntitCommitOnDiskPartitionsFiles) {
                 String partitionName = partition.getName();
-                //entity commit log must come after the update log, therefore, consider only partitions with max LSN > logLSN 
+                //entity commit log must come after the update log, therefore, consider only partitions with max LSN > logLSN
                 if (getPartitionMaxLSNFromName(partitionName) > logLSN) {
                     candidiatePartitions.add(partition);
                 }

@@ -34,8 +34,8 @@ import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
 import org.apache.asterix.lexergenerator.rules.RulePartial;
 
 public class LexerNodeAuxFunctionsTest {
-    String expectedDifferentReturn = "return TOKEN_AUX_NOT_FOUND;\n"; 
-    
+    String expectedDifferentReturn = "return TOKEN_AUX_NOT_FOUND;\n";
+
     @Test
     public void NodeRuleRuleNodeNode() {
         LexerNode node = new LexerNode();
@@ -53,7 +53,7 @@ public class LexerNodeAuxFunctionsTest {
                      +"}"
                      +expectedDifferentReturn , node.toJavaAuxFunction());
     }
-    
+
     @Test
     public void NodeSwitchCase() {
         LexerNode node = new LexerNode();
@@ -88,7 +88,7 @@ public class LexerNodeAuxFunctionsTest {
         expectedNeededAuxFunctions.add("token1");
         expectedNeededAuxFunctions.add("token2");
         assertEquals(expectedNeededAuxFunctions, node.neededAuxFunctions());
-    }    
+    }
 
     @Test(expected=Exception.class)
     public void NodeExpandFirstActionError() throws Exception {
@@ -107,7 +107,7 @@ public class LexerNodeAuxFunctionsTest {
             assertEquals("Cannot find a token used as part of another definition, missing token: token1", e.getMessage());
             throw e;
         }
-    } 
+    }
 
     public void NodeExpandFirstAction() throws Exception {
         LexerNode node = new LexerNode();

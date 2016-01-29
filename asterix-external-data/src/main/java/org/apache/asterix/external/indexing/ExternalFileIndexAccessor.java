@@ -48,7 +48,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
 /*
- * This class was created specifically to facilitate accessing 
+ * This class was created specifically to facilitate accessing
  * external file index when doing external lookup during runtime
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })

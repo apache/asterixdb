@@ -42,7 +42,7 @@ public class FuzzyJoinConfig {
     public static final String RECORD_DATA1_VALUE = "1";
     //
     // data
-    //    
+    //
     public static final String DATA_TOKENS_PROPERTY = NAMESPACE + ".data.tokens";
     //
     // const

@@ -101,7 +101,7 @@ public class FeedFrameCache extends MessageReceiver<ByteBuffer> {
 
     /**
      * Replay the frame from the tuple (inclusive) with recordId as specified.
-     * 
+     *
      * @param recordId
      * @param frame
      * @throws HyracksDataException
@@ -132,7 +132,7 @@ public class FeedFrameCache extends MessageReceiver<ByteBuffer> {
 
     /**
      * Replay the frame
-     * 
+     *
      * @param frame
      * @throws HyracksDataException
      */

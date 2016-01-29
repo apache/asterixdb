@@ -33,7 +33,7 @@ public class DatasetHints {
 
     /**
      * validate the use of a hint
-     * 
+     *
      * @param hintName
      *            name of the hint
      * @param value

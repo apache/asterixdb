@@ -31,13 +31,13 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 public class RecordType {
-    
+
     enum Type {
         BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "TypeUtil.Byte.append",   "TypeUtil.Byte.appendFixed"),
         SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "TypeUtil.Short.append",  "TypeUtil.Short.appendFixed"),
         INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "TypeUtil.Int.append",    "TypeUtil.Int.appendFixed"),
         GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "TypeUtil.Global.append", "TypeUtil.Global.appendFixed");
-        
+
         Type(int size, String javaType, String bbGetter, String bbSetter, String deadMemInitializer, String appender, String tabAppender) {
             this.size = size;
             this.javaType = javaType;
@@ -47,7 +47,7 @@ public class RecordType {
             this.appender = appender;
             this.tabAppender = tabAppender;
         }
-        
+
         int size;
         String javaType;
         String bbGetter;
@@ -56,9 +56,9 @@ public class RecordType {
         String appender;
         String tabAppender;
     }
-    
+
     static class Field {
-                
+
         String name;
         Type type;
         String initial;
@@ -72,14 +72,14 @@ public class RecordType {
             this.offset = offset;
             this.accessible = accessible;
         }
-        
+
         public static Field fromJSON(JSONObject obj) throws JSONException {
             String name = obj.getString("name");
             Type type = parseType(obj.getString("type"));
             String initial = obj.optString("initial", null);
             return new Field(name, type, initial, -1, true);
         }
-        
+
         private static Type parseType(String string) {
             string = string.toUpperCase();
             if (string.equals("GLOBAL")) {
@@ -103,7 +103,7 @@ public class RecordType {
                 sb.append(word.substring(0, 1).toUpperCase());
                 sb.append(word.substring(1));
             }
-            return sb.toString();        
+            return sb.toString();
         }
 
         StringBuilder appendMemoryManagerGetMethod(StringBuilder sb, String indent, int level) {
@@ -129,7 +129,7 @@ public class RecordType {
             sb.append("}\n");
             return sb;
         }
-            
+
         StringBuilder appendMemoryManagerSetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public void ")
@@ -173,7 +173,7 @@ public class RecordType {
             sb.append("}\n");
             return sb;
         }
-            
+
         StringBuilder appendArenaManagerSetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public void ")
@@ -197,7 +197,7 @@ public class RecordType {
             sb.append("}\n");
             return sb;
         }
-        
+
         StringBuilder appendInitializers(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("bb.")
@@ -213,7 +213,7 @@ public class RecordType {
             sb.append(");\n");
             return sb;
         }
-        
+
         StringBuilder appendChecks(StringBuilder sb, String indent, int level) {
             if (initial == null) {
                 return sb;
@@ -236,7 +236,7 @@ public class RecordType {
             sb.append("}\n");
             return sb;
         }
-        
+
         String offsetName() {
             String words[] = name.split(" ");
             assert(words.length > 0);
@@ -247,7 +247,7 @@ public class RecordType {
             sb.append("_OFF");
             return sb.toString();
         }
-        
+
         int offset() {
             return offset;
         }
@@ -257,26 +257,26 @@ public class RecordType {
     ArrayList<Field> fields;
     int totalSize;
     boolean modifiable = true;
-    
+
     static StringBuilder indent(StringBuilder sb, String indent, int level) {
         for (int i = 0; i < level; ++i) {
             sb.append(indent);
         }
         return sb;
     }
-    
+
     public RecordType(String name) {
         this.name = name;
         fields = new ArrayList<Field>();
         addField("next free slot", Type.INT, "-1", false);
     }
-    
+
     public static RecordType read(Reader reader) throws JSONException {
         JSONTokener tok = new JSONTokener(reader);
         JSONObject obj = new JSONObject(tok);
         return fromJSON(obj);
     }
-    
+
     public static RecordType fromJSON(JSONObject obj) throws JSONException {
         RecordType result = new RecordType(obj.getString("name"));
         JSONArray fields = obj.getJSONArray("fields");
@@ -284,9 +284,9 @@ public class RecordType {
             JSONObject field = fields.getJSONObject(i);
             result.fields.add(Field.fromJSON(field));
         }
-        return result;        
+        return result;
     }
-    
+
     public void addToMap(Map<String, RecordType> map) {
         modifiable = false;
         calcOffsetsAndSize();
@@ -295,15 +295,15 @@ public class RecordType {
 
     public void addField(String name, Type type, String initial) {
         addField(name, type, initial, true);
-    }    
-    
+    }
+
     private void addField(String name, Type type, String initial, boolean accessible) {
         if (! modifiable) {
             throw new IllegalStateException("cannot modify type anmore");
         }
         fields.add(new Field(name, type, initial, -1, accessible));
     }
-     
+
     private void calcOffsetsAndSize() {
         Collections.sort(fields, new Comparator<Field>() {
             public int compare(Field left, Field right) {
@@ -313,7 +313,7 @@ public class RecordType {
         // sort fields by size and align the items
         totalSize = 0;
         int alignment = 0;
-        for (int i = 0; i < fields.size(); ++i) {            
+        for (int i = 0; i < fields.size(); ++i) {
             final Field field = fields.get(i);
             assert field.offset == -1;
             field.offset = totalSize;
@@ -322,22 +322,22 @@ public class RecordType {
             if (size > alignment) alignment = size;
         }
         if (totalSize % alignment != 0) {
-            totalSize = ((totalSize / alignment) + 1) * alignment; 
+            totalSize = ((totalSize / alignment) + 1) * alignment;
         }
     }
-    
+
     int size() {
         return fields.size();
     }
-    
+
     static String padRight(String s, int n) {
-        return String.format("%1$-" + n + "s", s);  
+        return String.format("%1$-" + n + "s", s);
     }
 
     static String padLeft(String s, int n) {
-        return String.format("%1$" + n + "s", s);  
+        return String.format("%1$" + n + "s", s);
     }
-    
+
     StringBuilder appendConstants(StringBuilder sb, String indent, int level) {
         sb = indent(sb, indent, level);
         sb.append("public static int ITEM_SIZE = ")
@@ -354,7 +354,7 @@ public class RecordType {
         }
         return sb;
     }
-    
+
     StringBuilder appendBufferPrinter(StringBuilder sb, String indent, int level) {
         int maxNameWidth = 0;
         for (int i = 0; i < fields.size(); ++i) {
@@ -391,20 +391,20 @@ public class RecordType {
         }
         return sb;
     }
-    
+
     StringBuilder appendRecordPrinter(StringBuilder sb, String indent, int level) {
         sb = indent(sb, indent, level);
         sb.append("public StringBuilder appendRecord(StringBuilder sb, long slotNum) {\n");
-        
+
         sb = indent(sb, indent, level + 1);
         sb.append("sb.append(\"{ \");\n\n");
-        
+
         for (int i = 0; i < fields.size(); ++i) {
             Field field = fields.get(i);
             if (field.accessible) {
                 if (i > 0) {
                     sb = indent(sb, indent, level + 1);
-                    sb.append("sb.append(\", \");\n\n");                
+                    sb.append("sb.append(\", \");\n\n");
                 }
                 sb = indent(sb, indent, level + 1);
                 sb.append("sb.append(\"\\\"").append(field.name).append("\\\" : \\\"\");\n");
@@ -421,7 +421,7 @@ public class RecordType {
 
         sb = indent(sb, indent, level);
         sb.append("}");
-        
+
         return sb;
     }
 }

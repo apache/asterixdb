@@ -44,8 +44,8 @@ public class FeedFrameTupleAccessor implements IFrameTupleAccessor {
                 + StatisticsConstants.INTAKE_PARTITION.length() + 2 + 1;
         return buffer.getInt(recordStart + partitionOffset);
     }
-    
-    
+
+
 
     @Override
     public int getFieldCount() {

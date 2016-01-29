@@ -39,7 +39,7 @@ public class AccessMethodAnalysisContext {
     public List<IOptimizableFuncExpr> matchedFuncExprs = new ArrayList<IOptimizableFuncExpr>();
 
     // Contains candidate indexes and a list of (integer,integer) tuples that index into matchedFuncExprs and matched variable inside this expr.
-    // We are mapping from candidate indexes to a list of function expressions 
+    // We are mapping from candidate indexes to a list of function expressions
     // that match one of the index's expressions.
     public Map<Index, List<Pair<Integer, Integer>>> indexExprsAndVars = new TreeMap<Index, List<Pair<Integer, Integer>>>();
 

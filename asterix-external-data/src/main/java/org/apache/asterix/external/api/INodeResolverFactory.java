@@ -27,7 +27,7 @@ public interface INodeResolverFactory {
 
     /**
      * Create an instance of {@link INodeResolver}
-     * 
+     *
      * @return an instance of INodeResolver
      */
     public INodeResolver createNodeResolver();

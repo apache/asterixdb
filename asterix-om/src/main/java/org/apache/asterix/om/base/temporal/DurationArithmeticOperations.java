@@ -32,7 +32,7 @@ public class DurationArithmeticOperations {
      * <p/>
      * The basic algorithm is like this: duration is applied to the time point as two separated fields: year-month field and day-time field. Year-month field is applied firstly by reserving the correct day within the month's range (for example add 1M to 03-31 will return 04-30). Then day-time field is applied.
      * <p/>
-     * 
+     *
      * @param pointChronon
      *            The time instance where the duration will be added, represented as the milliseconds since the anchored time (00:00:00 for time type, 1970-01-01T00:00:00Z for datetime and date types).
      * @param yearMonthDuration

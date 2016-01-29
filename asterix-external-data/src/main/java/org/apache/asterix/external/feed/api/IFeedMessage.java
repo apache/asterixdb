@@ -44,7 +44,7 @@ public interface IFeedMessage extends Serializable, JSONSerializable {
 
     /**
      * Gets the type associated with this message
-     * 
+     *
      * @return MessageType type associated with this message
      */
     public MessageType getMessageType();

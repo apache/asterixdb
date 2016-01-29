@@ -36,7 +36,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public interface IValueExtractor<T> {
     /**
      * Extracts an object of type T from a given tuple.
-     * 
+     *
      * @param jobId
      *            A globally unique transaction id.
      * @param tuple

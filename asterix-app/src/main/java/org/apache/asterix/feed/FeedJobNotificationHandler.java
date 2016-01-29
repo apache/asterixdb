@@ -309,7 +309,7 @@ public class FeedJobNotificationHandler implements Runnable {
         intakeJobInfo.getIntakeFeedJoint().setState(State.ACTIVE);
         intakeJobInfo.setState(FeedJobState.ACTIVE);
 
-        // notify event listeners 
+        // notify event listeners
         notifyFeedEventSubscribers(intakeJobInfo, FeedLifecycleEvent.FEED_INTAKE_STARTED);
     }
 
@@ -424,7 +424,7 @@ public class FeedJobNotificationHandler implements Runnable {
         // remove feed joints
         deregisterFeedIntakeJob(message.jobId);
 
-        // notify event listeners 
+        // notify event listeners
         notifyFeedEventSubscribers(intakeInfo, event);
 
     }
@@ -458,7 +458,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
         deregisterFeedActivity(cInfo);
 
-        // notify event listeners 
+        // notify event listeners
         FeedLifecycleEvent event = failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE : FeedLifecycleEvent.FEED_ENDED;
         notifyFeedEventSubscribers(cInfo, event);
     }

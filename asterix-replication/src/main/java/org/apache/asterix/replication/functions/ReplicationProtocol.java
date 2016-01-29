@@ -43,7 +43,7 @@ public class ReplicationProtocol {
     public final static int REPLICATION_REQUEST_TYPE_SIZE = Integer.BYTES;
     public final static int REPLICATION_REQUEST_HEADER_SIZE = REPLICATION_REQUEST_TYPE_SIZE + Integer.BYTES;
 
-    /* 
+    /*
      * ReplicationRequestType:
      * REPLICATE_LOG: txn log replication
      * REPLICATE_FILE: replicate a file(s)
@@ -329,7 +329,7 @@ public class ReplicationProtocol {
 
     /**
      * Sends a goodbye request to a remote replica indicating the end of a replication request.
-     * 
+     *
      * @param socketChannel
      *            the remote replica socket.
      * @throws IOException

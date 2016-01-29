@@ -42,7 +42,7 @@ public class SimilarityFiltersJaccard implements SimilarityFilters {
     }
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

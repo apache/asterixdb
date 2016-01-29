@@ -49,30 +49,30 @@ public class EntityLockInfoManager {
     //        ////////////////////////////////////////////////
     //        // begin of unit test
     //        ////////////////////////////////////////////////
-    //    
+    //
     //        public static final int SHRINK_TIMER_THRESHOLD = 0; //for unit test
-    //    
+    //
     //        /**
     //         * @param args
     //         */
     //        public static void main(String[] args) {
     //            final int DataSize = 5000;
-    //    
+    //
     //            int i, j;
     //            int slots = ChildEntityLockInfoArrayManager.NUM_OF_SLOTS;
     //            int data[] = new int[DataSize];
     //            EntityLockInfoManager eliMgr = new EntityLockInfoManager();
-    //    
+    //
     //            //allocate: 50
     //            System.out.println("allocate: 50");
     //            for (i = 0; i < 5; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    data[j] = eliMgr.allocate();
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //deallocate from the last child to the first child
     //            System.out.println("deallocate from the last child to the first child");
     //            for (i = 4; i >= 0; i--) {
@@ -81,58 +81,58 @@ public class EntityLockInfoManager {
     //                }
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //allocate: 50
     //            System.out.println("allocate: 50");
     //            for (i = 0; i < 5; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    data[j] = eliMgr.allocate();
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //deallocate from the first child to last child
     //            System.out.println("deallocate from the first child to last child");
     //            for (i = 0; i < 5; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    eliMgr.deallocate(data[j]);
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //allocate: 50
     //            System.out.println("allocate: 50");
     //            for (i = 0; i < 5; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    data[j] = eliMgr.allocate();
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //deallocate from the first child to 4th child
     //            System.out.println("deallocate from the first child to 4th child");
     //            for (i = 0; i < 4; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    eliMgr.deallocate(data[j]);
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
-    //    
+    //
     //            //allocate: 40
     //            System.out.println("allocate: 40");
     //            for (i = 0; i < 4; i++) {
     //                for (j = i * slots; j < i * slots + slots; j++) {
     //                    data[j] = eliMgr.allocate();
     //                }
-    //    
+    //
     //                System.out.println(eliMgr.prettyPrint());
     //            }
     //        }
-    //        
+    //
     //        ////////////////////////////////////////////////
     //        // end of unit test
     //        ////////////////////////////////////////////////
@@ -199,7 +199,7 @@ public class EntityLockInfoManager {
      * pArray status : O O x x x x x
      * However, in the above case, if we subtract the deinitialized children's slots,
      * needShrink() will return false even if we shrink the pArray at this case.
-     * 
+     *
      * @return
      */
     private boolean needShrink() {
@@ -339,7 +339,7 @@ public class EntityLockInfoManager {
      * Remove holder from linked list of Actor.
      * Also, remove the corresponding resource from linked list of resource
      * in order to minimize JobInfo's resource link traversal.
-     * 
+     *
      * @param slotNum
      * @param holder
      * @param jobInfo
@@ -684,7 +684,7 @@ class ChildEntityLockInfoArrayManager {
     public static final int UPGRADER_OFFSET = 12;
 
     //byte offset of nextFreeSlotNum which shares the same space with LastHolder field
-    //If a slot is in use, the space is used for LastHolder. Otherwise, it is used for nextFreeSlotNum. 
+    //If a slot is in use, the space is used for LastHolder. Otherwise, it is used for nextFreeSlotNum.
     public static final int NEXT_FREE_SLOT_OFFSET = 4;
 
     private ByteBuffer buffer;

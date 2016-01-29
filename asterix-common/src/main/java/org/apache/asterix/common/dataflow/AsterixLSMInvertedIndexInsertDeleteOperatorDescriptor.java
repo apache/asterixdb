@@ -40,7 +40,7 @@ public class AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor extends LSMIn
     private static final long serialVersionUID = 1L;
 
     private final String indexName;
-    
+
     public AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,

@@ -67,7 +67,7 @@ public class Utils {
 
     /**
      * Gets the metadata node from an AsterixDB cluster description file
-     * 
+     *
      * @param cluster
      *            The cluster description in question.
      * @return
@@ -90,7 +90,7 @@ public class Utils {
 
     /**
      * Sends a "poison pill" message to an AsterixDB instance for it to shut down safely.
-     * 
+     *
      * @param host
      *            The host to shut down.
      * @throws IOException
@@ -116,7 +116,7 @@ public class Utils {
     /**
      * Simple test via the AsterixDB Javascript API to determine if an instance is truly live or not.
      * Queries the Metadata dataset and returns true if the query completes successfully, false otherwise.
-     * 
+     *
      * @param host
      *            The host to run the query against
      * @return
@@ -192,7 +192,7 @@ public class Utils {
 
     /**
      * Lists the deployed instances of AsterixDB on a YARN cluster
-     * 
+     *
      * @param conf
      *            Hadoop configuration object
      * @param confDirRel
@@ -227,7 +227,7 @@ public class Utils {
 
     /**
      * Lists the backups in the DFS.
-     * 
+     *
      * @param conf
      *            YARN configuration
      * @param confDirRel
@@ -248,8 +248,8 @@ public class Utils {
         }
     }
    /**
-    * Return the available snapshot names 
-    * @param conf 
+    * Return the available snapshot names
+    * @param conf
     * @param confDirRel
     * @param instance
     * @return
@@ -268,7 +268,7 @@ public class Utils {
 
     /**
      * Removes backup snapshots from the DFS
-     * 
+     *
      * @param conf
      *            DFS Configuration
      * @param confDirRel
@@ -308,7 +308,7 @@ public class Utils {
 
     /**
      * Simply parses out the YARN cluster config and instantiates it into a nice object.
-     * 
+     *
      * @return The object representing the configuration
      * @throws FileNotFoundException
      * @throws JAXBException
@@ -338,7 +338,7 @@ public class Utils {
 
     /**
      * Looks in the current class path for AsterixDB libraries and gets the version number from the name of the first match.
-     * 
+     *
      * @return The version found, as a string.
      */
 

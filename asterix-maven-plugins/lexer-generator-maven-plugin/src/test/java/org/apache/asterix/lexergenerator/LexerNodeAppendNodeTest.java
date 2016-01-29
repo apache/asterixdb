@@ -49,7 +49,7 @@ public class LexerNodeAppendNodeTest {
         node.append(node2);
         assertEquals("Arule_clone! ", node.toString());
     }
-    
+
     @Test
     public void AppendedNodesAreCloned() throws Exception {
         LexerNode node = new LexerNode();
@@ -61,7 +61,7 @@ public class LexerNodeAppendNodeTest {
         node.append(node2);
         // TODO
         // assertEquals("A! B_clone! ", node.toString());
-        
+
         LexerNode node3 = new LexerNode();
         node3.append(createRule("C"));
         node3.append(createRule("D"));
@@ -95,5 +95,5 @@ public class LexerNodeAppendNodeTest {
         // TODO
         // assertEquals(" ( A_clone! A_clone!  || A_clone!  ) ", node.toString());
   }
-    
+
 }

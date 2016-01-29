@@ -178,7 +178,7 @@ public class DatasetLockInfo {
             }
             entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jobId, hashVal);
             if (entityInfo == -1) {
-                //find the entityInfo from the waiter list of entityLockInfo. 
+                //find the entityInfo from the waiter list of entityLockInfo.
                 //There is a case where dataset-granule lock is acquired, but entity-granule lock is not acquired yet.
                 //In this case, the waiter of the entityLockInfo represents the holder of the datasetLockInfo.
                 waiterObjId = entityLockInfoManager.findWaiterFromWaiterList(eLockInfo, jobId, hashVal);
@@ -241,7 +241,7 @@ public class DatasetLockInfo {
      * Remove holder from linked list of Actor.
      * Also, remove the corresponding resource from linked list of resource
      * in order to minimize JobInfo's resource link traversal.
-     * 
+     *
      * @param holder
      * @param jobInfo
      */
@@ -298,7 +298,7 @@ public class DatasetLockInfo {
 
     /**
      * append new waiter to the end of waiters
-     * 
+     *
      * @param waiterObjId
      */
     public void addWaiter(int waiterObjId) {

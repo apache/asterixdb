@@ -67,7 +67,7 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
 
     /**
      * private constructor, to prevent constructing it arbitrarily
-     * 
+     *
      * @param inputType
      */
     public AListVisitablePointable(AbstractCollectionType inputType) {

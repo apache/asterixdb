@@ -41,16 +41,16 @@ public class TransactionManagementConstants {
             public static final byte IX  =  2;
             public static final byte S   =  3;
             public static final byte X   =  4;
-            
+
             public static byte intentionMode(byte mode) {
                 switch (mode) {
                     case S:  return IS;
                     case X:  return IX;
                     default: throw new IllegalArgumentException(
                             "no intention lock mode for " + toString(mode));
-                }                
+                }
             }
-            
+
             public static String toString(byte mode) {
                 switch (mode) {
                     case ANY: return "ANY";

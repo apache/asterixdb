@@ -30,7 +30,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Asynchronously sends a serialized version of the record to remote replicas.
-     * 
+     *
      * @param logRecord
      *            The log record to be replicated,
      */
@@ -38,7 +38,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Checks whether a log record has been replicated
-     * 
+     *
      * @param logRecord
      *            the log to check for.
      * @return true, if all ACKs were received from remote replicas.
@@ -47,7 +47,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Requests txns logs from a remote replica.
-     * 
+     *
      * @param remoteReplicaId
      *            The replica id to send the request to.
      * @param replicasDataToRecover
@@ -63,7 +63,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Requests LSM components files from a remote replica.
-     * 
+     *
      * @param remoteReplicaId
      *            The replica id to send the request to.
      * @param replicasDataToRecover
@@ -74,7 +74,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Requests current maximum LSN from remote replicas.
-     * 
+     *
      * @param remoteReplicaIds
      *            remote replicas to send the request to.
      * @return The maximum of the received maximum LSNs.
@@ -84,7 +84,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Sends the IP address of the local replica to all remote replicas.
-     * 
+     *
      * @throws IOException
      */
     public void broadcastNewIPAddress() throws IOException;
@@ -111,7 +111,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Updates remote replica (in-memory) information.
-     * 
+     *
      * @param replica
      *            the replica to update.
      */
@@ -124,14 +124,14 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Submits a ReplicaEvent to ReplicationEventsMonitor thread.
-     * 
+     *
      * @param event
      */
     public void reportReplicaEvent(ReplicaEvent event);
 
     /**
      * Requests the current minimum LSN of a remote replica.
-     * 
+     *
      * @param replicaId
      *            The replica to send the request to.
      * @return The returned minimum LSN from the remote replica.
@@ -141,7 +141,7 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Sends a request to remote replicas to flush indexes that have LSN less than nonSharpCheckpointTargetLSN
-     * 
+     *
      * @param nonSharpCheckpointTargetLSN
      * @throws IOException
      */

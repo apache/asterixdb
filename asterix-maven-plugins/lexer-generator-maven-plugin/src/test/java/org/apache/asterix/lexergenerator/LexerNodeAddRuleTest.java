@@ -44,7 +44,7 @@ public class LexerNodeAddRuleTest {
                      +"}"
                      +token_parseerror , node.toJava());
     }
-    
+
     @Test
     public void NodeSwitchCase() {
         LexerNode node = new LexerNode();

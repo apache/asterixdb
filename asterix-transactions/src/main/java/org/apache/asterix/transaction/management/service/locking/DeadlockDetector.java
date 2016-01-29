@@ -75,7 +75,7 @@ public class DeadlockDetector {
         visitedHolderList.clear(true);
 
         //holderlist contains jobId
-        //resourceList contains entityInfo's slot numbers instead of resourceId in order to avoid object creation 
+        //resourceList contains entityInfo's slot numbers instead of resourceId in order to avoid object creation
         //since resourceId consists of datasetId and PKHashValue
 
         //get holder list(jobId list)
@@ -93,7 +93,7 @@ public class DeadlockDetector {
             if (isUpgrade && dLockInfo.getFirstUpgrader() != -1) {
                 return false;
             }
-            //there is no case such that while a job is holding any mode of lock on a dataset and waits for the same dataset as an waiter. 
+            //there is no case such that while a job is holding any mode of lock on a dataset and waits for the same dataset as an waiter.
             //But the job may wait for the same dataset as an upgrader.
         }
 
@@ -153,7 +153,7 @@ public class DeadlockDetector {
     /**
      * Get holder list of dataset if hashValue == -1. Get holder list of entity otherwise.
      * Where, a holder is a jobId, not entityInfo's slotNum
-     * 
+     *
      * @param datasetId
      * @param hashValue
      * @param holderList
@@ -223,7 +223,7 @@ public class DeadlockDetector {
 
     /**
      * Get waiting resource list of jobId, where a resource is represented with entityInfo's slot number
-     * 
+     *
      * @param jobId
      * @param resourceList
      */

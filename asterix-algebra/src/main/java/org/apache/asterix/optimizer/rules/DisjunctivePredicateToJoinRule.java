@@ -158,7 +158,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
      * when joining. Right now this compatibility is defined as type equality, but it could we relaxed.
      * Once type promotion works correctly in all parts of the system, this check should not be needed anymore.
      * (see https://code.google.com/p/asterixdb/issues/detail?id=716)
-     * 
+     *
      * @param t1
      *            one type
      * @param t2

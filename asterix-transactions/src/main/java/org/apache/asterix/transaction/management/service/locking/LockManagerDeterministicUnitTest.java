@@ -516,14 +516,14 @@ class LockRequestWorker implements Runnable {
     public void log(String s) {
         System.out.println(s);
     }
-    
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{ t : \"").append(threadName).append("\", r : ");
         if (lockRequest == null) {
             sb.append("null");
         } else {
-            sb.append("\"").append(lockRequest.toString()).append("\""); 
+            sb.append("\"").append(lockRequest.toString()).append("\"");
         }
         sb.append(" }");
         return sb.toString();

@@ -20,18 +20,18 @@
 package @PACKAGE@;
 
 public class @E@ArenaManager {
-    
+
     public static final boolean TRACK_ALLOC_ID = @DEBUG@;
 
     private final int noArenas;
     private final @E@RecordManager[] arenas;
     private ThreadLocal<LocalManager> local;
-    
+
     static class LocalManager {
         int arenaId;
         @E@RecordManager mgr;
     }
-    
+
     public @E@ArenaManager(final int noArenas, final long txnShrinkTimer) {
         this.noArenas = noArenas;
         arenas = new @E@RecordManager[noArenas];
@@ -39,7 +39,7 @@ public class @E@ArenaManager {
             arenas[i] = new @E@RecordManager(txnShrinkTimer);
         }
         local = new ThreadLocal<LocalManager>() {
-            private int nextArena = 0; 
+            private int nextArena = 0;
 
             @Override
             protected synchronized LocalManager initialValue() {
@@ -58,7 +58,7 @@ public class @E@ArenaManager {
         final @E@RecordManager recMgr = localManager.mgr;
         final int allocId = TRACK_ALLOC_ID ? (++recMgr.allocCounter % 0x7fff) : 0;
         final int localId = recMgr.allocate();
-        
+
         long result = TypeUtil.Global.build(localManager.arenaId, allocId, localId);
 
         if (TRACK_ALLOC_ID) setAllocId(result, (short) allocId);
@@ -68,23 +68,23 @@ public class @E@ArenaManager {
         assert TypeUtil.Global.localId(result) == localId;
         return result;
     }
-    
+
     public void deallocate(long slotNum) {
         if (TRACK_ALLOC_ID) checkAllocId(slotNum);
         final int arenaId = TypeUtil.Global.arenaId(slotNum);
         get(arenaId).deallocate(TypeUtil.Global.localId(slotNum));
     }
-    
+
     public @E@RecordManager get(int i) {
         return arenas[i];
     }
-    
+
     public @E@RecordManager local() {
         return local.get().mgr;
     }
-    
+
     @METHODS@
-    
+
     private void checkAllocId(long slotNum) {
         final int refAllocId = TypeUtil.Global.allocId(slotNum);
         final short curAllocId = getAllocId(slotNum);
@@ -100,14 +100,14 @@ public class @E@ArenaManager {
             throw new IllegalStateException(msg);
         }
     }
-    
+
     public AllocInfo getAllocInfo(long slotNum) {
         final int arenaId = TypeUtil.Global.arenaId(slotNum);
         return get(arenaId).getAllocInfo(TypeUtil.Global.localId(slotNum));
     }
-    
+
     @PRINT_RECORD@
-    
+
     public StringBuilder append(StringBuilder sb) {
         for (int i = 0; i < noArenas; ++i) {
             sb.append("++++ arena ").append(i).append(" ++++\n");
@@ -115,7 +115,7 @@ public class @E@ArenaManager {
         }
         return sb;
     }
-    
+
     public String toString() {
         return append(new StringBuilder()).toString();
     }

@@ -41,7 +41,7 @@ public interface ITransactionManager {
     /**
      * Begins a transaction identified by a transaction id and returns the
      * associated transaction context.
-     * 
+     *
      * @param jobId
      *            a unique value for the transaction id.
      * @return the transaction context associated with the initiated transaction
@@ -53,7 +53,7 @@ public interface ITransactionManager {
     /**
      * Returns the transaction context of an active transaction given the
      * transaction id.
-     * 
+     *
      * @param jobId
      *            a unique value for the transaction id.
      * @param createIfNotExist
@@ -65,7 +65,7 @@ public interface ITransactionManager {
 
     /**
      * Commits a transaction.
-     * 
+     *
      * @param txnContext
      *            the transaction context associated with the transaction
      * @param datasetId
@@ -81,7 +81,7 @@ public interface ITransactionManager {
 
     /**
      * Aborts a transaction.
-     * 
+     *
      * @param txnContext
      *            the transaction context associated with the transaction
      * @param datasetId
@@ -99,7 +99,7 @@ public interface ITransactionManager {
      * Indicates end of all activity for a transaction. In other words, all
      * participating threads in the transaction have completed the intended
      * task.
-     * 
+     *
      * @param txnContext
      *            the transaction context associated with the transaction
      * @param datasetId
@@ -118,7 +118,7 @@ public interface ITransactionManager {
      * Returns the Transaction Provider for the transaction eco-system. A
      * transaction eco-system consists of a Log Manager, a Recovery Manager, a
      * Transaction Manager and a Lock Manager.
-     * 
+     *
      * @see ITransactionSubsystem
      * @return TransactionProvider
      */

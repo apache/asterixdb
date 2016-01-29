@@ -93,7 +93,7 @@ public class NetworkingUtil {
             socketChannel.write(requestBuffer);
         }
     }
-    
+
     //unused
     public static void sendFileNIO(FileChannel fileChannel, SocketChannel socketChannel) throws IOException {
         long fileSize = fileChannel.size();

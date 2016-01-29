@@ -103,7 +103,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
-        //Only job-level commits call this method. 
+        //Only job-level commits call this method.
         try {
             if (txnCtx.isWriteTxn()) {
                 LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();

@@ -24,7 +24,7 @@ public interface IReplicationThread extends Runnable {
 
     /**
      * Sends a notification to this thread that logRecord has been flushed.
-     * 
+     *
      * @param logRecord
      *            The log that has been flushed.
      */

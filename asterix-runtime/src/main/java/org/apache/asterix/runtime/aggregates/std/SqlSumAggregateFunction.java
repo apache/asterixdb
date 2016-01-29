@@ -30,7 +30,7 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 
 public class SqlSumAggregateFunction extends AbstractSumAggregateFunction {
     private final boolean isLocalAgg;
-    
+
     public SqlSumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isLocalAgg)
             throws AlgebricksException {
         super(args, provider);

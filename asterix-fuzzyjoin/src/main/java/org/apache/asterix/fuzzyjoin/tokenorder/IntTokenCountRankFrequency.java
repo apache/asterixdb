@@ -25,7 +25,7 @@ import org.apache.asterix.fuzzyjoin.IntPair;
 
 public class IntTokenCountRankFrequency implements IntTokenCountRank {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

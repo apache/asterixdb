@@ -29,7 +29,7 @@ public interface IReplicationChannel {
 
     /**
      * Closes the replication channel.
-     * 
+     *
      * @throws IOException
      */
     public void close() throws IOException;

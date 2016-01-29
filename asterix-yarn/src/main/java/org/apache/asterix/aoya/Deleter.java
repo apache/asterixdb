@@ -33,8 +33,8 @@ public class Deleter {
 
     public static void main(String[] args) throws IOException {
 
-	LogManager.getRootLogger().setLevel(Level.DEBUG); 
-	
+	LogManager.getRootLogger().setLevel(Level.DEBUG);
+
         LOG.info("Obliterator args: " + Arrays.toString(args));
         for (int i = 0; i < args.length; i++) {
             File f = new File(args[i]);

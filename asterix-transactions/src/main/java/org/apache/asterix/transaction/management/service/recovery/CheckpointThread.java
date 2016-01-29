@@ -42,7 +42,7 @@ public class CheckpointThread extends Thread {
 
     @Override
     public void run() {
-        
+
         Thread.currentThread().setName("Checkpoint Thread");
 
         long currentCheckpointAttemptMinLSN = -1;
@@ -55,21 +55,21 @@ public class CheckpointThread extends Thread {
             } catch (InterruptedException e) {
                 //ignore
             }
-            
-            
+
+
             if(lastCheckpointLSN == -1)
             {
                 try {
                     //Since the system just started up after sharp checkpoint, last checkpoint LSN is considered as the min LSN of the current log partition
                     lastCheckpointLSN = logManager.getReadableSmallestLSN();
                 } catch (Exception e) {
-                    lastCheckpointLSN = 0; 
+                    lastCheckpointLSN = 0;
                 }
             }
-            
+
             //1. get current log LSN
             currentLogLSN = logManager.getAppendLSN();
-            
+
             //2. if current log LSN - previous checkpoint > threshold, do checkpoint
             if (currentLogLSN - lastCheckpointLSN > lsnThreshold) {
                 try {
@@ -77,16 +77,16 @@ public class CheckpointThread extends Thread {
                     //1. get minimum first LSN (MFL) from open indexes.
                     //2. if current MinFirstLSN < targetCheckpointLSN, schedule async flush for any open index witch has first LSN < force flush delta
                     //3. next time checkpoint comes, it will be able to remove log files which have end range less than current targetCheckpointLSN
-                   
+
                     targetCheckpointLSN = lastCheckpointLSN + lsnThreshold;
                     currentCheckpointAttemptMinLSN = recoveryMgr.checkpoint(false, targetCheckpointLSN);
-                    
+
                     //checkpoint was completed at target LSN or above
                     if(currentCheckpointAttemptMinLSN >= targetCheckpointLSN)
                     {
-                        lastCheckpointLSN = currentCheckpointAttemptMinLSN; 
+                        lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
-                    
+
                 } catch (ACIDException | HyracksDataException e) {
                     throw new Error("failed to checkpoint", e);
                 }

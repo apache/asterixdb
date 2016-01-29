@@ -55,7 +55,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * Begins a local transaction against the metadata.
-     * 
+     *
      * @throws ACIDException
      * @throws RemoteException
      */
@@ -63,7 +63,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * Commits a local transaction against the metadata.
-     * 
+     *
      * @throws ACIDException
      * @throws RemoteException
      */
@@ -71,7 +71,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * Aborts a local transaction against the metadata.
-     * 
+     *
      * @throws ACIDException
      * @throws RemoteException
      */
@@ -80,7 +80,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Locally locks the entire metadata in given mode on behalf of given
      * transaction id.
-     * 
+     *
      * @throws ACIDException
      * @throws RemoteException
      */
@@ -88,7 +88,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * Releases all local locks of given transaction id.
-     * 
+     *
      * @throws ACIDException
      * @throws RemoteException
      */
@@ -97,7 +97,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Inserts a new dataverse into the metadata, acquiring local locks on
      * behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverse
@@ -111,7 +111,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves all dataverses, acquiring local locks on behalf of
      * the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @return A list of dataverse instances.
@@ -124,7 +124,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves a dataverse with given name, acquiring local locks on behalf of
      * the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -139,7 +139,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves all datasets belonging to the given dataverse, acquiring local
      * locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -155,7 +155,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * Deletes the dataverse with given name, and all it's associated datasets,
      * indexes, and types, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @return A list of dataset instances.
@@ -168,7 +168,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Inserts a new dataset into the metadata, acquiring local locks on behalf
      * of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
@@ -182,7 +182,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves a dataset within a given dataverse, acquiring local locks on
      * behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -200,7 +200,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves all indexes of a dataset, acquiring local locks on behalf of
      * the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -218,7 +218,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes the dataset with given name, and all it's associated indexes,
      * acquiring local locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -236,7 +236,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * Inserts an index into the metadata, acquiring local locks on behalf of
      * the given transaction id. The index itself knows its name, and which
      * dataset it belongs to.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param index
@@ -250,7 +250,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves the index with given name, in given dataverse and dataset,
      * acquiring local locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -269,7 +269,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes the index with given name, in given dataverse and dataset,
      * acquiring local locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -287,7 +287,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Inserts a datatype, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param datatype
@@ -301,7 +301,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves the datatype with given name in given dataverse, acquiring
      * local locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -319,7 +319,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes the given datatype in given dataverse, acquiring local locks on
      * behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -337,7 +337,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Inserts a node group, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroup
@@ -351,7 +351,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves a node group, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroupName
@@ -365,7 +365,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes a node group, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroupName
@@ -380,7 +380,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Inserts a node (compute node), acquiring local locks on behalf of the
      * given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param node
@@ -406,7 +406,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes a function, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param functionSignature
@@ -465,7 +465,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes a adapter , acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -550,7 +550,7 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public void dropFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException;
 
-   
+
     /**
      * @param jobId
      * @param feedPolicy
@@ -570,11 +570,11 @@ public interface IMetadataNode extends Remote, Serializable {
     public FeedPolicyEntity getFeedPolicy(JobId jobId, String dataverse, String policy) throws MetadataException,
             RemoteException;
 
-   
+
     /**
      * Removes a library , acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -590,7 +590,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Adds a library, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param library
@@ -617,7 +617,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * Retireve libraries installed in a given dataverse.
-     * 
+     *
      * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -640,7 +640,7 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * delete a give feed (ingestion) policy
-     * 
+     *
      * @param jobId
      * @param dataverseName
      * @param policyName
@@ -685,7 +685,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes an externalFile , acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -702,7 +702,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Deletes all external files belonging to a dataset, acquiring local locks on behalf of the given
      * transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
@@ -714,7 +714,7 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Retrieves the file with given number, in given dataverse and dataset,
      * acquiring local locks on behalf of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
@@ -730,12 +730,12 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public ExternalFile getExternalFile(JobId jobId, String dataverseName, String datasetName, Integer fileNumber)
             throws MetadataException, RemoteException;
-    
-    
+
+
     /**
      * update an existing dataset in the metadata, acquiring local locks on behalf
      * of the given transaction id.
-     * 
+     *
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param dataset

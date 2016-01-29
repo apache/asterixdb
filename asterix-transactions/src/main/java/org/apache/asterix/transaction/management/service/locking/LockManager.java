@@ -54,10 +54,10 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 public class LockManager implements ILockManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
-    //This variable indicates that the dataset granule X lock request is allowed when 
-    //there are concurrent lock requests. As of 4/16/2013, we only allow the dataset granule X lock 
+    //This variable indicates that the dataset granule X lock request is allowed when
+    //there are concurrent lock requests. As of 4/16/2013, we only allow the dataset granule X lock
     //during DDL operation which is preceded by holding X latch on metadata.
-    //Therefore, we don't allow the concurrent lock requests with the dataset granule X lock. 
+    //Therefore, we don't allow the concurrent lock requests with the dataset granule X lock.
     public static final boolean ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS = false;
 
     public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
@@ -69,7 +69,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
     //all threads accessing to LockManager's tables such as jobHT and datasetResourceHT
     //are serialized through LockTableLatch. All threads waiting the latch will be fairly served
-    //in FIFO manner when the latch is available. 
+    //in FIFO manner when the latch is available.
     private final ReadWriteLock lockTableLatch;
     private final ReadWriteLock waiterLatch;
     private final HashMap<JobId, JobInfo> jobHT;
@@ -165,7 +165,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 }
             }
 
-            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT
             if (dLockInfo == null || dLockInfo.isNoHolder()) {
                 if (dLockInfo == null) {
                     dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
@@ -269,7 +269,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         int entityHashValue;
         int did;//int-type dataset id
 
-        //while traversing all holding resources, 
+        //while traversing all holding resources,
         //release IS locks on the escalated dataset and
         //release S locks on the corresponding enttites
         //by calling unlock() method.
@@ -290,7 +290,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private int needEscalateFromEntityToDataset(JobInfo jobInfo, int datasetId, byte lockMode) {
-        //we currently allow upgrade only if the lockMode is S. 
+        //we currently allow upgrade only if the lockMode is S.
         if (lockMode != LockMode.S) {
             return DONOT_ESCALATE;
         }
@@ -403,10 +403,10 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 //[Notice] Mimicking SIX mode
                 //When the lock escalation from IS to S in dataset-level is allowed, the following case occurs
                 //DatasetLockInfo's SCount = 1 and the same job who carried out the escalation tries to insert,
-                //then the job should be able to insert without being blocked by itself. 
-                //Our approach is to introduce SIX mode, but we don't have currently, 
-                //so I simply mimicking SIX by allowing S and IX coexist in the dataset level 
-                //only if their job id is identical for the requests. 
+                //then the job should be able to insert without being blocked by itself.
+                //Our approach is to introduce SIX mode, but we don't have currently,
+                //so I simply mimicking SIX by allowing S and IX coexist in the dataset level
+                //only if their job id is identical for the requests.
                 if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
                     if (datasetLockMode == LockMode.IX && dLockInfo.getSCount() == 1
                             && jobInfo.isDatasetLockGranted(dId, LockMode.S)) {
@@ -422,20 +422,20 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
-                    //The following case only may occur when the dataset level X lock is requested 
+                    //The following case only may occur when the dataset level X lock is requested
                     //with the other lock
 
                     //[Notice]
                     //There has been no same caller as (jId, dId, entityHashValue) triplet.
                     //But there could be the same caller in terms of (jId, dId) pair.
-                    //For example, 
+                    //For example,
                     //1) (J1, D1, E1) acquires IS in Dataset D1
                     //2) (J2, D1, -1) requests X  in Dataset D1, but waits
-                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait
                     //The 3) may cause deadlock if 1) and 3) are under the same thread.
                     //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
                     //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
-                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //as long as the dataset level lock D1 is being held by the same jobId.
                     //The above consideration is covered in the following code.
                     //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
                     if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
@@ -494,7 +494,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             }
         } else {
             isUpgrade = isLockUpgrade(entityInfoManager.getDatasetLockMode(entityInfo), lockMode);
-            if (isUpgrade) { //upgrade call 
+            if (isUpgrade) { //upgrade call
                 //wait if any upgrader exists or upgrading lock mode is not compatible
                 if (dLockInfo.getFirstUpgrader() != -1 || !dLockInfo.isUpgradeCompatible(datasetLockMode, entityInfo)) {
                     waiterCount = handleLockWaiter(dLockInfo, -1, entityInfo, true, true, txnContext, jobInfo, -1);
@@ -567,7 +567,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
                     entityLockInfoManager.increaseLockCount(eLockInfo, LockMode.X, (short) (weakerModeLockCount
                             + waiterCount - 1));//new lock mode
-                    entityLockInfoManager.decreaseLockCount(eLockInfo, LockMode.S, (short) weakerModeLockCount);//old lock mode 
+                    entityLockInfoManager.decreaseLockCount(eLockInfo, LockMode.S, (short) weakerModeLockCount);//old lock mode
                 }
                 return;
             }
@@ -608,7 +608,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
                         entityLockInfoManager.increaseLockCount(eLockInfo, LockMode.X, (short) (weakerModeLockCount
                                 + waiterCount - 1));//new lock mode
-                        entityLockInfoManager.decreaseLockCount(eLockInfo, LockMode.S, (short) weakerModeLockCount);//old lock mode 
+                        entityLockInfoManager.decreaseLockCount(eLockInfo, LockMode.S, (short) weakerModeLockCount);//old lock mode
                     }
 
                 } else {//duplicated call
@@ -706,7 +706,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             if (entityInfoManager.getEntityLockCount(entityInfo) == 0
                     && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
-                int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
+                int threadCount = 0; //number of threads(in the same job) waiting on the same resource
                 int waiterObjId = jobInfo.getFirstWaitingResource();
                 int waitingEntityInfo;
                 LockWaiter waiterObj;
@@ -720,9 +720,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 //this can be done in the following single function call.
                 entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
 
-                //2) if 
+                //2) if
                 //      there is no waiting thread on the same resource (this can be checked through jobInfo)
-                //   then 
+                //   then
                 //      a) delete the corresponding entityInfo
                 //      b) write commit log for the unlocked resource(which is a committed txn).
                 while (waiterObjId != -1) {
@@ -795,10 +795,10 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 return;
             }
 
-            //remove waiterObj of JobInfo 
+            //remove waiterObj of JobInfo
             //[Notice]
             //waiterObjs may exist if aborted thread is the caller of this function.
-            //Even if there are the waiterObjs, there is no waiting thread on the objects. 
+            //Even if there are the waiterObjs, there is no waiting thread on the objects.
             //If the caller of this function is an aborted thread, it is guaranteed that there is no waiting threads
             //on the waiterObjs since when the aborted caller thread is waken up, all other waiting threads are
             //also waken up at the same time through 'notifyAll()' call.
@@ -883,8 +883,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         wakeUpDatasetLockWaiters(dLockInfo);
 
                         //remove the holder from datasetLockInfo only if the lock is dataset-granule lock.
-                        //--> this also removes the holding resource from jobInfo               
-                        //(Because the IX and IS lock's holders are handled implicitly, 
+                        //--> this also removes the holding resource from jobInfo
+                        //(Because the IX and IS lock's holders are handled implicitly,
                         //those are not in the holder list of datasetLockInfo.)
                         dLockInfo.removeHolder(entityInfo, jobInfo);
                     }
@@ -921,7 +921,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         //wakeup waiters of entityLock
                         wakeUpEntityLockWaiters(eLockInfo);
 
-                        //remove the holder from entityLockInfo 
+                        //remove the holder from entityLockInfo
                         //--> this also removes the holding resource from jobInfo
                         entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
                     }
@@ -1000,7 +1000,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             dLockInfo = datasetResourceHT.get(datasetId);
 
-            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT
             if (dLockInfo == null || dLockInfo.isNoHolder()) {
                 if (IS_DEBUG_MODE) {
                     trackLockRequest("Granted", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
@@ -1016,9 +1016,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             if (datasetLockMode == LockMode.IS) {
                 //[Notice]
                 //Skip checking the dataset level lock compatibility if the requested LockMode is IS lock.
-                //We know that this internalInstantTryLock() call with IS lock mode will be always granted 
-                //because we don't allow X lock on dataset-level except DDL operation. 
-                //During DDL operation, all other operations will be pending, so there is no conflict. 
+                //We know that this internalInstantTryLock() call with IS lock mode will be always granted
+                //because we don't allow X lock on dataset-level except DDL operation.
+                //During DDL operation, all other operations will be pending, so there is no conflict.
                 isSuccess = true;
             } else {
                 isSuccess = instantTryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext, dLockInfo,
@@ -1082,20 +1082,20 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     || !dLockInfo.isCompatible(datasetLockMode)) {
 
                 if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
-                    //The following case only may occur when the dataset level X lock is requested 
+                    //The following case only may occur when the dataset level X lock is requested
                     //with the other lock
 
                     //[Notice]
                     //There has been no same caller as (jId, dId, entityHashValue) triplet.
                     //But there could be the same caller in terms of (jId, dId) pair.
-                    //For example, 
+                    //For example,
                     //1) (J1, D1, E1) acquires IS in Dataset D1
                     //2) (J2, D1, -1) requests X  in Dataset D1, but waits
-                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait
                     //The 3) may cause deadlock if 1) and 3) are under the same thread.
                     //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
                     //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
-                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //as long as the dataset level lock D1 is being held by the same jobId.
                     //The above consideration is covered in the following code.
                     //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
                     if (jobInfo != null && jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
@@ -1110,7 +1110,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             }
         } else {
             isUpgrade = isLockUpgrade(entityInfoManager.getDatasetLockMode(entityInfo), lockMode);
-            if (isUpgrade) { //upgrade call 
+            if (isUpgrade) { //upgrade call
                 //return fail if any upgrader exists or upgrading lock mode is not compatible
                 if (dLockInfo.getFirstUpgrader() != -1 || !dLockInfo.isUpgradeCompatible(datasetLockMode, entityInfo)) {
                     return false;
@@ -1230,7 +1230,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 }
             }
 
-            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT
             if (dLockInfo == null || dLockInfo.isNoHolder()) {
                 if (dLockInfo == null) {
                     dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
@@ -1265,7 +1265,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         jobInfo.increaseDatasetISLockCount(dId);
                         if (doEscalate) {
                             //This exception is thrown when the threshold value is set to 1.
-                            //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
+                            //We don't want to allow the lock escalation when there is a first lock request on a dataset.
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
                                             + txnSubsystem.getTransactionProperties()
@@ -1514,20 +1514,20 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     || !dLockInfo.isCompatible(datasetLockMode)) {
 
                 if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
-                    //The following case only may occur when the dataset level X lock is requested 
+                    //The following case only may occur when the dataset level X lock is requested
                     //with the other lock
 
                     //[Notice]
                     //There has been no same caller as (jId, dId, entityHashValue) triplet.
                     //But there could be the same caller in terms of (jId, dId) pair.
-                    //For example, 
+                    //For example,
                     //1) (J1, D1, E1) acquires IS in Dataset D1
                     //2) (J2, D1, -1) requests X  in Dataset D1, but waits
-                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait
                     //The 3) may cause deadlock if 1) and 3) are under the same thread.
                     //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
                     //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
-                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //as long as the dataset level lock D1 is being held by the same jobId.
                     //The above consideration is covered in the following code.
                     //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
                     if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
@@ -1580,7 +1580,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
         } else {
             isUpgrade = isLockUpgrade(entityInfoManager.getDatasetLockMode(entityInfo), lockMode);
-            if (isUpgrade) { //upgrade call 
+            if (isUpgrade) { //upgrade call
                 //return fail if any upgrader exists or upgrading lock mode is not compatible
                 if (dLockInfo.getFirstUpgrader() != -1 || !dLockInfo.isUpgradeCompatible(datasetLockMode, entityInfo)) {
                     return -2;
@@ -1860,7 +1860,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
     /**
      * For now, upgrading lock granule from entity-granule to dataset-granule is not supported!!
-     * 
+     *
      * @param fromLockMode
      * @param toLockMode
      * @return
