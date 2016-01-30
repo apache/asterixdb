@@ -65,7 +65,6 @@ public class ClosedRecordConstructorEvalFactory implements ICopyEvaluatorFactory
         private IARecordBuilder recBuilder = new RecordBuilder();
         private ARecordType recType;
         private ArrayBackedValueStorage fieldValueBuffer = new ArrayBackedValueStorage();
-        private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
         private boolean first = true;
 
         public ClosedRecordConstructorEval(ARecordType recType, ICopyEvaluator[] evalFields,
@@ -87,7 +86,7 @@ public class ClosedRecordConstructorEvalFactory implements ICopyEvaluatorFactory
                 for (int i = 0; i < evalFields.length; i++) {
                     fieldValueBuffer.reset();
                     evalFields[i].evaluate(tuple);
-                    if (fieldValueBuffer.getByteArray()[0] != SER_NULL_TYPE_TAG) {
+                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         recBuilder.addField(i, fieldValueBuffer);
                     }
                 }

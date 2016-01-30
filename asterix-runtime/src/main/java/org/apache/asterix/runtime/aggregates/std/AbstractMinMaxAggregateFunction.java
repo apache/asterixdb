@@ -86,8 +86,8 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
             // Initialize min value.
             outputVal.assign(inputVal);
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
-                    + aggType + ".");
+            throw new AlgebricksException(
+                    "Unexpected type " + typeTag + " in aggregation input stream. Expected type " + aggType + ".");
         } else {
 
             // If a system_null is encountered locally, it would be an error; otherwise if it is seen
@@ -161,7 +161,7 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
         try {
             switch (aggType) {
                 case NULL: {
-                    out.writeByte(ATypeTag.NULL.serialize());
+                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                     break;
                 }
                 case SYSTEM_NULL: {

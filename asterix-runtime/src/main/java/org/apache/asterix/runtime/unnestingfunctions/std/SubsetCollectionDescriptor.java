@@ -47,14 +47,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubsetCollectionDescriptor();
         }
@@ -105,16 +100,17 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                             byte[] serList = inputVal.getByteArray();
 
-                            if (serList[0] == SER_NULL_TYPE_TAG) {
+                            if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                            if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException("Subset-collection is not defined for values of type"
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                             }
-                            if (serList[0] == SER_ORDEREDLIST_TYPE_TAG)
+                            if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG)
                                 numItemsMax = AOrderedListSerializerDeserializer.getNumberOfItems(serList);
                             else
                                 numItemsMax = AUnorderedListSerializerDeserializer.getNumberOfItems(serList);

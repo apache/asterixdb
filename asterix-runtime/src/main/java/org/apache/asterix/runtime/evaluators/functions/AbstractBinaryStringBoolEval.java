@@ -37,13 +37,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
-
     private DataOutput dout;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ICopyEvaluator evalLeft;
@@ -77,11 +71,12 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         evalRight.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
                 return;
-            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+            } else if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                 throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + " and "
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ")!");

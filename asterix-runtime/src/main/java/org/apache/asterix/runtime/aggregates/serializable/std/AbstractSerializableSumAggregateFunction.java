@@ -63,15 +63,14 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
     @SuppressWarnings("rawtypes")
     public ISerializerDeserializer serde;
 
-    public AbstractSerializableSumAggregateFunction(ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public AbstractSerializableSumAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
         eval = args[0].createEvaluator(inputVal);
     }
 
     @Override
     public void init(DataOutput state) throws AlgebricksException {
         try {
-            state.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+            state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             state.writeDouble(0.0);
         } catch (IOException e) {
             throw new AlgebricksException(e);
@@ -202,8 +201,8 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
                     break;
                 }
                 default:
-                    throw new AlgebricksException("SumAggregationFunction: incompatible type for the result ("
-                            + aggType + "). ");
+                    throw new AlgebricksException(
+                            "SumAggregationFunction: incompatible type for the result (" + aggType + "). ");
             }
         } catch (IOException e) {
             throw new AlgebricksException(e);
@@ -218,8 +217,11 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
     protected boolean skipStep(byte[] state, int start) {
         return false;
     }
+
     protected abstract void processNull(byte[] state, int start);
+
     protected abstract void processSystemNull() throws AlgebricksException;
+
     protected abstract void finishSystemNull(DataOutput out) throws IOException;
 
 }

@@ -1,0 +1,5 @@
+{ "id": 6i32, "age": 11i32, "name": "Silvester", "salary": 135.3d }
+{ "id": 12i32, "age": 45i32, "name": "Smith", "salary": 1085.7d }
+{ "id": 1i32, "age": 12i32, "name": "Cloud", "salary": 854.7d }
+{ "id": 2i32, "age": 11i32, "name": "Nadia", "salary": 170.5d }
+{ "id": 4i32, "age": 11i32, "name": "Igor", "salary": 366.3d }

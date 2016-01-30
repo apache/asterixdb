@@ -44,13 +44,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class PointXCoordinateAccessor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINT_X_COORDINATE_ACCESSOR;
-    private static final byte SER_POINT_TAG = ATypeTag.POINT.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -88,12 +83,12 @@ public class PointXCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
 
                         try {
                             double x;
-                            if (bytes[0] == SER_POINT_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
                                 x = ADoubleSerializerDeserializer.getDouble(bytes,
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 aDouble.setValue(x);
                                 doubleSerde.serialize(aDouble, out);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-x does not support the type: " + bytes[0]

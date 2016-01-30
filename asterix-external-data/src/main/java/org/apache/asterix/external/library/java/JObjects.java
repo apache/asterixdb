@@ -125,8 +125,6 @@ public class JObjects {
      *
      */
     public static class JNull implements IJObject {
-        public final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
         public final static JNull INSTANCE = new JNull();
 
         private JNull() {
@@ -146,7 +144,7 @@ public class JObjects {
         public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
             if (writeTypeTag) {
                 try {
-                    dataOutput.writeByte(SER_NULL_TYPE_TAG);
+                    dataOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

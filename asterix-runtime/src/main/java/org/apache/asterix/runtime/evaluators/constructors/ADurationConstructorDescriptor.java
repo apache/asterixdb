@@ -43,12 +43,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ADurationConstructorDescriptor();
         }
@@ -85,17 +82,16 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
 
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
 
                                 utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
 
-                                ADurationParserFactory
-                                        .parseDuration(serString, utf8Ptr.getCharStartOffset(), stringLength, aDuration,
-                                                ADurationParseOption.All);
+                                ADurationParserFactory.parseDuration(serString, utf8Ptr.getCharStartOffset(),
+                                        stringLength, aDuration, ADurationParseOption.All);
 
                                 durationSerde.serialize(aDuration, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);

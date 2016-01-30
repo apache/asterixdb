@@ -61,11 +61,12 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
-import org.apache.asterix.replication.functions.ReplicationProtocol.ReplicationRequestType;
+import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.asterix.replication.functions.ReplicaFilesRequest;
 import org.apache.asterix.replication.functions.ReplicaIndexFlushRequest;
 import org.apache.asterix.replication.functions.ReplicaLogsRequest;
+import org.apache.asterix.replication.functions.ReplicationProtocol;
+import org.apache.asterix.replication.functions.ReplicationProtocol.ReplicationRequestType;
 import org.apache.asterix.replication.logging.RemoteLogMapping;
 import org.apache.asterix.replication.storage.LSMComponentLSNSyncTask;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
@@ -393,8 +394,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                             long fileSize = fileChannel.size();
                             fileProperties.initialize(filePath, fileSize, replicaId, false,
                                     IMetaDataPageManager.INVALID_LSN_OFFSET, false);
-                            outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer,
-                                    fileProperties, ReplicationRequestType.REPLICATE_FILE);
+                            outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
+                                    ReplicationRequestType.REPLICATE_FILE);
 
                             //send file info
                             NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
@@ -488,13 +489,14 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
             if (remoteLog.getLogType() == LogType.JOB_COMMIT) {
                 LogRecord jobCommitLog = new LogRecord();
-                jobCommitLog.formJobTerminateLogRecord(remoteLog.getJobId(), true, remoteLog.getNodeId());
+                TransactionUtil.formJobTerminateLogRecord(jobCommitLog, remoteLog.getJobId(), true,
+                        remoteLog.getNodeId());
                 jobCommitLog.setReplicationThread(this);
                 jobCommitLog.setLogSource(LogSource.REMOTE);
                 logManager.log(jobCommitLog);
             } else if (remoteLog.getLogType() == LogType.FLUSH) {
                 LogRecord flushLog = new LogRecord();
-                flushLog.formFlushLogRecord(remoteLog.getDatasetId(), null, remoteLog.getNodeId(),
+                TransactionUtil.formFlushLogRecord(flushLog, remoteLog.getDatasetId(), null, remoteLog.getNodeId(),
                         remoteLog.getNumOfFlushedIndexes());
                 flushLog.setReplicationThread(this);
                 flushLog.setLogSource(LogSource.REMOTE);
@@ -523,8 +525,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             if (logRecord.getLogType() == LogType.JOB_COMMIT) {
                 //send ACK to requester
                 try {
-                    socketChannel.socket().getOutputStream().write(
-                            (localNodeID + ReplicationProtocol.JOB_COMMIT_ACK + logRecord.getJobId() + "\n")
+                    socketChannel.socket().getOutputStream()
+                            .write((localNodeID + ReplicationProtocol.JOB_COMMIT_ACK + logRecord.getJobId() + "\n")
                                     .getBytes());
                     socketChannel.socket().getOutputStream().flush();
                 } catch (IOException e) {

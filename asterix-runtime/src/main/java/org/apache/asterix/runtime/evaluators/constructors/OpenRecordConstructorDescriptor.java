@@ -41,6 +41,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OpenRecordConstructorDescriptor();
         }
@@ -99,7 +100,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                                     evalNames[i].evaluate(tuple);
                                     recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                                 } else {
-                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                         recBuilder.addField(closedFieldId, fieldValueBuffer);
                                     }
                                     closedFieldId++;

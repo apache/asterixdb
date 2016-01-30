@@ -39,7 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -89,15 +89,15 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
         if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
             return false;
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE)
+        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE_UPSERT)
             return false;
-        InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
-        if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
+        InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
+        if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE)
             return false;
         /**
          * get required record type
          */
-        InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
+        InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
         AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
         IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
         IAType requiredRecordType = schemaTypes[schemaTypes.length - 1];

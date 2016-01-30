@@ -62,6 +62,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RecordAddFieldsDescriptor();
         }
@@ -87,10 +88,6 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
         return new ICopyEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
-            private final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-            private final byte SER_ORDERED_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-            private final byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
-
             @SuppressWarnings("unchecked")
             private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
@@ -145,8 +142,8 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                         eval0.evaluate(tuple);
                         eval1.evaluate(tuple);
 
-                        if (abvs0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                || abvs1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                        if (abvs0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                || abvs1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
                                 nullSerDe.serialize(ANull.NULL, output.getDataOutput());
                             } catch (HyracksDataException e) {
@@ -156,14 +153,14 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                         }
 
                         // Make sure we get a valid record
-                        if (abvs0.getByteArray()[0] != SER_RECORD_TYPE_TAG) {
+                        if (abvs0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                             throw new AlgebricksException("Expected an ordederlist of type " + inRecType + " but "
                                     + "got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(abvs0.getByteArray()[0]));
                         }
 
                         // Make sure we get a valid list
-                        if (abvs1.getByteArray()[0] != SER_ORDERED_TYPE_TAG) {
+                        if (abvs1.getByteArray()[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException("Expected an ordederlist of type " + inListType + " but "
                                     + "got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(abvs1.getByteArray()[0]));

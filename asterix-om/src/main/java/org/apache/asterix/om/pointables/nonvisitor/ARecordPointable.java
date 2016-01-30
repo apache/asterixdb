@@ -216,10 +216,10 @@ public class ARecordPointable extends AbstractPointable {
     // Closed field accessors.
     // -----------------------
 
-    public void getClosedFieldValue(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException,
-            AsterixException {
+    public void getClosedFieldValue(ARecordType recordType, int fieldId, DataOutput dOut)
+            throws IOException, AsterixException {
         if (isClosedFieldNull(recordType, fieldId)) {
-            dOut.writeByte(ATypeTag.NULL.serialize());
+            dOut.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         } else {
             dOut.write(getClosedFieldTag(recordType, fieldId));
             dOut.write(bytes, getClosedFieldOffset(recordType, fieldId), getClosedFieldSize(recordType, fieldId));
@@ -231,7 +231,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public void getClosedFieldName(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
-        dOut.writeByte(ATypeTag.STRING.serialize());
+        dOut.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         utf8Writer.writeUTF8(getClosedFieldName(recordType, fieldId), dOut);
     }
 
@@ -281,8 +281,8 @@ public class ARecordPointable extends AbstractPointable {
     // Open field accessors.
     // -----------------------
 
-    public void getOpenFieldValue(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException,
-            AsterixException {
+    public void getOpenFieldValue(ARecordType recordType, int fieldId, DataOutput dOut)
+            throws IOException, AsterixException {
         dOut.write(bytes, getOpenFieldValueOffset(recordType, fieldId), getOpenFieldValueSize(recordType, fieldId));
     }
 
@@ -297,7 +297,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public void getOpenFieldName(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
-        dOut.writeByte(ATypeTag.STRING.serialize());
+        dOut.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         dOut.write(bytes, getOpenFieldNameOffset(recordType, fieldId), getOpenFieldNameSize(recordType, fieldId));
     }
 

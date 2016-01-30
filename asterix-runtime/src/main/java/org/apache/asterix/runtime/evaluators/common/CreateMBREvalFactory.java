@@ -45,8 +45,6 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
-
     private ICopyEvaluatorFactory recordEvalFactory;
     private ICopyEvaluatorFactory dimensionEvalFactory;
     private ICopyEvaluatorFactory coordinateEvalFactory;
@@ -82,8 +80,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                 eval2.evaluate(tuple);
 
                 // type-check: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32)
-                if (outInput1.getByteArray()[0] != SER_INT32_TYPE_TAG
-                        || outInput2.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                if (outInput1.getByteArray()[0] != ATypeTag.SERIALIZED_INT32_TYPE_TAG
+                        || outInput2.getByteArray()[0] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
                     throw new AlgebricksException(
                             "Expects Types: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32).");
                 }
@@ -99,8 +97,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                             case POINT:
                                 switch (coordinate) {
                                     case 0: // 0 is for min x, 1 is for min y, 2
-                                            // for
-                                            // max x, and 3 for max y
+                                           // for
+                                           // max x, and 3 for max y
                                     case 2: {
                                         double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
@@ -117,8 +115,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     }
                                         break;
                                     default: {
-                                        throw new NotImplementedException(coordinate
-                                                + " is not a valid coordinate option");
+                                        throw new NotImplementedException(
+                                                coordinate + " is not a valid coordinate option");
                                     }
                                 }
                                 break;
@@ -170,8 +168,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     }
                                         break;
                                     default: {
-                                        throw new NotImplementedException(coordinate
-                                                + " is not a valid coordinate option");
+                                        throw new NotImplementedException(
+                                                coordinate + " is not a valid coordinate option");
                                     }
                                 }
                                 break;
@@ -182,9 +180,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     case 0: {
                                         value = Double.MAX_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
-                                            double x = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
-                                                            .getCoordinateOffset(i, Coordinate.X));
+                                            double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
+                                                    APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                            Coordinate.X));
                                             value = Math.min(x, value);
                                         }
                                     }
@@ -192,9 +190,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     case 1: {
                                         value = Double.MAX_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
-                                            double y = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
-                                                            .getCoordinateOffset(i, Coordinate.Y));
+                                            double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
+                                                    APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                            Coordinate.Y));
                                             value = Math.min(y, value);
                                         }
                                     }
@@ -202,9 +200,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     case 2: {
                                         value = Double.MIN_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
-                                            double x = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
-                                                            .getCoordinateOffset(i, Coordinate.X));
+                                            double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
+                                                    APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                            Coordinate.X));
                                             value = Math.max(x, value);
                                         }
                                     }
@@ -212,16 +210,16 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     case 3: {
                                         value = Double.MIN_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
-                                            double y = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
-                                                            .getCoordinateOffset(i, Coordinate.Y));
+                                            double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
+                                                    APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                            Coordinate.Y));
                                             value = Math.max(y, value);
                                         }
                                     }
                                         break;
                                     default: {
-                                        throw new NotImplementedException(coordinate
-                                                + " is not a valid coordinate option");
+                                        throw new NotImplementedException(
+                                                coordinate + " is not a valid coordinate option");
                                     }
                                 }
                                 break;
@@ -272,8 +270,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     }
                                         break;
                                     default: {
-                                        throw new NotImplementedException(coordinate
-                                                + " is not a valid coordinate option");
+                                        throw new NotImplementedException(
+                                                coordinate + " is not a valid coordinate option");
                                     }
                                 }
                                 break;
@@ -305,13 +303,13 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                     }
                                         break;
                                     default: {
-                                        throw new NotImplementedException(coordinate
-                                                + " is not a valid coordinate option");
+                                        throw new NotImplementedException(
+                                                coordinate + " is not a valid coordinate option");
                                     }
                                 }
                                 break;
                             case NULL: {
-                                out.writeByte(ATypeTag.NULL.serialize());
+                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                                 return;
                             }
                             default:
@@ -323,7 +321,7 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                     } else {
                         throw new NotImplementedException(dimension + "D is not supported");
                     }
-                    out.writeByte(ATypeTag.DOUBLE.serialize());
+                    out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                     out.writeDouble(value);
                 } catch (HyracksDataException hde) {
                     throw new AlgebricksException(hde);

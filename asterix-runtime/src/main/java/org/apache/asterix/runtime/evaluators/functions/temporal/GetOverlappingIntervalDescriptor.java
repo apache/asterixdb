@@ -43,12 +43,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    private static final byte SER_INTERVAL_TYPE_TAG = ATypeTag.INTERVAL.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -56,6 +51,7 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
         }
     };
 
+    @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
 
@@ -88,22 +84,21 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            } else if (argOut0.getByteArray()[0] == SER_INTERVAL_TYPE_TAG
+                            } else if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
                                     && argOut0.getByteArray()[0] == argOut1.getByteArray()[0]) {
-                                byte type0 = AIntervalSerializerDeserializer.getIntervalTimeType(
-                                        argOut0.getByteArray(), 1);
-                                byte type1 = AIntervalSerializerDeserializer.getIntervalTimeType(
-                                        argOut1.getByteArray(), 1);
+                                byte type0 = AIntervalSerializerDeserializer.getIntervalTimeType(argOut0.getByteArray(),
+                                        1);
+                                byte type1 = AIntervalSerializerDeserializer.getIntervalTimeType(argOut1.getByteArray(),
+                                        1);
                                 if (type0 != type1) {
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName()
-                                                    + ": expecting two (nullable) interval values with the same internal time type but got interval of "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type0)
-                                                    + " and interval of "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type1));
+                                    throw new AlgebricksException(getIdentifier().getName()
+                                            + ": expecting two (nullable) interval values with the same internal time type but got interval of "
+                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type0)
+                                            + " and interval of "
+                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type1));
                                 }
 
                                 long start0 = AIntervalSerializerDeserializer.getIntervalStart(argOut0.getByteArray(),
@@ -124,11 +119,13 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                                     nullSerde.serialize(ANull.NULL, out);
                                 }
                             } else {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting two (nullable) interval values but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
-                                        + " and "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[1]));
+                                throw new AlgebricksException(
+                                        getIdentifier().getName()
+                                                + ": expecting two (nullable) interval values but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + " and " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut0.getByteArray()[1]));
                             }
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);

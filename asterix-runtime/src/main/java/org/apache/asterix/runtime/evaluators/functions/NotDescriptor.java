@@ -41,12 +41,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    private final static byte SER_BOOLEAN_TYPE_TAG = ATypeTag.BOOLEAN.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NotDescriptor();
         }
@@ -85,11 +82,11 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == SER_BOOLEAN_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
                                 boolean argRes = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 ABoolean aResult = argRes ? (ABoolean.FALSE) : (ABoolean.TRUE);
                                 booleanSerde.serialize(aResult, out);
-                            } else if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG)
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);

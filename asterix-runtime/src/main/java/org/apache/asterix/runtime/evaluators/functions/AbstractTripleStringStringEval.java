@@ -37,10 +37,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
-
     private DataOutput dout;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
@@ -82,18 +79,19 @@ public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    || array2.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array2.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
                 return;
-            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array2.getByteArray()[0] != SER_STRING_TYPE_TAG) {
-                throw new AlgebricksException(funcID.getName()
-                        + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL), but got ("
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ".");
+            } else if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array2.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                throw new AlgebricksException(
+                        funcID.getName() + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL), but got ("
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ".");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);

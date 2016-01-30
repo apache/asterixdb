@@ -45,15 +45,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATETIME_FROM_DATE_TIME;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-    private final static byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -100,25 +93,23 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG
-                                        && argOut1.getByteArray()[0] != SER_TIME_TYPE_TAG) {
+                                if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG
+                                        && argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            FID.getName()
-                                                    + ": expects input type (DATE/NULL, TIME/NULL) but got ("
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0
-                                                            .getByteArray()[0])
-                                                    + ", "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1
-                                                            .getByteArray()[0]) + ").");
+                                            FID.getName() + ": expects input type (DATE/NULL, TIME/NULL) but got ("
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                            .deserialize(argOut0.getByteArray()[0])
+                                                    + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                            .deserialize(argOut1.getByteArray()[0])
+                                                    + ").");
 
                                 }
 
-                                long datetimeChronon = ADateSerializerDeserializer
-                                        .getChronon(argOut0.getByteArray(), 1)
+                                long datetimeChronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
                                         * GregorianCalendarSystem.CHRONON_OF_DAY
                                         + ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
 

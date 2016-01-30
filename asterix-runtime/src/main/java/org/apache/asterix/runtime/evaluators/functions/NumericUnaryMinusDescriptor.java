@@ -56,6 +56,7 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericUnaryMinusDescriptor();
         }
@@ -74,13 +75,6 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
-                    private byte serNullTypeTag = ATypeTag.NULL.serialize();
-                    private byte serInt8TypeTag = ATypeTag.INT8.serialize();
-                    private byte serInt16TypeTag = ATypeTag.INT16.serialize();
-                    private byte serInt32TypeTag = ATypeTag.INT32.serialize();
-                    private byte serInt64TypeTag = ATypeTag.INT64.serialize();
-                    private byte serFloatTypeTag = ATypeTag.FLOAT.serialize();
-                    private byte serDoubleTypeTag = ATypeTag.DOUBLE.serialize();
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -96,37 +90,38 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == serNullTypeTag) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ANULL);
                                 serde.serialize(ANull.NULL, out);
                                 return;
-                            } else if (argOut.getByteArray()[0] == serInt8TypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
                                 aInt8.setValue((byte) -AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1));
                                 serde.serialize(aInt8, out);
-                            } else if (argOut.getByteArray()[0] == serInt16TypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
-                                aInt16.setValue((short) -AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1));
+                                aInt16.setValue(
+                                        (short) -AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1));
                                 serde.serialize(aInt16, out);
-                            } else if (argOut.getByteArray()[0] == serInt32TypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
                                 aInt32.setValue(-AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 serde.serialize(aInt32, out);
-                            } else if (argOut.getByteArray()[0] == serInt64TypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
                                 aInt64.setValue(-AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1));
                                 serde.serialize(aInt64, out);
-                            } else if (argOut.getByteArray()[0] == serFloatTypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
                                 aFloat.setValue(-AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1));
                                 serde.serialize(aFloat, out);
-                            } else if (argOut.getByteArray()[0] == serDoubleTypeTag) {
+                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
                                 aDouble.setValue(-ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1));

@@ -45,13 +45,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.PRINT_TIME;
-
-    private final static byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static DateTimeFormatUtils DT_UTILS = DateTimeFormatUtils.getInstance();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -94,20 +89,21 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_TIME_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects (TIME, STRING) but got  ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
-                                        + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
-                                        + ")");
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_TIME_TYPE_TAG
+                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        getIdentifier().getName() + ": expects (TIME, STRING) but got  ("
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut1.getByteArray()[0])
+                                                + ")");
                             }
 
                             long chronon = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
@@ -117,7 +113,7 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             DT_UTILS.printDateTime(chronon, 0, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
                                     formatLength, sbder, DateTimeParseMode.TIME_ONLY);
 
-                            out.writeByte(ATypeTag.STRING.serialize());
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(sbder.toString(), out);
 
                         } catch (IOException ex) {

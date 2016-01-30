@@ -43,13 +43,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_CIRCLE_RADIUS_ACCESSOR;
-    private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -87,12 +82,12 @@ public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescripto
 
                         try {
                             double radius;
-                            if (bytes[0] == SER_CICLE_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
                                 radius = ADoubleSerializerDeserializer.getDouble(bytes,
                                         ACircleSerializerDeserializer.getRadiusOffset());
                                 aDouble.setValue(radius);
                                 doubleSerde.serialize(aDouble, out);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-radius does not support the type: " + bytes[0]

@@ -46,15 +46,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.CALENDAR_DURATION_FROM_DATE;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -104,28 +97,28 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects type DATE/NULL for parameter 0 but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
+                            if (argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects type DURATION/NULL for parameter 1 but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
 
-                            int yearMonthDurationInMonths = ADurationSerializerDeserializer.getYearMonth(
-                                    argOut1.getByteArray(), 1);
-                            long dayTimeDurationInMs = ADurationSerializerDeserializer.getDayTime(
-                                    argOut1.getByteArray(), 1);
+                            int yearMonthDurationInMonths = ADurationSerializerDeserializer
+                                    .getYearMonth(argOut1.getByteArray(), 1);
+                            long dayTimeDurationInMs = ADurationSerializerDeserializer
+                                    .getDayTime(argOut1.getByteArray(), 1);
 
                             long startingTimePoint = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -192,7 +185,8 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                                 if (day < 0) {
                                     boolean isLeapYear = calInstanct.isLeapYear(year1);
                                     // need to "borrow" the days in previous month to make the day positive; when month is 1 (Jan), Dec will be borrowed
-                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
+                                    day += (isLeapYear)
+                                            ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
                                             : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
                                     month -= 1;
                                 }
@@ -204,17 +198,16 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
 
                                 if (negative) {
                                     aDuration.setValue(-1 * (year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month),
-                                            -1
-                                                    * (day * GregorianCalendarSystem.CHRONON_OF_DAY + hour
-                                                            * GregorianCalendarSystem.CHRONON_OF_HOUR + min
-                                                            * GregorianCalendarSystem.CHRONON_OF_MINUTE + sec
-                                                            * GregorianCalendarSystem.CHRONON_OF_SECOND + ms));
+                                            -1 * (day * GregorianCalendarSystem.CHRONON_OF_DAY
+                                                    + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
+                                                    + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
+                                                    + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms));
                                 } else {
-                                    aDuration.setValue(year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month, day
-                                            * GregorianCalendarSystem.CHRONON_OF_DAY + hour
-                                            * GregorianCalendarSystem.CHRONON_OF_HOUR + min
-                                            * GregorianCalendarSystem.CHRONON_OF_MINUTE + sec
-                                            * GregorianCalendarSystem.CHRONON_OF_SECOND + ms);
+                                    aDuration.setValue(year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month,
+                                            day * GregorianCalendarSystem.CHRONON_OF_DAY
+                                                    + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
+                                                    + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
+                                                    + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms);
                                 }
                             }
 

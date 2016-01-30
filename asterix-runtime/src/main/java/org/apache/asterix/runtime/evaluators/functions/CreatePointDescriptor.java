@@ -43,14 +43,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    // allowed input type
-    private static final byte SER_DOUBLE_TYPE_TAG = ATypeTag.DOUBLE.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CreatePointDescriptor();
         }
@@ -84,19 +79,23 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval1.evaluate(tuple);
 
                         // type-check: (double, double)
-                        if ((outInput0.getByteArray()[0] != SER_DOUBLE_TYPE_TAG && outInput0.getByteArray()[0] != SER_NULL_TYPE_TAG)
-                                || (outInput1.getByteArray()[0] != SER_DOUBLE_TYPE_TAG && outInput1.getByteArray()[0] != SER_NULL_TYPE_TAG)) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_POINT.getName()
-                                    + ": expects input type: (DOUBLE, DOUBLE) but got ("
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0])
-                                    + ", "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0])
-                                    + ").");
+                        if ((outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG
+                                && outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                                || (outInput1.getByteArray()[0] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG
+                                        && outInput1.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+                            throw new AlgebricksException(
+                                    AsterixBuiltinFunctions.CREATE_POINT.getName()
+                                            + ": expects input type: (DOUBLE, DOUBLE) but got ("
+                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                    outInput0.getByteArray()[0])
+                                            + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                    .deserialize(outInput1.getByteArray()[0])
+                                            + ").");
                         }
 
                         try {
-                            if (outInput0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || outInput1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (outInput0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || outInput1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL)
                                         .serialize(ANull.NULL, out);
                             } else {

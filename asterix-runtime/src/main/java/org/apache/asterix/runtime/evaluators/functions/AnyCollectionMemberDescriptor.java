@@ -47,6 +47,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AnyCollectionMemberDescriptor();
         }
@@ -65,11 +66,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
     private static class AnyCollectionMemberEvalFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-
         private ICopyEvaluatorFactory listEvalFactory;
-        private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-        private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
-        private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
         private byte serItemTypeTag;
         private ATypeTag itemTag;
         private boolean selfDescList = false;
@@ -99,26 +96,27 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                         evalList.evaluate(tuple);
                         byte[] serList = outInputList.getByteArray();
 
-                        if (serList[0] == SER_NULL_TYPE_TAG) {
+                        if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
                             return;
                         }
 
-                        if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                        if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER.getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 
-                        if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
+                        if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                             if (AOrderedListSerializerDeserializer.getNumberOfItems(serList) == 0) {
-                                out.writeByte(SER_NULL_TYPE_TAG);
+                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                                 return;
                             }
                             itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, 0);
                         } else {
                             if (AUnorderedListSerializerDeserializer.getNumberOfItems(serList) == 0) {
-                                out.writeByte(SER_NULL_TYPE_TAG);
+                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                                 return;
                             }
                             itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, 0);
@@ -132,7 +130,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                         if (selfDescList) {
                             itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
-                            itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true) + 1;
+                            itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true)
+                                    + 1;
                             out.write(serList, itemOffset, itemLength);
                         } else {
                             itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, false);

@@ -636,11 +636,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     token = admLexer.next();
                     this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput());
                     if (openRecordField) {
-                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                         }
                     } else if (NonTaggedFormatUtil.isOptional(recType)) {
-                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             recBuilder.addField(fieldId, fieldValueBuffer);
                         }
                     } else {

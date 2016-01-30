@@ -46,7 +46,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -97,16 +97,16 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                  */
 
                 AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-                if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
-                    InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
-                    if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
+                if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
+                    InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
+                    if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE)
                         return false;
 
                     // Remember this is the operator we need to modify
                     op = insertDeleteOp;
 
                     // Derive the required ARecordType based on the schema of the AqlDataSource
-                    InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
+                    InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
                     AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
                     IAType[] schemaTypes = dataSource.getSchemaTypes();
                     requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];

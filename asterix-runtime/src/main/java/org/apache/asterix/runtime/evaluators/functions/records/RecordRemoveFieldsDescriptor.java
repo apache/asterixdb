@@ -23,7 +23,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -31,19 +30,15 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class RecordRemoveFieldsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private static final byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RecordRemoveFieldsDescriptor();
         }
     };
 
-    private  RecordRemoveFieldsDescriptor() {
+    private RecordRemoveFieldsDescriptor() {
     }
 
     private ARecordType outputRecordType;
@@ -56,6 +51,7 @@ public class RecordRemoveFieldsDescriptor extends AbstractScalarFunctionDynamicD
         inputListType = (AOrderedListType) inListType;
     }
 
+    @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new RecordRemoveFieldsEvalFactory(args[0], args[1], outputRecordType, inputRecType, inputListType);
     }

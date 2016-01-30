@@ -51,6 +51,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AStringConstructorDescriptor();
         }
@@ -111,8 +112,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         break;
                                     }
                                     case DOUBLE: {
-                                        double d = ADoubleSerializerDeserializer.getDouble(outInput.getByteArray(),
-                                                1);
+                                        double d = ADoubleSerializerDeserializer.getDouble(outInput.getByteArray(), 1);
                                         builder.appendString(String.valueOf(d));
                                         break;
                                     }
@@ -122,13 +122,13 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         break;
                                     }
                                     case BOOLEAN: {
-                                        boolean b = ABooleanSerializerDeserializer.getBoolean(
-                                                outInput.getByteArray(), 1);
+                                        boolean b = ABooleanSerializerDeserializer.getBoolean(outInput.getByteArray(),
+                                                1);
                                         builder.appendString(String.valueOf(b));
                                         break;
                                     }
 
-                                    // NotYetImplemented
+                                        // NotYetImplemented
                                     case CIRCLE:
                                     case DATE:
                                     case DATETIME:
@@ -150,7 +150,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         throw new AlgebricksException("string of " + tt + " not supported");
                                 }
                                 builder.finish();
-                                out.write(ATypeTag.STRING.serialize());
+                                out.write(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                                 out.write(baaos.getByteArray(), 0, baaos.getLength());
                             }
                         } catch (IOException e) {

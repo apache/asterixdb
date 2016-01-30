@@ -46,12 +46,11 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringLowerCaseDescriptor();
         }
     };
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -70,8 +69,6 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
                     private final UTF8StringPointable string = new UTF8StringPointable();
 
-                    private final byte stt = ATypeTag.STRING.serialize();
-
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -84,14 +81,14 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
 
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 string.set(serString, 1, serString.length);
                                 array.reset();
                                 UTF8StringPointable.lowercase(string, builder, array);
 
-                                out.writeByte(stt);
+                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                                 out.write(array.getByteArray(), 0, array.getLength());
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LOWERCASE.getName()

@@ -48,8 +48,9 @@ public class SerializableGlobalAvgAggregateFunction extends AbstractSerializable
         finishPartialResults(state, start, len, result);
     }
 
+    @Override
     protected void processNull(byte[] state, int start) {
-        state[start + AGG_TYPE_OFFSET] = ATypeTag.NULL.serialize();
+        state[start + AGG_TYPE_OFFSET] = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
     }
 
     @Override

@@ -51,6 +51,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialAreaDescriptor();
         }
@@ -92,14 +93,14 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                                 + ": polygon must have at least 3 points");
                                     }
                                     area = Math.abs(SpatialUtils.polygonArea(argOut.getByteArray(), numOfPoints));
-                                    out.writeByte(ATypeTag.DOUBLE.serialize());
+                                    out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case CIRCLE:
                                     double radius = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
                                             ACircleSerializerDeserializer.getRadiusOffset());
                                     area = SpatialUtils.pi() * radius * radius;
-                                    out.writeByte(ATypeTag.DOUBLE.serialize());
+                                    out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case RECTANGLE:
@@ -117,7 +118,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                             ARectangleSerializerDeserializer
                                                     .getUpperRightCoordinateOffset(Coordinate.Y));
                                     area = (x2 - x1) * (y2 - y1);
-                                    out.writeByte(ATypeTag.DOUBLE.serialize());
+                                    out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case NULL:

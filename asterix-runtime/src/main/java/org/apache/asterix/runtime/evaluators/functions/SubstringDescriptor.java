@@ -47,6 +47,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubstringDescriptor();
         }
@@ -66,7 +67,6 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final ICopyEvaluator evalString = args[0].createEvaluator(argOut);
                     private final ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
                     private final ICopyEvaluator evalLen = args[2].createEvaluator(argOut);
-                    private final byte stt = ATypeTag.STRING.serialize();
 
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
@@ -91,7 +91,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                 start = argOut.getByteArray()[1] - 1;
                                 break;
                             case INT16:
-                                start = (int) ShortPointable.getShort(argOut.getByteArray(), 1) - 1;
+                                start = ShortPointable.getShort(argOut.getByteArray(), 1) - 1;
                                 break;
                             case FLOAT:
                                 start = (int) FloatPointable.getFloat(argOut.getByteArray(), 1) - 1;
@@ -122,7 +122,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                 len = argOut.getByteArray()[1];
                                 break;
                             case INT16:
-                                len = (int) ShortPointable.getShort(argOut.getByteArray(), 1);
+                                len = ShortPointable.getShort(argOut.getByteArray(), 1);
                                 break;
                             case FLOAT:
                                 len = (int) FloatPointable.getFloat(argOut.getByteArray(), 1);
@@ -159,7 +159,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         }
 
                         try {
-                            out.writeByte(stt);
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

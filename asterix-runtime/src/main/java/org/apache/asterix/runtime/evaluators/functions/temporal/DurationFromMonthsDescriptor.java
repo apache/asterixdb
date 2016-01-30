@@ -45,10 +45,6 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DURATION_FROM_MONTHS;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -87,7 +83,7 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                         eval0.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }

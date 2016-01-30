@@ -26,6 +26,7 @@ public interface Statement extends ILangExpression {
         DATASET_DROP,
         DELETE,
         INSERT,
+        UPSERT,
         UPDATE,
         DML_CMD_LIST,
         FUNCTION_DECL,

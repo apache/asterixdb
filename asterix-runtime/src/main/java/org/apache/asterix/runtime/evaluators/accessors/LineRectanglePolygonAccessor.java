@@ -50,15 +50,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR;
-    private static final byte SER_LINE_TAG = ATypeTag.LINE.serialize();
-    private static final byte SER_RECTANGLE_TAG = ATypeTag.RECTANGLE.serialize();
-    private static final byte SER_POLYGON_TAG = ATypeTag.POLYGON.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -99,7 +92,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                         byte[] bytes = argOut.getByteArray();
 
                         try {
-                            if (bytes[0] == SER_LINE_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_LINE_TYPE_TAG) {
                                 listBuilder.reset(pointListType);
 
                                 inputVal.reset();
@@ -121,7 +114,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.addItem(inputVal);
                                 listBuilder.write(out, true);
 
-                            } else if (bytes[0] == SER_RECTANGLE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG) {
                                 listBuilder.reset(pointListType);
 
                                 inputVal.reset();
@@ -143,7 +136,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.addItem(inputVal);
                                 listBuilder.write(out, true);
 
-                            } else if (bytes[0] == SER_POLYGON_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_POLYGON_TYPE_TAG) {
                                 int numOfPoints = AInt16SerializerDeserializer.getShort(bytes,
                                         APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
@@ -162,7 +155,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                     listBuilder.addItem(inputVal);
                                 }
                                 listBuilder.write(out, true);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-points does not support the type: " + bytes[0]

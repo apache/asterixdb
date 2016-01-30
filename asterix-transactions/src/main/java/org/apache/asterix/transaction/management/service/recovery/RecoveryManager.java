@@ -126,6 +126,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
      * of the operation, or the system can be recovered concurrently. This kind of concurrency is
      * not supported, yet.
      */
+    @Override
     public SystemState getSystemState() throws ACIDException {
         //read checkpoint file
         CheckpointObject checkpointObject = null;
@@ -180,6 +181,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     //This method is used only when replication is disabled. Therefore, there is no need to check logs node ids
+    @Override
     public void startRecovery(boolean synchronous) throws IOException, ACIDException {
         //delete any recovery files from previous failed recovery attempts
         deleteRecoveryTemporaryFiles();
@@ -244,6 +246,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         jobCommitLogCount++;
                         break;
                     case LogType.ENTITY_COMMIT:
+                    case LogType.UPSERT_ENTITY_COMMIT:
                         jobId = logRecord.getJobId();
                         if (!jobId2WinnerEntitiesMap.containsKey(jobId)) {
                             jobEntityWinners = new JobEntityCommits(jobId);
@@ -376,6 +379,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     case LogType.ENTITY_COMMIT:
                     case LogType.ABORT:
                     case LogType.FLUSH:
+                    case LogType.UPSERT_ENTITY_COMMIT:
                         //do nothing
                         break;
                     default:
@@ -452,6 +456,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         updateLogCount++;
                         break;
                     case LogType.JOB_COMMIT:
+                    case LogType.UPSERT_ENTITY_COMMIT:
                         winnerJobSet.add(Integer.valueOf(logRecord.getJobId()));
                         jobId2WinnerEntitiesMap.remove(Integer.valueOf(logRecord.getJobId()));
                         jobCommitLogCount++;
@@ -588,6 +593,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     case LogType.ENTITY_COMMIT:
                     case LogType.ABORT:
                     case LogType.FLUSH:
+                    case LogType.UPSERT_ENTITY_COMMIT:
 
                         //do nothing
                         break;
@@ -737,6 +743,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return minMCTFirstLSN;
     }
 
+    @Override
     public long getMinFirstLSN() throws HyracksDataException {
         long minFirstLSN = getLocalMinFirstLSN();
 
@@ -749,6 +756,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return minFirstLSN;
     }
 
+    @Override
     public long getLocalMinFirstLSN() throws HyracksDataException {
         IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getDatasetLifecycleManager();
@@ -969,6 +977,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             }
                             break;
                         case LogType.ENTITY_COMMIT:
+                        case LogType.UPSERT_ENTITY_COMMIT:
                             jobLoserEntity2LSNsMap.remove(tempKeyTxnId);
                             entityCommitLogCount++;
                             if (IS_DEBUG_MODE) {
@@ -1003,6 +1012,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             while (iter.hasNext()) {
                 Map.Entry<TxnId, List<Long>> loserEntity2LSNsMap = iter.next();
                 undoLSNSet = loserEntity2LSNsMap.getValue();
+                // The step below is important since the upsert operations must be done in reverse order.
+                Collections.reverse(undoLSNSet);
                 for (long undoLSN : undoLSNSet) {
                     //here, all the log records are UPDATE type. So, we don't need to check the type again.
                     //read the corresponding log record to be undone.

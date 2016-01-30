@@ -46,10 +46,6 @@ import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class FieldAccessUtil {
-
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
-
     @SuppressWarnings("unchecked")
     private static ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -72,7 +68,7 @@ public class FieldAccessUtil {
     }
 
     public static boolean checkType(byte tagId, DataOutput out) throws AlgebricksException {
-        if (tagId == SER_NULL_TYPE_TAG) {
+        if (tagId == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             try {
                 nullSerde.serialize(ANull.NULL, out);
             } catch (HyracksDataException e) {
@@ -81,7 +77,7 @@ public class FieldAccessUtil {
             return true;
         }
 
-        if (tagId != SER_RECORD_TYPE_TAG) {
+        if (tagId != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
             throw new AlgebricksException("Field accessor is not defined for values of type "
                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tagId));
         }
@@ -118,7 +114,7 @@ public class FieldAccessUtil {
                 if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                     //enforced SubType
                     subType = ((AUnionType) subType).getNullableType();
-                    if (subType.getTypeTag().serialize() != SER_RECORD_TYPE_TAG) {
+                    if (subType.getTypeTag().serialize() != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type " + subTypeTag);
                     }
                     if (subType.getTypeTag() == ATypeTag.RECORD) {
@@ -135,7 +131,7 @@ public class FieldAccessUtil {
                         nullBitmapSize, ((ARecordType) subType).isOpen());
                 if (subFieldOffset == 0) {
                     // the field is null, we checked the null bit map
-                    out.writeByte(SER_NULL_TYPE_TAG);
+                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                     return;
                 }
                 subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
@@ -177,7 +173,7 @@ public class FieldAccessUtil {
                 subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetByName(subRecord,
                         abvsFields[i].getByteArray());
                 if (subFieldOffset < 0) {
-                    out.writeByte(SER_NULL_TYPE_TAG);
+                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                     return;
                 }
 

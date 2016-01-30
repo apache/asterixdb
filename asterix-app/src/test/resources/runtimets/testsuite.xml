@@ -1240,7 +1240,64 @@
         </test-case>
         -->
     </test-group>
+    <test-group name="upsert">
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-rtree">
+                <output-dir compare="Text">primary-secondary-rtree</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="upsert-with-self-read">
+                <output-dir compare="Text">upsert-with-self-read</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="filtered-dataset">
+                <output-dir compare="Text">filtered-dataset</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="nullable-index">
+                <output-dir compare="Text">nullable-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="nested-index">
+                <output-dir compare="Text">nested-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="open-index">
+                <output-dir compare="Text">open-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-index">
+                <output-dir compare="Text">primary-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-btree">
+                <output-dir compare="Text">primary-secondary-btree</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-inverted">
+                <output-dir compare="Text">primary-secondary-inverted</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="multiple-secondaries">
+                <output-dir compare="Text">multiple-secondaries</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="dml">
+         <test-case FilePath="dml">
+            <compilation-unit name="load-with-ngram-index">
+                <output-dir compare="Text">load-with-ngram-index</output-dir>
+            </compilation-unit>
+        </test-case>
          <test-case FilePath="dml">
             <compilation-unit name="insert-duplicated-keys-from-query">
                 <output-dir compare="Text">insert-duplicated-keys-from-query</output-dir>
@@ -1467,11 +1524,6 @@
         <test-case FilePath="dml">
             <compilation-unit name="load-with-index">
                 <output-dir compare="Text">load-with-index</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="dml">
-            <compilation-unit name="load-with-ngram-index">
-                <output-dir compare="Text">load-with-ngram-index</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">

@@ -21,13 +21,16 @@ package org.apache.asterix.common.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -43,23 +46,24 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
     /** the name of the index that is being operated upon **/
     private final String indexName;
 
-    public AsterixLSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
-            int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ITupleFilterFactory tupleFilterFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackProvider, boolean isPrimary, String indexName) {
+    public AsterixLSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
+            IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
+            ITupleFilterFactory tupleFilterFactory, boolean isPrimary, String indexName,
+            INullWriterFactory nullWriterFactory, IModificationOperationCallbackFactory modificationOpCallbackProvider,
+            ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,
-                tupleFilterFactory, modificationOpCallbackProvider);
+                tupleFilterFactory, nullWriterFactory, modificationOpCallbackProvider, searchOpCallbackProvider);
         this.isPrimary = isPrimary;
         this.indexName = indexName;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new AsterixLSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
                 recordDescProvider, op, isPrimary);
     }

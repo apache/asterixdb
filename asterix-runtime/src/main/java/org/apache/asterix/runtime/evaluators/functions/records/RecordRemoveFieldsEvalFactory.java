@@ -53,10 +53,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
     private static final long serialVersionUID = 1L;
-
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private static final byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private static final byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -95,7 +91,6 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
             private final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
             private final Deque<IVisitablePointable> recordPath = new ArrayDeque<>();
 
-
             @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                 outInput0.reset();
@@ -104,7 +99,7 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
                 eval0.evaluate(tuple);
                 eval1.evaluate(tuple);
 
-                if (outInput0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                if (outInput0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                     try {
                         nullSerDe.serialize(ANull.NULL, output.getDataOutput());
                     } catch (HyracksDataException e) {
@@ -113,13 +108,13 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
                     return;
                 }
 
-                if (outInput0.getByteArray()[0] != SER_RECORD_TYPE_TAG) {
+                if (outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new AlgebricksException(AsterixBuiltinFunctions.REMOVE_FIELDS.getName()
                             + ": expects input type " + inputRecType + ", but got "
                             + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]));
                 }
 
-                if (outInput1.getByteArray()[0] != SER_ORDEREDLIST_TYPE_TAG) {
+                if (outInput1.getByteArray()[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                     throw new AlgebricksException(AsterixBuiltinFunctions.REMOVE_FIELDS.getName()
                             + ": expects input type " + inputListType + ", but got "
                             + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0]));
@@ -142,8 +137,8 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
             }
 
             private void processRecord(ARecordType requiredType, ARecordVisitablePointable srp,
-                    AListVisitablePointable inputList, int nestedLevel) throws IOException, AsterixException,
-                    AlgebricksException {
+                    AListVisitablePointable inputList, int nestedLevel)
+                            throws IOException, AsterixException, AlgebricksException {
                 if (rbStack.size() < (nestedLevel + 1)) {
                     rbStack.add(new RecordBuilder());
                 }
@@ -173,8 +168,8 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
 
             private void addKeptFieldToSubRecord(ARecordType requiredType, IVisitablePointable fieldNamePointable,
                     IVisitablePointable fieldValuePointable, IVisitablePointable fieldTypePointable,
-                    AListVisitablePointable inputList, int nestedLevel) throws IOException, AsterixException,
-                    AlgebricksException {
+                    AListVisitablePointable inputList, int nestedLevel)
+                            throws IOException, AsterixException, AlgebricksException {
 
                 runtimeRecordTypeInfo.reset(requiredType);
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),
@@ -191,7 +186,8 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
                     }
                 } else { // Open field
                     if (PointableHelper.sameType(ATypeTag.RECORD, fieldTypePointable)) {
-                        processRecord(null, (ARecordVisitablePointable) fieldValuePointable, inputList, nestedLevel + 1);
+                        processRecord(null, (ARecordVisitablePointable) fieldValuePointable, inputList,
+                                nestedLevel + 1);
                         tabvs.reset();
                         rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
                         rbStack.get(nestedLevel).addField(fieldNamePointable, tabvs);

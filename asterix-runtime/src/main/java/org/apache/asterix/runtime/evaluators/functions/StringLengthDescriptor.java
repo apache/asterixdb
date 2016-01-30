@@ -43,7 +43,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -51,8 +50,6 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
             return new StringLengthDescriptor();
         }
     };
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -80,11 +77,11 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 int len = UTF8StringUtil.getUTFLength(outInput.getByteArray(), 1);
                                 result.setValue(len);
                                 int64Serde.serialize(result, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LENGTH.getName()

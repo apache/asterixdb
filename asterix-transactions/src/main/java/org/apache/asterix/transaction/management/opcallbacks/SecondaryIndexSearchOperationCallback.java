@@ -27,11 +27,16 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 /**
  * Secondary index searches perform no locking at all.
  */
-public class SecondaryIndexSearchOperationCallback extends AbstractOperationCallback implements
-        ISearchOperationCallback {
+public class SecondaryIndexSearchOperationCallback extends AbstractOperationCallback
+        implements ISearchOperationCallback {
 
     public SecondaryIndexSearchOperationCallback() {
         super(-1, null, null, null);
+    }
+
+    @Override
+    public void before(ITupleReference tuple) throws HyracksDataException {
+        // Do nothing
     }
 
     @Override
@@ -53,5 +58,4 @@ public class SecondaryIndexSearchOperationCallback extends AbstractOperationCall
     public void complete(ITupleReference tuple) throws HyracksDataException {
         // Do nothing.
     }
-
 }

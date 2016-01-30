@@ -391,7 +391,7 @@ public class MetadataLockManager {
         releaseDataverseReadLock(dataverseName);
     }
 
-    public void insertDeleteBegin(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
+    public void insertDeleteUpsertBegin(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
             List<String> datasets) {
         dataverses.add(dataverseName);
         datasets.add(datasetFullyQualifiedName);
@@ -420,7 +420,7 @@ public class MetadataLockManager {
         }
     }
 
-    public void insertDeleteEnd(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
+    public void insertDeleteUpsertEnd(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
             List<String> datasets) {
         String previous = null;
         for (int i = dataverses.size() - 1; i >= 0; i--) {

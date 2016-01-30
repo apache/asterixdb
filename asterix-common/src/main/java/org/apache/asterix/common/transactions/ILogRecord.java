@@ -25,7 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ILogRecord {
 
-    public enum RECORD_STATUS{
+    public enum RECORD_STATUS {
         TRUNCATED,
         BAD_CHKSUM,
         OK
@@ -39,11 +39,6 @@ public interface ILogRecord {
     public LogRecord.RECORD_STATUS readLogRecord(ByteBuffer buffer);
 
     public void writeLogRecord(ByteBuffer buffer);
-
-    public void formJobTerminateLogRecord(ITransactionContext txnCtx, boolean isCommit);
-
-    public void formEntityCommitLogRecord(ITransactionContext txnCtx, int datasetId, int PKHashValue,
-            ITupleReference tupleReference, int[] primaryKeyFields);
 
     public ITransactionContext getTxnCtx();
 
@@ -134,7 +129,5 @@ public interface ILogRecord {
     public void writeLogRecord(ByteBuffer buffer, long appendLSN);
 
     public ByteBuffer getSerializedLog();
-
-    public void formJobTerminateLogRecord(int jobId, boolean isCommit, String nodeId);
 
 }

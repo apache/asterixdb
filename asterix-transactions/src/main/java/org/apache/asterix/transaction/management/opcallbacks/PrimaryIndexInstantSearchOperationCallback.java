@@ -31,8 +31,8 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 /**
  * Assumes LSM-BTrees as primary indexes. Implements try/locking and unlocking on primary keys.
  */
-public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperationCallback implements
-        ISearchOperationCallback {
+public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperationCallback
+        implements ISearchOperationCallback {
 
     public PrimaryIndexInstantSearchOperationCallback(int datasetId, int[] entityIdFields, ILockManager lockManager,
             ITransactionContext txnCtx) {
@@ -72,5 +72,9 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void before(ITupleReference tuple) throws HyracksDataException {
     }
 }

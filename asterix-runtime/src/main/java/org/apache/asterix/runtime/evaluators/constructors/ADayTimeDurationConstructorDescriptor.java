@@ -45,9 +45,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -86,17 +83,17 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
 
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
 
-                                utf8Ptr.set(serString, 1, outInput.getLength() -1);
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
                                 int startOffset = utf8Ptr.getCharStartOffset();
 
-                                ADurationParserFactory.parseDuration(serString, startOffset, stringLength, aDayTimeDuration,
-                                        ADurationParseOption.DAY_TIME);
+                                ADurationParserFactory.parseDuration(serString, startOffset, stringLength,
+                                        aDayTimeDuration, ADurationParseOption.DAY_TIME);
 
                                 dayTimeDurationSerde.serialize(aDayTimeDuration, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);

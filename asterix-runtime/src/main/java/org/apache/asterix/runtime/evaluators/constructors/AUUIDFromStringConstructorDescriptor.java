@@ -47,11 +47,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"))
  */
 public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AUUIDFromStringConstructorDescriptor();
         }
@@ -90,8 +88,8 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                 msb = 0;
                                 lsb = 0;
                                 tmpLongValue = 0;
@@ -138,7 +136,7 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                                 aUUID.setValue(msb, lsb);
                                 uuidSerde.serialize(aUUID, out);
 
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);

@@ -44,8 +44,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 
 public class RecordBuilder implements IARecordBuilder {
     private final static int DEFAULT_NUM_OPEN_FIELDS = 10;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
     private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
 
     private int openPartOffsetArraySize;
@@ -163,7 +161,7 @@ public class RecordBuilder implements IARecordBuilder {
         // +1 because we do not store the value tag.
         closedPartOutputStream.write(value.getByteArray(), value.getStartOffset() + 1, len);
         numberOfClosedFields++;
-        if (isNullable && value.getByteArray()[value.getStartOffset()] != SER_NULL_TYPE_TAG) {
+        if (isNullable && value.getByteArray()[value.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }
@@ -173,7 +171,7 @@ public class RecordBuilder implements IARecordBuilder {
         // We assume the tag is not included (closed field)
         closedPartOutputStream.write(value, 0, value.length);
         numberOfClosedFields++;
-        if (isNullable && value[0] != SER_NULL_TYPE_TAG) {
+        if (isNullable && value[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }
@@ -255,7 +253,7 @@ public class RecordBuilder implements IARecordBuilder {
 
         // write the record header
         if (writeTypeTag) {
-            out.writeByte(RECORD_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
         }
         out.writeInt(recordLength);
         if (isOpen) {

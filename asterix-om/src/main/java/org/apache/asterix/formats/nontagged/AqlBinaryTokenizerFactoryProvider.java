@@ -35,10 +35,12 @@ public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactor
     public static final AqlBinaryTokenizerFactoryProvider INSTANCE = new AqlBinaryTokenizerFactoryProvider();
 
     private static final IBinaryTokenizerFactory aqlStringTokenizer = new DelimitedUTF8StringBinaryTokenizerFactory(
-            true, true, new UTF8WordTokenFactory(ATypeTag.STRING.serialize(), ATypeTag.INT32.serialize()));
+            true, true,
+            new UTF8WordTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
     private static final IBinaryTokenizerFactory aqlHashingStringTokenizer = new DelimitedUTF8StringBinaryTokenizerFactory(
-            true, true, new HashedUTF8WordTokenFactory(ATypeTag.INT32.serialize(), ATypeTag.INT32.serialize()));
+            true, true,
+            new HashedUTF8WordTokenFactory(ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
     private static final IBinaryTokenizerFactory orderedListTokenizer = new AOrderedListBinaryTokenizerFactory(
             new AListElementTokenFactory());
@@ -77,7 +79,8 @@ public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactor
                     return null;
                 } else {
                     return new NGramUTF8StringBinaryTokenizerFactory(gramLength, usePrePost, true, true,
-                            new UTF8NGramTokenFactory(ATypeTag.STRING.serialize(), ATypeTag.INT32.serialize()));
+                            new UTF8NGramTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_INT32_TYPE_TAG));
                 }
             }
             case ORDEREDLIST: {

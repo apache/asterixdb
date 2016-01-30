@@ -44,14 +44,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATE_FROM_DATETIME;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -90,19 +84,19 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
+                                if (argOut.getByteArray()[0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            FID.getName()
-                                                    + ": expects input type DATETIME/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                            .getByteArray()[0]));
+                                            FID.getName() + ": expects input type DATETIME/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                            .deserialize(argOut.getByteArray()[0]));
                                 }
-                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(
-                                        argOut.getByteArray(), 1);
-                                int dateChrononInDays = (int) (datetimeChronon / GregorianCalendarSystem.CHRONON_OF_DAY);
+                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(argOut.getByteArray(),
+                                        1);
+                                int dateChrononInDays = (int) (datetimeChronon
+                                        / GregorianCalendarSystem.CHRONON_OF_DAY);
                                 if (dateChrononInDays < 0
                                         && datetimeChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                                     dateChrononInDays -= 1;

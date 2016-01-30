@@ -39,8 +39,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
@@ -80,19 +78,21 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    || array2.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array2.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
                 return;
             }
 
-            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array2.getByteArray()[0] != SER_STRING_TYPE_TAG) {
-                throw new AlgebricksException(funcID.getName()
-                        + ": expects iput type (STRING/NULL, STRING/NULL, STRING) but got ("
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ")");
+            if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array2.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                throw new AlgebricksException(
+                        funcID.getName() + ": expects iput type (STRING/NULL, STRING/NULL, STRING) but got ("
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ")");
             }
 
         } catch (HyracksDataException e) {
@@ -103,8 +103,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         strPtr2nd.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
         strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
 
-        ABoolean res = compute(strPtr1st, strPtr2nd, strPtr3rd) ? ABoolean.TRUE
-                : ABoolean.FALSE;
+        ABoolean res = compute(strPtr1st, strPtr2nd, strPtr3rd) ? ABoolean.TRUE : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);
         } catch (HyracksDataException e) {

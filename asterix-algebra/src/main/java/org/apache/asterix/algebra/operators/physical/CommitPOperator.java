@@ -43,11 +43,14 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> primaryKeyLogicalVars;
     private final JobId jobId;
     private final int datasetId;
+    private final LogicalVariable upsertVar;
 
-    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars) {
+    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars,
+            LogicalVariable upsertVar) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+        this.upsertVar = upsertVar;
     }
 
     @Override
@@ -76,15 +79,18 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
-
+                    throws AlgebricksException {
+        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
                 context);
         int[] primaryKeyFields = JobGenHelper.variablesToFieldIndexes(primaryKeyLogicalVars, inputSchemas[0]);
-
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-        CommitRuntimeFactory runtime = new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
-                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction());
+        int upsertVarIdx = -1;
+        CommitRuntimeFactory runtime = null;
+        if (upsertVar != null) {
+            upsertVarIdx = inputSchemas[0].findVariable(upsertVar);
+        }
+        runtime = new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
+                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), upsertVarIdx);
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

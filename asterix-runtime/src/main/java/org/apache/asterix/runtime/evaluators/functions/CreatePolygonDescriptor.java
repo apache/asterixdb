@@ -46,11 +46,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
-    private static final byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final static byte SER_POLYGON_TYPE_TAG = ATypeTag.POLYGON.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CreatePolygonDescriptor();
         }
@@ -81,7 +78,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] listBytes = outInputList.getByteArray();
-                            if (listBytes[0] != SER_ORDEREDLIST_TYPE_TAG) {
+                            if (listBytes[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_POLYGON.getName()
                                         + ": expects input type ORDEREDLIST, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[0]));
@@ -113,17 +110,17 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                     throw new AlgebricksException(
                                             "There must be an even number of double values in the list to form a polygon");
                                 }
-                                out.writeByte(SER_POLYGON_TYPE_TAG);
+                                out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 out.writeShort(listAccessor.size() / 2);
 
                                 for (int i = 0; i < listAccessor.size() / 2; i++) {
                                     int firstDoubleOffset = listAccessor.getItemOffset(i * 2);
                                     int secondDobuleOffset = listAccessor.getItemOffset((i * 2) + 1);
 
-                                    APointSerializerDeserializer
-                                            .serialize(ADoubleSerializerDeserializer.getDouble(listBytes,
-                                                    firstDoubleOffset), ADoubleSerializerDeserializer.getDouble(
-                                                    listBytes, secondDobuleOffset), out);
+                                    APointSerializerDeserializer.serialize(
+                                            ADoubleSerializerDeserializer.getDouble(listBytes, firstDoubleOffset),
+                                            ADoubleSerializerDeserializer.getDouble(listBytes, secondDobuleOffset),
+                                            out);
                                 }
                             } catch (AsterixException ex) {
                                 throw new AlgebricksException(ex);

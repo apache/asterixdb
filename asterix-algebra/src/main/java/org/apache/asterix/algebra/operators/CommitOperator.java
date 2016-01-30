@@ -31,9 +31,11 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 public class CommitOperator extends AbstractExtensibleLogicalOperator {
 
     private final List<LogicalVariable> primaryKeyLogicalVars;
+    private final LogicalVariable upsertVar;
 
-    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars) {
+    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar) {
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+        this.upsertVar = upsertVar;
     }
 
     @Override
@@ -44,11 +46,12 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
 
     @Override
     public IOperatorExtension newInstance() {
-        return new CommitOperator(primaryKeyLogicalVars);
+        return new CommitOperator(primaryKeyLogicalVars, upsertVar);
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         // TODO Auto-generated method stub
         return false;
     }
@@ -61,6 +64,9 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
     @Override
     public void getUsedVariables(Collection<LogicalVariable> usedVars) {
         usedVars.addAll(primaryKeyLogicalVars);
+        if (upsertVar != null) {
+            usedVars.add(upsertVar);
+        }
     }
 
     @Override

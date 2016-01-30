@@ -46,14 +46,10 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_DATE;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AIntervalFromDateConstructorDescriptor();
         }
@@ -95,36 +91,36 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
 
                         try {
 
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
                             long intervalStart = 0, intervalEnd = 0;
 
-                            if (argOut0.getByteArray()[0] == SER_DATE_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                 intervalStart = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
-                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                            } else if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
-                                intervalStart = ADateParserFactory
-                                        .parseDatePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
-                                                stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                intervalStart = ADateParserFactory.parseDatePart(utf8Ptr.getByteArray(),
+                                        utf8Ptr.getCharStartOffset(), stringLength)
+                                        / GregorianCalendarSystem.CHRONON_OF_DAY;
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DATE for the first argument, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            if (argOut1.getByteArray()[0] == SER_DATE_TYPE_TAG) {
+                            if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                 intervalEnd = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
-                            } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
-                                intervalEnd = ADateParserFactory
-                                        .parseDatePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
-                                                stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                intervalEnd = ADateParserFactory.parseDatePart(utf8Ptr.getByteArray(),
+                                        utf8Ptr.getCharStartOffset(), stringLength)
+                                        / GregorianCalendarSystem.CHRONON_OF_DAY;
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DATE for the second argument, but got "
@@ -132,11 +128,11 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": interval end must not be less than the interval start.");
+                                throw new AlgebricksException(
+                                        FID.getName() + ": interval end must not be less than the interval start.");
                             }
 
-                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.DATE.serialize());
+                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                             intervalSerde.serialize(aInterval, out);
 
                         } catch (IOException e1) {
