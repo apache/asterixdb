@@ -28,8 +28,8 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
 
-    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException,
-            IndexException;
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple)
+            throws HyracksDataException, IndexException;
 
     public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException;
@@ -45,14 +45,14 @@ public interface ILSMHarness {
     public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException;
+    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException;
 
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException;
 
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException;
+    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException;
 
     public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
 
@@ -62,5 +62,4 @@ public interface ILSMHarness {
             LSMOperationType opType) throws HyracksDataException;
 
     public void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException;
-
 }

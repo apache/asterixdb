@@ -25,7 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 
-public enum TestOperationCallback implements ISearchOperationCallback, IModificationOperationCallback {
+public enum TestOperationCallback implements ISearchOperationCallback,IModificationOperationCallback {
     INSTANCE;
 
     private static final int RANDOM_SEED = 50;
@@ -48,12 +48,12 @@ public enum TestOperationCallback implements ISearchOperationCallback, IModifica
 
     @Override
     public void before(ITupleReference tuple) {
-        // Do nothing.        
+        // Do nothing.
     }
 
     @Override
     public void found(ITupleReference before, ITupleReference after) {
-        // Do nothing.        
+        // Do nothing.
     }
 
     @Override
@@ -63,6 +63,11 @@ public enum TestOperationCallback implements ISearchOperationCallback, IModifica
 
     @Override
     public void complete(ITupleReference tuple) throws HyracksDataException {
+        // Do nothing.
+    }
+
+    @Override
+    public void setOp(Operation op) throws HyracksDataException {
         // Do nothing.
     }
 

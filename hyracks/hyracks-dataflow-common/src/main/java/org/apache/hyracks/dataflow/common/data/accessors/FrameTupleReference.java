@@ -21,9 +21,9 @@ package org.apache.hyracks.dataflow.common.data.accessors;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 
-public final class FrameTupleReference implements IFrameTupleReference {
-    private IFrameTupleAccessor fta;
-    private int tIndex;
+public class FrameTupleReference implements IFrameTupleReference {
+    protected IFrameTupleAccessor fta;
+    protected int tIndex;
 
     public void reset(IFrameTupleAccessor fta, int tIndex) {
         this.fta = fta;

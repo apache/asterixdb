@@ -218,7 +218,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
         pred = (SearchPredicate) searchPred;
         cmp = pred.getLowKeyComparator();
-        searchKey = pred.getSearchKey();
+        searchKey = pred.getLowKey();
 
         if (searchKey != null) {
             int maxFieldPos = cmp.getKeyFieldCount() / 2;

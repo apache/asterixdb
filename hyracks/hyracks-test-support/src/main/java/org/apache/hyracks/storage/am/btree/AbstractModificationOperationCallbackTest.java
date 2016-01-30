@@ -18,11 +18,6 @@
  */
 package org.apache.hyracks.storage.am.btree;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -32,6 +27,10 @@ import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public abstract class AbstractModificationOperationCallbackTest extends AbstractOperationCallbackTest {
 
@@ -48,11 +47,13 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
         this.isFoundNull = true;
     }
 
+    @Override
     @Before
     public void setup() throws Exception {
         super.setup();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();
@@ -96,6 +97,10 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
                 Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, before));
             }
             Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, after));
+        }
+
+        @Override
+        public void setOp(Operation op) throws HyracksDataException {
         }
 
     }

@@ -81,7 +81,8 @@ public class LSMHarness implements ILSMHarness {
                         if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
                             //The mutable component has not been modified by any writer. There is nothing to flush.
                             //since the component is empty, set its state back to READABLE_WRITABLE
-                            if (((AbstractLSMIndex) lsmIndex).getCurrentMutableComponentState() == ComponentState.READABLE_UNWRITABLE) {
+                            if (((AbstractLSMIndex) lsmIndex)
+                                    .getCurrentMutableComponentState() == ComponentState.READABLE_UNWRITABLE) {
                                 ((AbstractLSMIndex) lsmIndex)
                                         .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
                             }
@@ -196,8 +197,8 @@ public class LSMHarness implements ILSMHarness {
                         if (c.getType() == LSMComponentType.MEMORY) {
                             switch (c.getState()) {
                                 case READABLE_UNWRITABLE:
-                                    if (isMutableComponent
-                                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                                    if (isMutableComponent && (opType == LSMOperationType.MODIFICATION
+                                            || opType == LSMOperationType.FORCE_MODIFICATION)) {
                                         lsmIndex.changeFlushStatusForCurrentMutableCompoent(true);
                                     }
                                     break;
@@ -256,8 +257,8 @@ public class LSMHarness implements ILSMHarness {
                     e.printStackTrace();
                     throw e;
                 } finally {
-                    if (failedOperation
-                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                    if (failedOperation && (opType == LSMOperationType.MODIFICATION
+                            || opType == LSMOperationType.FORCE_MODIFICATION)) {
                         //When the operation failed, completeOperation() method must be called
                         //in order to decrement active operation count which was incremented in beforeOperation() method.
                         opTracker.completeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
@@ -314,8 +315,8 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException,
-            IndexException {
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple)
+            throws HyracksDataException, IndexException {
         LSMOperationType opType = LSMOperationType.FORCE_MODIFICATION;
         modify(ctx, false, tuple, opType);
     }
@@ -357,6 +358,7 @@ public class LSMHarness implements ILSMHarness {
         ctx.setSearchPredicate(pred);
         getAndEnterComponents(ctx, opType, false);
         try {
+            ctx.getSearchOperationCallback().before(pred.getLowKey());
             lsmIndex.search(ctx, cursor, pred);
         } catch (HyracksDataException | IndexException e) {
             exitComponents(ctx, opType, null, true);
@@ -386,8 +388,8 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException {
+    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a flush operation for index: " + lsmIndex + " ...");
         }
@@ -434,8 +436,8 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException {
+    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }

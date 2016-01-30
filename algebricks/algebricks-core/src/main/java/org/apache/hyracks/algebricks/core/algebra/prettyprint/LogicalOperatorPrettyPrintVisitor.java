@@ -38,10 +38,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -325,12 +325,16 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitInsertDeleteOperator(InsertDeleteOperator op, Integer indent) throws AlgebricksException {
+    public String visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Integer indent)
+            throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        String header = op.getOperation() == Kind.INSERT ? "insert into " : "delete from ";
+        String header = getIndexOpString(op.getOperation());
         addIndent(buffer, indent).append(header).append(op.getDataSource()).append(" from ")
                 .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" partitioned by ");
         pprintExprList(op.getPrimaryKeyExpressions(), buffer, indent);
+        if (op.getOperation() == Kind.UPSERT) {
+            buffer.append(" out: ([" + op.getPrevRecordVar() + "] <-{record-before-upsert}) ");
+        }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
         }
@@ -338,17 +342,36 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitIndexInsertDeleteOperator(IndexInsertDeleteOperator op, Integer indent)
+    public String visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Integer indent)
             throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        String header = op.getOperation() == Kind.INSERT ? "insert into " : "delete from ";
+        String header = getIndexOpString(op.getOperation());
         addIndent(buffer, indent).append(header).append(op.getIndexName()).append(" on ")
                 .append(op.getDataSourceIndex().getDataSource()).append(" from ");
-        pprintExprList(op.getSecondaryKeyExpressions(), buffer, indent);
+        if (op.getOperation() == Kind.UPSERT) {
+            buffer.append(" replace:");
+            pprintExprList(op.getPrevSecondaryKeyExprs(), buffer, indent);
+            buffer.append(" with:");
+            pprintExprList(op.getSecondaryKeyExpressions(), buffer, indent);
+        } else {
+            pprintExprList(op.getSecondaryKeyExpressions(), buffer, indent);
+        }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
         }
         return buffer.toString();
+    }
+
+    public String getIndexOpString(Kind opKind) {
+        switch (opKind) {
+            case DELETE:
+                return "delete from ";
+            case INSERT:
+                return "insert into ";
+            case UPSERT:
+                return "upsert into ";
+        }
+        return null;
     }
 
     @Override

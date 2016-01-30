@@ -34,18 +34,43 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class VariableUtilities {
 
+    /***
+     * Adds the used variables in the logical operator to the list of used variables
+     *
+     * @param op
+     *          The target operator
+     * @param usedVariables
+     *          A list to be filled with variables used in the logical operator op.
+     * @throws AlgebricksException
+     */
     public static void getUsedVariables(ILogicalOperator op, Collection<LogicalVariable> usedVariables)
             throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Void> visitor = new UsedVariableVisitor(usedVariables);
         op.accept(visitor, null);
     }
 
+    /**
+     * Adds the variables produced in the logical operator in the list of produced variables
+     * @param op
+     *          The target operator
+     * @param producedVariables
+     *          The variables produced in the logical operator
+     * @throws AlgebricksException
+     */
     public static void getProducedVariables(ILogicalOperator op, Collection<LogicalVariable> producedVariables)
             throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Void> visitor = new ProducedVariableVisitor(producedVariables);
         op.accept(visitor, null);
     }
 
+    /**
+     * Adds the variables that are live after the execution of this operator to the list of schema variables.
+     * @param op
+     *          The target logical operator
+     * @param schemaVariables
+     *          The list of live variables. The output of the operator and the propagated outputs of its children
+     * @throws AlgebricksException
+     */
     public static void getLiveVariables(ILogicalOperator op, Collection<LogicalVariable> schemaVariables)
             throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Void> visitor = new SchemaVariableVisitor(schemaVariables);

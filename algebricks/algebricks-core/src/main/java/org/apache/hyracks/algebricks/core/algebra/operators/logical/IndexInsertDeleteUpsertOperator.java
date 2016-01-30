@@ -22,21 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
+public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     private final IDataSourceIndex<?, ?> dataSourceIndex;
     private final List<Mutable<ILogicalExpression>> primaryKeyExprs;
@@ -48,8 +46,11 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
     private final Kind operation;
     private final boolean bulkload;
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
+    // used for upsert operations
+    private List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs;
+    private Mutable<ILogicalExpression> prevAdditionalFilteringExpression;
 
-    public IndexInsertDeleteOperator(IDataSourceIndex<?, ?> dataSourceIndex,
+    public IndexInsertDeleteUpsertOperator(IDataSourceIndex<?, ?> dataSourceIndex,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, List<Mutable<ILogicalExpression>> secondaryKeyExprs,
             Mutable<ILogicalExpression> filterExpr, Kind operation, boolean bulkload) {
         this.dataSourceIndex = dataSourceIndex;
@@ -69,22 +70,44 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
+        // Primary
         for (int i = 0; i < primaryKeyExprs.size(); i++) {
             if (visitor.transform(primaryKeyExprs.get(i))) {
                 b = true;
             }
         }
+        // Secondary
         for (int i = 0; i < secondaryKeyExprs.size(); i++) {
             if (visitor.transform(secondaryKeyExprs.get(i))) {
                 b = true;
             }
+        }
+        // Additional Filtering <For upsert>
+        if (additionalFilteringExpressions != null) {
+            for (int i = 0; i < additionalFilteringExpressions.size(); i++) {
+                if (visitor.transform(additionalFilteringExpressions.get(i))) {
+                    b = true;
+                }
+            }
+        }
+        // Old secondary <For upsert>
+        if (prevSecondaryKeyExprs != null) {
+            for (int i = 0; i < prevSecondaryKeyExprs.size(); i++) {
+                if (visitor.transform(prevSecondaryKeyExprs.get(i))) {
+                    b = true;
+                }
+            }
+        }
+        // Old Filtering <For upsert>
+        if (prevAdditionalFilteringExpression != null) {
+            visitor.transform(prevAdditionalFilteringExpression);
         }
         return b;
     }
 
     @Override
     public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
-        return visitor.visitIndexInsertDeleteOperator(this, arg);
+        return visitor.visitIndexInsertDeleteUpsertOperator(this, arg);
     }
 
     @Override
@@ -99,7 +122,7 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
 
     @Override
     public LogicalOperatorTag getOperatorTag() {
-        return LogicalOperatorTag.INDEX_INSERT_DELETE;
+        return LogicalOperatorTag.INDEX_INSERT_DELETE_UPSERT;
     }
 
     @Override
@@ -143,4 +166,19 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
         return additionalFilteringExpressions;
     }
 
+    public List<Mutable<ILogicalExpression>> getPrevSecondaryKeyExprs() {
+        return prevSecondaryKeyExprs;
+    }
+
+    public void setPrevSecondaryKeyExprs(List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs) {
+        this.prevSecondaryKeyExprs = prevSecondaryKeyExprs;
+    }
+
+    public Mutable<ILogicalExpression> getPrevAdditionalFilteringExpression() {
+        return prevAdditionalFilteringExpression;
+    }
+
+    public void setPrevAdditionalFilteringExpression(Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
+        this.prevAdditionalFilteringExpression = prevAdditionalFilteringExpression;
+    }
 }

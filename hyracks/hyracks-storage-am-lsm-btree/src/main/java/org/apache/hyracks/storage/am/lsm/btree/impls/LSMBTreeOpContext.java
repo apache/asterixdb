@@ -54,8 +54,8 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public IndexOperation op;
     public final MultiComparator cmp;
     public final MultiComparator bloomFilterCmp;
-    public final IModificationOperationCallback modificationCallback;
-    public final ISearchOperationCallback searchCallback;
+    public IModificationOperationCallback modificationCallback;
+    public ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
     private final List<ILSMComponent> componentsToBeReplicated;

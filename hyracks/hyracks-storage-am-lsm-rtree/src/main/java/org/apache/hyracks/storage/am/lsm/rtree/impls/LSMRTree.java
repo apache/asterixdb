@@ -123,7 +123,6 @@ public class LSMRTree extends AbstractLSMRTree {
     /**
      * Opens LSMRTree, cleaning up invalid files from base dir, and registering
      * all valid files as on-disk RTrees and BTrees.
-     * 
      * @throws HyracksDataException
      */
     @Override
@@ -493,8 +492,8 @@ public class LSMRTree extends AbstractLSMRTree {
             indexTuple = tuple;
         }
 
-        ctx.modificationCallback.before(indexTuple);
-        ctx.modificationCallback.found(null, indexTuple);
+        ctx.getModificationCallback().before(indexTuple);
+        ctx.getModificationCallback().found(null, indexTuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
             ctx.currentMutableRTreeAccessor.insert(indexTuple);
         } else {

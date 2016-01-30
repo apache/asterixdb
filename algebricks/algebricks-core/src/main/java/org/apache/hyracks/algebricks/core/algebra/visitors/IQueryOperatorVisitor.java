@@ -19,8 +19,8 @@
 package org.apache.hyracks.algebricks.core.algebra.visitors;
 
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
@@ -43,12 +43,12 @@ public interface IQueryOperatorVisitor<R, T> extends ILogicalOperatorVisitor<R, 
     }
 
     @Override
-    public default R visitInsertDeleteOperator(InsertDeleteOperator op, T arg) {
+    public default R visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, T arg) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public default R visitIndexInsertDeleteOperator(IndexInsertDeleteOperator op, T arg) {
+    public default R visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, T arg) {
         throw new UnsupportedOperationException();
     }
 

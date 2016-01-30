@@ -214,6 +214,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             case INSERT:
             case DELETE:
             case FLUSH:
+            case UPSERT:
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case SEARCH:
@@ -251,14 +252,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
-        //List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
-
-        /*
-        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(rtreeLeafFrameFactory,
-                rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), lsmHarness,
-                comparatorFields, linearizerArray, ctx.searchCallback, operationalComponents);
-        */
-
         cursor.open(ctx.searchInitialState, pred);
     }
 
@@ -353,8 +346,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             indexTuple = tuple;
         }
 
-        ctx.modificationCallback.before(indexTuple);
-        ctx.modificationCallback.found(null, indexTuple);
+        ctx.getModificationCallback().before(indexTuple);
+        ctx.getModificationCallback().found(null, indexTuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
             ctx.currentMutableRTreeAccessor.insert(indexTuple);
         } else {

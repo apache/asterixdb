@@ -21,10 +21,20 @@ package org.apache.hyracks.storage.am.common.api;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface ISearchPredicate extends Serializable {
-	public MultiComparator getLowKeyComparator();
+    public MultiComparator getLowKeyComparator();
 
-	public MultiComparator getHighKeyComparator();
+    public MultiComparator getHighKeyComparator();
+
+    /**
+     * Get the search key to be used with point search operation on primary index.
+     * This method will only be called with point search predicates that only happen in primary index.
+     * @return
+     * @throws HyracksDataException
+     */
+    public ITupleReference getLowKey();
 }

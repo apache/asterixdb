@@ -44,8 +44,8 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     private final List<ILSMComponent> componentsToBeMerged;
     private final List<ILSMComponent> componentsToBeReplicated;
 
-    public final IModificationOperationCallback modificationCallback;
-    public final ISearchOperationCallback searchCallback;
+    private IModificationOperationCallback modificationCallback;
+    private ISearchOperationCallback searchCallback;
 
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
     public PermutingTupleReference keysOnlyTuple;
@@ -79,10 +79,10 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMInvertedIndexMemoryComponent mutableComponent = (LSMInvertedIndexMemoryComponent) mutableComponents
                     .get(i);
-            mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex().createAccessor(
-                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree().createAccessor(
-                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex()
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree()
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
 
         assert mutableComponents.size() > 0;

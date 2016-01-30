@@ -22,9 +22,6 @@ import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -41,6 +38,8 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerProvider;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperationCallbackTest {
     private final LSMBTreeTestHarness harness;
@@ -207,6 +206,9 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                         expectedTupleToBeLockedValue);
             }
 
+            @Override
+            public void before(ITupleReference tuple) throws HyracksDataException {
+            }
         }
     }
 

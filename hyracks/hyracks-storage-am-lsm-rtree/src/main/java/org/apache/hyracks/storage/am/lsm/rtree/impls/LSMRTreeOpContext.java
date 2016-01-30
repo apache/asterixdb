@@ -55,8 +55,8 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     public final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
     private final List<ILSMComponent> componentsToBeReplicated;
-    public final IModificationOperationCallback modificationCallback;
-    public final ISearchOperationCallback searchCallback;
+    private IModificationOperationCallback modificationCallback;
+    private ISearchOperationCallback searchCallback;
     public final PermutingTupleReference indexTuple;
     public final MultiComparator filterCmp;
     public final PermutingTupleReference filterTuple;

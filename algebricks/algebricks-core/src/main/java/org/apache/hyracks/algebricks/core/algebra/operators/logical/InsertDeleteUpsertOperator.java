@@ -19,10 +19,10 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -31,28 +31,30 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class InsertDeleteOperator extends AbstractLogicalOperator {
+public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public enum Kind {
         INSERT,
-        DELETE
+        DELETE,
+        UPSERT
     }
 
     private final IDataSource<?> dataSource;
-
     private final Mutable<ILogicalExpression> payloadExpr;
-
     private final List<Mutable<ILogicalExpression>> primaryKeyExprs;
-
     private final Kind operation;
-    private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
-
     private final boolean bulkload;
+    private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
+    private LogicalVariable prevRecordVar;
+    private Object prevRecordType;
+    private LogicalVariable prevFilterVar;
+    private Object prevFilterType;
 
-    public InsertDeleteOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
+    public InsertDeleteUpsertOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, Kind operation, boolean bulkload) {
         this.dataSource = dataSource;
         this.payloadExpr = payloadExpr;
@@ -65,21 +67,43 @@ public class InsertDeleteOperator extends AbstractLogicalOperator {
     public void recomputeSchema() throws AlgebricksException {
         schema = new ArrayList<LogicalVariable>();
         schema.addAll(inputs.get(0).getValue().getSchema());
+        if (operation == Kind.UPSERT) {
+            // The upsert case also produces the previous record
+            schema.add(prevRecordVar);
+            if (prevFilterVar != null) {
+                schema.add(prevFilterVar);
+            }
+        }
+    }
+
+    public void getProducedVariables(Collection<LogicalVariable> producedVariables) {
+        if (prevRecordVar != null) {
+            producedVariables.add(prevRecordVar);
+        }
+        if (prevFilterVar != null) {
+            producedVariables.add(prevFilterVar);
+        }
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         boolean changed = false;
         changed = transform.transform(payloadExpr);
         for (Mutable<ILogicalExpression> e : primaryKeyExprs) {
             changed |= transform.transform(e);
+        }
+        if (additionalFilteringExpressions != null) {
+            for (Mutable<ILogicalExpression> e : additionalFilteringExpressions) {
+                changed |= transform.transform(e);
+            }
         }
         return changed;
     }
 
     @Override
     public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
-        return visitor.visitInsertDeleteOperator(this, arg);
+        return visitor.visitInsertDeleteUpsertOperator(this, arg);
     }
 
     @Override
@@ -89,17 +113,36 @@ public class InsertDeleteOperator extends AbstractLogicalOperator {
 
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
-        return VariablePropagationPolicy.ALL;
+        return new VariablePropagationPolicy() {
+            @Override
+            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
+                    throws AlgebricksException {
+                target.addAllVariables(sources[0]);
+                if (operation == Kind.UPSERT) {
+                    target.addVariable(prevRecordVar);
+                    if (prevFilterVar != null) {
+                        target.addVariable(prevFilterVar);
+                    }
+                }
+            }
+        };
     }
 
     @Override
     public LogicalOperatorTag getOperatorTag() {
-        return LogicalOperatorTag.INSERT_DELETE;
+        return LogicalOperatorTag.INSERT_DELETE_UPSERT;
     }
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        return createPropagatingAllInputsTypeEnvironment(ctx);
+        PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
+        if (operation == Kind.UPSERT) {
+            env.setVarType(prevRecordVar, prevRecordType);
+            if (prevFilterVar != null) {
+                env.setVarType(prevFilterVar, prevFilterType);
+            }
+        }
+        return env;
     }
 
     public List<Mutable<ILogicalExpression>> getPrimaryKeyExpressions() {
@@ -120,7 +163,7 @@ public class InsertDeleteOperator extends AbstractLogicalOperator {
 
     public boolean isBulkload() {
         return bulkload;
-	}
+    }
 
     public void setAdditionalFilteringExpressions(List<Mutable<ILogicalExpression>> additionalFilteringExpressions) {
         this.additionalFilteringExpressions = additionalFilteringExpressions;
@@ -130,4 +173,31 @@ public class InsertDeleteOperator extends AbstractLogicalOperator {
         return additionalFilteringExpressions;
     }
 
+    public LogicalVariable getPrevRecordVar() {
+        return prevRecordVar;
+    }
+
+    public void setPrevRecordVar(LogicalVariable prevRecordVar) {
+        this.prevRecordVar = prevRecordVar;
+    }
+
+    public void setPrevRecordType(Object recordType) {
+        prevRecordType = recordType;
+    }
+
+    public LogicalVariable getPrevFilterVar() {
+        return prevFilterVar;
+    }
+
+    public void setPrevFilterVar(LogicalVariable prevFilterVar) {
+        this.prevFilterVar = prevFilterVar;
+    }
+
+    public Object getPrevFilterType() {
+        return prevFilterType;
+    }
+
+    public void setPrevFilterType(Object prevFilterType) {
+        this.prevFilterType = prevFilterType;
+    }
 }
