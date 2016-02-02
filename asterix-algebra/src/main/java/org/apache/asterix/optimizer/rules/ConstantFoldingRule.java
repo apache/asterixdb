@@ -20,22 +20,19 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlNullableTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
+import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
@@ -47,6 +44,7 @@ import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -123,7 +121,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -182,8 +181,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
                 AbstractCollectionType listType = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(expr);
-                if (listType != null
-                        && (listType.getItemType().getTypeTag() == ATypeTag.ANY || listType.getItemType() instanceof AbstractCollectionType)) {
+                if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
+                        || listType.getItemType() instanceof AbstractCollectionType)) {
                     //case1: listType == null,  could be a nested list inside a list<ANY>
                     //case2: itemType = ANY
                     //case3: itemType = a nested list
@@ -194,12 +193,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                 String str = ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1)
                         .getValue()).getValue()).getObject()).getStringValue();
-                int k;
-                try {
-                    k = rt.getFieldIndex(str);
-                } catch (IOException e) {
-                    throw new AlgebricksException(e);
-                }
+                int k = rt.getFieldIndex(str);
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);

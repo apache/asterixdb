@@ -20,8 +20,9 @@
 # Place *first* the generic configuration
 # then list your grammar.
 
-PACKAGE:          org.apache.asterix.runtime.operators.file.adm
-LEXER_NAME:       AdmLexer
+PACKAGE:               org.apache.asterix.runtime.operators.file.adm
+LEXER_NAME:            AdmLexer
+EXCEPTION_SUPER_CLASS: org.apache.hyracks.api.exceptions.HyracksDataException
 
 TOKENS:
 

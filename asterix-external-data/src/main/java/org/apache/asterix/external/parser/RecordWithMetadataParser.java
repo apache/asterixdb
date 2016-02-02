@@ -89,19 +89,23 @@ public class RecordWithMetadataParser<T> implements IRecordDataParser<RecordWith
     }
 
     @Override
-    public void parse(IRawRecord<? extends RecordWithMetadata<T>> record, DataOutput out) throws Exception {
-        recBuilder.reset(recordType);
-        valueBuffer.reset();
-        recBuilder.init();
-        RecordWithMetadata<T> rwm = record.get();
-        for (int i = 0; i < numberOfFields; i++) {
-            if (i == valueIndex) {
-                valueParser.parse(rwm.getRecord(), valueBuffer.getDataOutput());
-                recBuilder.addField(i, valueBuffer);
-            } else {
-                recBuilder.addField(i, rwm.getMetadata(metaIndexes[i]));
+    public void parse(IRawRecord<? extends RecordWithMetadata<T>> record, DataOutput out) throws HyracksDataException {
+        try {
+            recBuilder.reset(recordType);
+            valueBuffer.reset();
+            recBuilder.init();
+            RecordWithMetadata<T> rwm = record.get();
+            for (int i = 0; i < numberOfFields; i++) {
+                if (i == valueIndex) {
+                    valueParser.parse(rwm.getRecord(), valueBuffer.getDataOutput());
+                    recBuilder.addField(i, valueBuffer);
+                } else {
+                    recBuilder.addField(i, rwm.getMetadata(metaIndexes[i]));
+                }
             }
+            recBuilder.write(out, true);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        recBuilder.write(out, true);
     }
 }

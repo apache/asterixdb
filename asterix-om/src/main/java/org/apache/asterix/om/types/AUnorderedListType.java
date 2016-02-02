@@ -18,10 +18,9 @@
  */
 package org.apache.asterix.om.types;
 
+import org.apache.asterix.om.base.IAObject;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import org.apache.asterix.om.base.IAObject;
 
 public class AUnorderedListType extends AbstractCollectionType {
 

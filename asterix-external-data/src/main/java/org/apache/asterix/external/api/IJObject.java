@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IJObject {
@@ -33,5 +32,5 @@ public interface IJObject {
 
     public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException;
 
-    public void reset() throws AlgebricksException;
+    public void reset() throws HyracksDataException;
 }

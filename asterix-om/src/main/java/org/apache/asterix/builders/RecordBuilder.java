@@ -26,7 +26,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -177,29 +176,20 @@ public class RecordBuilder implements IARecordBuilder {
     }
 
     @Override
-    public void addField(IValueReference name, IValueReference value) throws AsterixException {
+    public void addField(IValueReference name, IValueReference value) throws HyracksDataException {
         if (numberOfOpenFields == openPartOffsets.length) {
             openPartOffsets = Arrays.copyOf(openPartOffsets, openPartOffsets.length + DEFAULT_NUM_OPEN_FIELDS);
             openFieldNameLengths = Arrays.copyOf(openFieldNameLengths,
                     openFieldNameLengths.length + DEFAULT_NUM_OPEN_FIELDS);
         }
-        int fieldNameHashCode;
-        try {
-            fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1,
+        int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1,
                     name.getLength() - 1);
-        } catch (HyracksDataException e1) {
-            throw new AsterixException(e1);
-        }
         if (recType != null) {
             int cFieldPos;
-            try {
                 cFieldPos = recTypeInfo.getFieldIndex(name.getByteArray(), name.getStartOffset() + 1,
                         name.getLength() - 1);
-            } catch (HyracksDataException e) {
-                throw new AsterixException(e);
-            }
             if (cFieldPos >= 0) {
-                throw new AsterixException("Open field \"" + recType.getFieldNames()[cFieldPos]
+                throw new HyracksDataException("Open field \"" + recType.getFieldNames()[cFieldPos]
                         + "\" has the same field name as closed field at index " + cFieldPos);
             }
         }
@@ -212,7 +202,7 @@ public class RecordBuilder implements IARecordBuilder {
     }
 
     @Override
-    public void write(DataOutput out, boolean writeTypeTag) throws IOException, AsterixException {
+    public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException {
         int h = headerSize;
         int recordLength;
         // prepare the open part
@@ -231,7 +221,7 @@ public class RecordBuilder implements IARecordBuilder {
                             openBytes, (int) openPartOffsets[i], openFieldNameLengths[i]) == 0) {
                         String field = utf8SerDer.deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
                                 (int) openPartOffsets[i], openFieldNameLengths[i])));
-                        throw new AsterixException(
+                        throw new HyracksDataException(
                                 "Open fields " + (i - 1) + " and " + i + " have the same field name \"" + field + "\"");
                     }
                 }
@@ -248,37 +238,46 @@ public class RecordBuilder implements IARecordBuilder {
                 offsetPosition += 8;
             }
             recordLength = openPartOffset + 4 + openPartOffsetArraySize + openPartOutputStream.size();
-        } else
+        } else {
             recordLength = h + numberOfSchemaFields * 4 + closedPartOutputStream.size();
-
-        // write the record header
-        if (writeTypeTag) {
-            out.writeByte(ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
         }
-        out.writeInt(recordLength);
-        if (isOpen) {
-            if (this.numberOfOpenFields > 0) {
-                out.writeBoolean(true);
-                out.writeInt(openPartOffset);
-            } else
-                out.writeBoolean(false);
-        }
+        writeRecord(out, writeTypeTag, h, recordLength);
+    }
 
-        // write the closed part
-        if (numberOfSchemaFields > 0) {
-            out.writeInt(numberOfClosedFields);
-            if (isNullable)
-                out.write(nullBitMap, 0, nullBitMapSize);
-            for (int i = 0; i < numberOfSchemaFields; i++)
-                out.writeInt(closedPartOffsets[i] + h + (numberOfSchemaFields * 4));
-            out.write(closedPartOutputStream.toByteArray());
-        }
+    private void writeRecord(DataOutput out, boolean writeTypeTag, int headerSize, int recordLength)
+            throws HyracksDataException {
+        try {
+            // write the record header
+            if (writeTypeTag) {
+                out.writeByte(ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+            }
+            out.writeInt(recordLength);
+            if (isOpen) {
+                if (this.numberOfOpenFields > 0) {
+                    out.writeBoolean(true);
+                    out.writeInt(openPartOffset);
+                } else
+                    out.writeBoolean(false);
+            }
 
-        // write the open part
-        if (numberOfOpenFields > 0) {
-            out.writeInt(numberOfOpenFields);
-            out.write(openPartOffsetArray, 0, openPartOffsetArraySize);
-            out.write(openPartOutputStream.toByteArray());
+            // write the closed part
+            if (numberOfSchemaFields > 0) {
+                out.writeInt(numberOfClosedFields);
+                if (isNullable)
+                    out.write(nullBitMap, 0, nullBitMapSize);
+                for (int i = 0; i < numberOfSchemaFields; i++)
+                    out.writeInt(closedPartOffsets[i] + headerSize + (numberOfSchemaFields * 4));
+                out.write(closedPartOutputStream.toByteArray());
+            }
+
+            // write the open part
+            if (numberOfOpenFields > 0) {
+                out.writeInt(numberOfOpenFields);
+                out.write(openPartOffsetArray, 0, openPartOffsetArraySize);
+                out.write(openPartOutputStream.toByteArray());
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
     }
 

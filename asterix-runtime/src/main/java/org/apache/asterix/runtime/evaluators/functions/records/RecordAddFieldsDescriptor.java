@@ -184,7 +184,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                             }
                             addFields(recordPointable, listPointable);
                             recordBuilder.write(output.getDataOutput(), true);
-                        } catch (IOException | AsterixException e) {
+                        } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
                     }

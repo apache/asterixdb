@@ -46,5 +46,5 @@ public interface IValueExtractor<T> {
      * @throws HyracksDataException
      * @throws IOException
      */
-    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException;
+    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, IOException;
 }

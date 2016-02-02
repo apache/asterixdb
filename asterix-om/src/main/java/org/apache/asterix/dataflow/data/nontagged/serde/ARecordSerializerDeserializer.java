@@ -182,11 +182,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 serializers[fieldIndex].serialize(instance.getValueByPos(fieldIndex), fieldValue.getDataOutput());
                 recordBuilder.addField(fieldIndex, fieldValue);
             }
-            try {
-                recordBuilder.write(out, writeTypeTag);
-            } catch (IOException | AsterixException e) {
-                throw new HyracksDataException(e);
-            }
+            recordBuilder.write(out, writeTypeTag);
         } else {
             throw new NotImplementedException("Serializer for schemaless records is not implemented.");
         }

@@ -131,14 +131,14 @@ public class LexerGenerator {
         Set<String> functions = main.neededAuxFunctions();
         for (String token : functions) {
             result.append("private int parse_" + token
-                    + "(char currentChar) throws IOException, [LEXER_NAME]Exception{\n");
+                    + "(char currentChar) throws IOException {\n");
             result.append(tokens.get(token).getNode().toJavaAuxFunction());
             result.append("\n}\n\n");
         }
         return result.toString();
     }
 
-    private static String readFile(Reader input) throws FileNotFoundException, IOException {
+    private static String readFile(Reader input) throws IOException {
         StringBuffer fileData = new StringBuffer(1000);
         BufferedReader reader = new BufferedReader(input);
         char[] buf = new char[1024];
@@ -152,14 +152,14 @@ public class LexerGenerator {
         return fileData.toString();
     }
 
-    private static String readFile(InputStream input) throws FileNotFoundException, IOException {
+    private static String readFile(InputStream input) throws IOException {
         if (input == null) {
             throw new FileNotFoundException();
         }
         return readFile(new InputStreamReader(input));
     }
 
-    private static String readFile(String fileName) throws FileNotFoundException, IOException {
+    private static String readFile(String fileName) throws IOException {
         return readFile(new FileReader(fileName));
     }
 

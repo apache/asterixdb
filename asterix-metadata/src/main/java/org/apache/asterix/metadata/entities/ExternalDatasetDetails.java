@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.entities;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
@@ -29,7 +28,6 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -124,12 +122,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         intSerde.serialize(new AInt32(state.ordinal()), fieldValue.getDataOutput());
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX,
                 fieldValue);
-        try {
-            externalRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
-
+        externalRecordBuilder.write(out, true);
     }
 
     @Override

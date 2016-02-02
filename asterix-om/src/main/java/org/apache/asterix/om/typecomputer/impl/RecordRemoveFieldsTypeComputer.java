@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -196,21 +195,15 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         return false;
     }
 
-    private void addField(ARecordType inputRecordType,  String fieldName, List<String> resultFieldNames, List<IAType>
-            resultFieldTypes)
-            throws AlgebricksException {
-        try {
-            resultFieldNames.add(fieldName);
-            if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
-                ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
-                //Deep Copy prevents altering of input types
-                resultFieldTypes.add(nestedType.deepCopy(nestedType));
-            } else {
-                resultFieldTypes.add(inputRecordType.getFieldType(fieldName));
-            }
-
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
+    private void addField(ARecordType inputRecordType, String fieldName, List<String> resultFieldNames,
+            List<IAType> resultFieldTypes) throws AlgebricksException {
+        resultFieldNames.add(fieldName);
+        if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+            ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
+            //Deep Copy prevents altering of input types
+            resultFieldTypes.add(nestedType.deepCopy(nestedType));
+        } else {
+            resultFieldTypes.add(inputRecordType.getFieldType(fieldName));
         }
     }
 
@@ -245,7 +238,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         String resultTypeName = "result-record(" + inputRecordType.getTypeName() + ")";
 
         return new ARecordType(resultTypeName, resultFieldNames.toArray(new String[n]),
-                    resultFieldTypes.toArray(new IAType[n]), true); // Make the output type open always
+                resultFieldTypes.toArray(new IAType[n]), true); // Make the output type open always
 
     }
 
@@ -285,9 +278,8 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         A method to deep copy a record the path validation
              i.e., keep only fields that are valid
      */
-    private ARecordType deepCheckAndCopy(Deque<String> fieldPath, ARecordType srcRecType, List<List<String>>
-            pathList, boolean isOpen)
-            throws AlgebricksException {
+    private ARecordType deepCheckAndCopy(Deque<String> fieldPath, ARecordType srcRecType, List<List<String>> pathList,
+            boolean isOpen) throws AlgebricksException {
         // Make sure the current path is valid before going further
         if (isRemovePath(fieldPath, pathList)) {
             return null;
@@ -322,7 +314,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
             return null;
         }
         return new ARecordType(srcRecType.getTypeName(), destFieldNames.toArray(new String[n]),
-                    destFieldTypes.toArray(new IAType[n]), isOpen);
+                destFieldTypes.toArray(new IAType[n]), isOpen);
     }
 
 }

@@ -364,11 +364,7 @@ class LangExpressionToPlanTranslator
                     upsertOp.setPrevRecordType(recordType);
                     if (additionalFilteringField != null) {
                         upsertOp.setPrevFilterVar(context.newVar());
-                        try {
-                            upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
-                        } catch (IOException e) {
-                            throw new AlgebricksException("unable to get the type of filter field");
-                        }
+                        upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
                     }
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(upsertOp));

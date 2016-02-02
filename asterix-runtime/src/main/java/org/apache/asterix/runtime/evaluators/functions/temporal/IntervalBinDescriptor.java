@@ -168,8 +168,8 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                         switch (type2) {
                             case YEARMONTHDURATION:
 
-                                yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(
-                                        argOut2.getByteArray(), 1);
+                                yearMonth = AYearMonthDurationSerializerDeserializer
+                                        .getYearMonth(argOut2.getByteArray(), 1);
 
                                 int yearStart = GREG_CAL.getYear(chrononToStart);
                                 int monthStart = GREG_CAL.getMonthOfYear(chrononToStart, yearStart);
@@ -182,13 +182,13 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalMonths < 0 && totalMonths % yearMonth != 0) ? -1 : 0);
 
                                 if (binIndex > Integer.MAX_VALUE) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": Overflowing time value to be binned!");
+                                    throw new AlgebricksException(
+                                            getIdentifier().getName() + ": Overflowing time value to be binned!");
                                 }
 
                                 if (binIndex < Integer.MIN_VALUE) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": Underflowing time value to be binned!");
+                                    throw new AlgebricksException(
+                                            getIdentifier().getName() + ": Underflowing time value to be binned!");
                                 }
 
                                 break;
@@ -210,43 +210,42 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 }
                                 return;
                             default:
-                                throw new AlgebricksException(
-                                        getIdentifier().getName()
-                                                + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
-                                                + type2);
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
+                                        + type2);
                         }
 
                         switch (type0) {
                             case DATE:
-                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * (int) binIndex, dayTime * binIndex, false);
-                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
+                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * (int) binIndex, dayTime * binIndex, false);
+                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
 
-                                binStartChronon = binStartChronon
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY
-                                        + ((binStartChronon < 0 && binStartChronon
-                                                % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1 : 0);
-                                binEndChronon = binEndChronon
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY
-                                        + ((binEndChronon < 0 && binEndChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
-                                                : 0);
+                                binStartChronon = binStartChronon / GregorianCalendarSystem.CHRONON_OF_DAY
+                                        + ((binStartChronon < 0
+                                                && binStartChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
+                                                        : 0);
+                                binEndChronon = binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY
+                                        + ((binEndChronon < 0
+                                                && binEndChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
+                                                        : 0);
                                 break;
                             case TIME:
                                 if (yearMonth != 0) {
                                     throw new AlgebricksException(getIdentifier().getName()
                                             + ": cannot create year-month bin for a time value");
                                 }
-                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * (int) binIndex, dayTime * binIndex, true);
-                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * ((int) binIndex + 1), dayTime * (binIndex + 1), true);
+                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * (int) binIndex, dayTime * binIndex, true);
+                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), true);
                                 break;
                             case DATETIME:
-                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * (int) binIndex, dayTime * binIndex, false);
-                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart, yearMonth
-                                        * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
+                                binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * (int) binIndex, dayTime * binIndex, false);
+                                binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart,
+                                        yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
                                 break;
                             case NULL:
                                 try {
@@ -260,14 +259,13 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
 
                         }
-                        aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());
                         try {
+                            aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());
                             intervalSerde.serialize(aInterval, out);
                             return;
                         } catch (HyracksDataException ex) {
                             throw new AlgebricksException(ex);
                         }
-
                     }
                 };
             }

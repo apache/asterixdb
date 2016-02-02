@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.external.api.IJObject;
@@ -57,13 +56,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class JObjectUtil {
 
     /**
      * Normalize an input string by removing linebreaks, and replace them with space
      * Also remove non-readable special characters
+     *
      * @param originalString
      *            The input String
      * @return
@@ -88,7 +87,7 @@ public class JObjectUtil {
     }
 
     public static IJObject getJType(ATypeTag typeTag, IAType type, ByteArrayAccessibleDataInputStream dis,
-            IObjectPool<IJObject, IAType> objectPool) throws IOException, AsterixException {
+            IObjectPool<IJObject, IAType> objectPool) throws IOException {
         IJObject jObject;
 
         switch (typeTag) {
@@ -160,11 +159,7 @@ public class JObjectUtil {
                 long start = dis.readLong();
                 long end = dis.readLong();
                 byte intervalType = dis.readByte();
-                try {
-                    ((JInterval) jObject).setValue(start, end, intervalType);
-                } catch (AlgebricksException e) {
-                    throw new AsterixException(e);
-                }
+                ((JInterval) jObject).setValue(start, end, intervalType);
                 break;
             }
 
@@ -408,7 +403,7 @@ public class JObjectUtil {
         return fields;
     }
 
-    private static ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) throws AsterixException {
+    private static ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) {
 
         String[] fieldNames = new String[recType1.getFieldNames().length + recType2.getFieldNames().length];
         IAType[] fieldTypes = new IAType[recType1.getFieldTypes().length + recType2.getFieldTypes().length];

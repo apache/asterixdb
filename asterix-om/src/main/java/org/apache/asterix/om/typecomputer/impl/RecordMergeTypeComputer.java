@@ -19,10 +19,10 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
@@ -54,8 +54,8 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         ARecordType recType1 = TypeComputerUtils.extractRecordType(t1);
 
         if (recType0 == null || recType1 == null) {
-            throw new AlgebricksException("record-merge expects possibly NULL records as arguments, but got (" + t0
-                    + ", " + t1 + ")");
+            throw new AlgebricksException(
+                    "record-merge expects possibly NULL records as arguments, but got (" + t0 + ", " + t1 + ")");
         }
 
         List<String> resultFieldNames = new ArrayList<>();
@@ -66,16 +66,12 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
 
         List<IAType> resultFieldTypes = new ArrayList<>();
         for (String fieldName : resultFieldNames) {
-            try {
-                if (recType0.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
-                    ARecordType nestedType = (ARecordType) recType0.getFieldType(fieldName);
-                    //Deep Copy prevents altering of input types
-                    resultFieldTypes.add(nestedType.deepCopy(nestedType));
-                } else {
-                    resultFieldTypes.add(recType0.getFieldType(fieldName));
-                }
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
+            if (recType0.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+                ARecordType nestedType = (ARecordType) recType0.getFieldType(fieldName);
+                //Deep Copy prevents altering of input types
+                resultFieldTypes.add(nestedType.deepCopy(nestedType));
+            } else {
+                resultFieldTypes.add(recType0.getFieldType(fieldName));
             }
         }
 
@@ -111,7 +107,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         boolean isOpen = recType0.isOpen() || recType1.isOpen();
 
         IAType resultType = new ARecordType(resultTypeName, resultFieldNames.toArray(new String[] {}),
-                    resultFieldTypes.toArray(new IAType[] {}), isOpen);
+                resultFieldTypes.toArray(new IAType[] {}), isOpen);
 
         if (nullable) {
             resultType = AUnionType.createNullableType(resultType);
@@ -142,12 +138,12 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                 } else {
                     IAType[] combinedFieldTypes = ArrayUtils.addAll(resultType.getFieldTypes().clone(),
                             fieldType1Copy.getFieldTypes()[i]);
-                    resultType = new ARecordType(resultType.getTypeName(), ArrayUtils.addAll(
-                            resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]), combinedFieldTypes,
-                            resultType.isOpen());
+                    resultType = new ARecordType(resultType.getTypeName(),
+                            ArrayUtils.addAll(resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
+                            combinedFieldTypes, resultType.isOpen());
                 }
 
-            } catch (IOException | AsterixException e) {
+            } catch (AsterixException e) {
                 throw new AlgebricksException(e);
             }
         }

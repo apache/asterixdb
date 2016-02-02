@@ -25,7 +25,6 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IValueExtractor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -39,7 +38,7 @@ public class MetadataEntityValueExtractor<T> implements IValueExtractor<T> {
     }
 
     @Override
-    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException {
+    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, IOException {
         return tupleReaderWriter.getMetadataEntityFromTuple(tuple);
     }
 }

@@ -26,8 +26,8 @@ import java.util.Map;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -276,10 +276,6 @@ public class DatasetUtils {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         propertyRecordBuilder.addField(1, fieldValue);
 
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        propertyRecordBuilder.write(out, true);
     }
 }

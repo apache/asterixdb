@@ -24,7 +24,6 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -71,7 +70,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
         CompactionPolicy compactionPolicy = null;
         String dataverseName = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
-                .getStringValue();
+                        .getStringValue();
         String policyName = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_POLICY_NAME_FIELD_INDEX)).getStringValue();
         String className = ((AString) compactionPolicyRecord
@@ -82,8 +81,8 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(CompactionPolicy compactionPolicy) throws IOException,
-            MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(CompactionPolicy compactionPolicy)
+            throws IOException, MetadataException {
 
         tupleBuilder.reset();
         aString.setValue(compactionPolicy.getDataverseName());
@@ -115,11 +114,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
         recordBuilder.addField(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_CLASSNAME_FIELD_INDEX, fieldValue);
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

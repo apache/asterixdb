@@ -5706,7 +5706,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="drop-dataverse">
                 <output-dir compare="Text">drop-dataverse</output-dir>
-                <expected-error>SyntaxError: org.apache.asterix.metadata.MetadataException: Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
+                <expected-error>org.apache.asterix.metadata.MetadataException: Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">

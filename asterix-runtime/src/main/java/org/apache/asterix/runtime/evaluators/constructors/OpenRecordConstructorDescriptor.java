@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -107,7 +108,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                                 }
                             }
                             recBuilder.write(out, true);
-                        } catch (IOException | AsterixException e) {
+                        } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
                     }

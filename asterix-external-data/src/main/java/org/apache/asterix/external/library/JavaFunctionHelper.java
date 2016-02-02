@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.library;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.api.IJObject;
@@ -39,10 +43,6 @@ import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.api.IValueReference;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class JavaFunctionHelper implements IFunctionHelper {
 
@@ -80,18 +80,14 @@ public class JavaFunctionHelper implements IFunctionHelper {
     }
 
     @Override
-    public void setResult(IJObject result) throws IOException, AsterixException {
+    public void setResult(IJObject result) throws HyracksDataException {
         if (result == null) {
             JNull.INSTANCE.serialize(outputProvider.getDataOutput(), true);
             isValidResult = false;
         } else {
-            try {
-                isValidResult = true;
-                result.serialize(outputProvider.getDataOutput(), true);
-                result.reset();
-            } catch (IOException | AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            isValidResult = true;
+            result.serialize(outputProvider.getDataOutput(), true);
+            result.reset();
         }
     }
 
@@ -99,7 +95,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
      * Gets the value of the result flag
      *
      * @return
-     *    boolean True is the setResult is called and result is not null
+     *         boolean True is the setResult is called and result is not null
      */
     @Override
     public boolean isValidResult() {

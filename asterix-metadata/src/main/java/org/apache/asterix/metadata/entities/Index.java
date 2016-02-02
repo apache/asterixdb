@@ -144,20 +144,16 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<String> fieldName,
             ARecordType recType) throws AlgebricksException {
         Pair<IAType, Boolean> keyPairType = null;
-
-        try {
-            IAType subType = recType;
-            for (int i = 0; i < fieldName.size(); i++) {
-                subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
-                if (subType == null) {
-                    keyPairType = Index.getNonNullableType(fieldType);
-                    break;
-                }
+        IAType subType = recType;
+        for (int i = 0; i < fieldName.size(); i++) {
+            subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
+            if (subType == null) {
+                keyPairType = Index.getNonNullableType(fieldType);
+                break;
             }
-            if (subType != null)
-                keyPairType = Index.getNonNullableKeyFieldType(fieldName, recType);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
+        }
+        if (subType != null) {
+            keyPairType = Index.getNonNullableKeyFieldType(fieldName, recType);
         }
         return keyPairType;
     }

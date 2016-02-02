@@ -33,7 +33,6 @@ import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
@@ -54,7 +53,6 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.operators.file.adm.AdmLexer;
-import org.apache.asterix.runtime.operators.file.adm.AdmLexerException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -82,7 +80,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     private String mismatchErrorMessage2 = " got a value of type ";
     private Map<String, String> configuration;
 
-    static class ParseException extends AsterixException {
+    static class ParseException extends HyracksDataException {
         private static final long serialVersionUID = 1L;
         private String filename;
         private int line = -1;
@@ -137,17 +135,15 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     @Override
-    public boolean parse(DataOutput out) throws AsterixException {
+    public boolean parse(DataOutput out) throws IOException {
         try {
             resetPools();
             return parseAdmInstance(recordType, out);
-        } catch (IOException e) {
-            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
-        } catch (AdmLexerException e) {
-            throw new AsterixException(e);
         } catch (ParseException e) {
             e.setLocation(filename, admLexer.getLine(), admLexer.getColumn());
             throw e;
+        } catch (IOException e) {
+            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         }
     }
 
@@ -168,18 +164,16 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws Exception {
+    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
         try {
             resetPools();
             admLexer.setBuffer(record.get());
             parseAdmInstance(recordType, out);
-        } catch (IOException e) {
-            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
-        } catch (AdmLexerException e) {
-            throw new AsterixException(e);
         } catch (ParseException e) {
             e.setLocation(filename, admLexer.getLine(), admLexer.getColumn());
             throw e;
+        } catch (IOException e) {
+            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         }
     }
 
@@ -189,12 +183,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     @Override
-    public void setInputStream(InputStream in) throws Exception {
+    public void setInputStream(InputStream in) throws IOException {
         admLexer = new AdmLexer(new java.io.InputStreamReader(in));
     }
 
-    protected boolean parseAdmInstance(IAType objectType, DataOutput out)
-            throws AsterixException, IOException, AdmLexerException {
+    protected boolean parseAdmInstance(IAType objectType, DataOutput out) throws IOException {
         int token = admLexer.next();
         if (token == AdmLexer.TOKEN_EOF) {
             return false;
@@ -204,8 +197,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void admFromLexerStream(int token, IAType objectType, DataOutput out)
-            throws AsterixException, IOException, AdmLexerException {
+    private void admFromLexerStream(int token, IAType objectType, DataOutput out) throws IOException {
 
         switch (token) {
             case AdmLexer.TOKEN_NULL_LITERAL: {
@@ -529,7 +521,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         return null; // wont get here
     }
 
-    private ATypeTag getTargetTypeTag(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
+    private ATypeTag getTargetTypeTag(ATypeTag expectedTypeTag, IAType aObjectType) throws HyracksDataException {
         if (aObjectType == null) {
             return expectedTypeTag;
         }
@@ -559,8 +551,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 
-    private void parseRecord(ARecordType recType, DataOutput out)
-            throws IOException, AsterixException, AdmLexerException {
+    private void parseRecord(ARecordType recType, DataOutput out) throws IOException {
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
@@ -702,8 +693,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         return -1;
     }
 
-    private void parseOrderedList(AOrderedListType oltype, DataOutput out)
-            throws IOException, AsterixException, AdmLexerException {
+    private void parseOrderedList(AOrderedListType oltype, DataOutput out) throws IOException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         OrderedListBuilder orderedListBuilder = (OrderedListBuilder) getOrderedListBuilder();
 
@@ -744,8 +734,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         orderedListBuilder.write(out, true);
     }
 
-    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out)
-            throws IOException, AsterixException, AdmLexerException {
+    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out) throws IOException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) getUnorderedListBuilder();
 
@@ -821,16 +810,14 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out)
-            throws AsterixException, IOException {
+    private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out) throws IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
             throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
     }
 
-    private void parseAndCastNumeric(ATypeTag typeTag, IAType objectType, DataOutput out)
-            throws AsterixException, IOException {
+    private void parseAndCastNumeric(ATypeTag typeTag, IAType objectType, DataOutput out) throws IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         DataOutput dataOutput = out;
         if (targetTypeTag != typeTag) {
@@ -848,8 +835,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 // can promote typeTag to targetTypeTag
                 ITypeConvertComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag, targetTypeTag);
                 if (promoteComputer == null) {
-                    throw new AsterixException(
-                            "Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
+                    throw new ParseException("Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
                 }
                 // do the promotion; note that the type tag field should be skipped
                 promoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
@@ -858,8 +844,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 //can demote source type to the target type
                 ITypeConvertComputer demoteComputer = ATypeHierarchy.getTypeDemoteComputer(typeTag, targetTypeTag);
                 if (demoteComputer == null) {
-                    throw new AsterixException(
-                            "Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
+                    throw new ParseException("Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
                 }
                 // do the demotion; note that the type tag field should be skipped
                 demoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
@@ -868,8 +853,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out)
-            throws AsterixException, AdmLexerException, IOException {
+    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag != null) {
             DataOutput dataOutput = out;
@@ -906,8 +890,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
     }
 
-    private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out)
-            throws AsterixException, HyracksDataException, IOException {
+    private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out) throws HyracksDataException {
         switch (typeTag) {
             case BOOLEAN:
                 parseBoolean(unquoted, out);
@@ -981,7 +964,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void parseBoolean(String bool, DataOutput out) throws AsterixException, HyracksDataException {
+    private void parseBoolean(String bool, DataOutput out) throws HyracksDataException {
         String errorMessage = "This can not be an instance of boolean";
         if (bool.equals("true")) {
             booleanSerde.serialize(ABoolean.TRUE, out);
@@ -992,7 +975,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void parseInt8(String int8, DataOutput out) throws AsterixException, HyracksDataException {
+    private void parseInt8(String int8, DataOutput out) throws HyracksDataException {
         String errorMessage = "This can not be an instance of int8";
         boolean positive = true;
         byte value = 0;
@@ -1023,7 +1006,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int8Serde.serialize(aInt8, out);
     }
 
-    private void parseInt16(String int16, DataOutput out) throws AsterixException, HyracksDataException {
+    private void parseInt16(String int16, DataOutput out) throws HyracksDataException {
         String errorMessage = "This can not be an instance of int16";
         boolean positive = true;
         short value = 0;
@@ -1055,7 +1038,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int16Serde.serialize(aInt16, out);
     }
 
-    private void parseInt32(String int32, DataOutput out) throws AsterixException, HyracksDataException {
+    private void parseInt32(String int32, DataOutput out) throws HyracksDataException {
         String errorMessage = "This can not be an instance of int32";
         boolean positive = true;
         int value = 0;
@@ -1088,7 +1071,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int32Serde.serialize(aInt32, out);
     }
 
-    private void parseInt64(String int64, DataOutput out) throws AsterixException, HyracksDataException {
+    private void parseInt64(String int64, DataOutput out) throws HyracksDataException {
         String errorMessage = "This can not be an instance of int64";
         boolean positive = true;
         long value = 0;

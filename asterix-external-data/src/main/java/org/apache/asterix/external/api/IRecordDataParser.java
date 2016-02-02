@@ -19,6 +19,7 @@
 package org.apache.asterix.external.api;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 public interface IRecordDataParser<T> extends IDataParser {
 
@@ -27,7 +28,7 @@ public interface IRecordDataParser<T> extends IDataParser {
      * @param out
      * @throws Exception
      */
-    public void parse(IRawRecord<? extends T> record, DataOutput out) throws Exception;
+    public void parse(IRawRecord<? extends T> record, DataOutput out) throws IOException;
 
     /**
      * @return the record class
