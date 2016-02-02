@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <licenses>
@@ -106,14 +106,14 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.18-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.18-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

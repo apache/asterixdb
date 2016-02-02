@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <licenses>
@@ -59,27 +59,27 @@
   <dependency>
   	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-storage-am-btree</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
+  	<version>0.2.17-incubating</version>
   </dependency>
   <dependency>
   	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-storage-am-rtree</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
+  	<version>0.2.17-incubating</version>
   </dependency>
   <dependency>
   	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-dataflow-std</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
+  	<version>0.2.17-incubating</version>
   </dependency>
   <dependency>
   	<groupId>org.apache.hyracks</groupId>
   	<artifactId>algebricks-runtime</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
+  	<version>0.2.17-incubating</version>
   </dependency>
   <dependency>
   	<groupId>org.apache.hyracks</groupId>
   	<artifactId>algebricks-common</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
+  	<version>0.2.17-incubating</version>
   </dependency>
   </dependencies>
 </project>

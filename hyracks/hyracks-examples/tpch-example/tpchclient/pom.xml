@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
 
@@ -36,13 +36,13 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.18-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
-  		<version>0.2.18-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   	</dependency>
   </dependencies>
   <build>

@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-control</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <build>
@@ -48,7 +48,7 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-common</artifactId>
-  		<version>0.2.18-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
