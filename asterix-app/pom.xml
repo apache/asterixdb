@@ -21,7 +21,7 @@
     <parent>
         <artifactId>asterix</artifactId>
         <groupId>org.apache.asterix</groupId>
-        <version>0.8.9-SNAPSHOT</version>
+        <version>0.8.8-incubating</version>
     </parent>
     <artifactId>asterix-app</artifactId>
 
@@ -104,48 +104,48 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-algebra</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-aql</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-tools</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -155,7 +155,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-transactions</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -186,7 +186,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-test-framework</artifactId>
-            <version>0.8.9-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>test</scope>
         </dependency>
         <dependency>

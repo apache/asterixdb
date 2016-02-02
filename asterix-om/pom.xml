@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.9-SNAPSHOT</version>
+		<version>0.8.8-incubating</version>
 	</parent>
 	<artifactId>asterix-om</artifactId>
 
@@ -57,13 +57,13 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.9-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.8.9-SNAPSHOT</version>
+			<version>0.8.8-incubating</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
