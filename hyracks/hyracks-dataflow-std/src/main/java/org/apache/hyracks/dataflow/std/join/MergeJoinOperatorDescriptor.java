@@ -47,6 +47,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
  * @author prestonc
  */
 public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
+
     private static final int LEFT_ACTIVITY_ID = 0;
     private static final int RIGHT_ACTIVITY_ID = 1;
     private final IMergeJoinCheckerFactory mergeJoinCheckerFactory;

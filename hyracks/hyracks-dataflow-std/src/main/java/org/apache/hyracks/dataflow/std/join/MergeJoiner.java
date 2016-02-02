@@ -22,7 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
+import org.apache.asterix.runtime.operators.joins.IntervalPartitionJoinOperatorDescriptor;
 import org.apache.hyracks.api.comm.FixedSizeFrame;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -85,6 +87,8 @@ public class MergeJoiner {
     private final IMergeJoinChecker mjc;
 
     private final int partition;
+
+    private static final Logger LOGGER = Logger.getLogger(MergeJoiner.class.getName());
 
     public MergeJoiner(IHyracksTaskContext ctx, int memorySize, int partition, MergeStatus status, MergeJoinLocks locks,
             IMergeJoinChecker mjc, RecordDescriptor leftRd) throws HyracksDataException {

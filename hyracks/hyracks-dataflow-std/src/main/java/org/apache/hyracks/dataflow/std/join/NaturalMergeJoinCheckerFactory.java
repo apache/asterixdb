@@ -49,4 +49,9 @@ public class NaturalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory 
         return RangePartitioningType.PROJECT;
     }
 
+    @Override
+    public boolean isOrderAsc() {
+        return false;
+    }
+
 }
