@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>org.apache.hyracks</groupId>
 		<artifactId>hyracks</artifactId>
-		<version>0.2.17-incubating</version>
+		<version>0.2.17-SNAPSHOT</version>
 	</parent>
 
   <licenses>
@@ -78,32 +78,32 @@
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-net</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-comm</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.17-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
