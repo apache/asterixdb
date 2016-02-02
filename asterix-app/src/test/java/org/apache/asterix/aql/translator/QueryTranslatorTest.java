@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.extensions.PA;
+
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
@@ -37,10 +39,8 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.extensions.PA;
-import junit.framework.Assert;
 
 @SuppressWarnings({ "unchecked", "deprecation" })
 public class QueryTranslatorTest {
