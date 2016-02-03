@@ -146,6 +146,9 @@
           <excludes>
            <exclude>**/target/**</exclude>
            <exclude>**/*.iml</exclude>
+           <exclude>**/.classpath</exclude>
+           <exclude>**/.project</exclude>
+           <exclude>**/.settings/**</exclude>
            <exclude>algebricks/algebricks-examples/piglet-example/testcases/*.piglet</exclude>
            <exclude>algebricks/algebricks-tests/ClusterControllerService/logs/jobs/*.log</exclude>
            <exclude>algebricks/algebricks-tests/data/simple/*.tbl</exclude>

@@ -261,7 +261,7 @@ hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/
 and also the Hyracks adminconsole resources at:
 hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jquery
 and
-hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/stylesheets/jquery-ui
+hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/stylesheet/jquery-ui
 
    Copyright jQuery Foundation and other contributors, https://jquery.org/
 
@@ -301,7 +301,7 @@ hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/stylesheets
    the terms above.
 
 and also the Hyracks adminconsole resource at:
-hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/static/javascript/jquery/plugins/jquery.getParams.js
+hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jquery/plugins/jquery.getParams.js
 
 
    Copyright (c) 2006 Mathias Bank (http://www.mathias-bank.de)

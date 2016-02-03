@@ -209,46 +209,6 @@
    subcomponents is subject to the terms and condition of the following
    licenses.
 
-   Components under Apache License 2.0 are as follows:
-
-     - HttpClient (http://hc.apache.org/httpcomponents-client)
-       lib/httpclient-4.3.jar
-     - HttpCore (http://hc.apache.org/httpcomponents-core-ga)
-       lib/httpcore-4.3.jar
-     - Jetty :: Continuation (http://www.eclipse.org/jetty/jetty-continuation)
-       lib/jetty-continuation-8.0.0.RC0.jar
-     - Jetty :: Http Utility (http://www.eclipse.org/jetty/jetty-http)
-       lib/jetty-http-8.0.0.RC0.jar
-     - Jetty :: IO Utility (http://www.eclipse.org/jetty/jetty-io)
-       lib/jetty-io-8.0.0.RC0.jar
-     - Jetty :: Security (http://www.eclipse.org/jetty/jetty-security)
-       lib/jetty-security-8.0.0.RC0.jar
-     - Jetty :: Server Core (http://www.eclipse.org/jetty)
-       lib/jetty-server-8.0.0.RC0.jar
-     - Jetty :: Servlet Handling (http://www.eclipse.org/jetty/jetty-servlet)
-       lib/jetty-servlet-8.0.0.RC0.jar
-     - Jetty :: Utilities (http://www.eclipse.org/jetty/jetty-util)
-       lib/jetty-util-8.0.0.RC0.jar
-     - Jetty :: Webapp Application Support (http://www.eclipse.org/jetty/jetty-webapp)
-       lib/jetty-webapp-8.0.0.RC0.jar
-     - Jetty :: XML utilities (http://www.eclipse.org/jetty/jetty-xml)
-       lib/jetty-xml-8.0.0.RC0.jar
-     - Servlet API (http://www.eclipse.org/jetty/jetty-parent/servlet-api)
-       lib/servlet-api-3.0.20100224.jar
-     - Wicket Core (http://wicket.apache.org/wicket-core/wicket-core)
-       lib/wicket-core-1.5.2.jar
-     - Wicket Request (http://maven.apache.org)
-       lib/wicket-request-1.5.2.jar
-     - Wicket Util (http://maven.apache.org)
-       lib/wicket-util-1.5.2.jar
-     - Apache Commons Codec (http://commons.apache.org/codec/commons-codec)
-       lib/commons-codec-1.4.jar
-     - Commons IO (http://commons.apache.org/io/)
-       lib/commons-io-2.4.jar
-     - Apache Commons Logging (http://commons.apache.org/logging)
-       lib/commons-logging-1.1.1.jar
-     - Commons Lang (http://commons.apache.org/lang/)
-       lib/commons-lang3-3.1.jar
 
    ===
 
