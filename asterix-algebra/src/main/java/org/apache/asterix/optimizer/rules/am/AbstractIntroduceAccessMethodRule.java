@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -63,6 +62,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Class that embodies the commonalities between rewrite rules for access
  * methods.
@@ -70,6 +71,17 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
 
     private AqlMetadataProvider metadataProvider;
+
+    // Function Identifier sets that retain the original field variable through each function's arguments
+    private final ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName = ImmutableSet.of(
+            AsterixBuiltinFunctions.WORD_TOKENS, AsterixBuiltinFunctions.GRAM_TOKENS, AsterixBuiltinFunctions.SUBSTRING,
+            AsterixBuiltinFunctions.SUBSTRING_BEFORE, AsterixBuiltinFunctions.SUBSTRING_AFTER,
+            AsterixBuiltinFunctions.CREATE_POLYGON, AsterixBuiltinFunctions.CREATE_MBR,
+            AsterixBuiltinFunctions.CREATE_RECTANGLE, AsterixBuiltinFunctions.CREATE_CIRCLE,
+            AsterixBuiltinFunctions.CREATE_LINE, AsterixBuiltinFunctions.CREATE_POINT,
+            AsterixBuiltinFunctions.NUMERIC_ADD, AsterixBuiltinFunctions.NUMERIC_SUBTRACT,
+            AsterixBuiltinFunctions.NUMERIC_MULTIPLY, AsterixBuiltinFunctions.NUMERIC_DIVIDE,
+            AsterixBuiltinFunctions.NUMERIC_MOD);
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
 
@@ -187,6 +199,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         while (indexExprAndVarIt.hasNext()) {
             Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
             Index index = indexExprAndVarEntry.getKey();
+
             boolean allUsed = true;
             int lastFieldMatched = -1;
             boolean foundKeyField = false;
@@ -739,16 +752,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
         }
 
-        if (funcIdent != AsterixBuiltinFunctions.WORD_TOKENS && funcIdent != AsterixBuiltinFunctions.GRAM_TOKENS
-                && funcIdent != AsterixBuiltinFunctions.SUBSTRING
-                && funcIdent != AsterixBuiltinFunctions.SUBSTRING_BEFORE
-                && funcIdent != AsterixBuiltinFunctions.SUBSTRING_AFTER
-                && funcIdent != AsterixBuiltinFunctions.CREATE_POLYGON
-                && funcIdent != AsterixBuiltinFunctions.CREATE_MBR
-                && funcIdent != AsterixBuiltinFunctions.CREATE_RECTANGLE
-                && funcIdent != AsterixBuiltinFunctions.CREATE_CIRCLE
-                && funcIdent != AsterixBuiltinFunctions.CREATE_LINE
-                && funcIdent != AsterixBuiltinFunctions.CREATE_POINT) {
+        if (!funcIDSetThatRetainFieldName.contains(funcIdent)) {
             return null;
         }
         // We use a part of the field in edit distance computation

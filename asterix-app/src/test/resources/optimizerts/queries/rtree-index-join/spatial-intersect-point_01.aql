@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Joins two datasets on the intersection of their point attributes.
- *                  The dataset 'MyData1' has an RTree index, and we expect the 
+ *                  The dataset 'MyData1' has an RTree index, and we expect the
  *                  join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
@@ -45,7 +45,7 @@ create index rtree_index on MyData1(point) type rtree;
 
 write output to asterix_nc1:"rttest/index-join_rtree-spatial-intersect-point.adm";
 
-for $a in dataset('MyData1')
 for $b in dataset('MyData2')
+for $a in dataset('MyData1')
 where spatial-intersect($a.point, $b.point)
 return {"a": $a, "b": $b}

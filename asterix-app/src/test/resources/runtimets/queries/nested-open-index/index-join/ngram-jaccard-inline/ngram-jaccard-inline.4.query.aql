@@ -26,9 +26,9 @@
 use dataverse test;
 set import-private-functions 'true';
 
-for $a in dataset('DBLP')
-for $b in dataset('CSX')
-let $jacc := similarity-jaccard(gram-tokens($a.nested.title, 3, false), gram-tokens($b.nested.title, 3, false))
-where $jacc >= 0.5f and $a.nested.id < $b.nested.id
-order by $jacc, $a.nested.id, $b.nested.id
-return { "arec": $a.nested, "brec": $b.nested, "jacc": $jacc }
+for $csx in dataset('CSX')
+for $dblp in dataset('DBLP')
+let $jacc := similarity-jaccard(gram-tokens($dblp.nested.title, 3, false), gram-tokens($csx.nested.title, 3, false))
+where $jacc >= 0.5f and $dblp.nested.id < $csx.nested.id
+order by $jacc, $dblp.nested.id, $csx.nested.id
+return { "arec": $dblp.nested, "brec": $csx.nested, "jacc": $jacc }

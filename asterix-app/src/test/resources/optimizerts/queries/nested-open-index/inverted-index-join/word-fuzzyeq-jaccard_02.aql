@@ -60,7 +60,7 @@ write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.
 set simfunction 'jaccard';
 set simthreshold '0.5f';
 
-for $a in dataset('CSX')
 for $b in dataset('DBLP')
+for $a in dataset('CSX')
 where word-tokens($a.nested.title) ~= word-tokens($b.nested.title) and $a.nested.id < $b.nested.id
 return {"arec": $a, "brec": $b }

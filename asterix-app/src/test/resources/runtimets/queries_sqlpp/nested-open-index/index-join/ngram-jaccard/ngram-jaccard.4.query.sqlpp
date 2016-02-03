@@ -28,8 +28,7 @@ use test;
 set "import-private-functions" "true";
 
 select element {'arec':a.nested,'brec':b.nested}
-from  DBLP as a,
-      CSX as b
+from  CSX as b, DBLP as a
 where ((test."similarity-jaccard"(test."gram-tokens"(a.nested.title,3,false),test."gram-tokens"(b.nested.title,3,false)) >= 0.500000f) and (a.nested.id < b.nested.id))
 order by a.nested.id,b.nested.id
 ;

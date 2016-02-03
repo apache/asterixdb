@@ -48,8 +48,8 @@ create index ngram_index on DBLP(title: string) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-01.adm";
 
-for $o1 in dataset('DBLP')
 for $o2 in dataset('CSX')
+for $o1 in dataset('DBLP')
 where contains($o1.title, $o2.title) and $o1.id < $o2.id
 order by $o1.id, $o2.id
 return {"title1":$o1.title, "title2":$o2.title}

@@ -49,7 +49,7 @@ create index ngram_index on DBLP(authors:string) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance-check_01.adm";
 
-for $a in dataset('DBLP')
 for $b in dataset('CSX')
+for $a in dataset('DBLP')
 where edit-distance-check($a.authors, $b.authors, 3)[0] and $a.id < $b.id
 return {"arec": $a, "brec": $b }

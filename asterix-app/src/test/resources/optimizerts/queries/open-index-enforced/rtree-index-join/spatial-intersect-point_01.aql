@@ -55,7 +55,7 @@ create index rtree_index on MyData1(point:point) type rtree enforced;
 
 write output to asterix_nc1:"rttest/index-join_rtree-spatial-intersect-point.adm";
 
-for $a in dataset('MyData1')
 for $b in dataset('MyData2')
+for $a in dataset('MyData1')
 where spatial-intersect($a.point, $b.point)
 return {"a": $a, "b": $b}

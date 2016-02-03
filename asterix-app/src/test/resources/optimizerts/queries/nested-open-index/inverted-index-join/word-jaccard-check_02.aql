@@ -57,8 +57,8 @@ create index keyword_index on CSX(nested.title: string) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm";
 
-for $a in dataset('CSX')
 for $b in dataset('DBLP')
+for $a in dataset('CSX')
 where similarity-jaccard-check(word-tokens($a.nested.title), word-tokens($b.nested.title), 0.5f)[0]
       and $a.nested.id < $b.nested.id
 return {"arec": $a, "brec": $b }

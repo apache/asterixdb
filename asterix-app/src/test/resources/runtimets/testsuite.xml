@@ -2451,8 +2451,18 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="index-join">
+            <compilation-unit name="btree-secondary-self-equi-join_01">
+                <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-join">
             <compilation-unit name="rtree-spatial-intersect-point">
                 <output-dir compare="Text">rtree-spatial-intersect-point</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-join">
+            <compilation-unit name="rtree-spatial-self-intersect-point">
+                <output-dir compare="Text">rtree-spatial-self-intersect-point</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

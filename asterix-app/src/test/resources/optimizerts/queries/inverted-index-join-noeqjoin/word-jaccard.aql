@@ -28,7 +28,7 @@ create dataverse test;
 use dataverse test;
 
 create type DBLPType as closed {
-  id: int32, 
+  id: int32,
   dblpid: string,
   title: string,
   authors: string,
@@ -36,7 +36,7 @@ create type DBLPType as closed {
 }
 
 create type CSXType as closed {
-  id: int32, 
+  id: int32,
   csxid: string,
   title: string,
   authors: string,
@@ -51,8 +51,8 @@ create index keyword_index on DBLP(title) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_word-jaccard.adm";
 
-for $a in dataset('DBLP')
 for $b in dataset('CSX')
+for $a in dataset('DBLP')
 where similarity-jaccard(word-tokens($a.title), word-tokens($b.title)) >= 0.5f
       and $a.id < $b.id
 return {"atitle": $a.title, "btitle": $b.title}

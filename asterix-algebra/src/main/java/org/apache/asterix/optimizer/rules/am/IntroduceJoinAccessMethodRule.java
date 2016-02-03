@@ -49,9 +49,9 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * Matches the following operator pattern:
  * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
  * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
- * The order of the join inputs matters (left-outer relation, right-inner relation).
- * This rule tries to utilize an index on the inner relation first.
- * If that's not possible, it tries to use an index on the outer relation.
+ * The order of the join inputs matters (left becomes the outer relation and right becomes the inner relation).
+ * This rule tries to utilize an index on the inner relation.
+ * If that's not possible, it stops transforming the given join into an index-nested-loop join.
  * Replaces the above pattern with the following simplified plan:
  * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan | unnest-map)
  * The sort is optional, and some access methods may choose not to sort.
@@ -140,52 +140,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
 
-        // Prioritize the order of index that will be applied. If the right subtree (inner branch) has indexes,
-        // those indexes will be used.
-        String innerDataset = null;
-        if (rightSubTree.dataset != null) {
-            innerDataset = rightSubTree.dataset.getDatasetName();
-        }
+        // We only consider indexes from the inner branch (right subTree).
+        // If no index is available, then we stop this optimization.
+        removeIndexCandidatesFromOuterBranch(analyzedAMs);
 
-        Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
-        while (amIt.hasNext()) {
-            Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
-            AccessMethodAnalysisContext amCtx = entry.getValue();
-            Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.indexExprsAndVars.entrySet()
-                    .iterator();
-
-            // Check whether we can choose the indexes from the inner relations (removing indexes from the outer relations)
-            int totalIndexCount = 0;
-            int indexCountFromTheOuterBranch = 0;
-
-            while (indexIt.hasNext()) {
-                Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
-
-                Index chosenIndex = indexEntry.getKey();
-                //Count possible indexes that can be removed from left Tree (outer branch)
-                if (!chosenIndex.getDatasetName().equals(innerDataset)) {
-                    indexCountFromTheOuterBranch++;
-                }
-                totalIndexCount++;
-            }
-
-            if (indexCountFromTheOuterBranch < totalIndexCount) {
-                indexIt = amCtx.indexExprsAndVars.entrySet().iterator();
-                while (indexIt.hasNext()) {
-                    Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
-
-                    Index chosenIndex = indexEntry.getKey();
-                    //Remove possibly chosen indexes from left Tree (outer branch)
-                    if (!chosenIndex.getDatasetName().equals(innerDataset)) {
-                        indexIt.remove();
-                    }
-                }
-            }
-        }
-
-        // For the case of left-outer-join, we have to use indexes from the inner branch.
-        // For the inner-join, we try to use the indexes from the inner branch first.
-        // If no index is available, then we use the indexes from the outer branch.
+        // Choose an index from the inner branch that will be used.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, join);
@@ -202,6 +161,9 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     .findLOJIsNullFuncInGroupBy((GroupByOperator) opRef.getValue());
             analysisCtx.setLOJIsNullFuncInGroupBy(isNullFuncExpr);
         }
+
+        // At this point, we are sure that only an index from the inner branch is going to be used.
+        // So, the left subtree is the outer branch and the right subtree is the inner branch.
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
                 chosenIndex.second, analysisCtx, context, isLeftOuterJoin, hasGroupBy);
         if (res) {
@@ -209,6 +171,51 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         context.addToDontApplySet(this, join);
         return res;
+    }
+
+    /**
+     * Removes indexes from the optimizer's consideration for this rule.
+     */
+    protected void removeIndexCandidatesFromOuterBranch(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+        String innerDataset = null;
+        if (rightSubTree.dataset != null) {
+            innerDataset = rightSubTree.dataset.getDatasetName();
+        }
+
+        Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
+        while (amIt.hasNext()) {
+            Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
+            AccessMethodAnalysisContext amCtx = entry.getValue();
+
+            // Fetch index, expression, and variables.
+            Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.indexExprsAndVars.entrySet()
+                    .iterator();
+
+            while (indexIt.hasNext()) {
+                Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexIt.next();
+                Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
+                boolean indexFromInnerBranch = false;
+
+                while (exprsAndVarIter.hasNext()) {
+                    Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
+                    IOptimizableFuncExpr optFuncExpr = amCtx.matchedFuncExprs.get(exprAndVarIdx.first);
+
+                    // Does this index come from the inner branch?
+                    // We check the dataset name and the subtree to make sure the index is applicable.
+                    if (indexExprAndVarEntry.getKey().getDatasetName().equals(innerDataset)) {
+                        if (optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).equals(rightSubTree)) {
+                            indexFromInnerBranch = true;
+                        }
+                    }
+                }
+
+                // If the index does not come from the inner branch,
+                // We do not consider this index.
+                if (!indexFromInnerBranch) {
+                    indexIt.remove();
+                }
+            }
+        }
     }
 
     protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {

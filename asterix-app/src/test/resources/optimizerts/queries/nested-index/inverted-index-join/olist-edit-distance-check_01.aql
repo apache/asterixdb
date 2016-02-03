@@ -48,14 +48,14 @@ create type CustomerType as closed {
 }
 
 create dataset Customers(CustomerType) primary key nested.cid;
- 
+
 create dataset Customers2(CustomerType) primary key nested.cid;
 
 create index interests_index on Customers(nested.interests) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join_olist-edit-distance-check_01.adm";
 
-for $a in dataset('Customers')
 for $b in dataset('Customers2')
+for $a in dataset('Customers')
 where edit-distance-check($a.nested.interests, $b.nested.interests, 3)[0] and $a.nested.cid < $b.nested.cid
 return {"arec": $a, "brec": $b }

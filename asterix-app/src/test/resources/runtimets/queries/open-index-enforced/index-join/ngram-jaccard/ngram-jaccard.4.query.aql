@@ -25,9 +25,9 @@
 use dataverse test;
 set import-private-functions 'true';
 
-for $a in dataset('DBLPOpen')
-for $b in dataset('CSX')
-where similarity-jaccard(gram-tokens($a.title, 3, false), gram-tokens($b.title, 3, false)) >= 0.5f
-      and $a.id < $b.id
-order by $a.id, $b.id
-return { "arec": $a, "brec": $b }
+for $csx in dataset('CSX')
+for $dblp in dataset('DBLPOpen')
+where similarity-jaccard(gram-tokens($dblp.title, 3, false), gram-tokens($csx.title, 3, false)) >= 0.5f
+      and $dblp.id < $csx.id
+order by $dblp.id, $csx.id
+return { "arec": $dblp, "brec": $csx }
