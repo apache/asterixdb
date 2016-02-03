@@ -209,274 +209,42 @@
    subcomponents is subject to the terms and condition of the following
    licenses.
 
-   Components under Apache License 2.0 are as follows:
-
-     - Apache Derby Database Engine and Embedded JDBC Driver (http://db.apache.org/derby/derby/)
-       repo/derby-10.10.1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - JDO API (http://db.apache.org/jdo)
-       repo/jdo-api-3.0.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Rome HTTP Fetcher
-       repo/rome-fetcher-1.0.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - An open source Java toolkit for Amazon S3 (http://jets3t.s3.amazonaws.com/index.html)
-       repo/jets3t-0.6.1 in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - The Netty Project (http://www.jboss.org/netty/)
-       repo/netty-3.2.2.Final.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - The Netty Project (http://netty.io/)
-       repo/netty-3.6.2.Final.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - HttpClient (http://jakarta.apache.org/commons/httpclient/)
-       repo/commons-httpclient-3.0.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - HttpClient (http://hc.apache.org/httpcomponents-client)
-       repo/httpclient-4.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - HttpCore (http://hc.apache.org/httpcomponents-core-ga)
-       repo/httpcore-4.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - twitter4j-core (http://twitter4j.org/)
-       repo/twitter4j-core-4.0.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - twitter4j-stream (http://twitter4j.org/)
-       repo/twitter4j-stream-4.0.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Continuation (http://www.eclipse.org/jetty/jetty-continuation)
-       repo/jetty-continuation-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Http Utility (http://www.eclipse.org/jetty/jetty-http)
-       repo/jetty-http-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: IO Utility (http://www.eclipse.org/jetty/jetty-io)
-       repo/jetty-io-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Security (http://www.eclipse.org/jetty/jetty-security)
-       repo/jetty-security-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Server Core (http://www.eclipse.org/jetty)
-       repo/jetty-server-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Servlet Handling (http://www.eclipse.org/jetty/jetty-servlet)
-       repo/jetty-servlet-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Utilities (http://www.eclipse.org/jetty/jetty-util)
-       repo/jetty-util-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: Webapp Application Support (http://www.eclipse.org/jetty/jetty-webapp)
-       repo/jetty-webapp-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty :: XML utilities (http://www.eclipse.org/jetty/jetty-xml)
-       repo/jetty-xml-8.0.0.RC0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Servlet API (http://www.eclipse.org/jetty/jetty-parent/servlet-api)
-       repo/servlet-api-3.0.20100224.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - BoneCP :: Core Library (http://jolbox.com/bonecp)
-       repo/bonecp-0.8.0.RELEASE.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - FindBugs-jsr305 (http://findbugs.sourceforge.net/)
-       repo/jsr305-1.3.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Guava: Google Core Libraries for Java (http://code.google.com/p/guava-libraries/guava)
-       repo/guava-18.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - JSON.simple (http://code.google.com/p/json-simple/)
-       repo/json-simple-1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Microsoft Windows Azure Client API (https://github.com/WindowsAzure/azure-sdk-for-java)
-       repo/microsoft-windowsazure-api-0.4.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - javax.inject (http://code.google.com/p/atinject/)
-       repo/javax.inject-1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Thrift (http://thrift.apache.org)
-       repo/libfb303-0.9.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Thrift (http://thrift.apache.org)
-       repo/libthrift-0.9.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - DataNucleus JDO API plugin (http://www.datanucleus.org)
-       repo/datanucleus-api-jdo-3.2.6.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - DataNucleus Core (http://www.datanucleus.org)
-       repo/datanucleus-core-3.2.10.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - DataNucleus RDBMS (http://www.datanucleus.org)
-       repo/datanucleus-rdbms-3.2.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - JAXB2 CommonsValue Constructor Plugin (http://java.net/projects/jaxb2-commons/pages/value-constructor)
-       repo/jaxb2-value-constructor-3.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - StAX API (http://stax.codehaus.org/)
-       repo/stax-api-1.0.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - StAX
-       repo/stax-1.1.1-dev.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Wicket Core (http://wicket.apache.org/wicket-core/wicket-core)
-       repo/wicket-core-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Wicket Request (http://maven.apache.org)
-       repo/wicket-request-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Wicket Util (http://maven.apache.org)
-       repo/wicket-util-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Annotations
-       repo/hadoop-annotations-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Auth
-       repo/hadoop-auth-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Client
-       repo/hadoop-client-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Common
-       repo/hadoop-common-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Common (tests)
-       repo/hadoop-common-2.2.0-tests.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop HDFS
-       repo/hadoop-hdfs-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop HDFS
-       repo/hadoop-hdfs-2.2.0-tests.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-app
-       repo/hadoop-mapreduce-client-app-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-common
-       repo/hadoop-mapreduce-client-common-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-core
-       repo/hadoop-mapreduce-client-core-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-hs
-       repo/hadoop-mapreduce-client-hs-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-jobclient
-       repo/hadoop-mapreduce-client-jobclient-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-jobclient
-       repo/hadoop-mapreduce-client-jobclient-2.2.0-tests.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-mapreduce-client-shuffle
-       repo/hadoop-mapreduce-client-shuffle-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Hadoop Mini-Cluster
-       repo/hadoop-minicluster-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - zookeeper
-       repo/zookeeper-3.4.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-api
-       repo/hadoop-yarn-api-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-client
-       repo/hadoop-yarn-client-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-common
-       repo/hadoop-yarn-common-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-server-common
-       repo/hadoop-yarn-server-common-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-server-nodemanager
-       repo/hadoop-yarn-server-nodemanager-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-server-resourcemanager
-       repo/hadoop-yarn-server-resourcemanager-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-server-tests
-       repo/hadoop-yarn-server-tests-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - hadoop-yarn-server-web-proxy
-       repo/hadoop-yarn-server-web-proxy-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Plexus Common Utilities (http://plexus.codehaus.org/plexus-utils)
-       repo/plexus-utils-3.0.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jettison
-       repo/jettison-1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jackson (http://jackson.codehaus.org)
-       repo/jackson-core-asl-1.8.8.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - JAX-RS provider for JSON content type (http://jackson.codehaus.org)
-       repo/jackson-jaxrs-1.8.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Data Mapper for Jackson (http://jackson.codehaus.org)
-       repo/jackson-mapper-asl-1.9.12.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Xml Compatibility extensions for Jackson (http://jackson.codehaus.org)
-       repo/jackson-mapper-xc-1.8.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jackson-core (http://wiki.fasterxml.com/JacksonHome)
-       repo/jackson-core-2.2.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Google GuiceCore Library (http://code.google.com/p/google-guice/guice/)
-       repo/guice-3.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Google GuiceExtensionsServlet (http://code.google.com/p/google-guice/extensions-parent/guice-servlet/)
-       repo/guice-servlet-3.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty Server (http://jetty.mortbay.org/)
-       repo/jetty-6.1.26.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jetty Utilities (http://jetty.mortbay.org/)
-       repo/jetty-util-6.1.26.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Configuration (http://commons.apache.org/${pom.artifactId.substring(8)}/)
-       repo/commons-configuration-1.6.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Digester (http://jakarta.apache.org/commons/digester/)
-       repo/commons-digester-1.8.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - EL (http://jakarta.apache.org/commons/el/)
-       repo/commons-el-1.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Commons BeanUtils
-       repo/commons-beanutils-1.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons BeanUtils Core (http://commons.apache.org/beanutils/)
-       repo/commons-beanutils-core-1.8.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons CLI (http://commons.apache.org/cli/)
-       repo/commons-cli-1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Commons Codec (http://commons.apache.org/codec/commons-codec)
-       repo/commons-codec-1.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Commons Collections (http://commons.apache.org/collections/commons-collections)
-       commons-daemon:commons-daemon:jar:1.0.13
-     - Commons Daemon (http://commons.apache.org/daemon/)
-       repo/commons-daemon-1.0.13.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons IO (http://commons.apache.org/io/)
-       repo/commons-io-2.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Lang (http://commons.apache.org/lang/)
-       repo/commons-lang-2.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Commons Logging (http://commons.apache.org/logging)
-       repo/commons-logging-1.0.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Commons Logging Api (http://commons.apache.org/logging)
-       repo/commons-logging-api-1.0.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Net (http://commons.apache.org/net/)
-       repo/commons-net-3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Log4j (http://logging.apache.org:80/log4j/1.2/log4j)
-       repo/log4j-1.2.17.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Ant Core (http://ant.apache.org/)
-       repo/ant-1.9.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Ant Launcher (http://ant.apache.org/)
-       repo/ant-launcher-1.9.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Avro (http://avro.apache.org)
-       repo/avro-1.7.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Compress (http://commons.apache.org/compress/)
-       repo/commons-compress-1.4.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Lang (http://commons.apache.org/lang/)
-       repo/commons-lang3-3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Commons Math (http://commons.apache.org/math/)
-       repo/commons-math-2.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Ant Utilities (http://hive.apache.org/hive-ant)
-       repo/hive-ant-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Common (http://hive.apache.org/hive-common)
-       repo/hive-common-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Query Language (http://hive.apache.org/hive-exec)
-       repo/hive-exec-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Metastore (http://hive.apache.org/hive-metastore)
-       repo/hive-metastore-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Serde (http://hive.apache.org/hive-serde)
-       repo/hive-serde-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims (http://hive.apache.org/hive-shims)
-       repo/hive-shims-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims 0.20 (http://hive.apache.org/hive-shims-0.20)
-       repo/hive-shims-0.20-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims 0.20S (http://hive.apache.org/hive-shims-0.20S)
-       repo/hive-shims-0.20S-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims 0.23 (http://hive.apache.org/hive-shims-0.23)
-       repo/hive-shims-0.23-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims Common (http://hive.apache.org/hive-shims-common)
-       repo/hive-shims-common-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Hive Shims Secure Common (http://hive.apache.org/hive-shims-common-secure)
-       repo/hive-shims-secure-common-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Apache Velocity (http://velocity.apache.org/engine/releases/velocity-1.5/)
-       repo/velocity-1.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Jakarta ORO
-       repo/oro-2.0.8.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - ROME
-       repo/rome-1.0.1-modified-01.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - jasper-compiler (http://tomcat.apache.org/jasper-compiler)
-       repo/jasper-compiler-5.5.23.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - jasper-runtime (http://tomcat.apache.org/jasper-runtime)
-       repo/jasper-runtime-5.5.23.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Xerces2 Java Parser (http://xerces.apache.org/xerces2-j)
-       repo/xercesImpl-2.9.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - XML APIs (http://xml.apache.org/commons/components/external/xml-apis)
-       repo/xml-apis-1.3.04.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Groovy (http://groovy.codehaus.org/)
-       repo/groovy-all-2.1.6.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-     - Snappy for Java (http://github.com/xerial/snappy-java/)
-       repo/snappy-java-1.0.4.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
-
-   ===
 
    Component(s):
    - Java Servlet API (http://servlet-spec.java.n)
-     repo/javax.servlet-3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/javax.servlet-3.1.jar 
    - javax.servlet API v.3.0 (http://jcp.org/en/jsr/detail?id=315)
-     repo/servlet-api-2.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/servlet-api-2.5.jar 
    - grizzly-framework (http://grizzly.java.net/grizzly-framework)
-     repo/grizzly-framework-2.1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/grizzly-framework-2.1.2.jar 
    - grizzly-http (http://grizzly.java.net/grizzly-http)
-     repo/grizzly-http-2.1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/grizzly-http-2.1.2.jar 
    - grizzly-http-server (http://grizzly.java.net/grizzly-http-server)
-     repo/grizzly-http-server-2.1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/grizzly-http-server-2.1.2.jar 
    - grizzly-http-servlet (http://grizzly.java.net/grizzly-http-servlet)
-     repo/grizzly-http-servlet-2.1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/grizzly-http-servlet-2.1.2.jar 
    - grizzly-rcm (http://grizzly.java.net/grizzly-rcm)
-     repo/grizzly-rcm-2.1.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/grizzly-rcm-2.1.2.jar 
    - management-api (http://kenai.com/hg/gmbal~gf_common)
-     repo/management-api-3.0.0-b012.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/management-api-3.0.0-b012.jar 
    - gmbal-api-only (http://kenai.com/hg/gmbal~master)
-     repo/gmbal-api-only-3.0.0-b023.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/gmbal-api-only-3.0.0-b023.jar 
    - JavaBeans Activation Framework (JAF) (http://java.sun.com/products/javabeans/jaf/index.jsp)
-     repo/activation-1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/activation-1.1.jar 
    - JavaMail API (https://glassfish.dev.java.net/javaee5/mail/)
-     repo/mail-1.4.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/mail-1.4.5.jar 
    - Java Servlet API
-     repo/servlet-api-2.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/servlet-api-2.5.jar 
    - Java Transaction API (http://java.sun.com/products/jta/jta)
-     repo/jta-1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jta-1.1.jar 
    - Sun JAXB Reference Implementation Runtime (http://jaxb.java.net/jaxb-impl)
-     repo/jaxb-impl-2.2.3-1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jaxb-impl-2.2.3-1.jar 
    - Java Architecture for XML Binding (JAXB API) (https://jaxb.dev.java.net/jaxb-api) 
-     repo/jaxb-api-2.2.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jaxb-api-2.2.2.jar 
    - Streaming API for XML
-     repo/stax-api-1.0.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/stax-api-1.0.1.jar 
    - jsp-api
-     repo/jsp-api-2.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jsp-api-2.1.jar 
 
 
    are available under the CDDL 1.0
@@ -621,21 +389,21 @@
 
    Component(s):
   - jersey-client (https://jersey.java.net/jersey-client/)
-    repo/jersey-client-1.13.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-client-1.13.jar 
   - jersey-core (https://jersey.java.net/jersey-core/)
-    repo/jersey-core-1.13.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-core-1.13.jar 
   - jersey-grizzly2 (https://jersey.java.net/jersey-grizzly2/)
-    repo/jersey-grizzly2-1.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-grizzly2-1.9.jar 
   - jersey-json (https://jersey.java.net/jersey-json/)
-    repo/jersey-json-1.13.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-json-1.13.jar 
   - jersey-server (https://jersey.java.net/jersey-server/)
-    repo/jersey-server-1.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-server-1.9.jar 
   - jersey-guice (https://jersey.java.net/jersey-contribs/jersey-guice/)
-    repo/jersey-guice-1.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-guice-1.9.jar 
   - Jersey Test FrameworkCore (https://jersey.java.net/jersey-test-framework/jersey-test-framework-core/)
-    repo/jersey-test-framework-1.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-test-framework-1.9.jar 
   - Jersey Test FrameworkGrizzly 2 Module (https://jersey.java.net/jersey-test-framework/jersey-test-framework-grizzly2/)
-    repo/jersey-test-framework-grizzly2-1.9.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+    repo/jersey-test-framework-grizzly2-1.9.jar 
 
    Are available under the CDDL 1.1:
    --
@@ -733,7 +501,7 @@
    Component(s):
 
    - JUnit (http://junit.org)
-     repo/junit-4.11.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/junit-4.11.jar 
 
    Are available under the CPL 1.0:
 
@@ -957,11 +725,11 @@
       Component(s)
 
       - SLF4J JCL Binding (http://www.slf4j.org) 
-        repo/slf4j-jcl-1.6.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+        repo/slf4j-jcl-1.6.3.jar 
       - SLF4J LOG4J-12 Binding (http://www.slf4j.org)
-        repo/slf4j-log4j12-1.7.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+        repo/slf4j-log4j12-1.7.5.jar 
       - SLF4J API Module (http://www.slf4j.org/slf4j-api)
-        repo/slf4j-api-1.6.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+        repo/slf4j-api-1.6.1.jar 
 
       are provided under the MIT license:
 
@@ -992,13 +760,13 @@
    ===
    Component(s):
    - antlr-runtime (http://www.antlr.org/antlr-runtime)
-     repo/antlr-runtime-3.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/antlr-runtime-3.4.jar 
    - ANTLR ST4 4.0.4 (http://www.stringtemplate.org)
-     repo/ST4-4.0.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/ST4-4.0.4.jar 
    - ANTLR StringTemplate (http://www.stringtemplate.org)
-     repo/stringtemplate-3.2.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/stringtemplate-3.2.1.jar 
    - AntLR Parser Generator (http://www.antlr.org/)
-     repo/antlr-2.7.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/antlr-2.7.7.jar 
 
    Are available under a  BSD-style License:
 
@@ -1015,7 +783,7 @@
    ===
    Component(s):
    - JSch (http://www.jcraft.com/jsch/) 
-     repo/jsch-0.1.42.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jsch-0.1.42.jar 
 
    are available under a BSD-style license:
 
@@ -1098,7 +866,7 @@
    ===
    Component(s):
    - ParaNamer Core (http://paranamer.codehaus.org/paranamer) 
-     repo/paranamer-2.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/paranamer-2.3.jar 
 
    are available under a BSD-style license:
 
@@ -1135,7 +903,7 @@
    ===
    Component(s):
    - JDOM
-     repo/jdom-1.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jdom-1.0.jar 
 
    are available under a Modified ASL license:
    --
@@ -1199,7 +967,7 @@
    ===
    Component(s):
    - Hamcrest Core (https://github.com/hamcrest/JavaHamcrest/hamcrest-core) 
-     repo/hamcrest-core-1.3.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/hamcrest-core-1.3.jar 
 
    are available under a BSD-style license
    --
@@ -1235,7 +1003,7 @@
    ===
    Component(s):
    - Protocol Buffer Java API (http://code.google.com/p/protobuf) 
-     repo/prtobuf-java-2.5.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/prtobuf-java-2.5.0.jar 
 
    are available under a BSD-style license:
 
@@ -1287,7 +1055,7 @@
    ===
    Component(s):
    - JSON (JavaScript Object Notation) (http://www.json.org/java/index.html) 
-     repo/json-20090211.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/json-20090211.jar 
 
    are available under the JSON license:
 
@@ -1306,9 +1074,9 @@
    ===
    Component(s):
    - XZ for Java (http://tukaani.org/xz/java.html) 
-     repo/xz-1.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/xz-1.0.jar 
    - XML Pull Parsing API (http://aopalliance.sourceforge.net/aopalliance) 
-     repo/aopalliance-1.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/aopalliance-1.0.jar 
 
    are in the public domain.
 
@@ -1316,7 +1084,7 @@
 
    Component(s):
    - JLine (http://jline.sourceforge.net) 
-     repo/jline-0.9.94.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/jline-0.9.94.jar 
 
    are available under a BSD-style license:
    --
@@ -1359,7 +1127,7 @@
    Component(s):
 
    - xmlenc Library (http://xmlenc.sourceforge.net) 
-     repo/xmlenc-0.52.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/xmlenc-0.52.jar 
 
    are available under a BSD-style license:
 
@@ -1396,9 +1164,9 @@
    ===
    Component(s):
    - Appassembler :: Generic Bootstrapper (http://mojo.codehaus.org/appassembler/appassembler-booter) 
-     repo/appassembler-booter-1.3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/appassembler-booter-1.3.1.jar 
    - Appassembler :: Model (http://mojo.codehaus.org/appassembler/appassembler-model) 
-     repo/appassembler-model-1.3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/appassembler-model-1.3.1.jar 
 
    are available under the MIT license:
 
@@ -1430,7 +1198,7 @@
    Component(s):
 
    - args4j (http://args4j.dev.java.net/args4j/) 
-     repo/args4j-2.0.12.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/args4j-2.0.12.jar 
 
    are available under the MIT License:
 
@@ -1462,7 +1230,7 @@
    ===
    Component(s)
    - ASM Core (http://asm.objectweb.org/asm/) 
-     repo/asm-3.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/asm-3.1.jar 
 
    are available under a BSD-style license:
 
@@ -1502,7 +1270,7 @@
    ===
    Component(s)
    - Plexus Utils (http://asm.objectweb.org/asm/) 
-     repo/plexus-utils-3.0.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/plexus-utils-3.0.7.jar 
 
     contain components under a BSD-style license:
 
@@ -1548,7 +1316,7 @@
    ===
    Component(s)
    - Plexus Utils (http://asm.objectweb.org/asm/) 
-     repo/plexus-utils-3.0.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/plexus-utils-3.0.7.jar 
 
     contain components under a BSD-style license:
 
@@ -1581,7 +1349,7 @@
    ===
    Component(s)
    - Plexus Utils (http://asm.objectweb.org/asm/) 
-     repo/plexus-utils-3.0.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+     repo/plexus-utils-3.0.7.jar 
 
     contain components under the Indiana University Extreme! Lab Software License:
 

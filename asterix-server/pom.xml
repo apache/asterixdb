@@ -22,7 +22,7 @@
   <name>asterix-server</name>
   <parent>
     <groupId>org.apache.asterix</groupId>
-    <artifactId>asterix</artifactId>
+    <artifactId>apache-asterixdb</artifactId>
     <version>0.8.8-SNAPSHOT</version>
   </parent>
 
