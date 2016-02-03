@@ -20,9 +20,9 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 
@@ -42,29 +42,34 @@ public class AIntervalPrinter implements IPrinter {
      */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("interval");
+        ps.print("interval(");
 
-        short typetag = AInt8SerializerDeserializer.getByte(b, s + 1 + 8 * 2);
+        byte typetag = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
+        int startOffset = AIntervalSerializerDeserializer.getIntervalStartOffset(b, s + 1) - 1;
+        int startSize = AIntervalSerializerDeserializer.getStartSize(b, s + 1);
+        int endOffset = AIntervalSerializerDeserializer.getIntervalEndOffset(b, s + 1) - 1;
+        int endSize = AIntervalSerializerDeserializer.getEndSize(b, s + 1);
 
-        if (typetag == ATypeTag.DATE.serialize()) {
-            ps.print("-date(\"");
-            PrintTools.printDateString(b, s + 4, 4, ps);
-            ps.print(", ");
-            PrintTools.printDateString(b, s + 12, 4, ps);
-        } else if (typetag == ATypeTag.TIME.serialize()) {
-            ps.print("-time(\"");
-            PrintTools.printTimeString(b, s + 4, 4, ps);
-            ps.print(", ");
-            PrintTools.printTimeString(b, s + 12, 4, ps);
-        } else if (typetag == ATypeTag.DATETIME.serialize()) {
-            ps.print("-datetime(\"");
-            PrintTools.printDateTimeString(b, s, 8, ps);
-            ps.print(", ");
-            PrintTools.printDateTimeString(b, s + 8, 8, ps);
-        } else {
-            throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
+        IPrinter timeInstancePrinter;
+        ATypeTag intervalType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typetag);
+        switch (intervalType) {
+            case DATE:
+                timeInstancePrinter = ADatePrinter.INSTANCE;
+                break;
+            case TIME:
+                timeInstancePrinter = ATimePrinter.INSTANCE;
+                break;
+            case DATETIME:
+                timeInstancePrinter = ADateTimePrinter.INSTANCE;
+                break;
+            default:
+                throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
         }
 
-        ps.print("\")");
+        timeInstancePrinter.print(b, startOffset, startSize, ps);
+        ps.print(", ");
+        timeInstancePrinter.print(b, endOffset, endSize, ps);
+
+        ps.print(")");
     }
 }

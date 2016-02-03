@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
@@ -48,19 +49,27 @@ public final class NonTaggedFormatUtil {
 
     public static final boolean isFixedSizedCollection(IAType type) {
         switch (type.getTypeTag()) {
-            case STRING:
-            case BINARY:
-            case RECORD:
-            case ORDEREDLIST:
-            case UNORDEREDLIST:
-            case POLYGON:
-            case ANY:
-                return false;
             case UNION:
                 if (!((AUnionType) type).isNullableType())
                     return false;
                 else
                     return isFixedSizedCollection(((AUnionType) type).getNullableType());
+            default:
+                return isFixedSizedCollection(type.getTypeTag());
+        }
+    }
+
+    public static final boolean isFixedSizedCollection(ATypeTag type) {
+        switch (type) {
+            case STRING:
+            case BINARY:
+            case RECORD:
+            case INTERVAL:
+            case ORDEREDLIST:
+            case UNORDEREDLIST:
+            case POLYGON:
+            case ANY:
+                return false;
             default:
                 return true;
         }
@@ -130,7 +139,10 @@ public final class NonTaggedFormatUtil {
             case UUID:
                 return 16;
             case INTERVAL:
-                return 17;
+                if (tagged)
+                    return AIntervalSerializerDeserializer.getIntervalLength(serNonTaggedAObject, offset + 1);
+                else
+                    return AIntervalSerializerDeserializer.getIntervalLength(serNonTaggedAObject, offset);
             case POINT3D:
             case CIRCLE:
                 return 24;

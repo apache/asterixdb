@@ -34,6 +34,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt16Prin
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt32Printer;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt64Printer;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt8Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AIntervalPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ALinePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ANullPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.APoint3DPrinter;
@@ -152,6 +153,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case DURATION: {
                     ADurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case INTERVAL: {
+                    AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 case POINT: {

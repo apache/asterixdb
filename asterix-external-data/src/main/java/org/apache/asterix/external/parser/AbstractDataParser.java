@@ -71,7 +71,6 @@ import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -187,7 +186,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ALINE);
     @SuppressWarnings("unchecked")
-    private static final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
     protected String filename;
@@ -333,104 +332,7 @@ public abstract class AbstractDataParser implements IDataParser {
         binarySerde.serialize(aBinary, out);
     }
 
-    protected void parseDateTimeInterval(String interval, DataOutput out) throws HyracksDataException {
-        // the starting point for parsing (so for the accessor)
-        int startOffset = 0;
-        int endOffset, timeSeperatorOffsetInDatetimeString;
-
-        // Get the index for the comma
-        int commaIndex = interval.indexOf(',');
-        if (commaIndex < 1) {
-            throw new HyracksDataException("comma is missing for a string of interval");
-        }
-
-        endOffset = commaIndex - 1;
-        timeSeperatorOffsetInDatetimeString = interval.indexOf('T');
-
-        if (timeSeperatorOffsetInDatetimeString < 0) {
-            throw new HyracksDataException("This can not be an instance of interval: missing T for a datetime value.");
-        }
-
-        long chrononTimeInMsStart = parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString - 1);
-
-        chrononTimeInMsStart += parseTimePart(interval, timeSeperatorOffsetInDatetimeString + 1, endOffset);
-
-        // Interval End
-        startOffset = commaIndex + 1;
-        endOffset = interval.length() - 1;
-
-        timeSeperatorOffsetInDatetimeString = interval.indexOf('T', startOffset);
-
-        if (timeSeperatorOffsetInDatetimeString < 0) {
-            throw new HyracksDataException("This can not be an instance of interval: missing T for a datetime value.");
-        }
-
-        long chrononTimeInMsEnd = parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString - 1);
-
-        chrononTimeInMsEnd += parseTimePart(interval, timeSeperatorOffsetInDatetimeString + 1, endOffset);
-
-        aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.DATETIME.serialize());
-
-        intervalSerde.serialize(aInterval, out);
-    }
-
-    protected void parseTimeInterval(String interval, DataOutput out) throws HyracksDataException {
-        int startOffset = 0;
-        int endOffset;
-
-        // Get the index for the comma
-        int commaIndex = interval.indexOf(',');
-        if (commaIndex < 0) {
-            throw new HyracksDataException("comma is missing for a string of interval");
-        }
-
-        endOffset = commaIndex - 1;
-        // Interval Start
-        long chrononTimeInMsStart = parseTimePart(interval, startOffset, endOffset);
-
-        if (chrononTimeInMsStart < 0) {
-            chrononTimeInMsStart += GregorianCalendarSystem.CHRONON_OF_DAY;
-        }
-
-        // Interval End
-        startOffset = commaIndex + 1;
-        endOffset = interval.length() - 1;
-
-        long chrononTimeInMsEnd = parseTimePart(interval, startOffset, endOffset);
-        if (chrononTimeInMsEnd < 0) {
-            chrononTimeInMsEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
-        }
-
-        aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.TIME.serialize());
-        intervalSerde.serialize(aInterval, out);
-    }
-
-    protected void parseDateInterval(String interval, DataOutput out) throws HyracksDataException {
-        // the starting point for parsing (so for the accessor)
-        int startOffset = 0;
-        int endOffset;
-
-        // Get the index for the comma
-        int commaIndex = interval.indexOf(',');
-        if (commaIndex < 1) {
-            throw new HyracksDataException("comma is missing for a string of interval");
-        }
-
-        endOffset = commaIndex - 1;
-        long chrononTimeInMsStart = parseDatePart(interval, startOffset, endOffset);
-
-        // Interval End
-        startOffset = commaIndex + 1;
-        endOffset = interval.length() - 1;
-
-        long chrononTimeInMsEnd = parseDatePart(interval, startOffset, endOffset);
-
-        aInterval.setValue((chrononTimeInMsStart / GregorianCalendarSystem.CHRONON_OF_DAY),
-                (chrononTimeInMsEnd / GregorianCalendarSystem.CHRONON_OF_DAY), ATypeTag.DATE.serialize());
-        intervalSerde.serialize(aInterval, out);
-    }
-
-    private long parseDatePart(String interval, int startOffset, int endOffset) throws HyracksDataException {
+    protected long parseDatePart(String interval, int startOffset, int endOffset) throws HyracksDataException {
 
         while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
             endOffset--;
@@ -443,7 +345,7 @@ public abstract class AbstractDataParser implements IDataParser {
         return ADateParserFactory.parseDatePart(interval, startOffset, endOffset - startOffset + 1);
     }
 
-    private int parseTimePart(String interval, int startOffset, int endOffset) throws HyracksDataException {
+    protected int parseTimePart(String interval, int startOffset, int endOffset) throws HyracksDataException {
 
         while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
             endOffset--;

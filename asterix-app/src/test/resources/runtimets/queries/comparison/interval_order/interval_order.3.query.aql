@@ -18,13 +18,13 @@
  */
 use dataverse test;
 
-let $id1 := interval-from-date("2002-01-01", "2003-01-01")
-let $id2 := interval-from-date("2006-01-01", "2010-01-01")
-let $id3 := interval-from-date("2001-01-01", "2010-01-01")
-let $id4 := interval-from-date("2003-01-01", "2008-01-01")
-let $id5 := interval-from-date("2002-01-01", "2010-01-01")
-let $id6 := interval-from-date("2004-01-01", "2009-01-01")
-let $id7 := interval-from-date("2003-01-01", "2008-01-01")
+let $id1 := interval(date("2002-01-01"), date("2003-01-01"))
+let $id2 := interval(date("2006-01-01"), date("2010-01-01"))
+let $id3 := interval(date("2001-01-01"), date("2010-01-01"))
+let $id4 := interval(date("2003-01-01"), date("2008-01-01"))
+let $id5 := interval(date("2002-01-01"), date("2010-01-01"))
+let $id6 := interval(date("2004-01-01"), date("2009-01-01"))
+let $id7 := interval(date("2003-01-01"), date("2008-01-01"))
 
 for $id in [$id1, $id2, $id3, $id4, $id5, $id6, $id7]
 order by $id

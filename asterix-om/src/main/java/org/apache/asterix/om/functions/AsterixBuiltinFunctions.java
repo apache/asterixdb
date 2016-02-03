@@ -508,12 +508,8 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
 
-    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-from-date", 2);
-    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-from-time", 2);
-    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-from-datetime", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
@@ -1026,9 +1022,7 @@ public class AsterixBuiltinFunctions {
         addFunction(DURATION_FROM_INTERVAL, OptionalADayTimeDurationTypeComputer.INSTANCE, true);
 
         // interval constructors
-        addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE, true);
-        addFunction(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE, true);
-        addFunction(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR, OptionalAIntervalTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE, true);

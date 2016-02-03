@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -45,20 +44,14 @@ public class AIntervalAscPartialBinaryComparatorFactory implements IBinaryCompar
                 // The ascending interval comparator sorts intervals first by start point, then by end point.
                 // If the interval have the same point values, the final comparison orders the intervals by type
                 // (datetime, date, time).
-                int c = Long.compare(
-                        AInt64SerializerDeserializer.getLong(b1,
-                                s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
-                        AInt64SerializerDeserializer.getLong(b2,
-                                s2 + AIntervalSerializerDeserializer.getIntervalStartOffset()));
+                int c = Long.compare(AIntervalSerializerDeserializer.getIntervalStart(b1, s1),
+                        AIntervalSerializerDeserializer.getIntervalStart(b2, s2));
                 if (c == 0) {
-                    c = Long.compare(
-                            AInt64SerializerDeserializer.getLong(b1,
-                                    s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
-                            AInt64SerializerDeserializer.getLong(b2,
-                                    s2 + AIntervalSerializerDeserializer.getIntervalEndOffset()));
+                    c = Long.compare(AIntervalSerializerDeserializer.getIntervalEnd(b1, s1),
+                            AIntervalSerializerDeserializer.getIntervalEnd(b2, s2));
                     if (c == 0) {
-                        c = Byte.compare(b1[s1 + AIntervalSerializerDeserializer.getIntervalTagOffset()], b2[s2
-                                + AIntervalSerializerDeserializer.getIntervalTagOffset()]);
+                        c = Byte.compare(AIntervalSerializerDeserializer.getIntervalTimeType(b1, s1),
+                                AIntervalSerializerDeserializer.getIntervalTimeType(b2, s2));
                     }
                 }
                 return c;

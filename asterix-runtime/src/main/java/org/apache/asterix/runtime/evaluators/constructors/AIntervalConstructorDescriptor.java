@@ -21,13 +21,13 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.base.temporal.ATimeParserFactory;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -41,17 +41,16 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_TIME;
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new AIntervalFromTimeConstructorDescriptor();
+            return new AIntervalConstructorDescriptor();
         }
     };
 
@@ -65,13 +64,11 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                 return new ICopyEvaluator() {
 
                     private DataOutput out = output.getDataOutput();
-
                     private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
                     private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
                     private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
-                    private String errorMessage = "This can not be an instance of interval (from Date)";
-                    //TODO: Where to move and fix these?
+                    private String errorMessage = "This can not be an instance of interval (only support Date/Time/Datetime)";
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -79,7 +76,6 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -97,45 +93,38 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                                 return;
                             }
 
+                            if (argOut0.getByteArray()[0] != argOut1.getByteArray()[0]) {
+                                throw new AlgebricksException(
+                                        FID.getName()
+                                                + ": expects both arguments to be of the same type. Either DATE/TIME/DATETIME, but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + " and " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut0.getByteArray()[1]));
+                            }
+
                             long intervalStart = 0, intervalEnd = 0;
+                            ATypeTag intervalType = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(argOut0.getByteArray()[0]);
 
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
-                                intervalStart = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
-                            } else if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
-                                // start date
-                                int stringLength = utf8Ptr.getUTF8Length();
-
-                                intervalStart = ATimeParserFactory.parseTimePart(utf8Ptr.getByteArray(),
-                                        utf8Ptr.getCharStartOffset(), stringLength);
-                            } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/STRING/TIME for the first argument, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
-                            }
-
-                            if (intervalStart < 0) {
-                                intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
-                            }
-
-                            if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
-                                intervalEnd = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
-                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
-                                // start date
-                                int stringLength = utf8Ptr.getUTF8Length();
-
-                                intervalEnd = ATimeParserFactory.parseTimePart(argOut1.getByteArray(),
-                                        utf8Ptr.getCharStartOffset(), stringLength);
-
-                            } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/STRING/TIME for the second argument, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
-                            }
-
-                            if (intervalEnd < 0) {
-                                intervalEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
+                            switch (intervalType) {
+                                case DATE:
+                                    intervalStart = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    intervalEnd = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                    break;
+                                case TIME:
+                                    intervalStart = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    intervalEnd = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                    break;
+                                case DATETIME:
+                                    intervalStart = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(),
+                                            1);
+                                    intervalEnd = ADateTimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                    break;
+                                default:
+                                    throw new AlgebricksException(
+                                            FID.getName() + ": expects NULL/DATE/TIME/DATETIME as arguments, but got "
+                                                    + intervalType);
                             }
 
                             if (intervalEnd < intervalStart) {
@@ -143,7 +132,7 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                                         FID.getName() + ": interval end must not be less than the interval start.");
                             }
 
-                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+                            aInterval.setValue(intervalStart, intervalEnd, intervalType.serialize());
                             intervalSerde.serialize(aInterval, out);
 
                         } catch (IOException e1) {

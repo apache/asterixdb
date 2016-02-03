@@ -40,7 +40,9 @@ import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -53,6 +55,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.operators.file.adm.AdmLexer;
+import org.apache.asterix.runtime.operators.file.adm.AdmLexerException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -75,6 +78,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             new ListBuilderFactory());
     private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
             new AbvsBuilderFactory());
+
+    protected final AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
 
     private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
     private String mismatchErrorMessage2 = " got a value of type ";
@@ -328,44 +333,14 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 parseConstructor(ATypeTag.DATETIME, objectType, out);
                 break;
             }
-            case AdmLexer.TOKEN_INTERVAL_DATE_CONS: {
+            case AdmLexer.TOKEN_INTERVAL_CONS: {
                 if (checkType(ATypeTag.INTERVAL, objectType)) {
-                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            parseDateInterval(admLexer.getLastTokenImage(), out);
-                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                break;
-                            }
-                        }
-                    }
+                    objectType = getComplexType(objectType, ATypeTag.INTERVAL);
+                    parseInterval(ATypeTag.INTERVAL, objectType, out);
+                } else {
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 }
-                throw new ParseException("Wrong interval data parsing for date interval.");
-            }
-            case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType)) {
-                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            parseTimeInterval(admLexer.getLastTokenImage(), out);
-                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                throw new ParseException("Wrong interval data parsing for time interval.");
-            }
-            case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType)) {
-                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                            parseDateTimeInterval(admLexer.getLastTokenImage(), out);
-                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                throw new ParseException("Wrong interval data parsing for datetime interval.");
+                break;
             }
             case AdmLexer.TOKEN_DURATION_CONS: {
                 parseConstructor(ATypeTag.DURATION, objectType, out);
@@ -408,17 +383,16 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else {
-                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 }
                 break;
             }
-
             case AdmLexer.TOKEN_START_ORDERED_LIST: {
                 if (checkType(ATypeTag.ORDEREDLIST, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else {
-                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 }
                 break;
             }
@@ -427,7 +401,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out);
                 } else {
-                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 }
                 break;
             }
@@ -552,7 +526,6 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     private void parseRecord(ARecordType recType, DataOutput out) throws IOException {
-
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
         IARecordBuilder recBuilder = getRecordBuilder();
@@ -691,6 +664,100 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             }
         }
         return -1;
+    }
+
+    private void parseInterval(ATypeTag typeTag, IAType objectType, DataOutput out) throws IOException {
+        long start = 0, end = 0;
+        byte tag = 0;
+        int token = admLexer.next();
+        if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+            ATypeTag intervalType;
+
+            token = admLexer.next();
+            switch (token) {
+                case AdmLexer.TOKEN_DATE_CONS:
+                    intervalType = ATypeTag.DATE;
+                    break;
+                case AdmLexer.TOKEN_TIME_CONS:
+                    intervalType = ATypeTag.TIME;
+                    break;
+                case AdmLexer.TOKEN_DATETIME_CONS:
+                    intervalType = ATypeTag.DATETIME;
+                    break;
+                default:
+                    throw new ParseException("Unsupported interval type: " + AdmLexer.tokenKindToString(token) + ".");
+            }
+
+            // Interval
+            start = parseIntervalArgument(intervalType);
+            end = parseIntervalSecondArgument(token, intervalType);
+            tag = intervalType.serialize();
+        }
+
+        // Closing interval.
+        token = admLexer.next();
+        if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+            try {
+                aInterval.setValue(start, end, tag);
+            } catch (HyracksDataException e) {
+                throw new ParseException(e);
+            }
+        } else {
+            throw new ParseException("Interval was not closed.");
+        }
+        intervalSerde.serialize(aInterval, out);
+    }
+
+    private long parseIntervalSecondArgument(int startToken, ATypeTag parseType) throws IOException {
+        int token = admLexer.next();
+        if (token == AdmLexer.TOKEN_COMMA) {
+            token = admLexer.next();
+            if (token == startToken) {
+                return parseIntervalArgument(parseType);
+            } else {
+                throw new ParseException("The interval start and end point types do not match: "
+                        + AdmLexer.tokenKindToString(startToken) + " != " + AdmLexer.tokenKindToString(token));
+            }
+        } else {
+            throw new ParseException("Missing COMMA before interval end point.");
+        }
+    }
+
+    private long parseIntervalArgument(ATypeTag tag) throws IOException {
+        int token = admLexer.next();
+        if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+            token = admLexer.next();
+            if (token == AdmLexer.TOKEN_STRING_LITERAL) {
+                long chrononTimeInMs = 0;
+                final String arg = admLexer.getLastTokenImage();
+                switch (tag) {
+                    case DATE:
+                        chrononTimeInMs += (parseDatePart(arg, 0, arg.length() - 1)
+                                / GregorianCalendarSystem.CHRONON_OF_DAY);
+                        break;
+                    case TIME:
+                        chrononTimeInMs += parseTimePart(arg, 0, arg.length() - 1);
+                        break;
+                    case DATETIME:
+                        int timeSeperatorOffsetInDatetimeString = arg.indexOf('T');
+                        if (timeSeperatorOffsetInDatetimeString < 0) {
+                            throw new ParseException(
+                                    "This can not be an instance of interval: missing T for a datetime value.");
+                        }
+                        chrononTimeInMs += parseDatePart(arg, 0, timeSeperatorOffsetInDatetimeString - 1);
+                        chrononTimeInMs += parseTimePart(arg, timeSeperatorOffsetInDatetimeString + 1,
+                                arg.length() - 1);
+                        break;
+                    default:
+                        throw new ParseException("Unsupported interval type: " + tag.name() + ".");
+                }
+                token = admLexer.next();
+                if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                    return chrononTimeInMs;
+                }
+            }
+        }
+        throw new ParseException("Interval argument not properly constructed.");
     }
 
     private void parseOrderedList(AOrderedListType oltype, DataOutput out) throws IOException {

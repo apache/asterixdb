@@ -2,182 +2,6 @@ DataverseUse test
 Query:
 RecordConstructor [
   (
-    LiteralExpr [STRING] [interval11]
-    :
-    FunctionCall test.interval-from-date@2[
-      FunctionCall test.date@1[
-        LiteralExpr [STRING] [2010-10-30]
-      ]
-      FunctionCall test.date@1[
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval12]
-    :
-    FunctionCall test.interval-from-date@2[
-      LiteralExpr [STRING] [2010-10-30]
-      FunctionCall test.date@1[
-        LiteralExpr [STRING] [2012-10-21]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval13]
-    :
-    FunctionCall test.interval-from-date@2[
-      FunctionCall test.date@1[
-        LiteralExpr [STRING] [2010-10-30]
-      ]
-      LiteralExpr [STRING] [2012-10-21]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval14]
-    :
-    FunctionCall test.interval-from-date@2[
-      LiteralExpr [STRING] [2010-10-30]
-      LiteralExpr [STRING] [2012-10-21]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval15]
-    :
-    FunctionCall test.interval-from-date@2[
-      LiteralExpr [NULL]
-      LiteralExpr [STRING] [2012-10-21]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval16]
-    :
-    FunctionCall test.interval-from-date@2[
-      LiteralExpr [STRING] [2010-10-30]
-      LiteralExpr [NULL]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval21]
-    :
-    FunctionCall test.interval-from-time@2[
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [03:04:05.678-11:00]
-      ]
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [232425267+0200]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval22]
-    :
-    FunctionCall test.interval-from-time@2[
-      LiteralExpr [STRING] [03:04:05.678-11:00]
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [232425267+0200]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval23]
-    :
-    FunctionCall test.interval-from-time@2[
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [03:04:05.678-11:00]
-      ]
-      LiteralExpr [STRING] [232425267+0200]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval24]
-    :
-    FunctionCall test.interval-from-time@2[
-      LiteralExpr [STRING] [03:04:05.678-11:00]
-      LiteralExpr [STRING] [232425267+0200]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval25]
-    :
-    FunctionCall test.interval-from-time@2[
-      LiteralExpr [NULL]
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [232425267+0200]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval26]
-    :
-    FunctionCall test.interval-from-time@2[
-      FunctionCall test.time@1[
-        LiteralExpr [STRING] [03:04:05.678-11:00]
-      ]
-      LiteralExpr [NULL]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval31]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
-      ]
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [19991112T124935948-0700]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval32]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [19991112T124935948-0700]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval33]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
-      ]
-      LiteralExpr [STRING] [19991112T124935948-0700]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval34]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
-      LiteralExpr [STRING] [19991112T124935948-0700]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval35]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      LiteralExpr [NULL]
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [19991112T124935948-0700]
-      ]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [interval36]
-    :
-    FunctionCall test.interval-from-datetime@2[
-      FunctionCall test.datetime@1[
-        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
-      ]
-      LiteralExpr [NULL]
-    ]
-  )
-  (
     LiteralExpr [STRING] [interval41]
     :
     FunctionCall test.interval-start-from-date@2[
@@ -353,6 +177,102 @@ RecordConstructor [
     FunctionCall test.interval-start-from-datetime@2[
       FunctionCall test.datetime@1[
         LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval71]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval72]
+    :
+    FunctionCall test.interval@2[
+      LiteralExpr [NULL]
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval73]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval74]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [03:04:05.678-11:00]
+      ]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [232425267+0200]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval75]
+    :
+    FunctionCall test.interval@2[
+      LiteralExpr [NULL]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [232425267+0200]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval76]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [03:04:05.678-11:00]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval77]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      ]
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19991112T124935948-0700]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval78]
+    :
+    FunctionCall test.interval@2[
+      LiteralExpr [NULL]
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19991112T124935948-0700]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval79]
+    :
+    FunctionCall test.interval@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
       ]
       LiteralExpr [NULL]
     ]

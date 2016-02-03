@@ -23,4 +23,7 @@
  * Issue        : 363
  */
 
-{'interval0':("interval-from-datetime"(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) > "interval-from-datetime"(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),'interval1':("interval-from-datetime"(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) < "interval-from-datetime"(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),'interval2':("interval-from-datetime"(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) >= "interval-from-datetime"(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),'interval3':("interval-from-datetime"(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) <= "interval-from-datetime"(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')))};
+{ 'interval0':(interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) > interval(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),
+  'interval1':(interval(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) < interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),
+  'interval2':(interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) >= interval(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),
+  'interval3':(interval(datetime('-1983-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) <= interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')))};

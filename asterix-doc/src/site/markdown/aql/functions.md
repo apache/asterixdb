@@ -2040,11 +2040,11 @@ parse-date/parse-time/parse-datetime(date,formatting_expression)
 
  * The expected result is:
 
-        { "overlap1": interval-time("12:23:39.000Z, 18:27:19.000Z"),
+        { "overlap1": interval(time("12:23:39.000Z"), time("18:27:19.000Z")),
           "overlap2": null,
           "overlap3": null,
-          "overlap4": interval-date("2013-01-01, 2014-01-01"),
-          "overlap5": interval-datetime("1989-03-04T12:23:39.000Z, 2000-10-30T18:27:19.000Z"),
+          "overlap4": interval(date("2013-01-01"), date("2014-01-01")),
+          "overlap5": interval(datetime("1989-03-04T12:23:39.000Z"), datetime("2000-10-30T18:27:19.000Z")),
           "overlap6": null }
 
 
@@ -2079,83 +2079,17 @@ See the [Allen's Relations](allens.html).
         let $c3 := time("12:23:34.930+07:00")
 
         return { "bin1": interval-bin($c1, date("1990-01-01"), year-month-duration("P1Y")),
-         "bin2": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M")),
-         "bin3": interval-bin($c3, time("00:00:00"), day-time-duration("PD1M")),
-         "bin4": interval-bin($c2, datetime("2013-01-01T00:00:00.000"), day-time-duration("PT24H"))
-       }
+          "bin2": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M")),
+          "bin3": interval-bin($c3, time("00:00:00"), day-time-duration("PT1M")),
+          "bin4": interval-bin($c2, datetime("2013-01-01T00:00:00.000"), day-time-duration("PT24H"))
+        }
 
    * The expected result is:
 
-        { "bin1": interval-date("2010-01-01, 2011-01-01"),
-          "bin2": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z"),
-          "bin3": interval-time("05:23:00.000Z, 05:24:00.000Z"),
-          "bin4": interval-datetime("-1987-11-19T00:00:00.000Z, -1987-11-20T00:00:00.000Z")}
-
-
-### interval-from-date ###
- * Syntax:
-
-        interval-from-date(string1, string2)
-
- * Constructor function for the `interval` type by parsing two date strings.
- * Arguments:
-    * `string1` : The `string` value representing the starting date.
-    * `string2` : The `string` value representing the ending date.
- * Return Value:
-    * An `interval` value between the two dates.
-
- * Example:
-
-        {"date-interval": interval-from-date("2012-01-01", "2013-04-01")}
-
-
- * The expected result is:
-
-        { "date-interval": interval-date("2012-01-01, 2013-04-01") }
-
-
-### interval-from-time ###
- * Syntax:
-
-        interval-from-time(string1, string2)
-
- * Constructor function for the `interval` type by parsing two time strings.
- * Arguments:
-    * `string1` : The `string` value representing the starting time.
-    * `string2` : The `string` value representing the ending time.
- * Return Value:
-    * An `interval` value between the two times.
-
- * Example:
-
-        {"time-interval": interval-from-time("12:23:34.456Z", "233445567+0800")}
-
-
- * The expected result is:
-
-        { "time-interval": interval-time("12:23:34.456Z, 15:34:45.567Z") }
-
-
-### interval-from-datetime ###
- * Syntax:
-
-        interval-from-datetime(string1, string2)
-
- * Constructor function for `interval` type by parsing two datetime strings.
- * Arguments:
-    * `string1` : The `string` value representing the starting datetime.
-    * `string2` : The `string` value representing the ending datetime.
- * Return Value:
-    * An `interval` value between the two datetimes.
-
- * Example:
-
-        {"datetime-interval": interval-from-datetime("2012-01-01T12:23:34.456+08:00", "20130401T153445567Z")}
-
-
- * The expected result is:
-
-        { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
+        { "bin1": interval(date("2010-01-01"), date("2011-01-01")),
+          "bin2": interval(datetime("-1987-07-01T00:00:00.000Z"), datetime("-1986-01-01T00:00:00.000Z")),
+          "bin3": interval(time("05:23:00.000Z"), time("05:24:00.000Z")),
+          "bin4": interval(datetime("-1987-11-19T00:00:00.000Z"), datetime("-1987-11-20T00:00:00.000Z")) }
 
 
 ### interval-start-from-date/time/datetime ###
@@ -2179,7 +2113,9 @@ See the [Allen's Relations](allens.html).
 
  * The expectecd result is:
 
-        { "interval1": interval-date("1984-01-01, 1985-01-01"), "interval2": interval-time("02:23:28.394Z, 05:47:28.394Z"), "interval3": interval-datetime("1999-09-09T09:09:09.999Z, 1999-12-09T09:09:09.999Z") }
+        { "interval1": interval(date("1984-01-01"), date("1985-01-01")),
+          "interval2": interval(time("02:23:28.394Z"), time("05:47:28.394Z")),
+          "interval3": interval(datetime("1999-09-09T09:09:09.999Z"), datetime("1999-12-09T09:09:09.999Z")) }
 
 
 ### overlap-bins ###
@@ -2214,9 +2150,16 @@ See the [Allen's Relations](allens.html).
 
    * The expected result is:
 
-        { "timebins": [ interval-time("17:00:00.000Z, 17:30:00.000Z"), interval-time("17:30:00.000Z, 18:00:00.000Z"), interval-time("18:00:00.000Z, 18:30:00.000Z"), interval-time("18:30:00.000Z, 19:00:00.000Z") ],
-          "datebins": [ interval-date("1970-01-01, 1990-01-01"), interval-date("1990-01-01, 2010-01-01"), interval-date("2010-01-01, 2030-01-01") ],
-          "datetimebins": [ interval-datetime("1800-01-01T00:00:00.000Z, 1900-01-01T00:00:00.000Z"), interval-datetime("1900-01-01T00:00:00.000Z, 2000-01-01T00:00:00.000Z"), interval-datetime("2000-01-01T00:00:00.000Z, 2100-01-01T00:00:00.000Z") ] }
+        { "timebins": [ interval(time("17:00:00.000Z"), time("17:30:00.000Z")),
+              interval(time("17:30:00.000Z"), time("18:00:00.000Z")),
+              interval(time("18:00:00.000Z"), time("18:30:00.000Z")),
+              interval(time("18:30:00.000Z"), time("19:00:00.000Z")) ],
+          "datebins": [ interval(date("1970-01-01"), date("1990-01-01")),
+              interval(date("1990-01-01"), date("2010-01-01")),
+              interval(date("2010-01-01"), date("2030-01-01")) ],
+          "datetimebins": [ interval(datetime("1800-01-01T00:00:00.000Z"), datetime("1900-01-01T00:00:00.000Z")),
+              interval(datetime("1900-01-01T00:00:00.000Z"), datetime("2000-01-01T00:00:00.000Z")),
+              interval(datetime("2000-01-01T00:00:00.000Z"), datetime("2100-01-01T00:00:00.000Z")) ] }
 
 
 ## <a id="RecordFunctions">Record Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
