@@ -30,24 +30,46 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
     private final long partitionStart;
     private final long partitionDuration;
 
-    public IntervalPartitionComputerFactory(int intervalFieldId, int k, long partitionStart, long partitionDuration) {
+    public IntervalPartitionComputerFactory(int intervalFieldId, int k, long partitionStart, long partitionEnd)
+            throws HyracksDataException {
         this.intervalFieldId = intervalFieldId;
         this.k = k;
         this.partitionStart = partitionStart;
-        this.partitionDuration = partitionDuration;
+        if (k <= 2) {
+            throw new HyracksDataException("k is to small for interval partitioner.");
+        }
+        this.partitionDuration = (partitionEnd - partitionStart) / (k - 2);
     }
 
     @Override
     public ITuplePartitionComputer createPartitioner() {
         return new ITuplePartitionComputer() {
             @Override
-            public int partition(IFrameTupleAccessor accessor, int tIndex, int k) throws HyracksDataException {
-                long partitionI = IntervalPartitionUtil.getIntervalPartitionI(accessor, tIndex, intervalFieldId, partitionStart,
-                        partitionDuration, k);
-                long partitionJ = IntervalPartitionUtil.getIntervalPartitionJ(accessor, tIndex, intervalFieldId, partitionStart,
-                        partitionDuration, k);
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int nPartitions) throws HyracksDataException {
+                long partitionI = getIntervalPartitionI(accessor, tIndex, intervalFieldId);
+                long partitionJ = getIntervalPartitionJ(accessor, tIndex, intervalFieldId);
                 return IntervalPartitionUtil.intervalPartitionMap(partitionI, partitionJ, k);
             }
+
+            private long getIntervalPartition(long point) throws HyracksDataException {
+                if (point < partitionStart) {
+                    return 0;
+                }
+                point = Math.floorDiv((point - partitionStart), partitionDuration);
+                // Add one to the partition, since 0 represents any point before the start partition point.
+                return Math.min(point + 1, k - 1l);
+            }
+
+            public long getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)
+                    throws HyracksDataException {
+                return getIntervalPartition(IntervalPartitionUtil.getIntervalStart(accessor, tIndex, fieldId));
+            }
+
+            public long getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId)
+                    throws HyracksDataException {
+                return getIntervalPartition(IntervalPartitionUtil.getIntervalEnd(accessor, tIndex, fieldId));
+            }
+
         };
     }
 

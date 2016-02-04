@@ -2,10 +2,10 @@
 { "staff": "Elisabeth", "student": "Mary" }
 { "staff": "Elisabeth", "student": "Steve" }
 { "staff": "Elisabeth", "student": "Tess" }
-{ "staff": "Frank", "student": "Karen" }
-{ "staff": "Mary", "student": "Karen" }
-{ "staff": "Mary", "student": "Steve" }
-{ "staff": "Mary", "student": "Tess" }
+{ "staff": "Franklin", "student": "Karen" }
+{ "staff": "Maryann", "student": "Karen" }
+{ "staff": "Maryann", "student": "Steve" }
+{ "staff": "Maryann", "student": "Tess" }
 { "staff": "Vicky", "student": "Charles" }
 { "staff": "Vicky", "student": "Frank" }
 { "staff": "Vicky", "student": "Karen" }

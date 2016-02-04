@@ -105,12 +105,12 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
         IPartitioningProperty pp = null;
         ArrayList<OrderColumn> order = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysLeftBranch) {
-            order.add(new OrderColumn(v, OrderKind.ASC));
+            order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         pp = new OrderedPartitionedProperty(order, null, rangeMap, RangePartitioningType.PROJECT);
         List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
         propsLocal.add(new LocalOrderProperty(order));
-        deliveredProperties = new StructuralPropertiesVector(pp, null);
+        deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
     }
 
     @Override
@@ -126,13 +126,13 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
 
         ArrayList<OrderColumn> orderLeft = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysLeftBranch) {
-            orderLeft.add(new OrderColumn(v, OrderKind.ASC));
+            orderLeft.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         ispLeft.add(new LocalOrderProperty(orderLeft));
 
         ArrayList<OrderColumn> orderRight = new ArrayList<OrderColumn>();
         for (LogicalVariable v : keysRightBranch) {
-            orderRight.add(new OrderColumn(v, OrderKind.ASC));
+            orderRight.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         ispRight.add(new LocalOrderProperty(orderRight));
 
@@ -141,8 +141,8 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
             ppRight = new OrderedPartitionedProperty(orderRight, null, rangeMap, mjcf.getRightPartitioningType());
         }
 
-        pv[0] = new StructuralPropertiesVector(ppLeft, null);
-        pv[1] = new StructuralPropertiesVector(ppRight, null);
+        pv[0] = new StructuralPropertiesVector(ppLeft, ispLeft);
+        pv[1] = new StructuralPropertiesVector(ppRight, ispRight);
         IPartitioningRequirementsCoordinator prc = IPartitioningRequirementsCoordinator.NO_COORDINATION;
         return new PhysicalRequirements(pv, prc);
     }

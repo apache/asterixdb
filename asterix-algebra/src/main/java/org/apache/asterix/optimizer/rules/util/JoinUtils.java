@@ -62,14 +62,14 @@ public class JoinUtils {
 
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        List<LogicalVariable> sideLeft = new LinkedList<LogicalVariable>();
-        List<LogicalVariable> sideRight = new LinkedList<LogicalVariable>();
-        List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();
-        List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         ILogicalExpression conditionLE = op.getCondition().getValue();
         if (conditionLE.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return;
         }
+        List<LogicalVariable> sideLeft = new LinkedList<LogicalVariable>();
+        List<LogicalVariable> sideRight = new LinkedList<LogicalVariable>();
+        List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();
+        List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
         FunctionIdentifier fi = isIntervalJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight);
         if (fi != null) {
@@ -109,7 +109,7 @@ public class JoinUtils {
             IOptimizationContext context) {
         IMergeJoinCheckerFactory mjcf = (IMergeJoinCheckerFactory) getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), sideLeft, sideRight, mjcf, rangeMap));
+                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
     }
 
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,

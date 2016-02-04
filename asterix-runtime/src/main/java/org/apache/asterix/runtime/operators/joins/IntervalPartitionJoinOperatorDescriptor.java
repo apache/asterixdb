@@ -154,7 +154,6 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
             final int k = IntervalPartitionUtil.determineK();
             final long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeMap, partition);
             final long partitionEnd = IntervalPartitionUtil.getEndOfPartition(rangeMap, partition);
-            final long partitionDuration = (partitionEnd - partitionStart) / k;
 
             final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
                     : predEvaluatorFactory.createPredicateEvaluator());
@@ -163,17 +162,20 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
 
-                ITuplePartitionComputer buildHpc = new IntervalPartitionComputerFactory(buildKey, k, partitionStart,
-                        partitionDuration).createPartitioner();
-                ITuplePartitionComputer probeHpc = new IntervalPartitionComputerFactory(probeKey, k, partitionStart,
-                        partitionDuration).createPartitioner();
-
                 @Override
                 public void open() throws HyracksDataException {
                     if (memsize <= 2) {
                         // Dedicated buffers: One buffer to read and one buffer for output
                         throw new HyracksDataException("not enough memory for join");
                     }
+                    if (k <= 2) {
+                        throw new HyracksDataException("not enough partitions (k) for interval partition join");
+                    }
+                    ITuplePartitionComputer buildHpc = new IntervalPartitionComputerFactory(buildKey, k, partitionStart,
+                            partitionEnd).createPartitioner();
+                    ITuplePartitionComputer probeHpc = new IntervalPartitionComputerFactory(probeKey, k, partitionStart,
+                            partitionEnd).createPartitioner();
+
                     state.partition = partition;
                     state.k = k;
                     state.intervalPartitions = IntervalPartitionUtil.getMaxPartitions(state.k);

@@ -25,10 +25,8 @@ import java.util.HashSet;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.storage.IGrowableIntArray;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 
 public class IntervalPartitionUtil {
 
@@ -97,30 +95,6 @@ public class IntervalPartitionUtil {
         return (k * k + k) / 2;
     }
 
-    public static IGrowableIntArray[] getJoinPartitionIntArray(int k, IIntervalMergeJoinChecker imjc) {
-        IGrowableIntArray[] buildPartitionMap = new IntArrayList[getMaxPartitions(k)];
-        for (int buildStart = 0; buildStart < k; ++buildStart) {
-            for (int buildEnd = buildStart; buildEnd < k; ++buildEnd) {
-                //                System.out.println("Outer Partition: (" + buildStart + ", " + buildEnd + ") "
-                //                        + intervalPartitionMap(buildStart, buildEnd, k));
-                buildPartitionMap[intervalPartitionMap(buildStart, buildEnd, k)] = new IntArrayList(5, 5);
-                for (int probeStart = 0; probeStart < k; ++probeStart) {
-                    for (int probeEnd = probeStart; probeEnd < k; ++probeEnd) {
-                        //                        System.out.print("  Inner Partition: (" + probeStart + ", " + probeEnd + ") "
-                        //                                + intervalPartitionMap(probeStart, probeEnd, k));
-                        if (imjc.compareInterval(buildStart, buildEnd + 1, probeStart, probeEnd + 1)) {
-                            //                            System.out.print(" matches");
-                            buildPartitionMap[intervalPartitionMap(buildStart, buildEnd, k)]
-                                    .add(intervalPartitionMap(probeStart, probeEnd, k));
-                        }
-                        //                        System.out.println();
-                    }
-                }
-            }
-        }
-        return buildPartitionMap;
-    }
-
     public static ArrayList<HashSet<Integer>> getJoinPartitionListOfSets(int k, IIntervalMergeJoinChecker imjc) {
         ArrayList<HashSet<Integer>> buildPartitionMap = new ArrayList<HashSet<Integer>>();
         for (int i = 0; i < getMaxPartitions(k); ++i) {
@@ -142,16 +116,6 @@ public class IntervalPartitionUtil {
             }
         }
         return buildPartitionMap;
-    }
-
-    public static void printJoinPartitionMap(IGrowableIntArray[] partitionMap) {
-        for (int i = 0; i < partitionMap.length; ++i) {
-            System.out.print("Build partition " + i + " must join with prode partition(s): ");
-            for (int j = 0; j < partitionMap[i].size(); ++j) {
-                System.out.print(partitionMap[i].get(j) + " ");
-            }
-            System.out.println("");
-        }
     }
 
     public static void printJoinPartitionMap(ArrayList<HashSet<Integer>> partitionMap) {
@@ -252,18 +216,6 @@ public class IntervalPartitionUtil {
         }
         p += i;
         return p;
-    }
-
-    public static long getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId, long partitionStart,
-            long partitionDuration, int k) throws HyracksDataException {
-        long i = Math.floorDiv((getIntervalStart(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
-        return Math.max(0, Math.min(i, k - 1l));
-    }
-
-    public static long getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId, long partitionStart,
-            long partitionDuration, int k) throws HyracksDataException {
-        long j = Math.floorDiv((getIntervalEnd(accessor, tIndex, fieldId) - partitionStart), partitionDuration);
-        return Math.max(0, Math.min(j, k - 1l));
     }
 
     public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId)

@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 /**
  * Special interval partition logic for interval partition joins.
- *
  * Interval Partition Logic is used by the interval partition join to determine
  * which partitions have intervals that meet the given Allen's relation.
  *
@@ -46,6 +45,10 @@ public class IntervalPartitionLogic extends IntervalLogic {
         return e1.compareTo(s2) <= 0;
     }
 
+    public static <T extends Comparable<T>> boolean after(T s1, T e1, T s2, T e2) {
+        return before(s2, e2, s1, e1);
+    }
+
     /**
      * Something at the end of interval 1 is contained as the beginning of interval 2.
      *
@@ -62,6 +65,10 @@ public class IntervalPartitionLogic extends IntervalLogic {
      */
     public static <T extends Comparable<T>> boolean overlaps(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) <= 0 && e1.compareTo(s2) >= 0 && e2.compareTo(e1) >= 0;
+    }
+
+    public static <T extends Comparable<T>> boolean overlappedBy(T s1, T e1, T s2, T e2) {
+        return overlaps(s2, e2, s1, e1);
     }
 
     /**
@@ -98,4 +105,9 @@ public class IntervalPartitionLogic extends IntervalLogic {
     public static <T extends Comparable<T>> boolean covers(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) <= 0 && e1.compareTo(e2) >= 0;
     }
+
+    public static <T extends Comparable<T>> boolean coveredBy(T s1, T e1, T s2, T e2) {
+        return covers(s2, e2, s1, e1);
+    }
+
 }
