@@ -59,7 +59,7 @@ public abstract class AbstractPartitionDataWriter implements IFrameWriter {
     public void close() throws HyracksDataException {
         for (int i = 0; i < pWriters.length; ++i) {
             if (allocatedFrame) {
-                appenders[i].flush(pWriters[i], true);
+                appenders[i].write(pWriters[i], true);
             }
             pWriters[i].close();
         }

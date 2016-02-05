@@ -38,8 +38,8 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
-import org.apache.hyracks.dataflow.std.buffermanager.DeletableFramePool;
-import org.apache.hyracks.dataflow.std.buffermanager.IDeletableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
@@ -72,7 +72,7 @@ public class MergeJoiner {
 
     private final TuplePointer tp;
     private final List<TuplePointer> memoryTuples;
-    private final IDeletableFramePool framePool;
+    private final IDeallocatableFramePool framePool;
     private IDeletableTupleBufferManager bufferManager;
     private ITupleBufferAccessor memoryAccessor;
 
@@ -103,7 +103,7 @@ public class MergeJoiner {
         rightBufferTupleIndex = -1;
 
         // Memory (right buffer)
-        framePool = new DeletableFramePool(ctx, (memorySize - 1) * ctx.getInitialFrameSize());
+        framePool = new DeallocatableFramePool(ctx, (memorySize - 1) * ctx.getInitialFrameSize());
         memoryTuples = new ArrayList<TuplePointer>();
         tp = new TuplePointer();
 
@@ -135,12 +135,12 @@ public class MergeJoiner {
     }
 
     public void closeResult(IFrameWriter writer) throws HyracksDataException {
-        resultAppender.flush(writer, true);
+        resultAppender.write(writer, true);
     }
 
     private void addToRunFile(IFrameTupleAccessor accessor, int idx) throws HyracksDataException {
         if (!runFileAppender.append(accessor, idx)) {
-            runFileAppender.flush(runFileWriter, true);
+            runFileAppender.write(runFileWriter, true);
             runFileAppender.append(accessor, idx);
         }
     }
