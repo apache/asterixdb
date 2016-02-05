@@ -127,13 +127,6 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) {
         // During a comparison, since proper type promotion among several numeric types are required,
         // we will use AObjectAscBinaryComparatorFactory, instead of using a specific comparator
-        if (type == null) {
-            return anyBinaryComparatorFactory(ascending);
-        }
-        IAType aqlType = (IAType) type;
-        if (aqlType.getTypeTag() == ATypeTag.INTERVAL) {
-            return addOffset(intervalBinaryComparatorFactory(ascending), ascending);
-        }
         return anyBinaryComparatorFactory(ascending);
     }
 

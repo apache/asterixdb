@@ -39,14 +39,10 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
-import org.apache.hyracks.dataflow.std.buffermanager.FrameFreeSlotLastFit;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
-import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.IFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferAccessor;
-import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
-import org.apache.hyracks.dataflow.std.buffermanager.VariableFrameMemoryManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
@@ -130,7 +126,7 @@ public class SortMergeIntervalJoiner {
 
     private void addToRunFile(IFrameTupleAccessor accessor, int idx) throws HyracksDataException {
         if (!runFileAppender.append(accessor, idx)) {
-            runFileAppender.flush(runFileWriter, true);
+            runFileAppender.write(runFileWriter, true);
             runFileAppender.append(accessor, idx);
         }
     }

@@ -26,15 +26,17 @@ public class IntervalLogic {
 
     /**
      * Anything from interval 1 is less than anything from interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #after(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean before(T s1, T e1, T s2, T e2) {
         return e1.compareTo(s2) < 0;
@@ -46,15 +48,17 @@ public class IntervalLogic {
 
     /**
      * The end of interval 1 is the same as the start of interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #metBy(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean meets(T s1, T e1, T s2, T e2) {
         return e1.compareTo(s2) == 0;
@@ -66,15 +70,17 @@ public class IntervalLogic {
 
     /**
      * Something at the end of interval 1 is contained as the beginning of interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #overlappedBy(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean overlaps(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) < 0 && e1.compareTo(s2) > 0 && e2.compareTo(e1) > 0;
@@ -86,29 +92,34 @@ public class IntervalLogic {
 
     /**
      * Something is shared by both interval 1 and interval 2.
-     * <p/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
      */
-    public static <T extends Comparable<T>> boolean overlap(T s1, T e1, T s2, T e2) {
-        return (s2.compareTo(s1) >= 0 && s2.compareTo(e1) < 0) || (e2.compareTo(e1) <= 0 && e2.compareTo(s1) > 0);
+    public static <T extends Comparable<T>> boolean overlapping(T s1, T e1, T s2, T e2) {
+        return s1.compareTo(e2) <= 0 && e1.compareTo(s2) >= 0 && e2.compareTo(s1) != 0 && s2.compareTo(e1) != 0;
     }
 
     /**
      * Anything from interval 1 is contained in the beginning of interval 2.
-     * <p/>
-     * |------|<br/>
-     * |-------|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #startedBy(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean starts(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) == 0 && e1.compareTo(e2) <= 0;
@@ -120,15 +131,17 @@ public class IntervalLogic {
 
     /**
      * Anything from interval 2 is in interval 1.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;|----|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #coveredBy(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean covers(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) <= 0 && e1.compareTo(e2) >= 0;
@@ -140,15 +153,17 @@ public class IntervalLogic {
 
     /**
      * Anything from interval 1 is from the ending part of interval 2.
-     * <p/>
-     * &nbsp;&nbsp;|-----|<br/>
-     * |------|<br/>
      *
      * @param s1
+     *            First interval start point
      * @param e1
+     *            First interval end point
      * @param s2
+     *            Second interval start point
      * @param e2
-     * @return
+     *            Second interval end point
+     * @return boolean
+     * @see #endedBy(Comparable, Comparable, Comparable, Comparable)
      */
     public static <T extends Comparable<T>> boolean ends(T s1, T e1, T s2, T e2) {
         return s1.compareTo(s2) >= 0 && e1.compareTo(e2) == 0;

@@ -78,7 +78,7 @@ public class InMemoryIntervalPartitionJoin {
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        appender.flush(writer, true);
+        appender.write(writer, true);
     }
 
     private void appendToResult(IFrameTupleAccessor accessorBuild, int buildSidetIx, IFrameTupleAccessor accessorProbe,

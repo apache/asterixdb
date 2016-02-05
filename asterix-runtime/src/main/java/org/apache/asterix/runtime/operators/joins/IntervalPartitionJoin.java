@@ -450,7 +450,7 @@ public class IntervalPartitionJoin {
         if (!bigProbeFrameAppender.append(accessorProbe, i)) {
             throw new HyracksDataException("The given tuple is too big");
         }
-        bigProbeFrameAppender.flush(runFileWriter, true);
+        bigProbeFrameAppender.write(runFileWriter, true);
     }
 
     public RunFileReader getBuildRFReader(int pid) throws HyracksDataException {

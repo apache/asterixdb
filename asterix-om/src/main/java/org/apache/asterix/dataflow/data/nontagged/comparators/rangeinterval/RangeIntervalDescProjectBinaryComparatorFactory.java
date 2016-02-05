@@ -46,9 +46,7 @@ public class RangeIntervalDescProjectBinaryComparatorFactory implements IBinaryC
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                return Long.compare(
-                        AInt64SerializerDeserializer.getLong(b1,
-                                s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
+                return Long.compare(AIntervalSerializerDeserializer.getIntervalEnd(b1, s1),
                         AInt64SerializerDeserializer.getLong(b2, s2));
             }
         };

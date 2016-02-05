@@ -46,14 +46,10 @@ public class RangeIntervalDescSplitBinaryComparatorFactory implements IBinaryCom
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Long.compare(
-                        AInt64SerializerDeserializer.getLong(b1,
-                                s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
+                int c = Long.compare(AIntervalSerializerDeserializer.getIntervalEnd(b1, s1),
                         AInt64SerializerDeserializer.getLong(b2, s2));
                 if (c < 0) {
-                    c = Long.compare(
-                            AInt64SerializerDeserializer.getLong(b1,
-                                    s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
+                    c = Long.compare(AIntervalSerializerDeserializer.getIntervalStart(b1, s1),
                             AInt64SerializerDeserializer.getLong(b2, s2));
                     if (c > 0) {
                         c = 0;
