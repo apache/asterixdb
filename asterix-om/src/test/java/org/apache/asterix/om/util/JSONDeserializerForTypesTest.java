@@ -31,7 +31,6 @@ import org.apache.asterix.om.types.IAType;
 import org.junit.Assert;
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
 public class JSONDeserializerForTypesTest {
 
     @Test

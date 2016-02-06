@@ -44,7 +44,6 @@ import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
 public class VersionAPIServletTest {
 
     @Test

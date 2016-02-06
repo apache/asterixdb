@@ -36,8 +36,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import junit.extensions.PA;
-
 import org.apache.asterix.feed.CentralFeedManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -58,7 +56,8 @@ import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
+import junit.extensions.PA;
+
 public class ConnectorAPIServletTest {
 
     @Test
