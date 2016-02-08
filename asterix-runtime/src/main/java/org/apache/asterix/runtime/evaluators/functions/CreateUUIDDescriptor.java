@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableUUID;
+import org.apache.asterix.om.base.AGeneratedUUID;
 import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -58,7 +58,7 @@ public class CreateUUIDDescriptor extends AbstractScalarFunctionDynamicDescripto
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    final AMutableUUID uuid = new AMutableUUID(0, 0);
+                    final AGeneratedUUID uuid = new AGeneratedUUID();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

@@ -24,7 +24,6 @@ import java.io.PrintStream;
 import org.apache.asterix.om.base.AUUID;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.data.std.primitive.LongPointable;
 
 public class AUUIDPrinter implements IPrinter {
 
@@ -36,10 +35,10 @@ public class AUUIDPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long msb = LongPointable.getLong(b, s + 1);
-        long lsb = LongPointable.getLong(b, s + 9);
-
-        ps.print("uuid(\"" + AUUID.toStringLiteralOnly(msb, lsb) + "\")");
+        StringBuilder buf = new StringBuilder(AUUID.UUID_CHARS + 8);
+        buf.append("uuid(\"");
+        AUUID.appendLiteralOnly(b, s + 1, buf).append("\")");
+        ps.print(buf.toString());
     }
 
 }

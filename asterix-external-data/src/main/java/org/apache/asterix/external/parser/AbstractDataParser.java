@@ -92,7 +92,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableString aString = new AMutableString("");
     protected AMutableBinary aBinary = new AMutableBinary(null, 0, 0);
     protected AMutableString aStringFieldName = new AMutableString("");
-    protected AMutableUUID aUUID = new AMutableUUID(0, 0);
+    protected AMutableUUID aUUID = new AMutableUUID();
     // For temporal and spatial data types
     protected AMutableTime aTime = new AMutableTime(0);
     protected AMutableDateTime aDateTime = new AMutableDateTime(0L);
@@ -145,7 +145,7 @@ public abstract class AbstractDataParser implements IDataParser {
 
     // For UUID, we assume that the format is the string representation of UUID
     // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
-    // Thus, we need to call UUID.fromStringToAMuatbleUUID() to convert it to the internal representation (two long values).
+    // Thus, we need to call UUID.fromStringToAMutableUUID() to convert it to the internal representation (byte []).
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AUUID);

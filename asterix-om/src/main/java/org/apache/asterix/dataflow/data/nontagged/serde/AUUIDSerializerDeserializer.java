@@ -21,12 +21,10 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.AUUID;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 
 public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUID> {
 
@@ -39,20 +37,12 @@ public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUI
 
     @Override
     public AUUID deserialize(DataInput in) throws HyracksDataException {
-        long msb = Integer64SerializerDeserializer.INSTANCE.deserialize(in);
-        long lsb = Integer64SerializerDeserializer.INSTANCE.deserialize(in);
-        // for each deserialization, a new object is created. maybe we should change this.
-        return new AUUID(msb, lsb);
+        return AUUID.readFrom(in);
     }
 
     @Override
     public void serialize(AUUID instance, DataOutput out) throws HyracksDataException {
-        try {
-            Integer64SerializerDeserializer.INSTANCE.serialize(instance.getMostSignificantBits(), out);
-            Integer64SerializerDeserializer.INSTANCE.serialize(instance.getLeastSignificantBits(), out);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        instance.writeTo(out);
     }
 
 }

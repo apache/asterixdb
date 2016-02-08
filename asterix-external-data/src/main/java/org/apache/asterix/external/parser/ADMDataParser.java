@@ -55,7 +55,6 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.operators.file.adm.AdmLexer;
-import org.apache.asterix.runtime.operators.file.adm.AdmLexerException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -296,7 +295,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     // Dealing with UUID type that is represented by a string
                     final String tokenImage = admLexer.getLastTokenImage().substring(1,
                             admLexer.getLastTokenImage().length() - 1);
-                    aUUID.fromStringToAMuatbleUUID(tokenImage);
+                    aUUID.parseUUIDString(tokenImage);
                     uuidSerde.serialize(aUUID, out);
                 } else {
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -1023,7 +1022,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 APolygonSerializerDeserializer.parse(unquoted, out);
                 return true;
             case UUID:
-                aUUID.fromStringToAMuatbleUUID(unquoted);
+                aUUID.parseUUIDString(unquoted);
                 uuidSerde.serialize(aUUID, out);
                 return true;
             default:
