@@ -117,7 +117,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         dest.getAnnotations().putAll(src.getAnnotations());
     }
 
-    public ILogicalOperator deepCopy(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
+    public ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
+        // The deep copy call outside this visitor always has a null argument.
+        return deepCopy(op, null);
+    }
+
+    private ILogicalOperator deepCopy(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
         ILogicalOperator opCopy = op.accept(this, arg);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(opCopy, context);
         return opCopy;
@@ -308,8 +313,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<ILogicalPlan>();
 
         GroupByOperator opCopy = new GroupByOperator(groupByListCopy, decorListCopy, nestedPlansCopy);
-        deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;
     }
 
@@ -348,7 +353,9 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitNestedTupleSourceOperator(NestedTupleSourceOperator op, ILogicalOperator arg)
             throws AlgebricksException {
-        NestedTupleSourceOperator opCopy = new NestedTupleSourceOperator(op.getDataSourceReference());
+        Mutable<ILogicalOperator> dataSourceReference = arg == null ? op.getDataSourceReference()
+                : new MutableObject<ILogicalOperator>(arg);
+        NestedTupleSourceOperator opCopy = new NestedTupleSourceOperator(dataSourceReference);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -423,8 +430,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitSubplanOperator(SubplanOperator op, ILogicalOperator arg) throws AlgebricksException {
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<ILogicalPlan>();
         SubplanOperator opCopy = new SubplanOperator(nestedPlansCopy);
-        deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;
     }
 
