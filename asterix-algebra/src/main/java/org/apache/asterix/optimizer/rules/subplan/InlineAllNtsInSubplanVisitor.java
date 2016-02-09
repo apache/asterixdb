@@ -403,7 +403,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context);
-        ILogicalOperator copiedInputOperator = deepCopyVisitor.deepCopy(subplanInputOperator, null);
+        ILogicalOperator copiedInputOperator = deepCopyVisitor.deepCopy(subplanInputOperator);
 
         // Updates the primary key info in the copied plan segment.
         Map<LogicalVariable, LogicalVariable> varMap = deepCopyVisitor.getInputToOutputVariableMapping();

@@ -4951,6 +4951,13 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="subquery">
+        <test-case FilePath="subquery">
+            <compilation-unit name="gby_inline">
+                <output-dir compare="Text">gby_inline</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="subset-collection">
         <test-case FilePath="subset-collection">
             <compilation-unit name="01">
