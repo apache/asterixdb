@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.serializer;
 import java.io.PrintStream;
 import java.nio.BufferOverflowException;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
@@ -56,11 +55,7 @@ public class ResultSerializerFactoryProvider implements IResultSerializerFactory
 
                     @Override
                     public void init() throws HyracksDataException {
-                        try {
-                            writer.init();
-                        } catch (AlgebricksException e) {
-                            throw new HyracksDataException(e);
-                        }
+                        writer.init();
                     }
 
                     @Override
@@ -69,8 +64,6 @@ public class ResultSerializerFactoryProvider implements IResultSerializerFactory
                             writer.printTuple(tAccess, tIdx);
                         } catch (BufferOverflowException e) {
                             return false;
-                        } catch (AlgebricksException e) {
-                            throw new HyracksDataException(e);
                         }
                         return true;
                     }

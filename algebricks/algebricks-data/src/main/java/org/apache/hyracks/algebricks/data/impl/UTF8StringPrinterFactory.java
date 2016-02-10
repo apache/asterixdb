@@ -21,9 +21,9 @@ package org.apache.hyracks.algebricks.data.impl;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class UTF8StringPrinterFactory implements IPrinterFactory {
@@ -40,16 +40,16 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
         return new IPrinter() {
 
             @Override
-            public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 try {
                     UTF8StringUtil.printUTF8StringWithQuotes(b, s, l, ps);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
             }
         };
     }

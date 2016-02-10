@@ -26,11 +26,9 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.impl.IntegerPrinterFactory;
-import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 import org.apache.hyracks.algebricks.examples.piglet.types.Type;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
@@ -41,7 +39,7 @@ public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException {
+    public IPrinterFactory getPrinterFactory(Object type) {
         Type t = (Type) type;
         switch (t.getTag()) {
             case INTEGER:
@@ -69,15 +67,15 @@ public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
         public IPrinter createPrinter() {
             return new IPrinter() {
                 @Override
-                public void init() throws AlgebricksException {
+                public void init() {
                 }
 
                 @Override
-                public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+                public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                     try {
                         UTF8StringUtil.printUTF8StringWithQuotes(b, s, l, ps);
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
                 }
             };
@@ -97,11 +95,11 @@ public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
         public IPrinter createPrinter() {
             return new IPrinter() {
                 @Override
-                public void init() throws AlgebricksException {
+                public void init() throws HyracksDataException {
                 }
 
                 @Override
-                public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+                public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                     ps.print(FloatPointable.getFloat(b, s));
                 }
             };

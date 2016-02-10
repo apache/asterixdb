@@ -155,11 +155,7 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
                     for (int i = 0; i < printers.length; i++) {
-                        try {
-                            printers[i].print(buffer.array(), tRef.getFieldStart(i), tRef.getFieldLength(i), ps);
-                        } catch (AlgebricksException e) {
-                            throw new HyracksDataException(e);
-                        }
+                        printers[i].print(buffer.array(), tRef.getFieldStart(i), tRef.getFieldLength(i), ps);
                         ps.print(fieldDelimiter);
                         if (i == printers.length - 1) {
                             ps.print('\n');

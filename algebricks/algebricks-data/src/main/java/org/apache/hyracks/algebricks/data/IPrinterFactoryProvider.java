@@ -18,8 +18,8 @@
  */
 package org.apache.hyracks.algebricks.data;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IPrinterFactoryProvider {
-    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException;
+    IPrinterFactory getPrinterFactory(Object type) throws HyracksDataException;
 }

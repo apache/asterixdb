@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SerializedDataWriterFactory implements IAWriterFactory {
 
@@ -40,7 +40,7 @@ public class SerializedDataWriterFactory implements IAWriterFactory {
         return new IAWriter() {
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 // dump the SerializerDeserializers to disk
                 try {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -49,12 +49,12 @@ public class SerializedDataWriterFactory implements IAWriterFactory {
                     baos.writeTo(ps);
                     oos.close();
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws AlgebricksException {
+            public void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
                 for (int i = 0; i < fields.length; i++) {
                     int fldStart = tAccess.getTupleStartOffset(tIdx) + tAccess.getFieldSlotsLength()
                             + tAccess.getFieldStartOffset(tIdx, fields[i]);

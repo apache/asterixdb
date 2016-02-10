@@ -20,10 +20,10 @@ package org.apache.hyracks.algebricks.data;
 
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IPrinter {
-    public void init() throws AlgebricksException;
+    void init() throws HyracksDataException;
 
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException;
+    void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException;
 }

@@ -18,12 +18,12 @@
  */
 package org.apache.hyracks.algebricks.data;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IAWriter {
 
-    public void init() throws AlgebricksException;
+    void init() throws HyracksDataException;
 
-    public void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws AlgebricksException;
+    void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException;
 }

@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputSinkPushRuntime;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -55,11 +54,7 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
         if (first) {
             first = false;
             tAccess = new FrameTupleAccessor(inputRecordDesc);
-            try {
-                writer.init();
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            writer.init();
         }
     }
 
@@ -68,11 +63,7 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
         tAccess.reset(buffer);
         int nTuple = tAccess.getTupleCount();
         for (int t = 0; t < nTuple; t++) {
-            try {
-                writer.printTuple(tAccess, t);
-            } catch (AlgebricksException ae) {
-                throw new HyracksDataException(ae);
-            }
+            writer.printTuple(tAccess, t);
         }
     }
 

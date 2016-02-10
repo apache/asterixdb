@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 
 public class IntegerPrinterFactory implements IPrinterFactory {
@@ -40,17 +41,17 @@ public class IntegerPrinterFactory implements IPrinterFactory {
         return new IPrinter() {
 
             @Override
-            public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 int d = IntegerPointable.getInteger(b, s);
                 try {
                     WriteValueTools.writeInt(d, ps);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() {
             }
         };
     }

@@ -41,6 +41,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public final class JobGenHelper {
 
@@ -70,12 +71,16 @@ public final class JobGenHelper {
             JobGenContext context, int[] printColumns) throws AlgebricksException {
         IPrinterFactory[] pf = new IPrinterFactory[printColumns.length];
         IPrinterFactoryProvider pff = context.getPrinterFactoryProvider();
-        for (int i = 0; i < pf.length; i++) {
-            LogicalVariable v = opSchema.getVariable(printColumns[i]);
-            Object t = env.getVarType(v);
-            pf[i] = pff.getPrinterFactory(t);
+        try {
+            for (int i = 0; i < pf.length; i++) {
+                LogicalVariable v = opSchema.getVariable(printColumns[i]);
+                Object t = env.getVarType(v);
+                pf[i] = pff.getPrinterFactory(t);
+            }
+            return pf;
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
         }
-        return pf;
     }
 
     public static int[] variablesToFieldIndexes(Collection<LogicalVariable> varLogical, IOperatorSchema opSchema) {
@@ -90,7 +95,7 @@ public final class JobGenHelper {
 
     public static IBinaryHashFunctionFactory[] variablesToBinaryHashFunctionFactories(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IBinaryHashFunctionFactory[] funFactories = new IBinaryHashFunctionFactory[varLogical.size()];
         int i = 0;
         IBinaryHashFunctionFactoryProvider bhffProvider = context.getBinaryHashFunctionFactoryProvider();
@@ -103,7 +108,7 @@ public final class JobGenHelper {
 
     public static IBinaryHashFunctionFamily[] variablesToBinaryHashFunctionFamilies(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IBinaryHashFunctionFamily[] funFamilies = new IBinaryHashFunctionFamily[varLogical.size()];
         int i = 0;
         IBinaryHashFunctionFamilyProvider bhffProvider = context.getBinaryHashFunctionFamilyProvider();
@@ -116,7 +121,7 @@ public final class JobGenHelper {
 
     public static IBinaryComparatorFactory[] variablesToAscBinaryComparatorFactories(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IBinaryComparatorFactory[] compFactories = new IBinaryComparatorFactory[varLogical.size()];
         IBinaryComparatorFactoryProvider bcfProvider = context.getBinaryComparatorFactoryProvider();
         int i = 0;
@@ -140,7 +145,7 @@ public final class JobGenHelper {
 
     public static INormalizedKeyComputerFactory variablesToAscNormalizedKeyComputerFactory(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         if (nkcfProvider == null)
             return null;

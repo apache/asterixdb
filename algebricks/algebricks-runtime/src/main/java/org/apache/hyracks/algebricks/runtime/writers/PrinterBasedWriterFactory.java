@@ -20,13 +20,13 @@ package org.apache.hyracks.algebricks.runtime.writers;
 
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class PrinterBasedWriterFactory implements IAWriterFactory {
 
@@ -48,14 +48,14 @@ public class PrinterBasedWriterFactory implements IAWriterFactory {
         return new IAWriter() {
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 for (int i = 0; i < printers.length; i++) {
                     printers[i].init();
                 }
             }
 
             @Override
-            public void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws AlgebricksException {
+            public void printTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
                 for (int i = 0; i < fields.length; i++) {
                     int fldStart = tAccess.getTupleStartOffset(tIdx) + tAccess.getFieldSlotsLength()
                             + tAccess.getFieldStartOffset(tIdx, fields[i]);
