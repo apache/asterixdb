@@ -58,7 +58,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.
      * uci.ics.hyracks.api.context.IHyracksContext,

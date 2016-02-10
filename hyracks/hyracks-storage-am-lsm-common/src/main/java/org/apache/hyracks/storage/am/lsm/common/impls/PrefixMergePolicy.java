@@ -48,7 +48,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
         List<ILSMComponent> immutableComponents = new ArrayList<ILSMComponent>(index.getImmutableComponents());
         // Reverse the components order so that we look at components from oldest to newest.
         Collections.reverse(immutableComponents);
-       
+
         for (ILSMComponent c : immutableComponents) {
             if (c.getState() != ComponentState.READABLE_UNWRITABLE) {
                 return;

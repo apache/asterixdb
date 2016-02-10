@@ -20,13 +20,13 @@ package org.apache.hyracks.api.job.profiling.counters;
 
 /**
  * A namespace that holds named counters.
- * 
+ *
  * @author vinayakb
  */
 public interface ICounterContext {
     /**
      * Get a counter with the specified name.
-     * 
+     *
      * @param name
      *            - Name of the counter to get.
      * @param create

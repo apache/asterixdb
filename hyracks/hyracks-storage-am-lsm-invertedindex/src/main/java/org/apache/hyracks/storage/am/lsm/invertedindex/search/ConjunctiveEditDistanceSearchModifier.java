@@ -25,12 +25,12 @@ public class ConjunctiveEditDistanceSearchModifier extends EditDistanceSearchMod
     public ConjunctiveEditDistanceSearchModifier(int gramLength, int edThresh) {
         super(gramLength, edThresh);
     }
-   
+
     @Override
     public String toString() {
         return "Conjunctive Edit Distance Search Modifier, GramLen: " + gramLength + ", Threshold: " + edThresh;
     }
-    
+
     @Override
     public short getNumTokensLowerBound(short numQueryTokens) {
         return -1;

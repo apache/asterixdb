@@ -23,13 +23,13 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 
 public class ZCurveDoubleComparatorFactory implements ILinearizeComparatorFactory {
     private static final long serialVersionUID = 1L;
-    
+
     private int dim;
 
     public static ZCurveDoubleComparatorFactory get(int dim) {
         return new ZCurveDoubleComparatorFactory(dim);
     }
-    
+
     public ZCurveDoubleComparatorFactory(int dim) {
     	this.dim = dim;
     }

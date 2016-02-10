@@ -27,12 +27,12 @@ public class SortedIntegerFieldValueGenerator implements IFieldValueGenerator<In
         startVal = 0;
         reset();
     }
-    
+
     public SortedIntegerFieldValueGenerator(int startVal) {
         this.startVal = startVal;
         reset();
     }
-    
+
     @Override
     public Integer next() {
         return val++;

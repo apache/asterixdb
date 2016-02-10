@@ -196,7 +196,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         }
 
         // TODO: For now do not perform replacement in nested plans
-        // due to the complication of figuring out whether the firstOp in an equivalence class is within a subplan, 
+        // due to the complication of figuring out whether the firstOp in an equivalence class is within a subplan,
         // and the resulting variable will not be visible to the outside.
         // Since subplans should be eliminated in most cases, this behavior is acceptable for now.
         /*
@@ -238,7 +238,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             boolean modified = false;
             ExprEquivalenceClass exprEqClass = exprEqClassMap.get(expr);
             if (exprEqClass != null) {
-                // Replace common subexpression with existing variable. 
+                // Replace common subexpression with existing variable.
                 if (exprEqClass.variableIsSet()) {
                     Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
                     List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();

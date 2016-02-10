@@ -43,8 +43,8 @@ public abstract class VariablePropagationPolicy {
     /**
      * Adds, from each source, only variables that do not already appear in the
      * target.
-     * 
-     * 
+     *
+     *
      */
     public static final VariablePropagationPolicy ADDNEWVARIABLES = new VariablePropagationPolicy() {
         @Override

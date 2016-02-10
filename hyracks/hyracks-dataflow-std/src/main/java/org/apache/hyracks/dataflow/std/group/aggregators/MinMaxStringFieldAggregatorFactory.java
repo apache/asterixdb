@@ -55,7 +55,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory
      * #createAggregator(org.apache.hyracks.api.context.IHyracksTaskContext,

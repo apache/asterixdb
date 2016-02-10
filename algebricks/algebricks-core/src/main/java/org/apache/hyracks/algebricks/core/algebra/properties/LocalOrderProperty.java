@@ -90,7 +90,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
 
     /**
      * Whether current property implies the required property
-     * 
+     *
      * @param required
      *            , a required property
      * @return true if the current property satisfies the required property; otherwise false.

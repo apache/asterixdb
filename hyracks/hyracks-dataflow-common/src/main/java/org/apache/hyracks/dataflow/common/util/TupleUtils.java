@@ -130,7 +130,7 @@ public class TupleUtils {
         tupleCopy.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tupleCopy;
     }
-    
+
     public static void copyTuple(ArrayTupleBuilder tupleBuilder, ITupleReference tuple, int numFields) throws HyracksDataException {
         tupleBuilder.reset();
         for (int i = 0; i < numFields; i++) {

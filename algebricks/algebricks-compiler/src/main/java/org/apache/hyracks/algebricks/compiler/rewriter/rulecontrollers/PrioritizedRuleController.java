@@ -28,13 +28,13 @@ import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * 
+ *
  * Runs each rule until it produces no changes. Then the whole collection of
  * rules is run again until no change is made.
- * 
- * 
+ *
+ *
  * @author Nicola
- * 
+ *
  */
 
 public class PrioritizedRuleController extends AbstractRuleController {

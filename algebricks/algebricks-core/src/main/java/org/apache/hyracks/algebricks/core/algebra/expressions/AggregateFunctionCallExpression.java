@@ -28,17 +28,17 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
 /**
- * 
+ *
  * An aggregate function may be executed in a "two step" mode. First the
  * "step-one" aggregates are run and then the results are passed to the
  * "step-two" aggregators. The convention is the following:
- * 
+ *
  * 1. The step-one aggregate must be able to accept the same arguments as the
  * original aggregate function call.
- * 
+ *
  * 2. The step-two aggregate must be a unary function that accepts as input the
  * output of the step-one aggregate.
- * 
+ *
  */
 
 public class AggregateFunctionCallExpression extends AbstractFunctionCallExpression {

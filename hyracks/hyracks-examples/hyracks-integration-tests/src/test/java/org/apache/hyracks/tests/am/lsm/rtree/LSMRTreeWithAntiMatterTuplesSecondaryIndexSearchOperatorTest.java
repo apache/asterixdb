@@ -33,7 +33,7 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest extend
     public LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest() {
             this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
         }
-    
+
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
         return new LSMRTreeWithAntiMatterTuplesOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }

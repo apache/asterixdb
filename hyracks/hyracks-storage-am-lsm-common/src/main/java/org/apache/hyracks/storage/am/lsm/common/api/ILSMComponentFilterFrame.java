@@ -38,7 +38,7 @@ public interface ILSMComponentFilterFrame {
     public boolean isMaxTupleSet();
 
     public ITupleReference getMinTuple();
-    
+
     public ITupleReference getMaxTuple();
 
 }

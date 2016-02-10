@@ -36,13 +36,13 @@ import org.apache.hyracks.api.job.ActivityCluster;
 
 /**
  * Connector that connects operators in a Job.
- * 
+ *
  * @author vinayakb
  */
 public interface IConnectorDescriptor extends Serializable {
     /**
      * Gets the id of the connector.
-     * 
+     *
      * @return
      */
     public ConnectorDescriptorId getConnectorId();
@@ -50,7 +50,7 @@ public interface IConnectorDescriptor extends Serializable {
     /**
      * Factory method to create the send side writer that writes into this
      * connector.
-     * 
+     *
      * @param ctx
      *            Context
      * @param recordDesc
@@ -73,7 +73,7 @@ public interface IConnectorDescriptor extends Serializable {
     /**
      * Factory metod to create the receive side reader that reads data from this
      * connector.
-     * 
+     *
      * @param ctx
      *            Context
      * @param recordDesc
@@ -92,7 +92,7 @@ public interface IConnectorDescriptor extends Serializable {
 
     /**
      * Contribute any scheduling constraints imposed by this connector
-     * 
+     *
      * @param constraintAcceptor
      *            - Constraint Acceptor
      * @param ac
@@ -131,7 +131,7 @@ public interface IConnectorDescriptor extends Serializable {
 
     /**
      * Translate this connector descriptor to JSON.
-     * 
+     *
      * @return
      * @throws JSONException
      */

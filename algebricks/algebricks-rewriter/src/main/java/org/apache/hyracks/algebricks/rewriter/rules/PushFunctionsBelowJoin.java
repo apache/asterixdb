@@ -52,20 +52,20 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * a join (which may blow up the cardinality).
  * Also, this rule may help to enable other rules such as common subexpression elimination, again to reduce
  * the number of calls to expensive functions.
- * 
+ *
  * Example: (we are pushing pushMeFunc)
- * 
+ *
  * Before plan:
  * assign [$$10] <- [funcA(funcB(pushMeFunc($$3, $$4)))]
- *   join (some condition) 
+ *   join (some condition)
  *     join_branch_0 where $$3 and $$4 are not live
  *       ...
  *     join_branch_1 where $$3 and $$4 are live
  *       ...
- * 
+ *
  * After plan:
  * assign [$$10] <- [funcA(funcB($$11))]
- *   join (some condition) 
+ *   join (some condition)
  *     join_branch_0 where $$3 and $$4 are not live
  *       ...
  *     join_branch_1 where $$3 and $$4 are live

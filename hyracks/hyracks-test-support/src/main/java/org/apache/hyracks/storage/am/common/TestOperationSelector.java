@@ -33,18 +33,18 @@ public class TestOperationSelector {
         RANGE_SEARCH,
         SCAN,
         DISKORDER_SCAN,
-        MERGE        
+        MERGE
     }
-    
+
     private final TestOperation[] ops;
-    private final int[] cumulIntRanges;    
-    
+    private final int[] cumulIntRanges;
+
     public TestOperationSelector(TestOperation[] ops, double[] opProbs) {
         sanityCheck(ops, opProbs);
         this.ops = ops;
         this.cumulIntRanges = ProbabilityHelper.getCumulIntRanges(opProbs);
     }
-    
+
     private void sanityCheck(TestOperation[] ops, double[] opProbs) {
         if (ops.length == 0) {
             throw new RuntimeException("Empty op array.");
@@ -63,7 +63,7 @@ public class TestOperationSelector {
             throw new RuntimeException("Op probabilities don't add up to 1.");
         }
     }
-    
+
     public TestOperation getOp(int randomInt) {
         int ix = ProbabilityHelper.choose(cumulIntRanges, randomInt);
         return ops[ix];

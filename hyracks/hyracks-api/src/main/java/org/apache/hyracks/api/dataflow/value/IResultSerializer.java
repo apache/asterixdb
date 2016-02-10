@@ -31,7 +31,7 @@ public interface IResultSerializer extends Serializable {
 
     /**
      * Method to serialize the result and append it to the provided output stream
-     * 
+     *
      * @param tAccess
      *            - A frame tuple accessor object that contains the original data to be serialized
      * @param tIdx

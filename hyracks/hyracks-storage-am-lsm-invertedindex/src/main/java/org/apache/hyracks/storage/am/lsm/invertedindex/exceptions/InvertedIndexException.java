@@ -24,10 +24,10 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 public class InvertedIndexException extends IndexException {
     private static final long serialVersionUID = 1L;
 
-    public InvertedIndexException(Exception e) {        
+    public InvertedIndexException(Exception e) {
         super(e);
     }
-    
+
     public InvertedIndexException(String msg) {
         super(msg);
     }

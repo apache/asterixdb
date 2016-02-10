@@ -29,6 +29,6 @@ public abstract class Type {
         BAG,
         MAP
     }
-    
+
     public abstract Tag getTag();
 }

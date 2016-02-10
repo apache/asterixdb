@@ -25,6 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * This operation callback allows for arbitrary actions to be taken while traversing
  * an index structure. The {@link IModificationOperationCallback} will be called on
  * all modifying operations (e.g. insert, update, delete...) for all indexes.
+ *
  * @author zheilbron
  */
 public interface IModificationOperationCallback {

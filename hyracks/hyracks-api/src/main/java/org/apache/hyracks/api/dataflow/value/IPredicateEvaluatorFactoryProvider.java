@@ -22,7 +22,7 @@ package org.apache.hyracks.api.dataflow.value;
 import java.io.Serializable;
 
 /*
- * Provides PredicateEvaluatorFactory based on (equi-join) keys 		
+ * Provides PredicateEvaluatorFactory based on (equi-join) keys
  */
 
 public interface IPredicateEvaluatorFactoryProvider extends Serializable {

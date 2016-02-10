@@ -22,10 +22,10 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * under the License.
  */
 public interface ITwoPCIndexBulkLoader {
-    
+
     /**
      * Append a "delete" tuple to the index in the context of a bulk load.
-     * 
+     *
      * @param tuple
      *            "delete" Tuple to be inserted.
      * @throws IndexException
@@ -34,7 +34,7 @@ public interface ITwoPCIndexBulkLoader {
      *             If the BufferCache throws while un/pinning or un/latching.
      */
     public void delete(ITupleReference tuple) throws IndexException, HyracksDataException;
-    
+
     /**
      * Abort the bulk modify op
      */

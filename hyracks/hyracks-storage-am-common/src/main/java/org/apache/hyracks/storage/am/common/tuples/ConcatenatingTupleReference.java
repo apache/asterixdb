@@ -32,18 +32,18 @@ public class ConcatenatingTupleReference implements ITupleReference {
     private final int[] fieldCounts;
     private int numTuples;
     private int totalFieldCount;
-    
+
     public ConcatenatingTupleReference(int maxTuples) {
         tuples = new ITupleReference[maxTuples];
         fieldCounts = new int[maxTuples];
-        reset();        
+        reset();
     }
-    
+
     public void reset() {
         numTuples = 0;
         totalFieldCount = 0;
     }
-    
+
     public void addTuple(ITupleReference tuple) {
         tuples[numTuples] = tuple;
         totalFieldCount += tuple.getFieldCount();
@@ -54,22 +54,22 @@ public class ConcatenatingTupleReference implements ITupleReference {
         }
         ++numTuples;
     }
-    
+
     public void removeLastTuple() {
         if (numTuples > 0) {
             ITupleReference lastTuple = tuples[--numTuples];
             totalFieldCount -= lastTuple.getFieldCount();
         }
     }
-    
+
     public int getNumTuples() {
         return numTuples;
     }
-    
+
     public boolean hasMaxTuples() {
         return numTuples == tuples.length;
     }
-    
+
     @Override
     public int getFieldCount() {
         return totalFieldCount;
@@ -95,7 +95,7 @@ public class ConcatenatingTupleReference implements ITupleReference {
         int fieldIndex = getFieldIndex(tupleIndex, fIdx);
         return tuples[tupleIndex].getFieldLength(fieldIndex);
     }
-    
+
     private int getTupleIndex(int fIdx) {
         int tupleIndex = Arrays.binarySearch(fieldCounts, 0, numTuples - 1, fIdx);
         if (tupleIndex < 0) {
@@ -105,11 +105,11 @@ public class ConcatenatingTupleReference implements ITupleReference {
         }
         return tupleIndex;
     }
-    
+
     private int getFieldIndex(int tupleIndex, int fIdx) {
         int fieldIndex = -1;
         if (tupleIndex > 0) {
-            fieldIndex = fIdx - fieldCounts[tupleIndex - 1]; 
+            fieldIndex = fIdx - fieldCounts[tupleIndex - 1];
         } else {
             fieldIndex = fIdx;
         }

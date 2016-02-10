@@ -30,7 +30,7 @@ import org.apache.hyracks.data.std.util.GrowableArray;
 
 /**
  * Array backed tuple builder.
- * 
+ *
  * @author vinayakb
  */
 public class ArrayTupleBuilder implements IDataOutputProvider {
@@ -53,7 +53,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
 
     /**
      * Get the end offsets of the fields in this tuple.
-     * 
+     *
      * @return end offsets of the fields.
      */
     public int[] getFieldEndOffsets() {
@@ -62,7 +62,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
 
     /**
      * Get the data area in this builder.
-     * 
+     *
      * @return Data byte array.
      */
     public byte[] getByteArray() {
@@ -71,7 +71,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
 
     /**
      * Get the size of the data area.
-     * 
+     *
      * @return data area size.
      */
     public int getSize() {
@@ -80,7 +80,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
 
     /**
      * Add a field to the tuple from a field in a frame.
-     * 
+     *
      * @param accessor
      *            - Frame that contains the field to be copied into the tuple
      *            builder.
@@ -110,7 +110,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
     /**
      * Add a field to the tuple by serializing the given object using the given
      * serializer.
-     * 
+     *
      * @param serDeser
      *            - Serializer
      * @param instance
@@ -124,7 +124,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
 
     /**
      * Add a field to the tuple by copying the data bytes from a byte array.
-     * 
+     *
      * @param bytes
      *            - Byte array to copy the field data from.
      * @param start

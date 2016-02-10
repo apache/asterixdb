@@ -26,7 +26,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * assumes that the modifications do not change the size of the tuple, and that
  * it does not change keys (e.g., BTree keys). This interface is used to
  * implement update scans.
- * 
+ *
  */
 public interface ITupleUpdater {
 	public void updateTuple(ITupleReference tuple);

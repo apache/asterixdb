@@ -32,13 +32,13 @@ import org.apache.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFac
  * number generics in Java) in the two-dimensional space. For more dimensions, the
  * state machine has to be automatically generated. The idea of the fractal generation
  * of the curve is described e.g. in http://dl.acm.org/ft_gateway.cfm?id=383528&type=pdf
- * 
- * Unlike the described approach, this comparator does not compute the hilbert value at 
+ *
+ * Unlike the described approach, this comparator does not compute the hilbert value at
  * any point. Instead, it only evaluates how the two inputs compare to each other. This
  * is done by starting at the lowest hilbert resolution and zooming in on the fractal until
  * the two points are in different quadrants.
- * 
- * As a performance optimization, the state of the state machine is saved in a stack and 
+ *
+ * As a performance optimization, the state of the state machine is saved in a stack and
  * maintained over comparisons. The idea behind this is that comparisons are usually in a
  * similar area (e.g. geo coordinates). Zooming in from [-MAX_VALUE, MAX_VALUE] would take
  * ~300 steps every time. Instead, the comparator start from the previous state and zooms out

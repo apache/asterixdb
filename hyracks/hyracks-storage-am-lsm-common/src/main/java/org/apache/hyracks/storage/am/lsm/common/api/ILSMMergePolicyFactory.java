@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public interface ILSMMergePolicyFactory extends Serializable {
     // Having two methods to create the merge policy with two different signatures is hacky, but we do it now
-    // because we want to have an access to the IIndexLifecycleManager inside some of the merge policies. However, 
+    // because we want to have an access to the IIndexLifecycleManager inside some of the merge policies. However,
     // in order to get the IIndexLifecycleManager instance, we need to cast to IAsterixAppRuntimeContext which exist
     // in asterix and cannot be seen in hyracks. Thus we pass IHyracksTaskContext and let the merge policy do the casting.
     public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IHyracksTaskContext ctx);

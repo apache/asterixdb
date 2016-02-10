@@ -50,11 +50,11 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *
  * <pre>
  * Before plan:
- * 
+ *
  *   join ( eq( funcX($$1), funcX($$2) ) )
- * 
+ *
  * After plan:
- * 
+ *
  *   join (eq($$3,$$4))
  *   assign [$$4] <- [funcY($$2)]
  *   assign [$$3] <- [funcX($$1)]

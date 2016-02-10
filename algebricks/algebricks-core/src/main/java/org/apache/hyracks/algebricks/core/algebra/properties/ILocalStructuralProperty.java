@@ -36,7 +36,7 @@ public interface ILocalStructuralProperty extends IStructuralProperty {
      * Returns the retained property regarding to a collection of variables,
      * e.g., some variables used in the property may not exist in the input
      * collection and hence the data property changes.
-     * 
+     *
      * @param vars
      *            , an input collection of variables
      * @return the retained data property.
@@ -45,7 +45,7 @@ public interface ILocalStructuralProperty extends IStructuralProperty {
 
     /**
      * Returns the additional data property within each group, which is dictated by the group keys.
-     * 
+     *
      * @param vars
      *            , group keys.
      * @return the additional data property within each group.

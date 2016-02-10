@@ -22,17 +22,17 @@ package org.apache.hyracks.storage.am.common.datagen;
 public class SortedDoubleFieldValueGenerator implements IFieldValueGenerator<Double> {
     private double val;
     private final double startVal;
-    
+
     public SortedDoubleFieldValueGenerator() {
         startVal = 0.0d;
         reset();
     }
-    
+
     public SortedDoubleFieldValueGenerator(double startVal) {
         this.startVal = startVal;
         reset();
     }
-    
+
     @Override
     public Double next() {
         return val++;
@@ -40,6 +40,6 @@ public class SortedDoubleFieldValueGenerator implements IFieldValueGenerator<Dou
 
     @Override
     public void reset() {
-        val = startVal;        
+        val = startVal;
     }
 }

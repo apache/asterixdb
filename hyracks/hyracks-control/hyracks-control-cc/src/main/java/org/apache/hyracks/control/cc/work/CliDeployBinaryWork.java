@@ -39,7 +39,7 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
  * It first deploys the jar to CC application context.
  * Then, it remotely calls each NC service to deploy the jars listed as http URLs.
  * NOTE: in current implementation, a user cannot deploy with the same deployment id simultaneously.
- * 
+ *
  * @author yingyib
  */
 public class CliDeployBinaryWork extends SynchronizableWork {

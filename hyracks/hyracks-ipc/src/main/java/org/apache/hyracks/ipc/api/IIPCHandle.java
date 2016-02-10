@@ -30,6 +30,6 @@ public interface IIPCHandle {
     public void setAttachment(Object attachment);
 
     public Object getAttachment();
-    
+
     public boolean isConnected();
 }

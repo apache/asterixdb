@@ -25,7 +25,7 @@ import org.apache.hyracks.api.job.IJobLifecycleListener;
 
 /**
  * Application Context at the Cluster Controller for an application.
- * 
+ *
  * @author vinayakb
  */
 public interface ICCApplicationContext extends IApplicationContext {
@@ -34,7 +34,7 @@ public interface ICCApplicationContext extends IApplicationContext {
      * NC application contexts. Any state set by calling this method in the {@link ICCApplicationEntryPoint#start(ICCApplicationContext, String[])} call is made available to all the {@link INCApplicationContext} objects
      * at each Node Controller. The state is then available to be inspected by
      * the application at the NC during or after the {@link INCBootstrap#start()} call.
-     * 
+     *
      * @param state
      *            The distributed state
      */
@@ -43,7 +43,7 @@ public interface ICCApplicationContext extends IApplicationContext {
     /**
      * A listener that listens to Job Lifecycle events at the Cluster
      * Controller.
-     * 
+     *
      * @param jobLifecycleListener
      */
     public void addJobLifecycleListener(IJobLifecycleListener jobLifecycleListener);
@@ -51,14 +51,14 @@ public interface ICCApplicationContext extends IApplicationContext {
     /**
      * A listener that listens to Cluster Lifecycle events at the Cluster
      * Controller.
-     * 
+     *
      * @param jobLifecycleListener
      */
     public void addClusterLifecycleListener(IClusterLifecycleListener clusterLifecycleListener);
 
     /**
      * Get the Cluster Controller Context.
-     * 
+     *
      * @return The Cluster Controller Context.
      */
     public ICCContext getCCContext();

@@ -27,14 +27,14 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 
 /**
  * The serializer/deserializer/classloader interface for job/task information such as job specifications, activity graphs and so on.
- * 
+ *
  * @author yingyib
  */
 public interface IJobSerializerDeserializer {
 
     /**
      * Deserialize the bytes to an object
-     * 
+     *
      * @param bytes
      *            the binary content of an object
      * @return the deserialized object
@@ -44,7 +44,7 @@ public interface IJobSerializerDeserializer {
 
     /**
      * Serialize a object into bytes
-     * 
+     *
      * @param object
      *            a Serializable Java object
      * @return
@@ -55,7 +55,7 @@ public interface IJobSerializerDeserializer {
 
     /**
      * Load a class by its name
-     * 
+     *
      * @param className
      *            the name of the class
      * @return

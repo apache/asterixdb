@@ -33,7 +33,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
     // antimatter tuple.
     private boolean resetFieldCount = false;
     private final int numKeyFields;
-    
+
     public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields) {
 		super(typeTraits);
 		this.numKeyFields = numKeyFields;
@@ -51,7 +51,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
         // Don't change the fieldCount in reset calls.
         resetFieldCount = false;
     }
-    
+
     @Override
     public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
         this.buf = buf;
@@ -69,12 +69,12 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
         }
         super.resetByTupleOffset(buf, tupleStartOff);
     }
-    
+
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
     }
-    
+
 	@Override
 	protected int getNullFlagsBytes() {
 		// +1.0 is for matter/antimatter bit.
@@ -90,7 +90,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
 		}
 		return false;
 	}
-	
+
     public int getTupleStart() {
     	return tupleStartOff;
     }

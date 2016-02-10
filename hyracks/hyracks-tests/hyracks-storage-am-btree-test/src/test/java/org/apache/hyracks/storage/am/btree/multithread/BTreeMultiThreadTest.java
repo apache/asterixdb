@@ -77,7 +77,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
                 .getUniformProbDist(insertSearchOnlyOps.length)));
 
-        // Inserts, updates, deletes, and upserts.        
+        // Inserts, updates, deletes, and upserts.
         TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.UPSERT };
         workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, ProbabilityHelper

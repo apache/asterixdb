@@ -23,13 +23,13 @@ import org.apache.hyracks.api.io.FileReference;
 
 /**
  * Maintains the mapping between file names and file ids.
- * 
+ *
  * @author vinayakb
  */
 public interface IFileMapManager extends IFileMapProvider {
     /**
      * Register a new file name.
-     * 
+     *
      * @param fileRef
      *            - file reference to register
      * @throws HyracksDataException
@@ -39,15 +39,15 @@ public interface IFileMapManager extends IFileMapProvider {
 
     /**
      * Unregister a file mapping
-     * 
+     *
      * @param fileId
      *            - The file id whose mapping is to be unregistered.
      * @throws HyracksDataException
      *             - If the fileid is not mapped currently in this manager.
      */
     public void unregisterFile(int fileId) throws HyracksDataException;
-    
+
     public int registerMemoryFile();
-    
+
     public void unregisterMemFile(int fileId) throws HyracksDataException;
 }

@@ -26,7 +26,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public interface ICopySerializableAggregateFunction {
     /**
      * initialize the space occupied by internal state
-     * 
+     *
      * @param state
      * @throws AlgebricksException
      * @return length of the intermediate state
@@ -35,7 +35,7 @@ public interface ICopySerializableAggregateFunction {
 
     /**
      * update the internal state
-     * 
+     *
      * @param tuple
      * @param state
      * @throws AlgebricksException
@@ -44,7 +44,7 @@ public interface ICopySerializableAggregateFunction {
 
     /**
      * output the state to result
-     * 
+     *
      * @param state
      * @param result
      * @throws AlgebricksException
@@ -53,7 +53,7 @@ public interface ICopySerializableAggregateFunction {
 
     /**
      * output the partial state to partial result
-     * 
+     *
      * @param state
      * @param partialResult
      * @throws AlgebricksException

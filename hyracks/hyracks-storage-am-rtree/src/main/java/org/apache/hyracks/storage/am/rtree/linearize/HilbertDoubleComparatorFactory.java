@@ -23,13 +23,13 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 
 public class HilbertDoubleComparatorFactory implements ILinearizeComparatorFactory {
     private static final long serialVersionUID = 1L;
-    
+
     private int dim;
 
     public static HilbertDoubleComparatorFactory get(int dim) {
         return new HilbertDoubleComparatorFactory(dim);
     }
-    
+
     public HilbertDoubleComparatorFactory(int dim) {
     	this.dim = dim;
     }

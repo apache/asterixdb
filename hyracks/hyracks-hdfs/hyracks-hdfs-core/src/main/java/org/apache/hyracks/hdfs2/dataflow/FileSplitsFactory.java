@@ -53,7 +53,7 @@ public class FileSplitsFactory implements Serializable {
 
     /**
      * Convert splits to bytes.
-     * 
+     *
      * @param splits
      *            input splits
      * @return bytes which serialize the splits
@@ -77,7 +77,7 @@ public class FileSplitsFactory implements Serializable {
 
     /**
      * Covert bytes to splits.
-     * 
+     *
      * @param bytes
      * @return
      * @throws HyracksDataException

@@ -465,7 +465,7 @@ public class LSMInvertedIndexTestUtils {
                 highKey.appendField(Short.valueOf(numTokensUpperBound));
             }
 
-            // Get view over check tuples containing inverted-list corresponding to token. 
+            // Get view over check tuples containing inverted-list corresponding to token.
             SortedSet<CheckTuple> invList = OrderedIndexTestUtils.getPrefixExpectedSubset(checkTuples, lowKey, highKey);
             Iterator<CheckTuple> invListIter = invList.iterator();
             // Iterate over inverted list and update scan count array.

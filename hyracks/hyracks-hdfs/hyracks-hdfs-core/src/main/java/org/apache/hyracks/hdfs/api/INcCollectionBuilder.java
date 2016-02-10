@@ -25,7 +25,7 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 
 /**
  * NC collections
- * 
+ *
  * @author yingyib
  */
 public interface INcCollectionBuilder {

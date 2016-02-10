@@ -22,17 +22,17 @@ package org.apache.hyracks.storage.am.common.datagen;
 public class SortedFloatFieldValueGenerator implements IFieldValueGenerator<Float> {
     private float val = 0.0f;
     private final float startVal;
-    
+
     public SortedFloatFieldValueGenerator() {
         startVal = 0.0f;
         reset();
     }
-    
+
     public SortedFloatFieldValueGenerator(float startVal) {
         this.startVal = startVal;
         reset();
     }
-    
+
     @Override
     public Float next() {
         return val++;

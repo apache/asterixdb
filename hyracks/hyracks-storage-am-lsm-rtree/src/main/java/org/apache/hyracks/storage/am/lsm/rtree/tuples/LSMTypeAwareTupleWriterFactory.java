@@ -29,7 +29,7 @@ public class LSMTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory 
 	private static final long serialVersionUID = 1L;
 	private ITypeTraits[] typeTraits;
 	private final boolean isDelete;
-	
+
 	public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isDelete) {
 		super(typeTraits);
 		this.typeTraits = typeTraits;

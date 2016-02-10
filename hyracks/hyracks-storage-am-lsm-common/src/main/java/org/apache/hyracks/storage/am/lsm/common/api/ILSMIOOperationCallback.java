@@ -33,7 +33,7 @@ public interface ILSMIOOperationCallback {
     /**
      * This method is called on an IO operation sometime after the operation was completed.
      * (i.e. IO operations could be flush or merge operations.)
-     * 
+     *
      * @param oldComponents
      * @param newComponent
      * @throws HyracksDataException
@@ -45,7 +45,7 @@ public interface ILSMIOOperationCallback {
      * This method is called on an IO operation when the operation needs any cleanup works
      * regardless that the IO operation was executed or not. Once the IO operation is executed,
      * this method should be called after ILSMIOOperationCallback.afterOperation() was called.
-     * 
+     *
      * @param newComponent
      * @throws HyracksDataException
      */

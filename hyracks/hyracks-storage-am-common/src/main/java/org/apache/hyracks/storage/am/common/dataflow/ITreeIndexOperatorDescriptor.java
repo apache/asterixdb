@@ -25,8 +25,8 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 public interface ITreeIndexOperatorDescriptor extends IIndexOperatorDescriptor {
 	public IBinaryComparatorFactory[] getTreeIndexComparatorFactories();
-	
+
 	public ITypeTraits[] getTreeIndexTypeTraits();
-	
+
 	public ITupleFilterFactory getTupleFilterFactory();
 }

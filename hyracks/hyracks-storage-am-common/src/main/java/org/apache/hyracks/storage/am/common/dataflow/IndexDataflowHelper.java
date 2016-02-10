@@ -76,8 +76,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 index = createIndexInstance();
             }
 
-            // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy 
-            // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
+            // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy
+            // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID).
             // Once the index has been created, a new resource ID can be generated.
             long resourceID = getResourceID();
             if (resourceID != -1) {

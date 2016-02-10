@@ -32,17 +32,17 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 
 /**
  * Inlines variables that are referenced exactly once.
- * 
+ *
  * Preconditions/Assumptions:
  * Assumes no projects are in the plan.
- * 
+ *
  * Example assuming variable $$3 is referenced exactly once.
- * 
+ *
  * Before plan:
  * select (funcA($$3))
  *   ...
  *     assign [$$3] <- [field-access($$0, 1)]
- * 
+ *
  * After plan:
  * select (funcA(field-access($$0, 1))
  *   ...
@@ -53,14 +53,14 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
     // Maps from variable to a list of operators using that variable.
     protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap = new HashMap<LogicalVariable, List<ILogicalOperator>>();
     protected List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
-    
+
     @Override
     protected void prepare(IOptimizationContext context) {
         super.prepare(context);
         usedVarsMap.clear();
         usedVars.clear();
     }
-    
+
     @Override
     protected boolean performFinalAction() throws AlgebricksException {
         boolean modified = false;
@@ -75,7 +75,7 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
                         modified = true;
                     }
                     inlineVisitor.setTargetVariable(null);
-                }         
+                }
             }
         }
         return modified;

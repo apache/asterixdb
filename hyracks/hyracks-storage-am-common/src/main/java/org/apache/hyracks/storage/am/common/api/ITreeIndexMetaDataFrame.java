@@ -46,7 +46,7 @@ public interface ITreeIndexMetaDataFrame {
 
     public void addFreePage(int freePage);
 
-    // Special flag for LSM-Components to mark whether they are valid or not. 
+    // Special flag for LSM-Components to mark whether they are valid or not.
     public boolean isValid();
 
     // Set special validity flag.

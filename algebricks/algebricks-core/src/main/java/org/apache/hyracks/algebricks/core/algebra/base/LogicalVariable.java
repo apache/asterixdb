@@ -20,7 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.base;
 
 /**
  * Represents a logical variable in an asterix logical plan.
- * 
+ *
  * @author Vinayak R. Borkar [vborkar@ics.uci.edu]
  */
 public final class LogicalVariable {

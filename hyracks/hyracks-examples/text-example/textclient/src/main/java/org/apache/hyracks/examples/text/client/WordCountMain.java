@@ -89,7 +89,7 @@ public class WordCountMain {
 
         @Option(name = "-runtime-profiling", usage = "Indicates if runtime profiling should be enabled. (default: false)")
         public boolean runtimeProfiling = false;
-        
+
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
     }

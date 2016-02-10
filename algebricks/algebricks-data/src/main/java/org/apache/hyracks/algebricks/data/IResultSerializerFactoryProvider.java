@@ -25,7 +25,7 @@ import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 public interface IResultSerializerFactoryProvider extends Serializable {
     /**
      * Returns a result serializer factory
-     * 
+     *
      * @param fields
      *            - A position of the fields in the order it should be written in the output.
      * @param printerFactories

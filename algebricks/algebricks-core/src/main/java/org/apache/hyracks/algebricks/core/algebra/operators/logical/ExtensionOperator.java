@@ -116,7 +116,7 @@ public class ExtensionOperator extends AbstractLogicalOperator {
     public String toString() {
         return delegate.toString();
     }
-    
+
     public IOperatorExtension getDelegate() {
         return delegate;
     }

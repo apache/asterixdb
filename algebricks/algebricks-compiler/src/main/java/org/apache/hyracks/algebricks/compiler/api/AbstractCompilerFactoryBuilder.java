@@ -116,7 +116,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     public IBinaryComparatorFactoryProvider getComparatorFactoryProvider() {
         return comparatorFactoryProvider;
     }
-    
+
     public void setPredicateEvaluatorFactoryProvider(IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider) {
         this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
     }

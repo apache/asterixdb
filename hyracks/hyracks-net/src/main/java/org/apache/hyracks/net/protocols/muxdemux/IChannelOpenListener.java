@@ -20,13 +20,13 @@ package org.apache.hyracks.net.protocols.muxdemux;
 
 /**
  * Callback interface to report opening of channels.
- * 
+ *
  * @author vinayakb
  */
 public interface IChannelOpenListener {
     /**
      * Indicates that a remote endpoint has opened a channel to this receiver.
-     * 
+     *
      * @param channel
      *            - The newly opened channel.
      */

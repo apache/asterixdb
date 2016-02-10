@@ -24,7 +24,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public interface IIndexBulkLoader {
     /**
      * Append a tuple to the index in the context of a bulk load.
-     * 
+     *
      * @param tuple
      *            Tuple to be inserted.
      * @throws IndexException
@@ -36,7 +36,7 @@ public interface IIndexBulkLoader {
 
     /**
      * Finalize the bulk loading operation in the given context.
-     * 
+     *
      * @throws IndexException
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.

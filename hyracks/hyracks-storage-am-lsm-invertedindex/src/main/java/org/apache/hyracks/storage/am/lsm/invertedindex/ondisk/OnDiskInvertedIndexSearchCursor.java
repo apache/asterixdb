@@ -41,7 +41,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     private final IFrameTupleAccessor fta;
     private final FixedSizeTupleReference frameTuple;
     private final PermutingTupleReference resultTuple;
-    
+
     public OnDiskInvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher, int numInvListFields) {
         this.invIndexSearcher = invIndexSearcher;
         this.fta = invIndexSearcher.createResultFrameTupleAccessor();
@@ -64,7 +64,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
             fta.reset(resultBuffers.get(0));
         }
     }
-    
+
     @Override
     public boolean hasNext() {
         if (currentBufferIndex < numResultBuffers && tupleIndex < fta.getTupleCount()) {
@@ -85,7 +85,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
                 fta.reset(resultBuffers.get(currentBufferIndex));
                 tupleIndex = 0;
             }
-        }        
+        }
     }
 
     @Override

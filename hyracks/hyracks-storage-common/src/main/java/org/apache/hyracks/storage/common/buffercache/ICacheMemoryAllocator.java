@@ -32,7 +32,7 @@ public interface ICacheMemoryAllocator {
 
     /**
      * Ensures the availability of the memory budget with the ResourceMemoryManager (if exists) before allocation. Otherwise, it acts as a call to {@link #allocate(int, int)}
-     * 
+     *
      * @param pageSize
      * @param numPages
      * @return

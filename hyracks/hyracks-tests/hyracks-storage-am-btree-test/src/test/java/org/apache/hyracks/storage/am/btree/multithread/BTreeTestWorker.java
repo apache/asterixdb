@@ -95,7 +95,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
 
             case UPSERT:
                 accessor.upsert(tuple);
-                // Upsert should not throw. If it does, there's 
+                // Upsert should not throw. If it does, there's
                 // a bigger problem and the test should fail.
                 break;
 

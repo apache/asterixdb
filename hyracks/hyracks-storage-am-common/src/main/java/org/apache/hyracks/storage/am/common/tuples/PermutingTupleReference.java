@@ -25,11 +25,11 @@ public class PermutingTupleReference implements ITupleReference {
 
     private final int[] fieldPermutation;
     private ITupleReference sourceTuple;
-    
+
     public PermutingTupleReference(int[] fieldPermutation) {
         this.fieldPermutation = fieldPermutation;
     }
-    
+
     public void reset(ITupleReference sourceTuple) {
         this.sourceTuple = sourceTuple;
     }

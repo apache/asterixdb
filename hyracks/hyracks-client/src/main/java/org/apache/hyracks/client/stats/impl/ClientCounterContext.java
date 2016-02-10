@@ -146,7 +146,7 @@ public class ClientCounterContext implements IClusterCounterContext {
 
     /**
      * Update counters
-     * 
+     *
      * @param jo
      *            the Profile JSON object
      */
@@ -205,7 +205,7 @@ public class ClientCounterContext implements IClusterCounterContext {
 
     /**
      * Request a counter from the slave machine
-     * 
+     *
      * @param slaveMachine
      * @return the JSON string from the slave machine
      */

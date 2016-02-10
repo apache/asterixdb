@@ -31,14 +31,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface ITreeIndexAccessor extends IIndexAccessor {
 	/**
 	 * Creates a cursor appropriate for passing into diskOrderScan().
-	 * 
+	 *
 	 */
 	public ITreeIndexCursor createDiskOrderScanCursor();
-	
+
 	/**
 	 * Open the given cursor for a disk-order scan, positioning the cursor to
 	 * the first leaf tuple.
-	 * 
+	 *
 	 * @param icursor
 	 *            Cursor to be opened for disk-order scanning.
 	 * @throws HyracksDataException

@@ -37,7 +37,7 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
  * It first undeploys the jar to CC application context by giving it a deployment id.
  * Then, it remotely calls each NC service to undeploy by giving them a deployment id.
  * NOTE: in current implementation, a user cannot undeploy with the same deployment id simultaneously.
- * 
+ *
  * @author yingyib
  */
 public class CliUnDeployBinaryWork extends SynchronizableWork {

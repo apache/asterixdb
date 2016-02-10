@@ -79,7 +79,7 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
         int fix = Math.abs(rnd.nextInt()) % firstNames.size();
         strBuilder.append(firstNames.get(fix));
         strBuilder.append(" ");
-        
+
         // Optional middle initial.
         double d = Math.abs(rnd.nextDouble());
         if (d <= middleInitialProb) {
@@ -87,11 +87,11 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
             strBuilder.append(letters.charAt(mix));
             strBuilder.append(". ");
         }
-        
+
         // Last name.
         int lix = Math.abs(rnd.nextInt()) % lastNames.size();
         strBuilder.append(lastNames.get(lix));
-        
+
         return strBuilder.toString();
     }
 

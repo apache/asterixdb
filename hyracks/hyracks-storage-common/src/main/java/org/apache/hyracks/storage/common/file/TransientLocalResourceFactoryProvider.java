@@ -19,7 +19,7 @@
 package org.apache.hyracks.storage.common.file;
 
 public class TransientLocalResourceFactoryProvider implements ILocalResourceFactoryProvider {
-    
+
     private static final long serialVersionUID = 1L;
 
     @Override

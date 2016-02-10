@@ -60,7 +60,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     /**
      * The constructor of HDFSReadOperatorDescriptor.
-     * 
+     *
      * @param spec
      *            the JobSpecification object
      * @param rd

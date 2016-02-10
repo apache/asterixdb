@@ -48,7 +48,7 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
     public int getStartOff();
 
     public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException, IndexException;
-    
+
     // for debugging
     @SuppressWarnings("rawtypes")
     public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException, IndexException;

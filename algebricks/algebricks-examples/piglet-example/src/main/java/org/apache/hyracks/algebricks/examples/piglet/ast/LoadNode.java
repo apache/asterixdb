@@ -29,7 +29,7 @@ public class LoadNode extends RelationNode {
         this.dataFile = dataFile;
         this.schema = schema;
     }
-    
+
     @Override
     public Tag getTag() {
         return Tag.LOAD;

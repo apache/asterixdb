@@ -42,7 +42,7 @@ import org.apache.hyracks.api.rewriter.OneToOneConnectedActivityCluster;
 /**
  * This class can be used to execute a DAG of activities inside which
  * there are only one-to-one connectors.
- * 
+ *
  * @author yingyib
  */
 public class SuperActivity extends OneToOneConnectedActivityCluster implements IActivity {

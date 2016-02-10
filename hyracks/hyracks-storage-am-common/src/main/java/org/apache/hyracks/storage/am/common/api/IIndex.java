@@ -34,7 +34,7 @@ public interface IIndex {
      * Initializes the persistent state of an index.
      * An index cannot be created if it is in the activated state.
      * Calling create on an index that is deactivated has the effect of clearing the index.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is an error in the BufferCache while (un)pinning pages, (un)latching pages,
      *             creating files, or deleting files
@@ -45,7 +45,7 @@ public interface IIndex {
     /**
      * Initializes the index's operational state. An index in the activated state may perform
      * operations via an {@link IIndexAccessor}.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages,
      *             creating files, or deleting files
@@ -56,7 +56,7 @@ public interface IIndex {
      * Resets the operational state of the index. Calling clear has the same logical effect
      * as calling deactivate(), destroy(), create(), then activate(), but not necessarily the
      * same physical effect.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages,
      *             creating files, or deleting files
@@ -67,7 +67,7 @@ public interface IIndex {
     /**
      * Deinitializes the index's operational state. An index in the deactivated state may not
      * perform operations.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages,
      *             creating files, or deleting files
@@ -77,7 +77,7 @@ public interface IIndex {
     /**
      * Removes the persistent state of an index.
      * An index cannot be destroyed if it is in the activated state.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is an error in the BufferCache while (un)pinning pages, (un)latching pages,
      *             creating files, or deleting files
@@ -89,7 +89,7 @@ public interface IIndex {
      * Creates an {@link IIndexAccessor} for performing operations on this index.
      * An IIndexAccessor is not thread safe, but different IIndexAccessors can concurrently operate
      * on the same {@link IIndex}.
-     * 
+     *
      * @returns IIndexAccessor an accessor for this {@link IIndex}
      * @param modificationCallback
      *            the callback to be used for modification operations
@@ -103,7 +103,7 @@ public interface IIndex {
     /**
      * Ensures that all pages (and tuples) of the index are logically consistent.
      * An assertion error is thrown if validation fails.
-     * 
+     *
      * @throws HyracksDataException
      *             if there is an error performing validation
      */

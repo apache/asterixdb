@@ -258,7 +258,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     public boolean exclusiveLatchNodes() {
         return false;
     }
-    
+
     @Override
     public void markCurrentTupleAsUpdated() throws HyracksDataException {
         throw new HyracksDataException("Updating tuples is not supported with this cursor.");

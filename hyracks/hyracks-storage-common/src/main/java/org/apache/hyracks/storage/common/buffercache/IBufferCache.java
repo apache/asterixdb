@@ -29,7 +29,7 @@ public interface IBufferCache {
     public static final int INVALID_PAGEID = -1;
 
     public void createFile(FileReference fileRef) throws HyracksDataException;
-    
+
     public int createMemFile() throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;

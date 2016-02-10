@@ -31,10 +31,10 @@ import org.apache.hyracks.storage.am.btree.util.BTreeTestContext;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
 
 /**
- * Tests the BTree insert operation with strings and integer fields using 
- * various numbers of key and payload fields. Each tests first fills a BTree with 
- * randomly generated tuples. We compare the following operations against expected results: 
- *      1) Point searches for all tuples 
+ * Tests the BTree insert operation with strings and integer fields using
+ * various numbers of key and payload fields. Each tests first fills a BTree with
+ * randomly generated tuples. We compare the following operations against expected results:
+ *      1) Point searches for all tuples
  *      2) Ordered scan
  *      3) Disk-order scan
  *      4) Range search (and prefix search for composite keys)

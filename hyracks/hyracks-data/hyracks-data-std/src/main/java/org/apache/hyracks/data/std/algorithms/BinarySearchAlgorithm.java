@@ -25,7 +25,7 @@ import org.apache.hyracks.data.std.collections.api.IValueReferenceVector;
  * Performs Binary Search over a vector of value references.
  * Assumption: The items in the vector are sorted in ascending order with respect
  * to the specified key.
- * 
+ *
  * @author vinayakb
  */
 public class BinarySearchAlgorithm {
@@ -39,7 +39,7 @@ public class BinarySearchAlgorithm {
      * and sets the {@link #index} value that is retrievable by calling {@link #getIndex()} to refer to
      * the index in the array where the key was found (if it was found), and where it should have been (if
      * not found).
-     * 
+     *
      * @param vector
      *            - Sorted vector of items
      * @param key
@@ -68,7 +68,7 @@ public class BinarySearchAlgorithm {
 
     /**
      * Get the index as a result of binary search.
-     * 
+     *
      * @return the index in the array where the key was found (if it was found), and where it should have been (if
      *         not found).
      */

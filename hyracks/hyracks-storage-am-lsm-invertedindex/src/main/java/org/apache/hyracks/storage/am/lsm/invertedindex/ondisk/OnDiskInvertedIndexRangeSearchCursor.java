@@ -45,7 +45,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     private final IIndexOperationContext opCtx;
     private final IInvertedListCursor invListCursor;
     private boolean unpinNeeded;
-    
+
     private final IIndexCursor btreeCursor;
     private RangePredicate btreePred;
 
@@ -76,7 +76,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
             btreeAccessor.search(btreeCursor, btreePred);
         } catch (IndexException e) {
             throw new HyracksDataException(e);
-        }        
+        }
         invListCursor.pinPages();
         unpinNeeded = true;
     }

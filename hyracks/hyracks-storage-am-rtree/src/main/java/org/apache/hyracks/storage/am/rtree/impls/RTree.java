@@ -800,7 +800,7 @@ public class RTree extends AbstractTreeIndex {
             this.rtree = rtree;
             this.ctx = rtree.createOpContext(modificationCallback);
         }
-        
+
         public void reset(RTree rtree, IModificationOperationCallback modificationCallback) {
             this.rtree = rtree;
             ctx.setModificationCallback(modificationCallback);

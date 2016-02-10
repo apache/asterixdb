@@ -72,7 +72,7 @@ public class IPCSystem {
             throw new IPCException(e);
         }
     }
-    
+
     IPayloadSerializerDeserializer getSerializerDeserializer() {
         return serde;
     }

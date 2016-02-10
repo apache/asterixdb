@@ -31,7 +31,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public interface IIndexAccessor {
     /**
      * Inserts the given tuple.
-     * 
+     *
      * @param tuple
      *            Tuple to be inserted.
      * @throws HyracksDataException
@@ -45,7 +45,7 @@ public interface IIndexAccessor {
     /**
      * Updates the tuple in the index matching the given tuple with the new
      * contents in the given tuple.
-     * 
+     *
      * @param tuple
      *            Tuple whose match in the index is to be update with the given
      *            tuples contents.
@@ -58,7 +58,7 @@ public interface IIndexAccessor {
 
     /**
      * Deletes the tuple in the index matching the given tuple.
-     * 
+     *
      * @param tuple
      *            Tuple to be deleted.
      * @throws HyracksDataException
@@ -72,27 +72,27 @@ public interface IIndexAccessor {
      * This operation is only supported by indexes with the notion of a unique key.
      * If tuple's key already exists, then this operation performs an update.
      * Otherwise, it performs an insert.
-     * 
+     *
      * @param tuple
      *            Tuple to be deleted.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      * @throws IndexException
      *             If there is no matching tuple in the index.
-     * 
+     *
      */
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException;
-    
+
     /**
      * Creates a cursor appropriate for passing into search().
-     * 
+     *
      */
     public IIndexCursor createSearchCursor(boolean exclusive);
 
     /**
      * Open the given cursor for an index search using the given predicate as
      * search condition.
-     * 
+     *
      * @param icursor
      *            Cursor over the index entries satisfying searchPred.
      * @param searchPred

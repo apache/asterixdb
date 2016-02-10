@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.common.api;
 public class IndexException extends Exception {
     private static final long serialVersionUID = 1L;
 
-    public IndexException(Exception e) {        
+    public IndexException(Exception e) {
         super(e);
     }
 

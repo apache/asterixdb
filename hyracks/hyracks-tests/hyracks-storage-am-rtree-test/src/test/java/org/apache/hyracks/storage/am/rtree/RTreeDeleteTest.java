@@ -40,7 +40,7 @@ public class RTreeDeleteTest extends AbstractRTreeDeleteTest {
 	public RTreeDeleteTest() {
 		super(AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
 	}
-	
+
     @Before
     public void setUp() throws HyracksDataException {
         harness.setUp();

@@ -246,7 +246,7 @@ public class StartTasksWork extends AbstractWork {
 
     /**
      * Create a list of known channels for each input connector
-     * 
+     *
      * @param td
      *            the task attempt id
      * @param inputs

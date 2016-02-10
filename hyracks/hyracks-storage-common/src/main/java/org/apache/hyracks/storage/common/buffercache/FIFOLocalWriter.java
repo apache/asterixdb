@@ -41,7 +41,7 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
             }
         }
     }
-    
+
     @Override
     public void sync(int fileId, BufferCache bufferCache) throws HyracksDataException {
         bufferCache.force(fileId,true);

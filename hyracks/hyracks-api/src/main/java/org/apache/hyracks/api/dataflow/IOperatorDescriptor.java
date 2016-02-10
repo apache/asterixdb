@@ -29,34 +29,34 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 /**
  * Descriptor for operators in Hyracks.
- * 
+ *
  * @author vinayakb
  */
 public interface IOperatorDescriptor extends Serializable {
     /**
      * Returns the id of the operator.
-     * 
+     *
      * @return operator id
      */
     public OperatorDescriptorId getOperatorId();
 
     /**
      * Returns the number of inputs into this operator.
-     * 
+     *
      * @return Number of inputs.
      */
     public int getInputArity();
 
     /**
      * Returns the number of outputs out of this operator.
-     * 
+     *
      * @return Number of outputs.
      */
     public int getOutputArity();
 
     /**
      * Gets the output record descriptor
-     * 
+     *
      * @return Array of RecordDescriptor, one per output.
      */
     public RecordDescriptor[] getOutputRecordDescriptors();
@@ -64,7 +64,7 @@ public interface IOperatorDescriptor extends Serializable {
     /**
      * Contributes the activity graph that describes the behavior of this
      * operator.
-     * 
+     *
      * @param builder
      *            - graph builder
      */
@@ -72,7 +72,7 @@ public interface IOperatorDescriptor extends Serializable {
 
     /**
      * Contributes any scheduling constraints imposed by this operator.
-     * 
+     *
      * @param constraintAcceptor
      *            - Constraint Acceptor
      * @param plan

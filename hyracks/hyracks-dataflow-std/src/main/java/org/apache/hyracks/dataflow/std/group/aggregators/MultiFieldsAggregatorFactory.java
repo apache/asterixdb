@@ -49,7 +49,7 @@ public class MultiFieldsAggregatorFactory extends AbstractAccumulatingAggregator
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.dataflow.std.aggregations.IAggregatorDescriptorFactory
      * #createAggregator(org.apache.hyracks.api.context.IHyracksTaskContext,

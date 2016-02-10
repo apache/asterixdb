@@ -28,7 +28,7 @@ public class LSMBTreeTupleWriterFactory extends TypeAwareTupleWriterFactory {
 	private static final long serialVersionUID = 1L;
 	private final int numKeyFields;
 	private final boolean isDelete;
-	
+
 	public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
 		super(typeTraits);
 		this.numKeyFields = numKeyFields;

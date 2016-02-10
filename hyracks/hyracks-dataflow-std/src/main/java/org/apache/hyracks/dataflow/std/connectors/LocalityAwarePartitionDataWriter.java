@@ -63,7 +63,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.hyracks.api.comm.IFrameWriter#open()
      */
     @Override
@@ -76,7 +76,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.api.comm.IFrameWriter#nextFrame(java.nio.ByteBuffer)
      */
@@ -92,7 +92,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.hyracks.api.comm.IFrameWriter#fail()
      */
     @Override
@@ -118,7 +118,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.hyracks.api.comm.IFrameWriter#close()
      */
     @Override

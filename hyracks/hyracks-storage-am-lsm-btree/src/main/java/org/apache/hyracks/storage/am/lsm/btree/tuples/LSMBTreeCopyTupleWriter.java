@@ -27,7 +27,7 @@ public class LSMBTreeCopyTupleWriter extends LSMBTreeTupleWriter {
 		// Third parameter is never used locally, just give false.
 	    super(typeTraits, numKeyFields, false);
 	}
-	
+
 	@Override
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
 		int tupleSize = bytesRequired(tuple);

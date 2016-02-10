@@ -69,11 +69,11 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     public int getDefaultBranchIndex() {
         return defaultBranchIndex;
     }
-    
+
     public int getNumOutputBranches() {
         return (defaultBranchIndex == expressions.size()) ? expressions.size() + 1 : expressions.size();
     }
-    
+
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.PARTITIONINGSPLIT;

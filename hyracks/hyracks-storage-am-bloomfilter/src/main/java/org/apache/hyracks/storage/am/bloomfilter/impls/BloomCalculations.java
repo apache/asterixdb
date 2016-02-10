@@ -93,7 +93,7 @@ public class BloomCalculations {
     /**
      * Given the number of buckets that can be used per element, return a
      * specification that minimizes the false positive rate.
-     * 
+     *
      * @param bucketsPerElement
      *            The number of buckets per element for the filter.
      * @return A spec that minimizes the false positive rate.
@@ -111,7 +111,7 @@ public class BloomCalculations {
      * functions used. Because bandwidth (and therefore total bitvector size)
      * is considered more expensive than computing power, preference is given
      * to minimizing buckets per element rather than number of hash functions.
-     * 
+     *
      * @param maxBucketsPerElement
      *            The maximum number of buckets available for the filter.
      * @param maxFalsePosProb

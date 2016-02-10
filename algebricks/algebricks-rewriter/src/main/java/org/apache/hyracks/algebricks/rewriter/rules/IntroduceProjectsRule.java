@@ -82,7 +82,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         parentsUsedVars.addAll(parentUsedVars);
         parentsUsedVars.addAll(usedVars);
 
-        // Descend into children.        
+        // Descend into children.
         for (int i = 0; i < op.getInputs().size(); i++) {
             Mutable<ILogicalOperator> inputOpRef = op.getInputs().get(i);
             if (introduceProjects(op, i, inputOpRef, parentsUsedVars, context)) {
@@ -152,7 +152,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         }
         return modified;
     }
-    
+
     private boolean canEliminateProjectBelowUnion(UnionAllOperator unionOp, ProjectOperator projectOp,
             int unionInputIndex) throws AlgebricksException {
         List<LogicalVariable> orderedLiveVars = new ArrayList<LogicalVariable>();

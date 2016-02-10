@@ -66,7 +66,7 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
 		}
 		return compareTo((T) o) == 0;
 	}
-    
+
 	@Override
 	public int hashCode() {
 		int hash = 0;
@@ -75,27 +75,27 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
 		}
 		return hash;
 	}
-	
+
 	public void setIsHighKey(boolean isHighKey) {
 	    this.isHighKey = isHighKey;
 	}
-	
+
 	public T getField(int idx) {
 		return (T) fields[idx];
 	}
-    
+
     public void setField(int idx, T e) {
         fields[idx] = e;
     }
-    
+
     public int size() {
         return fields.length;
     }
-    
+
     public int getNumKeys() {
         return numKeys;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder strBuilder = new StringBuilder();

@@ -27,14 +27,14 @@ import org.apache.hyracks.api.service.IControllerService;
 
 /**
  * Base class of the {@link ICCApplicationContext} and the {@link INCApplicationContext}.
- * 
+ *
  * @author vinayakb
  */
 public interface IApplicationContext {
     /**
      * Gets the distributed state that is made available to all the Application
      * Contexts of this application in the cluster.
-     * 
+     *
      * @return
      */
     public Serializable getDistributedState();

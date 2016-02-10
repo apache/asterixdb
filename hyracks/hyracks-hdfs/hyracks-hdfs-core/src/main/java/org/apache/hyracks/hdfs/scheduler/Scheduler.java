@@ -69,7 +69,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
@@ -89,7 +89,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
@@ -106,7 +106,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @throws HyracksException
@@ -119,7 +119,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @param topology
@@ -135,7 +135,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @throws HyracksException
@@ -151,7 +151,7 @@ public class Scheduler {
      * Set location constraints for a file scan operator with a list of file
      * splits. It guarantees the maximum slots a machine can is at most one more
      * than the minimum slots a machine can get.
-     * 
+     *
      * @throws HyracksDataException
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
@@ -215,7 +215,7 @@ public class Scheduler {
 
     /**
      * Schedule non-local slots to each machine
-     * 
+     *
      * @param splits
      *            The HDFS file splits.
      * @param workloads
@@ -257,7 +257,7 @@ public class Scheduler {
 
     /**
      * Schedule data-local slots to each machine.
-     * 
+     *
      * @param splits
      *            The HDFS file splits.
      * @param workloads
@@ -344,7 +344,7 @@ public class Scheduler {
 
     /**
      * Scan the splits once and build a popularity map
-     * 
+     *
      * @param splits
      *            the split array
      * @param locationToNumOfSplits
@@ -368,7 +368,7 @@ public class Scheduler {
 
     /**
      * Load the IP-address-to-NC map from the NCNameToNCInfoMap
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */

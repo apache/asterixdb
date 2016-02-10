@@ -45,9 +45,9 @@ public class ClusterShutdownIT {
         ServerSocket s = null;
         try {
             c = new ServerSocket(1098);
-            //we should be able to bind to this 
+            //we should be able to bind to this
             s = new ServerSocket(1099);
-            //and we should be able to bind to this too 
+            //and we should be able to bind to this too
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
             throw e;

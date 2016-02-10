@@ -23,7 +23,7 @@ public class IOCounterFactory {
 
     /**
      * Get the IOCounter for the specific underlying OS
-     * 
+     *
      * @return an IIOCounter instance
      */
     public IIOCounter getIOCounter() {

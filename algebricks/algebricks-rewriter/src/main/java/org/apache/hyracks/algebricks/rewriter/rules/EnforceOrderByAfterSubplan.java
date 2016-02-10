@@ -43,7 +43,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * If there is any ordering property before the subplan operator, the ordering should
  * be kept after the subplan.
  * This rule adds a redundant order operator after those cases, to guarantee the correctness.
- * 
+ *
  * @author yingyib
  */
 public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {

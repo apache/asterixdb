@@ -23,7 +23,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIn
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 public class InMemoryInvertedIndexDeleteTest extends AbstractInvertedIndexDeleteTest {
-    
+
     public InMemoryInvertedIndexDeleteTest() {
         super(InvertedIndexType.INMEMORY, false);
     }

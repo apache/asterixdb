@@ -123,7 +123,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             invListTypeTraits[i] = allTypeTraits[i + tokenFieldCount];
             invListCmpFactories[i] = allCmpFactories[i + tokenFieldCount];
         }
-        // Create index and test context.        
+        // Create index and test context.
         IInvertedIndex invIndex;
         assert harness.getVirtualBufferCaches().size() > 0;
         switch (invIndexType) {

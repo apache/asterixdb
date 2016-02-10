@@ -95,7 +95,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
      * same, each of which is the aggregation of two copies of the lineitem.tbl.
      * Note that if the hashing connector is not working correctly, the two files may be different. This
      * also means that even the output files are the same, the hashing may have other problems.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -155,7 +155,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
     /**
      * Test for locality aware connector, using the global hashing node mapper. This should have
      * the exactly the same result as using {@link MToNPartitioningConnectorDescriptor}.
-     * 
+     *
      * @throws Exception
      */
     @Test

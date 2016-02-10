@@ -66,7 +66,7 @@ public class OperatorPropertiesUtil {
     /**
      * Adds the free variables of the plan rooted at that operator to the
      * collection provided.
-     * 
+     *
      * @param op
      * @param vars
      *            - The collection to which the free variables will be added.
@@ -107,7 +107,7 @@ public class OperatorPropertiesUtil {
     /**
      * Adds the free variables of the operator path from
      * op to dest, where dest is a direct/indirect input operator of op in the query plan.
-     * 
+     *
      * @param op
      *            , the start operator.
      * @param dest
@@ -165,7 +165,7 @@ public class OperatorPropertiesUtil {
 
     /***
      * Recursively checks if the dest operator is in the path of a nested plan
-     * 
+     *
      * @param op
      * @param dest
      * @return

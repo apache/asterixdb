@@ -134,7 +134,7 @@ public interface IMetaDataPageManager {
 
     /**
      * @return The LSN byte offset in the LSM disk component if the index is valid, otherwise {@link #INVALID_LSN_OFFSET}.
-     * @throws HyracksDataException 
+     * @throws HyracksDataException
      */
     long getLSNOffset() throws HyracksDataException;
 

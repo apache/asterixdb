@@ -25,7 +25,7 @@ import java.util.TreeSet;
 /**
  * The class maintain the status of a deployment process and the states
  * of all slave machines involved in the deployment.
- * 
+ *
  * @author yingyib
  */
 public class DeploymentRun implements IDeploymentStatusConditionVariable {
@@ -39,7 +39,7 @@ public class DeploymentRun implements IDeploymentStatusConditionVariable {
 
     /**
      * One notify the deployment status
-     * 
+     *
      * @param nodeId
      * @param status
      */

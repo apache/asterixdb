@@ -47,7 +47,7 @@ public class FieldRangePartitionComputerFactory implements ITuplePartitionComput
         return new ITuplePartitionComputer() {
             @Override
             /**
-             * Determine the range partition. 
+             * Determine the range partition.
              */
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
                 if (nParts == 1) {

@@ -25,9 +25,9 @@ import org.apache.hyracks.dataflow.common.util.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
-@SuppressWarnings("rawtypes") 
+@SuppressWarnings("rawtypes")
 public class TreeIndexUtils {
-	public static String printFrameTuples(ITreeIndexFrame frame, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {		
+	public static String printFrameTuples(ITreeIndexFrame frame, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {
 		StringBuilder strBuilder = new StringBuilder();
 		ITreeIndexTupleReference tuple = frame.createTupleReference();
 		for (int i = 0; i < frame.getTupleCount(); i++) {

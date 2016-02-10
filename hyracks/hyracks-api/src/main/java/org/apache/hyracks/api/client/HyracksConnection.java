@@ -53,7 +53,7 @@ import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeseri
 /**
  * Connection Class used by a Hyracks Client to interact with a Hyracks Cluster
  * Controller.
- * 
+ *
  * @author vinayakb
  */
 public final class HyracksConnection implements IHyracksClientConnection {
@@ -67,7 +67,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     /**
      * Constructor to create a connection to the Hyracks Cluster Controller.
-     * 
+     *
      * @param ccHost
      *            Host name (or IP Address) where the Cluster Controller can be
      *            reached.

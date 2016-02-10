@@ -59,7 +59,7 @@ public class NoOpOperationTrackerProvider implements ILSMOperationTrackerProvide
             public void afterOperation(ILSMIndex index, LSMOperationType opType,
                     ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
                     throws HyracksDataException {
-                // Do nothing.                        
+                // Do nothing.
             }
         };
     }

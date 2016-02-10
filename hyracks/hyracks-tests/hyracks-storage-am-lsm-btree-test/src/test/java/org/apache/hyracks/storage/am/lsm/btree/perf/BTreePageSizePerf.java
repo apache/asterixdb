@@ -40,16 +40,16 @@ public class BTreePageSizePerf {
             Logger logger = LogManager.getLogManager().getLogger(loggerName);
             logger.setLevel(Level.OFF);
         }
-        
+
         int numTuples = 1000000;
         int batchSize = 10000;
         int numBatches = numTuples / batchSize;
-        
+
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, 30);
-        
+
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
-        
+
         runExperiment(numBatches, batchSize, 1024, 100000, fieldSerdes, cmpFactories, typeTraits);
         runExperiment(numBatches, batchSize, 2048, 100000, fieldSerdes, cmpFactories, typeTraits);
         runExperiment(numBatches, batchSize, 4096, 25000, fieldSerdes, cmpFactories, typeTraits);
@@ -60,7 +60,7 @@ public class BTreePageSizePerf {
         runExperiment(numBatches, batchSize, 131072, 782, fieldSerdes, cmpFactories, typeTraits);
         runExperiment(numBatches, batchSize, 262144, 391, fieldSerdes, cmpFactories, typeTraits);
     }
-    
+
     private static void runExperiment(int numBatches, int batchSize, int pageSize, int numPages, ISerializerDeserializer[] fieldSerdes, IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] typeTraits) throws Exception {
         System.out.println("PAGE SIZE: " + pageSize);
         System.out.println("NUM PAGES: " + numPages);
@@ -73,7 +73,7 @@ public class BTreePageSizePerf {
         int numThreads = 1;
         for (int i = 0; i < repeats; i++) {
             DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, 30, 50, 10, false);
-            dataGen.start();            
+            dataGen.start();
             times[i] = runner.runExperiment(dataGen, numThreads);
             System.out.println("TIME " + i + ": " + times[i] + "ms");
         }

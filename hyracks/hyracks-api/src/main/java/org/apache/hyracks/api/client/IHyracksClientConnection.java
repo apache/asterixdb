@@ -34,13 +34,13 @@ import org.apache.hyracks.api.topology.ClusterTopology;
 
 /**
  * Interface used by clients to communicate with the Hyracks Cluster Controller.
- * 
+ *
  * @author vinayakb
  */
 public interface IHyracksClientConnection {
     /**
      * Gets the status of the specified Job.
-     * 
+     *
      * @param jobId
      *            JobId of the Job
      * @return {@link JobStatus}
@@ -50,7 +50,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Gets detailed information about the specified Job.
-     * 
+     *
      * @param jobId
      *            JobId of the Job
      * @return {@link JobStatus}
@@ -60,7 +60,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param appName
      *            Name of the application
      * @param jobSpec
@@ -71,7 +71,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param appName
      *            Name of the application
      * @param jobSpec
@@ -84,7 +84,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param appName
      *            Name of the application
      * @param acggf
@@ -97,7 +97,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
-     * 
+     *
      * @return {@link NetworkAddress}
      * @throws Exception
      */
@@ -106,7 +106,7 @@ public interface IHyracksClientConnection {
     /**
      * Waits until the specified job has completed, either successfully or has
      * encountered a permanent failure.
-     * 
+     *
      * @param jobId
      *            JobId of the Job
      * @throws Exception
@@ -115,14 +115,14 @@ public interface IHyracksClientConnection {
 
     /**
      * Gets a map of node controller names to node information.
-     * 
+     *
      * @return Map of node name to node information.
      */
     public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception;
 
     /**
      * Get the cluster topology
-     * 
+     *
      * @return the cluster topology
      * @throws Exception
      */
@@ -130,7 +130,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Deploy the user-defined jars to the cluster
-     * 
+     *
      * @param jars
      *            a list of user-defined jars
      */
@@ -138,7 +138,7 @@ public interface IHyracksClientConnection {
 
     /**
      * undeploy a certain deployment
-     * 
+     *
      * @param jars
      *            a list of user-defined jars
      */
@@ -146,7 +146,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param deploymentId
      *            the id of the specific deployment
      * @param jobSpec
@@ -157,7 +157,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param deploymentId
      *            the id of the specific deployment
      * @param jobSpec
@@ -171,7 +171,7 @@ public interface IHyracksClientConnection {
 
     /**
      * Start the specified Job.
-     * 
+     *
      * @param deploymentId
      *            the id of the specific deployment
      * @param acggf

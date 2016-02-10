@@ -23,7 +23,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIn
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 public class InMemoryInvertedIndexInsertTest extends AbstractInvertedIndexLoadTest {
-    
+
     public InMemoryInvertedIndexInsertTest() {
         super(InvertedIndexType.INMEMORY, false);
     }

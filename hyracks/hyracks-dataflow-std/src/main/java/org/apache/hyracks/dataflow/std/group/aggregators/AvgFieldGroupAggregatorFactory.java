@@ -50,7 +50,7 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.hyracks.dataflow.std.aggregations.
      * IFieldAggregateDescriptorFactory
      * #createAggregator(org.apache.hyracks.api.context.IHyracksTaskContext,

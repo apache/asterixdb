@@ -177,7 +177,7 @@ public class PropertiesUtil {
 
     /**
      * Converts a list of OrderColumns to a list of LogicalVariables.
-     * 
+     *
      * @param orderColumns
      *            , a list of OrderColumns
      * @return the list of LogicalVariables

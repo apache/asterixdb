@@ -27,12 +27,12 @@ public class ConjunctiveEditDistanceSearchModifierFactory implements IInvertedIn
 
     private final int gramLength;
     private final int edThresh;
-    
+
     public ConjunctiveEditDistanceSearchModifierFactory(int gramLength, int edThresh) {
         this.gramLength = gramLength;
         this.edThresh = edThresh;
     }
-    
+
     @Override
     public IInvertedIndexSearchModifier createSearchModifier() {
         return new ConjunctiveEditDistanceSearchModifier(gramLength, edThresh);

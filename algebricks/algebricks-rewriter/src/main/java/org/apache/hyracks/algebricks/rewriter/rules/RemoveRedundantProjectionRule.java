@@ -37,12 +37,12 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *  project [var-list1]
  *   project [var-list2]
  *     P
- * 
+ *
  *  if var-list1.equals(var-list2) becomes
- * 
+ *
  *  project [var-list1]
  *    P
- *  
+ *
  */
 
 public class RemoveRedundantProjectionRule implements IAlgebraicRewriteRule {

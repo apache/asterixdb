@@ -29,7 +29,7 @@ public class TestWorkloadConf {
         this.ops = ops;
         this.opProbs = opProbs;
     }
-    
+
     public String toString() {
         StringBuilder strBuilder = new StringBuilder();
         for (TestOperation op : ops) {

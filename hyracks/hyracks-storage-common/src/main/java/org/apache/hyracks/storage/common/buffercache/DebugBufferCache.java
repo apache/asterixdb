@@ -214,26 +214,26 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public void copyPage(ICachedPage src, ICachedPage dst) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setPageDiskId(ICachedPage page, long dpid) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void returnPage(ICachedPage page, boolean reinsert) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public int getFileReferenceCount(int fileId) {
         return bufferCache.getFileReferenceCount(fileId);
     }
-    
+
     @Override
     public boolean isReplicationEnabled() {
         return false;

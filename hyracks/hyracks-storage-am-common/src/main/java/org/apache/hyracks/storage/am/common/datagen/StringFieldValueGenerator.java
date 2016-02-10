@@ -24,7 +24,7 @@ import java.util.Random;
 public class StringFieldValueGenerator implements IFieldValueGenerator<String> {
     private int maxLen;
     private final Random rnd;
-    
+
     public StringFieldValueGenerator(int maxLen, Random rnd) {
         this.maxLen = maxLen;
         this.rnd = rnd;
@@ -33,7 +33,7 @@ public class StringFieldValueGenerator implements IFieldValueGenerator<String> {
     public void setMaxLength(int maxLen) {
         this.maxLen = maxLen;
     }
-    
+
     @Override
     public String next() {
         String s = Long.toHexString(Double.doubleToLongBits(rnd.nextDouble()));

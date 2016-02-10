@@ -44,7 +44,7 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
     private final Map<String, PriorityQueue<ILSMIOOperation>> waitingFlushOperations = new HashMap<String, PriorityQueue<ILSMIOOperation>>();
 
     public void init(ThreadFactory threadFactory) {
-        // Creating an executor with the same configuration of Executors.newCachedThreadPool. 
+        // Creating an executor with the same configuration of Executors.newCachedThreadPool.
         executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(), threadFactory) {
 

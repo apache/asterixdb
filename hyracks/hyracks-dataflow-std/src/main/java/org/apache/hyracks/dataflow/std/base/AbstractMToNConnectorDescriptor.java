@@ -42,7 +42,7 @@ public abstract class AbstractMToNConnectorDescriptor extends AbstractConnectorD
         sourceBitmap.clear();
         sourceBitmap.set(0, nProducerPartitions);
     }
-    
+
     @Override
     public boolean allProducersToAllConsumers(){
         return true;

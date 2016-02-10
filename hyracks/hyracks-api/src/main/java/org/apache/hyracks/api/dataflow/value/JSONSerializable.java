@@ -24,7 +24,7 @@ import org.json.JSONObject;
 public interface JSONSerializable {
     /**
      * Returns the JSON representation of the object.
-     * 
+     *
      * @return A new JSONObject instance representing this Java object.
      */
     public JSONObject toJSON() throws JSONException;

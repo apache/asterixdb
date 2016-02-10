@@ -298,7 +298,7 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
 
     /**
      * check whether the operator is inside a sub-plan
-     * 
+     *
      * @param nestedRootRef
      * @return true-if it is; false otherwise.
      */

@@ -106,7 +106,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                         rootsToBeRemoved.add(r);
                     }
                 }
-                // Makes sure the operator should have at least ONE nested plan even it is empty 
+                // Makes sure the operator should have at least ONE nested plan even it is empty
                 // (because a lot of places uses this assumption,  TODO(yingyib): clean them up).
                 if (nestedPlan.getRoots().size() == rootsToBeRemoved.size() && opWithNest.getNestedPlans().size() > 1) {
                     nestedPlan.getRoots().removeAll(rootsToBeRemoved);

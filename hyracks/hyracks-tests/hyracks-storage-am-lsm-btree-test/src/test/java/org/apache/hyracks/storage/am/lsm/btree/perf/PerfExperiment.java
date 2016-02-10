@@ -83,7 +83,7 @@ public class PerfExperiment {
             //String btreeName = "071211";
             //BTreeSearchRunner runner = new BTreeSearchRunner(btreeName, 10, numBatches, 8192, 25000, typeTraits, cmp);
             //LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100, 8192, 250, typeTraits, cmp);
-            //LSMTreeSearchRunner runner = new LSMTreeSearchRunner(100000, numBatches, 8192, 24750, 8192, 250, typeTraits, cmp); 
+            //LSMTreeSearchRunner runner = new LSMTreeSearchRunner(100000, numBatches, 8192, 24750, 8192, 250, typeTraits, cmp);
             int inMemPageSize = 131072; // 128kb
             int onDiskPageSize = inMemPageSize;
             int inMemNumPages = 8192; // 1GB

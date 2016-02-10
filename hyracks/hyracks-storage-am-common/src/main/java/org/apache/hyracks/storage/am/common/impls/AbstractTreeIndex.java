@@ -312,7 +312,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         protected final ITreeIndexTupleWriter tupleWriter;
         protected ITreeIndexFrame leafFrame;
         protected ITreeIndexFrame interiorFrame;
-        // Immutable bulk loaders write their root page at page -2, as needed e.g. by append-only file systems such as HDFS. 
+        // Immutable bulk loaders write their root page at page -2, as needed e.g. by append-only file systems such as HDFS.
         // Since loading this tree relies on the root page actually being at that point, no further inserts into that tree are allowed.
         // Currently, this is not enforced.
         protected boolean releasedLatches;
@@ -322,7 +322,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
         public AbstractTreeIndexBulkLoader(float fillFactor, boolean appendOnly) throws TreeIndexException,
                 HyracksDataException {
-            //Initialize the tree 
+            //Initialize the tree
             if (appendOnly) {
                 create(appendOnly);
                 this.appendOnly = appendOnly;

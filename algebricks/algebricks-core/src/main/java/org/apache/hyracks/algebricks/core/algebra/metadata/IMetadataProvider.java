@@ -78,7 +78,7 @@ public interface IMetadataProvider<S, I> {
     /**
      * Creates the insert runtime of IndexInsertDeletePOperator, which models
      * insert/delete operations into a secondary index.
-     * 
+     *
      * @param dataSource
      *            Target secondary index.
      * @param propagatedSchema
@@ -117,7 +117,7 @@ public interface IMetadataProvider<S, I> {
     /**
      * Creates the delete runtime of IndexInsertDeletePOperator, which models
      * insert/delete operations into a secondary index.
-     * 
+     *
      * @param dataSource
      *            Target secondary index.
      * @param propagatedSchema
@@ -157,7 +157,7 @@ public interface IMetadataProvider<S, I> {
      * Creates the TokenizeOperator for IndexInsertDeletePOperator, which tokenizes
      * secondary key into [token, number of token] pair in a length-partitioned index.
      * In case of non length-partitioned index, it tokenizes secondary key into [token].
-     * 
+     *
      * @param dataSource
      *            Target secondary index.
      * @param propagatedSchema

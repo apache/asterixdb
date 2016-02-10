@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * Matches the following operator pattern:
  * (select) <-- ((assign)* <-- (select)*)+
- * 
+ *
  * Consolidates the selects to:
  * (select) <-- (assign)*
  *
@@ -59,7 +59,7 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
 
         IFunctionInfo andFn = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
         // New conjuncts for consolidated select.
-        AbstractFunctionCallExpression conj = null;        
+        AbstractFunctionCallExpression conj = null;
         AbstractLogicalOperator topMostOp = null;
         AbstractLogicalOperator selectParent = null;
         AbstractLogicalOperator nextSelect = firstSelect;
@@ -75,14 +75,14 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
         	}
             // Remember the top-most op that we are not removing.
             topMostOp = selectParent;
-            
+
             // Initialize the new conjuncts, if necessary.
             if (conj == null) {
             	conj = new ScalarFunctionCallExpression(andFn);
             	// Add the first select's condition.
             	conj.getArguments().add(new MutableObject<ILogicalExpression>(firstSelect.getCondition().getValue()));
             }
-            
+
             // Consolidate all following selects.
             do {
                 // Add the condition nextSelect to the new list of conjuncts.
@@ -90,21 +90,21 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
                 selectParent = nextSelect;
                 nextSelect = (AbstractLogicalOperator) nextSelect.getInputs().get(0).getValue();
             } while (nextSelect.getOperatorTag() == LogicalOperatorTag.SELECT);
-            
+
             // Hook up the input of the top-most remaining op if necessary.
             if (topMostOp.getOperatorTag() == LogicalOperatorTag.ASSIGN || topMostOp == firstSelect) {
             	topMostOp.getInputs().set(0, selectParent.getInputs().get(0));
             }
-            
+
             // Prepare for next iteration.
             nextSelect = selectParent;
         } while (true);
-		
+
 		// Did we consolidate any selects?
         if (conj == null) {
         	return false;
         }
-        
+
         // Set the new conjuncts.
         firstSelect.getCondition().setValue(conj);
         context.computeAndSetTypeEnvironmentForOperator(firstSelect);

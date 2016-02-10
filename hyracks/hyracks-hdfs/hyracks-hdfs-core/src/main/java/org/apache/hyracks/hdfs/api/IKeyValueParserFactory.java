@@ -26,7 +26,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Users need to implement this interface to use the HDFSReadOperatorDescriptor.
- * 
+ *
  * @param <K>
  *            the key type
  * @param <V>
@@ -36,7 +36,7 @@ public interface IKeyValueParserFactory<K, V> extends Serializable {
 
     /**
      * This method creates a key-value parser.
-     * 
+     *
      * @param ctx
      *            the IHyracksTaskContext
      * @return a key-value parser instance.

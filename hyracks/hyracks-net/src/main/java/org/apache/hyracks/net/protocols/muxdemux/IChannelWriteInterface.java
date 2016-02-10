@@ -23,14 +23,14 @@ import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
 
 /**
  * Represents the write interface of a {@link ChannelControlBlock}.
- * 
+ *
  * @author vinayakb
  */
 public interface IChannelWriteInterface {
     /**
      * Set the callback interface that must be invoked when a full buffer has been emptied by
      * writing the data to the remote end.
-     * 
+     *
      * @param emptyBufferAcceptor
      *            - the empty buffer acceptor.
      */
@@ -39,7 +39,7 @@ public interface IChannelWriteInterface {
     /**
      * Get the full buffer acceptor that accepts buffers filled with data that need to be written
      * to the remote end.
-     * 
+     *
      * @return the full buffer acceptor.
      */
     public ICloseableBufferAcceptor getFullBufferAcceptor();
@@ -47,7 +47,7 @@ public interface IChannelWriteInterface {
     /**
      * Set the buffer factory which is in charge of creating buffers if the request does not
      * make the number of allocated buffers goes beyond limit
-     * 
+     *
      * @param bufferFactory
      *            - the buffer factory
      * @param limit

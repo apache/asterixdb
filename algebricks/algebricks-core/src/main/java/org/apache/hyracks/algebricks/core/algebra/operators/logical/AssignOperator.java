@@ -36,12 +36,12 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 /**
  * It corresponds to the Map operator in other algebras.
- * 
+ *
  * @author Nicola
  */
 
 public class AssignOperator extends AbstractAssignOperator {
-	
+
 	private LocalOrderProperty explicitOrderingProperty;
 
     public AssignOperator(List<LogicalVariable> vars, List<Mutable<ILogicalExpression>> exprs) {

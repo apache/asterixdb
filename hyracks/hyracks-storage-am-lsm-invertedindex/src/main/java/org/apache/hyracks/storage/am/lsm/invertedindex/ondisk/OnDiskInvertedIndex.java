@@ -75,7 +75,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class OnDiskInvertedIndex implements IInvertedIndex {
     protected final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
 
-    // Schema of BTree tuples, set in constructor.    
+    // Schema of BTree tuples, set in constructor.
     protected final int invListStartPageIdField;
     protected final int invListEndPageIdField;
     protected final int invListStartOffField;
@@ -350,7 +350,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         private void createAndInsertBTreeTuple() throws IndexException, HyracksDataException {
-            // Build tuple.        
+            // Build tuple.
             btreeTupleBuilder.reset();
             DataOutput output = btreeTupleBuilder.getDataOutput();
             // Add key fields.

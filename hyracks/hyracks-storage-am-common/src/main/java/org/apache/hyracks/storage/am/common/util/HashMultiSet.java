@@ -32,9 +32,9 @@ import java.util.Map;
  */
 public class HashMultiSet<E> extends AbstractCollection<E> {
 
-    private final Map<E, List<E>> map = new HashMap<E, List<E>>(); 
+    private final Map<E, List<E>> map = new HashMap<E, List<E>>();
     private int size = 0;
-    
+
     @Override
     public boolean add(E e) {
         List<E> list = map.get(e);
@@ -46,17 +46,17 @@ public class HashMultiSet<E> extends AbstractCollection<E> {
         size++;
         return true;
     }
-    
+
     @Override
     public boolean contains(Object o) {
         return map.containsKey(o);
     }
-    
+
     @Override
     public boolean remove(Object o) {
         List<E> list = map.get(o);
         if (list == null) {
-            return false;            
+            return false;
         }
         list.remove(list.size() - 1);
         if (list.isEmpty()) {
@@ -65,7 +65,7 @@ public class HashMultiSet<E> extends AbstractCollection<E> {
         size--;
         return true;
     }
-    
+
     @Override
     public Iterator<E> iterator() {
         return new HashMultiSetIterator();
@@ -75,22 +75,22 @@ public class HashMultiSet<E> extends AbstractCollection<E> {
     public int size() {
         return size;
     }
-    
+
     @Override
     public void clear() {
         map.clear();
         size = 0;
     }
-    
+
     private class HashMultiSetIterator implements Iterator<E> {
 
         private Iterator<Map.Entry<E, List<E>>> mapIter;
         private Iterator<E> listIter;
-        
+
         public HashMultiSetIterator() {
             mapIter = map.entrySet().iterator();
         }
-        
+
         @Override
         public boolean hasNext() {
             if (mapIter.hasNext() || (listIter != null && listIter.hasNext())) {

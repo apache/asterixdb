@@ -30,13 +30,13 @@ public interface IFieldAggregateDescriptor {
 
     /**
      * Initialize the state based on the input tuple.
-     * 
+     *
      * @param accessor
      * @param tIndex
      * @param fieldOutput
      *            The data output for the frame containing the state. This may
      *            be null, if the state is maintained as a java object.
-     * 
+     *
      *            Note that we have an assumption that the initialization of the
      *            binary state (if any) inserts the state fields into the buffer
      *            in a appending fashion. This means that an arbitrary initial
@@ -53,21 +53,21 @@ public interface IFieldAggregateDescriptor {
      * too. Note that here the frame is not an input argument, since it can be
      * reset outside of the aggregator (simply reset the starting index of the
      * buffer).
-     * 
+     *
      * @param state
      */
     public void reset();
 
     /**
      * Aggregate the value. Aggregate state should be updated correspondingly.
-     * 
+     *
      * @param accessor
      * @param tIndex
      * @param data
      *            The buffer containing the state, if frame-based-state is used.
      *            This means that it can be null if java-object-based-state is
      *            used.
-     * 
+     *
      *            Here the length of binary state can be obtains from the state
      *            parameter, and if the content to be filled into that is over-
      *            flowing (larger than the reversed space), error should be
@@ -82,7 +82,7 @@ public interface IFieldAggregateDescriptor {
 
     /**
      * Output the partial aggregation result.
-     * 
+     *
      * @param fieldOutput
      *            The data output for the output frame
      * @param data
@@ -97,7 +97,7 @@ public interface IFieldAggregateDescriptor {
 
     /**
      * Output the final aggregation result.
-     * 
+     *
      * @param fieldOutput
      *            The data output for the output frame
      * @param data

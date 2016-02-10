@@ -18,5 +18,5 @@
  */
 package org.apache.hyracks.yarn.am.manifest;
 
-public class ClusterController extends AbstractProcess {    
+public class ClusterController extends AbstractProcess {
 }

@@ -32,7 +32,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * EXCHANGE operators in the plan. Previously, i.e. before having physical
  * optimizations in place, we were using the IntroduceExchangeRule, which was
  * doing both, to both set excutionMode and introduce data exchange ops.
- * 
+ *
  * @author Nicola
  */
 public class SetExecutionModeRule implements IAlgebraicRewriteRule {

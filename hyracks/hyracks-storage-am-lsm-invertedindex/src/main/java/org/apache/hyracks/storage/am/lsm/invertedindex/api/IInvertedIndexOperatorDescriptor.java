@@ -25,14 +25,14 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public interface IInvertedIndexOperatorDescriptor extends IIndexOperatorDescriptor {
-    
+
     public ITypeTraits[] getInvListsTypeTraits();
-    
+
     public IBinaryComparatorFactory[] getInvListsComparatorFactories();
-    
+
     public ITypeTraits[] getTokenTypeTraits();
-    
+
     public IBinaryComparatorFactory[] getTokenComparatorFactories();
 
-    public IBinaryTokenizerFactory getTokenizerFactory();        
+    public IBinaryTokenizerFactory getTokenizerFactory();
 }

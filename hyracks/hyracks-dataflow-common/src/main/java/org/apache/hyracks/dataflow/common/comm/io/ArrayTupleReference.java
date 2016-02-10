@@ -25,7 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * a frame. It is meant to be reset directly with the field slots and tuple data
  * provided by ArrayTupleBuilder. The purpose is to avoid coping the built tuple
  * into a frame before being able to use it as an ITupleReference.
- * 
+ *
  * @author alexander.behm
  */
 public class ArrayTupleReference implements ITupleReference {
@@ -36,7 +36,7 @@ public class ArrayTupleReference implements ITupleReference {
 		this.fEndOffsets = fEndOffsets;
 		this.tupleData = tupleData;
 	}
-	
+
 	@Override
 	public int getFieldCount() {
 		return fEndOffsets.length;
@@ -49,7 +49,7 @@ public class ArrayTupleReference implements ITupleReference {
 
 	@Override
 	public int getFieldStart(int fIdx) {
-		return (fIdx == 0) ? 0 : fEndOffsets[fIdx - 1]; 
+		return (fIdx == 0) ? 0 : fEndOffsets[fIdx - 1];
 	}
 
 	@Override

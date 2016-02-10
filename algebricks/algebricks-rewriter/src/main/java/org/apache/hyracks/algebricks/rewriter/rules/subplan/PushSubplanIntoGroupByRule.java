@@ -47,7 +47,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * This rule pushes an array of subplans on top of a group-by into the
  * nested plan of the group-by.
- * 
+ *
  * @author yingyib
  */
 
@@ -179,7 +179,7 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
 
     /**
      * Removes unused aggregation variables (and expressions)
-     * 
+     *
      * @param gby
      * @throws AlgebricksException
      */

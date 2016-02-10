@@ -34,42 +34,42 @@ public interface ITwoPCIndex {
      */
     public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws TreeIndexException;
-    
+
     /**
      * This function is used to commit the previous transaction if it was resulted in creating any components
      */
     public void commitTransaction() throws TreeIndexException, HyracksDataException, IndexException;
-    
+
     /**
      * This function is used to abort the last transaction
      */
     public void abortTransaction() throws TreeIndexException;
-    
+
     /**
      * This function is used to recover a transaction if the system crashed after the decision to commit
      */
     public void recoverTransaction() throws TreeIndexException;
-    
+
     /**
      * This function is used to add the committed disk component to the appropriate list and reflect the changes
      */
     public void commitTransactionDiskComponent(ILSMComponent newComponent) throws IndexException, HyracksDataException;
-    
+
     /**
      * This function is used to create a version specific accessor to search a specific version
      */
     public ILSMIndexAccessorInternal createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion) throws HyracksDataException;
-    
+
     /**
      * This function is used to get the first components list
      */
     public List<ILSMComponent> getFirstComponentList();
-    
+
     /**
      * This function is used to get teh second components list
      */
     public List<ILSMComponent> getSecondComponentList();
-    
+
     /**
      * This function is used to get the current version id of the index
      */

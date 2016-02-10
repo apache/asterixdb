@@ -41,7 +41,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.AbstractDecorrelationRule;
  *
  * <pre>
  * Before
- * 
+ *
  *   %PARENT_PLAN
  *   SUBPLAN{
  *     %NESTED_OPERATORS_B+
@@ -50,12 +50,12 @@ import org.apache.hyracks.algebricks.rewriter.rules.AbstractDecorrelationRule;
  *     NESTEDTUPLESOURCE
  *   }
  *   %CHILD_PLAN
- * 
+ *
  *   where
  *     %SUBPLAN has one nested plan with a root AGGREGATE operator.
- * 
+ *
  * After
- * 
+ *
  *   %PARENT_PLAN
  *   SUBPLAN{
  *     %NESTED_OPERATORS_B+

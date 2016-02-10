@@ -28,14 +28,14 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 @SuppressWarnings({"rawtypes", "unchecked" })
-public class TupleGenerator {    
+public class TupleGenerator {
     protected final ISerializerDeserializer[] fieldSerdes;
     protected final IFieldValueGenerator[] fieldGens;
     protected final ArrayTupleBuilder tb;
     protected final ArrayTupleReference tuple;
     protected final byte[] payload;
     protected final DataOutput tbDos;
-    
+
     public TupleGenerator(IFieldValueGenerator[] fieldGens, ISerializerDeserializer[] fieldSerdes, int payloadSize) {
         this.fieldSerdes = fieldSerdes;
         this.fieldGens = fieldGens;
@@ -46,7 +46,7 @@ public class TupleGenerator {
         } else {
             tb = new ArrayTupleBuilder(fieldSerdes.length);
             payload = null;
-        }        
+        }
         tbDos = tb.getDataOutput();
     }
 
@@ -63,21 +63,21 @@ public class TupleGenerator {
         tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
         return tuple;
     }
-    
+
     public ITupleReference get() {
         return tuple;
     }
-    
+
     public void reset() {
         for (IFieldValueGenerator fieldGen : fieldGens) {
             fieldGen.reset();
         }
     }
-    
+
     public ISerializerDeserializer[] getFieldSerdes() {
         return fieldSerdes;
     }
-    
+
     public IFieldValueGenerator[] getFieldGens() {
         return fieldGens;
     }

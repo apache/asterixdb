@@ -44,7 +44,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * The live variables at OP will not be used after SUBPLAN.
  * Note: This rule must be applied after
  * the RemoveRedundantVariablesRule (to avoid the lineage analysis of variable cardinality).
- * 
+ *
  * @author yingyib
  */
 public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRewriteRule {
@@ -122,7 +122,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
 
     /**
      * Whether the cardinality of the input free variables are one.
-     * 
+     *
      * @param opRef
      *            the operator to be checked (including its input operators)
      * @param freeVars
@@ -141,7 +141,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
 
     /**
      * Recursively adding variables which has cardinality one and in int the input free variable set.
-     * 
+     *
      * @param opRef
      *            , the current operator reference.
      * @param freeVars
@@ -181,7 +181,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
 
     /**
      * Find the NestedTupleSource operator in the direct/undirect input operators of opRef.
-     * 
+     *
      * @param opRef
      *            , the current operator reference.
      * @param ntsSet

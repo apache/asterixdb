@@ -50,7 +50,7 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.api.dataflow.IConnectorDescriptor#createPartitioner
      * (org.apache.hyracks.api.context.IHyracksTaskContext,
@@ -67,7 +67,7 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.hyracks.api.dataflow.IConnectorDescriptor#
      * createPartitionCollector
      * (org.apache.hyracks.api.context.IHyracksTaskContext,

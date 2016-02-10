@@ -38,7 +38,7 @@ public class BTreeCursorInitialState implements ICursorInitialState {
         this.searchCallback = searchCallback;
         this.accessor = accessor;
     }
-    
+
     public IIndexAccessor getAccessor() {
         return accessor;
     }

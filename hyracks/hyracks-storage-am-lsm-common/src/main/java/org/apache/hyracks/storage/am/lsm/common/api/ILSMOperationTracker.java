@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
  * This interface exposes methods for tracking and setting the status of operations for the purpose
  * of coordinating flushes/merges in {@link ILSMIndex}.
  * Note that 'operation' below refers to {@link IIndexAccessor} methods.
- * 
+ *
  * @author zheilbron
  */
 public interface ILSMOperationTracker {

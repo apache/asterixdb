@@ -147,7 +147,7 @@ public class InsertPipelineExample {
         // tuple
         int[] primaryFieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input
                                                         // tuple to field 0 of
-                                                        // B-Tree tuple, etc.        
+                                                        // B-Tree tuple, etc.
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);

@@ -68,7 +68,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
  * This is an lsm r-tree that does not have memory component and is modified
  * only by bulk loading and addition of disk components as of this point, it is
  * intended for use with external dataset indexes only.
- * 
+ *
  * @author alamouda
  */
 public class ExternalRTree extends LSMRTree implements ITwoPCIndex {

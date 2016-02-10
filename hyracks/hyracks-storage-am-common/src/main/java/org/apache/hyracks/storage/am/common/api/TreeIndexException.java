@@ -24,7 +24,7 @@ public class TreeIndexException extends IndexException {
 	private static final long serialVersionUID = 1L;
 	private boolean handled = false;
 
-	public TreeIndexException(Exception e) {		
+	public TreeIndexException(Exception e) {
 		super(e);
 	}
 

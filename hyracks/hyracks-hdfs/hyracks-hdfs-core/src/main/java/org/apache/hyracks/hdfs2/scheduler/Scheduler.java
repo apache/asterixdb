@@ -41,7 +41,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler
-     * 
+     *
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
@@ -51,7 +51,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @throws HyracksException
@@ -62,7 +62,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @param topology
@@ -75,7 +75,7 @@ public class Scheduler {
 
     /**
      * The constructor of the scheduler.
-     * 
+     *
      * @param ncNameToNcInfos
      *            the mapping from nc names to nc infos
      * @throws HyracksException
@@ -87,7 +87,7 @@ public class Scheduler {
 
     /**
      * Set location constraints for a file scan operator with a list of file splits
-     * 
+     *
      * @throws HyracksDataException
      */
     public String[] getLocationConstraints(List<InputSplit> splits) throws HyracksException {

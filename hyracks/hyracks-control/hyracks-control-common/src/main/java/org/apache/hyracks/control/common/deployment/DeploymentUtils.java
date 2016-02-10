@@ -44,7 +44,7 @@ import org.apache.hyracks.control.common.context.ServerContext;
 
 /**
  * A utility class which is in charge of the actual work of deployments.
- * 
+ *
  * @author yingyib
  */
 public class DeploymentUtils {
@@ -53,7 +53,7 @@ public class DeploymentUtils {
 
     /**
      * undeploy an existing deployment
-     * 
+     *
      * @param deploymentId
      *            the deployment id
      * @param container
@@ -78,7 +78,7 @@ public class DeploymentUtils {
 
     /**
      * Deploying jars in NC or CC
-     * 
+     *
      * @param deploymentId
      *            the deployment id
      * @param urls
@@ -106,7 +106,7 @@ public class DeploymentUtils {
 
     /**
      * Deserialize bytes to an object according to a specific deployment
-     * 
+     *
      * @param bytes
      *            the bytes to be deserialized
      * @param deploymentId
@@ -130,7 +130,7 @@ public class DeploymentUtils {
 
     /**
      * Load a class from its class name
-     * 
+     *
      * @param className
      * @param deploymentId
      * @param appCtx
@@ -153,7 +153,7 @@ public class DeploymentUtils {
 
     /**
      * Get the classloader of a specific deployment
-     * 
+     *
      * @param deploymentId
      * @param appCtx
      * @return
@@ -174,7 +174,7 @@ public class DeploymentUtils {
 
     /**
      * Download remote Http URLs and return the stored local file URLs
-     * 
+     *
      * @param urls
      *            the remote Http URLs
      * @param deploymentDir

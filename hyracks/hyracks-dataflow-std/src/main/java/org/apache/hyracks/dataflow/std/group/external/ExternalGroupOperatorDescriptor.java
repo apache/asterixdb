@@ -85,7 +85,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.hyracks.api.dataflow.IOperatorDescriptor#contributeActivities
      * (org.apache.hyracks.api.dataflow.IActivityGraphBuilder)

@@ -127,8 +127,8 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
 
-        // Typically, we only enter this case for disk-based inverted indexes. 
-        // TODO: This behavior could potentially lead to a deadlock if we cannot pin 
+        // Typically, we only enter this case for disk-based inverted indexes.
+        // TODO: This behavior could potentially lead to a deadlock if we cannot pin
         // all inverted lists in memory, and are forced to wait for a page to get evicted
         // (other concurrent searchers may be in the same situation).
         // We should detect such cases, then unpin all pages, and then keep retrying to pin until we succeed.

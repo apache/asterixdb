@@ -33,7 +33,7 @@ import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 /**
  * A {@link MultiplexedConnection} can be used by clients to create multiple "channels"
  * that can have independent full-duplex conversations.
- * 
+ *
  * @author vinayakb
  */
 public class MultiplexedConnection implements ITCPConnectionEventListener {
@@ -140,7 +140,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     /**
      * Open a channel to the other side.
-     * 
+     *
      * @return
      * @throws NetException
      *             - A network failure occurred.

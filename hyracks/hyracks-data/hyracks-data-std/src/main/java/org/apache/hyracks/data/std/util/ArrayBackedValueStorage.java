@@ -25,7 +25,7 @@ import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class ArrayBackedValueStorage implements IMutableValueStorage {
-   
+
     private final GrowableArray data = new GrowableArray();
 
     @Override

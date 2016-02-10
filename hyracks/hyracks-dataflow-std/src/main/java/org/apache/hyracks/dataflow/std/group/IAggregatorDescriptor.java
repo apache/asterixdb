@@ -26,14 +26,14 @@ public interface IAggregatorDescriptor {
 
     /**
      * Create an aggregate state
-     * 
+     *
      * @return
      */
     public AggregateState createAggregateStates();
 
     /**
      * Initialize the state based on the input tuple.
-     * 
+     *
      * @param accessor
      * @param tIndex
      * @param fieldOutput
@@ -51,14 +51,14 @@ public interface IAggregatorDescriptor {
      * too. Note that here the frame is not an input argument, since it can be
      * reset outside of the aggregator (simply reset the starting index of the
      * buffer).
-     * 
+     *
      * @param state
      */
     public void reset();
 
     /**
      * Aggregate the value. Aggregate state should be updated correspondingly.
-     * 
+     *
      * @param accessor
      * @param tIndex
      * @param data
@@ -75,7 +75,7 @@ public interface IAggregatorDescriptor {
 
     /**
      * Output the partial aggregation result.
-     * 
+     *
      * @param fieldOutput
      *            The data output for the output frame
      * @param data
@@ -91,7 +91,7 @@ public interface IAggregatorDescriptor {
 
     /**
      * Output the final aggregation result.
-     * 
+     *
      * @param fieldOutput
      *            The data output for the output frame
      * @param data

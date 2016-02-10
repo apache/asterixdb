@@ -28,7 +28,7 @@ public final class LSMComponentFileReferences {
     // This FileReference for the delete index (if any). For example, this will be the the FileReference of the buddy BTree in one component of the LSM-RTree.
     private final FileReference deleteIndexFileReference;
 
-    // This FileReference for the bloom filter (if any). 
+    // This FileReference for the bloom filter (if any).
     private final FileReference bloomFilterFileReference;
 
     public LSMComponentFileReferences(FileReference insertIndexFileReference, FileReference deleteIndexFileReference,

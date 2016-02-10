@@ -39,7 +39,7 @@ public class LongArrayList {
 	public int first() {
 		return first;
 	}
-	
+
 	public void addFirst(long i) {
 	    long[] newData = new long[data.length + 1];
         System.arraycopy(data, 0, newData, 0, first);

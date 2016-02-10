@@ -46,7 +46,7 @@ public interface ITreeIndexTestContext<T extends CheckTuple> {
 
     public ArrayTupleBuilder getTupleBuilder();
 
-    public void insertCheckTuple(T checkTuple, Collection<T> checkTuples);      
+    public void insertCheckTuple(T checkTuple, Collection<T> checkTuples);
 
     public void deleteCheckTuple(T checkTuple, Collection<T> checkTuples);
 

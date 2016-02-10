@@ -32,7 +32,7 @@ import org.apache.hyracks.net.protocols.tcp.TCPEndpoint;
  * Multiplexed Connection Manager.
  * Every participant that wants to use the multiplexed connections must create and instance
  * of this class.
- * 
+ *
  * @author vinayakb
  */
 public class MuxDemux {
@@ -50,7 +50,7 @@ public class MuxDemux {
 
     /**
      * Constructor.
-     * 
+     *
      * @param localAddress
      *            - TCP/IP socket address to listen on. Null for non-listening unidirectional sockets
      * @param listener
@@ -109,7 +109,7 @@ public class MuxDemux {
 
     /**
      * Starts listening for remote connections and is capable of initiating connections.
-     * 
+     *
      * @throws IOException
      */
     public void start() throws IOException {
@@ -119,7 +119,7 @@ public class MuxDemux {
     /**
      * Create a {@link MultiplexedConnection} that can create channels to the specified remote address.
      * The remote address must have a {@link MuxDemux} listening for connections.
-     * 
+     *
      * @param remoteAddress
      *            - Address of the remote {@link MuxDemux}
      * @return a {@link MultiplexedConnection} connected to the remote address.
@@ -148,7 +148,7 @@ public class MuxDemux {
 
     /**
      * Get the local address that this {@link MuxDemux} is listening for connections.
-     * 
+     *
      * @return local TCP/IP socket address.
      */
     public InetSocketAddress getLocalAddress() {
@@ -157,7 +157,7 @@ public class MuxDemux {
 
     /**
      * Gets performance counters useful for collecting efficiency metrics.
-     * 
+     *
      * @return
      */
     public MuxDemuxPerformanceCounters getPerformanceCounters() {

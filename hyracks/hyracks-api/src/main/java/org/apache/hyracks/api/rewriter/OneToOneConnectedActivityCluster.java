@@ -31,7 +31,7 @@ import org.apache.hyracks.api.job.ActivityClusterId;
 
 /**
  * All the connectors in an OneToOneConnectedCluster are OneToOneConnectorDescriptors.
- * 
+ *
  * @author yingyib
  */
 public class OneToOneConnectedActivityCluster extends ActivityCluster {
@@ -49,7 +49,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * Set up the mapping of the cluster's output channel to an internal activity and its output channel
-     * 
+     *
      * @param clusterOutputIndex
      *            the output channel index for the cluster
      * @param activityId
@@ -64,7 +64,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * get the an internal activity and its output channel of a cluster output channel
-     * 
+     *
      * @param clusterOutputIndex
      *            the output channel index for the cluster
      * @return a pair containing the activity id of the corresponding internal activity and the output channel index
@@ -75,7 +75,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * Set up the mapping of the cluster's input channel to an internal activity and input output channel
-     * 
+     *
      * @param clusterInputIndex
      *            the input channel index for the cluster
      * @param activityId
@@ -90,7 +90,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * get the an internal activity and its input channel of a cluster input channel
-     * 
+     *
      * @param clusterOutputIndex
      *            the output channel index for the cluster
      * @return a pair containing the activity id of the corresponding internal activity and the output channel index
@@ -101,7 +101,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * Get the cluster input channel of an input-boundary activity and its input channel
-     * 
+     *
      * @param activityInputChannel
      *            the input-boundary activity and its input channel
      * @return the cluster input channel
@@ -113,7 +113,7 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     /**
      * Get the cluster output channel of an input-boundary activity and its output channel
-     * 
+     *
      * @param activityOutputChannel
      *            the output-boundary activity and its output channel
      * @return the cluster output channel

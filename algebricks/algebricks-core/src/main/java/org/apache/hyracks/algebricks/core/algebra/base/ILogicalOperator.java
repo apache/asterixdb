@@ -50,7 +50,7 @@ public interface ILogicalOperator {
     public List<LogicalVariable> getSchema();
 
     /*
-     * 
+     *
      * support for visitors
      */
 
@@ -73,7 +73,7 @@ public interface ILogicalOperator {
     /**
      * Get the variable propogation policy from this operator's input to its
      * output.
-     * 
+     *
      * @return The VariablePropogationPolicy.
      */
     public VariablePropagationPolicy getVariablePropagationPolicy();

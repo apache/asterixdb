@@ -43,7 +43,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveRedundantGroupByDecorVars implements IAlgebraicRewriteRule {
 
     private final Set<LogicalVariable> vars = new HashSet<LogicalVariable>();
-    
+
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
@@ -54,7 +54,7 @@ public class RemoveRedundantGroupByDecorVars implements IAlgebraicRewriteRule {
             return false;
         }
         vars.clear();
-        
+
         boolean modified = false;
         GroupByOperator groupOp = (GroupByOperator) op;
         Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupOp.getDecorList().iterator();

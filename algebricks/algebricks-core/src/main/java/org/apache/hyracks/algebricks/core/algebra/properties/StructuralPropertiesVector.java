@@ -63,7 +63,7 @@ public class StructuralPropertiesVector implements IPhysicalPropertiesVector {
     }
 
     /**
-     * 
+     *
      * @param reqd
      *            vector of required properties
      * @return a vector of properties from pvector that are not delivered by the

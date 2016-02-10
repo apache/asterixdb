@@ -44,7 +44,7 @@ public class FixedSizeFrameTupleTest {
      * Frames containing FixedSizeFrameTuple's require neither tuple slots nor
      * field slots. The tests inserts generated data into a frame until the
      * frame is full, and then verifies the frame's contents.
-     * 
+     *
      */
     @Test
     public void singleFieldTest() throws Exception {

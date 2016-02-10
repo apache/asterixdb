@@ -26,7 +26,7 @@ import org.apache.hyracks.control.common.deployment.DeploymentStatus;
 
 /***
  * This is the work happens on the CC when CC gets a deployment or undeployment notification status message from one NC.
- * 
+ *
  * @author yingyib
  */
 public class NotifyDeployBinaryWork extends AbstractHeartbeatWork {

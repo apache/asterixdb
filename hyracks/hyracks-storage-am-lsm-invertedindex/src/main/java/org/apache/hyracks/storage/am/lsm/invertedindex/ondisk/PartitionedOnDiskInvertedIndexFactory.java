@@ -32,7 +32,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFactory {
-    
+
     public PartitionedOnDiskInvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,

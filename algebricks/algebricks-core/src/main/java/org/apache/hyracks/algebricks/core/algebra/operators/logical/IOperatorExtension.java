@@ -47,8 +47,8 @@ public interface IOperatorExtension {
     void setPhysicalOperator(IPhysicalOperator physicalOperator);
 
     ExecutionMode getExecutionMode();
-    
+
     public void getUsedVariables(Collection<LogicalVariable> usedVars);
-    
+
     public void getProducedVariables(Collection<LogicalVariable> producedVars);
 }

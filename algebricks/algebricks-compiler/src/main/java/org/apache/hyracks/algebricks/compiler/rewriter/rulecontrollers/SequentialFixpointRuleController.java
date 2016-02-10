@@ -30,7 +30,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * Runs rules sequentially (round-robin), until one iteration over all rules
  * produces no change.
- * 
+ *
  * @author Nicola
  */
 public class SequentialFixpointRuleController extends AbstractRuleController {

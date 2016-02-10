@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * This rule lift out the aggregate operator out from a group-by operator
  * if the gby operator groups-by on empty key, e.g., the group-by variables are empty.
- * 
+ *
  * @author yingyib
  */
 public class EliminateGroupByEmptyKeyRule implements IAlgebraicRewriteRule {

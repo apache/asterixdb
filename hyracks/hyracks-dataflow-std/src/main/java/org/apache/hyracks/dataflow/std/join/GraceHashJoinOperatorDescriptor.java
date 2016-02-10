@@ -153,7 +153,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(spartAid, 0);
             int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
             final IPredicateEvaluator predEvaluator = ( predEvaluatorFactory == null ? null : predEvaluatorFactory.createPredicateEvaluator() );
-            
+
             return new GraceHashJoinOperatorNodePushable(ctx, new TaskId(new ActivityId(getOperatorId(),
                     RPARTITION_ACTIVITY_ID), partition), new TaskId(new ActivityId(getOperatorId(),
                     SPARTITION_ACTIVITY_ID), partition), recordsPerFrame, factor, keys0, keys1, hashFunctionFactories,

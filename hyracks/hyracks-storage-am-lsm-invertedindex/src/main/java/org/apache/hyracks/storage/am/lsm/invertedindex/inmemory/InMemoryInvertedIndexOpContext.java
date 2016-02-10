@@ -35,7 +35,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     public IndexOperation op;
     public final BTree btree;
 
-    // Needed for search operations,    
+    // Needed for search operations,
     public RangePredicate btreePred;
     public BTreeAccessor btreeAccessor;
     public MultiComparator btreeCmp;

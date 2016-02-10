@@ -173,19 +173,19 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public void copyPage(ICachedPage src, ICachedPage dst) {
-        
+
     }
 
     @Override
     public void setPageDiskId(ICachedPage page, long dpid) {
-        
+
     }
 
     @Override
     public void returnPage(ICachedPage page, boolean reinsert) {
-        
+
     }
-    
+
     @Override
     public int getFileReferenceCount(int fileId){
         return 0;

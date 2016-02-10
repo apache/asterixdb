@@ -24,34 +24,34 @@ import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
 /**
  * Application Context at the Node Controller for an application.
- * 
+ *
  * @author vinayakb
  */
 public interface INCApplicationContext extends IApplicationContext {
     /**
      * Gets the life cycle component manager of the Node Controller.
-     * 
+     *
      * @return
      */
     public ILifeCycleComponentManager getLifeCycleComponentManager();
 
     /**
      * Gets the node Id of the Node Controller.
-     * 
+     *
      * @return the Node Id.
      */
     public String getNodeId();
 
     /**
      * Get the Hyracks Root Context.
-     * 
+     *
      * @return The Hyracks Root Context
      */
     public IHyracksRootContext getRootContext();
 
     /**
      * Set an object that can be later retrieved by the {@link #getApplicationObject()} call.
-     * 
+     *
      * @param object
      *            Application Object
      */
@@ -59,21 +59,21 @@ public interface INCApplicationContext extends IApplicationContext {
 
     /**
      * Get the application object previously set by the {@link #setApplicationObject(Object)} call.
-     * 
+     *
      * @return Application Object
      */
     public Object getApplicationObject();
 
     /**
      * Get the memory manager at the node.
-     * 
+     *
      * @return Memory Manager
      */
     public IMemoryManager getMemoryManager();
 
     /**
      * Set the handler for state dumps.
-     * 
+     *
      * @param handler
      */
     public void setStateDumpHandler(IStateDumpHandler handler);

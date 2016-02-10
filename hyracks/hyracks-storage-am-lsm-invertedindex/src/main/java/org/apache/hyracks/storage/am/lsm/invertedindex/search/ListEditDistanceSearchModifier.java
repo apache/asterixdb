@@ -56,7 +56,7 @@ public class ListEditDistanceSearchModifier implements IInvertedIndexSearchModif
     public short getNumTokensUpperBound(short numQueryTokens) {
         return (short) (numQueryTokens + edThresh);
     }
-    
+
     @Override
     public String toString() {
         return "List Edit Distance Search Modifier, Threshold: " + edThresh;

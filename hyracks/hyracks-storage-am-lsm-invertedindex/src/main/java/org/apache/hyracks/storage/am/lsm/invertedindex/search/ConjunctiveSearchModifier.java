@@ -32,7 +32,7 @@ public class ConjunctiveSearchModifier implements IInvertedIndexSearchModifier {
     public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
         return 1;
     }
-    
+
     @Override
     public String toString() {
         return "Conjunctive Search Modifier";
