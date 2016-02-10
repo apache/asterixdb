@@ -39,7 +39,7 @@
 	<parent>
 		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.8-incubating</version>
 	</parent>
 
   <dependencies>

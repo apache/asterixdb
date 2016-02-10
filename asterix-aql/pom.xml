@@ -21,7 +21,7 @@
     <parent>
         <artifactId>apache-asterixdb</artifactId>
         <groupId>org.apache.asterix</groupId>
-        <version>0.8.8-SNAPSHOT</version>
+        <version>0.8.8-incubating</version>
     </parent>
 
     <licenses>
@@ -137,19 +137,19 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.8-incubating</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
