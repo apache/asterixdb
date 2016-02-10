@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <properties>
@@ -75,25 +75,25 @@
     <dependency>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-dataflow-std</artifactId>
-        <version>0.2.17-SNAPSHOT</version>
+        <version>0.2.17-incubating</version>
         <scope>compile</scope>
     </dependency>
     <dependency>
     	<groupId>org.apache.hyracks</groupId>
     	<artifactId>hyracks-data-std</artifactId>
-    	<version>0.2.17-SNAPSHOT</version>
+    	<version>0.2.17-incubating</version>
     </dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

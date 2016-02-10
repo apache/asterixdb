@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.17-incubating</version>
   </parent>
 
   <build>
@@ -56,14 +56,14 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-am-bloomfilter</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.17-incubating</version>
   		<type>jar</type>
   		<scope>test</scope>
   	</dependency>
