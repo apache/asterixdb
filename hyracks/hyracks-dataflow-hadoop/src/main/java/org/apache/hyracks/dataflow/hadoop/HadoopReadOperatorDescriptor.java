@@ -215,7 +215,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                                     .appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(),
                                             0, tb.getSize());
                         }
-                        appender.flush(writer, true);
+                        appender.write(writer, true);
                     } catch (Exception e) {
                         writer.fail();
                         throw new HyracksDataException(e);
