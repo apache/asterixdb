@@ -22,8 +22,8 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.util.bytes.HexPrinter;
 
@@ -34,18 +34,17 @@ public class ABinaryHexPrinter implements IPrinter {
     public static final ABinaryHexPrinter INSTANCE = new ABinaryHexPrinter();
 
     @Override
-    public void init() throws AlgebricksException {
-
+    public void init() {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         int validLength = ByteArrayPointable.getContentLength(b, s + 1);
         int start = s + 1 + ByteArrayPointable.getNumberBytesToStoreMeta(validLength);
         try {
             HexPrinter.printHexString(b, start, validLength, ps);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

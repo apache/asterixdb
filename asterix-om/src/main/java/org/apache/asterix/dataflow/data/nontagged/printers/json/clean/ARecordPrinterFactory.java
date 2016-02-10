@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
@@ -27,10 +28,10 @@ import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ARecordPrinterFactory implements IPrinterFactory {
 
@@ -54,18 +55,18 @@ public class ARecordPrinterFactory implements IPrinterFactory {
         return new IPrinter() {
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() {
                 arg.second = inputType.getTypeTag();
             }
 
             @Override
-            public void print(byte[] b, int start, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int start, int l, PrintStream ps) throws HyracksDataException {
                 try {
                     recAccessor.set(b, start, l);
                     arg.first = ps;
                     recAccessor.accept(printVisitor, arg);
-                } catch (Exception ioe) {
-                    throw new AlgebricksException(ioe);
+                } catch (AsterixException e) {
+                    throw new HyracksDataException(e);
                 }
             }
         };

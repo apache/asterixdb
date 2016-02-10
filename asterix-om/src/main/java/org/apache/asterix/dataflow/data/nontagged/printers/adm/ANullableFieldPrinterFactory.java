@@ -24,9 +24,9 @@ import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
@@ -45,19 +45,21 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
             private IPrinter fieldPrinter;
 
             @Override
-            public void init() throws AlgebricksException {
-                nullPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL)).createPrinter();
+            public void init() throws HyracksDataException {
+                nullPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                        .createPrinter();
                 fieldPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getNullableType()))
                         .createPrinter();
             }
 
             @Override
-            public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 fieldPrinter.init();
-                if (b[s] == ATypeTag.NULL.serialize())
+                if (b[s] == ATypeTag.NULL.serialize()) {
                     nullPrinter.print(b, s, l, ps);
-                else
+                } else {
                     fieldPrinter.print(b, s, l, ps);
+                }
             }
 
         };

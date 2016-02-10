@@ -21,19 +21,19 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AYearMonthDurationPrinter implements IPrinter {
 
     public static final AYearMonthDurationPrinter INSTANCE = new AYearMonthDurationPrinter();
 
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
 
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
 

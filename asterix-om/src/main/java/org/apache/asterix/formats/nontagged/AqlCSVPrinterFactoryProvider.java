@@ -50,6 +50,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 
@@ -61,7 +62,7 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException {
+    public IPrinterFactory getPrinterFactory(Object type) {
         IAType aqlType = (IAType) type;
 
         if (aqlType != null) {
@@ -113,9 +114,9 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case RECORD:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
                 case ORDEREDLIST:
-                    throw new AlgebricksException("'Orderedlist' type unsupported for CSV output");
+                    throw new NotImplementedException("'Orderedlist' type unsupported for CSV output");
                 case UNORDEREDLIST:
-                    throw new AlgebricksException("'Unorderedlist' type unsupported for CSV output");
+                    throw new NotImplementedException("'Unorderedlist' type unsupported for CSV output");
                 case UNION: {
                     if (((AUnionType) aqlType).isNullableType())
                         return new ANullableFieldPrinterFactory((AUnionType) aqlType);

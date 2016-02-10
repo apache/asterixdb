@@ -23,8 +23,8 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AIntervalPrinter implements IPrinter {
 
@@ -34,14 +34,14 @@ public class AIntervalPrinter implements IPrinter {
      * @see org.apache.hyracks.algebricks.data.IPrinter#init()
      */
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     /* (non-Javadoc)
      * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
      */
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         ps.print("interval(");
 
         byte typetag = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
@@ -63,7 +63,7 @@ public class AIntervalPrinter implements IPrinter {
                 timeInstancePrinter = ADateTimePrinter.INSTANCE;
                 break;
             default:
-                throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
+                throw new HyracksDataException("Unsupport internal time types in interval: " + typetag);
         }
 
         timeInstancePrinter.print(b, startOffset, startSize, ps);

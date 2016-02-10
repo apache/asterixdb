@@ -23,9 +23,9 @@ import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AYearMonthDurationPrinter implements IPrinter {
 
@@ -36,14 +36,14 @@ public class AYearMonthDurationPrinter implements IPrinter {
      * @see org.apache.hyracks.algebricks.data.IPrinter#init()
      */
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     /* (non-Javadoc)
      * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
      */
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         boolean positive = true;
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
 
@@ -72,7 +72,7 @@ public class AYearMonthDurationPrinter implements IPrinter {
             }
             ps.print("\")");
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

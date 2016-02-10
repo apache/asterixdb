@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AInt16Printer implements IPrinter {
 
@@ -34,17 +34,16 @@ public class AInt16Printer implements IPrinter {
 
     @Override
     public void init() {
-
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         short i = AInt16SerializerDeserializer.getShort(b, s + 1);
         try {
             WriteValueTools.writeInt(i, ps);
             WriteValueTools.writeUTF8StringNoQuotes(SUFFIX_STRING, ps);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 }

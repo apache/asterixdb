@@ -66,7 +66,7 @@ public class AqlLosslessJSONPrinterFactoryProvider implements IPrinterFactoryPro
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException {
+    public IPrinterFactory getPrinterFactory(Object type) {
         IAType aqlType = (IAType) type;
 
         if (aqlType != null) {

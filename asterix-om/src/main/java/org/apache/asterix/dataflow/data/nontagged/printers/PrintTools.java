@@ -25,8 +25,8 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
@@ -35,30 +35,29 @@ public class PrintTools {
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
 
-    public static void printDateString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public static void printDateString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
 
         try {
             gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
                     GregorianCalendarSystem.Fields.DAY, false);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
-    public static void printDateTimeString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public static void printDateTimeString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
 
         try {
             gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
                     GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
-
     }
 
-    public static void printDayTimeDurationString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public static void printDayTimeDurationString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         boolean positive = true;
         long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 1);
 
@@ -105,11 +104,11 @@ public class PrintTools {
                 ps.print("S");
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
-    public static void printDurationString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public static void printDurationString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         boolean positive = true;
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
         long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 5);
@@ -168,18 +167,18 @@ public class PrintTools {
                 ps.print("S");
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
-    public static void printTimeString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public static void printTimeString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
 
         try {
             gCalInstance.getExtendStringRepUntilField(time, 0, ps, GregorianCalendarSystem.Fields.HOUR,
                     GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

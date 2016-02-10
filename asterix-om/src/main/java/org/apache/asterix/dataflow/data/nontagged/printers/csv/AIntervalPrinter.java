@@ -20,8 +20,8 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AIntervalPrinter implements IPrinter {
 
@@ -29,11 +29,11 @@ public class AIntervalPrinter implements IPrinter {
 
 
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        throw new AlgebricksException("'Interval' type unsupported for CSV output");
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
+        throw new HyracksDataException("'Interval' type unsupported for CSV output");
     }
 }
