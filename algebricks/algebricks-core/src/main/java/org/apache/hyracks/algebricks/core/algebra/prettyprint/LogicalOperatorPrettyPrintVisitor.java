@@ -151,6 +151,11 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         addIndent(buffer, indent).append("order ");
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
             String fst;
+
+            if (op.getTopK() != -1) {
+                buffer.append("(topK: " + op.getTopK() + ") ");
+            }
+
             switch (p.first.getKind()) {
                 case ASC: {
                     fst = "ASC";
@@ -165,6 +170,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
                 }
             }
             buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
+
         }
         return buffer.toString();
     }

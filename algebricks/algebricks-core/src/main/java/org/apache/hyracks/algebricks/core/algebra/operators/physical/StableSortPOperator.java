@@ -38,6 +38,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.sort.TopKSorterOperatorDescriptor;
 
 /**
  * This will always be attached to an {@link OrderOperator} logical operator.
@@ -46,10 +47,16 @@ import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 public class StableSortPOperator extends AbstractStableSortPOperator {
 
     private int maxNumberOfFrames;
+    private int topK;
 
     public StableSortPOperator(int maxNumberOfFrames) {
+        this(maxNumberOfFrames, -1);
+    }
+
+    public StableSortPOperator(int maxNumberOfFrames, int topK) {
         super();
         this.maxNumberOfFrames = maxNumberOfFrames;
+        this.topK = topK;
     }
 
     @Override
@@ -65,9 +72,10 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema,
+                context);
         int n = sortColumns.length;
         int[] sortFields = new int[n];
         IBinaryComparatorFactory[] comps = new IBinaryComparatorFactory[n];
@@ -90,10 +98,41 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
             i++;
         }
 
-        ExternalSortOperatorDescriptor sortOpDesc = new ExternalSortOperatorDescriptor(spec, maxNumberOfFrames,
-                sortFields, nkcf, comps, recDescriptor);
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
-        ILogicalOperator src = op.getInputs().get(0).getValue();
-        builder.contributeGraphEdge(src, 0, op, 0);
+        // topK == -1 means that a topK value is not provided.
+        if (topK == -1) {
+            ExternalSortOperatorDescriptor sortOpDesc = new ExternalSortOperatorDescriptor(spec, maxNumberOfFrames,
+                    sortFields, nkcf, comps, recDescriptor);
+            contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
+            ILogicalOperator src = op.getInputs().get(0).getValue();
+            builder.contributeGraphEdge(src, 0, op, 0);
+        } else {
+            // Since topK value is provided, topK optimization is possible.
+            // We call topKSorter instead of calling ExternalSortOperator.
+            TopKSorterOperatorDescriptor sortOpDesc = new TopKSorterOperatorDescriptor(spec, maxNumberOfFrames, topK,
+                    sortFields, nkcf, comps, recDescriptor);
+            contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
+            ILogicalOperator src = op.getInputs().get(0).getValue();
+            builder.contributeGraphEdge(src, 0, op, 0);
+        }
     }
+
+    @Override
+    public String toString() {
+        if (orderProp == null) {
+            if (topK != -1) {
+                // A topK value is introduced.
+                return getOperatorTag().toString() + " [topK: " + topK + "]";
+            } else {
+                return getOperatorTag().toString();
+            }
+        } else {
+            if (topK != -1) {
+                // A topK value is introduced.
+                return getOperatorTag().toString() + " [topK: " + topK + "]" + " " + orderProp;
+            } else {
+                return getOperatorTag().toString() + " " + orderProp;
+            }
+        }
+    }
+
 }

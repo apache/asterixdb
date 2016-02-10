@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -48,7 +47,8 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.LIMIT) {
             return false;
@@ -71,6 +71,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             LogicalOperatorTag candidateOpTag = candidateOp.getOperatorTag();
             if (candidateOp.getInputs().size() > 1 || !candidateOp.isMap()
                     || candidateOpTag == LogicalOperatorTag.SELECT || candidateOpTag == LogicalOperatorTag.LIMIT
+                    || candidateOpTag == LogicalOperatorTag.UNNEST_MAP
                     || !OperatorPropertiesUtil.disjoint(limitUsedVars, candidateProducedVars)) {
                 break;
             }
@@ -87,10 +88,14 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             if (limitOp.getOffset().getValue() == null) {
                 limitCloneOp = new LimitOperator(limitOp.getMaxObjects().getValue(), false);
             } else {
-                IFunctionInfo finfoAdd = context.getMetadataProvider().lookupFunction(
-                        AlgebricksBuiltinFunctions.NUMERIC_ADD);
+                // Need to add an offset to the given limit value
+                // since the original topmost limit will use the offset value.
+                // We can't apply the offset multiple times.
+                IFunctionInfo finfoAdd = context.getMetadataProvider()
+                        .lookupFunction(AlgebricksBuiltinFunctions.NUMERIC_ADD);
                 List<Mutable<ILogicalExpression>> addArgs = new ArrayList<>();
-                addArgs.add(new MutableObject<ILogicalExpression>(limitOp.getMaxObjects().getValue().cloneExpression()));
+                addArgs.add(
+                        new MutableObject<ILogicalExpression>(limitOp.getMaxObjects().getValue().cloneExpression()));
                 addArgs.add(new MutableObject<ILogicalExpression>(limitOp.getOffset().getValue().cloneExpression()));
                 ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd, addArgs);
                 limitCloneOp = new LimitOperator(maxPlusOffset, false);

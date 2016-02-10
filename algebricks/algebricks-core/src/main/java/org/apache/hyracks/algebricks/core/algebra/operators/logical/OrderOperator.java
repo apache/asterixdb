@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -96,17 +95,26 @@ public class OrderOperator extends AbstractLogicalOperator {
     };
 
     private final List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions;
+    // In case we can push down LIMIT information into this operator.
+    protected final int topK;
 
     // These are pairs of type (comparison, expr) where comparison is
     // ASC or DESC or a boolean function of arity 2 that can take as
     // arguments results of expr.
 
+    // TopK : -1 means there is no LIMIT push-down optimization applied to this operator.
     public OrderOperator() {
         orderExpressions = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
+        topK = -1;
     }
 
     public OrderOperator(List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions) {
+        this(orderExpressions, -1);
+    }
+
+    public OrderOperator(List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions, int topK) {
         this.orderExpressions = orderExpressions;
+        this.topK = topK;
     }
 
     @Override
@@ -159,5 +167,9 @@ public class OrderOperator extends AbstractLogicalOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         return createPropagatingAllInputsTypeEnvironment(ctx);
+    }
+
+    public int getTopK() {
+        return topK;
     }
 }

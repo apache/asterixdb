@@ -214,8 +214,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                         }
                     }
                     if (topLevelOp) {
-                        op.setPhysicalOperator(
-                                new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort()));
+                        op.setPhysicalOperator(new StableSortPOperator(
+                                physicalOptimizationConfig.getMaxFramesExternalSort(), oo.getTopK()));
                     } else {
                         op.setPhysicalOperator(new InMemoryStableSortPOperator());
                     }
