@@ -72,7 +72,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             }
             ncConfiguration = new HashMap<String, String>();
             state.getNCConfig().toMap(ncConfiguration);
-            Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
+            Set<String> nodes = ipAddressNodeNameMap.get(InetAddress.getByName(ipAddress));
             if (nodes == null) {
                 nodes = new HashSet<String>();
                 ipAddressNodeNameMap.put(InetAddress.getByName(ipAddress), nodes);
