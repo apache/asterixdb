@@ -44,9 +44,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AInt16ConstructorDescriptor();
         }
@@ -85,8 +84,8 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                 offset = utf8Ptr.getCharStartOffset();
                                 value = 0;
                                 positive = true;
@@ -112,7 +111,7 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
                                 aInt16.setValue(value);
                                 int16Serde.serialize(aInt16, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);

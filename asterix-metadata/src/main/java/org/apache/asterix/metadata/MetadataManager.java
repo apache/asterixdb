@@ -543,7 +543,7 @@ public class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
-        ctx.addNogeGroup(nodeGroup);
+        ctx.addNodeGroup(nodeGroup);
     }
 
     @Override
@@ -584,7 +584,7 @@ public class MetadataManager implements IMetadataManager {
         // We fetched the nodeGroup from the MetadataNode. Add it to the cache
         // when this transaction commits.
         if (nodeGroup != null) {
-            ctx.addNogeGroup(nodeGroup);
+            ctx.addNodeGroup(nodeGroup);
         }
         return nodeGroup;
     }

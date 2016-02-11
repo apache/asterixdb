@@ -58,6 +58,11 @@ public class ResultUtils {
         HTML_ENTITIES.put('>', "&gt;");
     }
 
+    public static class Stats {
+        public long count;
+        public long size;
+    }
+
     public static String escapeHTML(String s) {
         for (Character c : HTML_ENTITIES.keySet()) {
             if (s.indexOf(c) >= 0) {
@@ -91,7 +96,8 @@ public class ResultUtils {
 
     public static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
 
-    public static void displayResults(ResultReader resultReader, SessionConfig conf) throws HyracksDataException {
+    public static void displayResults(ResultReader resultReader, SessionConfig conf, Stats stats)
+            throws HyracksDataException {
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
         IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
@@ -110,6 +116,8 @@ public class ResultUtils {
             conf.out().println("<h4>Results:</h4>");
             conf.out().println("<pre>");
         }
+
+        conf.resultPrefix(conf.out());
 
         switch (conf.fmt()) {
             case LOSSLESS_JSON:
@@ -153,6 +161,9 @@ public class ResultUtils {
                         if (conf.fmt() == OutputFormat.CSV) {
                             conf.out().print("\r\n");
                         }
+                        ++stats.count;
+                        // TODO(tillw) fix this approximation
+                        stats.size += result.length();
                     }
                     frame.getBuffer().clear();
                 } finally {
@@ -170,6 +181,8 @@ public class ResultUtils {
         if (wrap_array) {
             conf.out().println(" ]");
         }
+
+        conf.resultPostfix(conf.out());
 
         if (conf.is(SessionConfig.FORMAT_HTML)) {
             conf.out().println("</pre>");
@@ -305,7 +318,7 @@ public class ResultUtils {
      * @param e
      * @return the string containing the full stack trace of the error.
      */
-    private static String extractFullStackTrace(Throwable e) {
+    public static String extractFullStackTrace(Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         e.printStackTrace(printWriter);

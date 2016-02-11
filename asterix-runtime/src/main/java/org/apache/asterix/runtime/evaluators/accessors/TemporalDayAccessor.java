@@ -48,16 +48,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_DAY;
-
-    // allowed input types
-    private static final byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-    private static final byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
-    private static final byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-    private static final byte SER_DAY_TIME_DURATION_TYPE_TAG = ATypeTag.DAYTIMEDURATION.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -104,27 +95,27 @@ public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor
 
                         try {
 
-                            if (bytes[0] == SER_DURATION_TYPE_TAG) {
-                                aMutableInt64.setValue(calSystem.getDurationDay(ADurationSerializerDeserializer
-                                        .getDayTime(bytes, 1)));
+                            if (bytes[0] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                                aMutableInt64.setValue(
+                                        calSystem.getDurationDay(ADurationSerializerDeserializer.getDayTime(bytes, 1)));
                                 intSerde.serialize(aMutableInt64, out);
                                 return;
                             }
 
-                            if (bytes[0] == SER_DAY_TIME_DURATION_TYPE_TAG) {
-                                aMutableInt64.setValue(calSystem.getDurationDay(ADayTimeDurationSerializerDeserializer
-                                        .getDayTime(bytes, 1)));
+                            if (bytes[0] == ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {
+                                aMutableInt64.setValue(calSystem
+                                        .getDurationDay(ADayTimeDurationSerializerDeserializer.getDayTime(bytes, 1)));
                                 intSerde.serialize(aMutableInt64, out);
                                 return;
                             }
 
                             long chrononTimeInMs = 0;
-                            if (bytes[0] == SER_DATE_TYPE_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                 chrononTimeInMs = AInt32SerializerDeserializer.getInt(bytes, 1)
                                         * GregorianCalendarSystem.CHRONON_OF_DAY;
-                            } else if (bytes[0] == SER_DATETIME_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                 chrononTimeInMs = AInt64SerializerDeserializer.getLong(bytes, 1);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             } else {

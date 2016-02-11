@@ -88,7 +88,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringReader;
 
@@ -337,11 +336,7 @@ public class JObjectAccessors {
             long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(b, s);
             byte intervalType = AIntervalSerializerDeserializer.getIntervalTimeType(b, s);
             IJObject jObject = objectPool.allocate(BuiltinType.AINTERVAL);
-            try {
-                ((JInterval) jObject).setValue(intervalStart, intervalEnd, intervalType);
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            ((JInterval) jObject).setValue(intervalStart, intervalEnd, intervalType);
             return jObject;
         }
     }
@@ -464,11 +459,7 @@ public class JObjectAccessors {
         @Override
         public JRecord access(ARecordVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
                 ARecordType recordType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
-            try {
-                jRecord.reset();
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            jRecord.reset();
             ARecordVisitablePointable recordPointable = pointable;
             List<IVisitablePointable> fieldPointables = recordPointable.getFieldValues();
             List<IVisitablePointable> fieldTypeTags = recordPointable.getFieldTypeTags();
@@ -525,11 +516,7 @@ public class JObjectAccessors {
         }
 
         public void reset() throws HyracksDataException {
-            try {
-                jRecord.reset();
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            jRecord.reset();
             openFields.clear();
         }
 

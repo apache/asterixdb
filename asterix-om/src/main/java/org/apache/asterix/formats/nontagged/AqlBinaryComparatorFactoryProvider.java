@@ -23,7 +23,8 @@ import java.io.Serializable;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalPartialBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
@@ -172,7 +173,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(ADurationPartialBinaryComparatorFactory.INSTANCE, ascending);
             }
             case INTERVAL: {
-                return addOffset(AIntervalPartialBinaryComparatorFactory.INSTANCE, ascending);
+                return addOffset(intervalBinaryComparatorFactory(ascending), ascending);
             }
             case UUID: {
                 return addOffset(AUUIDPartialBinaryComparatorFactory.INSTANCE, ascending);
@@ -221,6 +222,16 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             return AObjectAscBinaryComparatorFactory.INSTANCE;
         } else {
             return AObjectDescBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryComparatorFactory intervalBinaryComparatorFactory(boolean ascending) {
+        // Intervals have separate binary comparator factories, since asc is primarily based on start point
+        // and desc is similarly based on end point.
+        if (ascending) {
+            return AIntervalAscPartialBinaryComparatorFactory.INSTANCE;
+        } else {
+            return AIntervalDescPartialBinaryComparatorFactory.INSTANCE;
         }
     }
 

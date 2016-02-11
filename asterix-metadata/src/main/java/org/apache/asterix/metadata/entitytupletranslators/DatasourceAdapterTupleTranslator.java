@@ -25,9 +25,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataSourceAdapter;
-import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
@@ -72,13 +70,14 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     private DatasourceAdapter createAdapterFromARecord(ARecord adapterRecord) {
         String dataverseName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                .getStringValue();
+                        .getStringValue();
         String adapterName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX)).getStringValue();
         String classname = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_CLASSNAME_FIELD_INDEX)).getStringValue();
-        IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType.valueOf(((AString) adapterRecord
-                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX)).getStringValue());
+        IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType.valueOf(
+                ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX))
+                        .getStringValue());
 
         return new DatasourceAdapter(new AdapterIdentifier(dataverseName, adapterName), classname, adapterType);
     }
@@ -129,11 +128,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

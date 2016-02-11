@@ -44,11 +44,11 @@ public class NotNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NotNullDescriptor();
         }
     };
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -71,7 +71,7 @@ public class NotNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] data = outInput.getByteArray();
-                            if (data[outInput.getStartOffset()] == SER_NULL_TYPE_TAG) {
+                            if (data[outInput.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 throw new AlgebricksException(errorMessage);
                             }
                             out.write(data, outInput.getStartOffset(), outInput.getLength());

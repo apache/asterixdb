@@ -47,10 +47,6 @@ public class GenericRecord<T> implements IRawRecord<T> {
     }
 
     @Override
-    public Class<?> getRecordClass() {
-        return record.getClass();
-    }
-
     public void set(T record) {
         this.record = record;
     }
@@ -58,5 +54,4 @@ public class GenericRecord<T> implements IRawRecord<T> {
     @Override
     public void reset() {
     }
-
 }

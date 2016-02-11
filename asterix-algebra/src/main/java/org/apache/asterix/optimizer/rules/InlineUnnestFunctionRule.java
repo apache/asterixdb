@@ -84,7 +84,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
 
     /**
      * This method is to inline one variable
-     * 
+     *
      * @param usedVar
      *            A variable that is used by the scan-collection function in the unnest operator
      * @param unnestOp

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,8 +38,19 @@ public class AObjectDescBinaryComparatorFactory implements IBinaryComparatorFact
         return new ABinaryComparator() {
             final IBinaryComparator ascComp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
+            // INTERVAL
+            // Interval asc and desc comparator factories are not the inverse of each other.
+            // Thus, we need to specify the interval desc comparator factory for descending comparisons.
+            final IBinaryComparator descIntervalComp = AIntervalDescPartialBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
+                ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
+                ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
+                if (tag1 == ATypeTag.INTERVAL && tag2 == ATypeTag.INTERVAL) {
+                    return descIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                }
                 return -ascComp.compare(b1, s1, l1, b2, s2, l2);
             }
         };

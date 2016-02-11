@@ -27,7 +27,7 @@ public interface INodeResolver {
 
     /**
      * Resolve a passed-in value to a node controller id.
-     * 
+     *
      * @param value
      *            string to be resolved
      * @return resolved result (a node controller id)

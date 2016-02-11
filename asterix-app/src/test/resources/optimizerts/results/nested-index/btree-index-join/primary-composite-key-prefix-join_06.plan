@@ -9,8 +9,8 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- BTREE_SEARCH  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
+                      -- STABLE_SORT [$$22(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$22]  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|

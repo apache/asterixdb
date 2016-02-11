@@ -24,7 +24,9 @@ import java.io.DataOutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.external.parser.ADMDataParser;
-import org.apache.asterix.om.base.AMutableInterval;
+import org.apache.asterix.om.base.AMutableDate;
+import org.apache.asterix.om.base.AMutableDateTime;
+import org.apache.asterix.om.base.AMutableTime;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,25 +36,23 @@ public class ADMDataParserTest {
 
     @Test
     public void test() {
-        String[] dateIntervals = { "-9537-08-04, 9656-06-03", "-9537-04-04, 9656-06-04", "-9537-10-04, 9626-09-05" };
-        AMutableInterval[] parsedDateIntervals = new AMutableInterval[] {
-                new AMutableInterval(-4202630, 2807408, (byte) 17), new AMutableInterval(-4202752, 2807409, (byte) 17),
-                new AMutableInterval(-4202569, 2796544, (byte) 17), };
+        String[] dates = { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" };
+        AMutableDate[] parsedDates = new AMutableDate[] { new AMutableDate(-4202630), new AMutableDate(2807408),
+                new AMutableDate(-4202752), new AMutableDate(2807409), new AMutableDate(-4202569),
+                new AMutableDate(2796544), };
 
-        String[] timeIntervals = { "12:04:45.689Z, 12:41:59.002Z", "12:10:45.169Z, 15:37:48.736Z",
-                "04:16:42.321Z, 12:22:56.816Z" };
-        AMutableInterval[] parsedTimeIntervals = new AMutableInterval[] {
-                new AMutableInterval(43485689, 45719002, (byte) 18),
-                new AMutableInterval(43845169, 56268736, (byte) 18),
-                new AMutableInterval(15402321, 44576816, (byte) 18), };
+        String[] times = { "12:04:45.689Z", "12:41:59.002Z", "12:10:45.169Z", "15:37:48.736Z", "04:16:42.321Z",
+                "12:22:56.816Z" };
+        AMutableTime[] parsedTimes = new AMutableTime[] { new AMutableTime(43485689), new AMutableTime(45719002),
+                new AMutableTime(43845169), new AMutableTime(56268736), new AMutableTime(15402321),
+                new AMutableTime(44576816), };
 
-        String[] dateTimeIntervals = { "-2640-10-11T17:32:15.675Z, 4104-02-01T05:59:11.902Z",
-                "0534-12-08T08:20:31.487Z, 6778-02-16T22:40:21.653Z",
-                "2129-12-12T13:18:35.758Z, 8647-07-01T13:10:19.691Z" };
-        AMutableInterval[] parsedDateTimeIntervals = new AMutableInterval[] {
-                new AMutableInterval(-145452954464325L, 67345192751902L, (byte) 16),
-                new AMutableInterval(-45286270768513L, 151729886421653L, (byte) 16),
-                new AMutableInterval(5047449515758L, 210721439419691L, (byte) 16) };
+        String[] dateTimes = { "-2640-10-11T17:32:15.675Z", "4104-02-01T05:59:11.902Z", "0534-12-08T08:20:31.487Z",
+                "6778-02-16T22:40:21.653Z", "2129-12-12T13:18:35.758Z", "8647-07-01T13:10:19.691Z" };
+        AMutableDateTime[] parsedDateTimes = new AMutableDateTime[] { new AMutableDateTime(-145452954464325L),
+                new AMutableDateTime(67345192751902L), new AMutableDateTime(-45286270768513L),
+                new AMutableDateTime(151729886421653L), new AMutableDateTime(5047449515758L),
+                new AMutableDateTime(210721439419691L) };
 
         Thread[] threads = new Thread[16];
         AtomicInteger errorCount = new AtomicInteger(0);
@@ -67,28 +67,28 @@ public class ADMDataParserTest {
                     try {
                         int round = 0;
                         while (round++ < 10000) {
-                            // Test parseDateInterval.
-                            for (int index = 0; index < dateIntervals.length; ++index) {
-                                PA.invokeMethod(parser, "parseDateInterval(java.lang.String, java.io.DataOutput)",
-                                        dateIntervals[index], dos);
-                                AMutableInterval aInterval = (AMutableInterval) PA.getValue(parser, "aInterval");
-                                Assert.assertTrue(aInterval.equals(parsedDateIntervals[index]));
+                            // Test parseDate.
+                            for (int index = 0; index < dates.length; ++index) {
+                                PA.invokeMethod(parser, "parseDate(java.lang.String, java.io.DataOutput)",
+                                        dates[index], dos);
+                                AMutableDate aDate = (AMutableDate) PA.getValue(parser, "aDate");
+                                Assert.assertTrue(aDate.equals(parsedDates[index]));
                             }
 
-                            // Tests parseTimeInterval.
-                            for (int index = 0; index < timeIntervals.length; ++index) {
-                                PA.invokeMethod(parser, "parseTimeInterval(java.lang.String, java.io.DataOutput)",
-                                        timeIntervals[index], dos);
-                                AMutableInterval aInterval = (AMutableInterval) PA.getValue(parser, "aInterval");
-                                Assert.assertTrue(aInterval.equals(parsedTimeIntervals[index]));
+                            // Tests parseTime.
+                            for (int index = 0; index < times.length; ++index) {
+                                PA.invokeMethod(parser, "parseTime(java.lang.String, java.io.DataOutput)",
+                                        times[index], dos);
+                                AMutableTime aTime = (AMutableTime) PA.getValue(parser, "aTime");
+                                Assert.assertTrue(aTime.equals(parsedTimes[index]));
                             }
 
-                            // Tests parseDateTimeInterval.
-                            for (int index = 0; index < dateTimeIntervals.length; ++index) {
-                                PA.invokeMethod(parser, "parseDateTimeInterval(java.lang.String, java.io.DataOutput)",
-                                        dateTimeIntervals[index], dos);
-                                AMutableInterval aInterval = (AMutableInterval) PA.getValue(parser, "aInterval");
-                                Assert.assertTrue(aInterval.equals(parsedDateTimeIntervals[index]));
+                            // Tests parseDateTime.
+                            for (int index = 0; index < dateTimes.length; ++index) {
+                                PA.invokeMethod(parser, "parseDateTime(java.lang.String, java.io.DataOutput)",
+                                        dateTimes[index], dos);
+                                AMutableDateTime aDateTime = (AMutableDateTime) PA.getValue(parser, "aDateTime");
+                                Assert.assertTrue(aDateTime.equals(parsedDateTimes[index]));
                             }
                         }
                     } catch (Exception e) {

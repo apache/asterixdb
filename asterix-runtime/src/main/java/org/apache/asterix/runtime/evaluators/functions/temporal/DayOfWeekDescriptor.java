@@ -45,15 +45,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DAY_OF_WEEK;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
-    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-
     // Fixed week day anchor: Thursday, 1 January 1970
     private final static int ANCHOR_WEEKDAY = 4;
 
@@ -95,24 +88,23 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 int daysSinceAnchor;
                                 int reminder = 0;
-                                if (argOut.getByteArray()[0] == SER_DATETIME_TYPE_TAG) {
+                                if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(
                                             argOut.getByteArray(), 1) / GregorianCalendarSystem.CHRONON_OF_DAY);
                                     reminder = (int) (ADateTimeSerializerDeserializer.getChronon(argOut.getByteArray(),
                                             1) % GregorianCalendarSystem.CHRONON_OF_DAY);
-                                } else if (argOut.getByteArray()[0] == SER_DATE_TYPE_TAG) {
+                                } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                     daysSinceAnchor = ADateSerializerDeserializer.getChronon(argOut.getByteArray(), 1);
                                 } else {
                                     throw new AlgebricksException(
-                                            FID.getName()
-                                                    + ": expects input type DATETIME/DATE/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                            .getByteArray()[0]));
+                                            FID.getName() + ": expects input type DATETIME/DATE/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                            .deserialize(argOut.getByteArray()[0]));
                                 }
 
                                 // adjust the day before 1970-01-01

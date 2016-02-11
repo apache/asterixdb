@@ -43,8 +43,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
 
     private DataOutput dout;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
@@ -71,7 +69,7 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
 
     public AbstractQuadStringStringEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
             ICopyEvaluatorFactory eval2, ICopyEvaluatorFactory eval3, FunctionIdentifier funcID)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         this.dout = dout;
         this.eval0 = eval0.createEvaluator(array0);
         this.eval1 = eval1.createEvaluator(array1);
@@ -93,14 +91,16 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
         eval3.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    || array2.getByteArray()[0] == SER_NULL_TYPE_TAG || array3.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array2.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array3.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
                 return;
-            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array2.getByteArray()[0] != SER_STRING_TYPE_TAG
-                    || array3.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+            } else if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array2.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array3.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                 throw new AlgebricksException(funcID.getName()
                         + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL, STRING/NULL), but got ("
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
@@ -127,7 +127,6 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
     }
 
     protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
-            UTF8StringPointable strPtr3rd,
-            UTF8StringPointable strPtr4th) throws AlgebricksException;
+            UTF8StringPointable strPtr3rd, UTF8StringPointable strPtr4th) throws AlgebricksException;
 
 }

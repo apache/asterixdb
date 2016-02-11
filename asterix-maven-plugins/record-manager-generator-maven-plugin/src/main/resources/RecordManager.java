@@ -26,7 +26,7 @@ public class @E@RecordManager {
 
     public static final boolean CHECK_SLOTS = @DEBUG@;
     public static final boolean TRACK_ALLOC_LOC = @DEBUG@;
-    
+
     static final int NO_SLOTS = 1000;
 
     @CONSTS@
@@ -39,22 +39,22 @@ public class @E@RecordManager {
     private boolean isShrinkTimerOn;
 
     int allocCounter;
-    
+
     public @E@RecordManager(long txnShrinkTimer) {
         this.txnShrinkTimer = txnShrinkTimer;
         buffers = new ArrayList<Buffer>();
         buffers.add(new Buffer());
         current = 0;
-        
+
         allocCounter = 0;
     }
-    
+
     enum SlotSource {
         NON_FULL,
         UNINITIALIZED,
         NEW
     }
-    
+
     synchronized int allocate() {
         if (buffers.get(current).isFull()) {
             final int size = buffers.size();
@@ -74,7 +74,7 @@ public class @E@RecordManager {
                     current = i;
                 }
             }
-            
+
             switch (source) {
                 case NEW:
                     buffers.add(new Buffer());
@@ -114,7 +114,7 @@ public class @E@RecordManager {
      * buffers status : O O x x x x x
      * However, in the above case, if we subtract the deinitialized children's slots,
      * needShrink() will return false even if we shrink the buffers at this case.
-     * 
+     *
      * @return
      */
     private boolean needShrink() {
@@ -175,7 +175,7 @@ public class @E@RecordManager {
                 break;
             }
         }
-        
+
         //reset allocChild to the first buffer
         current = 0;
 
@@ -183,7 +183,7 @@ public class @E@RecordManager {
     }
 
     @METHODS@
-    
+
     public AllocInfo getAllocInfo(int slotNum) {
         final Buffer buf = buffers.get(slotNum / NO_SLOTS);
         if (buf.allocList == null) {
@@ -192,7 +192,7 @@ public class @E@RecordManager {
             return buf.allocList.get(slotNum % NO_SLOTS);
         }
     }
-    
+
     StringBuilder append(StringBuilder sb) {
         sb.append("+++ current: ")
           .append(current)
@@ -205,7 +205,7 @@ public class @E@RecordManager {
         }
         return sb;
     }
-    
+
     public String toString() {
         return append(new StringBuilder()).toString();
     }
@@ -220,14 +220,14 @@ public class @E@RecordManager {
         }
         return s;
     }
-    
+
     static class Buffer {
         private ByteBuffer bb = null; // null represents 'deinitialized' state.
         private int freeSlotNum;
         private int occupiedSlots;
-        
+
         ArrayList<AllocInfo> allocList;
-        
+
         Buffer() {
             initialize();
         }
@@ -241,7 +241,7 @@ public class @E@RecordManager {
                 setNextFreeSlot(i, i + 1);
             }
             setNextFreeSlot(NO_SLOTS - 1, -1); //-1 represents EOL(end of link)
-            
+
             if (TRACK_ALLOC_LOC) {
                 allocList = new ArrayList<AllocInfo>(NO_SLOTS);
                 for (int i = 0; i < NO_SLOTS; ++i) {
@@ -249,12 +249,12 @@ public class @E@RecordManager {
                 }
             }
         }
-        
+
         public void deinitialize() {
             if (TRACK_ALLOC_LOC) allocList = null;
             bb = null;
         }
-        
+
         public boolean isInitialized() {
             return bb != null;
         }
@@ -266,7 +266,7 @@ public class @E@RecordManager {
         public boolean isEmpty() {
             return occupiedSlots == 0;
         }
-        
+
         public int allocate() {
             int slotNum = freeSlotNum;
             freeSlotNum = getNextFreeSlot(slotNum);
@@ -275,7 +275,7 @@ public class @E@RecordManager {
             if (TRACK_ALLOC_LOC) allocList.get(slotNum).alloc();
             return slotNum;
         }
-    
+
         public void deallocate(int slotNum) {
             @INIT_SLOT@
             setNextFreeSlot(slotNum, freeSlotNum);
@@ -286,8 +286,8 @@ public class @E@RecordManager {
 
         public int getNextFreeSlot(int slotNum) {
             return bb.getInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFF);
-        }    
-            
+        }
+
         public void setNextFreeSlot(int slotNum, int nextFreeSlot) {
             bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFF, nextFreeSlot);
         }
@@ -301,17 +301,17 @@ public class @E@RecordManager {
             @PRINT_BUFFER@
             return sb;
         }
-        
+
         public String toString() {
             return append(new StringBuilder()).toString();
         }
-        
+
         public void addTo(RecordManagerStats s) {
             if (isInitialized()) {
                 s.items += occupiedSlots;
             }
         }
-        
+
         private void checkSlot(int slotNum) {
             if (! CHECK_SLOTS) {
                 return;
@@ -320,5 +320,5 @@ public class @E@RecordManager {
             // @CHECK_SLOT@
         }
     }
-    
+
 }

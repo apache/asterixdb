@@ -27,7 +27,7 @@ select element {'timebin':bin,'subgroups':(
         group by i.app as subgid
         order by subgid,multitask.count(i)
     )}
-from  multitask."overlap-bins"(multitask."interval-from-time"(multitask.min((
+from  multitask."overlap-bins"(multitask.interval(multitask.min((
     select element i.time
     from  logs as i
 )),multitask.max((

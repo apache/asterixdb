@@ -19,7 +19,7 @@
 package @PACKAGE@;
 
 public class TypeUtil {
-    
+
     public static class Byte {
         public static StringBuilder append(StringBuilder sb, byte b) {
             return sb.append(String.format("%1$x", b));
@@ -71,7 +71,7 @@ public class TypeUtil {
         public static int localId(long l) {
             return (int) (l & 0xffffffffL);
         }
-        
+
         public static StringBuilder append(StringBuilder sb, long l) {
             sb.append(String.format("%1$x", TypeUtil.Global.arenaId(l)));
             sb.append(':');
@@ -80,7 +80,7 @@ public class TypeUtil {
             sb.append(String.format("%1$x", TypeUtil.Global.localId(l)));
             return sb;
         }
-        
+
         public static StringBuilder appendFixed(StringBuilder sb, long l) {
             sb.append(String.format("%1$4x", TypeUtil.Global.arenaId(l)));
             sb.append(':');
@@ -89,10 +89,10 @@ public class TypeUtil {
             sb.append(String.format("%1$8x", TypeUtil.Global.localId(l)));
             return sb;
         }
-        
+
         public static String toString(long l) {
             return append(new StringBuilder(), l).toString();
         }
-        
+
     }
 }

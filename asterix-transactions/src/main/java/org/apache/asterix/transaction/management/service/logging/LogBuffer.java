@@ -254,14 +254,20 @@ public class LogBuffer implements ILogBuffer {
             LogRecord logRecord = logBufferTailReader.next();
             while (logRecord != null) {
                 if (logRecord.getLogSource() == LogSource.LOCAL) {
-                    if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
+                    if (logRecord.getLogType() == LogType.ENTITY_COMMIT
+                            || logRecord.getLogType() == LogType.UPSERT_ENTITY_COMMIT) {
                         reusableJobId.setId(logRecord.getJobId());
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                         reusableDsId.setId(logRecord.getDatasetId());
                         txnSubsystem.getLockManager().unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY,
                                 txnCtx);
                         txnCtx.notifyOptracker(false);
-                    } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+                        if (logRecord.getLogType() == LogType.UPSERT_ENTITY_COMMIT) {
+                            // since this operation consisted of delete and insert, we need to notify the optracker twice
+                            txnCtx.notifyOptracker(false);
+                        }
+                    } else if (logRecord.getLogType() == LogType.JOB_COMMIT
+                            || logRecord.getLogType() == LogType.ABORT) {
                         reusableJobId.setId(logRecord.getJobId());
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                         txnCtx.notifyOptracker(true);

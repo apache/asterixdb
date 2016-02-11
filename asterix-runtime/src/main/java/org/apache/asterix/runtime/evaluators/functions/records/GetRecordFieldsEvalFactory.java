@@ -39,14 +39,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
-
     private static final long serialVersionUID = 1L;
-
     private ICopyEvaluatorFactory recordEvalFactory;
     private final ARecordType recordType;
-
-    private final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
 
     public GetRecordFieldsEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ARecordType recordType) {
         this.recordEvalFactory = recordEvalFactory;
@@ -74,7 +69,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
                 outInput0.reset();
                 eval0.evaluate(tuple);
 
-                if (outInput0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                if (outInput0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                     try {
                         nullSerde.serialize(ANull.NULL, out);
                     } catch (HyracksDataException e) {
@@ -82,7 +77,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
                     }
                 }
 
-                if (outInput0.getByteArray()[0] != SER_RECORD_TYPE_TAG) {
+                if (outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new AlgebricksException("Field accessor is not defined for values of type "
                             + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]));
                 }

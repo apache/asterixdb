@@ -192,7 +192,7 @@ public class LockWaiterManager {
      * pArray status : O O x x x x x
      * However, in the above case, if we subtract the deinitialized children's slots,
      * needShrink() will return false even if we shrink the pArray at this case.
-     * 
+     *
      * @return
      */
     private boolean needShrink() {
@@ -308,7 +308,7 @@ public class LockWaiterManager {
 
 class ChildLockWaiterArrayManager {
     public static final int NUM_OF_SLOTS = 100; //number of LockWaiter objects in 'childArray'.
-    //    public static final int NUM_OF_SLOTS = 10; //for unit test 
+    //    public static final int NUM_OF_SLOTS = 10; //for unit test
 
     private int freeSlotNum;
     private int occupiedSlots; //-1 represents 'deinitialized' state.

@@ -18,16 +18,16 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.PrintStream;
+import java.util.List;
+
 import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
-
-import java.io.PrintStream;
-import java.util.List;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AUnionPrinterFactory implements IPrinterFactory {
 
@@ -48,26 +48,27 @@ public class AUnionPrinterFactory implements IPrinterFactory {
             private List<IAType> unionList;
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 unionList = unionType.getUnionList();
                 printers = new IPrinter[unionType.getUnionList().size()];
                 for (int i = 0; i < printers.length; i++) {
-                    printers[i] = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
-                            .get(i))).createPrinter();
+                    printers[i] = (AqlCleanJSONPrinterFactoryProvider.INSTANCE
+                            .getPrinterFactory(unionType.getUnionList().get(i))).createPrinter();
                     printers[i].init();
                 }
             }
 
             @Override
-            public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 ATypeTag tag = unionList.get(b[s + 1]).getTypeTag();
-                if (tag == ATypeTag.UNION)
+                if (tag == ATypeTag.UNION) {
                     printers[b[s + 1]].print(b, s + 1, l, ps);
-                else {
-                    if (tag == ATypeTag.ANY)
+                } else {
+                    if (tag == ATypeTag.ANY) {
                         printers[b[s + 1]].print(b, s + 2, l, ps);
-                    else
+                    } else {
                         printers[b[s + 1]].print(b, s + 1, l, ps);
+                    }
                 }
             }
         };

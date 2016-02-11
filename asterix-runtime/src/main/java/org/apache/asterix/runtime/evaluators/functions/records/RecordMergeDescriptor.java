@@ -64,12 +64,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RecordMergeDescriptor();
         }
     };
     private static final long serialVersionUID = 1L;
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private ARecordType outRecType;
     private ARecordType inRecType0;
     private ARecordType inRecType1;
@@ -119,8 +119,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval0.evaluate(tuple);
                         eval1.evaluate(tuple);
 
-                        if (abvs0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                || abvs1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                        if (abvs0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                || abvs1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
                                 nullSerDe.serialize(ANull.NULL, output.getDataOutput());
                             } catch (HyracksDataException e) {
@@ -146,7 +146,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
                             ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel)
-                            throws IOException, AsterixException, AlgebricksException {
+                                    throws IOException, AsterixException, AlgebricksException {
                         if (rbStack.size() < (nestedLevel + 1)) {
                             rbStack.add(new RecordBuilder());
                         }

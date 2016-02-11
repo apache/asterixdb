@@ -20,7 +20,7 @@ package org.apache.asterix.common.utils;
 
 /*
  * Author: Guangqiang Li
- * Created on Nov 30, 2009 
+ * Created on Nov 30, 2009
  */
 public class ANameSchema {
     public static final int LOCALNAME_PROPERTY = 0;

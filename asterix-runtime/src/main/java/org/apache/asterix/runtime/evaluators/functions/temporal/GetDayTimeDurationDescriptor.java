@@ -43,14 +43,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.GET_DAY_TIME_DURATION;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -89,18 +83,18 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
                         eval0.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName() + ": expects NULL/DURATION, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            aDayTimeDuration.setMilliseconds(ADurationSerializerDeserializer.getDayTime(
-                                    argOut0.getByteArray(), 1));
+                            aDayTimeDuration.setMilliseconds(
+                                    ADurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1));
 
                             dayTimeDurationSerde.serialize(aDayTimeDuration, out);
 

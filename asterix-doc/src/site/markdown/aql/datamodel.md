@@ -293,15 +293,15 @@ Note that a canonical representation of the duration is always returned, regardl
 
  * Example:
 
-        let $v1 := interval-from-date(date("2013-01-01"), date("20130505"))
-        let $v2 := interval-from-time(time("00:01:01"), time("213901049+0800"))
-        let $v3 := interval-from-datetime(datetime("2013-01-01T00:01:01"), datetime("20130505T213901049+0800"))
+        let $v1 := interval(date("2013-01-01"), date("20130505"))
+        let $v2 := interval(time("00:01:01"), time("213901049+0800"))
+        let $v3 := interval(datetime("2013-01-01T00:01:01"), datetime("20130505T213901049+0800"))
         return { "v1": $v1, "v2": $v2, "v3": $v3 }
 
 
  * The expected result is:
 
-        { "v1": interval-date("2013-01-01, 2013-05-05"), "v2": interval-time("00:01:01.000Z, 13:39:01.049Z"), "v3": interval-datetime("2013-01-01T00:01:01.000Z, 2013-05-05T13:39:01.049Z") }
+        { "v1": interval(date("2013-01-01"), date("2013-05-05")), "v2": interval(time("00:01:01.000Z"), time("13:39:01.049Z")), "v3": interval(datetime("2013-01-01T00:01:01.000Z"), datetime("2013-05-05T13:39:01.049Z")) }
 
 ### <a id="PrimitiveTypesUUID">UUID</a><font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `uuid` represents a UUID value, which stands for Universally unique identifier. It is defined by a canonical format using hexadecimal text with inserted hyphen characters. (E.g.: 5a28ce1e-6a74-4201-9e8f-683256e5706f). This type is generally used to store auto-generated primary key values.

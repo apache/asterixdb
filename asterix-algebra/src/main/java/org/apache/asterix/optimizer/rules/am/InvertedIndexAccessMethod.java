@@ -303,8 +303,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         (IAType) AqlExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
-            if (optFuncExpr.getFuncExpr().equals(funcExpr))
+            if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
                 return true;
+            }
         }
         analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
         return true;
@@ -443,20 +444,17 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             boolean hasGroupBy) throws AlgebricksException {
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
-        // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (!isLeftOuterJoin && leftSubTree.hasDataSourceScan()
-                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
-            indexSubTree = leftSubTree;
-            probeSubTree = rightSubTree;
-        } else if (rightSubTree.hasDataSourceScan()
+
+        // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
+        // This assumption holds true since we only use an index from the right subtree.
+        // The following is just a sanity check.
+        if (rightSubTree.hasDataSourceScan()
                 && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
-        }
-        if (indexSubTree == null) {
-            //This may happen for left outer join case
+        } else {
             return false;
         }
 
@@ -607,13 +605,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Create first copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context, newProbeSubTreeVarMap);
-        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root);
         inferTypes(newProbeSubTree, context);
         Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);
         // Create second copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context, joinInputSubTreeVarMap);
-        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root);
         inferTypes(joinInputSubTree, context);
         probeSubTree.rootRef.setValue(joinInputSubTree);
 
@@ -675,10 +673,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Create select ops for removing tuples that are filterable and not filterable, respectively.
         IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeSubTree.root);
         IAType inputSearchVarType;
-        if (chosenIndex.isEnforcingKeyFileds())
+        if (chosenIndex.isEnforcingKeyFileds()) {
             inputSearchVarType = optFuncExpr.getFieldType(optFuncExpr.findLogicalVar(inputSearchVar));
-        else
+        } else {
             inputSearchVarType = (IAType) probeTypeEnv.getVarType(inputSearchVar);
+        }
         Mutable<ILogicalOperator> isFilterableSelectOpRef = new MutableObject<ILogicalOperator>();
         Mutable<ILogicalOperator> isNotFilterableSelectOpRef = new MutableObject<ILogicalOperator>();
         createIsFilterableSelectOps(replicateOp, inputSearchVar, inputSearchVarType, optFuncExpr, chosenIndex, context,
@@ -690,7 +689,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Copy the scan subtree in indexSubTree.
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context);
-        ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root, null);
+        ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root);
 
         Map<LogicalVariable, LogicalVariable> copyVarMap = deepCopyVisitor.getInputToOutputVariableMapping();
         panicVarMap.putAll(copyVarMap);
@@ -874,10 +873,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean isEditDistanceFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
-        if (index.isEnforcingKeyFileds())
+        if (index.isEnforcingKeyFileds()) {
             return isEditDistanceFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
-        else
+        } else {
             return isEditDistanceFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
+        }
     }
 
     private boolean isEditDistanceFuncCompatible(ATypeTag typeTag, IndexType indexType) {
@@ -975,11 +975,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         LogicalVariable targetVar = null;
         for (int i = 0; i < variableCount; i++) {
             subTree = optFuncExpr.getOperatorSubTree(i);
-            if (subTree == null)
+            if (subTree == null) {
                 continue;
+            }
             targetVar = optFuncExpr.getLogicalVar(i);
-            if (targetVar == null)
+            if (targetVar == null) {
                 continue;
+            }
             return isJaccardFuncCompatible(optFuncExpr.getFuncExpr().getArguments().get(i).getValue(),
                     optFuncExpr.getFieldType(i).getTypeTag(), index.getIndexType());
         }
@@ -1004,20 +1006,25 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         for (AbstractLogicalOperator op : subTree.assignsAndUnnests) {
-            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
                 continue;
+            }
             List<Mutable<ILogicalExpression>> exprList = ((AssignOperator) op).getExpressions();
             for (Mutable<ILogicalExpression> expr : exprList) {
-                if (expr.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL)
+                if (expr.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                     continue;
+                }
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr.getValue();
-                if (funcExpr.getFunctionIdentifier() != funcId)
+                if (funcExpr.getFunctionIdentifier() != funcId) {
                     continue;
+                }
                 ILogicalExpression varExpr = funcExpr.getArguments().get(0).getValue();
-                if (varExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE)
+                if (varExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                     continue;
-                if (((VariableReferenceExpression) varExpr).getVariableReference() == targetVar)
+                }
+                if (((VariableReferenceExpression) varExpr).getVariableReference() == targetVar) {
                     continue;
+                }
                 return (ScalarFunctionCallExpression) funcExpr;
             }
         }
@@ -1080,10 +1087,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean isContainsFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
-        if (index.isEnforcingKeyFileds())
+        if (index.isEnforcingKeyFileds()) {
             return isContainsFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
-        else
+        } else {
             return isContainsFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
+        }
     }
 
     private boolean isContainsFuncCompatible(ATypeTag typeTag, IndexType indexType) {

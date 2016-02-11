@@ -37,12 +37,12 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.junit.Assert;
 import org.junit.Test;
 
 import junit.extensions.PA;
-import junit.framework.Assert;
 
-@SuppressWarnings({ "unchecked", "deprecation" })
+@SuppressWarnings({ "unchecked" })
 public class QueryTranslatorTest {
 
     @Test

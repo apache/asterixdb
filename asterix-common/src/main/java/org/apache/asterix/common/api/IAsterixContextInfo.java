@@ -24,7 +24,7 @@ public interface IAsterixContextInfo {
 
     /**
      * Returns an instance of the implementation for ICCApplicationContext.
-     * 
+     *
      * @return ICCApplicationContext implementation instance
      */
     public ICCApplicationContext getCCApplicationContext();

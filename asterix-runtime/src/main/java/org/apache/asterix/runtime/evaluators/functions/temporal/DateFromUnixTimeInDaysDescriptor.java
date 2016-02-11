@@ -45,10 +45,6 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATE_FROM_UNIX_TIME_IN_DAYS;
-
-    // allowed input types
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -86,7 +82,7 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 aDate.setValue(ATypeHierarchy.getIntegerValue(argOut.getByteArray(), 0));

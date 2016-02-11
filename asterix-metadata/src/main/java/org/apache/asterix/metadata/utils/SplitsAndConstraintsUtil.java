@@ -142,4 +142,10 @@ public class SplitsAndConstraintsUtil {
         FileSplit[] splits = splitsForFilesIndex(mdTxnCtx, dataverseName, datasetName, targetIdxName, create);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
+
+    public static String getIndexPath(String partitionPath, int partition, String dataverse, String fullIndexName) {
+        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        return partitionPath + StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition) + File.separator
+                + StoragePathUtil.prepareDataverseIndexName(dataverse, fullIndexName);
+    }
 }

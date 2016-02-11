@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
@@ -57,7 +58,7 @@ public interface IARecordBuilder {
      * @throws AsterixException
      *             if the field name conflicts with a closed field name
      */
-    public void addField(IValueReference name, IValueReference value) throws AsterixException;
+    public void addField(IValueReference name, IValueReference value) throws HyracksDataException;
 
     /**
      * @param out
@@ -69,7 +70,7 @@ public interface IARecordBuilder {
      * @throws AsterixException
      *             if any open field names conflict with each other
      */
-    public void write(DataOutput out, boolean writeTypeTag) throws IOException, AsterixException;
+    public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException;
 
     public int getFieldId(String fieldName);
 

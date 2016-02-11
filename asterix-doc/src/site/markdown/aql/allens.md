@@ -27,9 +27,9 @@
 
 ## <a id="AboutAllensRelations">About Allen's Relations</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-AsterixDB supports Allen's relations over interval types. Allen's relations are also called Allen's interval algebra. There are totally 13 base relations described by this algebra, and all of them are supported in AsterixDB (note that `interval-equals` is supported by the `=` comparison symbol so there is no extra function for it). 
+AsterixDB supports Allen's relations over interval types. Allen's relations are also called Allen's interval algebra. There are totally 13 base relations described by this algebra, and all of them are supported in AsterixDB (note that `interval-equals` is supported by the `=` comparison symbol so there is no extra function for it).
 
-A detailed description of Allen's relations can be found from its [wikipedia entry](http://en.wikipedia.org/wiki/Allen's_interval_algebra). 
+A detailed description of Allen's relations can be found from its [wikipedia entry](http://en.wikipedia.org/wiki/Allen's_interval_algebra).
 
 ## <a id="AllensRelatonsFunctions">Allen's Relations Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
@@ -40,19 +40,19 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
         interval-before(interval1, interval2)
         interval-after(interval1, interval2)
 
- * These two functions check whether an interval happens before/after another interval. 
+ * These two functions check whether an interval happens before/after another interval.
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-before(interval1, interval2)` is true if and only if `interval1.end < interval2.start`, and `interval-after(interval1, interval2)` is true if and only if `interval1.start > interval2.end`. If any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2005-05-01", "2012-09-09")
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2005-05-01"), date("2012-09-09"))
         return {"interval-before": interval-before($itv1, $itv2), "interval-after": interval-after($itv2, $itv1)}
-        
+
  * The expected result is:
 
         { "interval-before": true, "interval-after": true }
@@ -69,7 +69,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
 
         interval1.start <= interval2.start
@@ -84,14 +84,14 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2000-03-01", "2004-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2012-08-01")
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2000-03-01"), date("2004-09-09"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2004-09-10"), date("2012-08-01"))
         return {"interval-covers": interval-covers($itv1, $itv2), "interval-covered-by": interval-covered-by($itv3, $itv4)}
-        
+
  * The expected result is:
- 
+
         { "interval-covers": true, "interval-covered-by": true }
 
 
@@ -106,7 +106,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
 
         interval1.start < interval2.start
@@ -125,15 +125,15 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
-        return {"overlaps": interval-overlaps($itv1, $itv2), 
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2004-05-01"), date("2012-09-09"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2004-09-10"), date("2006-12-31"))
+        return {"overlaps": interval-overlaps($itv1, $itv2),
                 "overlapped-by": interval-overlapped-by($itv3, $itv4)}
-        
+
  * The expected result is:
- 
+
         { "overlaps": true, "overlapped-by": true }
 
 
@@ -144,11 +144,11 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
 
         interval-overlapping(interval1, interval2)
 
- * This functions check whether two intervals share any points with each other. 
+ * This functions check whether two intervals share any points with each other.
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-overlapping(interval1, interval2)` is true if
 
         (interval2.start >= interval1.start
@@ -161,15 +161,15 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
-        return {"overlapping1": interval-overlapping($itv1, $itv2), 
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2004-05-01"), date("2012-09-09"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2004-09-10"), date("2006-12-31"))
+        return {"overlapping1": interval-overlapping($itv1, $itv2),
                 "overlapping2": interval-overlapping($itv3, $itv4)}
-        
+
  * The expected result is:
- 
+
         { "overlapping1": true, "overlapping2": true }
 
 
@@ -180,23 +180,23 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
         interval-meets(interval1, interval2)
         interval-met-by(interval1, interval2)
 
- * These two functions check whether an interval meets with another interval. 
+ * These two functions check whether an interval meets with another interval.
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-meets(interval1, interval2)` is true if and only if `interval1.end = interval2.start`, and `interval-met-by(interval1, interval2)` is true if and only if `interval1.start = interval2.end`. If any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2005-01-01", "2012-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2006-08-01")
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2005-01-01"), date("2012-09-09"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2004-09-10"), date("2006-08-01"))
         return {"meets": interval-meets($itv1, $itv2), "metby": interval-met-by($itv3, $itv4)}
 
  * The expected result is:
- 
+
         { "meets": true, "metby": true }
 
 
@@ -211,7 +211,7 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-starts(interval1, interval2)` returns true if and only if
 
         interval1.start = interval2.start
@@ -226,14 +226,14 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
 
  * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2000-01-01", "2012-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2006-08-01", "2006-08-01")
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("2000-01-01"), date("2012-09-09"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2006-08-01"), date("2006-08-02"))
         return {"interval-starts": interval-starts($itv1, $itv2), "interval-started-by": interval-started-by($itv3, $itv4)}
 
  * The expected result is:
- 
+
         { "interval-starts": true, "interval-started-by": true }
 
 
@@ -248,7 +248,7 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
  * Arguments:
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
-   
+
     A `boolean` value. Specifically, `interval-ends(interval1, interval2)` returns true if and only if
 
         interval1.end = interval2.end
@@ -263,12 +263,12 @@ Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar
 
 * Examples:
 
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("1998-01-01", "2005-01-01")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2006-09-10", "2007-03-01")
+        let $itv1 := interval(date("2000-01-01"), date("2005-01-01"))
+        let $itv2 := interval(date("1998-01-01"), date("2005-01-01"))
+        let $itv3 := interval(date("2006-08-01"), date("2007-03-01"))
+        let $itv4 := interval(date("2006-09-10"), date("2007-03-01"))
         return {"interval-ends": interval-ends($itv1, $itv2), "interval-ended-by": interval-ended-by($itv3, $itv4) }
-        
+
 * The expected result is:
 
         { "interval-ends": true, "interval-ended-by": true }

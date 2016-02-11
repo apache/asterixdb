@@ -66,7 +66,7 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
             final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                     throws HyracksDataException {
         // Create a file index accessor to be used for files lookup operations
-        // Note that all file index accessors will use partition 0 since we only have 1 files index per NC 
+        // Note that all file index accessors will use partition 0 since we only have 1 files index per NC
         final ExternalFileIndexAccessor snapshotAccessor = new ExternalFileIndexAccessor(
                 (ExternalBTreeDataflowHelper) dataflowHelperFactory.createIndexDataflowHelper(this, ctx, partition),
                 this);
@@ -80,7 +80,7 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
                 try {
                     adapter = adapterFactory.createAdapter(ctx, partition,
                             recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), snapshotAccessor, writer);
-                    //Open the file index accessor here
+                    // Open the file index accessor here
                     snapshotAccessor.open();
                     indexOpen = true;
                     adapter.open();
@@ -126,6 +126,11 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
                 } catch (Throwable th) {
                     throw new HyracksDataException(th);
                 }
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                adapter.flush();
             }
         };
     }

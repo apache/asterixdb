@@ -42,7 +42,7 @@ public class AqlNullWriterFactory implements INullWriterFactory {
             @Override
             public void writeNull(DataOutput out) throws HyracksDataException {
                 try {
-                    out.writeByte(ATypeTag.NULL.serialize());
+                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

@@ -46,11 +46,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_CIRCLE_CENTER_ACCESSOR;
-    private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -89,14 +85,14 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                         try {
                             double cX;
                             double cY;
-                            if (bytes[0] == SER_CICLE_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
                                 cX = ADoubleSerializerDeserializer.getDouble(bytes,
                                         ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X));
                                 cY = ADoubleSerializerDeserializer.getDouble(bytes,
                                         ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(cX, cY);
                                 pointSerde.serialize(aPoint, out);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-center does not support the type: " + bytes[0]

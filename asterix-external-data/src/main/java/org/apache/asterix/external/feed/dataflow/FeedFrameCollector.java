@@ -157,4 +157,13 @@ public class FeedFrameCollector extends MessageReceiver<DataBucket> {
         return connectionId.toString().hashCode();
     }
 
+    @Override
+    public void emptyInbox() throws HyracksDataException {
+        flush();
+    }
+
+    public synchronized void flush() throws HyracksDataException {
+        frameWriter.flush();
+    }
+
 }

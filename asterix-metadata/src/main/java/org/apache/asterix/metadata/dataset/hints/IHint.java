@@ -27,14 +27,14 @@ public interface IHint {
 
     /**
      * retrieve the name of the hint.
-     * 
+     *
      * @return
      */
     public String getName();
 
     /**
      * validate the value associated with the hint.
-     * 
+     *
      * @param value
      *            the value associated with the hint.
      * @return a Pair with

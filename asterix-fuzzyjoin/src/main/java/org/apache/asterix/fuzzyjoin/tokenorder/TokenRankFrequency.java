@@ -25,7 +25,7 @@ import java.util.TreeSet;
 
 public class TokenRankFrequency implements TokenRank {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

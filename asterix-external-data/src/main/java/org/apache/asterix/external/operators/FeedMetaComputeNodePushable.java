@@ -25,9 +25,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.external.feed.api.IFeedManager;
-import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.api.IFeedRuntime.Mode;
+import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -183,6 +183,9 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
                     inputSideHandler.nextFrame(null); // signal end of data
                     while (!inputSideHandler.isFinished()) {
                         synchronized (coreOperator) {
+                            if (inputSideHandler.isFinished()) {
+                                break;
+                            }
                             coreOperator.wait();
                         }
                     }
@@ -192,8 +195,8 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             }
             coreOperator.close();
             System.out.println("CLOSED " + coreOperator + " STALLED ?" + stalled + " ENDED " + end);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new HyracksDataException(e);
         } finally {
             if (!stalled) {
                 deregister();
@@ -219,6 +222,11 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             // deregister from connection manager
             feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, feedRuntime.getRuntimeId());
         }
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        inputSideHandler.flush();
     }
 
 }

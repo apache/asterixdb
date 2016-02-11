@@ -35,6 +35,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.api.IIndex;
@@ -214,8 +215,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {
-        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory), 
-        // that is not being used (refcount == 0) and has been least recently used. The sort order defined 
+        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory),
+        // that is not being used (refcount == 0) and has been least recently used. The sort order defined
         // for DatasetInfo maintains this. See DatasetInfo.compareTo().
         List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
         Collections.sort(datasetInfosList);
@@ -542,7 +543,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
         if (!dsInfo.isExternal) {
             synchronized (logRecord) {
-                logRecord.formFlushLogRecord(dsInfo.datasetID, null, dsInfo.indexes.size());
+                TransactionUtil.formFlushLogRecord(logRecord, dsInfo.datasetID, null, dsInfo.indexes.size());
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
@@ -572,7 +573,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
         } else {
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                // TODO: This is not efficient since we flush the indexes sequentially. 
+                // TODO: This is not efficient since we flush the indexes sequentially.
                 // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
                 // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
                 flushAndWaitForIO(dsInfo, iInfo);

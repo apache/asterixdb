@@ -327,6 +327,18 @@ public class CompiledStatements {
         }
     }
 
+    public static class CompiledUpsertStatement extends CompiledInsertStatement {
+
+        public CompiledUpsertStatement(String dataverseName, String datasetName, Query query, int varCounter) {
+            super(dataverseName, datasetName, query, varCounter);
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.UPSERT;
+        }
+    }
+
     public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
         private String feedName;

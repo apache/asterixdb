@@ -393,4 +393,9 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
         return storageTimeTrackingRateTask;
     }
 
+    @Override
+    public void emptyInbox() throws HyracksDataException {
+        inputHandler.flush();
+    }
+
 }

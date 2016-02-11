@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -41,6 +42,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OpenRecordConstructorDescriptor();
         }
@@ -99,14 +101,14 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                                     evalNames[i].evaluate(tuple);
                                     recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                                 } else {
-                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                         recBuilder.addField(closedFieldId, fieldValueBuffer);
                                     }
                                     closedFieldId++;
                                 }
                             }
                             recBuilder.write(out, true);
-                        } catch (IOException | AsterixException e) {
+                        } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
                     }

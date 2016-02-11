@@ -21,8 +21,8 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ABooleanPrinter implements IPrinter {
 
@@ -30,11 +30,10 @@ public class ABooleanPrinter implements IPrinter {
 
     @Override
     public void init() {
-
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         ps.print(ABooleanSerializerDeserializer.getBoolean(b, s + 1));
     }
 }

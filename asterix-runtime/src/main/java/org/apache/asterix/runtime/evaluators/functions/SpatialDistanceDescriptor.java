@@ -48,6 +48,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialDistanceDescriptor();
         }
@@ -97,10 +98,9 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
-                                    throw new NotImplementedException(
-                                            AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
-                                                    + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT.");
+                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
+                                            + ": does not support the type: " + tag1
+                                            + "; it is only implemented for POINT.");
                                 }
                             } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
@@ -109,7 +109,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                         + ": does not support the type: " + tag1
                                         + "; it is only implemented for POINT.");
                             }
-                            out.writeByte(ATypeTag.DOUBLE.serialize());
+                            out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                             out.writeDouble(distance);
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);

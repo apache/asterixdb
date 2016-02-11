@@ -112,8 +112,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         if (type0 == ATypeTag.INTERVAL) {
                             intervalStart = AIntervalSerializerDeserializer.getIntervalStart(argOut0.getByteArray(), 1);
                             intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(argOut0.getByteArray(), 1);
-                            intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(
-                                    argOut0.getByteArray(), 1);
+                            intervalTypeTag = AIntervalSerializerDeserializer
+                                    .getIntervalTimeType(argOut0.getByteArray(), 1);
                         } else if (type0 == ATypeTag.NULL) {
                             try {
                                 nullSerde.serialize(ANull.NULL, out);
@@ -133,10 +133,10 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]);
 
                         if (intervalTypeTag != type1.serialize()) {
-                            if (intervalTypeTag != ATypeTag.NULL.serialize() && type1 != ATypeTag.NULL)
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting compatible type to " + type0 + "(" + intervalTypeTag
-                                        + ") for the second argument but got " + type1);
+                            if (intervalTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG && type1 != ATypeTag.NULL)
+                                throw new AlgebricksException(
+                                        getIdentifier().getName() + ": expecting compatible type to " + type0 + "("
+                                                + intervalTypeTag + ") for the second argument but got " + type1);
                         }
 
                         long anchorTime = 0;
@@ -159,9 +159,9 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 }
                                 return;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting compatible type to " + type0 + "(" + intervalTypeTag
-                                        + ") for the second argument but got " + type1);
+                                throw new AlgebricksException(
+                                        getIdentifier().getName() + ": expecting compatible type to " + type0 + "("
+                                                + intervalTypeTag + ") for the second argument but got " + type1);
                         }
 
                         argOut2.reset();
@@ -174,8 +174,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         long firstBinIndex;
                         switch (type2) {
                             case YEARMONTHDURATION:
-                                yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(
-                                        argOut2.getByteArray(), 1);
+                                yearMonth = AYearMonthDurationSerializerDeserializer
+                                        .getYearMonth(argOut2.getByteArray(), 1);
 
                                 int yearStart = GREG_CAL.getYear(anchorTime);
                                 int monthStart = GREG_CAL.getMonthOfYear(anchorTime, yearStart);
@@ -188,13 +188,13 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalMonths < 0 && totalMonths % yearMonth != 0) ? -1 : 0);
 
                                 if (firstBinIndex > Integer.MAX_VALUE) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": Overflowing time value to be binned!");
+                                    throw new AlgebricksException(
+                                            getIdentifier().getName() + ": Overflowing time value to be binned!");
                                 }
 
                                 if (firstBinIndex < Integer.MIN_VALUE) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": Underflowing time value to be binned!");
+                                    throw new AlgebricksException(
+                                            getIdentifier().getName() + ": Underflowing time value to be binned!");
                                 }
                                 break;
 
@@ -216,10 +216,9 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 return;
 
                             default:
-                                throw new AlgebricksException(
-                                        getIdentifier().getName()
-                                                + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
-                                                + type2);
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
+                                        + type2);
                         }
 
                         long binStartChronon, binEndChronon;
@@ -228,25 +227,25 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         listBuilder.reset(intListType);
 
                         try {
-                            if (intervalTypeTag == ATypeTag.DATE.serialize()) {
+                            if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
 
                                 binOffset = 0;
 
                                 do {
-                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * (int) (firstBinIndex + binOffset), dayTime * (firstBinIndex + binOffset),
-                                            false);
-                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * ((int) (firstBinIndex + binOffset) + 1), dayTime
-                                            * ((firstBinIndex + binOffset) + 1), false);
-                                    binStartChronon = binStartChronon
-                                            / GregorianCalendarSystem.CHRONON_OF_DAY
-                                            + ((binStartChronon < 0 && binStartChronon
-                                                    % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1 : 0);
-                                    binEndChronon = binEndChronon
-                                            / GregorianCalendarSystem.CHRONON_OF_DAY
-                                            + ((binEndChronon < 0 && binEndChronon
-                                                    % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1 : 0);
+                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * (int) (firstBinIndex + binOffset),
+                                            dayTime * (firstBinIndex + binOffset), false);
+                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * ((int) (firstBinIndex + binOffset) + 1),
+                                            dayTime * ((firstBinIndex + binOffset) + 1), false);
+                                    binStartChronon = binStartChronon / GregorianCalendarSystem.CHRONON_OF_DAY
+                                            + ((binStartChronon < 0
+                                                    && binStartChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0)
+                                                            ? -1 : 0);
+                                    binEndChronon = binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY
+                                            + ((binEndChronon < 0
+                                                    && binEndChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
+                                                            : 0);
                                     aInterval.setValue(binStartChronon, binEndChronon, intervalTypeTag);
                                     listStorage.reset();
                                     intervalSerde.serialize(aInterval, listStorage.getDataOutput());
@@ -254,7 +253,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     binOffset++;
                                 } while (binEndChronon < intervalEnd);
 
-                            } else if (intervalTypeTag == ATypeTag.TIME.serialize()) {
+                            } else if (intervalTypeTag == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 if (yearMonth != 0) {
                                     throw new AlgebricksException(getIdentifier().getName()
                                             + ": cannot create year-month bin for a time value");
@@ -262,53 +261,52 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                                 binOffset = 0;
 
-                                binStartChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                        * (int) (firstBinIndex + binOffset), dayTime * (firstBinIndex + binOffset),
-                                        true);
-                                binEndChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                        * ((int) (firstBinIndex + binOffset) + 1), dayTime
-                                        * ((firstBinIndex + binOffset) + 1), true);
+                                binStartChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                        yearMonth * (int) (firstBinIndex + binOffset),
+                                        dayTime * (firstBinIndex + binOffset), true);
+                                binEndChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                        yearMonth * ((int) (firstBinIndex + binOffset) + 1),
+                                        dayTime * ((firstBinIndex + binOffset) + 1), true);
 
                                 if (binStartChronon < 0 || binStartChronon >= GregorianCalendarSystem.CHRONON_OF_DAY) {
                                     // avoid the case where a time bin is before 00:00:00 or no early than 24:00:00
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName()
-                                                    + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
+                                    throw new AlgebricksException(getIdentifier().getName()
+                                            + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
                                 }
 
-                                while (!((binStartChronon < intervalStart && binEndChronon <= intervalStart) || (binStartChronon >= intervalEnd && binEndChronon > intervalEnd))) {
+                                while (!((binStartChronon < intervalStart && binEndChronon <= intervalStart)
+                                        || (binStartChronon >= intervalEnd && binEndChronon > intervalEnd))) {
 
                                     aInterval.setValue(binStartChronon, binEndChronon, intervalTypeTag);
                                     listStorage.reset();
                                     intervalSerde.serialize(aInterval, listStorage.getDataOutput());
                                     listBuilder.addItem(listStorage);
                                     binOffset++;
-                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * (int) (firstBinIndex + binOffset), dayTime * (firstBinIndex + binOffset),
-                                            true);
-                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * ((int) (firstBinIndex + binOffset) + 1), dayTime
-                                            * ((firstBinIndex + binOffset) + 1), true);
+                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * (int) (firstBinIndex + binOffset),
+                                            dayTime * (firstBinIndex + binOffset), true);
+                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * ((int) (firstBinIndex + binOffset) + 1),
+                                            dayTime * ((firstBinIndex + binOffset) + 1), true);
 
                                     if (binStartChronon == GregorianCalendarSystem.CHRONON_OF_DAY) {
                                         break;
                                     }
 
                                     if (binEndChronon < binStartChronon) {
-                                        throw new AlgebricksException(
-                                                getIdentifier().getName()
-                                                        + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
+                                        throw new AlgebricksException(getIdentifier().getName()
+                                                + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
                                     }
                                 }
-                            } else if (intervalTypeTag == ATypeTag.DATETIME.serialize()) {
+                            } else if (intervalTypeTag == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                 binOffset = 0;
                                 do {
-                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * (int) (firstBinIndex + binOffset), dayTime * (firstBinIndex + binOffset),
-                                            false);
-                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime, yearMonth
-                                            * ((int) (firstBinIndex + binOffset) + 1), dayTime
-                                            * ((firstBinIndex + binOffset) + 1), false);
+                                    binStartChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * (int) (firstBinIndex + binOffset),
+                                            dayTime * (firstBinIndex + binOffset), false);
+                                    binEndChronon = DurationArithmeticOperations.addDuration(anchorTime,
+                                            yearMonth * ((int) (firstBinIndex + binOffset) + 1),
+                                            dayTime * ((firstBinIndex + binOffset) + 1), false);
                                     aInterval.setValue(binStartChronon, binEndChronon, intervalTypeTag);
                                     listStorage.reset();
                                     intervalSerde.serialize(aInterval, listStorage.getDataOutput());

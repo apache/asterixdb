@@ -80,6 +80,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.AsterixFunctionInfo;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.formats.FormatUtils;
@@ -117,7 +118,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -238,8 +239,8 @@ class LangExpressionToPlanTranslator
                     additionalFilteringAssignExpressions);
         }
 
-        InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, payloadRef, varRefsForLoading,
-                InsertDeleteOperator.Kind.INSERT, true);
+        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadRef,
+                varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, true);
         insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
 
         if (additionalFilteringAssign != null) {
@@ -344,17 +345,34 @@ class LangExpressionToPlanTranslator
 
             switch (stmt.getKind()) {
                 case INSERT: {
-                    InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef,
-                            varRefsForLoading, InsertDeleteOperator.Kind.INSERT, false);
+                    InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
                     insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     break;
                 }
+                case UPSERT: {
+                    InsertDeleteUpsertOperator upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteUpsertOperator.Kind.UPSERT, false);
+                    upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
+                    upsertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                    // Create and add a new variable used for representing the original record
+                    ARecordType recordType = (ARecordType) targetDatasource.getItemType();
+                    upsertOp.setPrevRecordVar(context.newVar());
+                    upsertOp.setPrevRecordType(recordType);
+                    if (additionalFilteringField != null) {
+                        upsertOp.setPrevFilterVar(context.newVar());
+                        upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
+                    }
+                    leafOperator = new SinkOperator();
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(upsertOp));
+                    break;
+                }
                 case DELETE: {
-                    InsertDeleteOperator deleteOp = new InsertDeleteOperator(targetDatasource, varRef,
-                            varRefsForLoading, InsertDeleteOperator.Kind.DELETE, false);
+                    InsertDeleteUpsertOperator deleteOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteUpsertOperator.Kind.DELETE, false);
                     deleteOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     deleteOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
@@ -362,8 +380,8 @@ class LangExpressionToPlanTranslator
                     break;
                 }
                 case CONNECT_FEED: {
-                    InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef,
-                            varRefsForLoading, InsertDeleteOperator.Kind.INSERT, false);
+                    InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
                     insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
@@ -371,8 +389,8 @@ class LangExpressionToPlanTranslator
                     break;
                 }
                 case SUBSCRIBE_FEED: {
-                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
-                            InsertDeleteOperator.Kind.INSERT, false);
+                    ILogicalOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));

@@ -31,8 +31,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,9 +59,6 @@ public class ARecordType extends AbstractComplexType {
      *            the types of the closed fields
      * @param isOpen
      *            whether the record is open
-     * @throws AsterixException
-     *             if there are duplicate field names or if there is an error serializing the field names
-     * @throws HyracksDataException
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         super(typeName);
@@ -128,7 +123,7 @@ public class ARecordType extends AbstractComplexType {
      *            the name of the field whose position is sought
      * @return the position of the field in the closed schema or -1 if the field does not exist.
      */
-    public int getFieldIndex(String fieldName) throws IOException {
+    public int getFieldIndex(String fieldName) {
         if (fieldNames == null) {
             return -1;
         }
@@ -146,10 +141,9 @@ public class ARecordType extends AbstractComplexType {
      * @param parent
      *            The type of the parent
      * @return the type of the child
-     * @throws IOException
      */
 
-    public IAType getSubFieldType(List<String> subFieldName, IAType parent) throws IOException {
+    public IAType getSubFieldType(List<String> subFieldName, IAType parent) {
         ARecordType subRecordType = (ARecordType) parent;
         for (int i = 0; i < subFieldName.size() - 1; i++) {
             subRecordType = (ARecordType) subRecordType.getFieldType(subFieldName.get(i));
@@ -189,10 +183,8 @@ public class ARecordType extends AbstractComplexType {
      * @param fieldName
      *            the fieldName whose type is sought
      * @return the field type of the field name if it exists, otherwise null
-     * @throws IOException
-     *             if an error occurs while serializing the field name
      */
-    public IAType getFieldType(String fieldName) throws IOException {
+    public IAType getFieldType(String fieldName) {
         int fieldPos = getFieldIndex(fieldName);
         if (fieldPos < 0 || fieldPos >= fieldTypes.length) {
             return null;
@@ -206,9 +198,8 @@ public class ARecordType extends AbstractComplexType {
      * @param fieldName
      *            the name of the field to check
      * @return true if fieldName is a closed field, otherwise false
-     * @throws IOException
      */
-    public boolean isClosedField(String fieldName) throws IOException {
+    public boolean isClosedField(String fieldName) {
         return getFieldIndex(fieldName) != -1;
     }
 
@@ -221,7 +212,7 @@ public class ARecordType extends AbstractComplexType {
         return false;
     }
 
-    public ARecordType deepCopy(ARecordType type) throws AlgebricksException {
+    public ARecordType deepCopy(ARecordType type) {
         IAType[] newTypes = new IAType[type.fieldNames.length];
         for (int i = 0; i < type.fieldTypes.length; i++) {
             if (type.fieldTypes[i].getTypeTag() == ATypeTag.RECORD) {

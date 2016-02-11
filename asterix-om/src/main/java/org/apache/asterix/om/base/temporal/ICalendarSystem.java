@@ -22,7 +22,7 @@ public interface ICalendarSystem {
 
     /**
      * check whether the given time stamp is valid in the calendar system.
-     * 
+     *
      * @param year
      * @param month
      * @param day
@@ -37,7 +37,7 @@ public interface ICalendarSystem {
 
     /**
      * get the chronon time for the given time stamp in the calendar system.
-     * 
+     *
      * @param year
      * @param month
      * @param day
@@ -52,7 +52,7 @@ public interface ICalendarSystem {
 
     /**
      * get the chronon time for the given time in the calendar system
-     * 
+     *
      * @param hour
      * @param min
      * @param sec

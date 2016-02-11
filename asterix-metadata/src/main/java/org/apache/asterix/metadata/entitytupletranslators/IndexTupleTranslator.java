@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
@@ -95,7 +94,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException, MetadataException {
+    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
         byte[] serRecord = frameTuple.getFieldData(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -167,7 +166,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Index instance) throws IOException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(Index instance) throws IOException {
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getDataverseName());
@@ -253,11 +252,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             aString.setValue(GRAM_LENGTH_FIELD_NAME);
             stringSerde.serialize(aString, nameValue.getDataOutput());
             intSerde.serialize(new AInt32(instance.getGramLength()), fieldValue.getDataOutput());
-            try {
-                recordBuilder.addField(nameValue, fieldValue);
-            } catch (AsterixException e) {
-                throw new MetadataException(e);
-            }
+            recordBuilder.addField(nameValue, fieldValue);
         }
 
         if (instance.isEnforcingKeyFileds()) {
@@ -279,11 +274,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
             fieldValue.reset();
             typeListBuilder.write(fieldValue.getDataOutput(), true);
-            try {
-                recordBuilder.addField(nameValue, fieldValue);
-            } catch (AsterixException e) {
-                throw new MetadataException(e);
-            }
+            recordBuilder.addField(nameValue, fieldValue);
 
             // write optional field 10
             fieldValue.reset();
@@ -294,19 +285,11 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
             booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
 
-            try {
-                recordBuilder.addField(nameValue, fieldValue);
-            } catch (AsterixException e) {
-                throw new MetadataException(e);
-            }
+            recordBuilder.addField(nameValue, fieldValue);
         }
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

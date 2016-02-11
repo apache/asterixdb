@@ -272,6 +272,10 @@ public class FeedFrameHandlers {
                 };
             }
 
+            @Override
+            public void emptyInbox() throws HyracksDataException {
+            }
+
         }
 
         @Override

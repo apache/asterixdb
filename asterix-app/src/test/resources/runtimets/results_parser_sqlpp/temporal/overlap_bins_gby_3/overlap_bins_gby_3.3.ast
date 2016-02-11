@@ -73,7 +73,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall multitask.overlap-bins@3[
-    FunctionCall multitask.interval-from-time@2[
+    FunctionCall multitask.interval@2[
       FunctionCall multitask.min@1[
         (
           SELECT ELEMENT [

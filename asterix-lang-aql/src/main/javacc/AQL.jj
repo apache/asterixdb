@@ -124,6 +124,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
+import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -884,12 +885,17 @@ InsertStatement InsertStatement() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;
   Query query;
+  boolean upsert = false;
 }
 {
-  "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query()
+  ("insert"|"upsert"{ upsert = true; }) "into" <DATASET> nameComponents = QualifiedName() query = Query()
     {
       query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      if(upsert){
+        return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      } else{
+        return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      }
     }
 }
 

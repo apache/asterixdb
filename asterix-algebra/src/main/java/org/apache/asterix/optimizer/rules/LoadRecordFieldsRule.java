@@ -223,7 +223,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
 
     /**
      * Pushes one field-access assignment above toPushThroughChildRef
-     * 
+     *
      * @param toPush
      * @param toPushThroughChildRef
      */
@@ -243,7 +243,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
      * into
      * assign $x := Expr
      * assign $y := record-constructor { "field": Expr, ... }
-     * 
+     *
      * @param toPush
      */
     private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign) throws AlgebricksException {

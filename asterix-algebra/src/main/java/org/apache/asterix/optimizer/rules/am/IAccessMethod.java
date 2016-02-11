@@ -51,7 +51,7 @@ public interface IAccessMethod {
      * optimizable by this access method based on its function identifier. If
      * funcExpr has been found to be optimizable, this method adds an
      * OptimizableFunction to analysisCtx.matchedFuncExprs for further analysis.
-     * 
+     *
      * @return true if funcExpr is optimizable by this access method, false
      *         otherwise
      * @throws AlgebricksException
@@ -63,7 +63,7 @@ public interface IAccessMethod {
     /**
      * Indicates whether all index expressions must be matched in order for this
      * index to be applicable.
-     * 
+     *
      * @return boolean
      */
     public boolean matchAllIndexExprs();
@@ -71,7 +71,7 @@ public interface IAccessMethod {
     /**
      * Indicates whether this index is applicable if only a prefix of the index
      * expressions are matched.
-     * 
+     *
      * @return boolean
      */
     public boolean matchPrefixIndexExprs();
@@ -95,7 +95,7 @@ public interface IAccessMethod {
 
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.
-     * 
+     *
      * @throws AlgebricksException
      */
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;

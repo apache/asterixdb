@@ -47,8 +47,6 @@ public class ExternalFunctionProvider {
 }
 
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, ICopyEvaluator {
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public ExternalScalarFunction(IExternalFunctionInfo finfo, ICopyEvaluatorFactory args[],
             IDataOutputProvider outputProvider) throws AlgebricksException {
         super(finfo, args, outputProvider);
@@ -80,8 +78,8 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
          * we want to discard a null object
          */
         byte byteOutput = ((ArrayBackedValueStorage) out).getByteArray()[0];
-        if (!argumentProvider.isValidResult() || byteOutput == SER_NULL_TYPE_TAG) {
-            out.getDataOutput().writeByte(SER_NULL_TYPE_TAG);
+        if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            out.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         }
     }
 

@@ -28,6 +28,7 @@ import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -120,10 +121,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                     }
                 }
             }
-
             LogRecord logRecord = new LogRecord();
-            logRecord.formFlushLogRecord(datasetID, this, logManager.getNodeId(), dsInfo.getDatasetIndexes().size());
-
+            TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
+                    dsInfo.getDatasetIndexes().size());
             try {
                 logManager.log(logRecord);
             } catch (ACIDException e) {

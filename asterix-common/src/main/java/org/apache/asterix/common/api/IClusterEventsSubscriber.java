@@ -46,6 +46,6 @@ public interface IClusterEventsSubscriber {
      * @param newState
      */
     public void notifyStateChange(ClusterState previousState, ClusterState newState);
-    
+
 
 }

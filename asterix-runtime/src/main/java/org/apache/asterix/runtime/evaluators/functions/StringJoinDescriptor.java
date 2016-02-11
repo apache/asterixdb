@@ -42,13 +42,11 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringJoinDescriptor();
         }
     };
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -79,14 +77,14 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                             outInputSep.reset();
                             evalSep.evaluate(tuple);
                             byte[] serSep = outInputSep.getByteArray();
-                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG
-                                    && serOrderedList[1] != SER_STRING_TYPE_TAG) {
+                            if (serOrderedList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && serOrderedList[1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
                                         + ": expects input type ORDEREDLIST but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                             }
 
-                            if (serSep[0] != SER_STRING_TYPE_TAG) {
+                            if (serSep[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
                                         + ": expects STRING type for the seperator but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serSep[0]));
@@ -100,8 +98,8 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 int sep_meta_len = UTF8StringUtil.getNumBytesToStoreLength(sep_len);
 
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer
-                                            .getItemOffset(serOrderedList, i);
+                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
+                                            i);
 
                                     int currentSize = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
                                     if (i != size - 1 && currentSize != 0) {
@@ -109,12 +107,12 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                     }
                                     utf_8_len += currentSize;
                                 }
-                                out.writeByte(stringTypeTag);
+                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                                 int length = UTF8StringUtil.encodeUTF8Length(utf_8_len, tempLengthArray, 0);
                                 out.write(tempLengthArray, 0, length);
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer
-                                            .getItemOffset(serOrderedList, i);
+                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
+                                            i);
                                     utf_8_len = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
                                     out.write(serOrderedList,
                                             itemOffset + UTF8StringUtil.getNumBytesToStoreLength(utf_8_len), utf_8_len);

@@ -26,9 +26,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.result.ResultReader;
 import org.apache.asterix.result.ResultUtils;
@@ -38,6 +35,8 @@ import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class QueryResultAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -89,7 +88,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             // originally determined there. Need to save this value on
             // some object that we can obtain here.
             SessionConfig sessionConfig = RESTAPIServlet.initResponse(request, response);
-            ResultUtils.displayResults(resultReader, sessionConfig);
+            ResultUtils.displayResults(resultReader, sessionConfig, new ResultUtils.Stats());
 
         } catch (Exception e) {
             out.println(e.getMessage());

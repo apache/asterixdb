@@ -118,20 +118,17 @@ public class RTreeAccessMethod implements IAccessMethod {
             boolean hasGroupBy) throws AlgebricksException {
         // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
-        // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (!isLeftOuterJoin && leftSubTree.hasDataSourceScan()
-                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
-            indexSubTree = leftSubTree;
-            probeSubTree = rightSubTree;
-        } else if (rightSubTree.hasDataSourceScan()
+
+        // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
+        // This assumption holds true since we only use an index from the right subtree.
+        // The following is just a sanity check.
+        if (rightSubTree.hasDataSourceScan()
                 && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
-        }
-        if (indexSubTree == null) {
-            //This may happen for left outer join case
+        } else {
             return false;
         }
 

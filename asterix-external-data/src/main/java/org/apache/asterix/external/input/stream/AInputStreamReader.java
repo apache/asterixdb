@@ -21,6 +21,8 @@ package org.apache.asterix.external.input.stream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+
 public class AInputStreamReader extends InputStreamReader {
     private AInputStream in;
 
@@ -39,5 +41,9 @@ public class AInputStreamReader extends InputStreamReader {
         } catch (Exception e) {
             throw new IOException(e);
         }
+    }
+
+    public void setController(AbstractFeedDataFlowController controller) {
+        in.setController(controller);
     }
 }

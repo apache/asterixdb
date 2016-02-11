@@ -35,11 +35,6 @@ public interface IRawRecord<T> {
     public T get();
 
     /**
-     * @return The class of the record objects.
-     */
-    public Class<?> getRecordClass();
-
-    /**
      * Resets the object to prepare it for another write operation.
      */
     public void reset();
@@ -48,4 +43,10 @@ public interface IRawRecord<T> {
      * @return The size of the valid bytes of the object. If the object can't be serialized, this method returns -1
      */
     int size();
+
+    /**
+     * Sets the new value of the record
+     * @param t
+     */
+    public void set(T t);
 }

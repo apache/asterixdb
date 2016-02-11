@@ -34,6 +34,7 @@ public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
         this.isLocalAgg = isLocalAgg;
     }
 
+    @Override
     protected void processNull() {
         aggType = ATypeTag.NULL;
     }
@@ -54,9 +55,9 @@ public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
     protected void finishSystemNull() throws IOException {
         // Empty stream. For local agg return system null. For global agg return null.
         if (isLocalAgg) {
-            out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+            out.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         } else {
-            out.writeByte(ATypeTag.NULL.serialize());
+            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         }
     }
 

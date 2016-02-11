@@ -26,7 +26,6 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
@@ -49,8 +48,7 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
     }
 
     @Override
-    public ITupleReference getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException,
-            IOException {
+    public ITupleReference getValue(JobId jobId, ITupleReference tuple) throws MetadataException, IOException {
         int numBytes = tupleWriter.bytesRequired(tuple);
         tupleBytes = new byte[numBytes];
         tupleWriter.writeTuple(tuple, tupleBytes, 0);

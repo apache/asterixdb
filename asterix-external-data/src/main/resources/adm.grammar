@@ -20,8 +20,9 @@
 # Place *first* the generic configuration
 # then list your grammar.
 
-PACKAGE:          org.apache.asterix.runtime.operators.file.adm
-LEXER_NAME:       AdmLexer
+PACKAGE:               org.apache.asterix.runtime.operators.file.adm
+LEXER_NAME:            AdmLexer
+EXCEPTION_SUPER_CLASS: org.apache.hyracks.api.exceptions.HyracksDataException
 
 TOKENS:
 
@@ -46,9 +47,7 @@ POLYGON_CONS   = string(polygon)
 RECTANGLE_CONS = string(rectangle)
 CIRCLE_CONS    = string(circle)
 TIME_CONS      = string(time)
-INTERVAL_TIME_CONS      = string(interval-time)
-INTERVAL_DATE_CONS      = string(interval-date)
-INTERVAL_DATETIME_CONS  = string(interval-datetime)
+INTERVAL_CONS  = string(interval)
 YEAR_MONTH_DURATION_CONS = string(year-month-duration)
 DAY_TIME_DURATION_CONS   = string(day-time-duration)
 UUID_CONS      = string(uuid)

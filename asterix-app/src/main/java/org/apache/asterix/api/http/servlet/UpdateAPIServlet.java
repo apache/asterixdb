@@ -41,8 +41,8 @@ public class UpdateAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPDATE, Kind.DML_CMD_LIST,
-                Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
+        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPSERT, Kind.UPDATE,
+                Kind.DML_CMD_LIST, Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
                 Kind.EXTERNAL_DATASET_REFRESH, Kind.RUN };
         return Arrays.asList(statementsArray);
     }

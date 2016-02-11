@@ -42,10 +42,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ANullConstructorDescriptor();
         }
@@ -78,8 +77,9 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NULL, 0, NULL.length) == 0) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NULL, 0,
+                                        NULL.length) == 0) {
                                     nullSerde.serialize(ANull.NULL, out);
                                     return;
                                 } else

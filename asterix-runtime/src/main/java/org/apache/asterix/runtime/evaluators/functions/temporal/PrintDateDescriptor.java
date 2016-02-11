@@ -46,13 +46,8 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.PRINT_DATE;
-
-    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static DateTimeFormatUtils DT_UTILS = DateTimeFormatUtils.getInstance();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -94,20 +89,21 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects (DATE, STRING) but got  ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
-                                        + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
-                                        + ")");
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG
+                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        getIdentifier().getName() + ": expects (DATE, STRING) but got  ("
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut1.getByteArray()[0])
+                                                + ")");
                             }
 
                             long chronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
@@ -118,7 +114,7 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             DT_UTILS.printDateTime(chronon, 0, argOut1.getByteArray(), 1 + offset, formatLength, sbder,
                                     DateTimeParseMode.DATE_ONLY);
 
-                            out.writeByte(ATypeTag.STRING.serialize());
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             utf8Writer.writeUTF8(sbder.toString(), out);
 
                         } catch (IOException ex) {

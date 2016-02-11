@@ -41,13 +41,9 @@ import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    // allowed input types
-    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new Substring2Descriptor();
         }
@@ -66,7 +62,6 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalString = args[0].createEvaluator(argOut);
                     private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
-                    private final byte stt = ATypeTag.STRING.serialize();
 
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
@@ -87,7 +82,7 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                         evalString.evaluate(tuple);
 
                         byte[] bytes = argOut.getByteArray();
-                        if (bytes[0] != SER_STRING_TYPE_TAG) {
+                        if (bytes[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING2.getName()
                                     + ": expects type STRING for the first argument but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
@@ -104,7 +99,7 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                         }
 
                         try {
-                            out.writeByte(stt);
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

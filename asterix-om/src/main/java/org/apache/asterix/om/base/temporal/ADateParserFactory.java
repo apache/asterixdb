@@ -55,7 +55,7 @@ public class ADateParserFactory implements IValueParserFactory {
 
     /**
      * Parse the given char sequence as a date string, and return the milliseconds represented by the date.
-     * 
+     *
      * @param charAccessor
      *            accessor for the char sequence
      * @param isDateOnly
@@ -153,7 +153,7 @@ public class ADateParserFactory implements IValueParserFactory {
     /**
      * A copy-and-paste of {@link #parseDatePart(String, int, int)} but for a char array, in order
      * to avoid object creation.
-     * 
+     *
      * @param dateString
      * @param start
      * @param length
@@ -249,7 +249,7 @@ public class ADateParserFactory implements IValueParserFactory {
     /**
      * A copy-and-paste of {@link #parseDatePart(String, int, int)} but for a byte array, in order
      * to avoid object creation.
-     * 
+     *
      * @param dateString
      * @param start
      * @param length

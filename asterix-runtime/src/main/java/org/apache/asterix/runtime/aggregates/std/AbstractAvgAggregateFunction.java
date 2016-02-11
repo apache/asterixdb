@@ -182,9 +182,9 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
                 if (GlobalConfig.DEBUG) {
                     GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
                 }
-                out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+                out.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             } else if (aggType == ATypeTag.NULL) {
-                out.writeByte(ATypeTag.NULL.serialize());
+                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             } else {
                 sumBytes.reset();
                 aDouble.setValue(sum);

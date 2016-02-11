@@ -44,7 +44,6 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    private static final byte SER_STRING_BYTE = ATypeTag.STRING.serialize();
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -101,7 +100,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": expects format indicator of \"hex\" or \"base64\" in the 2nd argument");
                             }
-                            dataOutput.writeByte(SER_STRING_BYTE);
+                            dataOutput.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(stringBuilder.toString(), dataOutput);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);

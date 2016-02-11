@@ -50,8 +50,6 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
     private ICopyEvaluatorFactory fieldIndexEvalFactory;
     private int nullBitmapSize;
     private ARecordType recordType;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
 
     public FieldAccessByIndexEvalFactory(ICopyEvaluatorFactory recordEvalFactory,
             ICopyEvaluatorFactory fieldIndexEvalFactory, ARecordType recordType) {
@@ -59,11 +57,11 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
         this.fieldIndexEvalFactory = fieldIndexEvalFactory;
         this.recordType = recordType;
         this.nullBitmapSize = ARecordType.computeNullBitmapSize(recordType);
-
     }
 
     @Override
     public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+
         return new ICopyEvaluator() {
 
             private DataOutput out = output.getDataOutput();
@@ -81,36 +79,41 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
             private IAType fieldValueType;
             private ATypeTag fieldValueTypeTag = ATypeTag.NULL;
 
+            /*
+             * outInput0: the record
+             * outInput1: the index
+             *
+             * This method outputs into IDataOutputProvider output [field type tag (1 byte)][the field data]
+             */
             @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                 try {
                     outInput0.reset();
                     eval0.evaluate(tuple);
-                    outInput1.reset();
-                    eval1.evaluate(tuple);
                     byte[] serRecord = outInput0.getByteArray();
 
-                    if (serRecord[0] == SER_NULL_TYPE_TAG) {
+                    if (serRecord[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
                         return;
                     }
 
-                    if (serRecord[0] != SER_RECORD_TYPE_TAG) {
+                    if (serRecord[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type "
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                     }
-
+                    outInput1.reset();
+                    eval1.evaluate(tuple);
                     fieldIndex = IntegerPointable.getInteger(outInput1.getByteArray(), 1);
+                    fieldValueType = recordType.getFieldTypes()[fieldIndex];
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, fieldIndex,
                             nullBitmapSize, recordType.isOpen());
 
                     if (fieldValueOffset == 0) {
                         // the field is null, we checked the null bit map
-                        out.writeByte(SER_NULL_TYPE_TAG);
+                        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                         return;
                     }
 
-                    fieldValueType = recordType.getFieldTypes()[fieldIndex];
                     if (fieldValueType.getTypeTag().equals(ATypeTag.UNION)) {
                         if (((AUnionType) fieldValueType).isNullableType()) {
                             fieldValueTypeTag = ((AUnionType) fieldValueType).getNullableType().getTypeTag();
@@ -137,5 +140,4 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
             }
         };
     }
-
 }

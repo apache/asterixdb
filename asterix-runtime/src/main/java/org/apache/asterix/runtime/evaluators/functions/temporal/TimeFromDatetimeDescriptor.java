@@ -47,11 +47,6 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.TIME_FROM_DATETIME;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -93,18 +88,17 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
+                                if (argOut.getByteArray()[0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            FID.getName()
-                                                    + ": expects input type DATETIME/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                            .getByteArray()[0]));
+                                            FID.getName() + ": expects input type DATETIME/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                            .deserialize(argOut.getByteArray()[0]));
                                 }
-                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(
-                                        argOut.getByteArray(), 1);
+                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(argOut.getByteArray(),
+                                        1);
                                 int timeChronon = (int) (datetimeChronon % GregorianCalendarSystem.CHRONON_OF_DAY);
                                 if (timeChronon < 0) {
                                     timeChronon += GregorianCalendarSystem.CHRONON_OF_DAY;

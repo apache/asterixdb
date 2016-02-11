@@ -31,7 +31,6 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeed.FeedType;
@@ -198,11 +197,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -250,11 +245,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
                         MetadataRecordTypes.FEED_ARECORD_PRIMARY_FIELD_DETAILS_ADAPTOR_CONFIGURATION_FIELD_INDEX,
                         primaryRecordfieldValue);
 
-                try {
-                    primaryDetailsRecordBuilder.write(fieldValue.getDataOutput(), true);
-                } catch (IOException | AsterixException e) {
-                    throw new HyracksDataException(e);
-                }
+                primaryDetailsRecordBuilder.write(fieldValue.getDataOutput(), true);
 
                 recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_PRIMARY_TYPE_DETAILS_FIELD_INDEX, fieldValue);
             }
@@ -273,11 +264,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
                         MetadataRecordTypes.FEED_ARECORD_SECONDARY_FIELD_DETAILS_SOURCE_FEED_NAME_FIELD_INDEX,
                         secondaryFieldValue);
 
-                try {
-                    secondaryDetailsRecordBuilder.write(fieldValue.getDataOutput(), true);
-                } catch (IOException | AsterixException e) {
-                    throw new HyracksDataException(e);
-                }
+                secondaryDetailsRecordBuilder.write(fieldValue.getDataOutput(), true);
                 recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_SECONDARY_TYPE_DETAILS_FIELD_INDEX, fieldValue);
                 break;
         }
@@ -305,10 +292,6 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         propertyRecordBuilder.addField(1, fieldValue);
 
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        propertyRecordBuilder.write(out, true);
     }
 }

@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
-import org.apache.asterix.replication.functions.AsterixReplicationProtocol;
+import org.apache.asterix.replication.functions.ReplicationProtocol;
 
 public class ReplicaEventNotifier implements Runnable {
 
@@ -61,7 +61,7 @@ public class ReplicaEventNotifier implements Runnable {
 
         ByteBuffer buffer = null;
         try {
-            buffer = AsterixReplicationProtocol.writeReplicaEventRequest(event);
+            buffer = ReplicationProtocol.writeReplicaEventRequest(event);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,7 +79,7 @@ public class ReplicaEventNotifier implements Runnable {
                     //send replica event
                     connection.write(buffer);
                     //send goodbye
-                    connection.write(AsterixReplicationProtocol.getGoodbyeBuffer());
+                    connection.write(ReplicationProtocol.getGoodbyeBuffer());
                     break;
                 } catch (IOException | UnresolvedAddressException e) {
                     try {

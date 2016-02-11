@@ -121,13 +121,13 @@
         <test-case FilePath="records">
             <compilation-unit name="open-closed-fieldname-conflict_issue173">
                 <output-dir compare="Text">open-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException: Open field "name" has the same field name as closed field at index 0</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="records">
             <compilation-unit name="open-open-fieldname-conflict_issue173">
                 <output-dir compare="Text">open-open-fieldname-conflict_issue173</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException: Open fields 0 and 1 have the same field name "name"</expected-error>
             </compilation-unit>
         </test-case>
     </test-group>

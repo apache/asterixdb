@@ -43,16 +43,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class TemporalIntervalStartDatetimeAccessor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_START_DATETIME;
-
-    private static final byte SER_INTERVAL_TYPE_TAG = ATypeTag.INTERVAL.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
-    private static final byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -61,6 +53,7 @@ public class TemporalIntervalStartDatetimeAccessor extends AbstractScalarFunctio
         }
     };
 
+    @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
 
@@ -92,13 +85,13 @@ public class TemporalIntervalStartDatetimeAccessor extends AbstractScalarFunctio
                         byte[] bytes = argOut.getByteArray();
 
                         try {
-                            if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
-                            } else if (bytes[0] == SER_INTERVAL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes, 1);
                                 long startTime = AIntervalSerializerDeserializer.getIntervalStart(bytes, 1);
-                                if (timeType == SER_DATETIME_TYPE_TAG) {
+                                if (timeType == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     aDateTime.setValue(startTime);
                                     datetimeSerde.serialize(aDateTime, out);
                                 } else {
@@ -107,9 +100,9 @@ public class TemporalIntervalStartDatetimeAccessor extends AbstractScalarFunctio
                                             + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(timeType) + ")");
                                 }
                             } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/INTERVAL(of DATETIME), but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[0]));
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects NULL/INTERVAL(of DATETIME), but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[0]));
                             }
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

@@ -42,15 +42,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class YearMonthDurationComparatorDecriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier GREATER_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_GREATER_THAN;
     public final static FunctionIdentifier LESS_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_LESS_THAN;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-
     private final boolean isGreaterThan;
 
     private YearMonthDurationComparatorDecriptor(boolean isGreaterThan) {
@@ -105,29 +99,31 @@ public class YearMonthDurationComparatorDecriptor extends AbstractScalarFunction
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DURATION_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects type NULL/DURATION, NULL/DURATION but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
-                                        + " and "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG
+                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        getIdentifier().getName()
+                                                + ": expects type NULL/DURATION, NULL/DURATION but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + " and " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut1.getByteArray()[0]));
                             }
 
                             if ((ADurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1) != 0)
                                     || (ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1) != 0)) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": only year-month durations are allowed.");
+                                throw new AlgebricksException(
+                                        getIdentifier().getName() + ": only year-month durations are allowed.");
                             }
 
-                            if (ADurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(), 1) > ADurationSerializerDeserializer
-                                    .getYearMonth(argOut1.getByteArray(), 1)) {
+                            if (ADurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(),
+                                    1) > ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1)) {
                                 boolSerde.serialize(isGreaterThan ? ABoolean.TRUE : ABoolean.FALSE, out);
                             } else {
                                 boolSerde.serialize(isGreaterThan ? ABoolean.FALSE : ABoolean.TRUE, out);

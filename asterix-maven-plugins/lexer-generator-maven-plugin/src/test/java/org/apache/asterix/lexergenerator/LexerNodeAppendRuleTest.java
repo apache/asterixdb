@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.apache.asterix.lexergenerator.LexerNode;
 import static org.apache.asterix.lexergenerator.Fixtures.*;
 
-public class LexerNodeAppendRuleTest {    
+public class LexerNodeAppendRuleTest {
     @Test
     public void SingleNode() {
         LexerNode node = new LexerNode();

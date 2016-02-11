@@ -64,7 +64,7 @@ public class PointableAllocator {
 
     /**
      * allocate closed part value pointable
-     * 
+     *
      * @param type
      * @return the pointable object
      */
@@ -81,7 +81,7 @@ public class PointableAllocator {
 
     /**
      * allocate open part value pointable
-     * 
+     *
      * @param typeTag
      * @return the pointable object
      */

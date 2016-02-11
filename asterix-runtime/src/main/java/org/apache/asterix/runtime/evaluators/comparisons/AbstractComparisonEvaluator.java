@@ -23,12 +23,13 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalPartialBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -84,7 +85,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             .createBinaryComparator();
     protected IBinaryComparator durationBinaryComp = ADurationPartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
-    protected IBinaryComparator intervalBinaryComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+    protected IBinaryComparator intervalBinaryComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
     protected IBinaryComparator lineBinaryComparator = ALinePartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
@@ -96,6 +97,9 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             .createBinaryComparator();
     protected IBinaryComparator rectangleBinaryComparator = ARectanglePartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
+    protected IBinaryComparator uuidBinaryComparator = AUUIDPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+
     protected final IBinaryComparator byteArrayComparator = new PointableBinaryComparatorFactory(
             ByteArrayPointable.FACTORY).createBinaryComparator();
 
@@ -127,8 +131,8 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
                 case POLYGON:
                 case CIRCLE:
                 case RECTANGLE:
-                    throw new AlgebricksException("Comparison operations (GT, GE, LT, and LE) for the " + typeTag
-                            + " type are not defined.");
+                    throw new AlgebricksException(
+                            "Comparison operations (GT, GE, LT, and LE) for the " + typeTag + " type are not defined.");
                 default:
                     return;
             }
@@ -203,8 +207,8 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
     private ComparisonResult compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag)
             throws AlgebricksException {
         if (expectedTypeTag != actualTypeTag) {
-            throw new AlgebricksException("Comparison is undefined between " + expectedTypeTag + " and "
-                    + actualTypeTag + ".");
+            throw new AlgebricksException(
+                    "Comparison is undefined between " + expectedTypeTag + " and " + actualTypeTag + ".");
         }
         int result = 0;
         try {
@@ -254,6 +258,10 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
                     break;
                 case BINARY:
                     result = byteArrayComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                            outRight.getByteArray(), 1, outRight.getLength() - 1);
+                    break;
+                case UUID:
+                    result = uuidBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
                             outRight.getByteArray(), 1, outRight.getLength() - 1);
                     break;
                 default:

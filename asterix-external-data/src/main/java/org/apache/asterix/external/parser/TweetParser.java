@@ -92,7 +92,7 @@ public class TweetParser implements IRecordDataParser<Status> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends Status> record, DataOutput out) throws Exception {
+    public void parse(IRawRecord<? extends Status> record, DataOutput out) throws HyracksDataException {
         Status tweet = record.get();
         User user = tweet.getUser();
         // Tweet user data

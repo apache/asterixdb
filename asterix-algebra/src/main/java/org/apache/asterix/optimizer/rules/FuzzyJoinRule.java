@@ -276,7 +276,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         translator.addVariableToMetaScope(new Identifier("$$RIGHT"), rightInputVar);
         translator.addVariableToMetaScope(new Identifier("$$RIGHTPK"), rightPKVar);
 
-        translator.addOperatorToMetaScope(new Identifier("#LEFT_1"), deepCopyVisitor.deepCopy(leftInputOp, null));
+        translator.addOperatorToMetaScope(new Identifier("#LEFT_1"), deepCopyVisitor.deepCopy(leftInputOp));
         translator.addVariableToMetaScope(new Identifier("$$LEFT_1"), deepCopyVisitor.varCopy(leftInputVar));
         translator.addVariableToMetaScope(new Identifier("$$LEFTPK_1"), deepCopyVisitor.varCopy(leftPKVar));
         deepCopyVisitor.updatePrimaryKeys(context);
@@ -300,20 +300,20 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         // deepCopyVisitor.updatePrimaryKeys(context);
         // deepCopyVisitor.reset();
 
-        translator.addOperatorToMetaScope(new Identifier("#RIGHT_1"), deepCopyVisitor.deepCopy(rightInputOp, null));
+        translator.addOperatorToMetaScope(new Identifier("#RIGHT_1"), deepCopyVisitor.deepCopy(rightInputOp));
         translator.addVariableToMetaScope(new Identifier("$$RIGHT_1"), deepCopyVisitor.varCopy(rightInputVar));
         translator.addVariableToMetaScope(new Identifier("$$RIGHTPK_1"), deepCopyVisitor.varCopy(rightPKVar));
         deepCopyVisitor.updatePrimaryKeys(context);
         deepCopyVisitor.reset();
 
         // TODO pick side to run Stage 1, currently always picks RIGHT side
-        translator.addOperatorToMetaScope(new Identifier("#RIGHT_2"), deepCopyVisitor.deepCopy(rightInputOp, null));
+        translator.addOperatorToMetaScope(new Identifier("#RIGHT_2"), deepCopyVisitor.deepCopy(rightInputOp));
         translator.addVariableToMetaScope(new Identifier("$$RIGHT_2"), deepCopyVisitor.varCopy(rightInputVar));
         translator.addVariableToMetaScope(new Identifier("$$RIGHTPK_2"), deepCopyVisitor.varCopy(rightPKVar));
         deepCopyVisitor.updatePrimaryKeys(context);
         deepCopyVisitor.reset();
 
-        translator.addOperatorToMetaScope(new Identifier("#RIGHT_3"), deepCopyVisitor.deepCopy(rightInputOp, null));
+        translator.addOperatorToMetaScope(new Identifier("#RIGHT_3"), deepCopyVisitor.deepCopy(rightInputOp));
         translator.addVariableToMetaScope(new Identifier("$$RIGHT_3"), deepCopyVisitor.varCopy(rightInputVar));
         translator.addVariableToMetaScope(new Identifier("$$RIGHTPK_3"), deepCopyVisitor.varCopy(rightPKVar));
         deepCopyVisitor.updatePrimaryKeys(context);

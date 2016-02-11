@@ -44,12 +44,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ADateTimeConstructorDescriptor();
         }
@@ -85,7 +82,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
 
                                 utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
@@ -108,16 +105,15 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                     }
                                 }
 
-                                long chrononTimeInMs = ADateParserFactory
-                                        .parseDatePart(serString, startOffset, timeOffset);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, startOffset,
+                                        timeOffset);
 
-                                chrononTimeInMs += ATimeParserFactory
-                                        .parseTimePart(serString, startOffset + timeOffset + 1,
-                                                stringLength - timeOffset - 1);
+                                chrononTimeInMs += ATimeParserFactory.parseTimePart(serString,
+                                        startOffset + timeOffset + 1, stringLength - timeOffset - 1);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);

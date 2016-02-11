@@ -150,9 +150,7 @@ import org.apache.asterix.runtime.evaluators.constructors.AInt16ConstructorDescr
 import org.apache.asterix.runtime.evaluators.constructors.AInt32ConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AInt64ConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AInt8ConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.AIntervalFromDateConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.AIntervalFromDateTimeConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.AIntervalFromTimeConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.AIntervalConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDateConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDateTimeConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromTimeConstructorDescriptor;
@@ -605,9 +603,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DurationFromIntervalDescriptor.FACTORY);
 
         // Interval constructor
-        temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
-        temp.add(AIntervalFromTimeConstructorDescriptor.FACTORY);
-        temp.add(AIntervalFromDateTimeConstructorDescriptor.FACTORY);
+        temp.add(AIntervalConstructorDescriptor.FACTORY);
         temp.add(AIntervalStartFromDateConstructorDescriptor.FACTORY);
         temp.add(AIntervalStartFromDateTimeConstructorDescriptor.FACTORY);
         temp.add(AIntervalStartFromTimeConstructorDescriptor.FACTORY);
@@ -866,8 +862,9 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         functionTypeInferers.put(AsterixBuiltinFunctions.DEEP_EQUAL, new FunctionTypeInferer() {
 
-            @Override public void infer(ILogicalExpression expr, IFunctionDescriptor fd,
-                    IVariableTypeEnvironment context) throws AlgebricksException {
+            @Override
+            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+                    throws AlgebricksException {
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
                 IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
                 IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
@@ -877,8 +874,9 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         functionTypeInferers.put(AsterixBuiltinFunctions.ADD_FIELDS, new FunctionTypeInferer() {
 
-            @Override public void infer(ILogicalExpression expr, IFunctionDescriptor fd,
-                    IVariableTypeEnvironment context) throws AlgebricksException {
+            @Override
+            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+                    throws AlgebricksException {
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
                 IAType outType = (IAType) context.getType(expr);
                 IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
@@ -896,8 +894,9 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         functionTypeInferers.put(AsterixBuiltinFunctions.REMOVE_FIELDS, new FunctionTypeInferer() {
 
-            @Override public void infer(ILogicalExpression expr, IFunctionDescriptor fd,
-                    IVariableTypeEnvironment context) throws AlgebricksException {
+            @Override
+            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+                    throws AlgebricksException {
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
                 IAType outType = (IAType) context.getType(expr);
                 IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());

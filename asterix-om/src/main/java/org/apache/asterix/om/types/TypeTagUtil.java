@@ -78,8 +78,6 @@ public class TypeTagUtil {
                 return BuiltinType.ADAYTIMEDURATION;
             case UUID:
                 return BuiltinType.AUUID;
-            case UUID_STRING:
-                return BuiltinType.AUUID_STRING;
             default:
                 throw new AsterixException("Typetag " + typeTag + " is not a built-in type");
         }

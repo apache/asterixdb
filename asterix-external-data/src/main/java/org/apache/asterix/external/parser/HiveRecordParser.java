@@ -119,25 +119,28 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends Writable> record, DataOutput out) throws Exception {
-        Writable hiveRawRecord = record.get();
-        Object hiveObject = hiveSerde.deserialize(hiveRawRecord);
-        int n = aRecord.getFieldNames().length;
-        List<Object> attributesValues = oi.getStructFieldsDataAsList(hiveObject);
-        recBuilder.reset(aRecord);
-        recBuilder.init();
-        for (int i = 0; i < n; i++) {
-            final Object value = attributesValues.get(i);
-            final ObjectInspector foi = fieldRefs.get(i).getFieldObjectInspector();
-            fieldValueBuffer.reset();
-            final DataOutput dataOutput = fieldValueBuffer.getDataOutput();
-            dataOutput.writeByte(fieldTypeTags[i]);
-            //get field type
-            parseItem(fieldTypes[i], value, foi, dataOutput, false);
-            recBuilder.addField(i, fieldValueBuffer);
+    public void parse(IRawRecord<? extends Writable> record, DataOutput out) throws HyracksDataException {
+        try {
+            Writable hiveRawRecord = record.get();
+            Object hiveObject = hiveSerde.deserialize(hiveRawRecord);
+            int n = aRecord.getFieldNames().length;
+            List<Object> attributesValues = oi.getStructFieldsDataAsList(hiveObject);
+            recBuilder.reset(aRecord);
+            recBuilder.init();
+            for (int i = 0; i < n; i++) {
+                final Object value = attributesValues.get(i);
+                final ObjectInspector foi = fieldRefs.get(i).getFieldObjectInspector();
+                fieldValueBuffer.reset();
+                final DataOutput dataOutput = fieldValueBuffer.getDataOutput();
+                dataOutput.writeByte(fieldTypeTags[i]);
+                //get field type
+                parseItem(fieldTypes[i], value, foi, dataOutput, false);
+                recBuilder.addField(i, fieldValueBuffer);
+            }
+            recBuilder.write(out, true);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
-        recBuilder.write(out, true);
-
     }
 
     private void parseItem(IAType itemType, Object value, ObjectInspector foi, DataOutput dataOutput,

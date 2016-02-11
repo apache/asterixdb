@@ -29,8 +29,8 @@ import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory {
 
@@ -67,7 +67,7 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     .createBinaryComparator();
             final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
-            final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascIntervalComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascPointComp = APointPartialBinaryComparatorFactory.INSTANCE
@@ -84,13 +84,13 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
 
-                if (b1[s1] == ATypeTag.NULL.serialize()) {
-                    if (b2[s2] == ATypeTag.NULL.serialize())
+                if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                         return 0;
                     else
                         return -1;
                 } else {
-                    if (b2[s2] == ATypeTag.NULL.serialize())
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                         return 1;
                 }
 

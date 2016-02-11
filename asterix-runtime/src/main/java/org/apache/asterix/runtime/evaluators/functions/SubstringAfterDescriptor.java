@@ -39,14 +39,9 @@ import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    // allowed input types
-    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubstringAfterDescriptor();
         }
@@ -66,8 +61,6 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalString = args[0].createEvaluator(array0);
                     private ICopyEvaluator evalPattern = args[1].createEvaluator(array1);
-                    private final byte stt = ATypeTag.STRING.serialize();
-
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
                     private final UTF8StringPointable stringPtr = new UTF8StringPointable();
@@ -83,8 +76,10 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                         evalPattern.evaluate(tuple);
                         byte[] pattern = array1.getByteArray();
 
-                        if ((src[0] != SER_STRING_TYPE_TAG && src[0] != SER_NULL_TYPE_TAG)
-                                || (pattern[0] != SER_STRING_TYPE_TAG && pattern[0] != SER_NULL_TYPE_TAG)) {
+                        if ((src[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                && src[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                                || (pattern[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                        && pattern[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING_AFTER.getName()
                                     + ": expects input type (STRING/NULL, STRING/NULL) but got ("
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[0]) + ", "
@@ -96,7 +91,7 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                         array.reset();
                         try {
                             UTF8StringPointable.substrAfter(stringPtr, patternPtr, builder, array);
-                            out.writeByte(stt);
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
@@ -105,11 +100,11 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                     }
                 }
 
-                        ;
+                ;
             }
         }
 
-                ;
+        ;
     }
 
     @Override

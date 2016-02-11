@@ -99,7 +99,7 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(datatype, true));
     }
 
-    public void addNogeGroup(NodeGroup nodeGroup) {
+    public void addNodeGroup(NodeGroup nodeGroup) {
         droppedCache.dropNodeGroup(nodeGroup);
         logAndApply(new MetadataLogicalOperation(nodeGroup, true));
     }

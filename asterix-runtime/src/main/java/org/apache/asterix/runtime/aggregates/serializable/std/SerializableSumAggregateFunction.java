@@ -38,9 +38,9 @@ public class SerializableSumAggregateFunction extends AbstractSerializableSumAgg
         this.isLocalAgg = isLocalAgg;
     }
 
+    @Override
     protected void processNull(byte[] state, int start) {
-        ATypeTag aggType = ATypeTag.NULL;
-        state[start + AGG_TYPE_OFFSET] = aggType.serialize();
+        state[start + AGG_TYPE_OFFSET] = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
     }
 
     @Override

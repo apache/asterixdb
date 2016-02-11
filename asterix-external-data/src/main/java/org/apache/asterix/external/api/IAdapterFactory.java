@@ -34,7 +34,7 @@ public interface IAdapterFactory extends Serializable {
 
     /**
      * Returns the display name corresponding to the Adapter type that is created by the factory.
-     * 
+     *
      * @return the display name
      */
     public String getAlias();
@@ -54,7 +54,7 @@ public interface IAdapterFactory extends Serializable {
 
     /**
      * Creates an instance of IDatasourceAdapter.
-     * 
+     *
      * @param HyracksTaskContext
      * @param partition
      * @return An instance of IDatasourceAdapter.
@@ -71,7 +71,7 @@ public interface IAdapterFactory extends Serializable {
 
     /**
      * Gets the record type associated with the output of the adapter
-     * 
+     *
      * @return
      */
     public ARecordType getAdapterOutputType();

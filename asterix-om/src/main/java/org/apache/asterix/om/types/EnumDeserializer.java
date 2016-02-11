@@ -23,7 +23,8 @@ import java.util.Map;
 
 public class EnumDeserializer<E extends Enum<E> & IEnumSerializer> {
 
-    public static final EnumDeserializer<ATypeTag> ATYPETAGDESERIALIZER = new EnumDeserializer<ATypeTag>(ATypeTag.class);
+    public static final EnumDeserializer<ATypeTag> ATYPETAGDESERIALIZER = new EnumDeserializer<ATypeTag>(
+            ATypeTag.class);
 
     private Map<Byte, E> enumvalMap = new HashMap<Byte, E>();
 

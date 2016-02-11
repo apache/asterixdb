@@ -156,4 +156,9 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     public FrameDistributor.DistributionMode getDistributionMode() {
         return frameDistributor.getDistributionMode();
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        frameDistributor.flush();
+    }
 }

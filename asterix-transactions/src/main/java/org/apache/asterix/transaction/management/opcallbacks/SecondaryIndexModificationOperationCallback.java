@@ -33,8 +33,8 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
  * We assume that the modification of the corresponding primary index has already taken an appropriate lock.
  * This callback performs logging of the before and/or after images for secondary indexes.
  */
-public class SecondaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback implements
-        IModificationOperationCallback {
+public class SecondaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
+        implements IModificationOperationCallback {
 
     protected final IndexOperation oldOp;
 

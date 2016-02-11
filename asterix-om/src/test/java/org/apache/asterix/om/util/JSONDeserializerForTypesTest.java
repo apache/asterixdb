@@ -22,19 +22,15 @@ package org.apache.asterix.om.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.JSONDeserializerForTypes;
+import org.junit.Assert;
+import org.junit.Test;
 
-@SuppressWarnings("deprecation")
 public class JSONDeserializerForTypesTest {
 
     @Test

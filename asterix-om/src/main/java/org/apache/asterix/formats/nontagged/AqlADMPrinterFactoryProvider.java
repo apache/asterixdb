@@ -66,7 +66,7 @@ public class AqlADMPrinterFactoryProvider implements IPrinterFactoryProvider {
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException {
+    public IPrinterFactory getPrinterFactory(Object type) {
         IAType aqlType = (IAType) type;
 
         if (aqlType != null) {
@@ -144,7 +144,6 @@ public class AqlADMPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case UINT32:
                 case UINT64:
                 case UINT8:
-                case UUID_STRING:
                     // These types are not intended to be printed to the user.
                     break;
             }

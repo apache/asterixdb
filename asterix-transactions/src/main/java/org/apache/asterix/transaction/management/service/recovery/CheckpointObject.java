@@ -29,7 +29,7 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
     private final int maxJobId;
     private final long timeStamp;
     private final boolean sharp;
-    
+
     public CheckpointObject(long checkpointLsn, long minMCTFirstLsn, int maxJobId, long timeStamp, boolean sharp) {
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
@@ -57,7 +57,7 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
     public boolean isSharp() {
         return sharp;
     }
-    
+
     @Override
     public int compareTo(CheckpointObject checkpointObject) {
         long compareTimeStamp = checkpointObject.getTimeStamp();

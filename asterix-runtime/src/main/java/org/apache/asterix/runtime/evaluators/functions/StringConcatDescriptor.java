@@ -45,11 +45,8 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
-    private static final byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private static final byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringConcatDescriptor();
         }
@@ -81,8 +78,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] listBytes = outInputList.getByteArray();
-                            if (listBytes[0] != SER_ORDEREDLIST_TYPE_TAG
-                                    && listBytes[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                            if (listBytes[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && listBytes[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
                                         + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[0]));
@@ -113,7 +110,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                     }
                                     utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                                 }
-                                out.writeByte(ATypeTag.STRING.serialize());
+                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                                 int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
                                 out.write(tempLengthArray, 0, cbytes);
 

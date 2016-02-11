@@ -58,8 +58,8 @@ create index ngram_index on CSX(nested.title: string) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-jaccard_01.adm";
 
-for $a in dataset('CSX')
 for $b in dataset('DBLP')
+for $a in dataset('CSX')
 where similarity-jaccard(gram-tokens($a.nested.title, 3, false), gram-tokens($b.nested.title, 3, false)) >= 0.5f
       and $a.nested.id < $b.nested.id
 return {"arec": $a, "brec": $b }

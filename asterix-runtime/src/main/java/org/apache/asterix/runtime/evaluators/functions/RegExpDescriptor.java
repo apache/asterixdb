@@ -56,14 +56,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  */
 
 public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RegExpDescriptor();
         }
@@ -114,11 +109,11 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         try {
                             array0.reset();
                             evalPattern.evaluate(tuple);
-                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
-                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                            if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the first input argument but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]));
@@ -138,19 +133,19 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 lastPattern.reset();
                                 lastPattern.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
                                 // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
-                                        lastPattern.getByteArray()));
-                                AString strPattern = (AString) stringSerde.deserialize(di);
+                                DataInputStream di = new DataInputStream(
+                                        new ByteArrayInputStream(lastPattern.getByteArray()));
+                                AString strPattern = stringSerde.deserialize(di);
                                 pattern = Pattern.compile(strPattern.getStringValue());
 
                             }
                             array0.reset();
                             evalString.evaluate(tuple);
-                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
-                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                            if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the second input argument but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]));

@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.library.java.JTypeTag;
-
-import java.io.IOException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFunctionHelper {
 
@@ -29,7 +27,7 @@ public interface IFunctionHelper {
 
     public IJObject getResultObject();
 
-    public void setResult(IJObject result) throws IOException, AsterixException;
+    public void setResult(IJObject result) throws HyracksDataException;
 
     public boolean isValidResult();
 

@@ -45,9 +45,6 @@ public class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
     private ICopyEvaluatorFactory recordEvalFactory;
     private ICopyEvaluatorFactory fldNameEvalFactory;
 
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
-
     public FieldAccessByNameEvalFactory(ICopyEvaluatorFactory recordEvalFactory,
             ICopyEvaluatorFactory fldNameEvalFactory) {
         this.recordEvalFactory = recordEvalFactory;
@@ -81,12 +78,12 @@ public class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
                     eval1.evaluate(tuple);
                     byte[] serRecord = outInput0.getByteArray();
 
-                    if (serRecord[0] == SER_NULL_TYPE_TAG) {
+                    if (serRecord[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
                         return;
                     }
 
-                    if (serRecord[0] != SER_RECORD_TYPE_TAG) {
+                    if (serRecord[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME.getName()
                                 + ": expects input type NULL or RECORD, but got "
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
@@ -95,7 +92,7 @@ public class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
                     byte[] serFldName = outInput1.getByteArray();
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serFldName);
                     if (fieldValueOffset < 0) {
-                        out.writeByte(ATypeTag.NULL.serialize());
+                        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                         return;
                     }
 

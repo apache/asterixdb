@@ -89,7 +89,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
             final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             // INTERVAL
-            final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascIntervalComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             // LINE
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -113,13 +113,13 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                 // Normally, comparing between NULL and non-NULL values should return UNKNOWN as the result.
                 // However, at this point, we assume that NULL check between two types is already done.
                 // Therefore, inside this method, we return an order between two values even if one value is NULL.
-                if (b1[s1] == ATypeTag.NULL.serialize()) {
-                    if (b2[s2] == ATypeTag.NULL.serialize())
+                if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                         return 0;
                     else
                         return -1;
                 } else {
-                    if (b2[s2] == ATypeTag.NULL.serialize())
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                         return 1;
                 }
 

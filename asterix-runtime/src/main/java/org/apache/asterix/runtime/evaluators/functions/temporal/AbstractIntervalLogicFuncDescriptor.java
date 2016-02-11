@@ -38,12 +38,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private final static long serialVersionUID = 1L;
-
-    // allowed input types
-    private final static byte SER_INTERVAL_TYPE_TAG = ATypeTag.INTERVAL.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
@@ -81,24 +76,27 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_INTERVAL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != SER_INTERVAL_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects input type (INTERVAL, INTERVAL) but got ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
-                                        + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
-                                        + ")");
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        getIdentifier().getName()
+                                                + ": expects input type (INTERVAL, INTERVAL) but got ("
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
+                                                        argOut0.getByteArray()[0])
+                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                        .deserialize(argOut1.getByteArray()[0])
+                                                + ")");
                             }
 
-                            if (AIntervalSerializerDeserializer.getIntervalTimeType(argOut0.getByteArray(), 1) != AIntervalSerializerDeserializer
-                                    .getIntervalTimeType(argOut1.getByteArray(), 1)) {
+                            if (AIntervalSerializerDeserializer.getIntervalTimeType(argOut0.getByteArray(),
+                                    1) != AIntervalSerializerDeserializer.getIntervalTimeType(argOut1.getByteArray(),
+                                            1)) {
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": failed to compare intervals with different internal time type.");
                             }
@@ -107,8 +105,8 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                                     AIntervalSerializerDeserializer.getIntervalStart(argOut0.getByteArray(), 1),
                                     AIntervalSerializerDeserializer.getIntervalEnd(argOut0.getByteArray(), 1),
                                     AIntervalSerializerDeserializer.getIntervalStart(argOut1.getByteArray(), 1),
-                                    AIntervalSerializerDeserializer.getIntervalEnd(argOut1.getByteArray(), 1))) ? ABoolean.TRUE
-                                    : ABoolean.FALSE;
+                                    AIntervalSerializerDeserializer.getIntervalEnd(argOut1.getByteArray(), 1)))
+                                            ? ABoolean.TRUE : ABoolean.FALSE;
 
                             booleanSerde.serialize(res, out);
 

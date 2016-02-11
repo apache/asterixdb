@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
-import org.apache.asterix.replication.functions.AsterixReplicationProtocol;
+import org.apache.asterix.replication.functions.ReplicationProtocol;
 
 public class ReplicaStateChecker implements Callable<Void> {
 
@@ -61,7 +61,7 @@ public class ReplicaStateChecker implements Callable<Void> {
                 connection = SocketChannel.open();
                 connection.configureBlocking(true);
                 connection.connect(new InetSocketAddress(replicaAddress.getHostString(), replicaAddress.getPort()));
-                ByteBuffer buffer = AsterixReplicationProtocol.getGoodbyeBuffer();
+                ByteBuffer buffer = ReplicationProtocol.getGoodbyeBuffer();
                 connection.write(buffer);
                 replicationManager.updateReplicaState(replica.getId(), ReplicaState.ACTIVE, suspendReplication);
                 return null;

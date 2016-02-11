@@ -44,8 +44,6 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
     private ICopyEvaluatorFactory fldNameEvalFactory;
     private final ARecordType recordType;
 
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-
     public GetRecordFieldValueEvalFactory(ICopyEvaluatorFactory recordEvalFactory,
             ICopyEvaluatorFactory fldNameEvalFactory, ARecordType recordType) {
         this.recordEvalFactory = recordEvalFactory;
@@ -89,7 +87,7 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
                     eval1.evaluate(tuple);
 
                     byte[] serFldName = outInput1.getByteArray();
-                    if (serFldName[0] != SER_STRING_TYPE_TAG) {
+                    if (serFldName[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
                         return;
                     }

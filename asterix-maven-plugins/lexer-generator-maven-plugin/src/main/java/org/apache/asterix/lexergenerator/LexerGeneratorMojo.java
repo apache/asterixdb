@@ -37,7 +37,7 @@ import java.io.File;
 public class LexerGeneratorMojo extends AbstractMojo {
     /**
      * parameter injected from pom.xml
-     * 
+     *
      * @parameter
      * @required
      */
@@ -45,7 +45,7 @@ public class LexerGeneratorMojo extends AbstractMojo {
 
     /**
      * parameter injected from pom.xml
-     * 
+     *
      * @parameter
      * @required
      */

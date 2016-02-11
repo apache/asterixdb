@@ -59,7 +59,7 @@ create index title_index on DBLP(nested.title);
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_01.adm";
 
-for $a in dataset('DBLP')
 for $b in dataset('CSX')
+for $a in dataset('DBLP')
 where $a.nested.title /*+ indexnl */ = $b.nested.title
 return {"arec": $a, "brec": $b}

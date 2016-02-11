@@ -68,7 +68,7 @@
             </compilation-unit>
         </test-case>
     </test-group>
-    <!-- 
+    <!--
     <test-group name="union">
         <test-case FilePath="union">
             <compilation-unit name="union">
@@ -4077,6 +4077,11 @@
                 <output-dir compare="Text">everysat_01</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="quantifiers">
+            <compilation-unit name="query-ASTERIXDB-1005">
+                <output-dir compare="Text">query-ASTERIXDB-1005</output-dir>
+            </compilation-unit>
+        </test-case>
         <!--
         <test-case FilePath="quantifiers">
           <compilation-unit name="everysat_02">
@@ -4946,6 +4951,13 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="subquery">
+        <test-case FilePath="subquery">
+            <compilation-unit name="gby_inline">
+                <output-dir compare="Text">gby_inline</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="subset-collection">
         <test-case FilePath="subset-collection">
             <compilation-unit name="01">
@@ -5044,6 +5056,11 @@
         <test-case FilePath="tpch">
             <compilation-unit name="nest_aggregate">
                 <output-dir compare="Text">nest_aggregate</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="nest_aggregate2">
+                <output-dir compare="Text">nest_aggregate2</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
@@ -6113,11 +6130,6 @@
         <test-case FilePath="temporal">
             <compilation-unit name="time_functions">
                 <output-dir compare="Text">time_functions</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="constructor">
-            <compilation-unit name="interval">
-                <output-dir compare="Text">interval</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="temporal">

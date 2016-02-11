@@ -59,26 +59,26 @@ public class PrimitiveIntHashMap {
     //        int val[] = new int[500];
     //        KeyValuePair pair;
     //        PrimitiveIntHashMap map = new PrimitiveIntHashMap(1<<4, 1<<3, 5);
-    //        
+    //
     //        for (j=0; j < num; j++) {
-    //            
+    //
     //            k += 100;
     //            //generate data
     //            for (i=0; i < k; i++) {
     //                key[i] = i;
     //                val[i] = i;
     //            }
-    //            
+    //
     //            //put data to map
     //            for (i=0; i < k-30; i++) {
     //                map.put(key[i], val[i]);
     //            }
-    //            
+    //
     //            //put data to map
     //            for (i=0; i < k-30; i++) {
     //                map.put(key[i], val[i]);
     //            }
-    //            
+    //
     //            map.beginIterate();
     //            pair = map.getNextKeyValue();
     //            i = 0;
@@ -87,17 +87,17 @@ public class PrimitiveIntHashMap {
     //                System.out.println("["+i+"] key:"+ pair.key + ", val:"+ pair.value);
     //                pair = map.getNextKeyValue();
     //            }
-    //            
+    //
     //            //System.out.println(map.prettyPrint());
-    //            
+    //
     //            for (i=k-20; i< k; i++) { //skip X70~X79
     //                map.put(key[i], val[i]);
     //            }
-    //            
+    //
     //            System.out.println(map.prettyPrint());
-    //            
+    //
     //            //remove data to map
-    //            for (i=0; i < k-10; i++) { 
+    //            for (i=0; i < k-10; i++) {
     //                map.remove(key[i]);
     //                try {
     //                    Thread.currentThread().sleep(1);
@@ -105,7 +105,7 @@ public class PrimitiveIntHashMap {
     //                    e.printStackTrace();
     //                }
     //            }
-    //            
+    //
     //            map.beginIterate();
     //            pair = map.getNextKeyValue();
     //            i = 0;
@@ -114,9 +114,9 @@ public class PrimitiveIntHashMap {
     //                System.out.println("["+i+"] key:"+ pair.key + ", val:"+ pair.value);
     //                pair = map.getNextKeyValue();
     //            }
-    //            
+    //
     //            //remove data to map
-    //            for (i=0; i < k-10; i++) { 
+    //            for (i=0; i < k-10; i++) {
     //                map.remove(key[i]);
     //                try {
     //                    Thread.currentThread().sleep(1);
@@ -125,15 +125,15 @@ public class PrimitiveIntHashMap {
     //                    e.printStackTrace();
     //                }
     //            }
-    //            
+    //
     //            System.out.println(map.prettyPrint());
-    //            
+    //
     //            //get data from map
     //            for (i=0; i < k; i++) {
-    //                System.out.println(""+i+"=> key:"+ key[i] + ", val:"+val[i] +", result: " + map.get(key[i]));  
+    //                System.out.println(""+i+"=> key:"+ key[i] + ", val:"+val[i] +", result: " + map.get(key[i]));
     //            }
     //        }
-    //        
+    //
     //        map.beginIterate();
     //        pair = map.getNextKeyValue();
     //        i = 0;
@@ -259,7 +259,7 @@ public class PrimitiveIntHashMap {
                         //Notice! To avoid bucket iteration, child.remove() is not used.
                         child.cArray[j][k * 2] = -1;
                         child.cArray[j][0]--;
-                        //re-hash it 
+                        //re-hash it
                         pArray.get(hash(key) / CHILD_BUCKETS).put(hash(key) % CHILD_BUCKETS, key, value, false);
                     }
                 }
@@ -289,7 +289,7 @@ public class PrimitiveIntHashMap {
     /**
      * Shrink policy:
      * Shrink when the resource under-utilization lasts for a certain amount of time.
-     * 
+     *
      * @return
      */
     private boolean needShrink() {
@@ -319,8 +319,8 @@ public class PrimitiveIntHashMap {
     private boolean isSafeToShrink() {
         int i, j;
         int size = pArray.size();
-        //Child: 0, 1, 2, 3, 4, 5, 6, 7 
-        //[HChild(Head Child):0 and TChild(Tail Child): 4], [1(H),5(T)], [2(H),6(T)] and so on. 
+        //Child: 0, 1, 2, 3, 4, 5, 6, 7
+        //[HChild(Head Child):0 and TChild(Tail Child): 4], [1(H),5(T)], [2(H),6(T)] and so on.
         //When the map shrinks, the sum of occupied slots in H/TChild should not exceed the NUM_OF_SLOTS-1.
         //Then it is safe to shrink. Otherwise, unsafe.
         ChildIntArrayManager HChild, TChild;
@@ -514,7 +514,7 @@ class ChildIntArrayManager {
      * Update value if the key exists and if isUpsert is true
      * No need to call get() to check the existence of the key before calling put().
      * Notice! Caller should make sure that there is an available slot.
-     * 
+     *
      * @param bucketNum
      * @param key
      * @param value
@@ -570,7 +570,7 @@ class ChildIntArrayManager {
 
     /**
      * remove key if it exists. Otherwise, ignore it.
-     * 
+     *
      * @param bucketNum
      * @param key
      * @return 1 for success, 0 if the key doesn't exist

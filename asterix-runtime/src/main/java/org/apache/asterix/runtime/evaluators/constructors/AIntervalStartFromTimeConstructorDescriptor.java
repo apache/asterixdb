@@ -52,16 +52,10 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_TIME;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
-    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-    private final static byte SER_DAY_TIME_DURATION_TYPE_TAG = ATypeTag.DAYTIMEDURATION.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AIntervalStartFromTimeConstructorDescriptor();
         }
@@ -104,24 +98,23 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
 
                         try {
 
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
                             long intervalStart = 0, intervalEnd = 0;
 
-                            if (argOut0.getByteArray()[0] == SER_TIME_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 intervalStart = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
-                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                            } else if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
 
                                 int stringLength = utf8Ptr.getUTF8Length();
 
-                                intervalStart = ATimeParserFactory
-                                        .parseTimePart(argOut0.getByteArray(), utf8Ptr.getCharStartOffset(),
-                                                stringLength);
+                                intervalStart = ATimeParserFactory.parseTimePart(argOut0.getByteArray(),
+                                        utf8Ptr.getCharStartOffset(), stringLength);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/TIME for the first argument, but got "
@@ -132,35 +125,35 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
                             }
 
-                            if (argOut1.getByteArray()[0] == SER_DURATION_TYPE_TAG) {
+                            if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
 
                                 if (ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1) != 0) {
-                                    throw new AlgebricksException(FID.getName()
-                                            + ": cannot add a year-month duration to a time value.");
+                                    throw new AlgebricksException(
+                                            FID.getName() + ": cannot add a year-month duration to a time value.");
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
 
-                            } else if (argOut1.getByteArray()[0] == SER_DAY_TIME_DURATION_TYPE_TAG) {
+                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         ADayTimeDurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1),
                                         false);
 
-                            } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 // duration
 
                                 utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
 
-                                ADurationParserFactory
-                                        .parseDuration(argOut1.getByteArray(), utf8Ptr.getCharStartOffset(),
-                                                stringLength, aDuration, ADurationParseOption.All);
+                                ADurationParserFactory.parseDuration(argOut1.getByteArray(),
+                                        utf8Ptr.getCharStartOffset(), stringLength, aDuration,
+                                        ADurationParseOption.All);
 
                                 if (aDuration.getMonths() != 0) {
-                                    throw new AlgebricksException(FID.getName()
-                                            + ": cannot add a year-month duration to a time value.");
+                                    throw new AlgebricksException(
+                                            FID.getName() + ": cannot add a year-month duration to a time value.");
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
@@ -174,11 +167,11 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": interval end must not be less than the interval start.");
+                                throw new AlgebricksException(
+                                        FID.getName() + ": interval end must not be less than the interval start.");
                             }
 
-                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.TIME.serialize());
+                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                             intervalSerde.serialize(aInterval, out);
 
                         } catch (IOException e1) {

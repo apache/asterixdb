@@ -44,8 +44,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -69,11 +69,11 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         // produce insert - assign - assign* - datasource scan
 
         AbstractLogicalOperator currentOp = (AbstractLogicalOperator) opRef.getValue();
-        if (currentOp.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE) {
+        if (currentOp.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE_UPSERT) {
             return false;
         }
 
-        InsertDeleteOperator insertOp = (InsertDeleteOperator) currentOp;
+        InsertDeleteUpsertOperator insertOp = (InsertDeleteUpsertOperator) currentOp;
         if (insertOp.getOperation() != Kind.INSERT) {
             return false;
         }

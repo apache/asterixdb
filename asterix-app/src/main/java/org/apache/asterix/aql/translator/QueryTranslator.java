@@ -162,6 +162,7 @@ import org.apache.asterix.translator.CompiledStatements.CompiledIndexDropStateme
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledSubscribeFeedStatement;
+import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.TypeTranslator;
 import org.apache.asterix.translator.util.ValidateUtil;
@@ -202,7 +203,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
-    public static enum ResultDelivery {
+    public enum ResultDelivery {
         SYNC,
         ASYNC,
         ASYNC_DEFERRED
@@ -237,6 +238,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
     /**
      * Compiles and submits for execution a list of AQL statements.
+     *
      * @param hcc
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
@@ -248,6 +250,11 @@ public class QueryTranslator extends AbstractLangTranslator {
      */
     public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery)
             throws Exception {
+        compileAndExecute(hcc, hdc, resultDelivery, new ResultUtils.Stats());
+    }
+
+    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
+            ResultUtils.Stats stats) throws Exception {
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
@@ -330,8 +337,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                     handleLoadStatement(metadataProvider, stmt, hcc);
                     break;
                 }
-                case INSERT: {
-                    handleInsertStatement(metadataProvider, stmt, hcc);
+                case INSERT:
+                case UPSERT: {
+                    handleInsertUpsertStatement(metadataProvider, stmt, hcc);
                     break;
                 }
                 case DELETE: {
@@ -379,7 +387,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                     metadataProvider.setResultAsyncMode(
                             resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
-                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery);
+                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, stats);
                     break;
                 }
 
@@ -853,7 +861,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     fieldType = typeMap.get(typeSignature);
                 }
                 if (fieldType == null) {
-                    throw new AlgebricksException("Unknown type " + fieldExpr.second);
+                    throw new AlgebricksException(
+                            "Unknown type " + (fieldExpr.second == null ? fieldExpr.first : fieldExpr.second));
                 }
 
                 indexFields.add(fieldExpr.first);
@@ -1817,22 +1826,33 @@ public class QueryTranslator extends AbstractLangTranslator {
         }
     }
 
-    private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    private void handleInsertUpsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
-        InsertStatement stmtInsert = (InsertStatement) stmt;
-        String dataverseName = getActiveDataverse(stmtInsert.getDataverseName());
-        Query query = stmtInsert.getQuery();
+        InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
+        String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
+        Query query = stmtInsertUpsert.getQuery();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        MetadataLockManager.INSTANCE.insertDeleteBegin(dataverseName, dataverseName + "." + stmtInsert.getDatasetName(),
-                query.getDataverses(), query.getDatasets());
+        MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseName,
+                dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(), query.getDatasets());
 
         try {
             metadataProvider.setWriteTransaction(true);
-            CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName,
-                    stmtInsert.getDatasetName().getValue(), query, stmtInsert.getVarCounter());
+            CompiledInsertStatement clfrqs = null;
+            switch (stmtInsertUpsert.getKind()) {
+                case INSERT:
+                    clfrqs = new CompiledInsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
+                            query, stmtInsertUpsert.getVarCounter());
+                    break;
+                case UPSERT:
+                    clfrqs = new CompiledUpsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
+                            query, stmtInsertUpsert.getVarCounter());
+                    break;
+                default:
+                    throw new AlgebricksException("Unsupported statement type " + stmtInsertUpsert.getKind());
+            }
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1848,8 +1868,9 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseName,
-                    dataverseName + "." + stmtInsert.getDatasetName(), query.getDataverses(), query.getDatasets());
+            MetadataLockManager.INSTANCE.insertDeleteUpsertEnd(dataverseName,
+                    dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(),
+                    query.getDatasets());
         }
     }
 
@@ -1861,8 +1882,9 @@ public class QueryTranslator extends AbstractLangTranslator {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        MetadataLockManager.INSTANCE.insertDeleteBegin(dataverseName, dataverseName + "." + stmtDelete.getDatasetName(),
-                stmtDelete.getDataverses(), stmtDelete.getDatasets());
+        MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseName,
+                dataverseName + "." + stmtDelete.getDatasetName(), stmtDelete.getDataverses(),
+                stmtDelete.getDatasets());
 
         try {
             metadataProvider.setWriteTransaction(true);
@@ -1884,7 +1906,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseName,
+            MetadataLockManager.INSTANCE.insertDeleteUpsertEnd(dataverseName,
                     dataverseName + "." + stmtDelete.getDatasetName(), stmtDelete.getDataverses(),
                     stmtDelete.getDatasets());
         }
@@ -2196,6 +2218,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     /**
      * Generates a subscription request corresponding to a connect feed request. In addition, provides a boolean
      * flag indicating if feed intake job needs to be started (source primary feed not found to be active).
+     *
      * @param dataverse
      * @param feed
      * @param dataset
@@ -2467,7 +2490,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     }
 
     private void handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, ResultDelivery resultDelivery) throws Exception {
+            IHyracksDataset hdc, ResultDelivery resultDelivery, ResultUtils.Stats stats) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -2507,7 +2530,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                                 && sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
                             ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
                         }
-                        ResultUtils.displayResults(resultReader, sessionConfig);
+                        ResultUtils.displayResults(resultReader, sessionConfig, stats);
                         break;
                     case ASYNC_DEFERRED:
                         handle = new JSONArray();
@@ -2822,7 +2845,8 @@ public class QueryTranslator extends AbstractLangTranslator {
         readDataverses.add(dataverseNameFrom);
         List<String> readDatasets = new ArrayList<String>();
         readDatasets.add(datasetNameFrom);
-        MetadataLockManager.INSTANCE.insertDeleteBegin(dataverseNameTo, datasetNameTo, readDataverses, readDatasets);
+        MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseNameTo, datasetNameTo, readDataverses,
+                readDatasets);
         try {
             prepareRunExternalRuntime(metadataProvider, hcc, pregelixStmt, dataverseNameFrom, dataverseNameTo,
                     datasetNameFrom, datasetNameTo, mdTxnCtx);
@@ -2864,7 +2888,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseNameTo, datasetNameTo, readDataverses, readDatasets);
+            MetadataLockManager.INSTANCE.insertDeleteUpsertEnd(dataverseNameTo, datasetNameTo, readDataverses,
+                    readDatasets);
         }
     }
 

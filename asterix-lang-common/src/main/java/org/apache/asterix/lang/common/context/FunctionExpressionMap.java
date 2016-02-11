@@ -24,7 +24,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 
 public class FunctionExpressionMap extends HashMap<Integer, FunctionSignature> {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
     private boolean varargs;

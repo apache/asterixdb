@@ -49,7 +49,7 @@ public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutput
         }
         try {
             writer.open();
-            appender.flush(writer, true);
+            appender.write(writer, true);
         } catch (Throwable th) {
             writer.fail();
             throw new HyracksDataException(th);

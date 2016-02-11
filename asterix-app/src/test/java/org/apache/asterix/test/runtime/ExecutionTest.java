@@ -56,9 +56,14 @@ public class ExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        File outdir = new File(PATH_ACTUAL);
-        outdir.mkdirs();
-        ExecutionTestUtil.setUp();
+        try {
+            File outdir = new File(PATH_ACTUAL);
+            outdir.mkdirs();
+            ExecutionTestUtil.setUp();
+        } catch (Throwable th) {
+            th.printStackTrace();
+            throw th;
+        }
     }
 
     @AfterClass

@@ -45,12 +45,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new LenDescriptor();
         }
@@ -87,7 +84,7 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
                         byte[] serList = inputVal.getByteArray();
 
-                        if (serList[0] == SER_NULL_TYPE_TAG) {
+                        if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
                                 nullSerde.serialize(ANull.NULL, out);
                             } catch (HyracksDataException e) {
@@ -96,14 +93,15 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             return;
                         }
 
-                        if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                        if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.LEN.getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 
                         int numberOfitems = 0;
-                        if (serList[0] == SER_ORDEREDLIST_TYPE_TAG)
+                        if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG)
                             numberOfitems = AOrderedListSerializerDeserializer.getNumberOfItems(serList);
                         else
                             numberOfitems = AUnorderedListSerializerDeserializer.getNumberOfItems(serList);

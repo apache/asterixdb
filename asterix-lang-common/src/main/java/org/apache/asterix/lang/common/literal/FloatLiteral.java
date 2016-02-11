@@ -22,7 +22,7 @@ import org.apache.asterix.lang.common.base.Literal;
 
 public class FloatLiteral extends Literal {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 3273563021227964396L;
     private Float value;

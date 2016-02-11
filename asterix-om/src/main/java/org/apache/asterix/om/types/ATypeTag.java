@@ -24,9 +24,7 @@ import java.util.List;
 
 /**
  * There is a unique tag for each primitive type and for each kind of
- * non-primitive type in the object model.
- *
- * @author Nicola
+ * non-primitive type in the object model
  */
 public enum ATypeTag implements IEnumSerializer {
     INT8(1),
@@ -67,22 +65,41 @@ public enum ATypeTag implements IEnumSerializer {
     YEARMONTHDURATION(36),
     DAYTIMEDURATION(37),
     UUID(38),
-    UUID_STRING(39),
     SHORTWITHOUTTYPEINFO(40);
 
-    private byte value;
-
-    private ATypeTag(int value) {
-        this.value = (byte) value;
-    }
-
-    @Override
-    public byte serialize() {
-        return value;
-    }
-
+    /*
+     * Serialized Tags begin
+     */
+    public static final byte SERIALIZED_STRING_TYPE_TAG = STRING.serialize();
+    public static final byte SERIALIZED_NULL_TYPE_TAG = NULL.serialize();
+    public static final byte SERIALIZED_DOUBLE_TYPE_TAG = DOUBLE.serialize();
+    public static final byte SERIALIZED_RECORD_TYPE_TAG = RECORD.serialize();
+    public static final byte SERIALIZED_INT32_TYPE_TAG = INT32.serialize();
+    public static final byte SERIALIZED_ORDEREDLIST_TYPE_TAG = ORDEREDLIST.serialize();
+    public static final byte SERIALIZED_UNORDEREDLIST_TYPE_TAG = UNORDEREDLIST.serialize();
+    public static final byte SERIALIZED_POLYGON_TYPE_TAG = POLYGON.serialize();
+    public static final byte SERIALIZED_DATE_TYPE_TAG = DATE.serialize();
+    public static final byte SERIALIZED_TIME_TYPE_TAG = TIME.serialize();
+    public static final byte SERIALIZED_DATETIME_TYPE_TAG = DATETIME.serialize();
+    public static final byte SERIALIZED_SYSTEM_NULL_TYPE_TAG = SYSTEM_NULL.serialize();
+    public static final byte SERIALIZED_DURATION_TYPE_TAG = DURATION.serialize();
+    public static final byte SERIALIZED_DAY_TIME_DURATION_TYPE_TAG = DAYTIMEDURATION.serialize();
+    public static final byte SERIALIZED_POINT_TYPE_TAG = POINT.serialize();
+    public static final byte SERIALIZED_INTERVAL_TYPE_TAG = INTERVAL.serialize();
+    public static final byte SERIALIZED_CIRCLE_TYPE_TAG = CIRCLE.serialize();
+    public static final byte SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG = YEARMONTHDURATION.serialize();
+    public static final byte SERIALIZED_LINE_TYPE_TAG = LINE.serialize();
+    public static final byte SERIALIZED_RECTANGLE_TYPE_TAG = RECTANGLE.serialize();
+    public static final byte SERIALIZED_BOOLEAN_TYPE_TAG = BOOLEAN.serialize();
+    public static final byte SERIALIZED_INT8_TYPE_TAG = INT8.serialize();
+    public static final byte SERIALIZED_INT16_TYPE_TAG = INT16.serialize();
+    public static final byte SERIALIZED_INT64_TYPE_TAG = INT64.serialize();
+    public static final byte SERIALIZED_FLOAT_TYPE_TAG = FLOAT.serialize();
+    /*
+     * Serialized Tags end
+     */
     public static final int TYPE_COUNT = ATypeTag.values().length;
-
+    private byte value;
     public static final ATypeTag[] VALUE_TYPE_MAPPING;
 
     static {
@@ -95,6 +112,15 @@ public enum ATypeTag implements IEnumSerializer {
             typeList.set(index, tt);
         }
         VALUE_TYPE_MAPPING = typeList.toArray(new ATypeTag[typeList.size()]);
+    }
+
+    private ATypeTag(int value) {
+        this.value = (byte) value;
+    }
+
+    @Override
+    public byte serialize() {
+        return value;
     }
 
     public boolean isDerivedType() {

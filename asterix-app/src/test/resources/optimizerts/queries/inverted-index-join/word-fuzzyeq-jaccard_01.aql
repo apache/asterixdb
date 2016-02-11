@@ -27,7 +27,7 @@ create dataverse test;
 use dataverse test;
 
 create type DBLPType as closed {
-  id: int32, 
+  id: int32,
   dblpid: string,
   title: string,
   authors: string,
@@ -35,7 +35,7 @@ create type DBLPType as closed {
 }
 
 create type CSXType as closed {
-  id: int32, 
+  id: int32,
   csxid: string,
   title: string,
   authors: string,
@@ -53,7 +53,7 @@ write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.
 set simfunction 'jaccard';
 set simthreshold '0.5f';
 
-for $a in dataset('DBLP')
 for $b in dataset('CSX')
+for $a in dataset('DBLP')
 where word-tokens($a.title) ~= word-tokens($b.title) and $a.id < $b.id
 return {"arec": $a, "brec": $b }

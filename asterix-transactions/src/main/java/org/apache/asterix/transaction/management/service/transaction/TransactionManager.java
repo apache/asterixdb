@@ -32,6 +32,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
@@ -58,7 +59,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         try {
             if (txnCtx.isWriteTxn()) {
                 LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
-                logRecord.formJobTerminateLogRecord(txnCtx, false);
+                TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
                 txnSubsystem.getLogManager().log(logRecord);
                 txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
             }
@@ -103,11 +104,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
-        //Only job-level commits call this method. 
+        //Only job-level commits call this method.
         try {
             if (txnCtx.isWriteTxn()) {
                 LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
-                logRecord.formJobTerminateLogRecord(txnCtx, true);
+                TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, true);
                 txnSubsystem.getLogManager().log(logRecord);
             }
         } catch (Exception ae) {
@@ -123,8 +124,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     @Override
-    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
-            throws ACIDException {
+    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal,
+            boolean success) throws ACIDException {
         if (!success) {
             abortTransaction(txnContext, datasetId, PKHashVal);
         } else {

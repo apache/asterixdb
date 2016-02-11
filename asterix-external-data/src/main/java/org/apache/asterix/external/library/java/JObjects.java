@@ -91,7 +91,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -125,8 +124,6 @@ public class JObjects {
      *
      */
     public static class JNull implements IJObject {
-        public final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
         public final static JNull INSTANCE = new JNull();
 
         private JNull() {
@@ -146,7 +143,7 @@ public class JObjects {
         public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
             if (writeTypeTag) {
                 try {
-                    dataOutput.writeByte(SER_NULL_TYPE_TAG);
+                    dataOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
@@ -550,7 +547,7 @@ public class JObjects {
             super(new AMutableInterval(intervalStart, intervalEnd, (byte) 0));
         }
 
-        public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AlgebricksException {
+        public void setValue(long intervalStart, long intervalEnd, byte typetag) throws HyracksDataException {
             ((AMutableInterval) value).setValue(intervalStart, intervalEnd, typetag);
         }
 
@@ -579,7 +576,7 @@ public class JObjects {
         }
 
         @Override
-        public void reset() throws AlgebricksException {
+        public void reset() throws HyracksDataException {
             ((AMutableInterval) value).setValue(0L, 0L, (byte) 0);
         }
 
@@ -1099,14 +1096,10 @@ public class JObjects {
                         recordBuilder.addField(openFieldName, openFieldValue);
                     }
                 }
-            } catch (IOException | AsterixException ae) {
+            } catch (IOException ae) {
                 throw new HyracksDataException(ae);
             }
-            try {
-                recordBuilder.write(output, writeTypeTag);
-            } catch (IOException | AsterixException e) {
-                throw new HyracksDataException(e);
-            }
+            recordBuilder.write(output, writeTypeTag);
         }
 
         @Override
@@ -1115,7 +1108,7 @@ public class JObjects {
         }
 
         @Override
-        public void reset() throws AlgebricksException {
+        public void reset() throws HyracksDataException {
             if (openFields != null && !openFields.isEmpty()) {
                 openFields.clear();
             }
@@ -1128,7 +1121,7 @@ public class JObjects {
             }
         }
 
-        public void reset(IJObject[] fields, LinkedHashMap<String, IJObject> openFields) throws AlgebricksException {
+        public void reset(IJObject[] fields, LinkedHashMap<String, IJObject> openFields) throws HyracksDataException {
             this.reset();
             this.fields = fields;
             this.openFields = openFields;

@@ -48,11 +48,11 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringToCodePointDescriptor();
         }
     };
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -62,8 +62,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    protected final DataOutput out = output.getDataOutput();
-                    ;
+                    protected final DataOutput out = output.getDataOutput();;
                     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     protected final ICopyEvaluator stringEval = args[0].createEvaluator(argOut);
                     protected final AOrderedListType intListType = new AOrderedListType(BuiltinType.AINT64, null);
@@ -83,7 +82,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             stringEval.evaluate(tuple);
                             byte[] serString = argOut.getByteArray();
 
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 byte[] bytes = argOut.getByteArray();
                                 int len = UTF8StringUtil.getUTFLength(bytes, 1);
 

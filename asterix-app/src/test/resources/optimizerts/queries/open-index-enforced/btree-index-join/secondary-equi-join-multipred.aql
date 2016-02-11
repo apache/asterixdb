@@ -52,7 +52,7 @@ create index title_index on DBLP(title:string) enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multipred.adm";
 
-for $a in dataset('DBLP')
 for $b in dataset('CSX')
+for $a in dataset('DBLP')
 where $a.title /*+ indexnl */ = $b.title and $a.authors < $b.authors and $a.misc > $b.misc
 return {"arec": $a, "brec": $b}

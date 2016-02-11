@@ -26,8 +26,8 @@ import java.util.Map;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
+import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -71,7 +71,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     }
 
     @Override
-    public boolean parse(DataOutput out) throws AsterixException, IOException {
+    public boolean parse(DataOutput out) throws IOException {
         while (cursor.nextRecord()) {
             parseRecord(out);
             if (!areAllNullFields) {
@@ -82,7 +82,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         return false;
     }
 
-    private void parseRecord(DataOutput out) throws AsterixException, IOException {
+    private void parseRecord(DataOutput out) throws IOException {
         recBuilder.reset(recordType);
         recBuilder.init();
         areAllNullFields = true;
@@ -99,7 +99,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                 // NULL. Note that string type can also process empty field as an
                 // empty string
                 if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
-                    throw new AsterixException("At record: " + cursor.recordCount + " - Field " + cursor.fieldCount
+                    throw new HyracksDataException("At record: " + cursor.recordCount + " - Field " + cursor.fieldCount
                             + " is not an optional type so it cannot accept null value. ");
                 }
                 fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
@@ -121,18 +121,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             } else {
                 recBuilder.addField(fldIds[i], fieldValueBuffer);
             }
-        }
-    }
-
-    protected void fieldNameToBytes(String fieldName, AMutableString str, ArrayBackedValueStorage buffer)
-            throws HyracksDataException {
-        buffer.reset();
-        DataOutput out = buffer.getDataOutput();
-        str.setValue(fieldName);
-        try {
-            stringSerde.serialize(str, out);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
         }
     }
 
@@ -173,7 +161,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     throw new HyracksDataException("Illegal field " + name + " in closed type " + recordType);
                 } else {
                     nameBuffers[i] = new ArrayBackedValueStorage();
-                    fieldNameToBytes(name, str, nameBuffers[i]);
+                    str.setValue(name);
+                    IDataParser.toBytes(str, nameBuffers[i], stringSerde);
                 }
             }
         }
@@ -184,7 +173,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws Exception {
+    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
         cursor.nextRecord(record.get(), record.size());
         parseRecord(out);
         if (!areAllNullFields) {

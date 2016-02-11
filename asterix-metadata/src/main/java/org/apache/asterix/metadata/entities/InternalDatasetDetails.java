@@ -20,14 +20,12 @@
 package org.apache.asterix.metadata.entities;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -156,8 +154,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
                 fieldValue);
 
         // write field 2
-        primaryKeyListBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX]);
+        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX]);
         for (List<String> field : partitioningKeys) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -176,8 +174,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
                 fieldValue);
 
         // write field 3
-        primaryKeyListBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX]);
+        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX]);
         for (List<String> field : primaryKeys) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -216,18 +214,10 @@ public class InternalDatasetDetails implements IDatasetDetails {
             }
             fieldValue.reset();
             listBuilder.write(fieldValue.getDataOutput(), true);
-            try {
-                internalRecordBuilder.addField(nameValue, fieldValue);
-            } catch (AsterixException e) {
-                throw new HyracksDataException(e);
-            }
+            internalRecordBuilder.addField(nameValue, fieldValue);
         }
 
-        try {
-            internalRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        internalRecordBuilder.write(out, true);
     }
 
     protected void writePropertyTypeRecord(String name, String value, DataOutput out, ARecordType recordType)
@@ -252,11 +242,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         propertyRecordBuilder.addField(1, fieldValue);
 
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        propertyRecordBuilder.write(out, true);
     }
 
 }

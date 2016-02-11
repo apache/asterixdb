@@ -38,7 +38,7 @@ public class SumAggregateFunction extends AbstractSumAggregateFunction {
     }
 
     @Override
-    protected boolean skipStep() { 
+    protected boolean skipStep() {
         return (aggType == ATypeTag.NULL);
     }
 

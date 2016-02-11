@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.feed.api.IMessageReceiver;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
 
@@ -74,12 +75,17 @@ public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
             this.inbox = messageReceiver.inbox;
             this.messageReceiver = messageReceiver;
         }
+        // TODO: this should handle exceptions better
 
         @Override
         public void run() {
             while (true) {
                 try {
-                    T message = inbox.take();
+                    T message = inbox.poll();
+                    if (message == null) {
+                        messageReceiver.emptyInbox();
+                        message = inbox.take();
+                    }
                     messageReceiver.processMessage(message);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -107,5 +113,7 @@ public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
             }
         }
     }
+
+    public abstract void emptyInbox() throws HyracksDataException;
 
 }

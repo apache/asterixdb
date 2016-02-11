@@ -19,6 +19,14 @@
 
 package org.apache.asterix.om.pointables.cast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.TypeException;
@@ -47,14 +55,6 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This class is to do the runtime type cast for a record. It is ONLY visible to
  * ACastVisitor.
@@ -75,8 +75,8 @@ class ARecordCaster {
     private final IVisitablePointable nullReference = allocator.allocateEmpty();
     private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
 
-    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(
-            UTF8StringPointable.FACTORY).createBinaryComparator();
+    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory
+            .of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
@@ -107,7 +107,7 @@ class ARecordCaster {
             int end = bos.size();
             nullReference.set(bos.getByteArray(), start, end - start);
             start = bos.size();
-            dos.write(ATypeTag.NULL.serialize());
+            dos.write(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             end = bos.size();
             nullTypeTag.set(bos.getByteArray(), start, end - start);
         } catch (IOException e) {
@@ -115,8 +115,8 @@ class ARecordCaster {
         }
     }
 
-    public void castRecord(ARecordVisitablePointable recordAccessor, IVisitablePointable resultAccessor, ARecordType reqType,
-            ACastVisitor visitor) throws IOException, TypeException {
+    public void castRecord(ARecordVisitablePointable recordAccessor, IVisitablePointable resultAccessor,
+            ARecordType reqType, ACastVisitor visitor) throws IOException, TypeException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
@@ -214,15 +214,15 @@ class ARecordCaster {
                 IVisitablePointable reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
-                        optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
+                optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
                     fieldPermutation[reqFnPos] = fnPos;
                     openFields[fnPos] = false;
                 } else {
                     // if mismatch, check whether input type can be promoted to the required type
-                    ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fieldTypeTag
-                            .getByteArray()[fieldTypeTag.getStartOffset()]);
-                    ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(reqFieldTypeTag
-                            .getByteArray()[reqFieldTypeTag.getStartOffset()]);
+                    ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            .deserialize(fieldTypeTag.getByteArray()[fieldTypeTag.getStartOffset()]);
+                    ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            .deserialize(reqFieldTypeTag.getByteArray()[reqFieldTypeTag.getStartOffset()]);
 
                     if (ATypeHierarchy.canPromote(inputTypeTag, requiredTypeTag)
                             || ATypeHierarchy.canDemote(inputTypeTag, requiredTypeTag)) {
@@ -255,8 +255,8 @@ class ARecordCaster {
 
                 //print the field type
                 IVisitablePointable fieldType = fieldTypeTags.get(i);
-                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fieldType.getByteArray()[fieldType
-                        .getStartOffset()]);
+                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                        .deserialize(fieldType.getByteArray()[fieldType.getStartOffset()]);
                 ps.print(typeTag);
 
                 //collect the output message
@@ -281,8 +281,8 @@ class ARecordCaster {
     }
 
     private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
-            List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException,
-            AsterixException {
+            List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor)
+                    throws IOException, AsterixException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();

@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description  : Notice the query hint to use an indexed nested-loops join plan. 
- *              : We expect a plan that hash-exchanges internal dataset DsTwo, then probes internal dataset DsOne’s primary index. 
+ * Description  : Notice the query hint to use an indexed nested-loops join plan.
+ *              : We expect a plan that hash-exchanges internal dataset DsTwo, then probes internal dataset DsOne’s primary index.
  * Expected Res : Success
  * Date         : 29th November 2012
  */

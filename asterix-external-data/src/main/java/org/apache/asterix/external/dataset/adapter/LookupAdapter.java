@@ -154,9 +154,14 @@ public final class LookupAdapter<T> implements IFrameWriter {
     @Override
     public void close() throws HyracksDataException {
         try {
-            appender.flush(writer, true);
+            appender.write(writer, true);
         } finally {
             writer.close();
         }
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        appender.flush(writer);
     }
 }

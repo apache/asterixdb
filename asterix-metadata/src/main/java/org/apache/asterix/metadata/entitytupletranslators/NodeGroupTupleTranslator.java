@@ -28,7 +28,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -101,8 +100,8 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
 
         // write field 1
-        listBuilder
-                .reset((AUnorderedListType) MetadataRecordTypes.NODEGROUP_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX]);
+        listBuilder.reset((AUnorderedListType) MetadataRecordTypes.NODEGROUP_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX]);
         this.nodeNames = instance.getNodeNames();
         for (String nodeName : this.nodeNames) {
             itemValue.reset();
@@ -120,11 +119,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

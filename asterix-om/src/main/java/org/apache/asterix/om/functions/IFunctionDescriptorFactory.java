@@ -23,7 +23,7 @@ public interface IFunctionDescriptorFactory {
 
     /**
      * the artifact registered in function manager
-     * 
+     *
      * @return a new IFunctionDescriptor instance
      */
     public IFunctionDescriptor createFunctionDescriptor();

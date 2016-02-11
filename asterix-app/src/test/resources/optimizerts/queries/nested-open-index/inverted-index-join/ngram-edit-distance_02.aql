@@ -57,7 +57,7 @@ create index ngram_index on CSX(nested.authors: string) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_01.adm";
 
-for $a in dataset('CSX')
 for $b in dataset('DBLP')
+for $a in dataset('CSX')
 where edit-distance($a.nested.authors, $b.nested.authors) < 3 and $a.nested.id < $b.nested.id
 return {"arec": $a, "brec": $b }

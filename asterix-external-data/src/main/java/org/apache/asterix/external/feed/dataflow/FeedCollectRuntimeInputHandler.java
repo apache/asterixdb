@@ -56,7 +56,7 @@ public class FeedCollectRuntimeInputHandler extends FeedRuntimeInputHandler {
     public void dropTill(int recordId) {
         feedFrameCache.dropTillRecordId(recordId);
     }
-    
+
     public void replayCached() throws HyracksDataException{
         feedFrameCache.replayAll();
     }

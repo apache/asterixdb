@@ -66,7 +66,7 @@ public class FeedConnectionRequest {
 
     private final FeedId receivingFeedId;
 
-    
+
     public FeedConnectionRequest(FeedJointKey feedPointKey, ConnectionLocation connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
             FeedId receivingFeedId) {

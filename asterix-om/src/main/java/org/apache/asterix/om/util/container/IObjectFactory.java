@@ -26,7 +26,7 @@ public interface IObjectFactory<E, T> {
 
     /**
      * create an element of type E
-     * 
+     *
      * @param arg
      * @return an E element
      */

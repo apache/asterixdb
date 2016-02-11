@@ -28,13 +28,13 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as closed {
-  number: int32, 
+  number: int32,
   street: string,
   city: string
 }
 
 create type CustomerType as closed {
-  cid: int32, 
+  cid: int32,
   name: string,
   age: int32?,
   address: AddressType?,
@@ -43,14 +43,14 @@ create type CustomerType as closed {
 }
 
 create dataset Customers(CustomerType) primary key cid;
-  
+
 create dataset Customers2(CustomerType) primary key cid;
 
 create index interests_index on Customers(interests) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_olist-jaccard.adm";
 
-for $a in dataset('Customers')
 for $b in dataset('Customers2')
+for $a in dataset('Customers')
 where /*+ indexnl */ similarity-jaccard($a.interests, $b.interests) >= 0.7f and $a.cid < $b.cid
 return {"ainterests": $a.interests, "binterests": $b.interests}

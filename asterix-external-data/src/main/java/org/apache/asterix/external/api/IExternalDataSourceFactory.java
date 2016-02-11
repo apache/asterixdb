@@ -59,6 +59,8 @@ public interface IExternalDataSourceFactory extends Serializable {
      * Specify whether the external data source can be indexed
      * @return
      */
-    public boolean isIndexible();
+    public default boolean isIndexible() {
+        return false;
+    }
 
 }

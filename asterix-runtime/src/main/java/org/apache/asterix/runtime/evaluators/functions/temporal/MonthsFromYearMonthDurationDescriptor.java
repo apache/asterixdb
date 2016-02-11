@@ -43,14 +43,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.MONTHS_FROM_YEAR_MONTH_DURATION;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_YEARMONTHDURATION_TYPE_TAG = ATypeTag.YEARMONTHDURATION.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -89,19 +83,19 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
                         eval0.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_YEARMONTHDURATION_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/YEAR-MONTH-DURATION, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            aInt64.setValue(AYearMonthDurationSerializerDeserializer.getYearMonth(
-                                    argOut0.getByteArray(), 1));
+                            aInt64.setValue(
+                                    AYearMonthDurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(), 1));
 
                             int64Serde.serialize(aInt64, out);
 

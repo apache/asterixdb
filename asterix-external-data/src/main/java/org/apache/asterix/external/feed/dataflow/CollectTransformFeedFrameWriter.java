@@ -63,6 +63,7 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        // always project the first field only. why?
         inputFrameTupleAccessor.reset(buffer);
         int nTuple = inputFrameTupleAccessor.getTupleCount();
         for (int t = 0; t < nTuple; t++) {
@@ -114,6 +115,11 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
 
     public void reset(IFrameWriter writer) {
         this.downstreamWriter = writer;
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        tupleAppender.flush(downstreamWriter);
     }
 
 }

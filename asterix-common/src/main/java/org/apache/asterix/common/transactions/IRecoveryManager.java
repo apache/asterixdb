@@ -51,7 +51,7 @@ public interface IRecoveryManager {
      * The system is recovering HEALTHY: The system is in healthy state
      * CORRUPTEED: The system is in corrupted state. This happens when a
      * rollback or recovery task fails. In this state the system is unusable.
-     * 
+     *
      * @see SystemState
      * @return SystemState The state of the system
      * @throws ACIDException
@@ -60,7 +60,7 @@ public interface IRecoveryManager {
 
     /**
      * Initiates a crash recovery.
-     * 
+     *
      * @param synchronous
      *            indicates if the recovery is to be done in a synchronous
      *            manner. In asynchronous mode, the recovery will happen as part
@@ -73,7 +73,7 @@ public interface IRecoveryManager {
 
     /**
      * Rolls back a transaction.
-     * 
+     *
      * @param txnContext
      *            the transaction context associated with the transaction
      * @throws ACIDException
@@ -89,7 +89,7 @@ public interface IRecoveryManager {
      * @throws HyracksDataException
      */
     public long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN) throws ACIDException, HyracksDataException;
-    
+
     /**
      * Performs recovery based on the passed logs
      * @param remoteLogs the remote logs to be replayed
@@ -99,16 +99,26 @@ public interface IRecoveryManager {
     public void replayRemoteLogs(ArrayList<ILogRecord> remoteLogs) throws HyracksDataException, ACIDException;
 
     /**
-     * 
+     *
      * @return min first LSN of the open indexes (including remote indexes if replication is enabled)
      * @throws HyracksDataException
      */
     public long getMinFirstLSN() throws HyracksDataException;
-    
+
     /**
-     * 
+     *
      * @return min first LSN of the open indexes
      * @throws HyracksDataException
      */
     public long getLocalMinFirstLSN() throws HyracksDataException;
+
+    /**
+     * Replay the logs that belong to the passed {@code partitions} starting from the {@code lowWaterMarkLSN}
+     * @param partitions
+     * @param lowWaterMarkLSN
+     * @param failedNode
+     * @throws IOException
+     * @throws ACIDException
+     */
+    public void replayPartitionsLogs(Integer[] partitions, long lowWaterMarkLSN, String failedNode) throws IOException, ACIDException;
 }

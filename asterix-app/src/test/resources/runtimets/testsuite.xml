@@ -18,6 +18,7 @@
  !-->
 <!DOCTYPE test-suite [
 
+<!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
 <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
 <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
 ]>
@@ -971,195 +972,7 @@
         </test-case>
     </test-group>
     <test-group name="comparison">
-        <test-case FilePath="comparison">
-            <compilation-unit name="year_month_duration_order">
-                <output-dir compare="Text">year_month_duration_order</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="datetime_order">
-                <output-dir compare="Text">datetime_order</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="datetime_range">
-                <output-dir compare="Text">datetime_range</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="datetime_tzeq">
-                <output-dir compare="Text">datetime_tzeq</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="double">
-                <output-dir compare="Text">double</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="double_gte_01">
-                <output-dir compare="Text">double_gte_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="double_null">
-                <output-dir compare="Text">double_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="eq_01">
-                <output-dir compare="Text">eq_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="float">
-                <output-dir compare="Text">float</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="float_null">
-                <output-dir compare="Text">float_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="gt_01">
-                <output-dir compare="Text">gt_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="gte_01">
-                <output-dir compare="Text">gte_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int16">
-                <output-dir compare="Text">int16</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int16_null">
-                <output-dir compare="Text">int16_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int32">
-                <output-dir compare="Text">int32</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int32_null">
-                <output-dir compare="Text">int32_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int64">
-                <output-dir compare="Text">int64</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int64_null">
-                <output-dir compare="Text">int64_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int8">
-                <output-dir compare="Text">int8</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="int8_null">
-                <output-dir compare="Text">int8_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="lt_01">
-                <output-dir compare="Text">lt_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="lte_01">
-                <output-dir compare="Text">lte_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="neq_01">
-                <output-dir compare="Text">neq_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <!--
-        <test-case FilePath="comparison">
-          <compilation-unit name="numeric-comparison_01">
-            <output-dir compare="Text">numeric-comparison_01</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
-        <test-case FilePath="comparison">
-            <compilation-unit name="string">
-                <output-dir compare="Text">string</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="string_null">
-                <output-dir compare="Text">string_null</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_equality">
-                <output-dir compare="Text">issue363_equality</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_duration">
-                <output-dir compare="Text">issue363_inequality_duration</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_interval">
-                <output-dir compare="Text">issue363_inequality_interval</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_point">
-                <output-dir compare="Text">issue363_inequality_point</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_line">
-                <output-dir compare="Text">issue363_inequality_line</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_polygon">
-                <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_rectangle">
-                <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="issue363_inequality_circle">
-                <output-dir compare="Text">issue363_inequality_circle</output-dir>
-                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="binary">
-                <output-dir compare="Text">binary</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="comparison">
-            <compilation-unit name="binary_null">
-                <output-dir compare="Text">binary_null</output-dir>
-            </compilation-unit>
-        </test-case>
+        &ComparisonQueries;
     </test-group>
     <test-group name="constructor">
         <test-case FilePath="constructor">
@@ -1427,7 +1240,64 @@
         </test-case>
         -->
     </test-group>
+    <test-group name="upsert">
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-rtree">
+                <output-dir compare="Text">primary-secondary-rtree</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="upsert-with-self-read">
+                <output-dir compare="Text">upsert-with-self-read</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="filtered-dataset">
+                <output-dir compare="Text">filtered-dataset</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="nullable-index">
+                <output-dir compare="Text">nullable-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="nested-index">
+                <output-dir compare="Text">nested-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="open-index">
+                <output-dir compare="Text">open-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-index">
+                <output-dir compare="Text">primary-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-btree">
+                <output-dir compare="Text">primary-secondary-btree</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="primary-secondary-inverted">
+                <output-dir compare="Text">primary-secondary-inverted</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="upsert">
+            <compilation-unit name="multiple-secondaries">
+                <output-dir compare="Text">multiple-secondaries</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="dml">
+         <test-case FilePath="dml">
+            <compilation-unit name="load-with-ngram-index">
+                <output-dir compare="Text">load-with-ngram-index</output-dir>
+            </compilation-unit>
+        </test-case>
          <test-case FilePath="dml">
             <compilation-unit name="insert-duplicated-keys-from-query">
                 <output-dir compare="Text">insert-duplicated-keys-from-query</output-dir>
@@ -1654,11 +1524,6 @@
         <test-case FilePath="dml">
             <compilation-unit name="load-with-index">
                 <output-dir compare="Text">load-with-index</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="dml">
-            <compilation-unit name="load-with-ngram-index">
-                <output-dir compare="Text">load-with-ngram-index</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
@@ -2586,8 +2451,18 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="index-join">
+            <compilation-unit name="btree-secondary-self-equi-join_01">
+                <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-join">
             <compilation-unit name="rtree-spatial-intersect-point">
                 <output-dir compare="Text">rtree-spatial-intersect-point</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-join">
+            <compilation-unit name="rtree-spatial-self-intersect-point">
+                <output-dir compare="Text">rtree-spatial-self-intersect-point</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -5407,6 +5282,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
+            <compilation-unit name="nest_aggregate2">
+                <output-dir compare="Text">nest_aggregate2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
             <compilation-unit name="query-issue638">
                 <output-dir compare="Text">query-issue638</output-dir>
             </compilation-unit>
@@ -5836,7 +5716,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="drop-dataverse">
                 <output-dir compare="Text">drop-dataverse</output-dir>
-                <expected-error>SyntaxError: org.apache.asterix.metadata.MetadataException: Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
+                <expected-error>org.apache.asterix.metadata.MetadataException: Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
@@ -6425,11 +6305,6 @@
         <test-case FilePath="temporal">
             <compilation-unit name="time_functions">
                 <output-dir compare="Text">time_functions</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="constructor">
-            <compilation-unit name="interval">
-                <output-dir compare="Text">interval</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="temporal">

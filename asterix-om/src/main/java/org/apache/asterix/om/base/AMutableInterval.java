@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.om.base;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AMutableInterval extends AInterval {
 
@@ -26,9 +26,9 @@ public class AMutableInterval extends AInterval {
         super(intervalStart, intervalEnd, typetag);
     }
 
-    public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AlgebricksException {
+    public void setValue(long intervalStart, long intervalEnd, byte typetag) throws HyracksDataException {
         if (intervalStart >= intervalEnd) {
-            throw new AlgebricksException("Invalid interval: the starting time should be less than the ending time.");
+            throw new HyracksDataException("Invalid interval: the starting time should be less than the ending time.");
         }
         this.intervalStart = intervalStart;
         this.intervalEnd = intervalEnd;

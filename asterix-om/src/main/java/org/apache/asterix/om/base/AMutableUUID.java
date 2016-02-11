@@ -19,46 +19,107 @@
 
 package org.apache.asterix.om.base;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class AMutableUUID extends AUUID {
-    private final long[] uuidBits;
-    private final byte[] randomBytes;
 
-    public AMutableUUID(long msb, long lsb) {
-        super(msb, lsb);
-        randomBytes = new byte[16];
-        uuidBits = new long[2];
+    public void parseUUIDString(String tokenImage) throws HyracksDataException {
+        if (tokenImage.length() != UUID_CHARS) {
+            throw new HyracksDataException("This is not a correct UUID value: " + tokenImage);
+        }
+        byte [] hexBytes = new byte[UUID_CHARS];
+        for (int i = 0; i < tokenImage.length(); i++) {
+            hexBytes[i] = (byte)tokenImage.charAt(i);
+        }
+        parseUUIDHexBytes(hexBytes, 0);
     }
 
-    public void nextUUID() {
-        Holder.srnd.nextBytes(randomBytes);
-        uuidBitsFromBytes(uuidBits, randomBytes);
-        msb = uuidBits[0];
-        lsb = uuidBits[1];
+    public void parseUUIDHexBytes(byte[] serString, int offset) throws HyracksDataException {
+        // First part - 8 bytes
+        decodeBytesFromHex(serString, offset, uuidBytes, 0, 8);
+        offset += 8;
+
+        // Skip the hyphen part
+        offset += 1;
+
+        // Second part - 4 bytes
+        decodeBytesFromHex(serString, offset, uuidBytes, 4, 4);
+        offset += 4;
+
+        // Skip the hyphen part
+        offset += 1;
+
+        // Third part - 4 bytes
+        decodeBytesFromHex(serString, offset, uuidBytes, 6, 4);
+        offset += 4;
+
+        // Skip the hyphen part
+        offset += 1;
+
+        // Fourth part - 4 bytes
+        decodeBytesFromHex(serString, offset, uuidBytes, 8, 4);
+        offset += 4;
+
+        // Skip the hyphen part
+        offset += 1;
+
+        // The last part - 12 bytes
+        decodeBytesFromHex(serString, offset, uuidBytes, 10, 12);
     }
 
-    // Set the most significant bits and the least significant bits.
-    public void setValue(long msb, long lsb) {
-        this.msb = msb;
-        this.lsb = lsb;
+    // Calculate a long value from a hex string.
+    private static void decodeBytesFromHex(byte[] hexArray, int hexArrayOffset, byte[] outputArray, int outputOffset, int length)
+            throws HyracksDataException {
+        for (int i = hexArrayOffset; i < hexArrayOffset + length; ) {
+            int hi = transformHexCharToInt(hexArray[i++]);
+            outputArray[outputOffset++] = (byte) (hi << 4 | transformHexCharToInt(hexArray[i++]));
+        }
     }
 
-    // Since AUUID is a wrapper of java.util.uuid,
-    // we can use the same method that creates a UUID from a String.
-    public void fromStringToAMuatbleUUID(String value) {
-        String[] components = value.split("-");
-        if (components.length != 5)
-            throw new IllegalArgumentException("Invalid UUID string: " + value);
-        for (int i = 0; i < 5; i++)
-            components[i] = "0x" + components[i];
-
-        msb = Long.decode(components[0]).longValue();
-        msb <<= 16;
-        msb |= Long.decode(components[1]).longValue();
-        msb <<= 16;
-        msb |= Long.decode(components[2]).longValue();
-
-        lsb = Long.decode(components[3]).longValue();
-        lsb <<= 48;
-        lsb |= Long.decode(components[4]).longValue();
+    // Interpret a character to the corresponding integer value.
+    private static int transformHexCharToInt(byte val) throws HyracksDataException {
+        switch (val) {
+            case '0':
+                return 0;
+            case '1':
+                return 1;
+            case '2':
+                return 2;
+            case '3':
+                return 3;
+            case '4':
+                return 4;
+            case '5':
+                return 5;
+            case '6':
+                return 6;
+            case '7':
+                return 7;
+            case '8':
+                return 8;
+            case '9':
+                return 9;
+            case 'a':
+            case 'A':
+                return 10;
+            case 'b':
+            case 'B':
+                return 11;
+            case 'c':
+            case 'C':
+                return 12;
+            case 'd':
+            case 'D':
+                return 13;
+            case 'e':
+            case 'E':
+                return 14;
+            case 'f':
+            case 'F':
+                return 15;
+            default:
+                throw new HyracksDataException("This is not a correct UUID value.");
+        }
     }
+
 }

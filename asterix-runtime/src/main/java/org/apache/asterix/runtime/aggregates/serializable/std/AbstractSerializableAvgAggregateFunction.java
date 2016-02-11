@@ -95,7 +95,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ICopyS
         try {
             state.writeDouble(0.0);
             state.writeLong(0);
-            state.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+            state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -193,9 +193,9 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ICopyS
                 if (GlobalConfig.DEBUG) {
                     GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
                 }
-                result.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+                result.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             } else if (aggType == ATypeTag.NULL) {
-                result.writeByte(ATypeTag.NULL.serialize());
+                result.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             } else {
                 sumBytes.reset();
                 aDouble.setValue(sum);

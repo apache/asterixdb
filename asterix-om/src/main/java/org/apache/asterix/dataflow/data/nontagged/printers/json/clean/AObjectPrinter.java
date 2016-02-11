@@ -22,9 +22,9 @@ import java.io.PrintStream;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinter implements IPrinter {
 
@@ -35,12 +35,11 @@ public class AObjectPrinter implements IPrinter {
     private IPrinter unorderedListPrinter = new AUnorderedlistPrinterFactory(null).createPrinter();
 
     @Override
-    public void init() throws AlgebricksException {
-
+    public void init() {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
         switch (typeTag) {
             case INT8: {
@@ -103,7 +102,7 @@ public class AObjectPrinter implements IPrinter {
                 AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
-             case POINT: {
+            case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
@@ -166,7 +165,6 @@ public class AObjectPrinter implements IPrinter {
             case UINT64:
             case UINT8:
             case UNION:
-            case UUID_STRING:
                 throw new NotImplementedException("No printer for type " + typeTag);
         }
     }

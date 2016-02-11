@@ -49,7 +49,7 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
         this.fileSplitProvider = fileSplitProvider;
         this.lifecycleManagerProvider = lifecycleManagerProvider;
         this.storageManager = storageManager;
-        
+
     }
 
     @Override

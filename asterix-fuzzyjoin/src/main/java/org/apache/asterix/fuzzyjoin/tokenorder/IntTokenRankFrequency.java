@@ -23,7 +23,7 @@ import java.util.HashMap;
 
 public class IntTokenRankFrequency implements IntTokenRank {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 

@@ -22,8 +22,8 @@ import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class APolygonPrinter implements IPrinter {
 
@@ -31,11 +31,10 @@ public class APolygonPrinter implements IPrinter {
 
     @Override
     public void init() {
-
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         short numberOfPoints = AInt16SerializerDeserializer.getShort(b, s + 1);
         s += 3;
 

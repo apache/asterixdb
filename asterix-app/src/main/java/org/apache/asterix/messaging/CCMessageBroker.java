@@ -29,14 +29,17 @@ import org.apache.asterix.common.messaging.ReportMaxResourceIdMessage;
 import org.apache.asterix.common.messaging.ReportMaxResourceIdRequestMessage;
 import org.apache.asterix.common.messaging.ResourceIdRequestMessage;
 import org.apache.asterix.common.messaging.ResourceIdRequestResponseMessage;
+import org.apache.asterix.common.messaging.TakeoverMetadataNodeResponseMessage;
+import org.apache.asterix.common.messaging.TakeoverPartitionsResponseMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.messages.IMessage;
-import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 
-public class CCMessageBroker implements IMessageBroker {
+public class CCMessageBroker implements ICCMessageBroker {
 
     private final static Logger LOGGER = Logger.getLogger(CCMessageBroker.class.getName());
     private final AtomicLong globalResourceId = new AtomicLong(0);
@@ -57,6 +60,12 @@ public class CCMessageBroker implements IMessageBroker {
                 break;
             case REPORT_MAX_RESOURCE_ID_RESPONSE:
                 handleReportResourceMaxIdResponse(message, nodeId);
+                break;
+            case TAKEOVER_PARTITIONS_RESPONSE:
+                handleTakeoverPartitionsResponse(message);
+                break;
+            case TAKEOVER_METADATA_NODE_RESPONSE:
+                handleTakeoverMetadataNodeResponse(message);
                 break;
             default:
                 LOGGER.warning("Unknown message: " + absMessage.getMessageType());
@@ -89,7 +98,8 @@ public class CCMessageBroker implements IMessageBroker {
         nodesReportedMaxResourceId.add(nodeId);
     }
 
-    private void sendApplicationMessageToNC(IMessage msg, String nodeId) throws Exception {
+    @Override
+    public void sendApplicationMessageToNC(IApplicationMessage msg, String nodeId) throws Exception {
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         NodeControllerState state = nodeMap.get(nodeId);
         state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
@@ -105,5 +115,15 @@ public class CCMessageBroker implements IMessageBroker {
                 sendApplicationMessageToNC(msg, nodeId);
             }
         }
+    }
+
+    private void handleTakeoverPartitionsResponse(IMessage message) {
+        TakeoverPartitionsResponseMessage msg = (TakeoverPartitionsResponseMessage) message;
+        AsterixClusterProperties.INSTANCE.processPartitionTakeoverResponse(msg);
+    }
+
+    private void handleTakeoverMetadataNodeResponse(IMessage message) {
+        TakeoverMetadataNodeResponseMessage msg = (TakeoverMetadataNodeResponseMessage) message;
+        AsterixClusterProperties.INSTANCE.processMetadataNodeTakeoverResponse(msg);
     }
 }

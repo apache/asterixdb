@@ -39,11 +39,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AndDescriptor();
         }
@@ -86,7 +84,7 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             for (int i = 0; i < n; i++) {
                                 argOut.reset();
                                 evals[i].evaluate(tuple);
-                                if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                                if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                     metNull = true;
                                     continue;
                                 }

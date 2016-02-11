@@ -44,8 +44,8 @@ create dataset test1.DsTwo(TestType) primary key nested.key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_01.adm";
 
-for $x in dataset('test1.DsOne')
 for $y in dataset('test1.DsTwo')
+for $x in dataset('test1.DsOne')
 where $x.nested.key1 /*+ indexnl */ = $y.nested.key2
 return $x
 

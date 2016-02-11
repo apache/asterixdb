@@ -44,14 +44,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DURATION_FROM_INTERVAL;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_INTERVAL_TYPE_TAG = ATypeTag.INTERVAL.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -91,10 +85,10 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
                         eval.evaluate(tuple);
 
                         try {
-                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
-                            } else if (argOut.getByteArray()[0] != SER_INTERVAL_TYPE_TAG) {
+                            } else if (argOut.getByteArray()[0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects INTERVAL/NULL as the input but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
@@ -102,10 +96,10 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
                             long chrononStart = AIntervalSerializerDeserializer.getIntervalStart(argOut.getByteArray(),
                                     1);
                             long chrononEnd = AIntervalSerializerDeserializer.getIntervalEnd(argOut.getByteArray(), 1);
-                            byte intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(
-                                    argOut.getByteArray(), 1);
+                            byte intervalTypeTag = AIntervalSerializerDeserializer
+                                    .getIntervalTimeType(argOut.getByteArray(), 1);
 
-                            if (intervalTypeTag == ATypeTag.DATE.serialize()) {
+                            if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                 chrononStart *= GregorianCalendarSystem.CHRONON_OF_DAY;
                                 chrononEnd *= GregorianCalendarSystem.CHRONON_OF_DAY;
                             }

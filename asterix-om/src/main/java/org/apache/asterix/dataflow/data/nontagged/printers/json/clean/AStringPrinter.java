@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AStringPrinter implements IPrinter {
 
@@ -31,15 +31,14 @@ public class AStringPrinter implements IPrinter {
 
     @Override
     public void init() {
-
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         try {
             PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 }

@@ -1,0 +1,7 @@
+interval(date("2006-01-01"), date("2010-01-01"))
+interval(date("2002-01-01"), date("2010-01-01"))
+interval(date("2001-01-01"), date("2010-01-01"))
+interval(date("2004-01-01"), date("2009-01-01"))
+interval(date("2003-01-01"), date("2008-01-01"))
+interval(date("2003-01-01"), date("2008-01-01"))
+interval(date("2002-01-01"), date("2003-01-01"))

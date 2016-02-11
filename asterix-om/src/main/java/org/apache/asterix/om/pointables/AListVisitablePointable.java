@@ -67,7 +67,7 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
 
     /**
      * private constructor, to prevent constructing it arbitrarily
-     * 
+     *
      * @param inputType
      */
     public AListVisitablePointable(AbstractCollectionType inputType) {
@@ -101,19 +101,9 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
 
         int numberOfitems = AInt32SerializerDeserializer.getInt(b, s + 6);
         int itemOffset;
-        if (typedItemList) {
-            switch (itemTag) {
-                case STRING:
-                case BINARY:
-                case RECORD:
-                case ORDEREDLIST:
-                case UNORDEREDLIST:
-                case ANY:
-                    itemOffset = s + 10 + (numberOfitems * 4);
-                    break;
-                default:
-                    itemOffset = s + 10;
-            }
+
+        if (typedItemList && NonTaggedFormatUtil.isFixedSizedCollection(itemTag)) {
+            itemOffset = s + 10;
         } else {
             itemOffset = s + 10 + (numberOfitems * 4);
         }

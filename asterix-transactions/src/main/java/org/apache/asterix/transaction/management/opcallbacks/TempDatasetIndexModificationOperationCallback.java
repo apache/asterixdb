@@ -34,8 +34,8 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
  * The "before" and "found" method in this callback is empty so that no locking is requested for accessing a temporary
  * dataset and no write-ahead log is written for update operations.
  */
-public class TempDatasetIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback implements
-        IModificationOperationCallback {
+public class TempDatasetIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
+        implements IModificationOperationCallback {
 
     public TempDatasetIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,

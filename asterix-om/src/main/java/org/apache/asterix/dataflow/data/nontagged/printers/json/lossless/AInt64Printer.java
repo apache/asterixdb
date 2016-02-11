@@ -21,8 +21,8 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AInt64Printer implements IPrinter {
     public static final AInt64Printer INSTANCE = new AInt64Printer();
@@ -32,7 +32,7 @@ public class AInt64Printer implements IPrinter {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         long d = AInt64SerializerDeserializer.getLong(b, s + 1);
         ps.print("{ \"int64\": ");
         ps.print(d);

@@ -39,7 +39,7 @@ public class SeriesAvg extends Series {
         runningSum += value;
         count++;
     }
-    
+
     public  void reset(){
         count = 0;
     }

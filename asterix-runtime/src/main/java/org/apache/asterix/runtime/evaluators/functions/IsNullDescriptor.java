@@ -37,10 +37,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -67,7 +64,8 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         eval.evaluate(tuple);
-                        boolean isNull = argOut.getByteArray()[argOut.getStartOffset()] == SER_NULL_TYPE_TAG;
+                        boolean isNull = argOut.getByteArray()[argOut
+                                .getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG;
                         ABoolean res = isNull ? ABoolean.TRUE : ABoolean.FALSE;
                         try {
                             aObjSerDer.serialize(res, out);

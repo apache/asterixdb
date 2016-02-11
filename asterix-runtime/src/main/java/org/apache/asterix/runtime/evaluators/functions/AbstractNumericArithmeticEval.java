@@ -69,7 +69,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
     /**
      * abstract method for arithmetic operation between a time instance (date/time/datetime)
      * and a duration (duration/year-month-duration/day-time-duration)
-     * 
+     *
      * @param chronon
      * @param yearMonth
      * @param dayTime
@@ -81,7 +81,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
     /**
      * abstract method for arithmetic operation between two time instances (date/time/datetime)
-     * 
+     *
      * @param chronon0
      * @param chronon1
      * @return

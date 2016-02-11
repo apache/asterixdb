@@ -22,10 +22,12 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
+import org.apache.asterix.external.input.record.RecordWithMetadata;
 import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.parser.factory.DelimitedDataParserFactory;
 import org.apache.asterix.external.parser.factory.HiveDataParserFactory;
 import org.apache.asterix.external.parser.factory.RSSParserFactory;
+import org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory;
 import org.apache.asterix.external.parser.factory.TweetParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -39,13 +41,12 @@ public class ParserFactoryProvider {
             return ExternalDataUtils.createExternalParserFactory(ExternalDataUtils.getDataverse(configuration),
                     parserFactoryName);
         } else {
-            parserFactory = ParserFactoryProvider.getParserFactory(configuration);
+            parserFactory = ParserFactoryProvider.getParserFactory(ExternalDataUtils.getRecordFormat(configuration));
         }
         return parserFactory;
     }
 
-    private static IDataParserFactory getParserFactory(Map<String, String> configuration) throws AsterixException {
-        String recordFormat = ExternalDataUtils.getRecordFormat(configuration);
+    private static IDataParserFactory getParserFactory(String recordFormat) throws AsterixException {
         switch (recordFormat) {
             case ExternalDataConstants.FORMAT_ADM:
             case ExternalDataConstants.FORMAT_JSON:
@@ -58,6 +59,8 @@ public class ParserFactoryProvider {
                 return new TweetParserFactory();
             case ExternalDataConstants.FORMAT_RSS:
                 return new RSSParserFactory();
+            case ExternalDataConstants.FORMAT_RECORD_WITH_META:
+                return new RecordWithMetadataParserFactory<RecordWithMetadata<?>>();
             default:
                 throw new AsterixException("Unknown data format");
         }

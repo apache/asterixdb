@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 final class LockManagerStats {
     private final int loggingPeriod;
-    
+
     private final AtomicLong lCnt = new AtomicLong();
     private final AtomicLong ilCnt = new AtomicLong();
     private final AtomicLong tlCnt = new AtomicLong();
@@ -36,16 +36,16 @@ final class LockManagerStats {
     LockManagerStats(int loggingPeriod) {
         this.loggingPeriod = loggingPeriod;
     }
-    
+
     final void lock()           { lCnt.incrementAndGet(); }
     final void instantLock()    { ilCnt.incrementAndGet(); }
     final void tryLock()        { tlCnt.incrementAndGet(); }
     final void instantTryLock() { itlCnt.incrementAndGet(); }
     final void unlock()         { ulCnt.incrementAndGet(); }
     final void releaseLocks()   { rlCnt.incrementAndGet(); }
-    
+
     final int requestSum() {
-        return lCnt.intValue() + ilCnt.intValue() + tlCnt.intValue() 
+        return lCnt.intValue() + ilCnt.intValue() + tlCnt.intValue()
                 + itlCnt.intValue() + ulCnt.intValue() + rlCnt.intValue();
     }
 
@@ -59,7 +59,7 @@ final class LockManagerStats {
         .append(", releaseLocks : ").append(rlCnt)
         .append(" }");
         return sb;
-    }        
+    }
 
     @Override
     public String toString() {
@@ -67,7 +67,7 @@ final class LockManagerStats {
     }
 
     final void logCounters(final Logger logger, final Level lvl, boolean always) {
-        if (logger.isLoggable(lvl) 
+        if (logger.isLoggable(lvl)
             && (always || requestSum()  % loggingPeriod == 0)) {
             logger.log(lvl, toString());
         }

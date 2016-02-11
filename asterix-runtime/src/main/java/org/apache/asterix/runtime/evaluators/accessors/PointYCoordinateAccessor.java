@@ -48,8 +48,6 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
     private static final long serialVersionUID = 1L;
 
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINT_Y_COORDINATE_ACCESSOR;
-    private static final byte SER_POINT_TAG = ATypeTag.POINT.serialize();
-    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -88,12 +86,12 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
 
                         try {
                             double y;
-                            if (bytes[0] == SER_POINT_TAG) {
+                            if (bytes[0] == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
                                 y = ADoubleSerializerDeserializer.getDouble(bytes,
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                 aDouble.setValue(y);
                                 doubleSerde.serialize(aDouble, out);
-                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-y does not support the type: " + bytes[0]

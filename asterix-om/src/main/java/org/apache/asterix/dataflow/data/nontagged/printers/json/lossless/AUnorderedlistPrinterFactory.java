@@ -27,10 +27,10 @@ import org.apache.asterix.om.pointables.printer.json.lossless.APrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AUnorderedlistPrinterFactory implements IPrinterFactory {
 
@@ -45,8 +45,8 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
     public IPrinter createPrinter() {
 
         PointableAllocator allocator = new PointableAllocator();
-        final IAType inputType = unorderedlistType == null ? DefaultOpenFieldType
-                .getDefaultOpenFieldType(ATypeTag.UNORDEREDLIST) : unorderedlistType;
+        final IAType inputType = unorderedlistType == null
+                ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.UNORDEREDLIST) : unorderedlistType;
         final IVisitablePointable listAccessor = allocator.allocateListValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
         final Pair<PrintStream, ATypeTag> arg = new Pair<PrintStream, ATypeTag>(null, null);
@@ -54,18 +54,18 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
         return new IPrinter() {
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() {
                 arg.second = inputType.getTypeTag();
             }
 
             @Override
-            public void print(byte[] b, int start, int l, PrintStream ps) throws AlgebricksException {
+            public void print(byte[] b, int start, int l, PrintStream ps) throws HyracksDataException {
                 try {
                     listAccessor.set(b, start, l);
                     arg.first = ps;
                     listAccessor.accept(printVisitor, arg);
-                } catch (Exception ioe) {
-                    throw new AlgebricksException(ioe);
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
                 }
             }
         };

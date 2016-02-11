@@ -37,6 +37,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -54,18 +55,16 @@ public interface IDataParser {
      *            2. The query compiler.
      * @param recordType
      *            The expected record type
-     * @throws HyracksDataException
      * @throws IOException
      */
-    public void configure(Map<String, String> configuration, ARecordType recordType)
-            throws HyracksDataException, IOException;
+    public void configure(Map<String, String> configuration, ARecordType recordType) throws IOException;
 
     /*
      * The following two static methods are expensive. right now, they are used by RSSFeeds and Twitter feed
      * TODO: Get rid of them
      */
     public static void writeRecord(AMutableRecord record, DataOutput dataOutput, IARecordBuilder recordBuilder)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         int numFields = record.getType().getFieldNames().length;
         for (int pos = 0; pos < numFields; pos++) {
@@ -78,7 +77,7 @@ public interface IDataParser {
     }
 
     @SuppressWarnings("unchecked")
-    public static void writeObject(IAObject obj, DataOutput dataOutput) throws IOException, AsterixException {
+    public static void writeObject(IAObject obj, DataOutput dataOutput) throws HyracksDataException {
         switch (obj.getType().getTypeTag()) {
             case RECORD: {
                 IARecordBuilder recordBuilder = new RecordBuilder();
@@ -123,5 +122,12 @@ public interface IDataParser {
                         dataOutput);
                 break;
         }
+    }
+
+    public static <T> void toBytes(T serializable, ArrayBackedValueStorage buffer, ISerializerDeserializer<T> serde)
+            throws HyracksDataException {
+        buffer.reset();
+        DataOutput out = buffer.getDataOutput();
+        serde.serialize(serializable, out);
     }
 }

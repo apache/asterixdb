@@ -29,7 +29,7 @@ public class IntervalLogic {
      * <p/>
      * |------|<br/>
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -49,7 +49,7 @@ public class IntervalLogic {
      * <p/>
      * |------|<br/>
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -69,7 +69,7 @@ public class IntervalLogic {
      * <p/>
      * |------|<br/>
      * &nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -87,7 +87,7 @@ public class IntervalLogic {
     /**
      * Something is shared by both interval 1 and interval 2.
      * <p/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -103,7 +103,7 @@ public class IntervalLogic {
      * <p/>
      * |------|<br/>
      * |-------|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -123,7 +123,7 @@ public class IntervalLogic {
      * <p/>
      * |------|<br/>
      * &nbsp;&nbsp;|----|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2
@@ -143,7 +143,7 @@ public class IntervalLogic {
      * <p/>
      * &nbsp;&nbsp;|-----|<br/>
      * |------|<br/>
-     * 
+     *
      * @param s1
      * @param e1
      * @param s2

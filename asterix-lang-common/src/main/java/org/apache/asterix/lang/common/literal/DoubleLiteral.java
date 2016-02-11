@@ -22,7 +22,7 @@ import org.apache.asterix.lang.common.base.Literal;
 
 public class DoubleLiteral extends Literal {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -5685491458356989250L;
     private Double value;

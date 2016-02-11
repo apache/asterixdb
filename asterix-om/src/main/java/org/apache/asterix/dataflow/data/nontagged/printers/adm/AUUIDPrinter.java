@@ -21,28 +21,24 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.om.base.AMutableUUID;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.om.base.AUUID;
 import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AUUIDPrinter implements IPrinter {
 
     public static final AUUIDPrinter INSTANCE = new AUUIDPrinter();
-    // We use mutable UUID not to create a UUID object multiple times.
-    AMutableUUID uuid = new AMutableUUID(0, 0);
 
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long msb = LongPointable.getLong(b, s + 1);
-        long lsb = LongPointable.getLong(b, s + 9);
-        uuid.setValue(msb, lsb);
-
-        ps.print("uuid(\"" + uuid.toStringLiteralOnly() + "\")");
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
+        StringBuilder buf = new StringBuilder(AUUID.UUID_CHARS + 8);
+        buf.append("uuid(\"");
+        AUUID.appendLiteralOnly(b, s + 1, buf).append("\")");
+        ps.print(buf.toString());
     }
 
 }

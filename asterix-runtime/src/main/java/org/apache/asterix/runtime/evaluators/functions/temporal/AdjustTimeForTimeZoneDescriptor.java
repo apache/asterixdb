@@ -45,15 +45,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.ADJUST_TIME_FOR_TIMEZONE;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
@@ -98,27 +91,27 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                         eval1.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_TIME_TYPE_TAG) {
+                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects type TIME/NULL for parameter 0 but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            if (argOut1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                            if (argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects type STRING/NULL for parameter 1 but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
 
                             utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
-                            int timezone = ATimeParserFactory
-                                    .parseTimezonePart(argOut1.getByteArray(), utf8Ptr.getCharStartOffset());
+                            int timezone = ATimeParserFactory.parseTimezonePart(argOut1.getByteArray(),
+                                    utf8Ptr.getCharStartOffset());
 
                             if (!calInstance.validateTimeZone(timezone)) {
                                 throw new AlgebricksException(FID.getName() + ": wrong format for a time zone string!");
@@ -133,7 +126,7 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                             calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.HOUR,
                                     Fields.MILLISECOND, true);
 
-                            out.writeByte(SER_STRING_TYPE_TAG);
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(sbder.toString(), out);
 
                         } catch (Exception e1) {

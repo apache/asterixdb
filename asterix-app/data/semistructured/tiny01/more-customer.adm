@@ -1,0 +1,4 @@
+{  "cid": 112,  "name": "Dorie Love",  "age": 12,  "address": {  "number": 2286,  "street": "Lake St.",  "city": "Los Angeles" },  "interests": {{ "Coffee" }},  "children": [ {  "name": "Grady Lave" }, {  "name": "Daysi Lave" } ] }
+{  "cid": 94,  "name": "Edgardo Dunnegan",  "age": 19,"interests": {{  }},  "children": [ {  "name": "Lyndia Dunnegan" } ] }
+{  "cid": 619,  "name": "Jacques Gaskill",  "interests": {{ "Cigars", "Coffee", "Computers", "Wine" }},  "children": [ {  "name": "Angelyn Gaskill" }, {  "name": "Jeanett Gaskill",  "age": 40 }, {  "name": "Emelda Gaskill",  "age": 34 } ] }
+{  "cid": 92,  "name": "Kenny Laychock", "address": {  "number": 4790,  "street": "Washington St.",  "city": "Portland" },  "interests": {{ "Video Games", "Basketball" }},  "children": [  ] }

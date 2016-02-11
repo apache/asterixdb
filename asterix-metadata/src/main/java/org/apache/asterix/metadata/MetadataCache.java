@@ -64,16 +64,16 @@ public class MetadataCache {
     protected final Map<String, NodeGroup> nodeGroups = new HashMap<String, NodeGroup>();
     // Key is function Identifier . Key of value map is function name.
     protected final Map<FunctionSignature, Function> functions = new HashMap<FunctionSignature, Function>();
-    // Key is adapter dataverse. Key of value map is the adapter name  
+    // Key is adapter dataverse. Key of value map is the adapter name
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
 
-    // Key is DataverseName, Key of the value map is the Policy name   
+    // Key is DataverseName, Key of the value map is the Policy name
     protected final Map<String, Map<String, FeedPolicyEntity>> feedPolicies = new HashMap<String, Map<String, FeedPolicyEntity>>();
     // Key is library dataverse. Key of value map is the library name
     protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
-    // Key is library dataverse. Key of value map is the feed name  
+    // Key is library dataverse. Key of value map is the feed name
     protected final Map<String, Map<String, Feed>> feeds = new HashMap<String, Map<String, Feed>>();
-    // Key is DataverseName, Key of the value map is the Policy name   
+    // Key is DataverseName, Key of the value map is the Policy name
     protected final Map<String, Map<String, CompactionPolicy>> compactionPolicies = new HashMap<String, Map<String, CompactionPolicy>>();
 
     // Atomically executes all metadata operations in ctx's log.

@@ -41,7 +41,7 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * NodeIdLength(4)
  * NodeId(?)
  * ---------------------------
- * [Header2] (12 bytes + PKValueSize) : for entity_commit and update log types 
+ * [Header2] (12 bytes + PKValueSize) : for entity_commit, upsert_entity_commit, and update log types
  * DatasetId(4) //stored in dataset_dataset in Metadata Node
  * PKHashValue(4)
  * PKValueSize(4)
@@ -63,7 +63,7 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * ---------------------------
  * = LogSize =
  * 1) JOB_COMMIT_LOG_SIZE: 13 bytes (5 + 8)
- * 2) ENTITY_COMMIT: 25 + PKSize (5 + 12 + PKSize + 8)
+ * 2) ENTITY_COMMIT || UPSERT_ENTITY_COMMIT: 25 + PKSize (5 + 12 + PKSize + 8)
  *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 25
  * 3) UPDATE: 54 + PKValueSize + NewValueSize (5 + 12 + PKValueSize + 20 + 9 + NewValueSize + 8)
  * 4) FLUSH: 5 + 8 + DatasetId(4) (In case of serialize: + (8 bytes for LSN) + (4 bytes for number of flushed indexes)
@@ -71,7 +71,7 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 
 public class LogRecord implements ILogRecord {
 
-    //------------- fields in a log record (begin) ------------//
+    // ------------- fields in a log record (begin) ------------//
     private byte logSource;
     private String nodeId;
     private int nodeIdLength;
@@ -89,7 +89,7 @@ public class LogRecord implements ILogRecord {
     private int newValueSize;
     private ITupleReference newValue;
     private long checksum;
-    //------------- fields in a log record (end) --------------//
+    // ------------- fields in a log record (end) --------------//
 
     private int PKFieldCnt;
     private ITransactionContext txnCtx;
@@ -104,7 +104,7 @@ public class LogRecord implements ILogRecord {
     private IReplicationThread replicationThread;
     private ByteBuffer serializedLog;
     private final Map<String, byte[]> nodeIdsMap;
-    //this field is used for serialized flush logs only to indicate how many indexes were flushed using its LSN.
+    // this field is used for serialized flush logs only to indicate how many indexes were flushed using its LSN.
     private int numOfFlushedIndexes;
 
     public LogRecord() {
@@ -142,7 +142,7 @@ public class LogRecord implements ILogRecord {
         if (nodeIdsMap.containsKey(nodeId)) {
             buffer.put(nodeIdsMap.get(nodeId));
         } else {
-            //byte array for node id length and string
+            // byte array for node id length and string
             byte[] bytes = new byte[(Integer.SIZE / 8) + nodeId.length()];
             buffer.putInt(nodeId.length());
             buffer.put(nodeId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -150,7 +150,7 @@ public class LogRecord implements ILogRecord {
             buffer.get(bytes, 0, bytes.length);
             nodeIdsMap.put(nodeId, bytes);
         }
-        if (logType == LogType.UPDATE || logType == LogType.ENTITY_COMMIT) {
+        if (logType == LogType.UPDATE || logType == LogType.ENTITY_COMMIT || logType == LogType.UPSERT_ENTITY_COMMIT) {
             buffer.putInt(datasetId);
             buffer.putInt(PKHashValue);
             if (PKValueSize <= 0) {
@@ -182,14 +182,14 @@ public class LogRecord implements ILogRecord {
         buffer.putLong(checksum);
     }
 
-    //this method is used when replication is enabled to include the log record LSN in the serialized version
+    // this method is used when replication is enabled to include the log record LSN in the serialized version
     @Override
     public void writeLogRecord(ByteBuffer buffer, long appendLSN) {
         int beginOffset = buffer.position();
         writeLogRecordCommonFields(buffer);
 
         if (logSource == LogSource.LOCAL) {
-            //copy the serialized log to send it to replicas
+            // copy the serialized log to send it to replicas
             int serializedLogSize = getSerializedLogSize(logType, logSize);
 
             if (serializedLog == null || serializedLog.capacity() < serializedLogSize) {
@@ -223,14 +223,14 @@ public class LogRecord implements ILogRecord {
                         PKValue.getFieldLength(PKFields[i]));
             }
         } else {
-            //since PKValue is already serialized in remote logs, just put it into buffer
+            // since PKValue is already serialized in remote logs, just put it into buffer
             buffer.put(PKValue.getFieldData(0), 0, PKValueSize);
         }
     }
 
     private void writeTuple(ByteBuffer buffer, ITupleReference tuple, int size) {
         tupleWriter.writeTuple(tuple, buffer.array(), buffer.position());
-        //writeTuple() doesn't change the position of the buffer. 
+        // writeTuple() doesn't change the position of the buffer.
         buffer.position(buffer.position() + size);
     }
 
@@ -244,21 +244,21 @@ public class LogRecord implements ILogRecord {
     public RECORD_STATUS readLogRecord(ByteBuffer buffer) {
         int beginOffset = buffer.position();
 
-        //read header
+        // read header
         RECORD_STATUS status = readLogHeader(buffer);
         if (status != RECORD_STATUS.OK) {
             buffer.position(beginOffset);
             return status;
         }
 
-        //read body
+        // read body
         status = readLogBody(buffer, false);
         if (status != RECORD_STATUS.OK) {
             buffer.position(beginOffset);
             return status;
         }
 
-        //attempt to read checksum
+        // attempt to read checksum
         if (buffer.remaining() < CHKSUM_LEN) {
             buffer.position(beginOffset);
             return RECORD_STATUS.TRUNCATED;
@@ -272,7 +272,7 @@ public class LogRecord implements ILogRecord {
     }
 
     private RECORD_STATUS readLogHeader(ByteBuffer buffer) {
-        //first we need the logtype and Job ID, if the buffer isn't that big, then no dice.
+        // first we need the logtype and Job ID, if the buffer isn't that big, then no dice.
         if (buffer.remaining() < ALL_RECORD_HEADER_LEN) {
             return RECORD_STATUS.TRUNCATED;
         }
@@ -280,14 +280,14 @@ public class LogRecord implements ILogRecord {
         logType = buffer.get();
         jobId = buffer.getInt();
         nodeIdLength = buffer.getInt();
-        //attempt to read node id
+        // attempt to read node id
         if (buffer.remaining() < nodeIdLength) {
             return RECORD_STATUS.TRUNCATED;
         }
-        //read node id string
+        // read node id string
         nodeId = new String(buffer.array(), buffer.position() + buffer.arrayOffset(), nodeIdLength,
                 java.nio.charset.StandardCharsets.UTF_8);
-        //skip node id string bytes
+        // skip node id string bytes
         buffer.position(buffer.position() + nodeIdLength);
 
         return RECORD_STATUS.OK;
@@ -299,14 +299,14 @@ public class LogRecord implements ILogRecord {
                 datasetId = -1;
                 PKHashValue = -1;
             } else {
-                //attempt to read in the dsid, PK hash and PK length
+                // attempt to read in the dsid, PK hash and PK length
                 if (buffer.remaining() < ENTITYCOMMIT_UPDATE_HEADER_LEN) {
                     return RECORD_STATUS.TRUNCATED;
                 }
                 datasetId = buffer.getInt();
                 PKHashValue = buffer.getInt();
                 PKValueSize = buffer.getInt();
-                //attempt to read in the PK
+                // attempt to read in the PK
                 if (buffer.remaining() < PKValueSize) {
                     return RECORD_STATUS.TRUNCATED;
                 }
@@ -317,7 +317,7 @@ public class LogRecord implements ILogRecord {
             }
 
             if (logType == LogType.UPDATE) {
-                //attempt to read in the previous LSN, log size, new value size, and new record type
+                // attempt to read in the previous LSN, log size, new value size, and new record type
                 if (buffer.remaining() < UPDATE_LSN_HEADER + UPDATE_BODY_HEADER) {
                     return RECORD_STATUS.TRUNCATED;
                 }
@@ -337,7 +337,7 @@ public class LogRecord implements ILogRecord {
                     tupleBuffer.put(buffer.array(), buffer.position(), newValueSize);
                     tupleBuffer.flip();
                     newValue = readTuple(tupleBuffer, readNewValue, fieldCnt, newValueSize);
-                    //skip tuple bytes
+                    // skip tuple bytes
                     buffer.position(buffer.position() + newValueSize);
                 }
             } else {
@@ -361,8 +361,8 @@ public class LogRecord implements ILogRecord {
         if (!remoteRecoveryLog || !nodeId.equals(localNodeId)) {
             readLogBody(buffer, false);
         } else {
-            //need to allocate buffer for tuple since the logs will be kept in memory to use during remote recovery
-            //TODO when this is redesigned to spill remote recovery logs to disk, this will not be needed
+            // need to allocate buffer for tuple since the logs will be kept in memory to use during remote recovery
+            // TODO when this is redesigned to spill remote recovery logs to disk, this will not be needed
             readLogBody(buffer, true);
         }
 
@@ -371,7 +371,7 @@ public class LogRecord implements ILogRecord {
             numOfFlushedIndexes = buffer.getInt();
         }
 
-        //remote recovery logs need to have the LSN to check which should be replayed
+        // remote recovery logs need to have the LSN to check which should be replayed
         if (remoteRecoveryLog && nodeId.equals(localNodeId)) {
             LSN = buffer.getLong();
         }
@@ -398,54 +398,6 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public void formJobTerminateLogRecord(ITransactionContext txnCtx, boolean isCommit) {
-        this.txnCtx = txnCtx;
-        formJobTerminateLogRecord(txnCtx.getJobId().getId(), isCommit, nodeId);
-    }
-
-    @Override
-    public void formJobTerminateLogRecord(int jobId, boolean isCommit, String nodeId) {
-        this.logType = isCommit ? LogType.JOB_COMMIT : LogType.ABORT;
-        this.jobId = jobId;
-        this.datasetId = -1;
-        this.PKHashValue = -1;
-        setNodeId(nodeId);
-        computeAndSetLogSize();
-    }
-
-    public void formFlushLogRecord(int datasetId, PrimaryIndexOperationTracker opTracker, int numOfFlushedIndexes) {
-        formFlushLogRecord(datasetId, opTracker, null, numOfFlushedIndexes);
-    }
-
-    public void formFlushLogRecord(int datasetId, PrimaryIndexOperationTracker opTracker, String nodeId,
-            int numberOfIndexes) {
-        this.logType = LogType.FLUSH;
-        this.jobId = -1;
-        this.datasetId = datasetId;
-        this.opTracker = opTracker;
-        this.numOfFlushedIndexes = numberOfIndexes;
-        if (nodeId != null) {
-            setNodeId(nodeId);
-        }
-        computeAndSetLogSize();
-    }
-
-    @Override
-    public void formEntityCommitLogRecord(ITransactionContext txnCtx, int datasetId, int PKHashValue,
-            ITupleReference PKValue, int[] PKFields) {
-        this.txnCtx = txnCtx;
-        this.logType = LogType.ENTITY_COMMIT;
-        this.jobId = txnCtx.getJobId().getId();
-        this.datasetId = datasetId;
-        this.PKHashValue = PKHashValue;
-        this.PKFieldCnt = PKFields.length;
-        this.PKValue = PKValue;
-        this.PKFields = PKFields;
-        computeAndSetPKValueSize();
-        computeAndSetLogSize();
-    }
-
-    @Override
     public void computeAndSetPKValueSize() {
         int i;
         PKValueSize = 0;
@@ -469,6 +421,7 @@ public class LogRecord implements ILogRecord {
                 logSize = JOB_TERMINATE_LOG_SIZE;
                 break;
             case LogType.ENTITY_COMMIT:
+            case LogType.UPSERT_ENTITY_COMMIT:
                 logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
                 break;
             case LogType.FLUSH:
@@ -511,7 +464,7 @@ public class LogRecord implements ILogRecord {
             buffer.putLong(LSN);
             buffer.putInt(numOfFlushedIndexes);
         }
-        //LSN must be included in all remote recovery logs (not only FLUSH)
+        // LSN must be included in all remote recovery logs (not only FLUSH)
         buffer.putLong(LSN);
         return buffer.position() - bufferBegin;
     }
@@ -612,13 +565,13 @@ public class LogRecord implements ILogRecord {
 
     private static int getSerializedLogSize(Byte logType, int logSize) {
         if (logType == LogType.FLUSH) {
-            //LSN
+            // LSN
             logSize += (Long.SIZE / 8);
-            //num of indexes 
+            // num of indexes
             logSize += (Integer.SIZE / 8);
         }
 
-        //checksum not included in serialized version
+        // checksum not included in serialized version
         logSize -= CHKSUM_LEN;
 
         return logSize;
@@ -750,6 +703,14 @@ public class LogRecord implements ILogRecord {
 
     public void setNumOfFlushedIndexes(int numOfFlushedIndexes) {
         this.numOfFlushedIndexes = numOfFlushedIndexes;
+    }
+
+    public void setPKFieldCnt(int pKFieldCnt) {
+        PKFieldCnt = pKFieldCnt;
+    }
+
+    public void setOpTracker(PrimaryIndexOperationTracker opTracker) {
+        this.opTracker = opTracker;
     }
 
 }

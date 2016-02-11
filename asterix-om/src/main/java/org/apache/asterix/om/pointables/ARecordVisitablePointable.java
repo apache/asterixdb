@@ -19,6 +19,11 @@
 
 package org.apache.asterix.om.pointables;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
@@ -35,11 +40,6 @@ import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.INullWriter;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This class interprets the binary data representation of a record. One can
  * call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
@@ -52,6 +52,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
      * object pool based allocator, in order to have object reuse
      */
     static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
+        @Override
         public IVisitablePointable create(IAType type) {
             return new ARecordVisitablePointable((ARecordType) type);
         }
@@ -114,7 +115,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
                 // add type name Reference (including a astring type tag)
                 int nameStart = typeBos.size();
-                typeDos.writeByte(ATypeTag.STRING.serialize());
+                typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 utf8Writer.writeUTF8(fieldNameStrs[i], typeDos);
                 int nameEnd = typeBos.size();
                 IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
@@ -183,8 +184,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 boolean hasNullableFields = NonTaggedFormatUtil.hasNullableField(inputRecType);
                 if (hasNullableFields) {
                     nullBitMapOffset = s;
-                    offsetArrayOffset = s
-                            + (this.numberOfSchemaFields % 8 == 0 ? numberOfSchemaFields / 8
+                    offsetArrayOffset = s + (this.numberOfSchemaFields % 8 == 0 ? numberOfSchemaFields / 8
                             : numberOfSchemaFields / 8 + 1);
                 } else {
                     offsetArrayOffset = s;
@@ -238,7 +238,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     int fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING,
                             false);
                     int fnstart = dataBos.size();
-                    dataDos.writeByte(ATypeTag.STRING.serialize());
+                    dataDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
                     IVisitablePointable fieldName = allocator.allocateEmpty();

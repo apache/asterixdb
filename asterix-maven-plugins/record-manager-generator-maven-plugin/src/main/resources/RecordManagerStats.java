@@ -24,7 +24,7 @@ public class RecordManagerStats {
     int slots   = 0;
     int items   = 0;
     int size    = 0;
-    
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{ arenas : ").append(arenas);

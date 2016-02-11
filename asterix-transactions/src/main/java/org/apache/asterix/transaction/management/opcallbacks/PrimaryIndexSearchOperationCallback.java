@@ -39,6 +39,11 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
     }
 
     @Override
+    public void before(ITupleReference tuple) throws HyracksDataException {
+        //no op
+    }
+
+    @Override
     public boolean proceed(ITupleReference tuple) throws HyracksDataException {
         try {
             return lockManager.tryLock(datasetId, -1, LockMode.S, txnCtx);

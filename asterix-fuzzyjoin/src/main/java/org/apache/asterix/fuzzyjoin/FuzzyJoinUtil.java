@@ -28,11 +28,11 @@ public class FuzzyJoinUtil {
     public static String clean(String in) {
         /*
          * - remove punctuation
-         * 
+         *
          * - normalize case
-         * 
+         *
          * - remove extra spaces
-         * 
+         *
          * - repalce space with FuzzyJoinDriver.TOKEN_SEPARATOR
          */
 

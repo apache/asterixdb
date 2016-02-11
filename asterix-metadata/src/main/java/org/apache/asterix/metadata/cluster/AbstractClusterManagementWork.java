@@ -39,7 +39,7 @@ public abstract class AbstractClusterManagementWork implements IClusterManagemen
         this.workId = WorkIdGenerator.getNextWorkId();
     }
 
-   
+
 
     private static class WorkIdGenerator {
         private static AtomicInteger workId = new AtomicInteger(0);

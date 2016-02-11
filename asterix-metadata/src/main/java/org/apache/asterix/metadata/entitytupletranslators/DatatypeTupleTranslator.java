@@ -24,12 +24,12 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.Calendar;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
@@ -207,11 +207,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         // write field 3
         if (fieldType.getTypeTag().isDerivedType()) {
             fieldValue.reset();
-            try {
-                writeDerivedTypeRecord(dataType, (AbstractComplexType) fieldType, fieldValue.getDataOutput());
-            } catch (AsterixException e) {
-                throw new MetadataException(e);
-            }
+            writeDerivedTypeRecord(dataType, (AbstractComplexType) fieldType, fieldValue.getDataOutput());
             recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
         }
 
@@ -222,11 +218,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -234,7 +226,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     private void writeDerivedTypeRecord(Datatype type, AbstractComplexType derivedDatatype, DataOutput out)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
         DerivedTypeTag tag = null;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -292,15 +284,16 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             throws HyracksDataException {
         AbstractCollectionType listType = (AbstractCollectionType) type;
         IAType itemType = listType.getItemType();
-        if (itemType.getTypeTag().isDerivedType())
+        if (itemType.getTypeTag().isDerivedType()) {
             handleNestedDerivedType(itemType.getTypeName(), (AbstractComplexType) itemType, instance,
                     instance.getDataverseName(), instance.getDatatypeName());
+        }
         aString.setValue(listType.getItemType().getTypeName());
         stringSerde.serialize(aString, out);
     }
 
     private void writeRecordType(Datatype instance, AbstractComplexType type, DataOutput out)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
 
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
@@ -369,13 +362,13 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             String dataverseName, String datatypeName) throws HyracksDataException {
         try {
             metadataNode.addDatatype(jobId, new Datatype(dataverseName, typeName, nestedType, true));
-
         } catch (MetadataException e) {
             // The nested record type may have been inserted by a previous DDL statement or by
             // a previous nested type.
-            if (!e.getCause().getClass().equals(TreeIndexDuplicateKeyException.class))
+            if (!(e.getCause() instanceof TreeIndexDuplicateKeyException)) {
                 throw new HyracksDataException(e);
-        } catch (Exception e) {
+            }
+        } catch (RemoteException e) {
             // TODO: This should not be a HyracksDataException. Can't
             // fix this currently because of BTree exception model whose
             // fixes must get in.

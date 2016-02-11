@@ -43,6 +43,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
             while (recordReader.hasNext()) {
                 IRawRecord<? extends T> record = recordReader.next();
                 if (record == null) {
+                    flush();
                     Thread.sleep(interval);
                     continue;
                 }
@@ -110,5 +111,6 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     @Override
     public void setRecordReader(IRecordReader<T> recordReader) {
         this.recordReader = recordReader;
+        recordReader.setController(this);
     }
 }

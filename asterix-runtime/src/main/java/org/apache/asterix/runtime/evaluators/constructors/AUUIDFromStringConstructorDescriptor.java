@@ -47,11 +47,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"))
  */
 public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AUUIDFromStringConstructorDescriptor();
         }
@@ -71,16 +69,15 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This can not be an instance of UUID";
-                    private AMutableUUID aUUID = new AMutableUUID(0, 0);
+                    private AMutableUUID uuid = new AMutableUUID();
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AUUID);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-                    private long msb = 0;
-                    private long lsb = 0;
-                    private long tmpLongValue = 0;
+
+
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -90,55 +87,16 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
-                                msb = 0;
-                                lsb = 0;
-                                tmpLongValue = 0;
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
 
                                 // first byte: tag, next x bytes: length
                                 int offset = utf8Ptr.getCharStartOffset();
-                                // First part - 8 bytes
-                                msb = calculateLongFromHex(serString, offset, 8);
-                                msb <<= 16;
-                                offset += 8;
 
-                                // Skip the hyphen part
-                                offset += 1;
+                                uuid.parseUUIDHexBytes(serString, offset);
+                                uuidSerde.serialize(uuid, out);
 
-                                // Second part - 4 bytes
-                                tmpLongValue = calculateLongFromHex(serString, offset, 4);
-                                msb |= tmpLongValue;
-                                msb <<= 16;
-                                offset += 4;
-
-                                // Skip the hyphen part
-                                offset += 1;
-
-                                // Third part - 4 bytes
-                                tmpLongValue = calculateLongFromHex(serString, offset, 4);
-                                msb |= tmpLongValue;
-                                offset += 4;
-
-                                // Skip the hyphen part
-                                offset += 1;
-
-                                // Fourth part - 4 bytes
-                                lsb = calculateLongFromHex(serString, offset, 4);
-                                lsb <<= 48;
-                                offset += 4;
-
-                                // Skip the hyphen part
-                                offset += 1;
-
-                                // The last part - 12 bytes
-                                tmpLongValue = calculateLongFromHex(serString, offset, 12);
-                                lsb |= tmpLongValue;
-
-                                aUUID.setValue(msb, lsb);
-                                uuidSerde.serialize(aUUID, out);
-
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);
@@ -147,70 +105,6 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                         }
                     }
 
-                    // Calculate a long value from a hex string.
-                    private long calculateLongFromHex(byte[] hexArray, int offset, int length)
-                            throws AlgebricksException {
-                        int tmpIntVal = 0;
-                        long tmpLongVal = 0;
-                        for (int i = offset; i < offset + length; i++) {
-                            tmpIntVal = transformHexCharToInt(hexArray[i]);
-                            if (tmpIntVal != -1) {
-                                tmpLongVal = tmpLongVal * 16 + tmpIntVal;
-                            } else {
-                                throw new AlgebricksException("This is not a correct UUID value.");
-                            }
-                        }
-                        return tmpLongVal;
-                    }
-
-                    // Interpret a character to the corresponding integer value.
-                    private int transformHexCharToInt(byte val) throws AlgebricksException {
-                        switch (val) {
-                            case '0':
-                                return 0;
-                            case '1':
-                                return 1;
-                            case '2':
-                                return 2;
-                            case '3':
-                                return 3;
-                            case '4':
-                                return 4;
-                            case '5':
-                                return 5;
-                            case '6':
-                                return 6;
-                            case '7':
-                                return 7;
-                            case '8':
-                                return 8;
-                            case '9':
-                                return 9;
-                            case 'a':
-                            case 'A':
-                                return 10;
-                            case 'b':
-                            case 'B':
-                                return 11;
-                            case 'c':
-                            case 'C':
-                                return 12;
-                            case 'd':
-                            case 'D':
-                                return 13;
-                            case 'e':
-                            case 'E':
-                                return 14;
-                            case 'f':
-                            case 'F':
-                                return 15;
-                            case '-':
-                                // We need to skip this hyphen part.
-                                return -1;
-                            default:
-                                throw new AlgebricksException("This is not a correct UUID value.");
-                        }
-                    }
                 };
             }
         };

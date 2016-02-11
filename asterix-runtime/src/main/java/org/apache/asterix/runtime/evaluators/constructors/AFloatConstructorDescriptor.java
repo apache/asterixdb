@@ -45,11 +45,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     private static final long serialVersionUID = 1L;
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AFloatConstructorDescriptor();
         }
@@ -98,23 +96,23 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-                                if (utf8BinaryComparator
-                                        .compare(serString, 1, outInput.getLength(), POSITIVE_INF, 0, 5) == 0) {
+                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), POSITIVE_INF, 0,
+                                        5) == 0) {
                                     aFloat.setValue(Float.POSITIVE_INFINITY);
                                 } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(),
                                         NEGATIVE_INF, 0, 6) == 0) {
                                     aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NAN, 0, 5)
-                                        == 0) {
+                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NAN, 0,
+                                        5) == 0) {
                                     aFloat.setValue(Float.NaN);
                                 } else {
-                                    utf8Ptr.set(serString, 1, outInput.getLength() -1);
+                                    utf8Ptr.set(serString, 1, outInput.getLength() - 1);
                                     aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
                                 }
                                 floatSerde.serialize(aFloat, out);
 
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);

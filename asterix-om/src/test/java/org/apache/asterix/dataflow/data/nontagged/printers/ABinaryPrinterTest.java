@@ -28,7 +28,7 @@ import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class ABinaryPrinterTest {
         return ret;
     }
 
-    public static void testOneInputString(String input) throws AlgebricksException {
+    public static void testOneInputString(String input) throws HyracksDataException {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);

@@ -20,10 +20,14 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADatePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADateTimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AIntervalPrinter implements IPrinter {
 
@@ -33,38 +37,41 @@ public class AIntervalPrinter implements IPrinter {
      * @see org.apache.hyracks.algebricks.data.IPrinter#init()
      */
     @Override
-    public void init() throws AlgebricksException {
+    public void init() {
     }
 
     /* (non-Javadoc)
      * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
      */
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         ps.print("{ \"interval\": { \"start\": ");
 
-        short typetag = AInt8SerializerDeserializer.getByte(b, s + 1 + 8 * 2);
+        byte typetag = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
+        int startOffset = AIntervalSerializerDeserializer.getIntervalStartOffset(b, s + 1) - 1;
+        int startSize = AIntervalSerializerDeserializer.getStartSize(b, s + 1);
+        int endOffset = AIntervalSerializerDeserializer.getIntervalEndOffset(b, s + 1) - 1;
+        int endSize = AIntervalSerializerDeserializer.getEndSize(b, s + 1);
 
         IPrinter timeInstancePrinter;
-
-        if (typetag == ATypeTag.DATE.serialize()) {
-            timeInstancePrinter = ADatePrinter.INSTANCE;
-            ((ADatePrinter) timeInstancePrinter).print(b, s + 4, 4, ps);
-            ps.print(", \"end\": ");
-            ((ADatePrinter) timeInstancePrinter).print(b, s + 12, 4, ps);
-        } else if (typetag == ATypeTag.TIME.serialize()) {
-            timeInstancePrinter = ATimePrinter.INSTANCE;
-            ((ATimePrinter) timeInstancePrinter).print(b, s + 4, 4, ps);
-            ps.print(", \"end\": ");
-            ((ATimePrinter) timeInstancePrinter).print(b, s + 12, 4, ps);
-        } else if (typetag == ATypeTag.DATETIME.serialize()) {
-            timeInstancePrinter = ADateTimePrinter.INSTANCE;
-            ((ADateTimePrinter) timeInstancePrinter).print(b, s, 8, ps);
-            ps.print(", \"end\": ");
-            ((ADateTimePrinter) timeInstancePrinter).print(b, s + 8, 8, ps);
-        } else {
-            throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
+        ATypeTag intervalType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typetag);
+        switch (intervalType) {
+            case DATE:
+                timeInstancePrinter = ADatePrinter.INSTANCE;
+                break;
+            case TIME:
+                timeInstancePrinter = ATimePrinter.INSTANCE;
+                break;
+            case DATETIME:
+                timeInstancePrinter = ADateTimePrinter.INSTANCE;
+                break;
+            default:
+                throw new HyracksDataException("Unsupport internal time types in interval: " + typetag);
         }
+
+        timeInstancePrinter.print(b, startOffset, startSize, ps);
+        ps.print(", \"end\": ");
+        timeInstancePrinter.print(b, endOffset, endSize, ps);
 
         ps.print("}}");
     }

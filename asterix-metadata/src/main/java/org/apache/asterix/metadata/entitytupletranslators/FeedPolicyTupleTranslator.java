@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -111,7 +110,8 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy) throws IOException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy)
+            throws IOException, MetadataException {
         // write the key in the first three fields of the tuple
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
 
@@ -161,11 +161,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         recordBuilder.addField(MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX, fieldValue);
 
         // write record
-        try {
-            recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        } catch (AsterixException e) {
-            throw new MetadataException(e);
-        }
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -192,10 +188,6 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         propertyRecordBuilder.addField(1, fieldValue);
 
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        propertyRecordBuilder.write(out, true);
     }
 }

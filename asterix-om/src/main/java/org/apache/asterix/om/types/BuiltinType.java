@@ -742,34 +742,6 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
-    // AUUID_STRING is used when converting between the string representation of
-    // UUID and corresponding a UUID instance
-    public static final BuiltinType AUUID_STRING = new LowerCaseConstructorType() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.UUID_STRING;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "UUID_STRING";
-        }
-
-        @Override
-        public String getTypeName() {
-            return "uuid_string";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", getDisplayName());
-            return type;
-        }
-    };
-
     public static final BuiltinType ANY = new BuiltinType() {
 
         private static final long serialVersionUID = 1L;

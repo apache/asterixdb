@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,16 +84,12 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         Collections.sort(resultFieldNames);
 
         for (String fieldName : resultFieldNames) {
-            try {
-                if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
-                    ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
-                    //Deep Copy prevents altering of input types
-                    resultFieldTypes.add(nestedType.deepCopy(nestedType));
-                } else {
-                    resultFieldTypes.add(inputRecordType.getFieldType(fieldName));
-                }
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
+            if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+                ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
+                //Deep Copy prevents altering of input types
+                resultFieldTypes.add(nestedType.deepCopy(nestedType));
+            } else {
+                resultFieldTypes.add(inputRecordType.getFieldType(fieldName));
             }
         }
 

@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Literal;
 public class NullLiteral extends Literal {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -7782153599294838739L;
 

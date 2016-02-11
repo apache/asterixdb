@@ -2,21 +2,33 @@ DataverseUse test
 Query:
 LetVariable [ Name=itv1 ]
   :=
-  FunctionCall test.interval-from-date@2[
-    LiteralExpr [STRING] [2010-10-30]
-    LiteralExpr [STRING] [2010-12-21]
+  FunctionCall test.interval@2[
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-10-30]
+    ]
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-12-21]
+    ]
   ]
 LetVariable [ Name=itv2 ]
   :=
-  FunctionCall test.interval-from-date@2[
-    LiteralExpr [STRING] [2011-10-30]
-    LiteralExpr [STRING] [2012-10-21]
+  FunctionCall test.interval@2[
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2011-10-30]
+    ]
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2012-10-21]
+    ]
   ]
 LetVariable [ Name=itv3 ]
   :=
-  FunctionCall test.interval-from-date@2[
-    LiteralExpr [STRING] [2010-12-21]
-    LiteralExpr [STRING] [2013-01-01]
+  FunctionCall test.interval@2[
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-12-21]
+    ]
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2013-01-01]
+    ]
   ]
 LetVariable [ Name=blnBefore1 ]
   :=
@@ -44,21 +56,33 @@ LetVariable [ Name=blnAfter2 ]
   ]
 LetVariable [ Name=itv4 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [2012-06-26T01:01:01.111]
-    LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+    ]
   ]
 LetVariable [ Name=itv5 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [20120727T020202222]
-    LiteralExpr [STRING] [2013-08-08T03:03:03.333]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [20120727T020202222]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2013-08-08T03:03:03.333]
+    ]
   ]
 LetVariable [ Name=itv6 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [19000707T020202222]
-    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [19000707T020202222]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+    ]
   ]
 LetVariable [ Name=blnMeet1 ]
   :=
@@ -86,21 +110,33 @@ LetVariable [ Name=blnMetBy2 ]
   ]
 LetVariable [ Name=itv7 ]
   :=
-  FunctionCall test.interval-from-time@2[
-    LiteralExpr [STRING] [12:32:38]
-    LiteralExpr [STRING] [20:29:20]
+  FunctionCall test.interval@2[
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12:32:38]
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [20:29:20]
+    ]
   ]
 LetVariable [ Name=itv8 ]
   :=
-  FunctionCall test.interval-from-time@2[
-    LiteralExpr [STRING] [17:48:19]
-    LiteralExpr [STRING] [22:19:49]
+  FunctionCall test.interval@2[
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [17:48:19]
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [22:19:49]
+    ]
   ]
 LetVariable [ Name=itv9 ]
   :=
-  FunctionCall test.interval-from-time@2[
-    LiteralExpr [STRING] [01:32:49]
-    LiteralExpr [STRING] [17:48:19]
+  FunctionCall test.interval@2[
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [01:32:49]
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [17:48:19]
+    ]
   ]
 LetVariable [ Name=blnOverlaps1 ]
   :=
@@ -140,9 +176,13 @@ LetVariable [ Name=blnOverlap2 ]
   ]
 LetVariable [ Name=itv10 ]
   :=
-  FunctionCall test.interval-from-date@2[
-    LiteralExpr [STRING] [2010-10-30]
-    LiteralExpr [STRING] [2010-11-30]
+  FunctionCall test.interval@2[
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-10-30]
+    ]
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-11-30]
+    ]
   ]
 LetVariable [ Name=blnStarts1 ]
   :=
@@ -170,21 +210,33 @@ LetVariable [ Name=blnStartedBy2 ]
   ]
 LetVariable [ Name=itv10 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [19000707T020202222]
-    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [19000707T020202222]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+    ]
   ]
 LetVariable [ Name=itv11 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [19990707T020202222]
-    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [19990707T020202222]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+    ]
   ]
 LetVariable [ Name=itv12 ]
   :=
-  FunctionCall test.interval-from-datetime@2[
-    LiteralExpr [STRING] [-19990707T020202222]
-    LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+  FunctionCall test.interval@2[
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19990707T020202222]
+    ]
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+    ]
   ]
 LetVariable [ Name=blnCovers1 ]
   :=
@@ -212,9 +264,13 @@ LetVariable [ Name=blnCoveredBy2 ]
   ]
 LetVariable [ Name=itv11 ]
   :=
-  FunctionCall test.interval-from-time@2[
-    LiteralExpr [STRING] [19:00:00.009]
-    LiteralExpr [STRING] [20:29:20.000]
+  FunctionCall test.interval@2[
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [19:00:00.009]
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [20:29:20.000]
+    ]
   ]
 LetVariable [ Name=blnEnds1 ]
   :=
