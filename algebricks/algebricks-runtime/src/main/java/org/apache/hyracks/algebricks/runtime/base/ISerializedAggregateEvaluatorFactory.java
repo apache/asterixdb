@@ -18,9 +18,11 @@
  */
 package org.apache.hyracks.algebricks.runtime.base;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import java.io.Serializable;
 
-public interface ICopyEvaluator {
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+
+public interface ISerializedAggregateEvaluatorFactory extends Serializable {
+    public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws AlgebricksException;
 }

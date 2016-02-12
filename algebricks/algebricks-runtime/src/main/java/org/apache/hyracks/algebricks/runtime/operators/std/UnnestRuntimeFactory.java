@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
-import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -73,7 +73,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         this.positionWriter = positionWriter;
         this.posOffsetEvalFactory = posOffsetEvalFactory;
         if (this.posOffsetEvalFactory == null) {
-            this.posOffsetEvalFactory = new ConstantEvaluatorFactory(new byte[5]);
+            this.posOffsetEvalFactory = new ConstantEvalFactory(new byte[5]);
         }
     }
 
@@ -88,7 +88,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
-            private IUnnestingEvaluator agg;
+            private IUnnestingEvaluator unnest;
             private ArrayTupleBuilder tupleBuilder;
 
             private IScalarEvaluator offsetEval = posOffsetEvalFactory.createScalarEvaluator(ctx);
@@ -98,7 +98,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 writer.open();
                 initAccessAppendRef(ctx);
                 try {
-                    agg = unnestingFactory.createUnnestingEvaluator(ctx);
+                    unnest = unnestingFactory.createUnnestingEvaluator(ctx);
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
@@ -118,7 +118,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     }
                     int offset = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                     try {
-                        agg.init(tRef);
+                        unnest.init(tRef);
                         // assume that when unnesting the tuple, each step() call for each element
                         // in the tuple will increase the positionIndex, and the positionIndex will
                         // be reset when a new tuple is to be processed.
@@ -126,7 +126,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         boolean goon = true;
                         do {
                             tupleBuilder.reset();
-                            if (!agg.step(p)) {
+                            if (!unnest.step(p)) {
                                 goon = false;
                             } else {
 

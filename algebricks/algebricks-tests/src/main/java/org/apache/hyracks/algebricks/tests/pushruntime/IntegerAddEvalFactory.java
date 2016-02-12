@@ -29,7 +29,6 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
 
@@ -52,7 +51,6 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
             private IScalarEvaluator evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
             private IScalarEvaluator evalRight = evalRightFactory.createScalarEvaluator(ctx);
 
-            @SuppressWarnings("static-access")
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                 evalLeft.evaluate(tuple, p);

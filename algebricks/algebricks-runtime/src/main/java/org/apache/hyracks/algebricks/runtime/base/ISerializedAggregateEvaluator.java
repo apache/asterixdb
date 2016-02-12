@@ -23,13 +23,12 @@ import java.io.DataOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public interface ICopySerializableAggregateFunction {
+public interface ISerializedAggregateEvaluator {
     /**
      * initialize the space occupied by internal state
      *
      * @param state
      * @throws AlgebricksException
-     * @return length of the intermediate state
      */
     public void init(DataOutput state) throws AlgebricksException;
 

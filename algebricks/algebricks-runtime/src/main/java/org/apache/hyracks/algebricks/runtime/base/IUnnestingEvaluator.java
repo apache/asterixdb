@@ -26,4 +26,5 @@ public interface IUnnestingEvaluator {
     public void init(IFrameTupleReference tuple) throws AlgebricksException;
 
     public boolean step(IPointable result) throws AlgebricksException;
+
 }

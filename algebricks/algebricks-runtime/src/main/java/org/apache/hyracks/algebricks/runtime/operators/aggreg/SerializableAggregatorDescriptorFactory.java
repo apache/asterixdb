@@ -21,8 +21,8 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 import java.io.DataOutput;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -35,16 +35,16 @@ import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
 
 public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatingAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-    private ICopySerializableAggregateFunctionFactory[] aggFactories;
+    private ISerializedAggregateEvaluatorFactory[] aggFactories;
 
-    public SerializableAggregatorDescriptorFactory(ICopySerializableAggregateFunctionFactory[] aggFactories) {
+    public SerializableAggregatorDescriptorFactory(ISerializedAggregateEvaluatorFactory[] aggFactories) {
         this.aggFactories = aggFactories;
     }
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         final int[] keys = keyFields;
 
         /**
@@ -52,7 +52,7 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
          */
         return new IAggregatorDescriptor() {
             private FrameTupleReference ftr = new FrameTupleReference();
-            private ICopySerializableAggregateFunction[] aggs = new ICopySerializableAggregateFunction[aggFactories.length];
+            private ISerializedAggregateEvaluator[] aggs = new ISerializedAggregateEvaluator[aggFactories.length];
             private int offsetFieldIndex = keys.length;
             private int stateFieldLength[] = new int[aggFactories.length];
 
@@ -70,7 +70,7 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                     try {
                         int begin = tb.getSize();
                         if (aggs[i] == null) {
-                            aggs[i] = aggFactories[i].createAggregateFunction();
+                            aggs[i] = aggFactories[i].createAggregateEvaluator(ctx);
                         }
                         aggs[i].init(output);
                         tb.addFieldEndOffset();

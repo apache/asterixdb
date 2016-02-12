@@ -94,7 +94,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * Returns the character at the given byte offset. The caller is responsible for making sure that
      * the provided offset is within bounds and points to the beginning of a valid UTF8 character.
      *
-     * @param offset - Byte offset
+     * @param offset
+     *            - Byte offset
      * @return Character at the given offset.
      */
     public char charAt(int offset) {
@@ -157,6 +158,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         UTF8StringUtil.toString(buffer, bytes, start);
     }
 
+    @Override
     public String toString() {
         return new String(this.bytes, this.getCharStartOffset(), this.getUTF8Length(), Charset.forName("UTF-8"));
     }
@@ -166,8 +168,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      */
 
     public int ignoreCaseCompareTo(UTF8StringPointable other) {
-        return UTF8StringUtil.lowerCaseCompareTo(this.getByteArray(), this.getStartOffset(),
-                other.getByteArray(), other.getStartOffset());
+        return UTF8StringUtil.lowerCaseCompareTo(this.getByteArray(), this.getStartOffset(), other.getByteArray(),
+                other.getStartOffset());
     }
 
     public int find(UTF8StringPointable pattern, boolean ignoreCase) {
@@ -228,8 +230,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     public static boolean startsWith(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
         int utflen1 = src.getUTF8Length();
         int utflen2 = pattern.getUTF8Length();
-        if (utflen2 > utflen1)
+        if (utflen2 > utflen1) {
             return false;
+        }
 
         int s1Start = src.getMetaDataLength();
         int s2Start = pattern.getMetaDataLength();
@@ -257,8 +260,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     public static boolean endsWith(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
         int len1 = src.getUTF8Length();
         int len2 = pattern.getUTF8Length();
-        if (len2 > len1)
+        if (len2 > len1) {
             return false;
+        }
 
         int s1Start = src.getMetaDataLength();
         int s2Start = pattern.getMetaDataLength();
@@ -351,10 +355,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * @param out
      * @throws IOException
      */
-    public static void substrBefore(
-            UTF8StringPointable src,
-            UTF8StringPointable match,
-            UTF8StringBuilder builder,
+    public static void substrBefore(UTF8StringPointable src, UTF8StringPointable match, UTF8StringBuilder builder,
             GrowableArray out) throws IOException {
 
         int byteOffset = find(src, match, false);
@@ -367,7 +368,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         final int srcMetaLen = src.getMetaDataLength();
 
         builder.reset(out, byteOffset);
-        for (int idx = 0; idx < byteOffset; ) {
+        for (int idx = 0; idx < byteOffset;) {
             builder.appendChar(src.charAt(srcMetaLen + idx));
             idx += src.charSize(srcMetaLen + idx);
         }
@@ -387,10 +388,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * @param builder
      * @param out
      */
-    public static void substrAfter(
-            UTF8StringPointable src,
-            UTF8StringPointable match,
-            UTF8StringBuilder builder,
+    public static void substrAfter(UTF8StringPointable src, UTF8StringPointable match, UTF8StringBuilder builder,
             GrowableArray out) throws IOException {
 
         int byteOffset = find(src, match, false);

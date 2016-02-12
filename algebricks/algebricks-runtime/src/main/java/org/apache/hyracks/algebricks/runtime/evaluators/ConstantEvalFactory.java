@@ -18,16 +18,14 @@
  */
 package org.apache.hyracks.algebricks.runtime.evaluators;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ConstantEvalFactory implements ICopyEvaluatorFactory {
+public class ConstantEvalFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
     private byte[] value;
@@ -42,18 +40,12 @@ public class ConstantEvalFactory implements ICopyEvaluatorFactory {
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
-
-            private DataOutput out = output.getDataOutput();
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
 
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                try {
-                    out.write(value, 0, value.length);
-                } catch (IOException ioe) {
-                    throw new AlgebricksException(ioe);
-                }
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                result.set(value, 0, value.length);
             }
         };
     }

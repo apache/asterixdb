@@ -24,17 +24,14 @@ import java.io.IOException;
 
 /**
  * Encodes positive integers in a variable-bytes format.
- *
  * Each byte stores seven bits of the number. The first bit of each byte notifies if it is the last byte.
  * Specifically, if the first bit is set, then we need to shift the current value by seven and
  * continue to read the next byte util we meet a byte whose first byte is unset.
- *
  * e.g. if the number is < 128, it will be stored using one byte and the byte value keeps as original.
  * To store the number 255 (0xff) , it will be encoded as [0x81,0x7f]. To decode that value, it reads the 0x81
  * to know that the current value is (0x81 & 0x7f)= 0x01, and the first bit tells that there are more bytes to
  * be read. When it meets 0x7f, whose first flag is unset, it knows that it is the final byte to decode.
  * Finally it will return ( 0x01 << 7) + 0x7f === 255.
- *
  */
 public class VarLenIntEncoderDecoder {
     // sometimes the dec number is easier to get the sense of how big it is.
@@ -75,11 +72,16 @@ public class VarLenIntEncoderDecoder {
 
     public static int decode(byte[] srcBytes, int startPos) {
         int sum = 0;
-        while ((srcBytes[startPos] & CONTINUE_CHUNK) == CONTINUE_CHUNK) {
+        while (startPos < srcBytes.length && (srcBytes[startPos] & CONTINUE_CHUNK) == CONTINUE_CHUNK) {
             sum = (sum + (srcBytes[startPos] & DECODE_MASK)) << 7;
             startPos++;
         }
-        sum += srcBytes[startPos++];
+        if (startPos < srcBytes.length) {
+            sum += srcBytes[startPos];
+        } else {
+            throw new IllegalStateException("Corrupted string bytes: trying to access entry " + startPos
+                    + " in a byte array of length " + srcBytes.length);
+        }
         return sum;
     }
 

@@ -24,8 +24,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -35,7 +35,8 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -48,12 +49,13 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
     private static final long serialVersionUID = 1L;
     public static int NO_DEFAULT_BRANCH = -1;
 
-    private final ICopyEvaluatorFactory[] evalFactories;
+    private final IScalarEvaluatorFactory[] evalFactories;
     private final IBinaryBooleanInspector boolInspector;
     private final int defaultBranchIndex;
 
-    public PartitioningSplitOperatorDescriptor(IOperatorDescriptorRegistry spec, ICopyEvaluatorFactory[] evalFactories,
-            IBinaryBooleanInspector boolInspector, int defaultBranchIndex, RecordDescriptor rDesc) {
+    public PartitioningSplitOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            IScalarEvaluatorFactory[] evalFactories, IBinaryBooleanInspector boolInspector, int defaultBranchIndex,
+            RecordDescriptor rDesc) {
         super(spec, 1, (defaultBranchIndex == evalFactories.length) ? evalFactories.length + 1 : evalFactories.length);
         for (int i = 0; i < evalFactories.length; i++) {
             recordDescriptors[i] = rDesc;
@@ -71,8 +73,8 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
             private final IFrameWriter[] writers = new IFrameWriter[outputArity];
             private final boolean[] isOpen = new boolean[outputArity];
             private final IFrame[] writeBuffers = new IFrame[outputArity];
-            private final ICopyEvaluator[] evals = new ICopyEvaluator[outputArity];
-            private final ArrayBackedValueStorage evalBuf = new ArrayBackedValueStorage();
+            private final IScalarEvaluator[] evals = new IScalarEvaluator[outputArity];
+            private final IPointable evalPointable = new VoidPointable();
             private final RecordDescriptor inOutRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(),
                     0);
             private final FrameTupleAccessor accessor = new FrameTupleAccessor(inOutRecDesc);
@@ -149,12 +151,12 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                     boolean found = false;
                     for (int j = 0; j < evals.length; j++) {
                         try {
-                            evalBuf.reset();
-                            evals[j].evaluate(frameTuple);
+                            evals[j].evaluate(frameTuple, evalPointable);
                         } catch (AlgebricksException e) {
                             throw new HyracksDataException(e);
                         }
-                        found = boolInspector.getBooleanValue(evalBuf.getByteArray(), 0, 1);
+                        found = boolInspector.getBooleanValue(evalPointable.getByteArray(),
+                                evalPointable.getStartOffset(), evalPointable.getLength());
                         if (found) {
                             copyAndAppendTuple(j);
                             break;
@@ -199,7 +201,7 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 // Create evaluators for partitioning.
                 try {
                     for (int i = 0; i < evalFactories.length; i++) {
-                        evals[i] = evalFactories[i].createEvaluator(evalBuf);
+                        evals[i] = evalFactories[i].createScalarEvaluator(ctx);
                     }
                 } catch (AlgebricksException e) {
                     throw new HyracksDataException(e);

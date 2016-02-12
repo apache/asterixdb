@@ -19,8 +19,8 @@
 package org.apache.hyracks.algebricks.examples.piglet.runtime.functions;
 
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public interface IPigletFunctionEvaluatorFactoryBuilder {
-    public ICopyEvaluatorFactory buildEvaluatorFactory(FunctionIdentifier fid, ICopyEvaluatorFactory[] arguments);
+    public IScalarEvaluatorFactory buildEvaluatorFactory(FunctionIdentifier fid, IScalarEvaluatorFactory[] arguments);
 }

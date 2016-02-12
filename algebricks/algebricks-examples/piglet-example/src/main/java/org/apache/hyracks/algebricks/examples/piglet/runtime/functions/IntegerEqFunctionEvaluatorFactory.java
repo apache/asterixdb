@@ -18,53 +18,45 @@
  */
 package org.apache.hyracks.algebricks.examples.piglet.runtime.functions;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class IntegerEqFunctionEvaluatorFactory implements ICopyEvaluatorFactory {
+public class IntegerEqFunctionEvaluatorFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
-    private final ICopyEvaluatorFactory arg1Factory;
+    private final IScalarEvaluatorFactory arg1Factory;
 
-    private final ICopyEvaluatorFactory arg2Factory;
+    private final IScalarEvaluatorFactory arg2Factory;
 
-    public IntegerEqFunctionEvaluatorFactory(ICopyEvaluatorFactory arg1Factory, ICopyEvaluatorFactory arg2Factory) {
+    public IntegerEqFunctionEvaluatorFactory(IScalarEvaluatorFactory arg1Factory, IScalarEvaluatorFactory arg2Factory) {
         this.arg1Factory = arg1Factory;
         this.arg2Factory = arg2Factory;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
-            private DataOutput dataout = output.getDataOutput();
-            private ArrayBackedValueStorage out1 = new ArrayBackedValueStorage();
-            private ArrayBackedValueStorage out2 = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval1 = arg1Factory.createEvaluator(out1);
-            private ICopyEvaluator eval2 = arg2Factory.createEvaluator(out2);
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
+            private IPointable out1 = new VoidPointable();
+            private IPointable out2 = new VoidPointable();
+            private IScalarEvaluator eval1 = arg1Factory.createScalarEvaluator(ctx);
+            private IScalarEvaluator eval2 = arg2Factory.createScalarEvaluator(ctx);
+            private byte[] resultData = new byte[1];
 
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                out1.reset();
-                eval1.evaluate(tuple);
-                out2.reset();
-                eval2.evaluate(tuple);
-                int v1 = IntegerPointable.getInteger(out1.getByteArray(), 0);
-                int v2 = IntegerPointable.getInteger(out2.getByteArray(), 0);
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                eval1.evaluate(tuple, out1);
+                eval2.evaluate(tuple, out2);
+                int v1 = IntegerPointable.getInteger(out1.getByteArray(), out1.getStartOffset());
+                int v2 = IntegerPointable.getInteger(out2.getByteArray(), out2.getStartOffset());
                 boolean r = v1 == v2;
-                try {
-                    dataout.writeBoolean(r);
-                } catch (IOException ioe) {
-                    throw new AlgebricksException(ioe);
-                }
+                resultData[0] = r ? (byte) 1 : (byte) 0;
+                result.set(resultData, 0, 1);
             }
         };
     }
