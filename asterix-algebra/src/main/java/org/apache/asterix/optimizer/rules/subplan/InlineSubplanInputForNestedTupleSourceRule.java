@@ -503,29 +503,34 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         }
         groupbyOp.getInputs().add(new MutableObject<ILogicalOperator>(topJoinRef.getValue()));
 
-        // Adds a select operator into the nested plan for group-by to remove tuples with NULL on {@code assignVar}, i.e.,
-        // subplan input tuples that are filtered out within a subplan.
-        List<Mutable<ILogicalExpression>> nullCheckExprRefs = new ArrayList<>();
-        for (LogicalVariable notNullVar : notNullVars) {
-            Mutable<ILogicalExpression> filterVarExpr = new MutableObject<ILogicalExpression>(
-                    new VariableReferenceExpression(notNullVar));
-            List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
-            args.add(filterVarExpr);
-            List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<Mutable<ILogicalExpression>>();
-            argsForNotFunction.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL), args)));
-            nullCheckExprRefs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)));
+        if (notNullVars.size() > 0) {
+            // Adds a select operator into the nested plan for group-by to remove tuples with NULL on {@code assignVar}, i.e.,
+            // subplan input tuples that are filtered out within a subplan.
+            List<Mutable<ILogicalExpression>> nullCheckExprRefs = new ArrayList<>();
+            for (LogicalVariable notNullVar : notNullVars) {
+                Mutable<ILogicalExpression> filterVarExpr = new MutableObject<ILogicalExpression>(
+                        new VariableReferenceExpression(notNullVar));
+                List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
+                args.add(filterVarExpr);
+                List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<Mutable<ILogicalExpression>>();
+                argsForNotFunction.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL), args)));
+                nullCheckExprRefs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)));
+            }
+            Mutable<ILogicalExpression> selectExprRef = nullCheckExprRefs.size() > 1
+                    ? new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), nullCheckExprRefs))
+                    : nullCheckExprRefs.get(0);
+            SelectOperator selectOp = new SelectOperator(selectExprRef, false, null);
+            topJoinRef.setValue(selectOp);
+            selectOp.getInputs().add(new MutableObject<ILogicalOperator>(
+                    new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(groupbyOp))));
+        } else {
+            // The original join operator in the Subplan is a left-outer join.
+            // Therefore, no null-check variable is injected and no SelectOperator needs to be added.
+            topJoinRef.setValue(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(groupbyOp)));
         }
-        Mutable<ILogicalExpression> selectExprRef = nullCheckExprRefs.size() > 1
-                ? new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), nullCheckExprRefs))
-                : nullCheckExprRefs.get(0);
-        SelectOperator selectOp = new SelectOperator(selectExprRef, false, null);
-        topJoinRef.setValue(selectOp);
-        selectOp.getInputs().add(new MutableObject<ILogicalOperator>(
-                new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(groupbyOp))));
-
         opRef.setValue(groupbyOp);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(groupbyOp, context);
 
