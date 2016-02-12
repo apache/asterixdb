@@ -20,25 +20,25 @@ package org.apache.asterix.external.library;
 
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class ExternalScalarFunctionEvaluatorFactory implements ICopyEvaluatorFactory {
+public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
     private final IExternalFunctionInfo finfo;
-    private final ICopyEvaluatorFactory[] args;
+    private final IScalarEvaluatorFactory[] args;
 
-    public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, ICopyEvaluatorFactory[] args)
+    public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
         this.finfo = finfo;
         this.args = args;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-        return (ExternalScalarFunction) ExternalFunctionProvider.getExternalFunctionEvaluator(finfo, args, output);
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        return (ExternalScalarFunction) ExternalFunctionProvider.getExternalFunctionEvaluator(finfo, args, ctx);
     }
 
 }

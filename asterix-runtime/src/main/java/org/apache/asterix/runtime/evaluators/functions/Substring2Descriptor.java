@@ -30,11 +30,13 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
@@ -50,44 +52,49 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalString = args[0].createEvaluator(argOut);
-                    private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
-
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
                     private final UTF8StringPointable string = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        evalStart.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        evalStart.evaluate(tuple, argPtr);
                         int start = 0;
 
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
+
                         try {
-                            start = ATypeHierarchy.getIntegerValue(argOut.getByteArray(), 0) - 1;
+                            start = ATypeHierarchy.getIntegerValue(bytes, offset) - 1;
                         } catch (HyracksDataException e1) {
                             throw new AlgebricksException(e1);
                         }
-                        argOut.reset();
-                        evalString.evaluate(tuple);
 
-                        byte[] bytes = argOut.getByteArray();
-                        if (bytes[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                        evalString.evaluate(tuple, argPtr);
+                        bytes = argPtr.getByteArray();
+                        offset = argPtr.getStartOffset();
+                        int len = argPtr.getLength();
+                        if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING2.getName()
                                     + ": expects type STRING for the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
                         }
-                        string.set(bytes, 1, bytes.length);
+                        string.set(bytes, offset + 1, len - 1);
                         array.reset();
                         try {
                             UTF8StringPointable.substr(string, start, Integer.MAX_VALUE, builder, array);
@@ -104,6 +111,7 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

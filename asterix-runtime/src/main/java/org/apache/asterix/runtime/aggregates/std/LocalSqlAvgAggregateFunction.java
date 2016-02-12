@@ -20,15 +20,16 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class LocalSqlAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
-    public LocalSqlAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public LocalSqlAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
+        super(args, context);
     }
 
     @Override
@@ -37,13 +38,13 @@ public class LocalSqlAvgAggregateFunction extends AbstractAvgAggregateFunction {
     }
 
     @Override
-    public void finish() throws AlgebricksException {
-        finishPartialResults();
+    public void finish(IPointable result) throws AlgebricksException {
+        finishPartialResults(result);
     }
 
     @Override
-    public void finishPartial() throws AlgebricksException {
-        finish();
+    public void finishPartial(IPointable result) throws AlgebricksException {
+        finish(result);
     }
 
     @Override

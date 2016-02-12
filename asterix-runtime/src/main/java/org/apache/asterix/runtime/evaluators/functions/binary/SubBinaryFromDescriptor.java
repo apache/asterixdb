@@ -25,9 +25,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -45,13 +45,14 @@ public class SubBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescri
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new SubBinaryFromToDescriptor.AbstractSubBinaryCopyEvaluator(output, args,
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new SubBinaryFromToDescriptor.AbstractSubBinaryCopyEvaluator(ctx, args,
                         getIdentifier().getName()) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {

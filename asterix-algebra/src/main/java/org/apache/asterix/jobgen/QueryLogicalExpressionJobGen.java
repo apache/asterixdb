@@ -46,11 +46,11 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 
 public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
@@ -61,16 +61,16 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     }
 
     @Override
-    public ICopyAggregateFunctionFactory createAggregateFunctionFactory(AggregateFunctionCallExpression expr,
+    public IAggregateEvaluatorFactory createAggregateFunctionFactory(AggregateFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
                     throws AlgebricksException {
-        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd = getFunctionDescriptor(expr, env, context);
         switch (fd.getFunctionDescriptorTag()) {
             case SERIALAGGREGATE:
                 return null;
             case AGGREGATE:
-                return fd.createAggregateFunctionFactory(args);
+                return fd.createAggregateEvaluatorFactory(args);
             default:
                 throw new IllegalStateException(
                         "Invalid function descriptor " + fd.getFunctionDescriptorTag() + " expected "
@@ -79,25 +79,25 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     }
 
     @Override
-    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(
+    public IRunningAggregateEvaluatorFactory createRunningAggregateFunctionFactory(
             StatefulFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
             JobGenContext context) throws AlgebricksException {
-        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        return getFunctionDescriptor(expr, env, context).createRunningAggregateFunctionFactory(args);
+        IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        return getFunctionDescriptor(expr, env, context).createRunningAggregateEvaluatorFactory(args);
     }
 
     @Override
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(UnnestingFunctionCallExpression expr,
+    public IUnnestingEvaluatorFactory createUnnestingFunctionFactory(UnnestingFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
                     throws AlgebricksException {
-        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        return getFunctionDescriptor(expr, env, context).createUnnestingFunctionFactory(args);
+        IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        return getFunctionDescriptor(expr, env, context).createUnnestingEvaluatorFactory(args);
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
+    public IScalarEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
-        ICopyEvaluatorFactory copyEvaluatorFactory = null;
+        IScalarEvaluatorFactory copyEvaluatorFactory = null;
         switch (expr.getExpressionTag()) {
             case VARIABLE: {
                 VariableReferenceExpression v = (VariableReferenceExpression) expr;
@@ -120,7 +120,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
     }
 
-    private ICopyEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
+    private IScalarEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         LogicalVariable variable = expr.getVariableReference();
         for (IOperatorSchema scm : inputSchemas) {
@@ -132,10 +132,10 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         throw new AlgebricksException("Variable " + variable + " could not be found in any input schema.");
     }
 
-    private ICopyEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
+    private IScalarEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
                     throws AlgebricksException {
-        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
         if (ck != null) {
@@ -157,17 +157,17 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         return fd.createEvaluatorFactory(args);
     }
 
-    private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr,
+    private IScalarEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         IDataFormat format = FormatUtils.getDefaultFormat();
         return format.getConstantEvalFactory(expr.getValue());
     }
 
-    private ICopyEvaluatorFactory[] codegenArguments(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
+    private IScalarEvaluatorFactory[] codegenArguments(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> arguments = expr.getArguments();
         int n = arguments.size();
-        ICopyEvaluatorFactory[] args = new ICopyEvaluatorFactory[n];
+        IScalarEvaluatorFactory[] args = new IScalarEvaluatorFactory[n];
         int i = 0;
         for (Mutable<ILogicalExpression> a : arguments) {
             args[i++] = createEvaluatorFactory(a.getValue(), env, inputSchemas, context);
@@ -176,10 +176,10 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
+    public ISerializedAggregateEvaluatorFactory createSerializableAggregateFunctionFactory(
             AggregateFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
             JobGenContext context) throws AlgebricksException {
-        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd = getFunctionDescriptor(expr, env, context);
 
         switch (fd.getFunctionDescriptorTag()) {
@@ -188,7 +188,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
                     AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
                             .makeSerializableAggregateFunctionExpression(fd.getIdentifier(), expr.getArguments());
                     IFunctionDescriptor afdd = getFunctionDescriptor(serialAggExpr, env, context);
-                    return afdd.createSerializableAggregateFunctionFactory(args);
+                    return afdd.createSerializableAggregateEvaluatorFactory(args);
                 } else {
                     throw new AlgebricksException(
                             "Trying to create a serializable aggregate from a non-serializable aggregate function descriptor. (fi="
@@ -196,7 +196,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
                 }
             }
             case SERIALAGGREGATE: {
-                return fd.createSerializableAggregateFunctionFactory(args);
+                return fd.createSerializableAggregateEvaluatorFactory(args);
             }
 
             default:

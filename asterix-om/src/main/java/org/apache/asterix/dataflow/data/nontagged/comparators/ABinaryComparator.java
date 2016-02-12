@@ -32,7 +32,8 @@ public abstract class ABinaryComparator implements IBinaryComparator {
 
     public static ComparableResultCode isComparable(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
         // NULL Check. If one type is NULL, then we return NULL
-        if (b1[s1] == ATypeTag.NULL.serialize() || b2[s2] == ATypeTag.NULL.serialize() || b1[s1] == 0 || b1[s2] == 0) {
+        if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG || b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG || b1[s1] == 0
+                || b2[s2] == 0) {
             return ComparableResultCode.UNKNOWN;
         }
 
@@ -49,6 +50,7 @@ public abstract class ABinaryComparator implements IBinaryComparator {
 
     }
 
+    @Override
     public abstract int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException;
 
 }

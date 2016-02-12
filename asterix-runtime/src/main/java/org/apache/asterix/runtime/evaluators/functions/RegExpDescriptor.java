@@ -38,13 +38,15 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.data.std.util.UTF8CharSequence;
@@ -70,22 +72,23 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
 
-                final DataOutput dout = output.getDataOutput();
+                return new IScalarEvaluator() {
 
-                return new ICopyEvaluator() {
-
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput dout = resultStorage.getDataOutput();
                     private boolean first = true;
-                    private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalString = args[0].createEvaluator(array0);
-                    private ICopyEvaluator evalPattern = args[1].createEvaluator(array0);
+                    private IPointable array0 = new VoidPointable();
+                    private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalPattern = args[1].createScalarEvaluator(ctx);
                     private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
                     private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
@@ -104,34 +107,40 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private Pattern pattern;
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         // evaluate the pattern first
                         try {
-                            array0.reset();
-                            evalPattern.evaluate(tuple);
-                            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            evalPattern.evaluate(tuple, array0);
+                            byte[] patternBytes = array0.getByteArray();
+                            int patternOffset = array0.getStartOffset();
+                            int patternLen = array0.getLength();
+
+                            if (patternBytes[patternOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
+                                result.set(resultStorage);
                                 return;
                             }
-                            if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            if (patternBytes[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the first input argument but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER
+                                                .deserialize(patternBytes[patternOffset]));
                             }
                             boolean newPattern = false;
                             if (first) {
                                 first = false;
                                 newPattern = true;
                             } else {
-                                int c = strComp.compare(array0.getByteArray(), array0.getStartOffset(),
-                                        array0.getLength(), lastPattern.getByteArray(), 0, lastPattern.size());
+                                int c = strComp.compare(patternBytes, patternOffset, patternLen,
+                                        lastPattern.getByteArray(), 0, lastPattern.size());
                                 if (c != 0) {
                                     newPattern = true;
                                 }
                             }
                             if (newPattern) {
                                 lastPattern.reset();
-                                lastPattern.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
+                                lastPattern.write(patternBytes, patternOffset, patternLen);
                                 // ! object creation !
                                 DataInputStream di = new DataInputStream(
                                         new ByteArrayInputStream(lastPattern.getByteArray()));
@@ -139,18 +148,21 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 pattern = Pattern.compile(strPattern.getStringValue());
 
                             }
-                            array0.reset();
-                            evalString.evaluate(tuple);
-                            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            evalString.evaluate(tuple, array0);
+                            byte[] data = array0.getByteArray();
+                            int offset = array0.getStartOffset();
+                            int len = array0.getLength();
+                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
+                                result.set(resultStorage);
                                 return;
                             }
-                            if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the second input argument but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
                             }
-                            utf8Ptr.set(array0.getByteArray(), 1, array0.getLength() - 1);
+                            utf8Ptr.set(data, offset + 1, len - 1);
                             carSeq.reset(utf8Ptr);
                             if (newPattern) {
                                 matcher = pattern.matcher(carSeq);
@@ -159,6 +171,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             }
                             ABoolean res = (matcher.find(0)) ? ABoolean.TRUE : ABoolean.FALSE;
                             booleanSerde.serialize(res, dout);
+                            result.set(resultStorage);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }

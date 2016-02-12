@@ -36,11 +36,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -54,19 +56,21 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator evalList = args[0].createEvaluator(inputVal);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable inputVal = new VoidPointable();
+                    private final IScalarEvaluator evalList = args[0].createScalarEvaluator(ctx);
 
                     // result
                     private final AMutableInt64 res = new AMutableInt64(0);
@@ -78,33 +82,35 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        inputVal.reset();
-                        evalList.evaluate(tuple);
-
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        evalList.evaluate(tuple, inputVal);
                         byte[] serList = inputVal.getByteArray();
+                        int offset = inputVal.getStartOffset();
 
-                        if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        if (serList[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
                                 nullSerde.serialize(ANull.NULL, out);
                             } catch (HyracksDataException e) {
                                 throw new AlgebricksException(e);
                             }
+                            result.set(resultStorage);
                             return;
                         }
 
-                        if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                        if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.LEN.getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset]));
                         }
 
                         int numberOfitems = 0;
-                        if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG)
-                            numberOfitems = AOrderedListSerializerDeserializer.getNumberOfItems(serList);
-                        else
-                            numberOfitems = AUnorderedListSerializerDeserializer.getNumberOfItems(serList);
+                        if (serList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                            numberOfitems = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
+                        } else {
+                            numberOfitems = AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset);
+                        }
 
                         res.setValue(numberOfitems);
                         try {
@@ -112,6 +118,7 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

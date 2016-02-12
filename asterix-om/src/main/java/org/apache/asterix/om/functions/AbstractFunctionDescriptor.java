@@ -22,11 +22,11 @@ import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 
 public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor {
 
@@ -39,30 +39,30 @@ public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor 
     public abstract FunctionDescriptorTag getFunctionDescriptorTag();
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
     }
 
     @Override
-    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
+    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
-            ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
+            IScalarEvaluatorFactory[] args) throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
     }
 
     @Override
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(ICopyEvaluatorFactory[] args)
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
     }
 
     @Override
-    public ICopyAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
+    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
     }

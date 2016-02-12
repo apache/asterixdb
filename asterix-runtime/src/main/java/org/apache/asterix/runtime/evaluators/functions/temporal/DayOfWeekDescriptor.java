@@ -36,11 +36,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -60,18 +62,20 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
@@ -84,27 +88,30 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
+
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
+
                         try {
-                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 int daysSinceAnchor;
                                 int reminder = 0;
-                                if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                                    daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(
-                                            argOut.getByteArray(), 1) / GregorianCalendarSystem.CHRONON_OF_DAY);
-                                    reminder = (int) (ADateTimeSerializerDeserializer.getChronon(argOut.getByteArray(),
-                                            1) % GregorianCalendarSystem.CHRONON_OF_DAY);
-                                } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                                    daysSinceAnchor = ADateSerializerDeserializer.getChronon(argOut.getByteArray(), 1);
+                                if (bytes[offset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                    daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(bytes,
+                                            offset + 1) / GregorianCalendarSystem.CHRONON_OF_DAY);
+                                    reminder = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
+                                            % GregorianCalendarSystem.CHRONON_OF_DAY);
+                                } else if (bytes[offset] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                                    daysSinceAnchor = ADateSerializerDeserializer.getChronon(bytes, offset + 1);
                                 } else {
                                     throw new AlgebricksException(
                                             FID.getName() + ": expects input type DATETIME/DATE/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                            .deserialize(argOut.getByteArray()[0]));
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
                                 }
 
                                 // adjust the day before 1970-01-01
@@ -132,6 +139,7 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

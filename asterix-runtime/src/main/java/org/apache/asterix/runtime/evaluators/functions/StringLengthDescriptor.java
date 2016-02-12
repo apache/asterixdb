@@ -34,10 +34,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -52,17 +54,18 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
                     private AMutableInt64 result = new AMutableInt64(0);
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -71,23 +74,26 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+                    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
+                            throws AlgebricksException {
                         try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
-                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                int len = UTF8StringUtil.getUTFLength(outInput.getByteArray(), 1);
+                            resultStorage.reset();
+                            eval.evaluate(tuple, inputArg);
+                            byte[] serString = inputArg.getByteArray();
+                            int offset = inputArg.getStartOffset();
+
+                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                int len = UTF8StringUtil.getUTFLength(serString, offset + 1);
                                 result.setValue(len);
                                 int64Serde.serialize(result, out);
-                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else {
+                            } else {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LENGTH.getName()
                                         + ": expects input type STRING/NULL but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[offset]));
                             }
+                            resultPointable.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
                         }

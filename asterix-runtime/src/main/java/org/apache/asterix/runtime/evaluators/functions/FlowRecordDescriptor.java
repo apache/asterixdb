@@ -19,8 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -30,15 +28,17 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class FlowRecordDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new FlowRecordDescriptor();
         }
@@ -57,30 +57,28 @@ public class FlowRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        final ICopyEvaluatorFactory recordEvalFactory = args[0];
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        final IScalarEvaluatorFactory recordEvalFactory = args[0];
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                final DataOutput out = output.getDataOutput();
-                final ArrayBackedValueStorage recordBuffer = new ArrayBackedValueStorage();
-                final ICopyEvaluator recEvaluator = recordEvalFactory.createEvaluator(recordBuffer);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                final IPointable recordPtr = new VoidPointable();
+                final IScalarEvaluator recEvaluator = recordEvalFactory.createScalarEvaluator(ctx);
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
                     // pointable allocator
                     private PointableAllocator allocator = new PointableAllocator();
                     final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            recordBuffer.reset();
-                            recEvaluator.evaluate(tuple);
-                            recAccessor.set(recordBuffer);
-                            out.write(recAccessor.getByteArray(), recAccessor.getStartOffset(), recAccessor.getLength());
+                            recEvaluator.evaluate(tuple, recordPtr);
+                            recAccessor.set(recordPtr);
+                            result.set(recAccessor);
                         } catch (Exception ioe) {
                             throw new AlgebricksException(ioe);
                         }

@@ -36,10 +36,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -59,20 +61,22 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr0 = new VoidPointable();
+                    private IPointable argPtr1 = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -82,44 +86,46 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut0.reset();
-                        eval0.evaluate(tuple);
-                        argOut1.reset();
-                        eval1.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
+
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
 
                         try {
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        getIdentifier().getName() + ": expects (DATE, STRING) but got  ("
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
-                                                        argOut0.getByteArray()[0])
-                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                        .deserialize(argOut1.getByteArray()[0])
-                                                + ")");
+                            if (bytes0[offset0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG
+                                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expects (DATE, STRING) but got  ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
                             }
 
-                            long chronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
+                            long chronon = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
-                            int formatLength = UTF8StringUtil.getUTFLength(argOut1.getByteArray(), 1);
+                            int formatLength = UTF8StringUtil.getUTFLength(bytes1, offset1 + 1);
                             int offset = UTF8StringUtil.getNumBytesToStoreLength(formatLength);
                             sbder.delete(0, sbder.length());
-                            DT_UTILS.printDateTime(chronon, 0, argOut1.getByteArray(), 1 + offset, formatLength, sbder,
+                            DT_UTILS.printDateTime(chronon, 0, bytes1, offset1 + 1 + offset, formatLength, sbder,
                                     DateTimeParseMode.DATE_ONLY);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             utf8Writer.writeUTF8(sbder.toString(), out);
-
                         } catch (IOException ex) {
                             throw new AlgebricksException(ex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

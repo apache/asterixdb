@@ -29,10 +29,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
@@ -48,54 +50,66 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalString = args[0].createEvaluator(array0);
-                    private ICopyEvaluator evalPattern = args[1].createEvaluator(array1);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable array0 = new VoidPointable();
+                    private IPointable array1 = new VoidPointable();
+                    private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalPattern = args[1].createScalarEvaluator(ctx);
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
                     private final UTF8StringPointable stringPtr = new UTF8StringPointable();
                     private final UTF8StringPointable patternPtr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        array0.reset();
-                        evalString.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        evalString.evaluate(tuple, array0);
                         byte[] src = array0.getByteArray();
+                        int srcOffset = array0.getStartOffset();
+                        int srcLen = array0.getLength();
 
-                        array1.reset();
-                        evalPattern.evaluate(tuple);
+                        evalPattern.evaluate(tuple, array1);
                         byte[] pattern = array1.getByteArray();
+                        int patternOffset = array1.getStartOffset();
+                        int patternLen = array1.getLength();
 
-                        if ((src[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                && src[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)
-                                || (pattern[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                        && pattern[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+                        if ((src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                && src[srcOffset] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                                || (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                        && pattern[patternOffset] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING_BEFORE.getName()
                                     + ": expects input type (STRING/NULL, STRING/NULL) but got ("
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[0]) + ", "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pattern[0]) + ").");
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[srcOffset]) + ", "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pattern[patternOffset]) + ").");
                         }
 
-                        stringPtr.set(src, 1, src.length);
-                        patternPtr.set(pattern, 1, pattern.length);
-                        array.reset();
                         try {
+                            if (src[srcOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || pattern[patternOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                                result.set(resultStorage);
+                                return;
+                            }
+                            stringPtr.set(src, srcOffset + 1, srcLen - 1);
+                            patternPtr.set(pattern, patternOffset + 1, patternLen - 1);
+                            array.reset();
                             UTF8StringPointable.substrBefore(stringPtr, patternPtr, builder, array);
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
-
+                        result.set(resultStorage);
                     }
                 };
             }

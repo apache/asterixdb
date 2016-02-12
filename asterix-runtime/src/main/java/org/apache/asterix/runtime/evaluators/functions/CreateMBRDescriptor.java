@@ -25,7 +25,7 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class CreateMBRDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -37,7 +37,7 @@ public class CreateMBRDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) throws AlgebricksException {
         return new CreateMBREvalFactory(args[0], args[1], args[2]);
     }
 

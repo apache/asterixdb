@@ -20,27 +20,19 @@ package org.apache.asterix.runtime.evaluators.common;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.IOException;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class AccessibleByteArrayEval implements ICopyEvaluator {
+public class AccessibleByteArrayEval implements IScalarEvaluator {
 
-    private DataOutput out;
     private ByteArrayAccessibleOutputStream baaos;
     private DataOutput dataOutput;
 
-    public AccessibleByteArrayEval(DataOutput out) {
-        this.out = out;
-        this.baaos = new ByteArrayAccessibleOutputStream();
-        this.dataOutput = new DataOutputStream(baaos);
-    }
-
-    public AccessibleByteArrayEval(DataOutput out, ByteArrayAccessibleOutputStream baaos) {
-        this.out = out;
+    public AccessibleByteArrayEval(ByteArrayAccessibleOutputStream baaos) {
         this.baaos = baaos;
         this.dataOutput = new DataOutputStream(baaos);
     }
@@ -50,16 +42,8 @@ public class AccessibleByteArrayEval implements ICopyEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-        try {
-            out.write(baaos.getByteArray(), 0, baaos.size());
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-    }
-
-    public void setBaaos(ByteArrayAccessibleOutputStream baaos) {
-        this.baaos = baaos;
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        result.set(baaos.getByteArray(), 0, baaos.size());
     }
 
     public ByteArrayAccessibleOutputStream getBaaos() {

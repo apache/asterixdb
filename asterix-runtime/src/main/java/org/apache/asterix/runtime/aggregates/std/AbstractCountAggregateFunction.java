@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -28,31 +27,33 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * COUNT returns the number of items in the given list. Note that COUNT(NULL) is not allowed.
  */
-public abstract class AbstractCountAggregateFunction implements ICopyAggregateFunction {
+public abstract class AbstractCountAggregateFunction implements IAggregateEvaluator {
     private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private ICopyEvaluator eval;
+    private IPointable inputVal = new VoidPointable();
+    private IScalarEvaluator eval;
     protected long cnt;
-    private DataOutput out;
 
-    public AbstractCountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+
+    public AbstractCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        eval = args[0].createEvaluator(inputVal);
-        out = output.getDataOutput();
+        eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
@@ -62,9 +63,9 @@ public abstract class AbstractCountAggregateFunction implements ICopyAggregateFu
 
     @Override
     public void step(IFrameTupleReference tuple) throws AlgebricksException {
-        inputVal.reset();
-        eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
+        eval.evaluate(tuple, inputVal);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         // Ignore SYSTEM_NULL.
         if (typeTag == ATypeTag.NULL) {
             processNull();
@@ -74,18 +75,20 @@ public abstract class AbstractCountAggregateFunction implements ICopyAggregateFu
     }
 
     @Override
-    public void finish() throws AlgebricksException {
+    public void finish(IPointable resultPointable) throws AlgebricksException {
+        resultStorage.reset();
         try {
             result.setValue(cnt);
-            int64Serde.serialize(result, out);
+            int64Serde.serialize(result, resultStorage.getDataOutput());
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        resultPointable.set(resultStorage);
     }
 
     @Override
-    public void finishPartial() throws AlgebricksException {
-        finish();
+    public void finishPartial(IPointable resultPointable) throws AlgebricksException {
+        finish(resultPointable);
     }
 
     protected abstract void processNull();

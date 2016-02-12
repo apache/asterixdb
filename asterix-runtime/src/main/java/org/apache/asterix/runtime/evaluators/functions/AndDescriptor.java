@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.DataOutput;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -30,11 +32,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -53,21 +57,23 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                // one temp. buffer re-used by all children
-                final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                final ICopyEvaluator[] evals = new ICopyEvaluator[args.length];
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                final DataOutput out = resultStorage.getDataOutput();
+                final IPointable argPtr = new VoidPointable();
+                final IScalarEvaluator[] evals = new IScalarEvaluator[args.length];
                 for (int i = 0; i < evals.length; i++) {
-                    evals[i] = args[i].createEvaluator(argOut);
+                    evals[i] = args[i].createScalarEvaluator(ctx);
                 }
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -76,31 +82,36 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
+                            resultStorage.reset();
                             int n = args.length;
                             boolean res = true;
                             boolean metNull = false;
                             for (int i = 0; i < n; i++) {
-                                argOut.reset();
-                                evals[i].evaluate(tuple);
-                                if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                evals[i].evaluate(tuple, argPtr);
+                                byte[] bytes = argPtr.getByteArray();
+                                int offset = argPtr.getStartOffset();
+
+                                if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                     metNull = true;
                                     continue;
                                 }
-                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
+                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
                                 res = res && argResult;
                             }
                             if (metNull) {
                                 if (!res) {
                                     ABoolean aResult = ABoolean.FALSE;
-                                    booleanSerde.serialize(aResult, output.getDataOutput());
-                                } else
-                                    nullSerde.serialize(ANull.NULL, output.getDataOutput());
+                                    booleanSerde.serialize(aResult, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
+                                }
                             } else {
                                 ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
-                                booleanSerde.serialize(aResult, output.getDataOutput());
+                                booleanSerde.serialize(aResult, out);
                             }
+                            result.set(resultStorage);
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         }

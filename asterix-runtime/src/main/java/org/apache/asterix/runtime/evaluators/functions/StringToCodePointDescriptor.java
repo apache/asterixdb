@@ -35,10 +35,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -55,16 +57,17 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-                    protected final DataOutput out = output.getDataOutput();;
-                    protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    protected final ICopyEvaluator stringEval = args[0].createEvaluator(argOut);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    protected final DataOutput out = resultStorage.getDataOutput();
+                    protected final IPointable argPtr = new VoidPointable();
+                    protected final IScalarEvaluator stringEval = args[0].createScalarEvaluator(ctx);
                     protected final AOrderedListType intListType = new AOrderedListType(BuiltinType.AINT64, null);
 
                     private OrderedListBuilder listBuilder = new OrderedListBuilder();
@@ -76,34 +79,35 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                     private final AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            argOut.reset();
-                            stringEval.evaluate(tuple);
-                            byte[] serString = argOut.getByteArray();
+                            resultStorage.reset();
+                            stringEval.evaluate(tuple, argPtr);
+                            byte[] serString = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
 
-                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                byte[] bytes = argOut.getByteArray();
-                                int len = UTF8StringUtil.getUTFLength(bytes, 1);
+                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                int len = UTF8StringUtil.getUTFLength(serString, offset + 1);
 
-                                int start = 1 + UTF8StringUtil.getNumBytesToStoreLength(len);
+                                int start = offset + 1 + UTF8StringUtil.getNumBytesToStoreLength(len);
                                 int pos = 0;
                                 listBuilder.reset(intListType);
                                 while (pos < len) {
-                                    int codePoint = UTF8StringUtil.UTF8ToCodePoint(bytes, start + pos);
-                                    pos += UTF8StringUtil.charSize(bytes, start + pos);
+                                    int codePoint = UTF8StringUtil.UTF8ToCodePoint(serString, start + pos);
+                                    pos += UTF8StringUtil.charSize(serString, start + pos);
 
                                     inputVal.reset();
                                     aInt64.setValue(codePoint);
                                     int64Serde.serialize(aInt64, inputVal.getDataOutput());
                                     listBuilder.addItem(inputVal);
-
                                 }
                                 listBuilder.write(out, true);
-                            } else
+                            } else {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_TO_CODEPOINT.getName()
                                         + ": expects input type STRING but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[offset]));
+                            }
+                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1.getMessage());
                         }

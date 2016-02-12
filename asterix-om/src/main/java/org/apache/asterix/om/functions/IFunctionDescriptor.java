@@ -23,29 +23,29 @@ import java.io.Serializable;
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 
 public interface IFunctionDescriptor extends Serializable {
     public FunctionIdentifier getIdentifier();
 
     public FunctionDescriptorTag getFunctionDescriptorTag();
 
-    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) throws AlgebricksException;
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException;
 
-    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
-            final ICopyEvaluatorFactory[] args) throws AlgebricksException;
+    public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
+            final IScalarEvaluatorFactory[] args) throws AlgebricksException;
 
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
-    public ICopyAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
 }

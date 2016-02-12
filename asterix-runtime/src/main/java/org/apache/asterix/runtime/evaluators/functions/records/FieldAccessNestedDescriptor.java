@@ -26,7 +26,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -51,7 +51,7 @@ public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDe
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new FieldAccessNestedEvalFactory(args[0], recType, fldName);
     }
 

@@ -34,10 +34,12 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -53,39 +55,42 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
-                    private final DataOutput out = output.getDataOutput();
-                    private final ICopyEvaluatorFactory listEvalFactory = args[0];
-                    private final ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IScalarEvaluatorFactory listEvalFactory = args[0];
+                    private final IPointable inputArgList = new VoidPointable();
+                    private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     private final byte[] tempLengthArray = new byte[5];
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         try {
-                            outInputList.reset();
-                            evalList.evaluate(tuple);
-                            byte[] listBytes = outInputList.getByteArray();
-                            if (listBytes[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                    && listBytes[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                            evalList.evaluate(tuple, inputArgList);
+                            byte[] listBytes = inputArgList.getByteArray();
+                            int listOffset = inputArgList.getStartOffset();
+
+                            if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
                                         + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[listOffset]));
                             }
                             try {
-                                listAccessor.reset(listBytes, 0);
+                                listAccessor.reset(listBytes, listOffset);
                             } catch (AsterixException e) {
                                 throw new AlgebricksException(e);
                             }
@@ -103,6 +108,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                     if (itemType != ATypeTag.STRING) {
                                         if (itemType == ATypeTag.NULL) {
                                             nullSerde.serialize(ANull.NULL, out);
+                                            result.set(resultStorage);
                                             return;
                                         }
                                         throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
@@ -129,6 +135,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1.getMessage());
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

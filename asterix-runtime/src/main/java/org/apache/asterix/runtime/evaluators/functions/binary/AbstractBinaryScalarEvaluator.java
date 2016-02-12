@@ -19,46 +19,47 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
+import java.io.DataOutput;
+
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.DataOutput;
-
-public abstract class AbstractCopyEvaluator implements ICopyEvaluator {
+public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
-    protected DataOutput dataOutput;
-    protected ArrayBackedValueStorage[] storages;
-    protected ICopyEvaluator[] evaluators;
+    protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    protected DataOutput dataOutput = resultStorage.getDataOutput();
+    protected IPointable[] pointables;
+    protected IScalarEvaluator[] evaluators;
 
-    public AbstractCopyEvaluator(final IDataOutputProvider output, final ICopyEvaluatorFactory[] copyEvaluatorFactories)
+    public AbstractBinaryScalarEvaluator(final IHyracksTaskContext context, final IScalarEvaluatorFactory[] evaluatorFactories)
             throws AlgebricksException {
-        dataOutput = output.getDataOutput();
-        storages = new ArrayBackedValueStorage[copyEvaluatorFactories.length];
-        evaluators = new ICopyEvaluator[copyEvaluatorFactories.length];
+        pointables = new IPointable[evaluatorFactories.length];
+        evaluators = new IScalarEvaluator[evaluatorFactories.length];
         for (int i = 0; i < evaluators.length; ++i) {
-            storages[i] = new ArrayBackedValueStorage();
-            evaluators[i] = copyEvaluatorFactories[i].createEvaluator(storages[i]);
+            pointables[i] = new VoidPointable();
+            evaluators[i] = evaluatorFactories[i].createScalarEvaluator(context);
         }
     }
 
     public ATypeTag evaluateTuple(IFrameTupleReference tuple, int id) throws AlgebricksException {
-        storages[id].reset();
-        evaluators[id].evaluate(tuple);
-        return ATypeTag.VALUE_TYPE_MAPPING[storages[id].getByteArray()[0]];
+        evaluators[id].evaluate(tuple, pointables[id]);
+        return ATypeTag.VALUE_TYPE_MAPPING[pointables[id].getByteArray()[pointables[id].getStartOffset()]];
     }
 
     public boolean serializeNullIfAnyNull(ATypeTag... tags) throws HyracksDataException {

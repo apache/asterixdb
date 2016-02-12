@@ -36,10 +36,12 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -54,7 +56,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new AnyCollectionMemberEvalFactory(args[0]);
     }
 
@@ -63,25 +65,27 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
         return AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER;
     }
 
-    private static class AnyCollectionMemberEvalFactory implements ICopyEvaluatorFactory {
+    private static class AnyCollectionMemberEvalFactory implements IScalarEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private ICopyEvaluatorFactory listEvalFactory;
+
+        private IScalarEvaluatorFactory listEvalFactory;
         private byte serItemTypeTag;
         private ATypeTag itemTag;
         private boolean selfDescList = false;
 
-        public AnyCollectionMemberEvalFactory(ICopyEvaluatorFactory arg) {
+        public AnyCollectionMemberEvalFactory(IScalarEvaluatorFactory arg) {
             this.listEvalFactory = arg;
         }
 
         @Override
-        public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-            return new ICopyEvaluator() {
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            return new IScalarEvaluator() {
 
-                private DataOutput out = output.getDataOutput();
-                private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
-                private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+                private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                private DataOutput out = resultStorage.getDataOutput();
+                private IPointable inputArgList = new VoidPointable();
+                private IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                 @SuppressWarnings("unchecked")
                 private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(BuiltinType.ANULL);
@@ -89,54 +93,60 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                 private int itemLength;
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
 
                     try {
-                        outInputList.reset();
-                        evalList.evaluate(tuple);
-                        byte[] serList = outInputList.getByteArray();
+                        resultStorage.reset();
+                        evalList.evaluate(tuple, inputArgList);
+                        byte[] serList = inputArgList.getByteArray();
+                        int offset = inputArgList.getStartOffset();
 
-                        if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        if (serList[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
+                            result.set(resultStorage);
                             return;
                         }
 
-                        if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                        if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER.getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset]));
                         }
 
-                        if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            if (AOrderedListSerializerDeserializer.getNumberOfItems(serList) == 0) {
+                        if (serList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                            if (AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset) == 0) {
                                 out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                                result.set(resultStorage);
                                 return;
                             }
-                            itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, 0);
+                            itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset, 0);
                         } else {
-                            if (AUnorderedListSerializerDeserializer.getNumberOfItems(serList) == 0) {
+                            if (AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset) == 0) {
                                 out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                                result.set(resultStorage);
                                 return;
                             }
-                            itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, 0);
+                            itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, offset, 0);
                         }
 
-                        itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[1]);
-                        if (itemTag == ATypeTag.ANY)
+                        itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset + 1]);
+                        if (itemTag == ATypeTag.ANY) {
                             selfDescList = true;
-                        else
-                            serItemTypeTag = serList[1];
+                        } else {
+                            serItemTypeTag = serList[offset + 1];
+                        }
 
                         if (selfDescList) {
                             itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
                             itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true)
                                     + 1;
-                            out.write(serList, itemOffset, itemLength);
+                            result.set(serList, itemOffset, itemLength);
                         } else {
                             itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, false);
                             out.writeByte(serItemTypeTag);
                             out.write(serList, itemOffset, itemLength);
+                            result.set(resultStorage);
                         }
                     } catch (IOException e) {
                         throw new AlgebricksException(e);

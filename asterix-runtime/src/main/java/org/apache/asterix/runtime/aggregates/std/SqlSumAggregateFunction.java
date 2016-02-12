@@ -25,15 +25,15 @@ import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SqlSumAggregateFunction extends AbstractSumAggregateFunction {
     private final boolean isLocalAgg;
 
-    public SqlSumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isLocalAgg)
+    public SqlSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isLocalAgg)
             throws AlgebricksException {
-        super(args, provider);
+        super(args, context);
         this.isLocalAgg = isLocalAgg;
     }
 
@@ -56,10 +56,10 @@ public class SqlSumAggregateFunction extends AbstractSumAggregateFunction {
     protected void finishSystemNull() throws IOException {
         // Empty stream. For local agg return system null. For global agg return null.
         if (isLocalAgg) {
-            out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+            resultStorage.getDataOutput().writeByte(ATypeTag.SYSTEM_NULL.serialize());
         } else {
             serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-            serde.serialize(ANull.NULL, out);
+            serde.serialize(ANull.NULL, resultStorage.getDataOutput());
         }
     }
 }

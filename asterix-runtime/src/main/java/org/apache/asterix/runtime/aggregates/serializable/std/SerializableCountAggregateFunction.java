@@ -19,13 +19,15 @@
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * count(NULL) returns NULL.
  */
 public class SerializableCountAggregateFunction extends AbstractSerializableCountAggregateFunction {
-    public SerializableCountAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        super(args);
+    public SerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+            throws AlgebricksException {
+        super(args, context);
     }
 }

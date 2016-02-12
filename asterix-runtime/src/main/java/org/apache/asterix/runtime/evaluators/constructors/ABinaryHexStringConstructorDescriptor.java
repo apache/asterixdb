@@ -32,11 +32,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactory;
@@ -53,13 +55,14 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ABinaryConstructorEvaluator(output, args[0], ByteArrayHexParserFactory.INSTANCE);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new ABinaryConstructorEvaluator(args[0], ByteArrayHexParserFactory.INSTANCE, ctx);
             }
         };
     }
@@ -69,10 +72,11 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         return AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR;
     }
 
-    static class ABinaryConstructorEvaluator implements ICopyEvaluator {
-        private DataOutput out;
-        private ArrayBackedValueStorage outInput;
-        private ICopyEvaluator eval;
+    static class ABinaryConstructorEvaluator implements IScalarEvaluator {
+        private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+        private final DataOutput out = resultStorage.getDataOutput();
+        private final IPointable inputArg = new VoidPointable();
+        private final IScalarEvaluator eval;
         private IValueParser byteArrayParser;
         private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -80,33 +84,34 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ANULL);
 
-        public ABinaryConstructorEvaluator(final IDataOutputProvider output, ICopyEvaluatorFactory copyEvaluatorFactory,
-                IValueParserFactory valueParserFactory) throws AlgebricksException {
-            out = output.getDataOutput();
-            outInput = new ArrayBackedValueStorage();
-            eval = copyEvaluatorFactory.createEvaluator(outInput);
+        public ABinaryConstructorEvaluator(IScalarEvaluatorFactory copyEvaluatorFactory,
+                IValueParserFactory valueParserFactory, IHyracksTaskContext context) throws AlgebricksException {
+            eval = copyEvaluatorFactory.createScalarEvaluator(context);
             byteArrayParser = valueParserFactory.createValueParser();
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
             try {
-                outInput.reset();
-                eval.evaluate(tuple);
-                byte[] binary = outInput.getByteArray();
+                eval.evaluate(tuple, inputArg);
+                byte[] binary = inputArg.getByteArray();
+                int startOffset = inputArg.getStartOffset();
+                int len = inputArg.getLength();
 
-                ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[binary[0]];
+                ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[binary[startOffset]];
                 if (tt == ATypeTag.NULL) {
+                    resultStorage.reset();
                     nullSerde.serialize(ANull.NULL, out);
+                    result.set(resultStorage);
                 } else if (tt == ATypeTag.BINARY) {
-                    out.write(outInput.getByteArray(), outInput.getStartOffset(), outInput.getLength());
+                    result.set(inputArg);
                 } else if (tt == ATypeTag.STRING) {
-                    utf8Ptr.set(outInput.getByteArray(), 1, outInput.getLength() - 1);
-
+                    resultStorage.reset();
+                    utf8Ptr.set(inputArg.getByteArray(), startOffset + 1, len - 1);
                     char[] buffer = utf8Ptr.toString().toCharArray();
                     out.write(ATypeTag.BINARY.serialize());
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
+                    result.set(resultStorage);
                 } else {
                     throw new AlgebricksException("binary type of " + tt + "haven't implemented yet.");
                 }

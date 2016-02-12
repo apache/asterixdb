@@ -29,10 +29,11 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
@@ -52,19 +53,21 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new AbstractSubBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractSubBinaryCopyEvaluator(ctx, args, getIdentifier().getName()) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
                         evaluateTuple(tuple, 2);
                         int subLength = 0;
                         try {
-                            subLength = ATypeHierarchy.getIntegerValue(storages[2].getByteArray(), 0);
+                            subLength = ATypeHierarchy.getIntegerValue(pointables[2].getByteArray(),
+                                    pointables[2].getStartOffset());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
@@ -76,10 +79,10 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
         };
     }
 
-    static abstract class AbstractSubBinaryCopyEvaluator extends AbstractCopyEvaluator {
-        public AbstractSubBinaryCopyEvaluator(IDataOutputProvider output,
-                ICopyEvaluatorFactory[] copyEvaluatorFactories, String functionName) throws AlgebricksException {
-            super(output, copyEvaluatorFactories);
+    static abstract class AbstractSubBinaryCopyEvaluator extends AbstractBinaryScalarEvaluator {
+        public AbstractSubBinaryCopyEvaluator(IHyracksTaskContext context,
+                IScalarEvaluatorFactory[] copyEvaluatorFactories, String functionName) throws AlgebricksException {
+            super(context, copyEvaluatorFactories);
             this.functionName = functionName;
         }
 
@@ -90,24 +93,27 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
         static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INT32 };
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             ATypeTag argTag0 = evaluateTuple(tuple, 0);
             ATypeTag argTag1 = evaluateTuple(tuple, 1);
 
             try {
                 if (serializeNullIfAnyNull(argTag0, argTag1)) {
+                    result.set(resultStorage);
                     return;
                 }
                 checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAGS, argTag0, argTag1);
 
-                byteArrayPointable.set(storages[0].getByteArray(), 1, storages[0].getLength() - 1);
-                byte[] startBytes = storages[1].getByteArray();
+                byteArrayPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
+                        pointables[0].getLength() - 1);
+                byte[] startBytes = pointables[1].getByteArray();
+                int offset = pointables[1].getStartOffset();
 
                 int subStart = 0;
 
                 // strange SQL index convention
-                subStart = ATypeHierarchy.getIntegerValue(startBytes, 0) - 1;
+                subStart = ATypeHierarchy.getIntegerValue(startBytes, offset) - 1;
 
                 int totalLength = byteArrayPointable.getContentLength();
                 int subLength = getSubLength(tuple);
@@ -133,6 +139,7 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
+            result.set(resultStorage);
         }
 
         protected abstract int getSubLength(IFrameTupleReference tuple) throws AlgebricksException;

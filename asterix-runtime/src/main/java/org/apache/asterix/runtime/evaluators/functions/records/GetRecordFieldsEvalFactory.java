@@ -30,27 +30,31 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
+public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
+
     private static final long serialVersionUID = 1L;
-    private ICopyEvaluatorFactory recordEvalFactory;
+
+    private IScalarEvaluatorFactory recordEvalFactory;
     private final ARecordType recordType;
 
-    public GetRecordFieldsEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ARecordType recordType) {
+    public GetRecordFieldsEvalFactory(IScalarEvaluatorFactory recordEvalFactory, ARecordType recordType) {
         this.recordEvalFactory = recordEvalFactory;
         this.recordType = recordType;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
 
             @SuppressWarnings("unchecked")
             private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -58,32 +62,36 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
 
             private final ARecordPointable recordPointable = (ARecordPointable) ARecordPointable.FACTORY
                     .createPointable();
-
-            private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private DataOutput out = output.getDataOutput();
+            private IPointable inputArg0 = new VoidPointable();
+            private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private DataOutput out = resultStorage.getDataOutput();
             private RecordFieldsUtil rfu = new RecordFieldsUtil();
 
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                outInput0.reset();
-                eval0.evaluate(tuple);
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                resultStorage.reset();
+                eval0.evaluate(tuple, inputArg0);
+                byte[] data = inputArg0.getByteArray();
+                int offset = inputArg0.getStartOffset();
+                int len = inputArg0.getLength();
 
-                if (outInput0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
+                        return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
                     }
                 }
 
-                if (outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new AlgebricksException("Field accessor is not defined for values of type "
-                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]));
+                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
                 }
 
-                recordPointable.set(outInput0.getByteArray(), outInput0.getStartOffset(), outInput0.getLength());
-
+                recordPointable.set(data, offset, len);
                 try {
                     rfu.processRecord(recordPointable, recordType, out, 0);
                 } catch (IOException e) {
@@ -91,6 +99,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
                 } catch (AsterixException e) {
                     e.printStackTrace();
                 }
+                result.set(resultStorage);
             }
         };
     }

@@ -28,19 +28,22 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator {
 
-    protected final ICopyEvaluator jaccThreshEval;
+    protected final IScalarEvaluator jaccThreshEval;
     protected float jaccThresh = -1f;
+    protected IPointable jaccThreshPointable = new VoidPointable();
 
     protected OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage inputVal;
@@ -49,10 +52,10 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     protected final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 
-    public SimilarityJaccardCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public SimilarityJaccardCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
-        jaccThreshEval = args[2].createEvaluator(argOut);
+        super(args, context);
+        jaccThreshEval = args[2].createScalarEvaluator(context);
         listBuilder = new OrderedListBuilder();
         inputVal = new ArrayBackedValueStorage();
     }
@@ -60,10 +63,9 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
     @Override
     protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
         super.runArgEvals(tuple);
-        int jaccThreshStart = argOut.getLength();
-        jaccThreshEval.evaluate(tuple);
-        jaccThresh = (float) AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), jaccThreshStart
-                + TYPE_INDICATOR_SIZE);
+        jaccThreshEval.evaluate(tuple, jaccThreshPointable);
+        jaccThresh = (float) AFloatSerializerDeserializer.getFloat(jaccThreshPointable.getByteArray(),
+                jaccThreshPointable.getStartOffset() + TYPE_INDICATOR_SIZE);
     }
 
     @Override
@@ -71,7 +73,8 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             throws HyracksDataException {
         // Apply length filter.
         int lengthLowerBound = (int) Math.ceil(jaccThresh * probeListSize);
-        if ((lengthLowerBound > buildListSize) || (buildListSize > (int) Math.floor(1.0f / jaccThresh * probeListSize))) {
+        if ((lengthLowerBound > buildListSize)
+                || (buildListSize > (int) Math.floor(1.0f / jaccThresh * probeListSize))) {
             return -1;
         }
         // Probe phase: Probe items from second list, and compute intersection size.

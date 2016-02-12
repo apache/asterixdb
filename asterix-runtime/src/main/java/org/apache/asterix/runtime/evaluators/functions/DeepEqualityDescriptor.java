@@ -34,15 +34,17 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new DeepEqualityDescriptor();
         }
@@ -58,45 +60,42 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        final ICopyEvaluatorFactory evalFactoryLeft = args[0];
-        final ICopyEvaluatorFactory evalFactoryRight = args[1];
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        final IScalarEvaluatorFactory evalFactoryLeft = args[0];
+        final IScalarEvaluatorFactory evalFactoryRight = args[1];
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
-            private final ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
+            @SuppressWarnings("unchecked")
+            private final ISerializerDeserializer<ABoolean> boolSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                final DataOutput out = output.getDataOutput();
-                final ArrayBackedValueStorage abvsLeft = new ArrayBackedValueStorage();
-                final ICopyEvaluator evalLeft = evalFactoryLeft.createEvaluator(abvsLeft);
-
-                final ArrayBackedValueStorage abvsRight = new ArrayBackedValueStorage();
-                final ICopyEvaluator evalRight = evalFactoryRight.createEvaluator(abvsRight);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                final DataOutput out = resultStorage.getDataOutput();
+                final IScalarEvaluator evalLeft = evalFactoryLeft.createScalarEvaluator(ctx);
+                final IScalarEvaluator evalRight = evalFactoryRight.createScalarEvaluator(ctx);
                 final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
                     private final PointableAllocator allocator = new PointableAllocator();
                     private final IVisitablePointable pointableLeft = allocator.allocateFieldValue(inputTypeLeft);
                     private final IVisitablePointable pointableRight = allocator.allocateFieldValue(inputTypeRight);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            abvsLeft.reset();
-                            abvsRight.reset();
-                            evalLeft.evaluate(tuple);
-                            evalRight.evaluate(tuple);
-                            pointableLeft.set(abvsLeft);
-                            pointableRight.set(abvsRight);
+                            evalLeft.evaluate(tuple, pointableLeft);
+                            evalRight.evaluate(tuple, pointableRight);
 
                             // Using deep equality assessment to assess the equality of the two values
                             boolean isEqual = deepEqualAssessor.isEqual(pointableLeft, pointableRight);
-                            ABoolean result = isEqual ? ABoolean.TRUE : ABoolean.FALSE;
+                            ABoolean resultBit = isEqual ? ABoolean.TRUE : ABoolean.FALSE;
 
-                            boolSerde.serialize(result, out);
+                            resultStorage.reset();
+                            boolSerde.serialize(resultBit, out);
+                            result.set(resultStorage);
                         } catch (Exception ioe) {
                             throw new AlgebricksException(ioe);
                         }

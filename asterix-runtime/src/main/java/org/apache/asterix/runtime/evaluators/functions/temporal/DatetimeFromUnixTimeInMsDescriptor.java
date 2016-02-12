@@ -36,11 +36,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -61,18 +63,20 @@ public class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDy
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
      */
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     // possible output types
                     @SuppressWarnings("unchecked")
@@ -85,43 +89,40 @@ public class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDy
                     private AMutableDateTime aDatetime = new AMutableDateTime(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
                         try {
-
-                            ATypeTag argOutTypeTag = ATypeTag.VALUE_TYPE_MAPPING[argOut.getByteArray()[0]];
-
-                            if (argOutTypeTag == ATypeTag.NULL) {
+                            ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
+                            if (argPtrTypeTag == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                switch (argOutTypeTag) {
+                                switch (argPtrTypeTag) {
                                     case INT8:
-                                        aDatetime
-                                                .setValue(AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1));
+                                        aDatetime.setValue(AInt8SerializerDeserializer.getByte(bytes, offset + 1));
                                         break;
                                     case INT16:
-                                        aDatetime.setValue(AInt16SerializerDeserializer.getShort(argOut.getByteArray(),
-                                                1));
+                                        aDatetime.setValue(AInt16SerializerDeserializer.getShort(bytes, offset + 1));
                                         break;
                                     case INT32:
-                                        aDatetime
-                                                .setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
+                                        aDatetime.setValue(AInt32SerializerDeserializer.getInt(bytes, offset + 1));
                                         break;
                                     case INT64:
-                                        aDatetime.setValue(AInt64SerializerDeserializer.getLong(argOut.getByteArray(),
-                                                1));
+                                        aDatetime.setValue(AInt64SerializerDeserializer.getLong(bytes, offset + 1));
                                         break;
                                     default:
-                                        throw new AlgebricksException(FID.getName()
-                                                + ": expects type INT8/INT16/INT32/INT64/NULL but got " + argOutTypeTag);
+                                        throw new AlgebricksException(
+                                                FID.getName() + ": expects type INT8/INT16/INT32/INT64/NULL but got "
+                                                        + argPtrTypeTag);
                                 }
                                 datetimeSerde.serialize(aDatetime, out);
                             }
-
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

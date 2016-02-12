@@ -25,36 +25,37 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 
-public class WordTokensEvaluator implements ICopyEvaluator {
-    private final DataOutput out;
-    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    private final ICopyEvaluator stringEval;
+public class WordTokensEvaluator implements IScalarEvaluator {
+    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private final DataOutput out = resultStorage.getDataOutput();
+    private final IPointable argPtr = new VoidPointable();
+    private final IScalarEvaluator stringEval;
 
     private final IBinaryTokenizer tokenizer;
     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
     private final AOrderedListType listType;
 
-    public WordTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
+    public WordTokensEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
-        out = output.getDataOutput();
-        stringEval = args[0].createEvaluator(argOut);
+        stringEval = args[0].createScalarEvaluator(context);
         this.tokenizer = tokenizer;
         this.listType = new AOrderedListType(itemType, null);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-        argOut.reset();
-        stringEval.evaluate(tuple);
-        byte[] bytes = argOut.getByteArray();
-        tokenizer.reset(bytes, 0, argOut.getLength());
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
+        stringEval.evaluate(tuple, argPtr);
+        tokenizer.reset(argPtr.getByteArray(), argPtr.getStartOffset(), argPtr.getLength());
         try {
             listBuilder.reset(listType);
             while (tokenizer.hasNext()) {
@@ -65,5 +66,6 @@ public class WordTokensEvaluator implements ICopyEvaluator {
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 }

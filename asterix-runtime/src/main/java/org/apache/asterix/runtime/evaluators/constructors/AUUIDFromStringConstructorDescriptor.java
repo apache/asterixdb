@@ -33,11 +33,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -56,18 +58,18 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private String errorMessage = "This can not be an instance of UUID";
                     private AMutableUUID uuid = new AMutableUUID();
                     @SuppressWarnings("unchecked")
@@ -77,29 +79,29 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-
-
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
-                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
+                            resultStorage.reset();
+                            eval.evaluate(tuple, inputArg);
+                            byte[] serString = inputArg.getByteArray();
+                            int start = inputArg.getStartOffset();
+                            int len = inputArg.getLength();
+                            if (serString[start] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, start + 1, len - 1);
 
                                 // first byte: tag, next x bytes: length
                                 int offset = utf8Ptr.getCharStartOffset();
-
                                 uuid.parseUUIDHexBytes(serString, offset);
                                 uuidSerde.serialize(uuid, out);
-
-                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                            } else if (serString[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
+                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         }
@@ -107,6 +109,7 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
 
                 };
             }
+
         };
     }
 

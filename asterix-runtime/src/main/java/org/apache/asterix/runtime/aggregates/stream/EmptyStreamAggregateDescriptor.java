@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.aggregates.stream;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -29,12 +27,14 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
@@ -50,19 +50,19 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
     };
 
     @Override
-    public ICopyAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
+    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ICopyAggregateFunctionFactory() {
+        return new IAggregateEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
+            public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws AlgebricksException {
 
-                return new ICopyAggregateFunction() {
+                return new IAggregateEvaluator() {
 
-                    private DataOutput out = provider.getDataOutput();
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -81,18 +81,20 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void finish() throws AlgebricksException {
+                    public void finish(IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         ABoolean b = res ? ABoolean.TRUE : ABoolean.FALSE;
                         try {
-                            serde.serialize(b, out);
+                            serde.serialize(b, resultStorage.getDataOutput());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
 
                     @Override
-                    public void finishPartial() throws AlgebricksException {
-                        finish();
+                    public void finishPartial(IPointable result) throws AlgebricksException {
+                        finish(result);
                     }
                 };
             }

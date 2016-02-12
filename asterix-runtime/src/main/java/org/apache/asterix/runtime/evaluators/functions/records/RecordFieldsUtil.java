@@ -54,10 +54,6 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class RecordFieldsUtil {
 
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
-    private final static byte SER_ORDERED_LIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final static byte SER_UNORDERED_LIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
-
     private final static AString fieldName = new AString("field-name");
     private final static AString typeName = new AString("field-type");
     private final static AString isOpenName = new AString("is-open");
@@ -118,15 +114,17 @@ public class RecordFieldsUtil {
             addIsOpenField(false, fieldRecordBuilder);
 
             // write nested or list types
-            if (tag == SER_RECORD_TYPE_TAG || tag == SER_ORDERED_LIST_TYPE_TAG || tag == SER_UNORDERED_LIST_TYPE_TAG) {
+            if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG || tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                    || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                 if (!recordAccessor.isClosedFieldNull(recType, i)) {
                     IAType fieldType = recordAccessor.getClosedFieldType(recType, i);
                     ArrayBackedValueStorage tmpValue = getTempBuffer();
                     tmpValue.reset();
                     recordAccessor.getClosedFieldValue(recType, i, tmpValue.getDataOutput());
-                    if (tag == SER_RECORD_TYPE_TAG) {
+                    if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
-                    } else if (tag == SER_ORDERED_LIST_TYPE_TAG || tag == SER_UNORDERED_LIST_TYPE_TAG) {
+                    } else if (tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                            || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                         addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                     }
                 }
@@ -155,14 +153,16 @@ public class RecordFieldsUtil {
             addIsOpenField(true, fieldRecordBuilder);
 
             // write nested or list types
-            if (tag == SER_RECORD_TYPE_TAG || tag == SER_ORDERED_LIST_TYPE_TAG || tag == SER_UNORDERED_LIST_TYPE_TAG) {
+            if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG || tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                    || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                 IAType fieldType = null;
                 ArrayBackedValueStorage tmpValue = getTempBuffer();
                 tmpValue.reset();
                 recordAccessor.getOpenFieldValue(recType, i, tmpValue.getDataOutput());
-                if (tag == SER_RECORD_TYPE_TAG) {
+                if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
-                } else if (tag == SER_ORDERED_LIST_TYPE_TAG || tag == SER_UNORDERED_LIST_TYPE_TAG) {
+                } else if (tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                        || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                     addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                 }
             }
@@ -277,7 +277,7 @@ public class RecordFieldsUtil {
             byte tagId = list.getItemTag(act, l);
             addFieldType(tagId, listRecordBuilder);
 
-            if (tagId == SER_RECORD_TYPE_TAG) {
+            if (tagId == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                 ArrayBackedValueStorage tmpAbvs = getTempBuffer();
                 list.getItemValue(act, l, tmpAbvs.getDataOutput());
                 addNestedField(tmpAbvs, act.getItemType(), listRecordBuilder, level + 1);

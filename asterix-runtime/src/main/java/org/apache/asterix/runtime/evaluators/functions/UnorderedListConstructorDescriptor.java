@@ -30,9 +30,11 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -40,6 +42,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new UnorderedListConstructorDescriptor();
         }
@@ -57,43 +60,44 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new UnorderedListConstructorEvaluatorFactory(args, ultype);
     }
 
-    private static class UnorderedListConstructorEvaluatorFactory implements ICopyEvaluatorFactory {
+    private static class UnorderedListConstructorEvaluatorFactory implements IScalarEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private ICopyEvaluatorFactory[] args;
+        private IScalarEvaluatorFactory[] args;
 
         private boolean selfDescList = false;
         private boolean homoList = false;
         private AUnorderedListType unorderedlistType;
 
-        public UnorderedListConstructorEvaluatorFactory(ICopyEvaluatorFactory[] args, AUnorderedListType type) {
+        public UnorderedListConstructorEvaluatorFactory(IScalarEvaluatorFactory[] args, AUnorderedListType type) {
             this.args = args;
             this.unorderedlistType = type;
-            if (type == null || type.getItemType() == null || type.getItemType().getTypeTag() == ATypeTag.ANY)
+            if (type == null || type.getItemType() == null || type.getItemType().getTypeTag() == ATypeTag.ANY) {
                 this.selfDescList = true;
-            else
+            } else {
                 this.homoList = true;
+            }
         }
 
         @Override
-        public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-            final DataOutput out = output.getDataOutput();
-            final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-            final ICopyEvaluator[] argEvals = new ICopyEvaluator[args.length];
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            final IPointable inputVal = new VoidPointable();
+            final IScalarEvaluator[] argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
-                argEvals[i] = args[i].createEvaluator(inputVal);
+                argEvals[i] = args[i].createScalarEvaluator(ctx);
             }
 
-            return new ICopyEvaluator() {
-
+            return new IScalarEvaluator() {
+                private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                private DataOutput out = resultStorage.getDataOutput();
                 private UnorderedListBuilder builder = new UnorderedListBuilder();
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                     try {
                         builder.reset(unorderedlistType);
                         if (selfDescList) {
@@ -102,7 +106,9 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                         if (homoList) {
                             this.writeTypedItems(tuple);
                         }
+                        resultStorage.reset();
                         builder.write(out, true);
+                        result.set(resultStorage);
                     } catch (IOException ioe) {
                         throw new AlgebricksException(ioe);
                     }
@@ -112,8 +118,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
-                            inputVal.reset();
-                            argEvals[i].evaluate(tuple);
+                            argEvals[i].evaluate(tuple, inputVal);
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {
@@ -125,8 +130,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
-                            inputVal.reset();
-                            argEvals[i].evaluate(tuple);
+                            argEvals[i].evaluate(tuple, inputVal);
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {

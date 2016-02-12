@@ -44,11 +44,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -64,20 +66,20 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-
-                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr0 = new VoidPointable();
+                    private IPointable argPtr1 = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private String errorMessage = "This can not be an instance of interval (from Date)";
 
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
@@ -91,66 +93,66 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
 
-                        argOut0.reset();
-                        argOut1.reset();
-                        eval0.evaluate(tuple);
-                        eval1.evaluate(tuple);
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
+                        int len0 = argPtr0.getLength();
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
+                        int len1 = argPtr1.getLength();
 
                         try {
-
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
                             }
 
                             long intervalStart = 0, intervalEnd = 0;
-
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                                intervalStart = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                                intervalStart = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
                                         * GregorianCalendarSystem.CHRONON_OF_DAY;
-                            } else if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
+                            } else if (bytes0[offset0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
                                 // start date
                                 int stringLength = utf8Ptr.getUTF8Length();
                                 int startOffset = utf8Ptr.getCharStartOffset();
-                                intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), startOffset,
-                                        stringLength);
+                                intervalStart = ADateParserFactory.parseDatePart(bytes0, startOffset, stringLength);
                             } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/STRING/DATE for the first argument, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects NULL/STRING/DATE for the first argument, but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]));
                             }
 
-                            if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                            if (bytes1[offset1] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
-                                        ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
-                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
-                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {
+                                        ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1),
+                                        ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1), false);
+                            } else if (bytes1[offset1] == ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
-                                        ADayTimeDurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1),
-                                        false);
-                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
+                                        ADayTimeDurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1), false);
+                            } else if (bytes1[offset1] == ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
-                                        AYearMonthDurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(),
-                                                1),
-                                        0, false);
-                            } else if (argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                        AYearMonthDurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1), 0,
+                                        false);
+                            } else if (bytes1[offset1] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 // duration
-                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                                utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
 
-                                ADurationParserFactory.parseDuration(argOut1.getByteArray(),
-                                        utf8Ptr.getCharStartOffset(), stringLength, aDuration,
-                                        ADurationParseOption.All);
+                                ADurationParserFactory.parseDuration(bytes1, utf8Ptr.getCharStartOffset(), stringLength,
+                                        aDuration, ADurationParseOption.All);
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds(), false);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DURATION for the second argument, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
                             }
 
                             intervalStart = GregorianCalendarSystem.getChrononInDays(intervalStart);
@@ -169,6 +171,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                         } catch (Exception e2) {
                             throw new AlgebricksException(e2);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

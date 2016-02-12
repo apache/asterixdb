@@ -34,11 +34,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -52,18 +54,17 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-
-                    private DataOutput out = output.getDataOutput();
-
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private String errorMessage = "This can not be an instance of duration";
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);
                     @SuppressWarnings("unchecked")
@@ -75,27 +76,26 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
+                            resultStorage.reset();
+                            eval.evaluate(tuple, inputArg);
+                            byte[] serString = inputArg.getByteArray();
+                            int offset = inputArg.getStartOffset();
+                            int len = inputArg.getLength();
 
-                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-
-                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
+                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, offset + 1, len - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
-
                                 ADurationParserFactory.parseDuration(serString, utf8Ptr.getCharStartOffset(),
                                         stringLength, aDuration, ADurationParseOption.All);
-
                                 durationSerde.serialize(aDuration, out);
-                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }
+                            result.set(resultStorage);
                         } catch (Exception e1) {
                             throw new AlgebricksException(e1);
                         }

@@ -92,26 +92,26 @@ public class SpatialUtils {
     }
 
     // Warning: The caller is responsible of taking the absolute value
-    public final static double polygonArea(byte[] bytes, int numOfPoints) throws HyracksDataException {
+    public final static double polygonArea(byte[] bytes, int offset, int numOfPoints) throws HyracksDataException {
         double area = 0.0;
         for (int i = 0; i < numOfPoints; i++) {
 
             double x1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                    APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
+                    offset + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
             double y1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                    APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
+                    offset + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
             double x2;
             double y2;
             if (i + 1 == numOfPoints) {
                 x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.X));
+                        offset + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.X));
                 y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.Y));
+                        offset + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.Y));
             } else {
                 x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.X));
+                        offset + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.X));
                 y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.Y));
+                        offset + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.Y));
             }
             area += (x1 * y2) - (x2 * y1);
         }
@@ -128,10 +128,11 @@ public class SpatialUtils {
             temp = getTriangleXCoordinate(trianglesX, triangleId, i) * xAxis
                     + getTriangleYCoordinate(trianglesY, triangleId, i) * yAxis;
 
-            if (temp > max)
+            if (temp > max) {
                 max = temp;
-            else if (temp < min)
+            } else if (temp < min) {
                 min = temp;
+            }
         }
         setMinProjection(min);
         setMaxProjection(max);

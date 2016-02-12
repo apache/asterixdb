@@ -26,10 +26,10 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -48,24 +48,25 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(output, args,
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(ctx, args,
                         getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
                         evaluateTuple(tuple, 2);
                         int getFrom = 0;
                         try {
-                            getFrom = ATypeHierarchy.getIntegerValue(storages[2].getByteArray(), 0);
+                            getFrom = ATypeHierarchy.getIntegerValue(pointables[2].getByteArray(),
+                                    pointables[2].getStartOffset());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
-
                         return getFrom;
                     }
                 };

@@ -25,14 +25,16 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableLocalSqlAvgAggregateDescriptor();
         }
@@ -44,13 +46,15 @@ public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializ
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
-            final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopySerializableAggregateFunctionFactory() {
+    public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
+            final IScalarEvaluatorFactory[] args) throws AlgebricksException {
+        return new ISerializedAggregateEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
-            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableLocalSqlAvgAggregateFunction(args);
+            @Override
+            public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
+                    throws AlgebricksException {
+                return new SerializableLocalSqlAvgAggregateFunction(args, ctx);
             }
         };
     }

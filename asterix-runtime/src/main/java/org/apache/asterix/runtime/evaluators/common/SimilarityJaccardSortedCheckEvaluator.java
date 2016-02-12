@@ -19,24 +19,22 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricJaccard;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
 
 public class SimilarityJaccardSortedCheckEvaluator extends SimilarityJaccardCheckEvaluator {
 
     protected final SimilarityMetricJaccard jaccard = new SimilarityMetricJaccard();
 
-    public SimilarityJaccardSortedCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public SimilarityJaccardSortedCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
+        super(args, context);
     }
 
     @Override
-    protected float computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
+    protected float computeResult() throws AlgebricksException {
         try {
             return jaccard.getSimilarity(firstListIter, secondListIter, jaccThresh);
         } catch (HyracksDataException e) {

@@ -18,27 +18,25 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
-
+public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory evalLeftFactory;
-    private ICopyEvaluatorFactory evalRightFactory;
+    private IScalarEvaluatorFactory evalLeftFactory;
+    private IScalarEvaluatorFactory evalRightFactory;
     private ComparisonKind comparisonKind;
 
-    public ComparisonEvalFactory(ICopyEvaluatorFactory evalLeftFactory, ICopyEvaluatorFactory evalRightFactory,
+    public ComparisonEvalFactory(IScalarEvaluatorFactory evalLeftFactory, IScalarEvaluatorFactory evalRightFactory,
             ComparisonKind comparisonKind) {
         this.evalLeftFactory = evalLeftFactory;
         this.evalRightFactory = evalRightFactory;
@@ -46,27 +44,26 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-        DataOutput out = output.getDataOutput();
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
         switch (comparisonKind) {
-        // Should we do any normalization?
+            // Should we do any normalization?
             case EQ: {
-                return new EqualityComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new EqualityComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             case GE: {
-                return new GreaterThanOrEqualComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new GreaterThanOrEqualComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             case GT: {
-                return new GreaterThanComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new GreaterThanComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             case LE: {
-                return new LessThanOrEqualComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new LessThanOrEqualComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             case LT: {
-                return new LessThanComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new LessThanComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             case NEQ: {
-                return new InequalityComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
+                return new InequalityComparisonEvaluator(evalLeftFactory, evalRightFactory, ctx);
             }
             default: {
                 throw new IllegalStateException();
@@ -75,21 +72,22 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
     }
 
     static class EqualityComparisonEvaluator extends AbstractComparisonEvaluator {
-        public EqualityComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public EqualityComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
-
             // Checks whether two types are comparable
             switch (comparabilityCheck()) {
                 case UNKNOWN:
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -117,19 +115,20 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Equality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }
 
     static class InequalityComparisonEvaluator extends AbstractComparisonEvaluator {
-        public InequalityComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public InequalityComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
 
             // Checks whether two types are comparable
@@ -138,6 +137,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -165,19 +165,20 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }
 
     static class GreaterThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
-        public GreaterThanOrEqualComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public GreaterThanOrEqualComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
 
             // checks whether we can apply >, >=, <, and <= to the given type since
@@ -190,6 +191,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -218,19 +220,20 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }
 
     static class GreaterThanComparisonEvaluator extends AbstractComparisonEvaluator {
-        public GreaterThanComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public GreaterThanComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
 
             // checks whether we can apply >, >=, <, and <= to the given type since
@@ -243,6 +246,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -270,19 +274,20 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }
 
     static class LessThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
-        public LessThanOrEqualComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public LessThanOrEqualComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
 
             // checks whether we can apply >, >=, <, and <= to the given type since
@@ -295,6 +300,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -323,19 +329,20 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }
 
     static class LessThanComparisonEvaluator extends AbstractComparisonEvaluator {
-        public LessThanComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
-                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
-            super(out, evalLeftFactory, evalRightFactory);
+        public LessThanComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+                IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
+            super(evalLeftFactory, evalRightFactory, context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             evalInputs(tuple);
 
             // checks whether we can apply >, >=, <, and <= to the given type since
@@ -348,6 +355,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     // result:UNKNOWN - NULL value found
                     try {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -375,7 +383,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
                     throw new AlgebricksException(
                             "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
             }
-
+            result.set(resultStorage);
         }
 
     }

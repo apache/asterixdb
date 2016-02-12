@@ -27,14 +27,15 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SerializableSumAggregateFunction extends AbstractSerializableSumAggregateFunction {
     private final boolean isLocalAgg;
 
-    public SerializableSumAggregateFunction(ICopyEvaluatorFactory[] args, boolean isLocalAgg)
-            throws AlgebricksException {
-        super(args);
+    public SerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, boolean isLocalAgg,
+            IHyracksTaskContext context) throws AlgebricksException {
+        super(args, context);
         this.isLocalAgg = isLocalAgg;
     }
 

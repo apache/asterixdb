@@ -32,11 +32,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -55,18 +57,20 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                final DataOutput out = output.getDataOutput();
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     private String errorMessage = AsterixBuiltinFunctions.NOT.getName()
                             + ": expects input type BOOLEAN/NULL";
@@ -78,21 +82,27 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
+
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
+
                         try {
-                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
-                                boolean argRes = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
+                            if (bytes[offset] == ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
+                                boolean argRes = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
                                 ABoolean aResult = argRes ? (ABoolean.FALSE) : (ABoolean.TRUE);
                                 booleanSerde.serialize(aResult, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                            } else if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

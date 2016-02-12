@@ -19,7 +19,6 @@
 
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -32,11 +31,13 @@ import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -44,6 +45,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ScanCollectionDescriptor();
         }
@@ -55,44 +57,42 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
     }
 
     @Override
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args) {
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new ScanCollectionUnnestingFunctionFactory(args[0]);
     }
 
-    public static class ScanCollectionUnnestingFunctionFactory implements ICopyUnnestingFunctionFactory {
+    public static class ScanCollectionUnnestingFunctionFactory implements IUnnestingEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private ICopyEvaluatorFactory listEvalFactory;
+        private IScalarEvaluatorFactory listEvalFactory;
 
-        public ScanCollectionUnnestingFunctionFactory(ICopyEvaluatorFactory arg) {
+        public ScanCollectionUnnestingFunctionFactory(IScalarEvaluatorFactory arg) {
             this.listEvalFactory = arg;
         }
 
         @Override
-        public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+        public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
 
-            final DataOutput out = provider.getDataOutput();
+            return new IUnnestingEvaluator() {
 
-            return new ICopyUnnestingFunction() {
-
+                private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                 private final AsterixListAccessor listAccessor = new AsterixListAccessor();
-                private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                private ICopyEvaluator argEval = listEvalFactory.createEvaluator(inputVal);
+                private final IPointable inputVal = new VoidPointable();
+                private final IScalarEvaluator argEval = listEvalFactory.createScalarEvaluator(ctx);
                 private int itemIndex;
                 private boolean metNull = false;
 
                 @Override
                 public void init(IFrameTupleReference tuple) throws AlgebricksException {
                     try {
-                        inputVal.reset();
-                        argEval.evaluate(tuple);
+                        argEval.evaluate(tuple, inputVal);
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                .deserialize(inputVal.getByteArray()[0]);
+                                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
                         if (typeTag == ATypeTag.NULL) {
                             metNull = true;
                             return;
                         }
-                        listAccessor.reset(inputVal.getByteArray(), 0);
+                        listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                         itemIndex = 0;
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
@@ -100,11 +100,13 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 }
 
                 @Override
-                public boolean step() throws AlgebricksException {
+                public boolean step(IPointable result) throws AlgebricksException {
                     try {
                         if (!metNull) {
                             if (itemIndex < listAccessor.size()) {
-                                listAccessor.writeItem(itemIndex, out);
+                                resultStorage.reset();
+                                listAccessor.writeItem(itemIndex, resultStorage.getDataOutput());
+                                result.set(resultStorage);
                                 ++itemIndex;
                                 return true;
                             }

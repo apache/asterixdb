@@ -36,11 +36,13 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -55,47 +57,51 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private final ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable inputArg0 = new VoidPointable();
+                    private final IPointable inputArg1 = new VoidPointable();
+                    private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        outInput0.reset();
-                        eval0.evaluate(tuple);
-                        outInput1.reset();
-                        eval1.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, inputArg0);
+                        eval1.evaluate(tuple, inputArg1);
 
                         try {
-                            byte[] bytes0 = outInput0.getByteArray();
-                            byte[] bytes1 = outInput1.getByteArray();
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[0]);
+                            byte[] bytes0 = inputArg0.getByteArray();
+                            byte[] bytes1 = inputArg1.getByteArray();
+                            int offset0 = inputArg0.getStartOffset();
+                            int offset1 = inputArg1.getStartOffset();
+
+                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
+                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                             double distance = 0.0;
                             if (tag0 == ATypeTag.POINT) {
                                 if (tag1 == ATypeTag.POINT) {
-                                    double x1 = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                            APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y1 = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                            APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
-                                    double x2 = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
-                                            APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y2 = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
-                                            APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                    double x1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                    double y1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                    double x2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                            offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                    double y2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                            offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
                                     throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
@@ -116,6 +122,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

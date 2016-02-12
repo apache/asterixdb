@@ -34,12 +34,14 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -54,17 +56,17 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private String errorMessage = "This can not be an instance of float";
                     private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
                     private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
@@ -90,131 +92,39 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
-                            if (serString[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), POSITIVE_INF, 0,
+                            resultStorage.reset();
+                            eval.evaluate(tuple, inputArg);
+                            byte[] serString = inputArg.getByteArray();
+                            int offset = inputArg.getStartOffset();
+                            int len = inputArg.getLength();
+
+                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, POSITIVE_INF, 0,
                                         5) == 0) {
                                     aFloat.setValue(Float.POSITIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(),
-                                        NEGATIVE_INF, 0, 6) == 0) {
+                                } else if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, NEGATIVE_INF, 0,
+                                        6) == 0) {
                                     aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NAN, 0,
+                                } else if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, NAN, 0,
                                         5) == 0) {
                                     aFloat.setValue(Float.NaN);
                                 } else {
-                                    utf8Ptr.set(serString, 1, outInput.getLength() - 1);
+                                    utf8Ptr.set(serString, offset + 1, len - 1);
                                     aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
                                 }
                                 floatSerde.serialize(aFloat, out);
-
-                            } else if (serString[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
+                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         }
                     }
-
-                    // private float parseFloat(byte[] serString) throws
-                    // AlgebricksException {
-                    //
-                    // if (serString[offset] == '+')
-                    // offset++;
-                    // else if (serString[offset] == '-') {
-                    // offset++;
-                    // positiveInteger = false;
-                    // }
-                    //
-                    // if ((serString[offset] == '.') || (serString[offset] ==
-                    // 'e') || (serString[offset] == 'E')
-                    // || (serString[outInput.getLength() - 1] == '.')
-                    // || (serString[outInput.getLength() - 1] == 'E')
-                    // || (serString[outInput.getLength() - 1] == 'e'))
-                    // throw new AlgebricksException(errorMessage);
-                    //
-                    // for (; offset < outInput.getLength(); offset++) {
-                    // if (serString[offset] >= '0' && serString[offset] <= '9')
-                    // {
-                    // value = value * 10 + serString[offset] - '0';
-                    // } else
-                    // switch (serString[offset]) {
-                    // case '.':
-                    // if (expectingInteger) {
-                    // if (serString[offset + 1] < '0' || serString[offset + 1]
-                    // > '9')
-                    // throw new AlgebricksException(errorMessage);
-                    // expectingInteger = false;
-                    // expectingFraction = true;
-                    // integerPart = value;
-                    // value = 0;
-                    // pointIndex = offset;
-                    // eIndex = outInput.getLength();
-                    // } else
-                    // throw new AlgebricksException(errorMessage);
-                    // break;
-                    // case 'e':
-                    // case 'E':
-                    // if (expectingInteger) {
-                    // expectingInteger = false;
-                    // integerPart = value;
-                    // pointIndex = offset - 1;
-                    // eIndex = offset;
-                    // value = 0;
-                    // expectingExponent = true;
-                    // } else if (expectingFraction) {
-                    //
-                    // expectingFraction = false;
-                    // fractionPart = value;
-                    // eIndex = offset;
-                    // value = 0;
-                    // expectingExponent = true;
-                    // } else
-                    // throw new AlgebricksException();
-                    //
-                    // if (serString[offset + 1] == '+')
-                    // offset++;
-                    // else if (serString[offset + 1] == '-') {
-                    // offset++;
-                    // positiveExponent = false;
-                    // } else if (serString[offset + 1] < '0' ||
-                    // serString[offset + 1] > '9')
-                    // throw new AlgebricksException(errorMessage);
-                    // break;
-                    // default:
-                    // throw new AlgebricksException(errorMessage);
-                    // }
-                    // }
-                    //
-                    // if (expectingInteger)
-                    // integerPart = value;
-                    // else if (expectingFraction)
-                    // fractionPart = value;
-                    // else if (expectingExponent)
-                    // exponentPart = value * (positiveExponent ? 1 : -1);
-                    //
-                    // // floatValue = (float) ( integerPart + ( fractionPart *
-                    // (1.0f / Math.pow(10.0f, eIndex - pointIndex - 1))));
-                    // // floatValue *= (float) Math.pow(10.0f, exponentPart);
-                    //
-                    // floatValue = Float.parseFloat(integerPart+"."+
-                    // fractionPart+"e"+ exponentPart);
-                    //
-                    // if (integerPart != 0
-                    // && (floatValue == Float.POSITIVE_INFINITY || floatValue
-                    // == Float.NEGATIVE_INFINITY || floatValue == 0))
-                    // throw new AlgebricksException(errorMessage);
-                    //
-                    // if (floatValue > 0 && !positiveInteger)
-                    // floatValue *= -1;
-                    //
-                    // return floatValue;
-                    // }
                 };
             }
         };

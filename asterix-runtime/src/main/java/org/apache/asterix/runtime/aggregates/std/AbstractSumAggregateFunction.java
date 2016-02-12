@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
@@ -41,18 +40,20 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunction {
-    protected DataOutput out;
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private ICopyEvaluator eval;
+public abstract class AbstractSumAggregateFunction implements IAggregateEvaluator {
+    protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private IPointable inputVal = new VoidPointable();
+    private IScalarEvaluator eval;
     private double sum;
     protected ATypeTag aggType;
     private AMutableDouble aDouble = new AMutableDouble(0);
@@ -64,10 +65,9 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
     @SuppressWarnings("rawtypes")
     protected ISerializerDeserializer serde;
 
-    public AbstractSumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider)
+    public AbstractSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        out = provider.getDataOutput();
-        eval = args[0].createEvaluator(inputVal);
+        eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
@@ -81,9 +81,11 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
         if (skipStep()) {
             return;
         }
-        inputVal.reset();
-        eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
+        eval.evaluate(tuple, inputVal);
+        byte[] data = inputVal.getByteArray();
+        int offset = inputVal.getStartOffset();
+
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
         if (typeTag == ATypeTag.NULL) {
             processNull();
             return;
@@ -100,32 +102,32 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
 
         switch (typeTag) {
             case INT8: {
-                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
                 sum += val;
                 break;
             }
             case INT16: {
-                short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
+                short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
                 sum += val;
                 break;
             }
             case INT32: {
-                int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
                 sum += val;
                 break;
             }
             case INT64: {
-                long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
+                long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
                 sum += val;
                 break;
             }
             case FLOAT: {
-                float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
                 sum += val;
                 break;
             }
             case DOUBLE: {
-                double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
+                double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                 sum += val;
                 break;
             }
@@ -144,48 +146,49 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
 
     @SuppressWarnings("unchecked")
     @Override
-    public void finish() throws AlgebricksException {
+    public void finish(IPointable result) throws AlgebricksException {
+        resultStorage.reset();
         try {
             switch (aggType) {
                 case INT8: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
                     aInt8.setValue((byte) sum);
-                    serde.serialize(aInt8, out);
+                    serde.serialize(aInt8, resultStorage.getDataOutput());
                     break;
                 }
                 case INT16: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT16);
                     aInt16.setValue((short) sum);
-                    serde.serialize(aInt16, out);
+                    serde.serialize(aInt16, resultStorage.getDataOutput());
                     break;
                 }
                 case INT32: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
                     aInt32.setValue((int) sum);
-                    serde.serialize(aInt32, out);
+                    serde.serialize(aInt32, resultStorage.getDataOutput());
                     break;
                 }
                 case INT64: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     aInt64.setValue((long) sum);
-                    serde.serialize(aInt64, out);
+                    serde.serialize(aInt64, resultStorage.getDataOutput());
                     break;
                 }
                 case FLOAT: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
                     aFloat.setValue((float) sum);
-                    serde.serialize(aFloat, out);
+                    serde.serialize(aFloat, resultStorage.getDataOutput());
                     break;
                 }
                 case DOUBLE: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
                     aDouble.setValue(sum);
-                    serde.serialize(aDouble, out);
+                    serde.serialize(aDouble, resultStorage.getDataOutput());
                     break;
                 }
                 case NULL: {
                     serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                    serde.serialize(ANull.NULL, out);
+                    serde.serialize(ANull.NULL, resultStorage.getDataOutput());
                     break;
                 }
                 case SYSTEM_NULL: {
@@ -193,23 +196,27 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
                     break;
                 }
                 default:
-                    throw new AlgebricksException("SumAggregationFunction: incompatible type for the result ("
-                            + aggType + "). ");
+                    throw new AlgebricksException(
+                            "SumAggregationFunction: incompatible type for the result (" + aggType + "). ");
             }
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     @Override
-    public void finishPartial() throws AlgebricksException {
-        finish();
+    public void finishPartial(IPointable result) throws AlgebricksException {
+        finish(result);
     }
 
     protected boolean skipStep() {
         return false;
     }
+
     protected abstract void processNull();
+
     protected abstract void processSystemNull() throws AlgebricksException;
+
     protected abstract void finishSystemNull() throws IOException;
 }

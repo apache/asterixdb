@@ -30,11 +30,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.bytes.Base64Parser;
@@ -60,13 +61,14 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new AbstractCopyEvaluator(output, args) {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -80,18 +82,22 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final Base64Parser base64Parser = new Base64Parser();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         ATypeTag binaryTag = evaluateTuple(tuple, 0);
                         ATypeTag formatTag = evaluateTuple(tuple, 1);
 
                         try {
                             if (serializeNullIfAnyNull(binaryTag, formatTag)) {
+                                result.set(resultStorage);
                                 return;
                             }
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, binaryTag,
                                     formatTag);
-                            stringPointable.set(storages[0].getByteArray(), 1, storages[0].getLength());
-                            formatPointable.set(storages[1].getByteArray(), 1, storages[1].getLength());
+                            stringPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
+                                    pointables[0].getLength());
+                            formatPointable.set(pointables[1].getByteArray(), pointables[1].getStartOffset() + 1,
+                                    pointables[1].getLength());
                             if (HEX_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
                                 hexParser.generateByteArrayFromHexString(stringPointable.getByteArray(),
                                         stringPointable.getCharStartOffset(), stringPointable.getUTF8Length());
@@ -110,6 +116,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                         } catch (HyracksDataException e) {
                             e.printStackTrace();
                         }
+                        result.set(resultStorage);
                     }
                 };
 

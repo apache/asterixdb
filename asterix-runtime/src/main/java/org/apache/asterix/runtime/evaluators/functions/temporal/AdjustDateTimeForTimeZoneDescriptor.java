@@ -35,11 +35,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringWriter;
@@ -60,20 +62,22 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
      */
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr0 = new VoidPointable();
+                    private IPointable argPtr1 = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     // possible output types
                     @SuppressWarnings("unchecked")
@@ -86,32 +90,38 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut0.reset();
-                        eval0.evaluate(tuple);
-                        argOut1.reset();
-                        eval1.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
+
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
+                        int len1 = argPtr1.getLength();
 
                         try {
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects type DATETIME/NULL for parameter 0 but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
+                            if (bytes0[offset0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects type DATETIME/NULL for parameter 0 but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]));
                             }
 
-                            if (argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects type STRING/NULL for parameter 1 but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
+                            if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects type STRING/NULL for parameter 1 but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
                             }
 
-                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                            utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                             int timezone = ATimeParserFactory.parseTimezonePart(utf8Ptr.getByteArray(),
                                     utf8Ptr.getCharStartOffset());
 
@@ -119,12 +129,11 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                                 throw new AlgebricksException(FID.getName() + ": wrong format for a time zone string!");
                             }
 
-                            long chronon = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                            long chronon = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
 
                             chronon = calInstance.adjustChrononByTimezone(chronon, timezone);
 
                             StringBuilder sbder = new StringBuilder();
-
                             calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.YEAR,
                                     Fields.MILLISECOND, true);
 
@@ -133,6 +142,7 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                         } catch (Exception e1) {
                             throw new AlgebricksException(e1);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

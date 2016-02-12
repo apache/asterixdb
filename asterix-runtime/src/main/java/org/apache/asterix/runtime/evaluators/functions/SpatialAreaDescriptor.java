@@ -39,11 +39,13 @@ import org.apache.asterix.runtime.evaluators.common.SpatialUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -58,64 +60,67 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr = new VoidPointable();
+                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
 
                         try {
-                            byte[] bytes = argOut.getByteArray();
-                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[0]);
+                            byte[] bytes = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
+                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
                             double area = 0.0;
 
                             switch (tag) {
                                 case POLYGON:
-                                    int numOfPoints = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
+                                    int numOfPoints = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
 
                                     if (numOfPoints < 3) {
                                         throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()
                                                 + ": polygon must have at least 3 points");
                                     }
-                                    area = Math.abs(SpatialUtils.polygonArea(argOut.getByteArray(), numOfPoints));
+                                    area = Math.abs(SpatialUtils.polygonArea(bytes, offset, numOfPoints));
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case CIRCLE:
-                                    double radius = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
-                                            ACircleSerializerDeserializer.getRadiusOffset());
+                                    double radius = ADoubleSerializerDeserializer.getDouble(bytes,
+                                            offset + ACircleSerializerDeserializer.getRadiusOffset());
                                     area = SpatialUtils.pi() * radius * radius;
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case RECTANGLE:
-                                    double x1 = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
-                                            ARectangleSerializerDeserializer
+                                    double x1 = ADoubleSerializerDeserializer.getDouble(bytes,
+                                            offset + ARectangleSerializerDeserializer
                                                     .getBottomLeftCoordinateOffset(Coordinate.X));
-                                    double y1 = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
-                                            ARectangleSerializerDeserializer
+                                    double y1 = ADoubleSerializerDeserializer.getDouble(bytes,
+                                            offset + ARectangleSerializerDeserializer
                                                     .getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                                    double x2 = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
-                                            ARectangleSerializerDeserializer
+                                    double x2 = ADoubleSerializerDeserializer.getDouble(bytes,
+                                            offset + ARectangleSerializerDeserializer
                                                     .getUpperRightCoordinateOffset(Coordinate.X));
-                                    double y2 = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(),
-                                            ARectangleSerializerDeserializer
+                                    double y2 = ADoubleSerializerDeserializer.getDouble(bytes,
+                                            offset + ARectangleSerializerDeserializer
                                                     .getUpperRightCoordinateOffset(Coordinate.Y));
                                     area = (x2 - x1) * (y2 - y1);
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
@@ -134,6 +139,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

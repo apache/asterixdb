@@ -29,11 +29,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -44,21 +46,23 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
      */
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr0 = new VoidPointable();
+                    private IPointable argPtr1 = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     // possible output types
                     @SuppressWarnings("unchecked")
@@ -69,50 +73,51 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut0.reset();
-                        eval0.evaluate(tuple);
-                        argOut1.reset();
-                        eval1.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
+
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
 
                         try {
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        getIdentifier().getName()
-                                                + ": expects input type (INTERVAL, INTERVAL) but got ("
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
-                                                        argOut0.getByteArray()[0])
-                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                        .deserialize(argOut1.getByteArray()[0])
-                                                + ")");
+                            if (bytes0[offset0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
+                                    || bytes1[offset1] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expects input type (INTERVAL, INTERVAL) but got ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
                             }
 
-                            if (AIntervalSerializerDeserializer.getIntervalTimeType(argOut0.getByteArray(),
-                                    1) != AIntervalSerializerDeserializer.getIntervalTimeType(argOut1.getByteArray(),
-                                            1)) {
+                            if (AIntervalSerializerDeserializer.getIntervalTimeType(bytes0,
+                                    offset0 + 1) != AIntervalSerializerDeserializer.getIntervalTimeType(bytes1,
+                                            offset1 + 1)) {
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": failed to compare intervals with different internal time type.");
                             }
 
                             ABoolean res = (compareIntervals(
-                                    AIntervalSerializerDeserializer.getIntervalStart(argOut0.getByteArray(), 1),
-                                    AIntervalSerializerDeserializer.getIntervalEnd(argOut0.getByteArray(), 1),
-                                    AIntervalSerializerDeserializer.getIntervalStart(argOut1.getByteArray(), 1),
-                                    AIntervalSerializerDeserializer.getIntervalEnd(argOut1.getByteArray(), 1)))
+                                    AIntervalSerializerDeserializer.getIntervalStart(bytes0, offset0 + 1),
+                                    AIntervalSerializerDeserializer.getIntervalEnd(bytes0, offset0 + 1),
+                                    AIntervalSerializerDeserializer.getIntervalStart(bytes1, offset1 + 1),
+                                    AIntervalSerializerDeserializer.getIntervalEnd(bytes1, offset1 + 1)))
                                             ? ABoolean.TRUE : ABoolean.FALSE;
 
                             booleanSerde.serialize(res, out);
-
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

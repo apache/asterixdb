@@ -39,19 +39,20 @@ public class SimilarityFiltersCache {
     private byte[] similarityNameBytesCached = null;
     private SimilarityFilters similarityFiltersCached = null;
 
-    public SimilarityFilters get(float similarityThreshold, byte[] similarityNameBytes) throws AlgebricksException {
+    public SimilarityFilters get(float similarityThreshold, byte[] similarityNameBytes, int startOffset, int len)
+            throws AlgebricksException {
         if (similarityThreshold != similarityThresholdCached || similarityNameBytesCached == null
                 || !Arrays.equals(similarityNameBytes, similarityNameBytesCached)) {
-            bbis.setByteBuffer(ByteBuffer.wrap(similarityNameBytes), 1);
+            bbis.setByteBuffer(ByteBuffer.wrap(similarityNameBytes), startOffset + 1);
             String similarityName;
             try {
                 similarityName = utf8SerDer.deserialize(dis);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            similarityNameBytesCached = Arrays.copyOf(similarityNameBytes, similarityNameBytes.length);
-            similarityFiltersCached = SimilarityFiltersFactory
-                    .getSimilarityFilters(similarityName, similarityThreshold);
+            similarityNameBytesCached = Arrays.copyOfRange(similarityNameBytes, startOffset, len);
+            similarityFiltersCached = SimilarityFiltersFactory.getSimilarityFilters(similarityName,
+                    similarityThreshold);
         }
         return similarityFiltersCached;
     }

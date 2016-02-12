@@ -36,20 +36,19 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
-    private final static byte SER_FLOAT_TYPE_TAG = ATypeTag.FLOAT.serialize();
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -58,20 +57,22 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator evalLen = args[0].createEvaluator(inputVal);
-                    private final ICopyEvaluator evalThreshold = args[1].createEvaluator(inputVal);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable inputVal = new VoidPointable();
+                    private final IScalarEvaluator evalLen = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator evalThreshold = args[1].createScalarEvaluator(ctx);
 
                     private float similarityThresholdCache;
                     private SimilarityFiltersJaccard similarityFilters;
@@ -83,26 +84,27 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                             .getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         // length
-                        inputVal.reset();
-                        evalLen.evaluate(tuple);
+                        evalLen.evaluate(tuple, inputVal);
                         int length = 0;
                         try {
-                            length = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+                            length = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), inputVal.getStartOffset());
                         } catch (HyracksDataException e1) {
                             throw new AlgebricksException(e1);
                         }
 
                         // similarity threshold
-                        inputVal.reset();
-                        evalThreshold.evaluate(tuple);
-                        if (inputVal.getByteArray()[0] != SER_FLOAT_TYPE_TAG) {
+                        evalThreshold.evaluate(tuple, inputVal);
+                        byte[] data = inputVal.getByteArray();
+                        int offset = inputVal.getStartOffset();
+                        if (data[offset] != ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
                                     + ": expects type FLOAT the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
                         }
-                        float similarityThreshold = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                        float similarityThreshold = AFloatSerializerDeserializer.getFloat(data, offset + 1);
 
                         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {
                             similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);
@@ -116,6 +118,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

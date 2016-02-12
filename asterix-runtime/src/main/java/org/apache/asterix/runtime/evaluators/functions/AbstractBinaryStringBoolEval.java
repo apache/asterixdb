@@ -28,20 +28,26 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
-    private DataOutput dout;
-    private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
-    private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
-    private ICopyEvaluator evalLeft;
-    private ICopyEvaluator evalRight;
+public abstract class AbstractBinaryStringBoolEval implements IScalarEvaluator {
+
+    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private DataOutput dout = resultStorage.getDataOutput();
+
+    private IPointable ptr0 = new VoidPointable();
+    private IPointable ptr1 = new VoidPointable();
+    private IScalarEvaluator evalLeft;
+    private IScalarEvaluator evalRight;
     private final FunctionIdentifier funcID;
 
     private final UTF8StringPointable leftPtr = new UTF8StringPointable();
@@ -54,39 +60,45 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
-    public AbstractBinaryStringBoolEval(DataOutput dout, ICopyEvaluatorFactory evalLeftFactory,
-            ICopyEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
-        this.dout = dout;
-        this.evalLeft = evalLeftFactory.createEvaluator(array0);
-        this.evalRight = evalRightFactory.createEvaluator(array1);
+    public AbstractBinaryStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
+            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
+        this.evalLeft = evalLeftFactory.createScalarEvaluator(context);
+        this.evalRight = evalRightFactory.createScalarEvaluator(context);
         this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-        array0.reset();
-        evalLeft.evaluate(tuple);
-        array1.reset();
-        evalRight.evaluate(tuple);
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        evalLeft.evaluate(tuple, ptr0);
+        evalRight.evaluate(tuple, ptr1);
 
+        byte[] bytes0 = ptr0.getByteArray();
+        int offset0 = ptr0.getStartOffset();
+        int len0 = ptr0.getLength();
+        byte[] bytes1 = ptr1.getByteArray();
+        int offset1 = ptr1.getStartOffset();
+        int len1 = ptr1.getLength();
+
+        resultStorage.reset();
         try {
-            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
+                result.set(resultStorage);
                 return;
-            } else if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            } else if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                 throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + " and "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ")!");
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")!");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
 
-        leftPtr.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
-        rightPtr.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
+        leftPtr.set(bytes0, offset0 + 1, len0 - 1);
+        rightPtr.set(bytes1, offset1 + 1, len1 - 1);
 
         ABoolean res = compute(leftPtr, rightPtr) ? ABoolean.TRUE : ABoolean.FALSE;
         try {
@@ -94,6 +106,7 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws AlgebricksException;

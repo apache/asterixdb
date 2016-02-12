@@ -18,40 +18,40 @@
  */
 package org.apache.asterix.runtime.aggregates.collections;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFunctionFactory {
+public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
-    private ICopyEvaluatorFactory[] args;
+    private IScalarEvaluatorFactory[] args;
     private final AOrderedListType orderedlistType;
 
-    public ListifyAggregateFunctionEvalFactory(ICopyEvaluatorFactory[] args, AOrderedListType type) {
+    public ListifyAggregateFunctionEvalFactory(IScalarEvaluatorFactory[] args, AOrderedListType type) {
         this.args = args;
         this.orderedlistType = type;
     }
 
     @Override
-    public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
-            throws AlgebricksException {
+    public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-        return new ICopyAggregateFunction() {
+        return new IAggregateEvaluator() {
 
-            private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
-            private DataOutput out = provider.getDataOutput();
+            private IPointable inputVal = new VoidPointable();
+            private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
+            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
             private OrderedListBuilder builder = new OrderedListBuilder();
 
             @Override
@@ -62,8 +62,7 @@ public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFuncti
             @Override
             public void step(IFrameTupleReference tuple) throws AlgebricksException {
                 try {
-                    inputVal.reset();
-                    eval.evaluate(tuple);
+                    eval.evaluate(tuple, inputVal);
                     builder.addItem(inputVal);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
@@ -71,17 +70,19 @@ public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFuncti
             }
 
             @Override
-            public void finish() throws AlgebricksException {
+            public void finish(IPointable result) throws AlgebricksException {
+                resultStorage.reset();
                 try {
-                    builder.write(out, true);
+                    builder.write(resultStorage.getDataOutput(), true);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }
+                result.set(resultStorage);
             }
 
             @Override
-            public void finishPartial() throws AlgebricksException {
-                finish();
+            public void finishPartial(IPointable result) throws AlgebricksException {
+                finish(result);
             }
 
         };

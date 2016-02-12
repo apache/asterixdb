@@ -29,29 +29,31 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
 
-    protected final ICopyEvaluator edThreshEval;
-    protected long edThresh = -1;
+    protected final IScalarEvaluator edThreshEval;
+    protected int edThresh;
+    private final IPointable argPtrThreshold = new VoidPointable();
     protected final OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage listItemVal;
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    protected final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
 
-    public EditDistanceCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
-        edThreshEval = args[2].createEvaluator(argOut);
+        super(args, context);
+        edThreshEval = args[2].createScalarEvaluator(context);
         listBuilder = new OrderedListBuilder();
         listItemVal = new ArrayBackedValueStorage();
     }
@@ -59,28 +61,30 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     @Override
     protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
         super.runArgEvals(tuple);
-        int edThreshStart = argOut.getLength();
-        edThreshEval.evaluate(tuple);
+        edThreshEval.evaluate(tuple, argPtrThreshold);
         try {
-            edThresh = ATypeHierarchy.getIntegerValue(argOut.getByteArray(), edThreshStart);
+            edThresh = ATypeHierarchy.getIntegerValue(argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
 
     @Override
-    protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
+    protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
             throws AlgebricksException, HyracksDataException {
+        byte[] leftBytes = left.getByteArray();
+        int leftStartOffset = left.getStartOffset();
+        byte[] rightBytes = right.getByteArray();
+        int rightStartOffset = right.getStartOffset();
         switch (argType) {
-
             case STRING: {
-                return ed.UTF8StringEditDistance(bytes, firstStart + typeIndicatorSize,
-                        secondStart + typeIndicatorSize, (int) edThresh);
+                return ed.UTF8StringEditDistance(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
+                        rightStartOffset + typeIndicatorSize, edThresh);
             }
 
             case ORDEREDLIST: {
-                firstOrdListIter.reset(bytes, firstStart);
-                secondOrdListIter.reset(bytes, secondStart);
+                firstOrdListIter.reset(leftBytes, leftStartOffset);
+                secondOrdListIter.reset(rightBytes, rightStartOffset);
                 return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter, edThresh);
             }
 
@@ -94,7 +98,6 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
 
     @Override
     protected void writeResult(int ed) throws IOException {
-
         listBuilder.reset(new AOrderedListType(BuiltinType.ANY, "list"));
         boolean matches = (ed < 0) ? false : true;
         listItemVal.reset();
@@ -105,7 +108,6 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
         aInt64.setValue((matches) ? ed : Integer.MAX_VALUE);
         int64Serde.serialize(aInt64, listItemVal.getDataOutput());
         listBuilder.addItem(listItemVal);
-
         listBuilder.write(out, true);
     }
 }

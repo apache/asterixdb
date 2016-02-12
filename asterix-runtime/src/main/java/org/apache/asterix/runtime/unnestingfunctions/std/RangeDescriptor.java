@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -30,13 +28,15 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -45,6 +45,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RangeDescriptor();
         }
@@ -56,41 +57,39 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     }
 
     @Override
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ICopyUnnestingFunctionFactory() {
+        return new IUnnestingEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyUnnestingFunction createUnnestingFunction(final IDataOutputProvider provider)
+            public IUnnestingEvaluator createUnnestingEvaluator(final IHyracksTaskContext ctx)
                     throws AlgebricksException {
-                return new ICopyUnnestingFunction() {
+                return new IUnnestingEvaluator() {
 
-                    private DataOutput out = provider.getDataOutput();
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
-                    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(inputVal);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(inputVal);
+                    private IPointable inputVal = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     private long current;
                     private long max;
 
                     @Override
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
-                        inputVal.reset();
-                        eval0.evaluate(tuple);
+                        eval0.evaluate(tuple, inputVal);
                         try {
-                            current = ATypeHierarchy.getLongValue(inputVal.getByteArray(), 0);
+                            current = ATypeHierarchy.getLongValue(inputVal.getByteArray(), inputVal.getStartOffset());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
-                        inputVal.reset();
-                        eval1.evaluate(tuple);
+                        eval1.evaluate(tuple, inputVal);
                         try {
-                            max = ATypeHierarchy.getLongValue(inputVal.getByteArray(), 0);
+                            max = ATypeHierarchy.getLongValue(inputVal.getByteArray(), inputVal.getStartOffset());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
@@ -98,13 +97,15 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public boolean step() throws AlgebricksException {
+                    public boolean step(IPointable result) throws AlgebricksException {
                         if (current > max) {
                             return false;
                         }
                         aInt64.setValue(current);
                         try {
-                            serde.serialize(aInt64, out);
+                            resultStorage.reset();
+                            serde.serialize(aInt64, resultStorage.getDataOutput());
+                            result.set(resultStorage);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }

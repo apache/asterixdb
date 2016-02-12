@@ -37,12 +37,14 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -63,20 +65,22 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr0 = new VoidPointable();
+                    private IPointable argPtr1 = new VoidPointable();
+                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -89,34 +93,38 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut0.reset();
-                        eval0.evaluate(tuple);
-                        argOut1.reset();
-                        eval1.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
+
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
+                        int len0 = argPtr0.getLength();
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
+                        int len1 = argPtr1.getLength();
 
                         try {
-                            if (argOut0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argOut1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                    || argOut1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        getIdentifier().getName() + ": expects two strings but got  ("
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(
-                                                        argOut0.getByteArray()[0])
-                                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                        .deserialize(argOut1.getByteArray()[0])
-                                                + ")");
+                            if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expects two strings but got  ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
                             }
-                            utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
+                            utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
                             int start0 = utf8Ptr.getCharStartOffset();
                             int length0 = utf8Ptr.getUTF8Length();
 
-                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                            utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                             int start1 = utf8Ptr.getCharStartOffset();
                             int length1 = utf8Ptr.getUTF8Length();
                             long chronon = 0;
@@ -128,14 +136,13 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                 // search for "|"
                                 formatLength = 0;
                                 for (; formatStart + formatLength < start1 + length1; formatLength++) {
-                                    if (argOut1.getByteArray()[formatStart + formatLength] == '|') {
+                                    if (argPtr1.getByteArray()[formatStart + formatLength] == '|') {
                                         break;
                                     }
                                 }
                                 try {
-                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), start0, length0,
-                                            argOut1.getByteArray(), formatStart, formatLength,
-                                            DateTimeParseMode.DATE_ONLY);
+                                    chronon = DT_UTILS.parseDateTime(bytes0, start0, length0, bytes1, formatStart,
+                                            formatLength, DateTimeParseMode.DATE_ONLY);
                                 } catch (AsterixTemporalTypeParseException ex) {
                                     formatStart += formatLength + 1;
                                     continue;
@@ -150,10 +157,10 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                             aDate.setValue((int) (chronon / GregorianCalendarSystem.CHRONON_OF_DAY));
                             dateSerde.serialize(aDate, out);
-
                         } catch (HyracksDataException ex) {
                             throw new AlgebricksException(ex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

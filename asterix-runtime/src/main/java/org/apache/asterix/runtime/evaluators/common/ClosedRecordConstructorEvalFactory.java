@@ -20,78 +20,75 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ClosedRecordConstructorEvalFactory implements ICopyEvaluatorFactory {
+public class ClosedRecordConstructorEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory[] args;
+    private IScalarEvaluatorFactory[] args;
     private ARecordType recType;
 
-    public ClosedRecordConstructorEvalFactory(ICopyEvaluatorFactory[] args, ARecordType recType) {
+    public ClosedRecordConstructorEvalFactory(IScalarEvaluatorFactory[] args, ARecordType recType) {
         this.args = args;
         this.recType = recType;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
         int n = args.length / 2;
-        ICopyEvaluator[] evalFields = new ICopyEvaluator[n];
-        ArrayBackedValueStorage fieldValueBuffer = new ArrayBackedValueStorage();
+        IScalarEvaluator[] evalFields = new IScalarEvaluator[n];
         for (int i = 0; i < n; i++) {
-            evalFields[i] = args[2 * i + 1].createEvaluator(fieldValueBuffer);
+            evalFields[i] = args[2 * i + 1].createScalarEvaluator(ctx);
         }
-        DataOutput out = output.getDataOutput();
-        return new ClosedRecordConstructorEval(recType, evalFields, fieldValueBuffer, out);
+        return new ClosedRecordConstructorEval(recType, evalFields);
     }
 
-    public static class ClosedRecordConstructorEval implements ICopyEvaluator {
-
-        private ICopyEvaluator[] evalFields;
-        private DataOutput out;
-        private IARecordBuilder recBuilder = new RecordBuilder();
-        private ARecordType recType;
-        private ArrayBackedValueStorage fieldValueBuffer = new ArrayBackedValueStorage();
+    public static class ClosedRecordConstructorEval implements IScalarEvaluator {
+        private IScalarEvaluator[] evalFields;
+        private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+        private final DataOutput out = resultStorage.getDataOutput();
+        private final IARecordBuilder recBuilder = new RecordBuilder();
+        private final ARecordType recType;
+        private final IPointable fieldValuePointable = new VoidPointable();
         private boolean first = true;
 
-        public ClosedRecordConstructorEval(ARecordType recType, ICopyEvaluator[] evalFields,
-                ArrayBackedValueStorage fieldValueBuffer, DataOutput out) {
+        public ClosedRecordConstructorEval(ARecordType recType, IScalarEvaluator[] evalFields) {
             this.evalFields = evalFields;
-            this.fieldValueBuffer = fieldValueBuffer;
-            this.out = out;
             this.recType = recType;
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
             try {
+                resultStorage.reset();
                 if (first) {
                     first = false;
                     recBuilder.reset(this.recType);
                 }
                 recBuilder.init();
                 for (int i = 0; i < evalFields.length; i++) {
-                    fieldValueBuffer.reset();
-                    evalFields[i].evaluate(tuple);
-                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        recBuilder.addField(i, fieldValueBuffer);
+                    evalFields[i].evaluate(tuple, fieldValuePointable);
+                    if (fieldValuePointable.getByteArray()[fieldValuePointable
+                            .getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        recBuilder.addField(i, fieldValuePointable);
                     }
                 }
                 recBuilder.write(out, true);
+                result.set(resultStorage);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }

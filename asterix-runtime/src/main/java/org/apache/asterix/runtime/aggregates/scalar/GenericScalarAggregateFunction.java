@@ -20,41 +20,41 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.runtime.aggregates.base.SingleFieldFrameTupleReference;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * Implements scalar aggregates by iterating over a collection with the ScanCollection unnesting function,
  * and applying the corresponding ICopyAggregateFunction to each collection-item.
  */
-public class GenericScalarAggregateFunction implements ICopyEvaluator {
+public class GenericScalarAggregateFunction implements IScalarEvaluator {
 
-    private final ArrayBackedValueStorage listItemOut = new ArrayBackedValueStorage();
-    private final ICopyAggregateFunction aggFunc;
-    private final ICopyUnnestingFunction scanCollection;
+    private final IPointable listItemOut = new VoidPointable();
+    private final IAggregateEvaluator aggFunc;
+    private final IUnnestingEvaluator scanCollection;
 
     private final SingleFieldFrameTupleReference itemTuple = new SingleFieldFrameTupleReference();
 
-    public GenericScalarAggregateFunction(ICopyAggregateFunction aggFunc,
-            ICopyUnnestingFunctionFactory scanCollectionFactory) throws AlgebricksException {
+    public GenericScalarAggregateFunction(IAggregateEvaluator aggFunc, IUnnestingEvaluatorFactory scanCollectionFactory,
+            IHyracksTaskContext context) throws AlgebricksException {
         this.aggFunc = aggFunc;
-        this.scanCollection = scanCollectionFactory.createUnnestingFunction(listItemOut);
-        listItemOut.reset();
+        this.scanCollection = scanCollectionFactory.createUnnestingEvaluator(context);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
         scanCollection.init(tuple);
         aggFunc.init();
-        while (scanCollection.step()) {
-            itemTuple.reset(listItemOut.getByteArray(), 0, listItemOut.getLength());
+        while (scanCollection.step(listItemOut)) {
+            itemTuple.reset(listItemOut.getByteArray(), listItemOut.getStartOffset(), listItemOut.getLength());
             aggFunc.step(itemTuple);
-            listItemOut.reset();
         }
-        aggFunc.finish();
+        aggFunc.finish(result);
     }
 }

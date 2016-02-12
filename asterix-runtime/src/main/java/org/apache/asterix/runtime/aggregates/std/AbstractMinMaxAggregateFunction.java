@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -27,46 +26,48 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateFunction {
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
+public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvaluator {
+    private IPointable inputVal = new VoidPointable();
     private ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage tempValForCasting = new ArrayBackedValueStorage();
-    protected DataOutput out;
-    private ICopyEvaluator eval;
+
+    protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private IScalarEvaluator eval;
     protected ATypeTag aggType;
     private IBinaryComparator cmp;
     private ITypeConvertComputer tpc;
     private final boolean isMin;
 
-    public AbstractMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin)
+    public AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin)
             throws AlgebricksException {
-        out = provider.getDataOutput();
-        eval = args[0].createEvaluator(inputVal);
+        eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
     }
 
     @Override
     public void init() {
         aggType = ATypeTag.SYSTEM_NULL;
-        outputVal.reset();
         tempValForCasting.reset();
     }
 
     @Override
     public void step(IFrameTupleReference tuple) throws AlgebricksException {
-        inputVal.reset();
-        eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
+        eval.evaluate(tuple, inputVal);
+
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         if (typeTag == ATypeTag.NULL) {
             processNull();
             return;
@@ -110,7 +111,6 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }
-                    outputVal.reset();
                     outputVal.assign(tempValForCasting);
                 }
                 try {
@@ -157,19 +157,22 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
     }
 
     @Override
-    public void finish() throws AlgebricksException {
+    public void finish(IPointable result) throws AlgebricksException {
+        resultStorage.reset();
         try {
             switch (aggType) {
                 case NULL: {
-                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                    resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                    result.set(resultStorage);
                     break;
                 }
                 case SYSTEM_NULL: {
                     finishSystemNull();
+                    result.set(resultStorage);
                     break;
                 }
                 default: {
-                    out.write(outputVal.getByteArray(), outputVal.getStartOffset(), outputVal.getLength());
+                    result.set(outputVal);
                     break;
                 }
             }
@@ -179,8 +182,8 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
     }
 
     @Override
-    public void finishPartial() throws AlgebricksException {
-        finish();
+    public void finishPartial(IPointable result) throws AlgebricksException {
+        finish(result);
     }
 
     protected boolean skipStep() {

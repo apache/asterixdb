@@ -18,31 +18,28 @@
  */
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -56,68 +53,65 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
     };
 
     @Override
-    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ICopyUnnestingFunctionFactory() {
+        return new IUnnestingEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider)
-                    throws AlgebricksException {
+            public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
 
-                final DataOutput out = provider.getDataOutput();
-
-                return new ICopyUnnestingFunction() {
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalList = args[0].createEvaluator(inputVal);
-                    private ICopyEvaluator evalStart = args[1].createEvaluator(inputVal);
-                    private ICopyEvaluator evalLen = args[2].createEvaluator(inputVal);
+                return new IUnnestingEvaluator() {
+                    private IPointable inputVal = new VoidPointable();
+                    private IScalarEvaluator evalList = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalLen = args[2].createScalarEvaluator(ctx);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private int numItems;
                     private int numItemsMax;
                     private int posStart;
                     private int posCrt;
                     private ATypeTag itemTag;
                     private boolean selfDescList = false;
+                    private boolean metNull = false;
 
                     @Override
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
                         try {
-                            inputVal.reset();
-                            evalStart.evaluate(tuple);
+                            evalStart.evaluate(tuple, inputVal);
+                            posStart = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(),
+                                    inputVal.getStartOffset());
 
-                            posStart = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+                            evalLen.evaluate(tuple, inputVal);
+                            numItems = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(),
+                                    inputVal.getStartOffset());
 
-                            inputVal.reset();
-                            evalLen.evaluate(tuple);
-
-                            numItems = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
-
-                            inputVal.reset();
-                            evalList.evaluate(tuple);
-
+                            evalList.evaluate(tuple, inputVal);
                             byte[] serList = inputVal.getByteArray();
+                            int offset = inputVal.getStartOffset();
+                            metNull = false;
 
-                            if (serList[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
+                            byte typeTag = serList[offset];
+                            if (typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                metNull = true;
                                 return;
                             }
 
-                            if (serList[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                    && serList[0] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                            if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException("Subset-collection is not defined for values of type"
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag));
                             }
-                            if (serList[0] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG)
-                                numItemsMax = AOrderedListSerializerDeserializer.getNumberOfItems(serList);
-                            else
-                                numItemsMax = AUnorderedListSerializerDeserializer.getNumberOfItems(serList);
+                            if (typeTag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                                numItemsMax = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
+                            } else {
+                                numItemsMax = AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset);
+                            }
 
-                            itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[1]);
-                            if (itemTag == ATypeTag.ANY)
+                            itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset + 1]);
+                            if (itemTag == ATypeTag.ANY) {
                                 selfDescList = true;
+                            }
 
                             posCrt = posStart;
                         } catch (IOException e) {
@@ -126,24 +120,31 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     }
 
                     @Override
-                    public boolean step() throws AlgebricksException {
-                        if (posCrt < posStart + numItems && posCrt < numItemsMax) {
+                    public boolean step(IPointable result) throws AlgebricksException {
+                        if (!metNull && posCrt < posStart + numItems && posCrt < numItemsMax) {
+                            resultStorage.reset();
                             byte[] serList = inputVal.getByteArray();
+                            int offset = inputVal.getStartOffset();
                             int itemLength = 0;
                             try {
-                                int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, posCrt);
-                                if (selfDescList)
+                                int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
+                                        posCrt);
+                                if (selfDescList) {
                                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
+                                }
                                 itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag,
                                         selfDescList);
-                                if (!selfDescList)
-                                    out.writeByte(itemTag.serialize());
-                                out.write(serList, itemOffset, itemLength + (!selfDescList ? 0 : 1));
+                                if (!selfDescList) {
+                                    resultStorage.getDataOutput().writeByte(itemTag.serialize());
+                                }
+                                resultStorage.getDataOutput().write(serList, itemOffset,
+                                        itemLength + (!selfDescList ? 0 : 1));
                             } catch (IOException e) {
                                 throw new AlgebricksException(e);
                             } catch (AsterixException e) {
                                 throw new AlgebricksException(e);
                             }
+                            result.set(resultStorage);
                             ++posCrt;
                             return true;
                         }

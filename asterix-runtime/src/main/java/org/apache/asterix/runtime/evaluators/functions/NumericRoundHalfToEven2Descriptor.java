@@ -50,11 +50,13 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -74,19 +76,20 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
-                    private ICopyEvaluator precision = args[1].createEvaluator(argOut);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator precision = args[1].createScalarEvaluator(ctx);
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -97,17 +100,19 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                     private ISerializerDeserializer serde;
 
                     private int getPrecision(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        precision.evaluate(tuple);
+                        resultStorage.reset();
+                        precision.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
 
-                        if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
-                            return AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
-                        } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
-                            return AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
-                        } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            return AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
-                        } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                            return (int) AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
+                        if (bytes[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                            return AInt8SerializerDeserializer.getByte(bytes, offset + 1);
+                        } else if (bytes[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
+                            return AInt16SerializerDeserializer.getShort(bytes, offset + 1);
+                        } else if (bytes[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                            return AInt32SerializerDeserializer.getInt(bytes, offset + 1);
+                        } else if (bytes[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
+                            return (int) AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                         } else {
                             throw new AlgebricksException(AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
                                     + ": the precision argument should be an INT8/INT16/INT32/INT64.");
@@ -116,43 +121,45 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
+                        byte[] data = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
 
                         try {
-                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ANULL);
                                 serde.serialize(ANull.NULL, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
-                                byte val = AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
+                                byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
                                 aInt8.setValue(val);
                                 serde.serialize(aInt8, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
-                                short val = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
+                                short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
                                 aInt16.setValue(val);
                                 serde.serialize(aInt16, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
-                                int val = AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
+                                int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
                                 aInt32.setValue(val);
                                 serde.serialize(aInt32, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
-                                long val = AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
+                                long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
                                 aInt64.setValue(val);
                                 serde.serialize(aInt64, out);
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                float val = AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
+                                float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
                                 if (Float.isNaN(val) || Float.isInfinite(val) || val == -0.0F || val == 0.0F) {
                                     aFloat.setValue(val);
                                     serde.serialize(aFloat, out);
@@ -162,10 +169,10 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                             r.setScale(getPrecision(tuple), BigDecimal.ROUND_HALF_EVEN).floatValue());
                                     serde.serialize(aFloat, out);
                                 }
-                            } else if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                            } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                double val = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
+                                double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                                 if (Double.isNaN(val) || Double.isInfinite(val) || val == -0.0D || val == 0.0D) {
                                     aDouble.setValue(val);
                                     serde.serialize(aDouble, out);
@@ -176,13 +183,15 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                     serde.serialize(aDouble, out);
                                 }
                             } else {
-                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2
-                                        .getName() + ": not implemented for "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                                throw new NotImplementedException(
+                                        AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
+                                                + ": not implemented for "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
                             }
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

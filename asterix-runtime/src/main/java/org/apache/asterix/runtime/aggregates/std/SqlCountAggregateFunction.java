@@ -19,17 +19,17 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * COUNT returns the number of non-null items in the given list. Note that COUNT(NULL) is not allowed.
  */
 public class SqlCountAggregateFunction extends AbstractCountAggregateFunction {
 
-    public SqlCountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public SqlCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
+        super(args, context);
     }
 
     @Override

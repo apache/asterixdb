@@ -64,10 +64,8 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
@@ -126,7 +124,7 @@ public abstract class SecondaryIndexOperationsHelper {
     protected ITypeTraits[] secondaryTypeTraits;
     protected int[] secondaryBloomFilterKeyFields;
     protected RecordDescriptor secondaryRecDesc;
-    protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
+    protected IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
     protected IAsterixPropertiesProvider propertiesProvider;
     protected ILSMMergePolicyFactory mergePolicyFactory;
@@ -152,10 +150,10 @@ public abstract class SecondaryIndexOperationsHelper {
     }
 
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(IndexType indexType, String dataverseName,
-            String datasetName, String indexName, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
+            String datasetName, String indexName, List<List<String>> secondaryKeyFields, List<IAType> secondaryKeyTypes,
+            boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
             PhysicalOptimizationConfig physOptConf, ARecordType recType, ARecordType enforcedType)
-            throws AsterixException, AlgebricksException {
+                    throws AsterixException, AlgebricksException {
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         SecondaryIndexOperationsHelper indexOperationsHelper = null;
         switch (indexType) {
@@ -286,8 +284,8 @@ public abstract class SecondaryIndexOperationsHelper {
                 throw new AlgebricksException(e);
             }
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
-            primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
-                    keyType, true);
+            primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(keyType, true);
             primaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
             primaryBloomFilterKeyFields[i] = i;
         }
@@ -300,8 +298,8 @@ public abstract class SecondaryIndexOperationsHelper {
             List<List<String>> secondaryKeyFields, List<IAType> secondaryKeyTypes, int gramLength,
             AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException;
 
-    protected AbstractOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec) throws AsterixException,
-            AlgebricksException {
+    protected AbstractOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec)
+            throws AsterixException, AlgebricksException {
         // Build dummy tuple containing one field with a dummy value inside.
         ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
         DataOutput dos = tb.getDataOutput();
@@ -345,12 +343,12 @@ public abstract class SecondaryIndexOperationsHelper {
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
                 primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        mergePolicyFactory, mergePolicyFactoryProperties, new PrimaryIndexOperationTrackerProvider(
-                                dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                .getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
-                        primaryBTreeFields, primaryFilterFields, !temp), false, false, null,
-                searchCallbackFactory, null, null);
+                        mergePolicyFactory, mergePolicyFactoryProperties,
+                        new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
+                        primaryBTreeFields, primaryFilterFields, !temp),
+                false, false, null, searchCallbackFactory, null, null);
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
@@ -377,8 +375,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
         for (int i = 0; i < secondaryFieldAccessEvalFactories.length; ++i) {
-            sefs[i] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
-                    secondaryFieldAccessEvalFactories[i]);
+            sefs[i] = secondaryFieldAccessEvalFactories[i];
         }
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         AlgebricksMetaOperatorDescriptor asterixAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
@@ -408,10 +405,10 @@ public abstract class SecondaryIndexOperationsHelper {
         for (int i = 0; i <= numPrimaryKeys; i++) {
             projectionList[i] = i;
         }
-        ICopyEvaluatorFactory[] castEvalFact = new ICopyEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
+        IScalarEvaluatorFactory[] castEvalFact = new IScalarEvaluatorFactory[] {
+                new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
-        sefs[0] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
-                castFuncDesc.createEvaluatorFactory(castEvalFact));
+        sefs[0] = castFuncDesc.createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         AlgebricksMetaOperatorDescriptor castRecAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { castAssign }, new RecordDescriptor[] { enforcedRecDesc });
@@ -433,7 +430,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected TreeIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
             int numSecondaryKeyFields, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor)
-            throws MetadataException, AlgebricksException {
+                    throws MetadataException, AlgebricksException {
         int[] fieldPermutation = new int[numSecondaryKeyFields + numPrimaryKeys + numFilterFields];
         for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = i;
@@ -450,19 +447,19 @@ public abstract class SecondaryIndexOperationsHelper {
 
     public AlgebricksMetaOperatorDescriptor createFilterNullsSelectOp(JobSpecification spec, int numSecondaryKeyFields)
             throws AlgebricksException {
-        ICopyEvaluatorFactory[] andArgsEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeyFields];
+        IScalarEvaluatorFactory[] andArgsEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeyFields];
         NotDescriptor notDesc = new NotDescriptor();
         IsNullDescriptor isNullDesc = new IsNullDescriptor();
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
-            ICopyEvaluatorFactory isNullEvalFactory = isNullDesc
-                    .createEvaluatorFactory(new ICopyEvaluatorFactory[] { columnAccessEvalFactory });
-            ICopyEvaluatorFactory notEvalFactory = notDesc
-                    .createEvaluatorFactory(new ICopyEvaluatorFactory[] { isNullEvalFactory });
+            IScalarEvaluatorFactory isNullEvalFactory = isNullDesc
+                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
+            IScalarEvaluatorFactory notEvalFactory = notDesc
+                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { isNullEvalFactory });
             andArgsEvalFactories[i] = notEvalFactory;
         }
-        ICopyEvaluatorFactory selectCond = null;
+        IScalarEvaluatorFactory selectCond = null;
         if (numSecondaryKeyFields > 1) {
             // Create conjunctive condition where all secondary index keys must
             // satisfy 'is not null'.
@@ -471,9 +468,8 @@ public abstract class SecondaryIndexOperationsHelper {
         } else {
             selectCond = andArgsEvalFactories[0];
         }
-        StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(
-                new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(selectCond),
-                null, AqlBinaryBooleanInspectorImpl.FACTORY, false, -1, null);
+        StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(selectCond, null,
+                AqlBinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         AlgebricksMetaOperatorDescriptor asterixSelectOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { select }, new RecordDescriptor[] { secondaryRecDesc });
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixSelectOp,
@@ -525,8 +521,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
         for (int i = 0; i < secondaryFieldAccessEvalFactories.length; ++i) {
-            sefs[i] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
-                    secondaryFieldAccessEvalFactories[i]);
+            sefs[i] = secondaryFieldAccessEvalFactories[i];
         }
         //add External RIDs to the projection list
         for (int i = 0; i < numPrimaryKeys; i++) {
@@ -541,7 +536,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected ExternalIndexBulkModifyOperatorDescriptor createExternalIndexBulkModifyOp(JobSpecification spec,
             int numSecondaryKeyFields, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor)
-            throws MetadataException, AlgebricksException {
+                    throws MetadataException, AlgebricksException {
         int[] fieldPermutation = new int[numSecondaryKeyFields + numPrimaryKeys];
         for (int i = 0; i < numSecondaryKeyFields + numPrimaryKeys; i++) {
             fieldPermutation[i] = i;
@@ -549,8 +544,9 @@ public abstract class SecondaryIndexOperationsHelper {
         // create a list of file ids
         int numOfDeletedFiles = 0;
         for (ExternalFile file : externalFiles) {
-            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP)
+            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
                 numOfDeletedFiles++;
+            }
         }
         int[] deletedFiles = new int[numOfDeletedFiles];
         int i = 0;

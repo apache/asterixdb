@@ -19,9 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -29,10 +26,11 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
@@ -51,33 +49,28 @@ public class NotNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private String errorMessage = AsterixBuiltinFunctions.NOT_NULL
                             + ": the input value cannot be NULL.";
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        eval.evaluate(tuple, inputArg);
+                        byte[] data = inputArg.getByteArray();
+                        int offset = inputArg.getStartOffset();
 
-                        try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] data = outInput.getByteArray();
-                            if (data[outInput.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                throw new AlgebricksException(errorMessage);
-                            }
-                            out.write(data, outInput.getStartOffset(), outInput.getLength());
-                        } catch (IOException e1) {
+                        if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             throw new AlgebricksException(errorMessage);
                         }
+                        result.set(inputArg);
                     }
                 };
             }

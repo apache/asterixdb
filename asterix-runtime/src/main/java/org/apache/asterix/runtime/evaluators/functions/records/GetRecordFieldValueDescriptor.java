@@ -24,7 +24,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class GetRecordFieldValueDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -47,7 +47,7 @@ public class GetRecordFieldValueDescriptor extends AbstractScalarFunctionDynamic
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new GetRecordFieldValueEvalFactory(args[0], args[1], recType);
     }
 

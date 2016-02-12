@@ -30,10 +30,11 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
@@ -54,51 +55,53 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new AbstractCopyEvaluator(output, args) {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
-                    private final byte SER_BINARY_TYPE = ATypeTag.BINARY.serialize();
                     private final byte[] metaBuffer = new byte[5];
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         ATypeTag typeTag = evaluateTuple(tuple, 0);
                         if (typeTag != ATypeTag.UNORDEREDLIST && typeTag != ATypeTag.ORDEREDLIST) {
                             throw new AlgebricksException(getIdentifier().getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got " + typeTag);
                         }
                         try {
-                            listAccessor.reset(storages[0].getByteArray(), 0);
+                            byte[] data = pointables[0].getByteArray();
+                            int offset = pointables[0].getStartOffset();
 
+                            listAccessor.reset(data, offset);
                             int concatLength = 0;
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
                                 if (itemType != ATypeTag.BINARY) {
                                     if (serializeNullIfAnyNull(itemType)) {
+                                        result.set(resultStorage);
                                         return;
                                     }
                                     throw new AlgebricksException(getIdentifier().getName()
                                             + ": expects type STRING/NULL for the list item but got " + itemType);
                                 }
-                                concatLength += ByteArrayPointable.getContentLength(storages[0].getByteArray(),
-                                        itemOffset);
+                                concatLength += ByteArrayPointable.getContentLength(data, itemOffset);
                             }
-                            dataOutput.writeByte(SER_BINARY_TYPE);
+                            dataOutput.writeByte(ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
                             int metaLen = VarLenIntEncoderDecoder.encode(concatLength, metaBuffer, 0);
                             dataOutput.write(metaBuffer, 0, metaLen);
 
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
-                                int length = ByteArrayPointable.getContentLength(storages[0].getByteArray(),
-                                        itemOffset);
-                                dataOutput.write(storages[0].getByteArray(),
+                                int length = ByteArrayPointable.getContentLength(data, itemOffset);
+                                dataOutput.write(data,
                                         itemOffset + ByteArrayPointable.getNumberBytesToStoreMeta(length), length);
                             }
                         } catch (HyracksDataException e) {
@@ -108,7 +111,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         } catch (AsterixException e) {
                             throw new AlgebricksException(e);
                         }
-
+                        result.set(resultStorage);
                     }
                 };
 

@@ -35,11 +35,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -56,18 +58,20 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
@@ -80,21 +84,22 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
+
                         try {
-                            if (argOut.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut.getByteArray()[0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                if (bytes[offset] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     throw new AlgebricksException(
                                             FID.getName() + ": expects input type DATETIME/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                            .deserialize(argOut.getByteArray()[0]));
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
                                 }
-                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(argOut.getByteArray(),
-                                        1);
+                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);
                                 int dateChrononInDays = (int) (datetimeChronon
                                         / GregorianCalendarSystem.CHRONON_OF_DAY);
                                 if (dateChrononInDays < 0
@@ -107,6 +112,7 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

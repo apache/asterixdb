@@ -36,10 +36,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -56,17 +58,19 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr = new VoidPointable();
+                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -77,31 +81,32 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
-                        byte[] bytes = argOut.getByteArray();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        eval.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int startOffset = argPtr.getStartOffset();
+                        resultStorage.reset();
 
                         try {
                             double cX;
                             double cY;
-                            if (bytes[0] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
-                                cX = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X));
-                                cY = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y));
+                            if (bytes[startOffset] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
+                                cX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X));
+                                cY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(cX, cY);
                                 pointSerde.serialize(aPoint, out);
-                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new AlgebricksException("get-center does not support the type: " + bytes[0]
-                                        + " It is only implemented for CIRCLE.");
+                                throw new AlgebricksException("get-center does not support the type: "
+                                        + bytes[startOffset] + " It is only implemented for CIRCLE.");
                             }
-
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

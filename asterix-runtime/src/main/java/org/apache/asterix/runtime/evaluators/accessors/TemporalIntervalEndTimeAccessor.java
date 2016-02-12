@@ -35,10 +35,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -54,20 +56,19 @@ public class TemporalIntervalEndTimeAccessor extends AbstractScalarFunctionDynam
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-
-                    private final DataOutput out = output.getDataOutput();
-
-                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-
-                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr = new VoidPointable();
+                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     // possible output
                     @SuppressWarnings("unchecked")
@@ -79,18 +80,21 @@ public class TemporalIntervalEndTimeAccessor extends AbstractScalarFunctionDynam
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
-                        byte[] bytes = argOut.getByteArray();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        eval.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int startOffset = argPtr.getStartOffset();
 
+                        resultStorage.reset();
                         try {
-                            if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                                 return;
-                            } else if (bytes[0] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes, 1);
-                                long endTime = AIntervalSerializerDeserializer.getIntervalEnd(bytes, 1);
+                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                                byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
+                                        startOffset + 1);
+                                long endTime = AIntervalSerializerDeserializer.getIntervalEnd(bytes, startOffset + 1);
                                 if (timeType == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                     aTime.setValue((int) (endTime));
                                     timeSerde.serialize(aTime, out);
@@ -100,13 +104,14 @@ public class TemporalIntervalEndTimeAccessor extends AbstractScalarFunctionDynam
                                             + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(timeType) + ")");
                                 }
                             } else {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects NULL/INTERVAL(of TIME), but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[0]));
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/INTERVAL(of TIME), but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]));
                             }
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

@@ -38,10 +38,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -49,30 +51,32 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialCellDescriptor();
         }
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
-
-                    private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage outInput3 = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private final ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
-                    private final ICopyEvaluator eval2 = args[2].createEvaluator(outInput2);
-                    private final ICopyEvaluator eval3 = args[3].createEvaluator(outInput3);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable inputArg0 = new VoidPointable();
+                    private final IPointable inputArg1 = new VoidPointable();
+                    private final IPointable inputArg2 = new VoidPointable();
+                    private final IPointable inputArg3 = new VoidPointable();
+                    private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval3 = args[3].createScalarEvaluator(ctx);
                     private final AMutableRectangle aRectangle = new AMutableRectangle(null, null);
                     private final AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
 
@@ -84,39 +88,41 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        outInput0.reset();
-                        eval0.evaluate(tuple);
-                        outInput1.reset();
-                        eval1.evaluate(tuple);
-                        outInput2.reset();
-                        eval2.evaluate(tuple);
-                        outInput3.reset();
-                        eval3.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, inputArg0);
+                        eval1.evaluate(tuple, inputArg1);
+                        eval2.evaluate(tuple, inputArg2);
+                        eval3.evaluate(tuple, inputArg3);
+
+                        byte[] bytes0 = inputArg0.getByteArray();
+                        byte[] bytes1 = inputArg1.getByteArray();
+                        byte[] bytes2 = inputArg2.getByteArray();
+                        byte[] bytes3 = inputArg3.getByteArray();
+                        int offset0 = inputArg0.getStartOffset();
+                        int offset1 = inputArg1.getStartOffset();
+                        int offset2 = inputArg2.getStartOffset();
+                        int offset3 = inputArg3.getStartOffset();
 
                         try {
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(outInput0.getByteArray()[0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(outInput1.getByteArray()[0]);
-                            ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(outInput2.getByteArray()[0]);
-                            ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(outInput3.getByteArray()[0]);
+                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
+                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
+                            ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
+                            ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
                             if (tag0 == ATypeTag.POINT && tag1 == ATypeTag.POINT && tag2 == ATypeTag.DOUBLE
                                     && tag3 == ATypeTag.DOUBLE) {
-                                double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                double xLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                        offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                double yLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                        offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
-                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
-                                        APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                double xOrigin = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                        offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                double yOrigin = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                        offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xInc = ADoubleSerializerDeserializer.getDouble(outInput2.getByteArray(), 1);
-                                double yInc = ADoubleSerializerDeserializer.getDouble(outInput3.getByteArray(), 1);
+                                double xInc = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1);
+                                double yInc = ADoubleSerializerDeserializer.getDouble(bytes3, offset3 + 1);
 
                                 double x = xOrigin + (Math.floor((xLoc - xOrigin) / xInc)) * xInc;
                                 double y = yOrigin + (Math.floor((yLoc - yOrigin) / yInc)) * yInc;
@@ -128,21 +134,14 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                     || tag3 == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new AlgebricksException(
-                                        AsterixBuiltinFunctions.SPATIAL_CELL.getName()
-                                                + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0
-                                                        .getByteArray()[0])
-                                                + ", "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1
-                                                        .getByteArray()[0])
-                                                + ", "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput2
-                                                        .getByteArray()[0])
-                                                + ", "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput3
-                                                        .getByteArray()[0]) + ").");
+                                throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_CELL.getName()
+                                        + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]) + ").");
                             }
+                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
                         }

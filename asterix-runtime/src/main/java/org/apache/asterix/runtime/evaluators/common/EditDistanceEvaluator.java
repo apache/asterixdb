@@ -30,23 +30,27 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class EditDistanceEvaluator implements ICopyEvaluator {
+public class EditDistanceEvaluator implements IScalarEvaluator {
 
     // assuming type indicator in serde format
     protected final int typeIndicatorSize = 1;
 
-    protected final DataOutput out;
-    protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final ICopyEvaluator firstStringEval;
-    protected final ICopyEvaluator secondStringEval;
+    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    protected final DataOutput out = resultStorage.getDataOutput();
+    protected final IPointable argPtr1 = new VoidPointable();
+    protected final IPointable argPtr2 = new VoidPointable();
+    protected final IScalarEvaluator firstStringEval;
+    protected final IScalarEvaluator secondStringEval;
     protected final SimilarityMetricEditDistance ed = new SimilarityMetricEditDistance();
     protected final AsterixOrderedListIterator firstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator secondOrdListIter = new AsterixOrderedListIterator();
@@ -60,27 +64,26 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
             .getSerializerDeserializer(BuiltinType.ANULL);
     protected ATypeTag itemTypeTag;
 
-    protected int firstStart = -1;
-    protected int secondStart = -1;
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
 
-    public EditDistanceEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
-        out = output.getDataOutput();
-        firstStringEval = args[0].createEvaluator(argOut);
-        secondStringEval = args[1].createEvaluator(argOut);
+    public EditDistanceEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+            throws AlgebricksException {
+        firstStringEval = args[0].createScalarEvaluator(context);
+        secondStringEval = args[1].createScalarEvaluator(context);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
         runArgEvals(tuple);
-
-        if (!checkArgTypes(firstTypeTag, secondTypeTag))
+        if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
+            result.set(resultStorage);
             return;
+        }
 
         try {
-            editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
+            editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
         } catch (HyracksDataException e1) {
             throw new AlgebricksException(e1);
         }
@@ -90,32 +93,33 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
-        argOut.reset();
-
-        firstStart = argOut.getLength();
-        firstStringEval.evaluate(tuple);
-        secondStart = argOut.getLength();
-        secondStringEval.evaluate(tuple);
-
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
+        firstStringEval.evaluate(tuple, argPtr1);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondStringEval.evaluate(tuple, argPtr2);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
     }
 
-    protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
+    protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
             throws AlgebricksException, HyracksDataException {
+        byte[] leftBytes = left.getByteArray();
+        int leftStartOffset = left.getStartOffset();
+        byte[] rightBytes = right.getByteArray();
+        int rightStartOffset = right.getStartOffset();
+
         switch (argType) {
-
             case STRING: {
-                return ed
-                        .UTF8StringEditDistance(bytes, firstStart + typeIndicatorSize, secondStart + typeIndicatorSize);
+                return ed.UTF8StringEditDistance(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
+                        rightStartOffset + typeIndicatorSize);
             }
-
             case ORDEREDLIST: {
-                firstOrdListIter.reset(bytes, firstStart);
-                secondOrdListIter.reset(bytes, secondStart);
+                firstOrdListIter.reset(leftBytes, leftStartOffset);
+                secondOrdListIter.reset(rightBytes, rightStartOffset);
                 try {
                     return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
                 } catch (HyracksDataException e) {
@@ -124,8 +128,8 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
             }
 
             default: {
-                throw new AlgebricksException("Invalid type " + argType
-                        + " passed as argument to edit distance function.");
+                throw new AlgebricksException(
+                        "Invalid type " + argType + " passed as argument to edit distance function.");
             }
 
         }
@@ -143,8 +147,8 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         }
 
         if (typeTag1 != typeTag2) {
-            throw new AlgebricksException("Incompatible argument types given in edit distance: " + typeTag1 + " "
-                    + typeTag2);
+            throw new AlgebricksException(
+                    "Incompatible argument types given in edit distance: " + typeTag1 + " " + typeTag2);
         }
 
         // Since they are equal, check one tag is enough.
@@ -154,15 +158,17 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         }
 
         if (typeTag1 == ATypeTag.ORDEREDLIST) {
-            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
-            if (itemTypeTag == ATypeTag.ANY)
+            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
+            if (itemTypeTag == ATypeTag.ANY) {
                 throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
-
-            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
-            if (itemTypeTag == ATypeTag.ANY)
+            }
+            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
+            if (itemTypeTag == ATypeTag.ANY) {
                 throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
+            }
         }
-
         return true;
     }
 

@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.runningaggregates.std;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -30,12 +28,14 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
@@ -49,36 +49,36 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
     };
 
     @Override
-    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
+    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
 
-        return new ICopyRunningAggregateFunctionFactory() {
+        return new IRunningAggregateEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @SuppressWarnings("unchecked")
             @Override
-            public ICopyRunningAggregateFunction createRunningAggregateFunction(IDataOutputProvider provider)
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx)
                     throws AlgebricksException {
 
-                final DataOutput out = provider.getDataOutput();
+                return new IRunningAggregateEvaluator() {
 
-                return new ICopyRunningAggregateFunction() {
-
-                    int cnt;
-                    ISerializerDeserializer<AInt64> serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final ISerializerDeserializer<AInt64> serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
-                    AMutableInt64 m = new AMutableInt64(0);
+                    private final AMutableInt64 m = new AMutableInt64(0);
+                    private int cnt;
 
                     @Override
-                    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void step(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         try {
                             m.setValue(cnt);
-                            serde.serialize(m, out);
+                            serde.serialize(m, resultStorage.getDataOutput());
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
-
+                        result.set(resultStorage);
                         ++cnt;
                     }
 

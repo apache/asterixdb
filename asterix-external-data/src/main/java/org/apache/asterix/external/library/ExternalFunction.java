@@ -30,10 +30,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -42,23 +44,22 @@ public abstract class ExternalFunction implements IExternalFunction {
     protected final IExternalFunctionInfo finfo;
     protected final IFunctionFactory externalFunctionFactory;
     protected final IExternalFunction externalFunction;
-    protected final ICopyEvaluatorFactory[] evaluatorFactories;
-    protected final IDataOutputProvider out;
-    protected final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
+    protected final IScalarEvaluatorFactory[] evaluatorFactories;
+    protected final IPointable inputVal = new VoidPointable();
+    protected final ArrayBackedValueStorage resultBuffer = new ArrayBackedValueStorage();
     protected final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
-    protected final ICopyEvaluator[] argumentEvaluators;
+    protected final IScalarEvaluator[] argumentEvaluators;
     protected final JavaFunctionHelper functionHelper;
 
-    public ExternalFunction(IExternalFunctionInfo finfo, ICopyEvaluatorFactory args[],
-            IDataOutputProvider outputProvider) throws AlgebricksException {
+    public ExternalFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[], IHyracksTaskContext context)
+            throws AlgebricksException {
         this.finfo = finfo;
         this.evaluatorFactories = args;
-        this.out = outputProvider;
-        argumentEvaluators = new ICopyEvaluator[args.length];
+        argumentEvaluators = new IScalarEvaluator[args.length];
         for (int i = 0; i < args.length; i++) {
-            argumentEvaluators[i] = args[i].createEvaluator(inputVal);
+            argumentEvaluators[i] = args[i].createScalarEvaluator(context);
         }
-        functionHelper = new JavaFunctionHelper(finfo, outputProvider);
+        functionHelper = new JavaFunctionHelper(finfo, resultBuffer);
 
         String[] fnameComponents = finfo.getFunctionIdentifier().getName().split("#");
         String functionLibary = fnameComponents[0];
@@ -85,8 +86,7 @@ public abstract class ExternalFunction implements IExternalFunction {
 
     public void setArguments(IFrameTupleReference tuple) throws AlgebricksException, IOException, AsterixException {
         for (int i = 0; i < evaluatorFactories.length; i++) {
-            inputVal.reset();
-            argumentEvaluators[i].evaluate(tuple);
+            argumentEvaluators[i].evaluate(tuple, inputVal);
 
             // Type-cast the source array based on the input type that this function wants to receive.
             ATypeTag targetTypeTag = finfo.getParamList().get(i).getTypeTag();

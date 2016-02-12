@@ -32,25 +32,29 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
+public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
-    private DataOutput dout;
-    private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
-    private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
-    private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
-    private ArrayBackedValueStorage array3 = new ArrayBackedValueStorage();
-    private ICopyEvaluator eval0;
-    private ICopyEvaluator eval1;
-    private ICopyEvaluator eval2;
-    private ICopyEvaluator eval3;
+    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private DataOutput dout = resultStorage.getDataOutput();
+    private IPointable array0 = new VoidPointable();
+    private IPointable array1 = new VoidPointable();
+    private IPointable array2 = new VoidPointable();
+    private IPointable array3 = new VoidPointable();
+    private IScalarEvaluator eval0;
+    private IScalarEvaluator eval1;
+    private IScalarEvaluator eval2;
+    private IScalarEvaluator eval3;
 
     private final FunctionIdentifier funcID;
 
@@ -67,46 +71,50 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
     private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
     private final UTF8StringPointable strPtr4th = new UTF8StringPointable();
 
-    public AbstractQuadStringStringEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
-            ICopyEvaluatorFactory eval2, ICopyEvaluatorFactory eval3, FunctionIdentifier funcID)
-                    throws AlgebricksException {
-        this.dout = dout;
-        this.eval0 = eval0.createEvaluator(array0);
-        this.eval1 = eval1.createEvaluator(array1);
-        this.eval2 = eval2.createEvaluator(array2);
-        this.eval3 = eval3.createEvaluator(array3);
+    public AbstractQuadStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
+            IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
+            FunctionIdentifier funcID) throws AlgebricksException {
+        this.eval0 = eval0.createScalarEvaluator(context);
+        this.eval1 = eval1.createScalarEvaluator(context);
+        this.eval2 = eval2.createScalarEvaluator(context);
+        this.eval3 = eval3.createScalarEvaluator(context);
         this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-        array0.reset();
-        eval0.evaluate(tuple);
-        array1.reset();
-        eval1.evaluate(tuple);
-        array2.reset();
-        eval2.evaluate(tuple);
-        array3.reset();
-        eval3.evaluate(tuple);
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        eval0.evaluate(tuple, array0);
+        eval1.evaluate(tuple, array1);
+        eval2.evaluate(tuple, array2);
+        eval3.evaluate(tuple, array3);
 
+        resultStorage.reset();
         try {
-            if (array0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array2.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array3.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[array0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array1.getByteArray()[array1.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array2.getByteArray()[array2.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || array3.getByteArray()[array3.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 nullSerde.serialize(ANull.NULL, dout);
+                result.set(resultStorage);
                 return;
-            } else if (array0.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array1.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array2.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array3.getByteArray()[0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            } else if (array0.getByteArray()[array0.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array1.getByteArray()[array1.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array2.getByteArray()[array2.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                    || array3.getByteArray()[array3.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                 throw new AlgebricksException(funcID.getName()
                         + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL, STRING/NULL), but got ("
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array3.getByteArray()[0]) + ".");
+                        + EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(array0.getByteArray()[array0.getStartOffset()])
+                        + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(array1.getByteArray()[array1.getStartOffset()])
+                        + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(array2.getByteArray()[array2.getStartOffset()])
+                        + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(array3.getByteArray()[array3.getStartOffset()])
+                        + ".");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -124,6 +132,7 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,

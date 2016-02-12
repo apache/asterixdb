@@ -31,36 +31,39 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
+public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory recordEvalFactory;
-    private ICopyEvaluatorFactory fldNameEvalFactory;
+    private IScalarEvaluatorFactory recordEvalFactory;
+    private IScalarEvaluatorFactory fldNameEvalFactory;
 
-    public FieldAccessByNameEvalFactory(ICopyEvaluatorFactory recordEvalFactory,
-            ICopyEvaluatorFactory fldNameEvalFactory) {
+    public FieldAccessByNameEvalFactory(IScalarEvaluatorFactory recordEvalFactory,
+            IScalarEvaluatorFactory fldNameEvalFactory) {
         this.recordEvalFactory = recordEvalFactory;
         this.fldNameEvalFactory = fldNameEvalFactory;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
 
-            private DataOutput out = output.getDataOutput();
+            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private DataOutput out = resultStorage.getDataOutput();
 
-            private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-            private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private ICopyEvaluator eval1 = fldNameEvalFactory.createEvaluator(outInput1);
+            private IPointable inputArg0 = new VoidPointable();
+            private IPointable inputArg1 = new VoidPointable();
+            private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            private IScalarEvaluator eval1 = fldNameEvalFactory.createScalarEvaluator(ctx);
             @SuppressWarnings("unchecked")
             private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
@@ -69,38 +72,41 @@ public class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
             private ATypeTag fieldValueTypeTag = ATypeTag.NULL;
 
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                 try {
-                    outInput0.reset();
-                    eval0.evaluate(tuple);
-                    outInput1.reset();
-                    eval1.evaluate(tuple);
-                    byte[] serRecord = outInput0.getByteArray();
+                    resultStorage.reset();
+                    eval0.evaluate(tuple, inputArg0);
+                    eval1.evaluate(tuple, inputArg1);
+                    byte[] serRecord = inputArg0.getByteArray();
+                    int serRecordOffset = inputArg0.getStartOffset();
+                    int serRecordLen = inputArg0.getLength();
 
-                    if (serRecord[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                    if (serRecord[serRecordOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
                         return;
                     }
 
-                    if (serRecord[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME.getName()
                                 + ": expects input type NULL or RECORD, but got "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[serRecordOffset]));
                     }
 
-                    byte[] serFldName = outInput1.getByteArray();
-                    fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serFldName);
+                    byte[] serFldName = inputArg1.getByteArray();
+                    int serFldNameOffset = inputArg1.getStartOffset();
+                    fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
+                            serRecordLen, serFldName, serFldNameOffset);
                     if (fieldValueOffset < 0) {
                         out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                        result.set(resultStorage);
                         return;
                     }
 
                     fieldValueTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[fieldValueOffset]);
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
                             fieldValueTypeTag, true) + 1;
-                    out.write(serRecord, fieldValueOffset, fieldValueLength);
-
+                    result.set(serRecord, fieldValueOffset, fieldValueLength);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 } catch (AsterixException e) {

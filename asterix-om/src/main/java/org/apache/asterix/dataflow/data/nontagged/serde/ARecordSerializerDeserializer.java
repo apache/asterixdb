@@ -105,10 +105,12 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             } else {
                 if (recordType.isOpen()) {
                     isExpanded = in.readBoolean();
-                    if (isExpanded)
+                    if (isExpanded) {
                         in.readInt(); // openPartOffset
-                } else
+                    }
+                } else {
                     isExpanded = false;
+                }
             }
             IAObject[] closedFields = null;
             if (numberOfSchemaFields > 0) {
@@ -232,57 +234,64 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     if (nullBitmapSize > 0) {
                         // 14 = tag (1) + record Size (4) + isExpanded (1) +
                         // offset of openPart (4) + number of closed fields (4)
-                        if ((serRecord[14 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)
+                        if ((serRecord[14 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
                             // the field value is null
                             return 0;
+                        }
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord, 14 + offset + nullBitmapSize + (4 * fieldId));
+                    return offset + AInt32SerializerDeserializer.getInt(serRecord,
+                            14 + offset + nullBitmapSize + (4 * fieldId));
                 } else {
                     if (nullBitmapSize > 0) {
                         // 9 = tag (1) + record Size (4) + isExpanded (1) +
                         // number of closed fields (4)
-                        if ((serRecord[10 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)
+                        if ((serRecord[10 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
                             // the field value is null
                             return 0;
+                        }
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord, 10 + offset + nullBitmapSize + (4 * fieldId));
+                    return offset + AInt32SerializerDeserializer.getInt(serRecord,
+                            10 + offset + nullBitmapSize + (4 * fieldId));
                 }
-            } else
+            } else {
                 return -1;
+            }
         } else {
-            if (serRecord[0 + offset] == ATypeTag.RECORD.serialize()) {
-                if (nullBitmapSize > 0)
+            if (serRecord[offset] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                if (nullBitmapSize > 0) {
                     // 9 = tag (1) + record Size (4) + number of closed fields
                     // (4)
-                    if ((serRecord[9 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)
+                    if ((serRecord[9 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
                         // the field value is null
                         return 0;
-                return AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
-            } else
+                    }
+                }
+                return offset
+                        + AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
+            } else {
                 return -1;
+            }
         }
     }
 
-    public static final int getFieldOffsetById(byte[] serRecord, int fieldId, int nullBitmapSize, boolean isOpen) {
-        return getFieldOffsetById(serRecord, 0, fieldId, nullBitmapSize, isOpen);
-    }
-
-    public static final int getFieldOffsetByName(byte[] serRecord, byte[] fieldName) throws HyracksDataException {
-
+    public static final int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart)
+            throws HyracksDataException {
         int openPartOffset = 0;
-        if (serRecord[0] == ATypeTag.RECORD.serialize())
+        if (serRecord[start] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
             // 5 is the index of the byte that determines whether the record is
             // expanded or not, i.e. it has an open part.
-            if (serRecord[5] == 1) { // true
+            if (serRecord[start + 5] == 1) { // true
                 // 6 is the index of the first byte of the openPartOffset value.
-                openPartOffset = AInt32SerializerDeserializer.getInt(serRecord, 6);
-            } else
+                openPartOffset = start + AInt32SerializerDeserializer.getInt(serRecord, start + 6);
+            } else {
                 return -1; // this record does not have an open part
-        else
+            }
+        } else {
             return -1; // this record does not have an open part
+        }
 
         int numberOfOpenField = AInt32SerializerDeserializer.getInt(serRecord, openPartOffset);
-        int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, 1);
+        int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, nstart + 1);
         int fieldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fieldUtflength);
 
         IBinaryHashFunction utf8HashFunction = AqlBinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
@@ -291,7 +300,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                 .createBinaryComparator();
 
-        int fieldNameHashCode = utf8HashFunction.hash(fieldName, 1, fieldUtflength + fieldUtfMetaLen);
+        int fieldNameHashCode = utf8HashFunction.hash(fieldName, nstart + 1, fieldUtflength + fieldUtfMetaLen);
 
         int offset = openPartOffset + 4;
         int fieldOffset = -1;
@@ -303,29 +312,32 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             // 8 = hash code (4) + offset to the (name + tag + value ) of the field (4).
             int h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid));
             if (h == fieldNameHashCode) {
-                fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
+                fieldOffset = start + AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
                 // the utf8 comparator do not require to put the precise length, we can just pass a estimated limit.
-                if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
-                        fieldUtflength + fieldUtfMetaLen) == 0)
+                if (utf8BinaryComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
+                        fieldUtflength + fieldUtfMetaLen) == 0) {
                     // since they are equal, we can directly use the meta length and the utf length.
                     return fieldOffset + fieldUtfMetaLen + fieldUtflength;
-                else { // this else part has not been tested yet
+                } else { // this else part has not been tested yet
                     for (int j = mid + 1; j < numberOfOpenField; j++) {
                         h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j));
                         if (h == fieldNameHashCode) {
-                            fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
-                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
-                                    fieldUtflength) == 0)
+                            fieldOffset = start + AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
+                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
+                                    fieldUtflength) == 0) {
                                 return fieldOffset + fieldUtfMetaLen + fieldUtflength;
-                        } else
+                            }
+                        } else {
                             break;
+                        }
                     }
                 }
             }
-            if (fieldNameHashCode > h)
+            if (fieldNameHashCode > h) {
                 low = mid + 1;
-            else
+            } else {
                 high = mid - 1;
+            }
 
         }
         return -1; // no field with this name.

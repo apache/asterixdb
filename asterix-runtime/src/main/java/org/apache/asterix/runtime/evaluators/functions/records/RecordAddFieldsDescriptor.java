@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.records;
 
-import java.io.IOException;
+import java.io.DataOutput;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
@@ -49,13 +49,15 @@ import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -84,8 +86,9 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
             @SuppressWarnings("unchecked")
@@ -93,16 +96,16 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     .getSerializerDeserializer(BuiltinType.ANULL);
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
                 final PointableAllocator allocator = new PointableAllocator();
                 final IVisitablePointable vp0 = allocator.allocateRecordValue(inRecType);
                 final IVisitablePointable vp1 = allocator.allocateListValue(inListType);
 
-                final ArrayBackedValueStorage abvs0 = new ArrayBackedValueStorage();
-                final ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
+                final IPointable argPtr0 = new VoidPointable();
+                final IPointable argPtr1 = new VoidPointable();
 
-                final ICopyEvaluator eval0 = args[0].createEvaluator(abvs0);
-                final ICopyEvaluator eval1 = args[1].createEvaluator(abvs1);
+                final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                 final ArrayBackedValueStorage fieldNamePointable = new ArrayBackedValueStorage();
                 final ArrayBackedValueStorage fieldValuePointer = new ArrayBackedValueStorage();
@@ -114,7 +117,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     throw new AlgebricksException(e);
                 }
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
                     public static final int TABLE_FRAME_SIZE = 32768; // the default 32k frame size
                     public static final int TABLE_SIZE = 100; // the default 32k frame size
                     private final RecordBuilder recordBuilder = new RecordBuilder();
@@ -132,42 +135,46 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     private BinaryHashMap hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc,
                             getHashFunc, cmp);
 
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
                         recordBuilder.reset(outRecType);
                         requiredRecordTypeInfo.reset(outRecType);
-                        abvs0.reset();
-                        abvs1.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
 
-                        eval0.evaluate(tuple);
-                        eval1.evaluate(tuple);
-
-                        if (abvs0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                || abvs1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        if (argPtr0.getByteArray()[argPtr0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                || argPtr1.getByteArray()[argPtr1
+                                        .getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
-                                nullSerDe.serialize(ANull.NULL, output.getDataOutput());
+                                nullSerDe.serialize(ANull.NULL, out);
                             } catch (HyracksDataException e) {
                                 throw new AlgebricksException(e);
                             }
+                            result.set(resultStorage);
                             return;
                         }
 
                         // Make sure we get a valid record
-                        if (abvs0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                        if (argPtr0.getByteArray()[argPtr0.getStartOffset()] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                             throw new AlgebricksException("Expected an ordederlist of type " + inRecType + " but "
-                                    + "got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(abvs0.getByteArray()[0]));
+                                    + "got " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                            .deserialize(argPtr0.getByteArray()[argPtr0.getStartOffset()]));
                         }
 
                         // Make sure we get a valid list
-                        if (abvs1.getByteArray()[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                        if (argPtr1.getByteArray()[argPtr1
+                                .getStartOffset()] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                             throw new AlgebricksException("Expected an ordederlist of type " + inListType + " but "
-                                    + "got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(abvs1.getByteArray()[0]));
+                                    + "got " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                            .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]));
                         }
 
-                        vp0.set(abvs0);
-                        vp1.set(abvs1);
+                        vp0.set(argPtr0);
+                        vp1.set(argPtr1);
 
                         try {
                             ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) vp0;
@@ -183,10 +190,11 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                 hashMap.clear();
                             }
                             addFields(recordPointable, listPointable);
-                            recordBuilder.write(output.getDataOutput(), true);
+                            recordBuilder.write(out, true);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
 
                     private void addFields(ARecordVisitablePointable inputRecordPointer,

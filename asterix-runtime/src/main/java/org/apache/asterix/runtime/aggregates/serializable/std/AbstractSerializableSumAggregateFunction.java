@@ -41,19 +41,21 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractSerializableSumAggregateFunction implements ICopySerializableAggregateFunction {
+public abstract class AbstractSerializableSumAggregateFunction implements ISerializedAggregateEvaluator {
     protected static final int AGG_TYPE_OFFSET = 0;
     private static final int SUM_OFFSET = 1;
 
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private ICopyEvaluator eval;
+    private IPointable inputVal = new VoidPointable();
+    private IScalarEvaluator eval;
     private AMutableDouble aDouble = new AMutableDouble(0);
     private AMutableFloat aFloat = new AMutableFloat(0);
     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -63,8 +65,9 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
     @SuppressWarnings("rawtypes")
     public ISerializerDeserializer serde;
 
-    public AbstractSerializableSumAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        eval = args[0].createEvaluator(inputVal);
+    public AbstractSerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+            throws AlgebricksException {
+        eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
@@ -84,9 +87,11 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
         }
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
-        inputVal.reset();
-        eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
+        eval.evaluate(tuple, inputVal);
+        byte[] bytes = inputVal.getByteArray();
+        int offset = inputVal.getStartOffset();
+
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
         if (typeTag == ATypeTag.NULL) {
             processNull(state, start);
             return;
@@ -103,32 +108,32 @@ public abstract class AbstractSerializableSumAggregateFunction implements ICopyS
 
         switch (typeTag) {
             case INT8: {
-                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                byte val = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
                 sum += val;
                 break;
             }
             case INT16: {
-                short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
+                short val = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
                 sum += val;
                 break;
             }
             case INT32: {
-                int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                int val = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
                 sum += val;
                 break;
             }
             case INT64: {
-                long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
+                long val = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                 sum += val;
                 break;
             }
             case FLOAT: {
-                float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                float val = AFloatSerializerDeserializer.getFloat(bytes, offset + 1);
                 sum += val;
                 break;
             }
             case DOUBLE: {
-                double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
+                double val = ADoubleSerializerDeserializer.getDouble(bytes, offset + 1);
                 sum += val;
                 break;
             }

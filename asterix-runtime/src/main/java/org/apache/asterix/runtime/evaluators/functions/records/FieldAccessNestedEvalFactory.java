@@ -19,27 +19,44 @@
 package org.apache.asterix.runtime.evaluators.functions.records;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
+import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class FieldAccessNestedEvalFactory implements ICopyEvaluatorFactory {
+public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory recordEvalFactory;
+    private IScalarEvaluatorFactory recordEvalFactory;
     private ARecordType recordType;
     private List<String> fieldPath;
 
-    public FieldAccessNestedEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ARecordType recordType,
+    public FieldAccessNestedEvalFactory(IScalarEvaluatorFactory recordEvalFactory, ARecordType recordType,
             List<String> fldName) {
         this.recordEvalFactory = recordEvalFactory;
         this.recordType = recordType;
@@ -48,30 +65,192 @@ public class FieldAccessNestedEvalFactory implements ICopyEvaluatorFactory {
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
 
-            private final DataOutput out = output.getDataOutput();
+            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private final DataOutput out = resultStorage.getDataOutput();
             private final ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
 
-            private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-            private final ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private final ArrayBackedValueStorage[] abvsFields = new ArrayBackedValueStorage[fieldPath.size()];
-            private final DataOutput[] doFields = new DataOutput[fieldPath.size()];
+            private final IPointable inputArg0 = new VoidPointable();
+            private final IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            private final IPointable[] fieldPointables = new VoidPointable[fieldPath.size()];
             private final RuntimeRecordTypeInfo[] recTypeInfos = new RuntimeRecordTypeInfo[fieldPath.size()];
+            @SuppressWarnings("unchecked")
+            private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(BuiltinType.ANULL);
 
             {
-                FieldAccessUtil.getFieldsAbvs(abvsFields, doFields, fieldPath);
+                generateFieldsPointables();
                 for (int index = 0; index < fieldPath.size(); ++index) {
                     recTypeInfos[index] = new RuntimeRecordTypeInfo();
                 }
 
             }
 
+            @SuppressWarnings("unchecked")
+            private void generateFieldsPointables() throws AlgebricksException {
+                for (int i = 0; i < fieldPath.size(); i++) {
+                    ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+                    DataOutput out = storage.getDataOutput();
+                    AString as = new AString(fieldPath.get(i));
+                    try {
+                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                                out);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    fieldPointables[i] = new VoidPointable();
+                    fieldPointables[i].set(storage);
+                }
+            }
+
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, recordType,
-                        recTypeInfos);
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                try {
+                    resultStorage.reset();
+                    eval0.evaluate(tuple, inputArg0);
+                    byte[] serRecord = inputArg0.getByteArray();
+                    int offset = inputArg0.getStartOffset();
+                    int start = offset;
+                    int len = inputArg0.getLength();
+
+                    if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
+                        return;
+                    }
+                    if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                        throw new AlgebricksException("Field accessor is not defined for values of type "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                    }
+
+                    int subFieldIndex = -1;
+                    int subFieldOffset = -1;
+                    int subFieldLength = -1;
+                    int nullBitmapSize = -1;
+
+                    IAType subType = recordType;
+                    recTypeInfos[0].reset(recordType);
+
+                    ATypeTag subTypeTag = ATypeTag.NULL;
+                    boolean openField = false;
+                    int pathIndex = 0;
+
+                    // Moving through closed fields first.
+                    for (; pathIndex < fieldPointables.length; pathIndex++) {
+                        if (subType.getTypeTag().equals(ATypeTag.UNION)) {
+                            //enforced SubType
+                            subType = ((AUnionType) subType).getNullableType();
+                            if (subType.getTypeTag().serialize() != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        "Field accessor is not defined for values of type " + subTypeTag);
+                            }
+                            if (subType.getTypeTag() == ATypeTag.RECORD) {
+                                recTypeInfos[pathIndex].reset((ARecordType) subType);
+                            }
+                        }
+                        subFieldIndex = recTypeInfos[pathIndex].getFieldIndex(fieldPointables[pathIndex].getByteArray(),
+                                fieldPointables[pathIndex].getStartOffset() + 1,
+                                fieldPointables[pathIndex].getLength() - 1);
+                        if (subFieldIndex == -1) {
+                            break;
+                        }
+                        nullBitmapSize = ARecordType.computeNullBitmapSize((ARecordType) subType);
+                        subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, start,
+                                subFieldIndex, nullBitmapSize, ((ARecordType) subType).isOpen());
+                        if (subFieldOffset == 0) {
+                            // the field is null, we checked the null bit map
+                            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                            result.set(resultStorage);
+                            return;
+                        }
+                        subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
+                        if (subType.getTypeTag() == ATypeTag.RECORD && pathIndex + 1 < fieldPointables.length) {
+                            // Move to the next Depth
+                            recTypeInfos[pathIndex + 1].reset((ARecordType) subType);
+                        }
+                        if (subType.getTypeTag().equals(ATypeTag.UNION)) {
+                            if (((AUnionType) subType).isNullableType()) {
+                                subTypeTag = ((AUnionType) subType).getNullableType().getTypeTag();
+                                subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
+                                        subTypeTag, false);
+                            } else {
+                                // union .. the general case
+                                throw new NotImplementedException();
+                            }
+                        } else {
+                            subTypeTag = subType.getTypeTag();
+                            subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
+                                    subTypeTag, false);
+                        }
+
+                        if (pathIndex < fieldPointables.length - 1) {
+                            //setup next iteration
+                            subRecordTmpStream.reset();
+                            subRecordTmpStream.write(subTypeTag.serialize());
+                            subRecordTmpStream.write(serRecord, subFieldOffset, subFieldLength);
+                            serRecord = subRecordTmpStream.getByteArray();
+                            start = 0;
+
+                            // type check
+                            if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
+                                return;
+                            }
+                            if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                                throw new AlgebricksException("Field accessor is not defined for values of type "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                            }
+                        }
+                    }
+
+                    // Moving through open fields after we hit the first open field.
+                    for (; pathIndex < fieldPointables.length; pathIndex++) {
+                        openField = true;
+                        subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, start, len,
+                                fieldPointables[pathIndex].getByteArray(), fieldPointables[pathIndex].getStartOffset());
+                        if (subFieldOffset < 0) {
+                            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                            result.set(resultStorage);
+                            return;
+                        }
+
+                        subTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[subFieldOffset]);
+                        subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, subTypeTag,
+                                true) + 1;
+
+                        if (pathIndex < fieldPointables.length - 1) {
+                            //setup next iteration
+                            start = subFieldOffset;
+                            len = subFieldLength;
+
+                            // type check
+                            if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
+                                return;
+                            }
+                            if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                                throw new AlgebricksException("Field accessor is not defined for values of type "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                            }
+                        }
+                    }
+                    // emit the final result.
+                    if (openField) {
+                        result.set(serRecord, subFieldOffset, subFieldLength);
+                    } else {
+                        out.writeByte(subTypeTag.serialize());
+                        out.write(serRecord, subFieldOffset, subFieldLength);
+                        result.set(resultStorage);
+                    }
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                } catch (AsterixException e) {
+                    throw new AlgebricksException(e);
+                }
             }
         };
     }

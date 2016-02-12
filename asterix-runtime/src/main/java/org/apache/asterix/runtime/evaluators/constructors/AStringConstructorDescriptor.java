@@ -38,10 +38,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
@@ -58,17 +60,18 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
+                    private IPointable inputArg = new VoidPointable();
+                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -76,54 +79,57 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     private GrowableArray baaos = new GrowableArray();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
-                            outInput.reset();
+                            resultStorage.reset();
                             baaos.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
+                            eval.evaluate(tuple, inputArg);
+                            byte[] serString = inputArg.getByteArray();
+                            int offset = inputArg.getStartOffset();
+                            int len = inputArg.getLength();
 
-                            ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[serString[0]];
+                            ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[serString[offset]];
                             if (tt == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
                             } else if (tt == ATypeTag.STRING) {
-                                out.write(outInput.getByteArray(), outInput.getStartOffset(), outInput.getLength());
+                                result.set(inputArg);
                             } else {
-                                builder.reset(baaos, outInput.getLength());
+                                builder.reset(baaos, len);
+                                int startOffset = offset + 1;
                                 switch (tt) {
                                     case INT8: {
-                                        int i = AInt8SerializerDeserializer.getByte(outInput.getByteArray(), 1);
+                                        int i = AInt8SerializerDeserializer.getByte(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
                                     case INT16: {
-                                        int i = AInt16SerializerDeserializer.getShort(outInput.getByteArray(), 1);
+                                        int i = AInt16SerializerDeserializer.getShort(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
                                     case INT32: {
-                                        int i = AInt32SerializerDeserializer.getInt(outInput.getByteArray(), 1);
+                                        int i = AInt32SerializerDeserializer.getInt(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
                                     case INT64: {
-                                        long l = AInt64SerializerDeserializer.getLong(outInput.getByteArray(), 1);
+                                        long l = AInt64SerializerDeserializer.getLong(serString, startOffset);
                                         builder.appendString(String.valueOf(l));
                                         break;
                                     }
                                     case DOUBLE: {
-                                        double d = ADoubleSerializerDeserializer.getDouble(outInput.getByteArray(), 1);
+                                        double d = ADoubleSerializerDeserializer.getDouble(serString, startOffset);
                                         builder.appendString(String.valueOf(d));
                                         break;
                                     }
                                     case FLOAT: {
-                                        float f = AFloatSerializerDeserializer.getFloat(outInput.getByteArray(), 1);
+                                        float f = AFloatSerializerDeserializer.getFloat(serString, startOffset);
                                         builder.appendString(String.valueOf(f));
                                         break;
                                     }
                                     case BOOLEAN: {
-                                        boolean b = ABooleanSerializerDeserializer.getBoolean(outInput.getByteArray(),
-                                                1);
+                                        boolean b = ABooleanSerializerDeserializer.getBoolean(serString, startOffset);
                                         builder.appendString(String.valueOf(b));
                                         break;
                                     }
@@ -152,6 +158,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                 builder.finish();
                                 out.write(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                                 out.write(baaos.getByteArray(), 0, baaos.getLength());
+                                result.set(resultStorage);
                             }
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

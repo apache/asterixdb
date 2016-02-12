@@ -77,13 +77,15 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
     @Override
     public void addItem(IValueReference item) throws HyracksDataException {
         try {
-            if (!fixedSize && (item.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG || itemTypeTag == ATypeTag.ANY))
+            if (!fixedSize && (item.getByteArray()[item.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    || itemTypeTag == ATypeTag.ANY)) {
                 this.offsets.add(outputStorage.getLength());
-            if (itemTypeTag == ATypeTag.ANY
-                    || (itemTypeTag == ATypeTag.NULL && item.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+            }
+            if (itemTypeTag == ATypeTag.ANY || (itemTypeTag == ATypeTag.NULL
+                    && item.getByteArray()[item.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
                 this.numberOfItems++;
                 this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
-            } else if (item.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            } else if (item.getByteArray()[item.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 this.numberOfItems++;
                 this.outputStream.write(item.getByteArray(), item.getStartOffset() + 1, item.getLength() - 1);
             }
@@ -95,10 +97,12 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
     @Override
     public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException {
         try {
-            if (!fixedSize)
+            if (!fixedSize) {
                 metadataInfoSize += offsets.size() * 4;
-            if (offsetArray == null || offsetArray.length < metadataInfoSize)
+            }
+            if (offsetArray == null || offsetArray.length < metadataInfoSize) {
                 offsetArray = new byte[metadataInfoSize];
+            }
 
             SerializerDeserializerUtil.writeIntToByteArray(offsetArray,
                     headerSize + metadataInfoSize + outputStorage.getLength(), offsetPosition);

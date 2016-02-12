@@ -22,15 +22,15 @@ import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
     private final boolean isLocalAgg;
 
-    public SqlMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin,
+    public SqlMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
             boolean isLocalAgg) throws AlgebricksException {
-        super(args, provider, isMin);
+        super(args, context, isMin);
         this.isLocalAgg = isLocalAgg;
     }
 
@@ -49,9 +49,9 @@ public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction 
     protected void finishSystemNull() throws IOException {
         // Empty stream. For local agg return system null. For global agg return null.
         if (isLocalAgg) {
-            out.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         } else {
-            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         }
     }
 }

@@ -41,11 +41,13 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -61,17 +63,19 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
-                    private final DataOutput out = output.getDataOutput();
-                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr = new VoidPointable();
+                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
@@ -86,59 +90,57 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut.reset();
-                        eval.evaluate(tuple);
-                        byte[] bytes = argOut.getByteArray();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        eval.evaluate(tuple, argPtr);
+                        byte[] bytes = argPtr.getByteArray();
+                        int startOffset = argPtr.getStartOffset();
+                        resultStorage.reset();
 
                         try {
-                            if (bytes[0] == ATypeTag.SERIALIZED_LINE_TYPE_TAG) {
+                            if (bytes[startOffset] == ATypeTag.SERIALIZED_LINE_TYPE_TAG) {
                                 listBuilder.reset(pointListType);
 
                                 inputVal.reset();
-                                double startX = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X));
-                                double startY = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.Y));
+                                double startX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X));
+                                double startY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(startX, startY);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
 
                                 inputVal.reset();
-                                double endX = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X));
-                                double endY = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.Y));
+                                double endX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X));
+                                double endY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(endX, endY);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
                                 listBuilder.write(out, true);
-
-                            } else if (bytes[0] == ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG) {
+                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG) {
                                 listBuilder.reset(pointListType);
-
                                 inputVal.reset();
-                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(x1, y1);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
 
                                 inputVal.reset();
-                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(x2, y2);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
                                 listBuilder.write(out, true);
-
-                            } else if (bytes[0] == ATypeTag.SERIALIZED_POLYGON_TYPE_TAG) {
+                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_POLYGON_TYPE_TAG) {
                                 int numOfPoints = AInt16SerializerDeserializer.getShort(bytes,
-                                        APolygonSerializerDeserializer.getNumberOfPointsOffset());
+                                        startOffset + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                                 if (numOfPoints < 3) {
                                     throw new HyracksDataException("Polygon must have at least 3 points.");
@@ -146,24 +148,26 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.reset(pointListType);
                                 for (int i = 0; i < numOfPoints; ++i) {
                                     inputVal.reset();
-                                    double x = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
-                                    double y = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
+                                    double x = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                            + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
+                                    double y = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                            + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
                                     aPoint.setValue(x, y);
                                     pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                     listBuilder.addItem(inputVal);
                                 }
                                 listBuilder.write(out, true);
-                            } else if (bytes[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new AlgebricksException("get-points does not support the type: " + bytes[0]
-                                        + " It is only implemented for LINE, RECTANGLE, or POLYGON.");
+                                throw new AlgebricksException(
+                                        "get-points does not support the type: " + bytes[startOffset]
+                                                + " It is only implemented for LINE, RECTANGLE, or POLYGON.");
                             }
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
                 };
             }

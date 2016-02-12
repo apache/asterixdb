@@ -24,13 +24,15 @@ import java.io.DataOutput;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SerializableIntermediateAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
-    public SerializableIntermediateAvgAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        super(args);
+    public SerializableIntermediateAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+            throws AlgebricksException {
+        super(args, context);
     }
 
     @Override

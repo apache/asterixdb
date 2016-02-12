@@ -21,7 +21,6 @@ package org.apache.asterix.om.pointables.nonvisitor;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
@@ -166,10 +165,6 @@ public class ARecordPointable extends AbstractPointable {
         return (isOpen(recordType)) ? EXPANDED_SIZE : 0;
     }
 
-    public int getOpenPart(ARecordType recordType) {
-        return IntegerPointable.getInteger(bytes, getOpenPartOffset(recordType));
-    }
-
     public int getOpenPartOffset(ARecordType recordType) {
         return getExpendedOffset(recordType) + getExpandedSize(recordType);
     }
@@ -188,13 +183,6 @@ public class ARecordPointable extends AbstractPointable {
 
     public int getClosedFieldCountSize(ARecordType recordType) {
         return CLOSED_COUNT_SIZE;
-    }
-
-    public byte[] getNullBitmap(ARecordType recordType) {
-        if (getNullBitmapSize(recordType) > 0) {
-            return Arrays.copyOfRange(bytes, getNullBitmapOffset(recordType), getNullBitmapSize(recordType));
-        }
-        return null;
     }
 
     public int getNullBitmapOffset(ARecordType recordType) {
@@ -258,7 +246,7 @@ public class ARecordPointable extends AbstractPointable {
 
     public int getClosedFieldOffset(ARecordType recordType, int fieldId) {
         int offset = getNullBitmapOffset(recordType) + getNullBitmapSize(recordType) + fieldId * FIELD_OFFSET_SIZE;
-        return IntegerPointable.getInteger(bytes, offset);
+        return start + IntegerPointable.getInteger(bytes, offset);
     }
 
     // -----------------------
@@ -274,7 +262,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public int getOpenFieldCountOffset(ARecordType recordType) {
-        return getOpenPart(recordType);
+        return start + IntegerPointable.getInteger(bytes, getOpenPartOffset(recordType));
     }
 
     // -----------------------
@@ -327,7 +315,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public int getOpenFieldOffset(ARecordType recordType, int fieldId) {
-        return IntegerPointable.getInteger(bytes, getOpenFieldOffsetOffset(recordType, fieldId));
+        return start + IntegerPointable.getInteger(bytes, getOpenFieldOffsetOffset(recordType, fieldId));
     }
 
     public int getOpenFieldOffsetOffset(ARecordType recordType, int fieldId) {

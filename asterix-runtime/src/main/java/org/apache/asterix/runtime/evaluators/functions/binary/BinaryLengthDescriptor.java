@@ -30,11 +30,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -50,13 +51,14 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
     private static final ATypeTag[] EXPECTED_TAGS = { ATypeTag.BINARY };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new AbstractCopyEvaluator(output, args) {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     private AMutableInt64 result = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
@@ -64,20 +66,24 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
+                            throws AlgebricksException {
+                        resultStorage.reset();
                         ATypeTag tag = evaluateTuple(tuple, 0);
                         try {
                             if (serializeNullIfAnyNull(tag)) {
+                                resultPointable.set(resultStorage);
                                 return;
                             }
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_TAGS, tag);
-                            int len = ByteArrayPointable.getContentLength(storages[0].getByteArray(), 1);
+                            int len = ByteArrayPointable.getContentLength(pointables[0].getByteArray(),
+                                    pointables[0].getStartOffset() + 1);
                             result.setValue(len);
                             intSerde.serialize(result, dataOutput);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }
-
+                        resultPointable.set(resultStorage);
                     }
                 };
             }

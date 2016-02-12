@@ -34,10 +34,10 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.evaluators.common.SimilarityJaccardPrefixEvaluator;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -45,19 +45,21 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SimilarityJaccardPrefixCheckDescriptor();
         }
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new SimilarityJaccardPrefixCheckEvaluator(args, output);
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new SimilarityJaccardPrefixCheckEvaluator(args, ctx);
             }
         };
     }
@@ -81,9 +83,9 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
 
         private final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 
-        public SimilarityJaccardPrefixCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+        public SimilarityJaccardPrefixCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
                 throws AlgebricksException {
-            super(args, output);
+            super(args, context);
             listBuilder = new OrderedListBuilder();
             inputVal = new ArrayBackedValueStorage();
         }
@@ -104,7 +106,6 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
             listBuilder.addItem(inputVal);
 
             listBuilder.write(out, true);
-
         }
     }
 

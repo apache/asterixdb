@@ -95,6 +95,7 @@ public enum ATypeTag implements IEnumSerializer {
     public static final byte SERIALIZED_INT16_TYPE_TAG = INT16.serialize();
     public static final byte SERIALIZED_INT64_TYPE_TAG = INT64.serialize();
     public static final byte SERIALIZED_FLOAT_TYPE_TAG = FLOAT.serialize();
+    public static final byte SERIALIZED_BINARY_TYPE_TAG = BINARY.serialize();
     /*
      * Serialized Tags end
      */
@@ -124,10 +125,8 @@ public enum ATypeTag implements IEnumSerializer {
     }
 
     public boolean isDerivedType() {
-        if (this == ATypeTag.RECORD || this == ATypeTag.ORDEREDLIST || this == ATypeTag.UNORDEREDLIST
-                || this == ATypeTag.UNION)
-            return true;
-        return false;
+        return this == ATypeTag.RECORD || this == ATypeTag.ORDEREDLIST || this == ATypeTag.UNORDEREDLIST
+                || this == ATypeTag.UNION;
     }
 
 }

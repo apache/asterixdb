@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.records;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -43,27 +44,29 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
+class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
-    private ICopyEvaluatorFactory inputRecordEvalFactory;
-    private ICopyEvaluatorFactory removeFieldPathsFactory;
+    private IScalarEvaluatorFactory inputRecordEvalFactory;
+    private IScalarEvaluatorFactory removeFieldPathsFactory;
     private ARecordType requiredRecType;
     private ARecordType inputRecType;
     private AOrderedListType inputListType;
 
-    public RecordRemoveFieldsEvalFactory(ICopyEvaluatorFactory inputRecordEvalFactory,
-            ICopyEvaluatorFactory removeFieldPathsFactory, ARecordType requiredRecType, ARecordType inputRecType,
+    public RecordRemoveFieldsEvalFactory(IScalarEvaluatorFactory inputRecordEvalFactory,
+            IScalarEvaluatorFactory removeFieldPathsFactory, ARecordType requiredRecType, ARecordType inputRecType,
             AOrderedListType inputListType) {
         this.inputRecordEvalFactory = inputRecordEvalFactory;
         this.removeFieldPathsFactory = removeFieldPathsFactory;
@@ -74,54 +77,58 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
         final PointableAllocator pa = new PointableAllocator();
         final IVisitablePointable vp0 = pa.allocateRecordValue(inputRecType);
         final IVisitablePointable vp1 = pa.allocateListValue(inputListType);
-        final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-        final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-        final ICopyEvaluator eval0 = inputRecordEvalFactory.createEvaluator(outInput0);
-        final ICopyEvaluator eval1 = removeFieldPathsFactory.createEvaluator(outInput1);
+        final IPointable inputArg0 = new VoidPointable();
+        final IPointable inputArg1 = new VoidPointable();
+        final IScalarEvaluator eval0 = inputRecordEvalFactory.createScalarEvaluator(ctx);
+        final IScalarEvaluator eval1 = removeFieldPathsFactory.createScalarEvaluator(ctx);
 
-        return new ICopyEvaluator() {
+        return new IScalarEvaluator() {
             private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
 
             private final List<RecordBuilder> rbStack = new ArrayList<>();
             private final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
             private final Deque<IVisitablePointable> recordPath = new ArrayDeque<>();
 
+            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private DataOutput out = resultStorage.getDataOutput();
+
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                outInput0.reset();
-                outInput1.reset();
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                resultStorage.reset();
+                eval0.evaluate(tuple, inputArg0);
+                eval1.evaluate(tuple, inputArg1);
 
-                eval0.evaluate(tuple);
-                eval1.evaluate(tuple);
-
-                if (outInput0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                if (inputArg0.getByteArray()[inputArg0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                     try {
-                        nullSerDe.serialize(ANull.NULL, output.getDataOutput());
+                        nullSerDe.serialize(ANull.NULL, out);
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
                     }
+                    result.set(resultStorage);
                     return;
                 }
 
-                if (outInput0.getByteArray()[0] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new AlgebricksException(AsterixBuiltinFunctions.REMOVE_FIELDS.getName()
-                            + ": expects input type " + inputRecType + ", but got "
-                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]));
+                if (inputArg0.getByteArray()[inputArg0.getStartOffset()] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    throw new AlgebricksException(
+                            AsterixBuiltinFunctions.REMOVE_FIELDS.getName() + ": expects input type " + inputRecType
+                                    + ", but got " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                            .deserialize(inputArg0.getByteArray()[inputArg0.getStartOffset()]));
                 }
 
-                if (outInput1.getByteArray()[0] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                    throw new AlgebricksException(AsterixBuiltinFunctions.REMOVE_FIELDS.getName()
-                            + ": expects input type " + inputListType + ", but got "
-                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0]));
+                if (inputArg1.getByteArray()[inputArg1.getStartOffset()] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                    throw new AlgebricksException(
+                            AsterixBuiltinFunctions.REMOVE_FIELDS.getName() + ": expects input type " + inputListType
+                                    + ", but got " + EnumDeserializer.ATYPETAGDESERIALIZER
+                                            .deserialize(inputArg1.getByteArray()[inputArg1.getStartOffset()]));
                 }
 
-                vp0.set(outInput0);
-                vp1.set(outInput1);
+                vp0.set(inputArg0);
+                vp1.set(inputArg1);
 
                 ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) vp0;
                 AListVisitablePointable listPointable = (AListVisitablePointable) vp1;
@@ -130,10 +137,11 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
                     recordPath.clear();
                     rbStack.clear();
                     processRecord(requiredRecType, recordPointable, listPointable, 0);
-                    rbStack.get(0).write(output.getDataOutput(), true);
+                    rbStack.get(0).write(out, true);
                 } catch (IOException | AsterixException e) {
                     throw new AlgebricksException(e);
                 }
+                result.set(resultStorage);
             }
 
             private void processRecord(ARecordType requiredType, ARecordVisitablePointable srp,
@@ -212,11 +220,13 @@ class RecordRemoveFieldsEvalFactory implements ICopyEvaluatorFactory {
                             Iterator<IVisitablePointable> fpi = recordPath.iterator();
                             for (int j = inputPathItems.size() - 1; j >= 0; j--) {
                                 match &= PointableHelper.isEqual(inputPathItems.get(j), fpi.next());
-                                if (!match)
+                                if (!match) {
                                     break;
+                                }
                             }
-                            if (match)
+                            if (match) {
                                 return false; // Not a valid path for the output record
+                            }
                         }
                     } else {
                         if (PointableHelper.isEqual(recordPath.getFirst(), item)) {

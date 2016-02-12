@@ -30,11 +30,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -55,13 +56,14 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new AbstractFindBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractFindBinaryCopyEvaluator(ctx, args, getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
                         return 0;
@@ -71,11 +73,11 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
         };
     }
 
-    static abstract class AbstractFindBinaryCopyEvaluator extends AbstractCopyEvaluator {
+    static abstract class AbstractFindBinaryCopyEvaluator extends AbstractBinaryScalarEvaluator {
 
-        public AbstractFindBinaryCopyEvaluator(IDataOutputProvider output,
-                ICopyEvaluatorFactory[] copyEvaluatorFactories, String functionName) throws AlgebricksException {
-            super(output, copyEvaluatorFactories);
+        public AbstractFindBinaryCopyEvaluator(IHyracksTaskContext context,
+                IScalarEvaluatorFactory[] copyEvaluatorFactories, String functionName) throws AlgebricksException {
+            super(context, copyEvaluatorFactories);
             this.functionName = functionName;
         }
 
@@ -89,19 +91,23 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
                 .getSerializerDeserializer(BuiltinType.AINT64);
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws AlgebricksException {
+            resultStorage.reset();
             ATypeTag textTag = evaluateTuple(tuple, 0);
             ATypeTag wordTag = evaluateTuple(tuple, 1);
             int fromOffset = getFromOffset(tuple);
 
             try {
                 if (serializeNullIfAnyNull(textTag, wordTag)) {
+                    resultPointable.set(resultStorage);
                     return;
                 }
                 checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag, wordTag);
 
-                textPtr.set(storages[0].getByteArray(), 1, storages[0].getLength() - 1);
-                wordPtr.set(storages[1].getByteArray(), 1, storages[1].getLength() - 1);
+                textPtr.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
+                        pointables[0].getLength() - 1);
+                wordPtr.set(pointables[1].getByteArray(), pointables[0].getStartOffset() + 1,
+                        pointables[1].getLength() - 1);
                 result.setValue(1 + indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(),
                         textPtr.getContentLength(), wordPtr.getByteArray(), wordPtr.getContentStartOffset(),
                         wordPtr.getContentLength(), fromOffset));
@@ -109,6 +115,7 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
+            resultPointable.set(resultStorage);
         }
 
         protected abstract int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException;
@@ -133,14 +140,18 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
         for (int i = sourceOffset + fromIndex; i <= max; i++) {
             /* Look for first character. */
             if (source[i] != first) {
-                while (++i <= max && source[i] != first);
+                while (++i <= max && source[i] != first) {
+                    ;
+                }
             }
 
             /* Found first character, now look at the rest of v2 */
             if (i <= max) {
                 int j = i + 1;
                 int end = j + targetCount - 1;
-                for (int k = targetOffset + 1; j < end && source[j] == target[k]; j++, k++);
+                for (int k = targetOffset + 1; j < end && source[j] == target[k]; j++, k++) {
+                    ;
+                }
 
                 if (j == end) {
                     /* Found whole string. */

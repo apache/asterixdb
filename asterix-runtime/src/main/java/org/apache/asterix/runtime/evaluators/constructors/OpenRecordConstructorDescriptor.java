@@ -20,10 +20,8 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -32,10 +30,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -63,30 +63,32 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
                 int n = args.length / 2;
-                final ICopyEvaluator[] evalNames = new ICopyEvaluator[n];
-                final ICopyEvaluator[] evalFields = new ICopyEvaluator[n];
-                final ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage();
-                final ArrayBackedValueStorage fieldValueBuffer = new ArrayBackedValueStorage();
+                final IScalarEvaluator[] evalNames = new IScalarEvaluator[n];
+                final IScalarEvaluator[] evalFields = new IScalarEvaluator[n];
+                final IPointable fieldNamePointable = new VoidPointable();
+                final IPointable fieldValuePointable = new VoidPointable();
                 for (int i = 0; i < n; i++) {
-                    evalNames[i] = args[2 * i].createEvaluator(fieldNameBuffer);
-                    evalFields[i] = args[2 * i + 1].createEvaluator(fieldValueBuffer);
+                    evalNames[i] = args[2 * i].createScalarEvaluator(ctx);
+                    evalFields[i] = args[2 * i + 1].createScalarEvaluator(ctx);
                 }
-                final DataOutput out = output.getDataOutput();
-                return new ICopyEvaluator() {
+                final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                final DataOutput out = resultStorage.getDataOutput();
+                return new IScalarEvaluator() {
                     private RecordBuilder recBuilder = new RecordBuilder();
                     private int closedFieldId;
                     private boolean first = true;
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
+                            resultStorage.reset();
                             closedFieldId = 0;
                             if (first) {
                                 first = false;
@@ -94,20 +96,20 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                             }
                             recBuilder.init();
                             for (int i = 0; i < evalFields.length; i++) {
-                                fieldValueBuffer.reset();
-                                evalFields[i].evaluate(tuple);
+                                evalFields[i].evaluate(tuple, fieldValuePointable);
                                 if (openFields[i]) {
-                                    fieldNameBuffer.reset();
-                                    evalNames[i].evaluate(tuple);
-                                    recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
+                                    evalNames[i].evaluate(tuple, fieldNamePointable);
+                                    recBuilder.addField(fieldNamePointable, fieldValuePointable);
                                 } else {
-                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                        recBuilder.addField(closedFieldId, fieldValueBuffer);
+                                    if (fieldValuePointable.getByteArray()[fieldValuePointable
+                                            .getStartOffset()] != ATypeTag.NULL.serialize()) {
+                                        recBuilder.addField(closedFieldId, fieldValuePointable);
                                     }
                                     closedFieldId++;
                                 }
                             }
                             recBuilder.write(out, true);
+                            result.set(resultStorage);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }

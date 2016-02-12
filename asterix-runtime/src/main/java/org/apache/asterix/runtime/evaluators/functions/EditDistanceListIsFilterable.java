@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -34,11 +35,13 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -54,19 +57,21 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceListIsFilterable();
         }
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                return new EditDistanceListIsFilterableEvaluator(args, output);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new EditDistanceListIsFilterableEvaluator(args, ctx);
             }
         };
     }
@@ -76,41 +81,44 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
         return AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE;
     }
 
-    private static class EditDistanceListIsFilterableEvaluator implements ICopyEvaluator {
+    private static class EditDistanceListIsFilterableEvaluator implements IScalarEvaluator {
 
-        protected final ArrayBackedValueStorage argBuf = new ArrayBackedValueStorage();
-        protected final IDataOutputProvider output;
+        protected final IPointable argPtr = new VoidPointable();
+        protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+        protected final DataOutput output = resultStorage.getDataOutput();
 
-        protected final ICopyEvaluator listEval;
-        protected final ICopyEvaluator edThreshEval;
+        protected final IScalarEvaluator listEval;
+        protected final IScalarEvaluator edThreshEval;
 
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
-        public EditDistanceListIsFilterableEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+        public EditDistanceListIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
                 throws AlgebricksException {
-            this.output = output;
-            listEval = args[0].createEvaluator(argBuf);
-            edThreshEval = args[1].createEvaluator(argBuf);
+            listEval = args[0].createScalarEvaluator(context);
+            edThreshEval = args[1].createScalarEvaluator(context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             ATypeTag typeTag = null;
 
             // Check type and compute string length.
-            argBuf.reset();
-            listEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            listEval.evaluate(tuple, argPtr);
+            byte[] bytes = argPtr.getByteArray();
+            int offset = argPtr.getStartOffset();
+
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
             long listLen = 0;
             switch (typeTag) {
                 case UNORDEREDLIST: {
-                    listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
+                    listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 }
                 case ORDEREDLIST: {
-                    listLen = AOrderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
+                    listLen = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 }
                 default: {
@@ -121,13 +129,14 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             }
 
             // Check type and extract edit-distance threshold.
-            argBuf.reset();
-            edThreshEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            edThreshEval.evaluate(tuple, argPtr);
+            bytes = argPtr.getByteArray();
+            offset = argPtr.getStartOffset();
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
             long edThresh;
 
             try {
-                edThresh = ATypeHierarchy.getIntegerValue(argBuf.getByteArray(), 0);
+                edThresh = ATypeHierarchy.getIntegerValue(bytes, offset);
             } catch (HyracksDataException e1) {
                 throw new AlgebricksException(e1);
             }
@@ -136,13 +145,14 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             long lowerBound = listLen - edThresh;
             try {
                 if (lowerBound <= 0) {
-                    booleanSerde.serialize(ABoolean.FALSE, output.getDataOutput());
+                    booleanSerde.serialize(ABoolean.FALSE, output);
                 } else {
-                    booleanSerde.serialize(ABoolean.TRUE, output.getDataOutput());
+                    booleanSerde.serialize(ABoolean.TRUE, output);
                 }
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
+            result.set(resultStorage);
         }
     }
 }

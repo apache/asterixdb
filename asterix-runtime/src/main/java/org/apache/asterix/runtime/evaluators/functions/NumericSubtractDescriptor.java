@@ -44,11 +44,13 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -56,6 +58,7 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericSubtractDescriptor();
         }
@@ -67,19 +70,21 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
 
-                return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
+                return new IScalarEvaluator() {
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
                     // one temp. buffer re-used by both children
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalLeft = args[0].createEvaluator(argOut);
-                    private ICopyEvaluator evalRight = args[1].createEvaluator(argOut);
+                    private IPointable argPtr = new VoidPointable();
+                    private IScalarEvaluator evalLeft = args[0].createScalarEvaluator(ctx);
+                    private IScalarEvaluator evalRight = args[1].createScalarEvaluator(ctx);
                     private double[] operands = new double[args.length];
                     private boolean metInt8 = false, metInt16 = false, metInt32 = false, metInt64 = false,
                             metFloat = false, metDouble = false;
@@ -95,60 +100,60 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         try {
+                            resultStorage.reset();
                             for (int i = 0; i < args.length; i++) {
-                                argOut.reset();
-                                if (i == 0)
-                                    evalLeft.evaluate(tuple);
-                                else
-                                    evalRight.evaluate(tuple);
-                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
+                                if (i == 0) {
+                                    evalLeft.evaluate(tuple, argPtr);
+                                } else {
+                                    evalRight.evaluate(tuple, argPtr);
+                                }
+                                byte[] data = argPtr.getByteArray();
+                                int offset = argPtr.getStartOffset();
+                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
                                 switch (typeTag) {
                                     case INT8: {
                                         metInt8 = true;
-                                        operands[i] = AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
+                                        operands[i] = AInt8SerializerDeserializer.getByte(data, offset + 1);
                                         break;
                                     }
                                     case INT16: {
                                         metInt16 = true;
-                                        operands[i] = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
+                                        operands[i] = AInt16SerializerDeserializer.getShort(data, offset + 1);
                                         break;
                                     }
                                     case INT32: {
                                         metInt32 = true;
-                                        operands[i] = AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
+                                        operands[i] = AInt32SerializerDeserializer.getInt(data, offset + 1);
                                         break;
                                     }
                                     case INT64: {
                                         metInt64 = true;
-                                        operands[i] = AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
+                                        operands[i] = AInt64SerializerDeserializer.getLong(data, offset + 1);
                                         break;
                                     }
                                     case FLOAT: {
                                         metFloat = true;
-                                        operands[i] = AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
+                                        operands[i] = AFloatSerializerDeserializer.getFloat(data, offset + 1);
                                         break;
                                     }
                                     case DOUBLE: {
                                         metDouble = true;
-                                        operands[i] = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
+                                        operands[i] = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                                         break;
                                     }
                                     case NULL: {
                                         serde = AqlSerializerDeserializerProvider.INSTANCE
                                                 .getSerializerDeserializer(BuiltinType.ANULL);
                                         serde.serialize(ANull.NULL, out);
+                                        result.set(resultStorage);
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(
-                                                AsterixBuiltinFunctions.NUMERIC_SUBTRACT.getName()
-                                                        + (i == 0 ? ": left" : ": right")
-                                                        + " operand can not be "
-                                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getByteArray()[0]));
+                                        throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_SUBTRACT
+                                                .getName() + (i == 0 ? ": left" : ": right") + " operand can not be "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
                                     }
                                 }
                             }
@@ -184,7 +189,7 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                                 aInt8.setValue((byte) (operands[0] - operands[1]));
                                 serde.serialize(aInt8, out);
                             }
-
+                            result.set(resultStorage);
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         }

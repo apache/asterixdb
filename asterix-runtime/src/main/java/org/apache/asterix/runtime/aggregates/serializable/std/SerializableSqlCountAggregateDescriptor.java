@@ -24,9 +24,10 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * count(NULL) returns NULL.
@@ -35,6 +36,7 @@ public class SerializableSqlCountAggregateDescriptor extends AbstractSerializabl
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableSqlCountAggregateDescriptor();
         }
@@ -46,14 +48,15 @@ public class SerializableSqlCountAggregateDescriptor extends AbstractSerializabl
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
-            final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopySerializableAggregateFunctionFactory() {
+    public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
+            final IScalarEvaluatorFactory[] args) throws AlgebricksException {
+        return new ISerializedAggregateEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableSqlCountAggregateFunction(args);
+            public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
+                    throws AlgebricksException {
+                return new SerializableSqlCountAggregateFunction(args, ctx);
             }
         };
     }

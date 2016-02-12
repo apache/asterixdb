@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.records;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,11 +45,13 @@ import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -81,8 +84,9 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
@@ -91,57 +95,58 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                     .getSerializerDeserializer(BuiltinType.ANULL);
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
                 final PointableAllocator pa = new PointableAllocator();
                 final IVisitablePointable vp0 = pa.allocateRecordValue(inRecType0);
                 final IVisitablePointable vp1 = pa.allocateRecordValue(inRecType1);
 
-                final ArrayBackedValueStorage abvs0 = new ArrayBackedValueStorage();
-                final ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
+                final IPointable argPtr0 = new VoidPointable();
+                final IPointable argPtr1 = new VoidPointable();
 
-                final ICopyEvaluator eval0 = args[0].createEvaluator(abvs0);
-                final ICopyEvaluator eval1 = args[1].createEvaluator(abvs1);
+                final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                 final List<RecordBuilder> rbStack = new ArrayList<>();
 
                 final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
                     private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
                     private final DeepEqualAssessor deepEqualAssesor = new DeepEqualAssessor();
+                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private DataOutput out = resultStorage.getDataOutput();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        abvs0.reset();
-                        abvs1.reset();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
 
-                        eval0.evaluate(tuple);
-                        eval1.evaluate(tuple);
-
-                        if (abvs0.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                || abvs1.getByteArray()[0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        if (argPtr0.getByteArray()[argPtr0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                || argPtr1.getByteArray()[argPtr1.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                             try {
-                                nullSerDe.serialize(ANull.NULL, output.getDataOutput());
+                                nullSerDe.serialize(ANull.NULL, out);
                             } catch (HyracksDataException e) {
                                 throw new AlgebricksException(e);
                             }
+                            result.set(resultStorage);
                             return;
                         }
 
-                        vp0.set(abvs0);
-                        vp1.set(abvs1);
+                        vp0.set(argPtr0);
+                        vp1.set(argPtr1);
 
                         ARecordVisitablePointable rp0 = (ARecordVisitablePointable) vp0;
                         ARecordVisitablePointable rp1 = (ARecordVisitablePointable) vp1;
 
                         try {
                             mergeFields(outRecType, rp0, rp1, true, 0);
-
-                            rbStack.get(0).write(output.getDataOutput(), true);
+                            rbStack.get(0).write(out, true);
                         } catch (IOException | AsterixException e) {
                             throw new AlgebricksException(e);
                         }
+                        result.set(resultStorage);
                     }
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,

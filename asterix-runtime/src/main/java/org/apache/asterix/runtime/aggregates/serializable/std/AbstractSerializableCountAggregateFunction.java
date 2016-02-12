@@ -29,17 +29,19 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * count(NULL) returns NULL.
  */
-public abstract class AbstractSerializableCountAggregateFunction implements ICopySerializableAggregateFunction {
+public abstract class AbstractSerializableCountAggregateFunction implements ISerializedAggregateEvaluator {
     private static final int MET_NULL_OFFSET = 0;
     private static final int COUNT_OFFSET = 1;
 
@@ -50,11 +52,12 @@ public abstract class AbstractSerializableCountAggregateFunction implements ICop
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private ICopyEvaluator eval;
+    private IPointable inputVal = new VoidPointable();
+    private IScalarEvaluator eval;
 
-    public AbstractSerializableCountAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        eval = args[0].createEvaluator(inputVal);
+    public AbstractSerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+            throws AlgebricksException {
+        eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
@@ -71,9 +74,9 @@ public abstract class AbstractSerializableCountAggregateFunction implements ICop
     public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
         boolean metNull = BufferSerDeUtil.getBoolean(state, start);
         long cnt = BufferSerDeUtil.getLong(state, start + 1);
-        inputVal.reset();
-        eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
+        eval.evaluate(tuple, inputVal);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         if (typeTag == ATypeTag.NULL) {
             processNull(state, start);
         } else {

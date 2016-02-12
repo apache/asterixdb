@@ -44,11 +44,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -64,24 +66,26 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new ICopyEvaluator() {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                return new IScalarEvaluator() {
 
-                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
 
-                    private final ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
-                    private final ArrayBackedValueStorage argOut2 = new ArrayBackedValueStorage();
+                    private final IPointable argPtr0 = new VoidPointable();
+                    private final IPointable argPtr1 = new VoidPointable();
+                    private final IPointable argPtr2 = new VoidPointable();
 
-                    private final ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
-                    private final ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
-                    private final ICopyEvaluator eval2 = args[2].createEvaluator(argOut2);
+                    private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
 
                     // for output
                     private OrderedListBuilder listBuilder = new OrderedListBuilder();
@@ -100,26 +104,28 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final GregorianCalendarSystem GREG_CAL = GregorianCalendarSystem.getInstance();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        argOut0.reset();
-                        eval0.evaluate(tuple);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        resultStorage.reset();
+                        eval0.evaluate(tuple, argPtr0);
+                        byte[] bytes0 = argPtr0.getByteArray();
+                        int offset0 = argPtr0.getStartOffset();
 
-                        ATypeTag type0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]);
+                        ATypeTag type0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
 
                         long intervalStart = 0, intervalEnd = 0;
                         byte intervalTypeTag;
 
                         if (type0 == ATypeTag.INTERVAL) {
-                            intervalStart = AIntervalSerializerDeserializer.getIntervalStart(argOut0.getByteArray(), 1);
-                            intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(argOut0.getByteArray(), 1);
-                            intervalTypeTag = AIntervalSerializerDeserializer
-                                    .getIntervalTimeType(argOut0.getByteArray(), 1);
+                            intervalStart = AIntervalSerializerDeserializer.getIntervalStart(bytes0, offset0 + 1);
+                            intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(bytes0, offset0 + 1);
+                            intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(bytes0, offset0 + 1);
                         } else if (type0 == ATypeTag.NULL) {
                             try {
                                 nullSerde.serialize(ANull.NULL, out);
                             } catch (HyracksDataException e) {
                                 throw new AlgebricksException(e);
                             }
+                            result.set(resultStorage);
                             return;
                         } else {
                             throw new AlgebricksException(getIdentifier().getName()
@@ -127,29 +133,31 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         }
 
                         // get the anchor instance time
-                        argOut1.reset();
-                        eval1.evaluate(tuple);
+                        eval1.evaluate(tuple, argPtr1);
+                        byte[] bytes1 = argPtr1.getByteArray();
+                        int offset1 = argPtr1.getStartOffset();
 
-                        ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]);
+                        ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
                         if (intervalTypeTag != type1.serialize()) {
-                            if (intervalTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG && type1 != ATypeTag.NULL)
+                            if (intervalTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG && type1 != ATypeTag.NULL) {
                                 throw new AlgebricksException(
                                         getIdentifier().getName() + ": expecting compatible type to " + type0 + "("
                                                 + intervalTypeTag + ") for the second argument but got " + type1);
+                            }
                         }
 
                         long anchorTime = 0;
                         switch (type1) {
                             case DATE:
-                                anchorTime = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1)
+                                anchorTime = ADateSerializerDeserializer.getChronon(bytes1, offset1 + 1)
                                         * GregorianCalendarSystem.CHRONON_OF_DAY;
                                 break;
                             case TIME:
-                                anchorTime = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                anchorTime = ATimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
                             case DATETIME:
-                                anchorTime = ADateTimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                anchorTime = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
                             case NULL:
                                 try {
@@ -157,6 +165,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 } catch (HyracksDataException e) {
                                     throw new AlgebricksException(e);
                                 }
+                                result.set(resultStorage);
                                 return;
                             default:
                                 throw new AlgebricksException(
@@ -164,18 +173,18 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                                 + intervalTypeTag + ") for the second argument but got " + type1);
                         }
 
-                        argOut2.reset();
-                        eval2.evaluate(tuple);
+                        eval2.evaluate(tuple, argPtr2);
+                        byte[] bytes2 = argPtr2.getByteArray();
+                        int offset2 = argPtr2.getStartOffset();
 
-                        ATypeTag type2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut2.getByteArray()[0]);
+                        ATypeTag type2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
 
                         int yearMonth = 0;
                         long dayTime = 0;
                         long firstBinIndex;
                         switch (type2) {
                             case YEARMONTHDURATION:
-                                yearMonth = AYearMonthDurationSerializerDeserializer
-                                        .getYearMonth(argOut2.getByteArray(), 1);
+                                yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(bytes2, offset2 + 1);
 
                                 int yearStart = GREG_CAL.getYear(anchorTime);
                                 int monthStart = GREG_CAL.getMonthOfYear(anchorTime, yearStart);
@@ -199,7 +208,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 break;
 
                             case DAYTIMEDURATION:
-                                dayTime = ADayTimeDurationSerializerDeserializer.getDayTime(argOut2.getByteArray(), 1);
+                                dayTime = ADayTimeDurationSerializerDeserializer.getDayTime(bytes2, offset2 + 1);
 
                                 long totalChronon = intervalStart - anchorTime;
 
@@ -213,6 +222,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 } catch (HyracksDataException e) {
                                     throw new AlgebricksException(e);
                                 }
+                                result.set(resultStorage);
                                 return;
 
                             default:
@@ -317,12 +327,11 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
                             }
-
                             listBuilder.write(out, true);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1.getMessage());
                         }
-
+                        result.set(resultStorage);
                     }
                 };
             }

@@ -118,10 +118,6 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
         return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 1);
     }
 
-    public static int getNumberOfItems(byte[] serOrderedList) {
-        return getNumberOfItems(serOrderedList, 0);
-    }
-
     public static int getNumberOfItems(byte[] serOrderedList, int offset) {
         if (serOrderedList[offset] == ATypeTag.ORDEREDLIST.serialize())
             // 6 = tag (1) + itemTag (1) + list size (4)
@@ -142,10 +138,6 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             // 10 = tag (1) + itemTag (1) + list size (4) + number of items (4)
         } else
             return -1;
-    }
-
-    public static int getItemOffset(byte[] serOrderedList, int itemIndex) throws AsterixException {
-        return getItemOffset(serOrderedList, 0, itemIndex);
     }
 
 }

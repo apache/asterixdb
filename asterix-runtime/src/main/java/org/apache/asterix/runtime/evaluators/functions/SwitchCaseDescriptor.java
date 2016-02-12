@@ -18,25 +18,24 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SwitchCaseDescriptor();
         }
@@ -48,65 +47,55 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
     }
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
 
-        return new ICopyEvaluatorFactory() {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                final ArrayBackedValueStorage condOut = new ArrayBackedValueStorage();
-                final ArrayBackedValueStorage caseOut = new ArrayBackedValueStorage();
-                final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+                final IPointable condPtr = new VoidPointable();
+                final IPointable casePtr = new VoidPointable();
+                final IPointable argPtr = new VoidPointable();
 
-                final ICopyEvaluator[] evals = new ICopyEvaluator[args.length];
+                final IScalarEvaluator[] evals = new IScalarEvaluator[args.length];
                 // condition
-                evals[0] = args[0].createEvaluator(condOut);
+                evals[0] = args[0].createScalarEvaluator(ctx);
                 // case value
                 for (int i = 1; i < evals.length - 1; i += 2) {
-                    evals[i] = args[i].createEvaluator(caseOut);
+                    evals[i] = args[i].createScalarEvaluator(ctx);
                 }
                 // case expression
                 for (int i = 2; i < evals.length - 1; i += 2) {
-                    evals[i] = args[i].createEvaluator(argOut);
+                    evals[i] = args[i].createScalarEvaluator(ctx);
                 }
                 // default expression
-                evals[evals.length - 1] = args[evals.length - 1].createEvaluator(argOut);
+                evals[evals.length - 1] = args[evals.length - 1].createScalarEvaluator(ctx);
 
-                return new ICopyEvaluator() {
+                return new IScalarEvaluator() {
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        try {
-                            int n = args.length;
-                            condOut.reset();
-                            evals[0].evaluate(tuple);
-                            for (int i = 1; i < n; i += 2) {
-                                caseOut.reset();
-                                evals[i].evaluate(tuple);
-                                if (equals(condOut, caseOut)) {
-                                    argOut.reset();
-                                    evals[i + 1].evaluate(tuple);
-                                    output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
-                                            argOut.getLength());
-                                    return;
-                                }
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                        int n = args.length;
+                        evals[0].evaluate(tuple, condPtr);
+                        for (int i = 1; i < n; i += 2) {
+                            evals[i].evaluate(tuple, casePtr);
+                            if (equals(condPtr, casePtr)) {
+                                evals[i + 1].evaluate(tuple, argPtr);
+                                result.set(argPtr);
+                                return;
                             }
-                            // the default case
-                            argOut.reset();
-                            evals[n - 1].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
-                                    argOut.getLength());
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
-                        } catch (IOException ioe) {
-                            throw new AlgebricksException(ioe);
                         }
+                        // the default case
+                        evals[n - 1].evaluate(tuple, argPtr);
+                        result.set(argPtr);
                     }
 
-                    private boolean equals(ArrayBackedValueStorage out1, ArrayBackedValueStorage out2) {
-                        if (out1.getStartOffset() != out2.getStartOffset() || out1.getLength() != out2.getLength())
+                    private boolean equals(IPointable out1, IPointable out2) {
+                        if (out1.getStartOffset() != out2.getStartOffset() || out1.getLength() != out2.getLength()) {
                             return false;
+                        }
                         byte[] data1 = out1.getByteArray();
                         byte[] data2 = out2.getByteArray();
                         for (int i = out1.getStartOffset(); i < out1.getLength(); i++) {

@@ -33,18 +33,20 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class SimilarityJaccardEvaluator implements ICopyEvaluator {
+public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     // Parameters for hash table.
     protected final int TABLE_SIZE = 100;
@@ -53,10 +55,12 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
     // Assuming type indicator in serde format.
     protected final int TYPE_INDICATOR_SIZE = 1;
 
-    protected final DataOutput out;
-    protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final ICopyEvaluator firstOrdListEval;
-    protected final ICopyEvaluator secondOrdListEval;
+    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    protected final DataOutput out = resultStorage.getDataOutput();
+    protected final IPointable argPtr1 = new VoidPointable();
+    protected final IPointable argPtr2 = new VoidPointable();
+    protected final IScalarEvaluator firstOrdListEval;
+    protected final IScalarEvaluator secondOrdListEval;
 
     protected final AsterixOrderedListIterator fstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator sndOrdListIter = new AsterixOrderedListIterator();
@@ -73,8 +77,6 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
 
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
-    protected int firstStart = -1;
-    protected int secondStart = -1;
     protected float jaccSim = 0.0f;
     protected ATypeTag firstItemTypeTag;
     protected ATypeTag secondItemTypeTag;
@@ -86,24 +88,25 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
     // Ignore case for strings. Defaults to true.
     protected final boolean ignoreCase = true;
 
-    public SimilarityJaccardEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public SimilarityJaccardEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        out = output.getDataOutput();
-        firstOrdListEval = args[0].createEvaluator(argOut);
-        secondOrdListEval = args[1].createEvaluator(argOut);
+        firstOrdListEval = args[0].createScalarEvaluator(context);
+        secondOrdListEval = args[1].createScalarEvaluator(context);
         byte[] emptyValBuf = new byte[8];
         Arrays.fill(emptyValBuf, (byte) 0);
         valEntry.set(emptyValBuf, 0, 8);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
         runArgEvals(tuple);
         if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
+            result.set(resultStorage);
             return;
         }
-        if (prepareLists(argOut.getByteArray(), firstStart, secondStart, firstTypeTag)) {
-            jaccSim = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
+        if (prepareLists(argPtr1, argPtr2, firstTypeTag)) {
+            jaccSim = computeResult();
         } else {
             jaccSim = 0.0f;
         }
@@ -112,32 +115,34 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
-        argOut.reset();
+        firstOrdListEval.evaluate(tuple, argPtr1);
+        secondOrdListEval.evaluate(tuple, argPtr2);
 
-        firstStart = argOut.getLength();
-        firstOrdListEval.evaluate(tuple);
-        secondStart = argOut.getLength();
-        secondOrdListEval.evaluate(tuple);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
-
-        if (firstTypeTag == ATypeTag.NULL)
+        if (firstTypeTag == ATypeTag.NULL) {
             return;
-        if (secondTypeTag == ATypeTag.NULL)
+        }
+        if (secondTypeTag == ATypeTag.NULL) {
             return;
+        }
 
-        firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
-        secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
+        firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
+        secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
     }
 
-    protected boolean prepareLists(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
-        firstListIter.reset(bytes, firstStart);
-        secondListIter.reset(bytes, secondStart);
+    protected boolean prepareLists(IPointable left, IPointable right, ATypeTag argType) throws AlgebricksException {
+        firstListIter.reset(left.getByteArray(), left.getStartOffset());
+        secondListIter.reset(right.getByteArray(), right.getStartOffset());
         // Check for special case where one of the lists is empty, since list
         // types won't match.
         if (firstListIter.size() == 0 || secondListIter.size() == 0) {
@@ -147,8 +152,7 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         return true;
     }
 
-    protected float computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
+    protected float computeResult() throws AlgebricksException {
         // We will subtract the intersection size later to get the real union size.
         int firstListSize = firstListIter.size();
         int secondListSize = secondListIter.size();
@@ -161,7 +165,7 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         ATypeTag buildItemTypeTag = (buildList == firstListIter) ? firstItemTypeTag : secondItemTypeTag;
         ATypeTag probeItemTypeTag = (probeList == firstListIter) ? firstItemTypeTag : secondItemTypeTag;
 
-        setHashMap(bytes, buildItemTypeTag, probeItemTypeTag);
+        setHashMap(buildItemTypeTag, probeItemTypeTag);
         try {
             buildHashMap(buildList);
             int intersectionSize = probeHashMap(probeList, buildListSize, probeListSize);
@@ -225,16 +229,16 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         return intersectionSize;
     }
 
-    protected void setHashMap(byte[] bytes, ATypeTag buildItemTypeTag, ATypeTag probeItemTypeTag) {
+    protected void setHashMap(ATypeTag buildItemTypeTag, ATypeTag probeItemTypeTag) {
         if (hashMap != null) {
             hashMap.clear();
             return;
         }
 
-        IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(
-                buildItemTypeTag, ignoreCase);
-        IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(
-                probeItemTypeTag, ignoreCase);
+        IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
+                .createBinaryHashFunction(buildItemTypeTag, ignoreCase);
+        IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
+                .createBinaryHashFunction(probeItemTypeTag, ignoreCase);
         IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE.createBinaryComparator(buildItemTypeTag,
                 probeItemTypeTag, ignoreCase);
         hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);

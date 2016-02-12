@@ -21,42 +21,43 @@ package org.apache.asterix.runtime.evaluators.common;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 
 public class EditDistanceContainsEvaluator extends EditDistanceCheckEvaluator {
 
-    public EditDistanceContainsEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+    public EditDistanceContainsEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws AlgebricksException {
-        super(args, output);
+        super(args, context);
     }
 
     @Override
-    protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
+    protected int computeResult(IPointable left, IPointable right, ATypeTag argType) throws AlgebricksException {
+        byte[] leftBytes = left.getByteArray();
+        int leftStartOffset = left.getStartOffset();
+        byte[] rightBytes = right.getByteArray();
+        int rightStartOffset = right.getStartOffset();
+
         switch (argType) {
-
             case STRING: {
-                return ed.UTF8StringEditDistanceContains(argOut.getByteArray(), firstStart + typeIndicatorSize,
-                        secondStart + typeIndicatorSize, (int) edThresh);
+                return ed.UTF8StringEditDistanceContains(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
+                        rightStartOffset + typeIndicatorSize, edThresh);
             }
-
             case ORDEREDLIST: {
-                firstOrdListIter.reset(bytes, firstStart);
-                secondOrdListIter.reset(bytes, secondStart);
+                firstOrdListIter.reset(leftBytes, leftStartOffset);
+                secondOrdListIter.reset(rightBytes, rightStartOffset);
                 try {
-                    return ed.getSimilarityContains(firstOrdListIter, secondOrdListIter, (int) edThresh);
+                    return ed.getSimilarityContains(firstOrdListIter, secondOrdListIter, edThresh);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
             }
-
             default: {
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS.getName()
                         + ": expects input type as STRING or ORDEREDLIST but got " + argType + ".");
             }
-
         }
     }
 }

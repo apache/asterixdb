@@ -26,63 +26,64 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 
-public class GramTokensEvaluator implements ICopyEvaluator {
+public class GramTokensEvaluator implements IScalarEvaluator {
 
     // assuming type indicator in serde format
     private final int typeIndicatorSize = 1;
 
-    private final DataOutput out;
-    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    private final ICopyEvaluator stringEval;
-    private final ICopyEvaluator gramLengthEval;
-    private final ICopyEvaluator prePostEval;
+    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private final DataOutput out = resultStorage.getDataOutput();
+    private final IPointable stringArg = new VoidPointable();
+    private final IPointable gramLengthArg = new VoidPointable();
+    private final IPointable prePostArg = new VoidPointable();
+    private final IScalarEvaluator stringEval;
+    private final IScalarEvaluator gramLengthEval;
+    private final IScalarEvaluator prePostEval;
 
     private final NGramUTF8StringBinaryTokenizer tokenizer;
     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
     private final AOrderedListType listType;
 
-    public GramTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
+    public GramTokensEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
-        out = output.getDataOutput();
-        stringEval = args[0].createEvaluator(argOut);
-        gramLengthEval = args[1].createEvaluator(argOut);
-        prePostEval = args[2].createEvaluator(argOut);
+        stringEval = args[0].createScalarEvaluator(context);
+        gramLengthEval = args[1].createScalarEvaluator(context);
+        prePostEval = args[2].createScalarEvaluator(context);
         this.tokenizer = (NGramUTF8StringBinaryTokenizer) tokenizer;
         this.listType = new AOrderedListType(itemType, null);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-        argOut.reset();
-        stringEval.evaluate(tuple);
-        int gramLengthOff = argOut.getLength();
-        gramLengthEval.evaluate(tuple);
-        int prePostOff = argOut.getLength();
-        prePostEval.evaluate(tuple);
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
+        stringEval.evaluate(tuple, stringArg);
+        gramLengthEval.evaluate(tuple, gramLengthArg);
+        prePostEval.evaluate(tuple, prePostArg);
 
-        byte[] bytes = argOut.getByteArray();
         int gramLength = 0;
-
         try {
-            gramLength = ATypeHierarchy.getIntegerValue(bytes, gramLengthOff);
+            gramLength = ATypeHierarchy.getIntegerValue(gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());
         } catch (HyracksDataException e1) {
             throw new AlgebricksException(e1);
         }
 
         tokenizer.setGramlength(gramLength);
-        boolean prePost = BooleanPointable.getBoolean(bytes, prePostOff + typeIndicatorSize);
+        boolean prePost = BooleanPointable.getBoolean(prePostArg.getByteArray(),
+                prePostArg.getStartOffset() + typeIndicatorSize);
         tokenizer.setPrePost(prePost);
-        tokenizer.reset(bytes, 0, gramLengthOff);
+        tokenizer.reset(stringArg.getByteArray(), stringArg.getStartOffset(), stringArg.getLength());
 
         try {
             listBuilder.reset(listType);
@@ -94,5 +95,6 @@ public class GramTokensEvaluator implements ICopyEvaluator {
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 }

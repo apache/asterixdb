@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -32,13 +33,15 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -53,19 +56,21 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceStringIsFilterable();
         }
     };
 
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
-        return new ICopyEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                return new EditDistanceStringIsFilterableEvaluator(args, output);
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new EditDistanceStringIsFilterableEvaluator(args, ctx);
             }
         };
     }
@@ -75,15 +80,16 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
         return AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE;
     }
 
-    private static class EditDistanceStringIsFilterableEvaluator implements ICopyEvaluator {
+    private static class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator {
 
-        protected final ArrayBackedValueStorage argBuf = new ArrayBackedValueStorage();
-        protected final IDataOutputProvider output;
+        protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+        protected final DataOutput output = resultStorage.getDataOutput();
+        protected final IPointable argPtr = new VoidPointable();
 
-        protected final ICopyEvaluator stringEval;
-        protected final ICopyEvaluator edThreshEval;
-        protected final ICopyEvaluator gramLenEval;
-        protected final ICopyEvaluator usePrePostEval;
+        protected final IScalarEvaluator stringEval;
+        protected final IScalarEvaluator edThreshEval;
+        protected final IScalarEvaluator gramLenEval;
+        protected final IScalarEvaluator usePrePostEval;
 
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -91,78 +97,75 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
 
         private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
-        public EditDistanceStringIsFilterableEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
+        public EditDistanceStringIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
                 throws AlgebricksException {
-            this.output = output;
-            stringEval = args[0].createEvaluator(argBuf);
-            edThreshEval = args[1].createEvaluator(argBuf);
-            gramLenEval = args[2].createEvaluator(argBuf);
-            usePrePostEval = args[3].createEvaluator(argBuf);
+            stringEval = args[0].createScalarEvaluator(context);
+            edThreshEval = args[1].createScalarEvaluator(context);
+            gramLenEval = args[2].createScalarEvaluator(context);
+            usePrePostEval = args[3].createScalarEvaluator(context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            resultStorage.reset();
             ATypeTag typeTag = null;
 
             // Check type and compute string length.
-            argBuf.reset();
-            stringEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            stringEval.evaluate(tuple, argPtr);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr.getByteArray()[argPtr.getStartOffset()]);
             if (!typeTag.equals(ATypeTag.STRING)) {
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type STRING as first argument, but got " + typeTag + ".");
             }
 
-            utf8Ptr.set(argBuf.getByteArray(), 1, argBuf.getLength());
+            utf8Ptr.set(argPtr.getByteArray(), argPtr.getStartOffset() + 1, argPtr.getLength());
             int strLen = utf8Ptr.getStringLength();
 
             // Check type and extract edit-distance threshold.
-            argBuf.reset();
-            edThreshEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            edThreshEval.evaluate(tuple, argPtr);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr.getByteArray()[argPtr.getStartOffset()]);
 
             long edThresh = 0;
 
             try {
-                edThresh = ATypeHierarchy.getIntegerValue(argBuf.getByteArray(), 0);
+                edThresh = ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset());
             } catch (HyracksDataException e1) {
                 throw new AlgebricksException(e1);
             }
 
             // Check type and extract gram length.
-            argBuf.reset();
-            gramLenEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            gramLenEval.evaluate(tuple, argPtr);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr.getByteArray()[argPtr.getStartOffset()]);
 
             long gramLen = 0;
             try {
-                gramLen = ATypeHierarchy.getIntegerValue(argBuf.getByteArray(), 0);
+                gramLen = ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset());
             } catch (HyracksDataException e1) {
                 throw new AlgebricksException(e1);
             }
 
             // Check type and extract usePrePost flag.
-            argBuf.reset();
-            usePrePostEval.evaluate(tuple);
-            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            usePrePostEval.evaluate(tuple, argPtr);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr.getByteArray()[argPtr.getStartOffset()]);
             if (!typeTag.equals(ATypeTag.BOOLEAN)) {
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type BOOLEAN as fourth argument, but got " + typeTag + ".");
             }
-            boolean usePrePost = BooleanPointable.getBoolean(argBuf.getByteArray(), 1);
+            boolean usePrePost = BooleanPointable.getBoolean(argPtr.getByteArray(), argPtr.getStartOffset() + 1);
 
             // Compute result.
             long numGrams = (usePrePost) ? strLen + gramLen - 1 : strLen - gramLen + 1;
             long lowerBound = numGrams - edThresh * gramLen;
             try {
                 if (lowerBound <= 0 || strLen == 0) {
-                    booleanSerde.serialize(ABoolean.FALSE, output.getDataOutput());
+                    booleanSerde.serialize(ABoolean.FALSE, output);
                 } else {
-                    booleanSerde.serialize(ABoolean.TRUE, output.getDataOutput());
+                    booleanSerde.serialize(ABoolean.TRUE, output);
                 }
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
+            result.set(resultStorage);
         }
     }
 }

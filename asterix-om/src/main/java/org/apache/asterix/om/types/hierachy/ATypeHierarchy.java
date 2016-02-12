@@ -125,10 +125,12 @@ public class ATypeHierarchy {
     public static boolean isSameTypeDomain(ATypeTag tag1, ATypeTag tag2, boolean useListDomain) {
         Domain tagHierarchy1 = hierarchyDomains.get(tag1);
         Domain tagHierarchy2 = hierarchyDomains.get(tag2);
-        if (tagHierarchy1 == null || tagHierarchy2 == null)
+        if (tagHierarchy1 == null || tagHierarchy2 == null) {
             return false;
-        if (useListDomain && tagHierarchy1 == Domain.LIST && tagHierarchy2 == Domain.LIST)
+        }
+        if (useListDomain && tagHierarchy1 == Domain.LIST && tagHierarchy2 == Domain.LIST) {
             return true;
+        }
         return tagHierarchy1.equals(tagHierarchy2) && !useListDomain;
     }
 
@@ -189,24 +191,24 @@ public class ATypeHierarchy {
         if (sourceTypeTag != targetTypeTag) {
 
             switch (targetTypeTag) {
-            //Target Field Type:INT64
+                //Target Field Type:INT64
                 case INT64:
 
                     // Change the Constant Type to INT64 Type
                     switch (sourceTypeTag) {
                         case INT8:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt64(
-                                    (long) ((AInt8) sourceObject).getByteValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt64((long) ((AInt8) sourceObject).getByteValue()));
                             break;
 
                         case INT16:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt64(
-                                    (long) ((AInt16) sourceObject).getShortValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt64((long) ((AInt16) sourceObject).getShortValue()));
                             break;
 
                         case INT32:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt64(
-                                    (long) ((AInt32) sourceObject).getIntegerValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt64((long) ((AInt32) sourceObject).getIntegerValue()));
                             break;
 
                         case FLOAT:
@@ -235,13 +237,13 @@ public class ATypeHierarchy {
                     // Change the Constant Type to INT32 Type
                     switch (sourceTypeTag) {
                         case INT8:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt32(
-                                    (int) ((AInt8) sourceObject).getByteValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt32(((AInt8) sourceObject).getByteValue()));
                             break;
 
                         case INT16:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt32(
-                                    (int) ((AInt16) sourceObject).getShortValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt32(((AInt16) sourceObject).getShortValue()));
                             break;
 
                         case INT64:
@@ -321,8 +323,8 @@ public class ATypeHierarchy {
                     // Change the Constant Type to INT16 Type
                     switch (sourceTypeTag) {
                         case INT8:
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt16(
-                                    (short) ((AInt8) sourceObject).getByteValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AInt16(((AInt8) sourceObject).getByteValue()));
                             break;
 
                         case INT32:
@@ -363,23 +365,23 @@ public class ATypeHierarchy {
                     // Change the Constant Type to FLOAT Type
                     switch (sourceTypeTag) {
                         case INT8:
-                            asterixNewConstantValue = new AsterixConstantValue(new AFloat(
-                                    (float) ((AInt8) sourceObject).getByteValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AFloat(((AInt8) sourceObject).getByteValue()));
                             break;
 
                         case INT16:
-                            asterixNewConstantValue = new AsterixConstantValue(new AFloat(
-                                    (float) ((AInt16) sourceObject).getShortValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AFloat(((AInt16) sourceObject).getShortValue()));
                             break;
 
                         case INT32:
-                            asterixNewConstantValue = new AsterixConstantValue(new AFloat(
-                                    (float) (int) ((AInt32) sourceObject).getIntegerValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AFloat(((AInt32) sourceObject).getIntegerValue()));
                             break;
 
                         case INT64:
-                            asterixNewConstantValue = new AsterixConstantValue(new AFloat(
-                                    (float) ((AInt64) sourceObject).getLongValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new AFloat(((AInt64) sourceObject).getLongValue()));
                             break;
 
                         case DOUBLE:
@@ -399,28 +401,28 @@ public class ATypeHierarchy {
                     // Change the Constant Type to DOUBLE Type
                     switch (sourceTypeTag) {
                         case INT8:
-                            asterixNewConstantValue = new AsterixConstantValue(new ADouble(
-                                    (double) ((AInt8) sourceObject).getByteValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new ADouble(((AInt8) sourceObject).getByteValue()));
                             break;
 
                         case INT16:
-                            asterixNewConstantValue = new AsterixConstantValue(new ADouble(
-                                    (double) ((AInt16) sourceObject).getShortValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new ADouble(((AInt16) sourceObject).getShortValue()));
                             break;
 
                         case INT32:
-                            asterixNewConstantValue = new AsterixConstantValue(new ADouble(
-                                    (double) (int) ((AInt32) sourceObject).getIntegerValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new ADouble(((AInt32) sourceObject).getIntegerValue()));
                             break;
 
                         case INT64:
-                            asterixNewConstantValue = new AsterixConstantValue(new ADouble(
-                                    (double) ((AInt64) sourceObject).getLongValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new ADouble(((AInt64) sourceObject).getLongValue()));
                             break;
 
                         case FLOAT:
-                            asterixNewConstantValue = new AsterixConstantValue(new ADouble(
-                                    (double) ((AFloat) sourceObject).getFloatValue()));
+                            asterixNewConstantValue = new AsterixConstantValue(
+                                    new ADouble(((AFloat) sourceObject).getFloatValue()));
                             break;
 
                         default:
@@ -494,18 +496,18 @@ public class ATypeHierarchy {
                     case INT8:
                         return sourceObject;
                     case INT16:
-                        return new AInt16((short) ((AInt8) sourceObject).getByteValue());
+                        return new AInt16(((AInt8) sourceObject).getByteValue());
                     case INT32:
-                        return new AInt32((int) ((AInt8) sourceObject).getByteValue());
+                        return new AInt32(((AInt8) sourceObject).getByteValue());
                     case INT64:
                         return new AInt64((long) ((AInt8) sourceObject).getByteValue());
                     case FLOAT:
-                        return new AFloat((float) ((AInt8) sourceObject).getByteValue());
+                        return new AFloat(((AInt8) sourceObject).getByteValue());
                     case DOUBLE:
-                        return new ADouble((double) ((AInt8) sourceObject).getByteValue());
+                        return new ADouble(((AInt8) sourceObject).getByteValue());
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
             case INT16:
                 switch (targetTypeTag) {
@@ -515,37 +517,37 @@ public class ATypeHierarchy {
                     case INT16:
                         return sourceObject;
                     case INT32:
-                        return new AInt32((int) ((AInt16) sourceObject).getShortValue());
+                        return new AInt32(((AInt16) sourceObject).getShortValue());
                     case INT64:
                         return new AInt64((long) ((AInt16) sourceObject).getShortValue());
                     case FLOAT:
-                        return new AFloat((float) ((AInt16) sourceObject).getShortValue());
+                        return new AFloat(((AInt16) sourceObject).getShortValue());
                     case DOUBLE:
-                        return new ADouble((double) ((AInt16) sourceObject).getShortValue());
+                        return new ADouble(((AInt16) sourceObject).getShortValue());
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
 
             case INT32:
                 switch (targetTypeTag) {
                     case INT8:
                         // an exception can happen because of a type demotion from INT32 to INT8
-                        return new AInt8((byte) ((AInt32) sourceObject).getIntegerValue().byteValue());
+                        return new AInt8(((AInt32) sourceObject).getIntegerValue().byteValue());
                     case INT16:
                         // an exception can happen because of a type demotion from INT32 to INT16
-                        return new AInt16((short) ((AInt32) sourceObject).getIntegerValue().shortValue());
+                        return new AInt16(((AInt32) sourceObject).getIntegerValue().shortValue());
                     case INT32:
                         return sourceObject;
                     case INT64:
                         return new AInt64((long) ((AInt32) sourceObject).getIntegerValue());
                     case FLOAT:
-                        return new AFloat((float) ((AInt32) sourceObject).getIntegerValue());
+                        return new AFloat(((AInt32) sourceObject).getIntegerValue());
                     case DOUBLE:
-                        return new ADouble((double) ((AInt32) sourceObject).getIntegerValue());
+                        return new ADouble(((AInt32) sourceObject).getIntegerValue());
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
 
             case INT64:
@@ -562,12 +564,12 @@ public class ATypeHierarchy {
                     case INT64:
                         return sourceObject;
                     case FLOAT:
-                        return new AFloat((float) ((AInt64) sourceObject).getLongValue());
+                        return new AFloat(((AInt64) sourceObject).getLongValue());
                     case DOUBLE:
-                        return new ADouble((double) ((AInt64) sourceObject).getLongValue());
+                        return new ADouble(((AInt64) sourceObject).getLongValue());
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
             case FLOAT:
                 switch (targetTypeTag) {
@@ -586,10 +588,10 @@ public class ATypeHierarchy {
                     case FLOAT:
                         return sourceObject;
                     case DOUBLE:
-                        return new ADouble((double) ((AFloat) sourceObject).getFloatValue());
+                        return new ADouble(((AFloat) sourceObject).getFloatValue());
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
             case DOUBLE:
                 switch (targetTypeTag) {
@@ -611,8 +613,8 @@ public class ATypeHierarchy {
                     case DOUBLE:
                         return sourceObject;
                     default:
-                        throw new AsterixException("Can't convert the " + sourceTypeTag + " type to the "
-                                + targetTypeTag + " type.");
+                        throw new AsterixException(
+                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
             default:
                 throw new AsterixException("Source type is not a numeric type.");
@@ -636,7 +638,8 @@ public class ATypeHierarchy {
                 convertComputer = ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag);;
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
             } else {
-                throw new IOException("Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
+                throw new IOException(
+                        "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
             }
         }
 
@@ -662,10 +665,10 @@ public class ATypeHierarchy {
                 value = IntegerPointable.getInteger(bytes, offset);
                 break;
             case INT8:
-                value = (int) bytes[offset];
+                value = bytes[offset];
                 break;
             case INT16:
-                value = (int) ShortPointable.getShort(bytes, offset);
+                value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
                 value = (int) FloatPointable.getFloat(bytes, offset);
@@ -699,13 +702,13 @@ public class ATypeHierarchy {
                 value = LongPointable.getLong(bytes, offset);
                 break;
             case INT32:
-                value = (long) IntegerPointable.getInteger(bytes, offset);
+                value = IntegerPointable.getInteger(bytes, offset);
                 break;
             case INT8:
-                value = (long) bytes[offset];
+                value = bytes[offset];
                 break;
             case INT16:
-                value = (long) ShortPointable.getShort(bytes, offset);
+                value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
                 value = (long) FloatPointable.getFloat(bytes, offset);
@@ -736,16 +739,16 @@ public class ATypeHierarchy {
 
         switch (sourceTypeTag) {
             case INT64:
-                value = (float) LongPointable.getLong(bytes, offset);
+                value = LongPointable.getLong(bytes, offset);
                 break;
             case INT32:
-                value = (float) IntegerPointable.getInteger(bytes, offset);
+                value = IntegerPointable.getInteger(bytes, offset);
                 break;
             case INT8:
-                value = (float) bytes[offset];
+                value = bytes[offset];
                 break;
             case INT16:
-                value = (float) ShortPointable.getShort(bytes, offset);
+                value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
                 value = FloatPointable.getFloat(bytes, offset);
@@ -776,19 +779,19 @@ public class ATypeHierarchy {
 
         switch (sourceTypeTag) {
             case INT64:
-                value = (double) LongPointable.getLong(bytes, offset);
+                value = LongPointable.getLong(bytes, offset);
                 break;
             case INT32:
-                value = (double) IntegerPointable.getInteger(bytes, offset);
+                value = IntegerPointable.getInteger(bytes, offset);
                 break;
             case INT8:
-                value = (double) bytes[offset];
+                value = bytes[offset];
                 break;
             case INT16:
-                value = (double) ShortPointable.getShort(bytes, offset);
+                value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
-                value = (double) FloatPointable.getFloat(bytes, offset);
+                value = FloatPointable.getFloat(bytes, offset);
                 break;
             case DOUBLE:
                 value = DoublePointable.getDouble(bytes, offset);
