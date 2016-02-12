@@ -56,6 +56,7 @@ import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule
 import org.apache.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
 import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
 import org.apache.asterix.optimizer.rules.PushGroupByThroughProduct;
+import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
 import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
@@ -310,6 +311,10 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<IAlgebraicRewriteRule>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new CopyLimitDownRule());
+        // CopyLimitDownRule may generates non-topmost limits with numeric_adds functions.
+        // We are going to apply a constant folding rule again for this case.
+        physicalRewritesTopLevel.add(new ConstantFoldingRule());
+        physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
         physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());

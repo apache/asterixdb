@@ -62,6 +62,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
@@ -75,9 +76,21 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
+import com.google.common.collect.ImmutableSet;
+
 public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     private final ConstantFoldingVisitor cfv = new ConstantFoldingVisitor();
+
+    // Function Identifier sets that the ConstantFolding rule should skip to apply.
+    // Most of them are record-related functions.
+    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED = ImmutableSet.of(
+            AsterixBuiltinFunctions.RECORD_MERGE, AsterixBuiltinFunctions.ADD_FIELDS,
+            AsterixBuiltinFunctions.REMOVE_FIELDS, AsterixBuiltinFunctions.GET_RECORD_FIELDS,
+            AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
+            AsterixBuiltinFunctions.GET_ITEM, AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
+            AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, AsterixBuiltinFunctions.CAST_RECORD,
+            AsterixBuiltinFunctions.CAST_LIST);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
@@ -133,6 +146,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
+
         return op.acceptExpressionTransform(cfv);
     }
 
@@ -172,11 +186,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (!checkArgs(expr) || !expr.isFunctional()) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
             }
-            //Current ARecord SerDe assumes a closed record, so we do not constant fold open record constructors
-            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
-                    || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
+
+            // Skip Constant Folding for the record-related functions.
+            if (FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED.contains(expr.getFunctionIdentifier())) {
                 return new Pair<Boolean, ILogicalExpression>(false, null);
             }
+
             //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
@@ -199,6 +214,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);
                 }
             }
+
             IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                     _emptyTypeEnv, _emptySchemas, _jobGenCtx);
             IScalarEvaluator eval = fact.createScalarEvaluator(null);

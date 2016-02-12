@@ -4284,6 +4284,23 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="orderby_limit">
+        <test-case FilePath="orderby_limit">
+            <compilation-unit name="orderby_limit_01">
+                <output-dir compare="Text">orderby_limit_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="orderby_limit">
+            <compilation-unit name="orderby_limit_offset_01">
+                <output-dir compare="Text">orderby_limit_offset_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="orderby_limit">
+            <compilation-unit name="orderby_limit_primary_index_01">
+                <output-dir compare="Text">orderby_limit_primary_index_01</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="quantifiers">
         <test-case FilePath="quantifiers">
             <compilation-unit name="everysat_01">

@@ -6,7 +6,7 @@
           -- SORT_MERGE_EXCHANGE [$$26(DESC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$26(DESC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 5] [$$26(DESC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- PRE_CLUSTERED_GROUP_BY[$$32]  |PARTITIONED|
                             {
