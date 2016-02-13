@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalData
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
@@ -203,6 +204,16 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             newVarMap.add(new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(triple.first, triple.second,
                     triple.third));
         return new UnionAllOperator(newVarMap);
+    }
+
+    @Override
+    public ILogicalOperator visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        List<LogicalVariable> outputVar = new ArrayList<>(op.getOutputVars());
+        List<List<LogicalVariable>> inputVars = new ArrayList<>(op.getNumInput());
+        for(int i = 0; i < op.getNumInput(); i++){
+            inputVars.add(new ArrayList<>(op.getInputVariables(i)));
+        }
+        return new IntersectOperator(outputVar, inputVars);
     }
 
     @Override

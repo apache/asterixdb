@@ -37,7 +37,6 @@
     </license>
   </licenses>
 
-
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

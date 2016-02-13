@@ -26,11 +26,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IPartitioningProperty extends IStructuralProperty {
-    public enum PartitioningType {
+    enum PartitioningType {
         UNPARTITIONED, RANDOM, BROADCAST, UNORDERED_PARTITIONED, ORDERED_PARTITIONED
     }
 
-    static final INodeDomain DOMAIN_FOR_UNPARTITIONED_DATA = new INodeDomain() {
+    INodeDomain DOMAIN_FOR_UNPARTITIONED_DATA = new INodeDomain() {
         @Override
         public boolean sameAs(INodeDomain domain) {
             return domain == this;
@@ -42,7 +42,7 @@ public interface IPartitioningProperty extends IStructuralProperty {
         }
     };
 
-    public static final IPartitioningProperty UNPARTITIONED = new IPartitioningProperty() {
+    IPartitioningProperty UNPARTITIONED = new IPartitioningProperty() {
 
         @Override
         public PartitioningType getPartitioningType() {
@@ -72,14 +72,20 @@ public interface IPartitioningProperty extends IStructuralProperty {
         public void setNodeDomain(INodeDomain domain) {
             throw new IllegalStateException();
         }
+
+        @Override
+        public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> variableMap) {
+        }
     };
 
-    public abstract PartitioningType getPartitioningType();
+    PartitioningType getPartitioningType();
 
-    public abstract void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+    void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
             List<FunctionalDependency> fds);
 
-    public abstract INodeDomain getNodeDomain();
+    INodeDomain getNodeDomain();
 
-    public abstract void setNodeDomain(INodeDomain domain);
+    void setNodeDomain(INodeDomain domain);
+
+    void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap);
 }

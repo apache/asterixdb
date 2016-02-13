@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -198,6 +199,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     public Void visitUnionOperator(UnionAllOperator op, ILogicalOperator arg) throws AlgebricksException {
         mapChildren(op, arg);
         mapVariablesForUnion(op, arg);
+        return null;
+    }
+
+    @Override
+    public Void visitIntersectOperator(IntersectOperator op, ILogicalOperator arg) throws AlgebricksException {
+        mapChildren(op, arg);
+        mapVariablesForIntersect(op, arg);
         return null;
     }
 
@@ -426,6 +434,22 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
                 }
             }
         }
+    }
+
+    private void mapVariablesForIntersect(IntersectOperator op, ILogicalOperator arg) {
+        IntersectOperator opArg = (IntersectOperator) arg;
+        if (op.getNumInput() != opArg.getNumInput()){
+            return;
+        }
+        for (int i = 0; i < op.getNumInput(); i++){
+            for (int j = 0; j < op.getInputVariables(i).size(); j++){
+                if (!varEquivalent(op.getInputVariables(i).get(j), opArg.getInputVariables(i).get(j))){
+                    return;
+                }
+            }
+
+        }
+        mapVariables(op.getOutputVars(), opArg.getOutputVars());
     }
 
     private boolean varEquivalent(LogicalVariable left, LogicalVariable right) {

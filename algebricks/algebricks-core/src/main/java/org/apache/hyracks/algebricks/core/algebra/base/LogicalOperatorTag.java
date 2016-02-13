@@ -53,4 +53,5 @@ public enum LogicalOperatorTag {
     UPDATE,
     WRITE,
     WRITE_RESULT,
+    INTERSECT,
 }

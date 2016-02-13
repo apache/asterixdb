@@ -75,18 +75,6 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        UnionAllOperator unionOp = (UnionAllOperator) op;
-        int n = unionOp.getVariableMappings().size();
-        int[] leftColumns = new int[n];
-        int[] rightColumns = new int[n];
-        int i = 0;
-        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : unionOp.getVariableMappings()) {
-            int posLeft = inputSchemas[0].findVariable(t.first);
-            leftColumns[i] = posLeft;
-            int posRight = inputSchemas[1].findVariable(t.second);
-            rightColumns[i] = posRight;
-            ++i;
-        }
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);

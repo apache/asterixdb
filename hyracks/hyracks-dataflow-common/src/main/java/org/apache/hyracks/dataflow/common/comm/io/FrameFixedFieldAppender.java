@@ -49,18 +49,22 @@ public class FrameFixedFieldAppender extends AbstractFrameAppender implements IF
         leftOverSize = 0;
     }
 
+    /**
+     * Reset frame states and copy the left over data into the new frame
+     *
+     * @param frame
+     * @throws HyracksDataException
+     */
+    public void resetWithLeftOverData(IFrame frame) throws HyracksDataException {
+        super.reset(frame, true);
+        copyLeftOverDataFromeBufferToFrame();
+    }
+
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         super.write(outWriter, clearFrame);
         if (clearFrame) {
-            if (leftOverSize > 0) {
-                if (!canHoldNewTuple(0, leftOverSize)) {
-                    throw new HyracksDataException(
-                            "The given frame can not be extended to insert the leftover data from the last record");
-                }
-                System.arraycopy(cachedLeftOverFields, 0, array, tupleDataEndOffset, leftOverSize);
-                leftOverSize = 0;
-            }
+            copyLeftOverDataFromeBufferToFrame();
         }
     }
 
@@ -85,18 +89,29 @@ public class FrameFixedFieldAppender extends AbstractFrameAppender implements IF
             return true;
         } else {
             if (currentField > 0) {
-                copyLeftOverData();
+                copyLeftOverDataFromFrameToBuffer();
             }
             return false;
         }
     }
 
-    private void copyLeftOverData() {
+    private void copyLeftOverDataFromFrameToBuffer() {
         leftOverSize = lastFieldEndOffset + fieldCount * 4;
         if (cachedLeftOverFields == null || cachedLeftOverFields.length < leftOverSize) {
             cachedLeftOverFields = new byte[leftOverSize];
         }
         System.arraycopy(array, tupleDataEndOffset, cachedLeftOverFields, 0, leftOverSize);
+    }
+
+    private void copyLeftOverDataFromeBufferToFrame() throws HyracksDataException {
+        if (leftOverSize > 0) {
+            if (!canHoldNewTuple(0, leftOverSize)) {
+                throw new HyracksDataException(
+                        "The given frame can not be extended to insert the leftover data from the last record");
+            }
+            System.arraycopy(cachedLeftOverFields, 0, array, tupleDataEndOffset, leftOverSize);
+            leftOverSize = 0;
+        }
     }
 
     public boolean appendField(IFrameTupleAccessor fta, int tIndex, int fIndex) throws HyracksDataException {

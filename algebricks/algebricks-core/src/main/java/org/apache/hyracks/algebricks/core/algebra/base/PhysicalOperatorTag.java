@@ -73,4 +73,5 @@ public enum PhysicalOperatorTag {
     UNNEST,
     UPDATE,
     WRITE_RESULT,
+    INTERSECT,
 }

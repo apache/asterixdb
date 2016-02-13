@@ -81,4 +81,13 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
         this.domain = domain;
     }
 
+    @Override
+    public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
+        for (OrderColumn orderColumn : orderColumns){
+            if (varMap.containsKey(orderColumn.getColumn())){
+                orderColumn.setColumn(varMap.get(orderColumn.getColumn()));
+            }
+        }
+    }
+
 }

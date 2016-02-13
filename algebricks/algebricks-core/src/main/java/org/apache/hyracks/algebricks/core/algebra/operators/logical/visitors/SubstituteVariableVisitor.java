@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalData
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
@@ -299,6 +300,24 @@ public class SubstituteVariableVisitor
             }
         }
         substVarTypes(op, pair);
+        return null;
+    }
+
+    @Override
+    public Void visitIntersectOperator(IntersectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        for (int i = 0; i < op.getOutputVars().size(); i++) {
+            if (op.getOutputVars().get(i).equals(pair.first)){
+                op.getOutputVars().set(i, pair.second);
+            }
+        }
+        for(int i = 0; i < op.getNumInput(); i++){
+            for (int j = 0; j < op.getInputVariables(i).size(); j++){
+                if (op.getInputVariables(i).get(j).equals(pair.first)){
+                    op.getInputVariables(i).set(j, pair.second);
+                }
+            }
+        }
         return null;
     }
 

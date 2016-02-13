@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -328,6 +329,32 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (mapping.size() != mappingArg.size())
             return Boolean.FALSE;
         return VariableUtilities.varListEqualUnordered(mapping, mappingArg);
+    }
+
+    @Override
+    public Boolean visitIntersectOperator(IntersectOperator op, ILogicalOperator arg) throws AlgebricksException {
+        if (op.getOperatorTag() != LogicalOperatorTag.INTERSECT){
+            return Boolean.FALSE;
+        }
+        IntersectOperator intersetOpArg = (IntersectOperator) copyAndSubstituteVar(op, arg);
+        List<LogicalVariable> variables = op.getOutputVars();
+        List<LogicalVariable> variablesArg = intersetOpArg.getOutputVars();
+        if (variables.size() != variablesArg.size()){
+            return Boolean.FALSE;
+        }
+        if (!VariableUtilities.varListEqualUnordered(variables, variablesArg)){
+            return Boolean.FALSE;
+        }
+
+        if (op.getNumInput() != intersetOpArg.getNumInput()){
+            return Boolean.FALSE;
+        }
+        for (int i = 0; i < op.getNumInput(); i++){
+            if (!VariableUtilities.varListEqualUnordered(op.getInputVariables(i), intersetOpArg.getInputVariables(i))){
+                return Boolean.FALSE;
+            }
+        }
+        return Boolean.TRUE;
     }
 
     @Override

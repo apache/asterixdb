@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -461,6 +462,33 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         UnionAllOperator opCopy = new UnionAllOperator(copiedTriples);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitIntersectOperator(IntersectOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        List<List<LogicalVariable>> liveVarsInInputs = getLiveVarsInInputs(op);
+        List<LogicalVariable> outputCopy = new ArrayList<>();
+        for (LogicalVariable var : op.getOutputVars()){
+            outputCopy.add(deepCopyVariable(var));
+        }
+        IntersectOperator opCopy = new IntersectOperator(outputCopy, liveVarsInInputs);
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        return opCopy;
+    }
+
+    private List<List<LogicalVariable>> getLiveVarsInInputs(AbstractLogicalOperator op) throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> copiedInputs = new ArrayList<>();
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            copiedInputs.add(deepCopyOperatorReference(childRef, null));
+        }
+        List<List<LogicalVariable>> liveVarsInInputs = new ArrayList<>();
+        for (Mutable<ILogicalOperator> inputOpRef : copiedInputs) {
+            List<LogicalVariable> liveVars = new ArrayList<>();
+            VariableUtilities.getLiveVariables(inputOpRef.getValue(), liveVars);
+            liveVarsInInputs.add(liveVars);
+        }
+        return liveVarsInInputs;
     }
 
     @Override

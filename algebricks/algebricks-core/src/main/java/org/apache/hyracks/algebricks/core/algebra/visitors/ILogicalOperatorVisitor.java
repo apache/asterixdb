@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -94,6 +95,8 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitSinkOperator(SinkOperator op, T arg) throws AlgebricksException;
 
     public R visitUnionOperator(UnionAllOperator op, T arg) throws AlgebricksException;
+
+    public R visitIntersectOperator(IntersectOperator op, T arg) throws AlgebricksException;
 
     public R visitUnnestOperator(UnnestOperator op, T arg) throws AlgebricksException;
 

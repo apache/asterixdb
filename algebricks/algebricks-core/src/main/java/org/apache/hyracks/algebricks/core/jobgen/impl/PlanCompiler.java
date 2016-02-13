@@ -76,18 +76,18 @@ public class PlanCompiler {
         int n = op.getInputs().size();
         IOperatorSchema[] schemas = new IOperatorSchema[n];
         int i = 0;
-        for (Mutable<ILogicalOperator> opRef2 : op.getInputs()) {
-            List<Mutable<ILogicalOperator>> parents = operatorVisitedToParents.get(opRef2);
+        for (Mutable<ILogicalOperator> opChild : op.getInputs()) {
+            List<Mutable<ILogicalOperator>> parents = operatorVisitedToParents.get(opChild);
             if (parents == null) {
                 parents = new ArrayList<Mutable<ILogicalOperator>>();
-                operatorVisitedToParents.put(opRef2, parents);
+                operatorVisitedToParents.put(opChild, parents);
                 parents.add(opRef);
-                compileOpRef(opRef2, spec, builder, outerPlanSchema);
-                schemas[i++] = context.getSchema(opRef2.getValue());
+                compileOpRef(opChild, spec, builder, outerPlanSchema);
+                schemas[i++] = context.getSchema(opChild.getValue());
             } else {
                 if (!parents.contains(opRef))
                     parents.add(opRef);
-                schemas[i++] = context.getSchema(opRef2.getValue());
+                schemas[i++] = context.getSchema(opChild.getValue());
                 continue;
             }
         }

@@ -226,6 +226,12 @@ public class OperatorManipulationUtil {
         return op.accept(visitor, null);
     }
 
+    public static ILogicalOperator deepCopyWithExcutionMode(ILogicalOperator op) throws AlgebricksException {
+        OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
+        AbstractLogicalOperator newOp = (AbstractLogicalOperator) op.accept(visitor, null);
+        newOp.setExecutionMode(op.getExecutionMode());
+        return newOp;
+    }
     /**
      * Compute type environment of a newly generated operator {@code op} and its input.
      *

@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -250,6 +251,36 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
             buffer.append(" (" + v.first + ", " + v.second + ", " + v.third + ")");
         }
         return buffer.toString();
+    }
+
+    @Override
+    public String visitIntersectOperator(IntersectOperator op, Integer indent) throws AlgebricksException {
+        StringBuilder builder = new StringBuilder();
+        addIndent(builder, indent).append("intersect (");
+
+        builder.append('[');
+        for (int i = 0; i < op.getOutputVars().size(); i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(op.getOutputVars().get(i));
+        }
+        builder.append("] <- [");
+        for (int i = 0; i < op.getNumInput(); i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append('[');
+            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
+                if (j > 0) {
+                    builder.append(", ");
+                }
+                builder.append(op.getInputVariables(i).get(j));
+            }
+            builder.append(']');
+        }
+        builder.append("])");
+        return builder.toString();
     }
 
     @Override

@@ -57,4 +57,8 @@ public class BroadcastPartitioningProperty implements IPartitioningProperty {
         this.domain = domain;
     }
 
+    @Override
+    public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
+    }
+
 }

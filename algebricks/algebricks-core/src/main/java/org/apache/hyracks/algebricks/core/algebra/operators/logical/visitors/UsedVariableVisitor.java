@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -291,6 +292,18 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
             }
             if (!usedVariables.contains(m.second)) {
                 usedVariables.add(m.second);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        for (int i = 0; i < op.getNumInput(); i++) {
+            for (LogicalVariable var : op.getInputVariables(i)) {
+                if (!usedVariables.contains(var)) {
+                    usedVariables.add(var);
+                }
             }
         }
         return null;
