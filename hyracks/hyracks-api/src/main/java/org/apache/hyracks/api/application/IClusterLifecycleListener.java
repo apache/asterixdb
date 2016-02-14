@@ -26,6 +26,12 @@ import java.util.Set;
  */
 public interface IClusterLifecycleListener {
 
+    public enum ClusterEventType {
+        NODE_JOIN,
+        NODE_FAILURE,
+        NODE_SHUTTING_DOWN //node shutting down gracefully
+    }
+
     /**
      * @param nodeId
      *            A unique identifier of a Node Controller

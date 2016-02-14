@@ -29,8 +29,7 @@ public interface IReplicationJob {
 
     public enum ReplicationOperation {
         REPLICATE,
-        DELETE,
-        STOP
+        DELETE
     }
 
     public enum ReplicationExecutionType {

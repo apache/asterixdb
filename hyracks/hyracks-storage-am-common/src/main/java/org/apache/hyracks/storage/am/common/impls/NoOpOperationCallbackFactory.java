@@ -29,9 +29,9 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
  * Dummy NoOp callback factory used primarily for testing. Always returns the {@link NoOpOperationCallback} instance.
  * Implemented as an enum to preserve singleton model while being serializable
  */
-public enum NoOpOperationCallbackFactory implements ISearchOperationCallbackFactory,
-        IModificationOperationCallbackFactory {
-    INSTANCE;
+public enum NoOpOperationCallbackFactory
+    implements ISearchOperationCallbackFactory,IModificationOperationCallbackFactory {
+        INSTANCE;
 
     @Override
     public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
@@ -40,7 +40,7 @@ public enum NoOpOperationCallbackFactory implements ISearchOperationCallbackFact
 
     @Override
     public IModificationOperationCallback createModificationOperationCallback(String resourcePath, long resourceId,
-            Object resource, IHyracksTaskContext ctx) throws HyracksDataException {
+            int resourcePartition, Object resource, IHyracksTaskContext ctx) throws HyracksDataException {
         return NoOpOperationCallback.INSTANCE;
     }
 }

@@ -45,6 +45,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final boolean durable;
     protected IIndex index;
     protected final String resourcePath;
+    protected final int resourcePartition;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition,
             boolean durable) {
@@ -57,6 +58,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.file = IndexFileNameUtil.getIndexAbsoluteFileRef(opDesc, partition, ctx.getIOManager());
         this.resourcePath = file.getFile().getPath();
         this.durable = durable;
+        this.resourcePartition = opDesc.getFileSplitProvider().getFileSplits()[partition].getPartition();
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
@@ -88,7 +90,6 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                int resourcePartition = opDesc.getFileSplitProvider().getFileSplits()[partition].getPartition();
                 String resourceName = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile().getFile()
                         .getPath();
                 localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
@@ -159,5 +160,10 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     @Override
     public String getResourcePath() {
         return resourcePath;
+    }
+
+    @Override
+    public int getResourcePartition() {
+        return resourcePartition;
     }
 }
