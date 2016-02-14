@@ -23,12 +23,14 @@ import java.util.List;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.data.std.api.IDataOutputProvider;
 
 /**
  * Interface that an access method should implement to work with the rewrite
@@ -36,7 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
  * methods for analyzing a select/join condition, and for rewriting the plan
  * with a given index.
  */
-public interface IAccessMethod {
+public interface IAccessMethod extends Comparable<IAccessMethod>{
 
     /**
      * @return A list of function identifiers that are optimizable by this
@@ -83,6 +85,15 @@ public interface IAccessMethod {
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context) throws AlgebricksException;
 
+    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
+            OptimizableOperatorSubTree indexSubTree,
+            OptimizableOperatorSubTree probeSubTree,
+            Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context)
+                    throws AlgebricksException;
+
     /**
      * Applies the plan transformation to use chosenIndex to optimize a join query.
      * In the case of a LeftOuterJoin, there may or may not be a needed groupby operation
@@ -99,5 +110,7 @@ public interface IAccessMethod {
      * @throws AlgebricksException
      */
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;
+
+    public String getName();
 
 }

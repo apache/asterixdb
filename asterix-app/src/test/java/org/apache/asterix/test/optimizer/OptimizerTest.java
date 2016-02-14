@@ -95,26 +95,34 @@ public class OptimizerTest {
         AsterixHyracksIntegrationUtil.deinit(true);
     }
 
-    private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory() && !file.getName().startsWith(".")) {
-                suiteBuild(file, testArgs, path + file.getName() + SEPARATOR);
+    private static void suiteBuildPerFile(File file, Collection<Object[]> testArgs, String path) {
+        if (file.isDirectory() && !file.getName().startsWith(".")) {
+            for (File innerfile : file.listFiles()) {
+                String subdir = innerfile.isDirectory() ? path + innerfile.getName() + SEPARATOR : path;
+                suiteBuildPerFile(innerfile, testArgs, subdir);
             }
-            if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)
-            // && !ignore.contains(path + file.getName())
-            ) {
-                String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
-                File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
-                File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
-                testArgs.add(new Object[] { file, expectedFile, actualFile });
-            }
+        }
+        if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)
+        // && !ignore.contains(path + file.getName())
+        ) {
+            String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
+            File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
+            File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
+            testArgs.add(new Object[] { file, expectedFile, actualFile });
         }
     }
 
     @Parameters(name = "OptimizerTest {index}: {0}")
     public static Collection<Object[]> tests() {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
-        suiteBuild(new File(PATH_QUERIES), testArgs, "");
+        if (only.isEmpty()) {
+            suiteBuildPerFile(new File(PATH_QUERIES), testArgs, "");
+        } else {
+            for (String path : only) {
+                suiteBuildPerFile(new File(PATH_QUERIES + path), testArgs,
+                        path.lastIndexOf(SEPARATOR) < 0 ? "" : path.substring(0, path.lastIndexOf(SEPARATOR) + 1));
+            }
+        }
         return testArgs;
     }
 

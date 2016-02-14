@@ -57,6 +57,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -523,6 +524,22 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varTriples) {
             updateInputToOutputVarMapping(triple.third, triple.first, false);
             updateInputToOutputVarMapping(triple.second, triple.first, false);
+        }
+        return op;
+    }
+
+    @Override
+    public ILogicalOperator visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        visitMultiInputOperator(op);
+        List<LogicalVariable> outputVars = op.getOutputVars();
+        for (int i = 0; i < op.getNumInput(); i++) {
+            List<LogicalVariable> inputVars = op.getInputVariables(i);
+            if (inputVars.size() != outputVars.size()) {
+                throw new AlgebricksException("The cardinality of input and output are not equal for Intersection");
+            }
+            for (int j = 0; j < inputVars.size(); j++) {
+                updateInputToOutputVarMapping(inputVars.get(j), outputVars.get(j), false);
+            }
         }
         return op;
     }

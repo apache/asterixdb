@@ -145,7 +145,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         removeIndexCandidatesFromOuterBranch(analyzedAMs);
 
         // Choose an index from the inner branch that will be used.
-        Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
+        Pair<IAccessMethod, Index> chosenIndex = chooseBestIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, join);
             return false;

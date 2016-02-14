@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -230,6 +231,11 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
 
         @Override
         public Void visitUnionOperator(UnionAllOperator op, Void arg) throws AlgebricksException {
+            return null;
+        }
+
+        @Override
+        public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
             return null;
         }
 

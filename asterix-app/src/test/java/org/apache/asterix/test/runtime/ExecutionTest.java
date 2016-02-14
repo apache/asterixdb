@@ -52,8 +52,6 @@ public class ExecutionTest {
     protected static AsterixTransactionProperties txnProperties;
     private final static TestExecutor testExecutor = new TestExecutor();
 
-    protected static TestGroup FailedGroup;
-
     @BeforeClass
     public static void setUp() throws Exception {
         try {
@@ -98,6 +96,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, FailedGroup);
+        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
     }
 }

@@ -141,14 +141,21 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Simply picks the first index that it finds. TODO: Improve this decision
      * process by making it more systematic.
      */
-    protected Pair<IAccessMethod, Index> chooseIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected Pair<IAccessMethod, Index> chooseBestIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+        List<Pair<IAccessMethod, Index>> list = chooseAllIndex(analyzedAMs);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    protected List<Pair<IAccessMethod, Index>> chooseAllIndex(
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+        List<Pair<IAccessMethod, Index>> result = new ArrayList<Pair<IAccessMethod, Index>>();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry = amIt.next();
             AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
             Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = analysisCtx.indexExprsAndVars.entrySet()
                     .iterator();
-            if (indexIt.hasNext()) {
+            while (indexIt.hasNext()) {
                 Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
                 // To avoid a case where the chosen access method and a chosen
                 // index type is different.
@@ -161,23 +168,23 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 //                           LENGTH_PARTITIONED_NGRAM_INVIX]
                 IAccessMethod chosenAccessMethod = amEntry.getKey();
                 Index chosenIndex = indexEntry.getKey();
-                boolean isKeywordOrNgramIndexChosen = false;
-                if (chosenIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                boolean isKeywordOrNgramIndexChosen =
+                        chosenIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                         || chosenIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
                         || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
-                        || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX)
-                    isKeywordOrNgramIndexChosen = true;
-                if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && chosenIndex.getIndexType() != IndexType.BTREE)
+                        || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX;
+
+                if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && chosenIndex.getIndexType() == IndexType.BTREE)
                         || (chosenAccessMethod == RTreeAccessMethod.INSTANCE
-                                && chosenIndex.getIndexType() != IndexType.RTREE)
-                        || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && !isKeywordOrNgramIndexChosen)) {
-                    continue;
+                                && chosenIndex.getIndexType() == IndexType.RTREE)
+                        || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordOrNgramIndexChosen)) {
+                    result.add(new Pair<IAccessMethod, Index>(chosenAccessMethod, chosenIndex));
                 }
-                return new Pair<IAccessMethod, Index>(chosenAccessMethod, chosenIndex);
             }
         }
-        return null;
+        return result;
     }
+
 
     /**
      * Removes irrelevant access methods candidates, based on whether the

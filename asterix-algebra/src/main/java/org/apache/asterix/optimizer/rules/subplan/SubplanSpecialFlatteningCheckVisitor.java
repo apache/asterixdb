@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
@@ -180,6 +181,11 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
     public Boolean visitUnionOperator(UnionAllOperator op, Void arg) throws AlgebricksException {
         // Flattening with an Union Operator in the pipeline will perturb the query semantics,
         // e.g., the result cardinality can change.
+        return false;
+    }
+
+    @Override
+    public Boolean visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
         return false;
     }
 

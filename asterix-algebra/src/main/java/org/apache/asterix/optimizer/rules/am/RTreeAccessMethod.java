@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 /**
  * Class for helping rewrite rules to choose and apply RTree indexes.
@@ -100,15 +101,23 @@ public class RTreeAccessMethod implements IAccessMethod {
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context) throws AlgebricksException {
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
-        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, optFuncExpr,
-                analysisCtx, false, false, false, context);
+        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, analysisCtx,
+                false, false, false, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.dataSourceRef.setValue(primaryIndexUnnestOp);
         return true;
+    }
+
+    @Override
+    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
+            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException {
+        return createSecondaryToPrimaryPlan(indexSubTree, probeSubTree, chosenIndex, analysisCtx, retainInput,
+                retainNull, requiresBroadcast, context);
     }
 
     @Override
@@ -140,9 +149,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
 
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
-        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(indexSubTree, probeSubTree, chosenIndex,
-                optFuncExpr, analysisCtx, true, isLeftOuterJoin, true, context);
+                analysisCtx, true, isLeftOuterJoin, true, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
@@ -165,9 +173,11 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
-            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, IOptimizableFuncExpr optFuncExpr,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
-            IOptimizationContext context) throws AlgebricksException {
+            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
+                    throws AlgebricksException {
+
+        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
 
@@ -221,7 +231,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (probeSubTree == null) {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignSearchKeys.getInputs().add(dataSourceOp.getInputs().get(0));
+            assignSearchKeys.getInputs().add(new MutableObject<ILogicalOperator>(
+                    OperatorManipulationUtil.deepCopyWithExcutionMode(dataSourceOp.getInputs().get(0).getValue())));
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.
@@ -254,4 +265,15 @@ public class RTreeAccessMethod implements IAccessMethod {
         // No additional analysis required.
         return true;
     }
+
+    @Override
+    public String getName() {
+        return "RTREE_ACCESS_METHOD";
+    }
+
+    @Override
+    public int compareTo(IAccessMethod o) {
+        return this.getName().compareTo(o.getName());
+    }
+
 }

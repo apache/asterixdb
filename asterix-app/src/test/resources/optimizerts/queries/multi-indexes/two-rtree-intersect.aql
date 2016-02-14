@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Tests two secondary rtree indexes should trigger intersection rule
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type tTweet as closed {
+  id: int32,
+  location: point,
+  place: rectangle,
+  misc: string
+}
+
+create dataset dsTweet(tTweet) primary key id;
+
+create index loc_index on dsTweet(location) type rtree;
+create index plc_index on dsTweet(place) type rtree;
+
+let $region := create-rectangle(create-point(-128.43007812500002,20.298506037222175), create-point(-64.26992187500002,54.56902589732035))
+for $t in dataset dsTweet
+where spatial-intersect($t.location , $region) and spatial-intersect($t.place, $region)
+return $t
+
