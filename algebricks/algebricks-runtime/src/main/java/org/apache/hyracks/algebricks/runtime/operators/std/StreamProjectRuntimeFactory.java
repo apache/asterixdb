@@ -65,23 +65,26 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                // what if numOfTuples is 0?
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
-
-                int t = 0;
-                if (nTuple > 1) {
-                    for (; t < nTuple - 1; t++) {
+                if (nTuple == 0) {
+                    appender.flush(writer);
+                } else {
+                    int t = 0;
+                    if (nTuple > 1) {
+                        for (; t < nTuple - 1; t++) {
+                            appendProjectionToFrame(t, projectionList);
+                        }
+                    }
+                    if (flushFramesRapidly) {
+                        // Whenever all the tuples in the incoming frame have been consumed, the project operator
+                        // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
+                        appendProjectionToFrame(t, projectionList, true);
+                    } else {
                         appendProjectionToFrame(t, projectionList);
                     }
                 }
-                if (flushFramesRapidly) {
-                    // Whenever all the tuples in the incoming frame have been consumed, the project operator
-                    // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
-                    appendProjectionToFrame(t, projectionList, true);
-                } else {
-                    appendProjectionToFrame(t, projectionList);
-                }
-
             }
 
             @Override
