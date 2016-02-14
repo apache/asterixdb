@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -37,7 +36,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -45,7 +45,9 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (!op1.isMap()) {
+        // Even the LIMIT operator is a map operator, we don't push LIMIT operator into a join
+        // since a new LIMIT under a join can't generate the original result.
+        if (!op1.isMap() || op1.getOperatorTag() == LogicalOperatorTag.LIMIT) {
             return false;
         }
         Mutable<ILogicalOperator> op2Ref = op1.getInputs().get(0);
