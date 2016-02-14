@@ -4296,6 +4296,11 @@
     </test-group>
     <test-group name="orderby_limit">
         <test-case FilePath="orderby_limit">
+            <compilation-unit name="limit_on_variable_01">
+                <output-dir compare="Text">limit_on_variable_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="orderby_limit">
             <compilation-unit name="orderby_limit_01">
                 <output-dir compare="Text">orderby_limit_01</output-dir>
             </compilation-unit>
