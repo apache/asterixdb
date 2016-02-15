@@ -28,7 +28,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -216,11 +215,6 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
 
     @Override
     public Boolean visitExchangeOperator(ExchangeOperator op, Void arg) throws AlgebricksException {
-        return visitInputs(op);
-    }
-
-    @Override
-    public Boolean visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg) throws AlgebricksException {
         return visitInputs(op);
     }
 

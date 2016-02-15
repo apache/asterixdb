@@ -45,8 +45,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractScanPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
@@ -124,8 +124,8 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
                     throws AlgebricksException {
-        ExternalDataLookupOperator edabro = (ExternalDataLookupOperator) op;
-        ILogicalExpression expr = edabro.getExpressionRef().getValue();
+        UnnestMapOperator unnestMap = (UnnestMapOperator) op;
+        ILogicalExpression expr = unnestMap.getExpressionRef().getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             throw new IllegalStateException();
         }
@@ -138,19 +138,19 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         List<LogicalVariable> outputVars = new ArrayList<LogicalVariable>();
         if (retainInput) {
-            VariableUtilities.getLiveVariables(edabro, outputVars);
+            VariableUtilities.getLiveVariables(unnestMap, outputVars);
         } else {
-            VariableUtilities.getProducedVariables(edabro, outputVars);
+            VariableUtilities.getProducedVariables(unnestMap, outputVars);
         }
 
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = AqlMetadataProvider
                 .buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, secondaryIndex, ridIndexes, retainInput,
                         typeEnv, outputVars, opSchema, context, metadataProvider, retainNull);
-        builder.contributeHyracksOperator(edabro, externalLoopup.first);
+        builder.contributeHyracksOperator(unnestMap, externalLoopup.first);
         builder.contributeAlgebricksPartitionConstraint(externalLoopup.first, externalLoopup.second);
-        ILogicalOperator srcExchange = edabro.getInputs().get(0).getValue();
-        builder.contributeGraphEdge(srcExchange, 0, edabro, 0);
+        ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
+        builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }
 
     protected int[] getKeyIndexes(List<LogicalVariable> keyVarList, IOperatorSchema[] inputSchemas) {

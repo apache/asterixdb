@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -35,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExp
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 public class AnalysisUtil {
     /*
@@ -128,6 +130,13 @@ public class AnalysisUtil {
     public static Pair<String, String> getDatasetInfo(AbstractDataSourceOperator op) throws AlgebricksException {
         AqlSourceId srcId = (AqlSourceId) op.getDataSource().getId();
         return new Pair<String, String>(srcId.getDataverseName(), srcId.getDatasourceName());
+    }
+
+    public static Pair<String, String> getExternalDatasetInfo(UnnestMapOperator op) throws AlgebricksException {
+        AbstractFunctionCallExpression unnestExpr = (AbstractFunctionCallExpression) op.getExpressionRef().getValue();
+        String dataverseName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(0));
+        String datasetName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(1));
+        return new Pair<String, String>(dataverseName, datasetName);
     }
 
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<FunctionIdentifier>();

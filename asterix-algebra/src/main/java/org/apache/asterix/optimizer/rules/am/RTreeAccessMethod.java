@@ -51,7 +51,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractData
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -244,9 +243,8 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            ExternalDataLookupOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(
-                    dataSourceOp, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
-                    retainNull);
+            UnnestMapOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp,
+                    dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull);
             return externalDataAccessOp;
         } else {
             UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,

@@ -230,13 +230,21 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
-                    if (!fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
-                        throw new IllegalStateException();
+                    String dataverseName = null;
+                    String datasetName = null;
+                    if (AsterixBuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
+                        dataverseName = AccessMethodUtils.getStringConstant(f.getArguments().get(0));
+                        datasetName = AccessMethodUtils.getStringConstant(f.getArguments().get(1));
+                    } else if (fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                        AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
+                        jobGenParams.readFromFuncArgs(f.getArguments());
+                        dataverseName = jobGenParams.dataverseName;
+                        datasetName = jobGenParams.datasetName;
+                    } else {
+                        throw new AlgebricksException("Unexpected function for Unnest Map: " + fid);
                     }
-                    AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
-                    jobGenParams.readFromFuncArgs(f.getArguments());
-                    return ((AqlMetadataProvider) context.getMetadataProvider()).findDataset(jobGenParams.dataverseName,
-                            jobGenParams.datasetName);
+                    return ((AqlMetadataProvider) context.getMetadataProvider()).findDataset(dataverseName,
+                            datasetName);
                 }
             }
             if (descendantOp.getInputs().isEmpty()) {

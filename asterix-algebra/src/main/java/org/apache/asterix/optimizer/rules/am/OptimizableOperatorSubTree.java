@@ -42,7 +42,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 /**
@@ -230,9 +229,8 @@ public class OptimizableOperatorSubTree {
                     dataverseName = jobGenParams.getDataverseName();
                     break;
                 case EXTERNAL_SCAN:
-                    ExternalDataLookupOperator externalScan = (ExternalDataLookupOperator) sourceOpRefs.get(i)
-                            .getValue();
-                    datasetInfo = AnalysisUtil.getDatasetInfo(externalScan);
+                    UnnestMapOperator externalScan = (UnnestMapOperator) sourceOpRefs.get(i).getValue();
+                    datasetInfo = AnalysisUtil.getExternalDatasetInfo(externalScan);
                     dataverseName = datasetInfo.first;
                     datasetName = datasetInfo.second;
                     break;

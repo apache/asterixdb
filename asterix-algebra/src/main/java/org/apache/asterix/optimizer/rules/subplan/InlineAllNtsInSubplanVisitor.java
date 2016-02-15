@@ -54,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -586,19 +585,6 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     @Override
     public ILogicalOperator visitExchangeOperator(ExchangeOperator op, Void arg) throws AlgebricksException {
         return visitSingleInputOperator(op);
-    }
-
-    @Override
-    public ILogicalOperator visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg)
-            throws AlgebricksException {
-        visitSingleInputOperator(op);
-        Set<LogicalVariable> liveVars = new HashSet<>();
-        VariableUtilities.getLiveVariables(op, liveVars);
-        if (!liveVars.containsAll(correlatedKeyVars)) {
-            op.setPropagateInput(true);
-        }
-        context.computeAndSetTypeEnvironmentForOperator(op);
-        return op;
     }
 
     @Override
