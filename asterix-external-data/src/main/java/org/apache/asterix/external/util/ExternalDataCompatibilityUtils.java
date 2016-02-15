@@ -78,6 +78,15 @@ public class ExternalDataCompatibilityUtils {
             configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.ALIAS_LOCALFS_ADAPTER);
         }
 
+        // Socket
+        if (adapterName.equalsIgnoreCase(ExternalDataConstants.ALIAS_SOCKET_ADAPTER)) {
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new AsterixException("Unspecified format parameter for socket adapter");
+            }
+            configuration.put(ExternalDataConstants.KEY_READER, configuration.get(ExternalDataConstants.KEY_FORMAT));
+            configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.STREAM_SOCKET);
+        }
+
         // Twitter (Pull)
         if (adapterName.equals(ExternalDataConstants.ALIAS_TWITTER_PULL_ADAPTER)) {
             configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_TWITTER_PULL);
