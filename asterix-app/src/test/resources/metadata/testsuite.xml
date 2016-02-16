@@ -274,6 +274,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
+      <compilation-unit name="metadata_selfjoin">
+        <output-dir compare="Text">metadata_selfjoin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
       <compilation-unit name="temp_dataset">
         <output-dir compare="Text">temp_dataset</output-dir>
       </compilation-unit>

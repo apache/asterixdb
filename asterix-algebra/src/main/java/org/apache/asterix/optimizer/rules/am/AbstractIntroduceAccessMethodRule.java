@@ -168,8 +168,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 //                           LENGTH_PARTITIONED_NGRAM_INVIX]
                 IAccessMethod chosenAccessMethod = amEntry.getKey();
                 Index chosenIndex = indexEntry.getKey();
-                boolean isKeywordOrNgramIndexChosen =
-                        chosenIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                boolean isKeywordOrNgramIndexChosen = chosenIndex
+                        .getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                         || chosenIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
                         || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
                         || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX;
@@ -184,7 +184,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
         return result;
     }
-
 
     /**
      * Removes irrelevant access methods candidates, based on whether the
@@ -574,16 +573,33 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // The variable value is one of the partitioning fields.
             List<String> fieldName = null;
             IAType fieldType = null;
+            List<List<String>> subTreePKs = null;
 
             if (!fromAdditionalDataSource) {
-                fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
-                fieldType = (IAType) context.getOutputTypeEnvironment(subTree.dataSourceRef.getValue()).getVarType(var);
+                subTreePKs = DatasetUtils.getPartitioningKeys(subTree.dataset);
+                // Check whether this variable is PK, not a record variable.
+                if (varIndex <= subTreePKs.size() - 1) {
+                    fieldName = subTreePKs.get(varIndex);
+                    fieldType = (IAType) context.getOutputTypeEnvironment(subTree.dataSourceRef.getValue())
+                            .getVarType(var);
+                }
             } else {
-                fieldName = DatasetUtils.getPartitioningKeys(subTree.ixJoinOuterAdditionalDatasets.get(varIndex))
-                        .get(varIndex);
-                fieldType = (IAType) context
-                        .getOutputTypeEnvironment(subTree.ixJoinOuterAdditionalDataSourceRefs.get(varIndex).getValue())
-                        .getVarType(var);
+                // Need to check additional dataset one by one
+                for (int i = 0; i < subTree.ixJoinOuterAdditionalDatasets.size(); i++) {
+                    if (subTree.ixJoinOuterAdditionalDatasets.get(i) != null) {
+                        subTreePKs = DatasetUtils.getPartitioningKeys(subTree.ixJoinOuterAdditionalDatasets.get(i));
+
+                        // Check whether this variable is PK, not a record variable.
+                        if (subTreePKs.contains(var) && varIndex <= subTreePKs.size() - 1) {
+                            fieldName = subTreePKs.get(varIndex);
+                            fieldType = (IAType) context
+                                    .getOutputTypeEnvironment(
+                                            subTree.ixJoinOuterAdditionalDataSourceRefs.get(i).getValue())
+                                    .getVarType(var);
+                            break;
+                        }
+                    }
+                }
             }
             // Set the fieldName in the corresponding matched function
             // expression, and remember matching subtree.
