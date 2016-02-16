@@ -26,7 +26,8 @@ use dataverse test;
 let $date := date("-0123-01-30")
 let $time := time("08:07:29.030Z")
 let $datetime := datetime("0137-12-31T23:59:59.999+08:00")
-return { 
+let $datetime2 := datetime("1000-10-10T10:10:10.100+00:00")
+return {
   "date-string-1": print-date($date, "YY/M/D"),
   "date-string-2": print-date($date, "MMM DD, YYYY"),
   "date-string-3": print-date($date, "YYYY/MM/DD"),
@@ -34,5 +35,6 @@ return {
   "time-string-2": print-time($time, "hh.mm.ss.nnn a z"),
   "datetime-string-1": print-datetime($datetime, "MMM DD h:m:s.nnn a YY z"),
   "datetime-string-2": print-datetime($datetime, "YYYY/MMM/DD h:m:s.nnnz a"),
-  "datetime-string-3": print-datetime($datetime, "YYYY-MM-DDThh:mm:ss.nnnz")
+  "datetime-string-3": print-datetime($datetime, "YYYY-MM-DDThh:mm:ss.nnnz"),
+  "datetime-string-4": print-datetime($datetime2, "YYYY-MM-DDThh:mm:ss.nnnz")
  }

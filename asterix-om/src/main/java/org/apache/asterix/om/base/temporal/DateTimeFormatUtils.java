@@ -875,14 +875,12 @@ public class DateTimeFormatUtils {
                         } else {
                             val = day;
                         }
-                        int valFieldCount = (int) Math.ceil(Math.log10(val));
-                        if (val == 1 || val == 0) {
-                            valFieldCount = 1;
-                        }
+                        String strVal = String.valueOf(val);
+                        int valFieldCount = strVal.length();
                         for (int i = 0; i < formatCharCopies - valFieldCount; i++) {
                             appender.append('0');
                         }
-                        appender.append(String.valueOf(val));
+                        appender.append(strVal);
                         break;
                     case HOUR:
                     case MINUTE:
@@ -904,7 +902,8 @@ public class DateTimeFormatUtils {
                         appender.append(String.valueOf(val));
                         break;
                     case MILLISECOND:
-                        int msFieldCount = (int) Math.ceil(Math.log10(ms));
+                        String strMS = String.valueOf(ms);
+                        int msFieldCount = strMS.length();
                         for (int i = 0; i < 3 - msFieldCount; i++) {
                             appender.append('0');
                         }
@@ -924,9 +923,10 @@ public class DateTimeFormatUtils {
                                     ms = ms / 10;
                                 }
                             }
-
+                            appender.append(String.valueOf(ms));
+                        } else {
+                            appender.append(strMS);
                         }
-                        appender.append(String.valueOf(ms));
                         break;
                     case TIMEZONE:
                         if (timezone == 0) {
