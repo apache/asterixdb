@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -40,7 +39,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeRe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -316,26 +314,6 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
     @Override
     public Void visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
         standardLayout(op);
-        return null;
-    }
-
-    @Override
-    public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg) throws AlgebricksException {
-        ArrayList<LogicalVariable> liveVariables = new ArrayList<LogicalVariable>();
-        ArrayList<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-        //get used variables
-        op.getExpressionRef().getValue().getUsedVariables(usedVariables);
-        //live variables - used variables
-        for (Mutable<ILogicalOperator> c : op.getInputs()) {
-            VariableUtilities.getLiveVariables(c.getValue(), liveVariables);
-        }
-        for (LogicalVariable v : liveVariables) {
-            if (!usedVariables.contains(v)) {
-                schemaVariables.add(v);
-            }
-        }
-        VariableUtilities.getProducedVariables(op, schemaVariables);
-        //+ produced variables
         return null;
     }
 

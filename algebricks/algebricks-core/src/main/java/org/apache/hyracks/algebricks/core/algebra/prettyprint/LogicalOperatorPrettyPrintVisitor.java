@@ -36,7 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeRe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -494,14 +493,4 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         }
         sb.append("]");
     }
-
-    @Override
-    public String visitExternalDataLookupOperator(ExternalDataLookupOperator op, Integer indent)
-            throws AlgebricksException {
-        StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent)
-                .append("external-instant-lookup " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
-        return buffer.toString();
-    }
-
 }

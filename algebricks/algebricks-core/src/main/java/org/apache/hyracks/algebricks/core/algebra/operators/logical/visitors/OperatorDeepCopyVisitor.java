@@ -40,7 +40,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeRe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -367,15 +366,6 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
         return new ExtensionOperator(op.getNewInstanceOfDelegateOperator());
-    }
-
-    @Override
-    public ILogicalOperator visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg)
-            throws AlgebricksException {
-        ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
-        newInputList.addAll(op.getVariables());
-        return new ExternalDataLookupOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
-                new ArrayList<Object>(op.getVariableTypes()), op.isPropagateInput(), op.getDataSource());
     }
 
     @Override
