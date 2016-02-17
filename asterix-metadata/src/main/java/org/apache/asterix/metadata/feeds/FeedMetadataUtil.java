@@ -84,6 +84,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.RandomPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningWithMessageConnectorDescriptor;
 
 /**
  * A utility class for providing helper functions for feeds
@@ -212,6 +213,11 @@ public class FeedMetadataUtil {
         Map<ConnectorDescriptorId, ConnectorDescriptorId> connectorMapping = new HashMap<ConnectorDescriptorId, ConnectorDescriptorId>();
         for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()) {
             IConnectorDescriptor connDesc = entry.getValue();
+            if (connDesc instanceof MToNPartitioningConnectorDescriptor) {
+                MToNPartitioningConnectorDescriptor m2nConn = (MToNPartitioningConnectorDescriptor) connDesc;
+                connDesc = new MToNPartitioningWithMessageConnectorDescriptor(altered,
+                        m2nConn.getTuplePartitionComputerFactory());
+            }
             ConnectorDescriptorId newConnId = altered.createConnectorDescriptor(connDesc);
             connectorMapping.put(entry.getKey(), newConnId);
         }

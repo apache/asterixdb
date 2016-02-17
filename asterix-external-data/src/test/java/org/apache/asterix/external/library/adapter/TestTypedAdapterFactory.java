@@ -31,7 +31,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -64,7 +63,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ITupleParser createTupleParser(final IHyracksCommonContext ctx) throws HyracksDataException {
+            public ITupleParser createTupleParser(final IHyracksTaskContext ctx) throws HyracksDataException {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;

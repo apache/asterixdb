@@ -146,7 +146,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 policyAccessor, false, tupleAccessor, recordDesc, feedManager, nPartitions);
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, outputSideWriter,
-                sourceRuntime, feedPolicy);
+                sourceRuntime, feedPolicy, ctx);
         feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, collectRuntime);
         sourceRuntime.subscribeFeed(policyAccessor, collectRuntime);
     }
@@ -180,7 +180,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 new FrameTupleAccessor(recordDesc), recordDesc, feedManager, nPartitions);
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, wrapper, sourceRuntime,
-                feedPolicy);
+                feedPolicy, ctx);
         feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, collectRuntime);
         recordDesc = sourceRuntime.getRecordDescriptor();
         sourceRuntime.subscribeFeed(policyAccessor, collectRuntime);

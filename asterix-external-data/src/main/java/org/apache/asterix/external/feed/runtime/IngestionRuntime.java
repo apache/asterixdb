@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.feed.runtime;
 
+import java.nio.ByteBuffer;
 import java.util.logging.Level;
 
 import org.apache.asterix.external.api.IAdapterRuntimeManager;
@@ -26,16 +27,20 @@ import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
 import org.apache.asterix.external.feed.dataflow.FrameDistributor;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
 
 public class IngestionRuntime extends SubscribableRuntime {
 
     private final IAdapterRuntimeManager adapterRuntimeManager;
+    private final IHyracksTaskContext ctx;
 
     public IngestionRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
-            RecordDescriptor recordDesc, IAdapterRuntimeManager adaptorRuntimeManager) {
+            RecordDescriptor recordDesc, IAdapterRuntimeManager adaptorRuntimeManager, IHyracksTaskContext ctx) {
         super(feedId, runtimeId, null, feedWriter, recordDesc);
         this.adapterRuntimeManager = adaptorRuntimeManager;
+        this.ctx = ctx;
     }
 
     @Override
@@ -45,12 +50,14 @@ public class IngestionRuntime extends SubscribableRuntime {
         collectionRuntime.setFrameCollector(reader);
 
         if (dWriter.getDistributionMode().equals(FrameDistributor.DistributionMode.SINGLE)) {
+            ctx.setSharedObject(ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE));
             adapterRuntimeManager.start();
         }
         subscribers.add(collectionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Subscribed feed collection [" + collectionRuntime + "] to " + this);
         }
+        collectionRuntime.getCtx().setSharedObject(ctx.getSharedObject());
     }
 
     @Override

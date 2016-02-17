@@ -33,12 +33,15 @@ import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
 import org.apache.asterix.external.feed.runtime.FeedRuntime;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
+import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -88,6 +91,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private FeedRuntimeInputHandler inputSideHandler;
 
+    private ByteBuffer message = ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE);
+
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
             Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
@@ -101,6 +106,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.feedManager = (IFeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getFeedManager();
         this.operandId = operationId;
+        ctx.setSharedObject(message);
     }
 
     @Override
@@ -116,7 +122,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
             coreOperator.open();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Failed to open feed store operator", e);
             throw new HyracksDataException(e);
         }
     }
@@ -161,11 +167,24 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         try {
+            processFeedMessage(buffer);
             inputSideHandler.nextFrame(buffer);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
         }
+    }
+
+    private void processFeedMessage(ByteBuffer buffer) {
+        // read the message and reduce the number of tuples
+        fta.reset(buffer);
+        int tc = fta.getTupleCount() - 1;
+        int offset = fta.getTupleStartOffset(tc);
+        int len = fta.getTupleLength(tc);
+        message.clear();
+        message.put(buffer.array(), offset, len);
+        message.flip();
+        IntSerDeUtils.putInt(buffer.array(), FrameHelper.getTupleCountOffset(buffer.capacity()), tc);
     }
 
     @Override
