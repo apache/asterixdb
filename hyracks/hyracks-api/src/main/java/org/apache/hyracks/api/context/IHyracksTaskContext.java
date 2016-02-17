@@ -41,4 +41,8 @@ public interface IHyracksTaskContext
     public IDatasetPartitionManager getDatasetPartitionManager();
 
     public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymendId) throws Exception;
+
+    public void setSharedObject(Object sharedObject);
+
+    public Object getSharedObject();
 }

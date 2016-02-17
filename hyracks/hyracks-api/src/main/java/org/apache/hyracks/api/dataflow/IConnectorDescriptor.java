@@ -21,9 +21,6 @@ package org.apache.hyracks.api.dataflow;
 import java.io.Serializable;
 import java.util.BitSet;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
@@ -33,6 +30,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.ActivityCluster;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Connector that connects operators in a Job.
@@ -40,6 +39,7 @@ import org.apache.hyracks.api.job.ActivityCluster;
  * @author vinayakb
  */
 public interface IConnectorDescriptor extends Serializable {
+
     /**
      * Gets the id of the connector.
      *
@@ -68,7 +68,7 @@ public interface IConnectorDescriptor extends Serializable {
      */
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-            throws HyracksDataException;
+                    throws HyracksDataException;
 
     /**
      * Factory metod to create the receive side reader that reads data from this

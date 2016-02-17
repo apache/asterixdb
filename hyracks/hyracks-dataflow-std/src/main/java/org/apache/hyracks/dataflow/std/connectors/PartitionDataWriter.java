@@ -51,7 +51,7 @@ public class PartitionDataWriter implements IFrameWriter {
         for (int i = 0; i < consumerPartitionCount; ++i) {
             try {
                 pWriters[i] = pwFactory.createFrameWriter(i);
-                appenders[i] = new FrameTupleAppender();
+                appenders[i] = createTupleAppender(ctx);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -59,6 +59,10 @@ public class PartitionDataWriter implements IFrameWriter {
         tupleAccessor = new FrameTupleAccessor(recordDescriptor);
         this.tpc = tpc;
         this.ctx = ctx;
+    }
+
+    protected FrameTupleAppender createTupleAppender(IHyracksTaskContext ctx) {
+        return new FrameTupleAppender();
     }
 
     @Override

@@ -95,6 +95,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private List<List<PartitionChannel>> inputChannelsFromConnectors;
 
+    private Object sharedObject;
+
     public Task(Joblet joblet, TaskAttemptId taskId, String displayName, ExecutorService executor,
             NodeControllerService ncs, List<List<PartitionChannel>> inputChannelsFromConnectors) {
         this.joblet = joblet;
@@ -382,5 +384,15 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
         this.ncs.sendApplicationMessageToCC(message, deploymentId);
+    }
+
+    @Override
+    public void setSharedObject(Object sharedObject) {
+        this.sharedObject = sharedObject;
+    }
+
+    @Override
+    public Object getSharedObject() {
+        return sharedObject;
     }
 }

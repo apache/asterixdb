@@ -48,13 +48,13 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         return edwFactory.createFrameWriter(index);
     }
 
     @Override
-    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
-            int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
+    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc, int index,
+            int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(index);
         NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
@@ -69,8 +69,8 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
         OperatorDescriptorId consumer = ac.getConsumerActivity(getConnectorId()).getOperatorDescriptorId();
         OperatorDescriptorId producer = ac.getProducerActivity(getConnectorId()).getOperatorDescriptorId();
 
-        constraintAcceptor.addConstraint(new Constraint(new PartitionCountExpression(consumer),
-                new PartitionCountExpression(producer)));
+        constraintAcceptor.addConstraint(
+                new Constraint(new PartitionCountExpression(consumer), new PartitionCountExpression(producer)));
     }
 
     @Override

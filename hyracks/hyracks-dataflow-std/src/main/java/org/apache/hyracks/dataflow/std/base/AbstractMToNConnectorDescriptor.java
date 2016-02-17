@@ -44,7 +44,7 @@ public abstract class AbstractMToNConnectorDescriptor extends AbstractConnectorD
     }
 
     @Override
-    public boolean allProducersToAllConsumers(){
+    public boolean allProducersToAllConsumers() {
         return true;
     }
 }

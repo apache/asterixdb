@@ -20,9 +20,9 @@ package org.apache.hyracks.dataflow.std.file;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ITupleParserFactory extends Serializable {
-    public ITupleParser createTupleParser(IHyracksCommonContext ctx) throws HyracksDataException;
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException;
 }

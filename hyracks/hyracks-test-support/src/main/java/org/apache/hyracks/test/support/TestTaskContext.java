@@ -137,4 +137,13 @@ public class TestTaskContext implements IHyracksTaskContext {
     public ExecutorService getExecutorService() {
         return null;
     }
+
+    @Override
+    public Object getSharedObject() {
+        return null;
+    }
+
+    @Override
+    public void setSharedObject(Object sharedObject) {
+    }
 }
