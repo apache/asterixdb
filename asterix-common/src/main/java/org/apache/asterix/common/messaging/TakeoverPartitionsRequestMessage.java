@@ -22,15 +22,12 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
 
     private static final long serialVersionUID = 1L;
     private final Integer[] partitions;
-    private final String failedNode;
     private final long requestId;
     private final String nodeId;
 
-    public TakeoverPartitionsRequestMessage(long requestId, String nodeId, String failedNode,
-            Integer[] partitionsToTakeover) {
+    public TakeoverPartitionsRequestMessage(long requestId, String nodeId, Integer[] partitionsToTakeover) {
         this.requestId = requestId;
         this.nodeId = nodeId;
-        this.failedNode = failedNode;
         this.partitions = partitionsToTakeover;
     }
 
@@ -47,10 +44,6 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
         return requestId;
     }
 
-    public String getFailedNode() {
-        return failedNode;
-    }
-
     public String getNodeId() {
         return nodeId;
     }
@@ -60,7 +53,6 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
         StringBuilder sb = new StringBuilder();
         sb.append("Request ID: " + requestId);
         sb.append(" Node ID: " + nodeId);
-        sb.append(" Failed Node: " + failedNode);
         sb.append(" Partitions: ");
         for (Integer partitionId : partitions) {
             sb.append(partitionId + ",");

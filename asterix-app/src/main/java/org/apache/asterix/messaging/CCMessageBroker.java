@@ -22,9 +22,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.PreparePartitionsFailbackResponseMessage;
+import org.apache.asterix.common.messaging.CompleteFailbackResponseMessage;
 import org.apache.asterix.common.messaging.ReportMaxResourceIdMessage;
 import org.apache.asterix.common.messaging.ReportMaxResourceIdRequestMessage;
 import org.apache.asterix.common.messaging.ResourceIdRequestMessage;
@@ -54,6 +57,9 @@ public class CCMessageBroker implements ICCMessageBroker {
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
         AbstractApplicationMessage absMessage = (AbstractApplicationMessage) message;
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Received message: " + absMessage.getMessageType().name());
+        }
         switch (absMessage.getMessageType()) {
             case RESOURCE_ID_REQUEST:
                 handleResourceIdRequest(message, nodeId);
@@ -67,6 +73,12 @@ public class CCMessageBroker implements ICCMessageBroker {
             case TAKEOVER_METADATA_NODE_RESPONSE:
                 handleTakeoverMetadataNodeResponse(message);
                 break;
+            case PREPARE_PARTITIONS_FAILBACK_RESPONSE:
+                handleClosePartitionsResponse(message);
+                break;
+            case COMPLETE_FAILBACK_RESPONSE:
+                handleCompleteFailbcakResponse(message);
+                break;
             default:
                 LOGGER.warning("Unknown message: " + absMessage.getMessageType());
                 break;
@@ -78,7 +90,7 @@ public class CCMessageBroker implements ICCMessageBroker {
         ResourceIdRequestResponseMessage reponse = new ResourceIdRequestResponseMessage();
         reponse.setId(msg.getId());
         //cluster is not active
-        if (!AsterixClusterProperties.isClusterActive()) {
+        if (!AsterixClusterProperties.INSTANCE.isClusterActive()) {
             reponse.setResourceId(-1);
             reponse.setException(new Exception("Cannot generate global resource id when cluster is not active."));
         } else if (nodesReportedMaxResourceId.size() < AsterixClusterProperties.getNumberOfNodes()) {
@@ -125,5 +137,15 @@ public class CCMessageBroker implements ICCMessageBroker {
     private void handleTakeoverMetadataNodeResponse(IMessage message) {
         TakeoverMetadataNodeResponseMessage msg = (TakeoverMetadataNodeResponseMessage) message;
         AsterixClusterProperties.INSTANCE.processMetadataNodeTakeoverResponse(msg);
+    }
+
+    private void handleCompleteFailbcakResponse(IMessage message) {
+        CompleteFailbackResponseMessage msg = (CompleteFailbackResponseMessage) message;
+        AsterixClusterProperties.INSTANCE.processCompleteFailbackResponse(msg);
+    }
+
+    private void handleClosePartitionsResponse(IMessage message) {
+        PreparePartitionsFailbackResponseMessage msg = (PreparePartitionsFailbackResponseMessage) message;
+        AsterixClusterProperties.INSTANCE.processPreparePartitionsFailbackResponse(msg);
     }
 }

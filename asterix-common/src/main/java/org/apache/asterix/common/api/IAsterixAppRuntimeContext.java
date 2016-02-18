@@ -55,8 +55,6 @@ public interface IAsterixAppRuntimeContext {
 
     public ILSMMergePolicyFactory getMetadataMergePolicyFactory();
 
-    public int getMetaDataIODeviceId();
-
     public IBufferCache getBufferCache();
 
     public IFileMapProvider getFileMapManager();
@@ -93,14 +91,23 @@ public interface IAsterixAppRuntimeContext {
 
     /**
      * Exports the metadata node to the metadata RMI port.
+     *
      * @throws RemoteException
      */
     public void exportMetadataNodeStub() throws RemoteException;
 
     /**
      * Initializes the metadata node and bootstraps the metadata.
+     *
      * @param newUniverse
      * @throws Exception
      */
     public void initializeMetadata(boolean newUniverse) throws Exception;
+
+    /**
+     * Unexports the metadata node from the RMI registry
+     *
+     * @throws RemoteException
+     */
+    public void unexportMetadataNodeStub() throws RemoteException;
 }

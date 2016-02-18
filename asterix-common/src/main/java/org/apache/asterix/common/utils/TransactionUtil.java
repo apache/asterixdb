@@ -28,22 +28,15 @@ public class TransactionUtil {
 
     public static void formJobTerminateLogRecord(ITransactionContext txnCtx, LogRecord logRecord, boolean isCommit) {
         logRecord.setTxnCtx(txnCtx);
-        TransactionUtil.formJobTerminateLogRecord(logRecord, txnCtx.getJobId().getId(), isCommit,
-                logRecord.getNodeId());
+        TransactionUtil.formJobTerminateLogRecord(logRecord, txnCtx.getJobId().getId(), isCommit);
     }
 
-    public static void formJobTerminateLogRecord(LogRecord logRecord, int jobId, boolean isCommit, String nodeId) {
+    public static void formJobTerminateLogRecord(LogRecord logRecord, int jobId, boolean isCommit) {
         logRecord.setLogType(isCommit ? LogType.JOB_COMMIT : LogType.ABORT);
         logRecord.setDatasetId(-1);
         logRecord.setPKHashValue(-1);
         logRecord.setJobId(jobId);
-        logRecord.setNodeId(nodeId);
         logRecord.computeAndSetLogSize();
-    }
-
-    public static void formFlushLogRecord(LogRecord logRecord, int datasetId, PrimaryIndexOperationTracker opTracker,
-            int numOfFlushedIndexes) {
-        formFlushLogRecord(logRecord, datasetId, opTracker, null, numOfFlushedIndexes);
     }
 
     public static void formFlushLogRecord(LogRecord logRecord, int datasetId, PrimaryIndexOperationTracker opTracker,
@@ -53,36 +46,21 @@ public class TransactionUtil {
         logRecord.setDatasetId(datasetId);
         logRecord.setOpTracker(opTracker);
         logRecord.setNumOfFlushedIndexes(numberOfIndexes);
-        if (nodeId != null) {
-            logRecord.setNodeId(nodeId);
-        }
+        logRecord.setNodeId(nodeId);
         logRecord.computeAndSetLogSize();
     }
 
     public static void formEntityCommitLogRecord(LogRecord logRecord, ITransactionContext txnCtx, int datasetId,
-            int PKHashValue, ITupleReference PKValue, int[] PKFields) {
+            int PKHashValue, ITupleReference PKValue, int[] PKFields, int resourcePartition, byte entityCommitType) {
         logRecord.setTxnCtx(txnCtx);
-        logRecord.setLogType(LogType.ENTITY_COMMIT);
+        logRecord.setLogType(entityCommitType);
         logRecord.setJobId(txnCtx.getJobId().getId());
         logRecord.setDatasetId(datasetId);
         logRecord.setPKHashValue(PKHashValue);
         logRecord.setPKFieldCnt(PKFields.length);
         logRecord.setPKValue(PKValue);
         logRecord.setPKFields(PKFields);
-        logRecord.computeAndSetPKValueSize();
-        logRecord.computeAndSetLogSize();
-    }
-
-    public static void formEntityUpsertCommitLogRecord(LogRecord logRecord, ITransactionContext txnCtx, int datasetId,
-            int PKHashValue, ITupleReference PKValue, int[] PKFields) {
-        logRecord.setTxnCtx(txnCtx);
-        logRecord.setLogType(LogType.UPSERT_ENTITY_COMMIT);
-        logRecord.setJobId(txnCtx.getJobId().getId());
-        logRecord.setDatasetId(datasetId);
-        logRecord.setPKHashValue(PKHashValue);
-        logRecord.setPKFieldCnt(PKFields.length);
-        logRecord.setPKValue(PKValue);
-        logRecord.setPKFields(PKFields);
+        logRecord.setResourcePartition(resourcePartition);
         logRecord.computeAndSetPKValueSize();
         logRecord.computeAndSetLogSize();
     }

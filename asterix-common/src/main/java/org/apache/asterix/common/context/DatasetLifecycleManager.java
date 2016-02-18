@@ -75,7 +75,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         capacity = storageProperties.getMemoryComponentGlobalBudget();
         used = 0;
         logRecord = new LogRecord();
-        logRecord.setNodeId(logManager.getNodeId());
     }
 
     @Override
@@ -543,7 +542,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
         if (!dsInfo.isExternal) {
             synchronized (logRecord) {
-                TransactionUtil.formFlushLogRecord(logRecord, dsInfo.datasetID, null, dsInfo.indexes.size());
+                TransactionUtil.formFlushLogRecord(logRecord, dsInfo.datasetID, null, logManager.getNodeId(),
+                        dsInfo.indexes.size());
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
@@ -612,9 +612,20 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public void closeAllDatasets() throws HyracksDataException {
-        for (DatasetInfo dsInfo : datasetInfos.values()) {
+    public synchronized void closeAllDatasets() throws HyracksDataException {
+        List<DatasetInfo> openDatasets = new ArrayList<>(datasetInfos.values());
+        for (DatasetInfo dsInfo : openDatasets) {
             closeDataset(dsInfo);
+        }
+    }
+
+    @Override
+    public synchronized void closeUserDatasets() throws HyracksDataException {
+        List<DatasetInfo> openDatasets = new ArrayList<>(datasetInfos.values());
+        for (DatasetInfo dsInfo : openDatasets) {
+            if (dsInfo.datasetID >= firstAvilableUserDatasetID) {
+                closeDataset(dsInfo);
+            }
         }
     }
 

@@ -28,7 +28,8 @@ public interface IClusterManagementWork {
     public enum ClusterState {
         STARTING,
         ACTIVE,
-        UNUSABLE
+        UNUSABLE,
+        REBALANCING
     }
 
     public WorkType getClusterManagementWorkType();

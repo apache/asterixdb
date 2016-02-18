@@ -19,7 +19,6 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import org.apache.asterix.api.common.AsterixAppRuntimeContext;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -71,8 +69,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
     private SystemState systemState = SystemState.NEW_UNIVERSE;
-    private boolean performedRemoteRecovery = false;
-    private boolean replicationEnabled = false;
+    private boolean pendingFailbackCompletion = false;
     private IMessageBroker messageBroker;
 
     @Override
@@ -90,8 +87,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
-        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService());
-        ncApplicationContext.setMessageBroker(messageBroker);
+
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
@@ -108,17 +104,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
+        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService());
+        ncApplicationContext.setMessageBroker(messageBroker);
 
-        //If replication is enabled, check if there is a replica for this node
-        AsterixReplicationProperties asterixReplicationProperties = ((IAsterixPropertiesProvider) runtimeContext)
-                .getReplicationProperties();
-
-        replicationEnabled = asterixReplicationProperties.isReplicationEnabled();
-
+        boolean replicationEnabled = AsterixClusterProperties.INSTANCE.isReplicationEnabled();
+        boolean autoFailover = AsterixClusterProperties.INSTANCE.isAutoFailoverEnabled();
         if (initialRun) {
             LOGGER.info("System is being initialized. (first run)");
         } else {
-            //#. recover if the system is corrupted by checking system state.
             IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
             systemState = recoveryMgr.getSystemState();
 
@@ -130,35 +123,40 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
                     //Try to perform remote recovery
                     IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();
-                    remoteRecoveryMgr.performRemoteRecovery();
-                    performedRemoteRecovery = true;
-                    systemState = SystemState.HEALTHY;
+                    if (autoFailover) {
+                        remoteRecoveryMgr.startFailbackProcess();
+                        systemState = SystemState.RECOVERING;
+                        pendingFailbackCompletion = true;
+                    } else {
+                        remoteRecoveryMgr.performRemoteRecovery();
+                        systemState = SystemState.HEALTHY;
+                    }
                 }
-            }
-
-            if (systemState == SystemState.CORRUPTED) {
-                recoveryMgr.startRecovery(true);
+            } else {
+                //recover if the system is corrupted by checking system state.
+                if (systemState == SystemState.CORRUPTED) {
+                    recoveryMgr.startRecovery(true);
+                }
             }
         }
 
-        if (replicationEnabled) {
+        /**
+         * if the node pending failback completion, the replication channel
+         * should not be opened to avoid other nodes connecting to it before
+         * the node completes its failback. CC will notify other replicas once
+         * this node is ready to receive replication requests.
+         */
+        if (replicationEnabled && !pendingFailbackCompletion) {
             startReplicationService();
         }
     }
 
-    private void startReplicationService() throws IOException {
+    private void startReplicationService() {
         //Open replication channel
         runtimeContext.getReplicationChannel().start();
 
         //Check the state of remote replicas
         runtimeContext.getReplicationManager().initializeReplicasState();
-
-        if (performedRemoteRecovery) {
-            //Notify remote replicas about the new IP Address if changed
-            //Note: this is a hack since each node right now maintains its own copy of the cluster configuration.
-            //Once the configuration is centralized on the CC, this step wont be needed.
-            runtimeContext.getReplicationManager().broadcastNewIPAddress();
-        }
 
         //Start replication after the state of remote replicas has been initialized.
         runtimeContext.getReplicationManager().startReplicationThreads();
@@ -211,10 +209,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
 
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
-        if (isMetadataNode) {
+        if (isMetadataNode && !pendingFailbackCompletion) {
             runtimeContext.initializeMetadata(systemState == SystemState.NEW_UNIVERSE);
         }
-        ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
+        ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode && !pendingFailbackCompletion);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
@@ -237,11 +235,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         lccm.startAll();
 
-        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        recoveryMgr.checkpoint(true, RecoveryManager.NON_SHARP_CHECKPOINT_TARGET_LSN);
+        if (!pendingFailbackCompletion) {
+            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+            recoveryMgr.checkpoint(true, RecoveryManager.NON_SHARP_CHECKPOINT_TARGET_LSN);
 
-        if (isMetadataNode) {
-            runtimeContext.exportMetadataNodeStub();
+            if (isMetadataNode) {
+                runtimeContext.exportMetadataNodeStub();
+            }
         }
 
         //Clean any temporary files

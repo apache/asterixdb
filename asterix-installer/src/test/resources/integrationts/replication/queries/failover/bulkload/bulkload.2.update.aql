@@ -29,4 +29,4 @@
 use dataverse TinySocial;
 
 load dataset FacebookUsers using localfs
-(("path"="vagrant-ssh_nc1:///vagrant/data/fbu.adm"),("format"="adm"));
+(("path"="asterix_nc1:///vagrant/data/fbu.adm"),("format"="adm"));

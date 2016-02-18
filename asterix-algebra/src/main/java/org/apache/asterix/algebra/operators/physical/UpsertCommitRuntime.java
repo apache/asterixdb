@@ -21,22 +21,23 @@ package org.apache.asterix.algebra.operators.physical;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class UpsertCommitRuntime extends CommitRuntime {
     private final int upsertIdx;
 
     public UpsertCommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int upsertIdx) throws AlgebricksException {
-        super(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob, isWriteTransaction);
+            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition, int upsertIdx) {
+        super(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob, isWriteTransaction,
+                resourcePartition);
         this.upsertIdx = upsertIdx;
     }
 
     @Override
-    protected void formLogRecord(ByteBuffer buffer, int t) throws AlgebricksException {
+    protected void formLogRecord(ByteBuffer buffer, int t) {
         boolean isNull = ABooleanSerializerDeserializer.getBoolean(buffer.array(),
                 frameTupleAccessor.getFieldSlotsLength() + frameTupleAccessor.getTupleStartOffset(t)
                         + frameTupleAccessor.getFieldStartOffset(t, upsertIdx) + 1);
@@ -46,8 +47,8 @@ public class UpsertCommitRuntime extends CommitRuntime {
         } else {
             // Previous record found (delete + insert)
             int pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
-            TransactionUtil.formEntityUpsertCommitLogRecord(logRecord, transactionContext, datasetId, pkHash,
-                    frameTupleReference, primaryKeyFields);
+            TransactionUtil.formEntityCommitLogRecord(logRecord, transactionContext, datasetId, pkHash,
+                    frameTupleReference, primaryKeyFields, resourcePartition, LogType.UPSERT_ENTITY_COMMIT);
         }
     }
 }

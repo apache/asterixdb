@@ -22,12 +22,14 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
@@ -105,8 +107,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         }
     }
 
-    private static final int METADATA_IO_DEVICE_ID = 0;
-
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCApplicationContext ncApplicationContext;
 
@@ -126,7 +126,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private ITransactionSubsystem txnSubsystem;
 
     private ILSMIOOperationScheduler lsmIOScheduler;
-    private ILocalResourceRepository localResourceRepository;
+    private PersistentLocalResourceRepository localResourceRepository;
     private IResourceIdFactory resourceIdFactory;
     private IIOManager ioManager;
     private boolean isShuttingdown;
@@ -153,6 +153,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         this.metadataRmiPort = metadataRmiPort;
     }
 
+    @Override
     public void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException {
         Logger.getLogger("org.apache").setLevel(externalProperties.getLogLevel());
 
@@ -172,7 +173,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager, ncApplicationContext.getNodeId(), metadataProperties);
 
-        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
+        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
 
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
                 this);
@@ -183,7 +184,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         SystemState systemState = recoveryMgr.getSystemState();
         if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
             //delete any storage data before the resource factory is initialized
-            ((PersistentLocalResourceRepository) localResourceRepository).deleteStorageData(true);
+            localResourceRepository.deleteStorageData(true);
         }
         initializeResourceIdFactory();
 
@@ -208,7 +209,22 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
             txnSubsystem.getLogManager().setReplicationManager(replicationManager);
 
             //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
-            ((PersistentLocalResourceRepository) localResourceRepository).setReplicationManager(replicationManager);
+            localResourceRepository.setReplicationManager(replicationManager);
+
+            /**
+             * add the partitions that will be replicated in this node as inactive partitions
+             */
+            //get nodes which replicate to this node
+            Set<String> replicationClients = replicationProperties.getNodeReplicationClients(nodeId);
+            //remove the node itself
+            replicationClients.remove(nodeId);
+            for (String clientId : replicationClients) {
+                //get the partitions of each client
+                ClusterPartition[] clientPartitions = metadataProperties.getNodePartitions().get(clientId);
+                for (ClusterPartition partition : clientPartitions) {
+                    localResourceRepository.addInactivePartition(partition.getPartitionId());
+                }
+            }
 
             //initialize replication channel
             replicationChannel = new ReplicationChannel(nodeId, replicationProperties, txnSubsystem.getLogManager(),
@@ -220,7 +236,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
             bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
                     storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory(),
                     replicationManager);
-
         } else {
             bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
                     storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
@@ -251,55 +266,63 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
     }
 
+    @Override
     public boolean isShuttingdown() {
         return isShuttingdown;
     }
 
+    @Override
     public void setShuttingdown(boolean isShuttingdown) {
         this.isShuttingdown = isShuttingdown;
     }
 
+    @Override
     public void deinitialize() throws HyracksDataException {
     }
 
+    @Override
     public IBufferCache getBufferCache() {
         return bufferCache;
     }
 
+    @Override
     public IFileMapProvider getFileMapManager() {
         return fileMapManager;
     }
 
+    @Override
     public ITransactionSubsystem getTransactionSubsystem() {
         return txnSubsystem;
     }
 
+    @Override
     public IDatasetLifecycleManager getDatasetLifecycleManager() {
         return datasetLifecycleManager;
     }
 
+    @Override
     public double getBloomFilterFalsePositiveRate() {
         return storageProperties.getBloomFilterFalsePositiveRate();
     }
 
+    @Override
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return lsmIOScheduler;
     }
 
+    @Override
     public ILocalResourceRepository getLocalResourceRepository() {
         return localResourceRepository;
     }
 
+    @Override
     public IResourceIdFactory getResourceIdFactory() {
         return resourceIdFactory;
     }
 
+    @Override
     public IIOManager getIOManager() {
         return ioManager;
-    }
-
-    public int getMetaDataIODeviceId() {
-        return METADATA_IO_DEVICE_ID;
     }
 
     @Override
@@ -352,6 +375,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return threadExecutor;
     }
 
+    @Override
     public ILSMMergePolicyFactory getMetadataMergePolicyFactory() {
         return metadataMergePolicyFactory;
     }
@@ -420,5 +444,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     public void exportMetadataNodeStub() throws RemoteException {
         IMetadataNode stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, metadataRmiPort);
         ((IAsterixStateProxy) ncApplicationContext.getDistributedState()).setMetadataNode(stub);
+    }
+
+    @Override
+    public void unexportMetadataNodeStub() throws RemoteException {
+        UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
     }
 }

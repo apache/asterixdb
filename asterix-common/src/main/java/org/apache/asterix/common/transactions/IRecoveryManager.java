@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.common.transactions;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -82,31 +83,25 @@ public interface IRecoveryManager {
 
     /**
      * Makes a system checkpoint.
-     * @param isSharpCheckpoint a flag indicating whether to perform a sharp or non-sharp checkpoint.
-     * @param nonSharpCheckpointTargetLSN if a non-sharp checkpoint to be performed, what is the minimum LSN it should target.
+     *
+     * @param isSharpCheckpoint
+     *            a flag indicating whether to perform a sharp or non-sharp checkpoint.
+     * @param nonSharpCheckpointTargetLSN
+     *            if a non-sharp checkpoint to be performed, what is the minimum LSN it should target.
      * @return the LSN at which the checkpoint was performed.
      * @throws ACIDException
      * @throws HyracksDataException
      */
-    public long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN) throws ACIDException, HyracksDataException;
+    public long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN)
+            throws ACIDException, HyracksDataException;
 
     /**
-     * Performs recovery based on the passed logs
-     * @param remoteLogs the remote logs to be replayed
-     * @throws HyracksDataException
-     * @throws ACIDException
-     */
-    public void replayRemoteLogs(ArrayList<ILogRecord> remoteLogs) throws HyracksDataException, ACIDException;
-
-    /**
-     *
      * @return min first LSN of the open indexes (including remote indexes if replication is enabled)
      * @throws HyracksDataException
      */
     public long getMinFirstLSN() throws HyracksDataException;
 
     /**
-     *
      * @return min first LSN of the open indexes
      * @throws HyracksDataException
      */
@@ -114,11 +109,29 @@ public interface IRecoveryManager {
 
     /**
      * Replay the logs that belong to the passed {@code partitions} starting from the {@code lowWaterMarkLSN}
+     *
      * @param partitions
      * @param lowWaterMarkLSN
      * @param failedNode
      * @throws IOException
      * @throws ACIDException
      */
-    public void replayPartitionsLogs(Integer[] partitions, long lowWaterMarkLSN, String failedNode) throws IOException, ACIDException;
+    public void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN)
+            throws IOException, ACIDException;
+
+    /**
+     * Creates a temporary file to be used during recovery
+     *
+     * @param jobId
+     * @param fileName
+     * @return A file to the created temporary file
+     * @throws IOException
+     *             if the file for the specified {@code jobId} with the {@code fileName} already exists
+     */
+    public File createJobRecoveryFile(int jobId, String fileName) throws IOException;
+
+    /**
+     * Deletes all temporary recovery files
+     */
+    public void deleteRecoveryTemporaryFiles();
 }

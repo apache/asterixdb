@@ -28,8 +28,8 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -58,9 +58,10 @@ public class CommitRuntime implements IPushRuntime {
 
     protected ITransactionContext transactionContext;
     protected FrameTupleAccessor frameTupleAccessor;
+    protected final int resourcePartition;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction) {
+            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition) {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.ctx = ctx;
@@ -72,9 +73,9 @@ public class CommitRuntime implements IPushRuntime {
         this.frameTupleReference = new FrameTupleReference();
         this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
-        this.longHashes = new long[2];
-        this.logRecord = new LogRecord();
-        logRecord.setNodeId(logMgr.getNodeId());
+        this.resourcePartition = resourcePartition;
+        longHashes = new long[2];
+        logRecord = new LogRecord();
     }
 
     @Override
@@ -109,17 +110,17 @@ public class CommitRuntime implements IPushRuntime {
                 try {
                     formLogRecord(buffer, t);
                     logMgr.log(logRecord);
-                } catch (ACIDException | AlgebricksException e) {
+                } catch (ACIDException e) {
                     throw new HyracksDataException(e);
                 }
             }
         }
     }
 
-    protected void formLogRecord(ByteBuffer buffer, int t) throws AlgebricksException {
+    protected void formLogRecord(ByteBuffer buffer, int t) {
         int pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
         TransactionUtil.formEntityCommitLogRecord(logRecord, transactionContext, datasetId, pkHash, frameTupleReference,
-                primaryKeyFields);
+                primaryKeyFields, resourcePartition, LogType.ENTITY_COMMIT);
     }
 
     protected int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {

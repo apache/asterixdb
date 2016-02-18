@@ -68,6 +68,8 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
 
         List<Mutable<ILogicalExpression>> primaryKeyExprs = null;
         int datasetId = 0;
+        String dataverse = null;
+        String datasetName = null;
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) sinkOperator.getInputs().get(0).getValue();
         LogicalVariable upsertVar = null;
         AssignOperator upsertFlagAssign = null;
@@ -79,6 +81,10 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                     primaryKeyExprs = indexInsertDeleteUpsertOperator.getPrimaryKeyExpressions();
                     datasetId = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
                             .getDataSource()).getDataset().getDatasetId();
+                    dataverse = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
+                            .getDataSource()).getDataset().getDataverseName();
+                    datasetName = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
+                            .getDataSource()).getDataset().getDatasetName();
                     break;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
@@ -87,6 +93,10 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                     primaryKeyExprs = insertDeleteUpsertOperator.getPrimaryKeyExpressions();
                     datasetId = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
                             .getDatasetId();
+                    dataverse = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
+                            .getDataverseName();
+                    datasetName = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
+                            .getDatasetName();
                     if (insertDeleteUpsertOperator.getOperation() == Kind.UPSERT) {
                         //we need to add a function that checks if previous record was found
                         upsertVar = context.newVar();
@@ -132,7 +142,8 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
 
         //create the logical and physical operator
         CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, upsertVar);
-        CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars, upsertVar);
+        CommitPOperator commitPOperator = new CommitPOperator(jobId, dataverse, datasetName, datasetId,
+                primaryKeyLogicalVars, upsertVar);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

@@ -28,6 +28,7 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -113,6 +114,7 @@ public class MetadataNode implements IMetadataNode {
 
     private IDatasetLifecycleManager datasetLifecycleManager;
     private ITransactionSubsystem transactionSubsystem;
+    private int metadataStoragePartition;
 
     public static final MetadataNode INSTANCE = new MetadataNode();
 
@@ -123,6 +125,8 @@ public class MetadataNode implements IMetadataNode {
     public void initialize(IAsterixAppRuntimeContext runtimeContext) {
         this.transactionSubsystem = runtimeContext.getTransactionSubsystem();
         this.datasetLifecycleManager = runtimeContext.getDatasetLifecycleManager();
+        this.metadataStoragePartition = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties()
+                .getMetadataPartition().getPartitionId();
     }
 
     @Override
@@ -305,11 +309,11 @@ public class MetadataNode implements IMetadataNode {
         if (metadataIndex.isPrimaryIndex()) {
             return new PrimaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
                     metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
-                    transactionSubsystem, resourceId, ResourceType.LSM_BTREE, indexOp);
+                    transactionSubsystem, resourceId, metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
         } else {
             return new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
                     metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
-                    transactionSubsystem, resourceId, ResourceType.LSM_BTREE, indexOp);
+                    transactionSubsystem, resourceId, metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
         }
     }
 
@@ -641,8 +645,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<Datatype> getDataverseDatatypes(JobId jobId, String dataverseName)
-            throws MetadataException, RemoteException {
+    private List<Datatype> getDataverseDatatypes(JobId jobId, String dataverseName) throws MetadataException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DatatypeTupleTranslator tupleReaderWriter = new DatatypeTupleTranslator(jobId, this, false);
@@ -673,7 +676,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public List<Dataset> getAllDatasets(JobId jobId) throws MetadataException, RemoteException {
+    public List<Dataset> getAllDatasets(JobId jobId) throws MetadataException {
         try {
             ITupleReference searchKey = null;
             DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
@@ -686,7 +689,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public List<Datatype> getAllDatatypes(JobId jobId) throws MetadataException, RemoteException {
+    public List<Datatype> getAllDatatypes(JobId jobId) throws MetadataException {
         try {
             ITupleReference searchKey = null;
             DatatypeTupleTranslator tupleReaderWriter = new DatatypeTupleTranslator(jobId, this, false);
@@ -699,8 +702,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDataverseCanBeDeleted(JobId jobId, String dataverseName)
-            throws MetadataException, RemoteException {
+    private void confirmDataverseCanBeDeleted(JobId jobId, String dataverseName) throws MetadataException {
         //If a dataset from a DIFFERENT dataverse
         //uses a type from this dataverse
         //throw an error
@@ -717,13 +719,13 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmDatatypeIsUnused(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
+            throws MetadataException {
         confirmDatatypeIsUnusedByDatatypes(jobId, dataverseName, datatypeName);
         confirmDatatypeIsUnusedByDatasets(jobId, dataverseName, datatypeName);
     }
 
     private void confirmDatatypeIsUnusedByDatasets(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
+            throws MetadataException {
         //If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(jobId);
         for (Dataset set : datasets) {
@@ -735,7 +737,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException, RemoteException {
+            throws MetadataException {
         //If any datatype uses this type, throw an error
         //TODO: Currently this loads all types into memory. This will need to be fixed for large numbers of types
         List<Datatype> datatypes = getAllDatatypes(jobId);
@@ -768,7 +770,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     public List<String> getDatasetNamesPartitionedOnThisNodeGroup(JobId jobId, String nodegroup)
-            throws MetadataException, RemoteException {
+            throws MetadataException {
         //this needs to scan the datasets and return the datasets that use this nodegroup
         List<String> nodeGroupDatasets = new ArrayList<String>();
         List<Dataset> datasets = getAllDatasets(jobId);

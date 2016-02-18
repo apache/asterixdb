@@ -30,6 +30,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,6 @@ import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationThread;
-import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -72,6 +72,7 @@ import org.apache.asterix.replication.storage.LSMComponentLSNSyncTask;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -97,6 +98,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final Map<String, LSMComponentProperties> lsmComponentId2PropertiesMap;
     private final Map<Long, RemoteLogMapping> localLSN2RemoteLSNMap;
     private final LSMComponentsSyncService lsmComponentLSNMappingService;
+    private final Set<Integer> nodeHostedPartitions;
 
     public ReplicationChannel(String nodeId, AsterixReplicationProperties replicationProperties, ILogManager logManager,
             IReplicaResourcesManager replicaResoucesManager, IReplicationManager replicationManager,
@@ -112,6 +114,17 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         localLSN2RemoteLSNMap = new ConcurrentHashMap<Long, RemoteLogMapping>();
         lsmComponentLSNMappingService = new LSMComponentsSyncService();
         replicationThreads = Executors.newCachedThreadPool(appContext.getThreadFactory());
+        Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
+                .getAppContext()).getMetadataProperties().getNodePartitions();
+        Set<String> nodeReplicationClients = replicationProperties.getNodeReplicationClients(nodeId);
+        List<Integer> clientsPartitions = new ArrayList<>();
+        for (String clientId : nodeReplicationClients) {
+            for (ClusterPartition clusterPartition : nodePartitions.get(clientId)) {
+                clientsPartitions.add(clusterPartition.getPartitionId());
+            }
+        }
+        nodeHostedPartitions = new HashSet<>(clientsPartitions.size());
+        nodeHostedPartitions.addAll(clientsPartitions);
     }
 
     @Override
@@ -193,6 +206,18 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         }
     }
 
+    private static void sendRemoteRecoveryLog(ILogRecord logRecord, SocketChannel socketChannel, ByteBuffer outBuffer)
+            throws IOException {
+        logRecord.setLogSource(LogSource.REMOTE_RECOVERY);
+        if (logRecord.getSerializedLogSize() > outBuffer.capacity()) {
+            int requestSize = logRecord.getSerializedLogSize() + ReplicationProtocol.REPLICATION_REQUEST_HEADER_SIZE;
+            outBuffer = ByteBuffer.allocate(requestSize);
+        }
+        //set log source to REMOTE_RECOVERY to avoid re-logging on the recipient side
+        ReplicationProtocol.writeRemoteRecoveryLogRequest(outBuffer, logRecord);
+        NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
+    }
+
     /**
      * A replication thread is created per received replication request.
      */
@@ -231,9 +256,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                             break;
                         case REPLICA_EVENT:
                             handleReplicaEvent();
-                            break;
-                        case UPDATE_REPLICA:
-                            handleUpdateReplica();
                             break;
                         case GET_REPLICA_MAX_LSN:
                             handleGetReplicaMaxLSN();
@@ -379,29 +401,33 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
             List<String> filesList;
             Set<String> replicaIds = request.getReplicaIds();
+            Set<String> requesterExistingFiles = request.getExistingFiles();
             Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
                     .getAppContext()).getMetadataProperties().getNodePartitions();
             for (String replicaId : replicaIds) {
                 //get replica partitions
                 ClusterPartition[] replicaPatitions = nodePartitions.get(replicaId);
                 for (ClusterPartition partition : replicaPatitions) {
-                    filesList = replicaResourcesManager.getPartitionIndexesFiles(partition.getPartitionId());
-
+                    filesList = replicaResourcesManager.getPartitionIndexesFiles(partition.getPartitionId(), false);
                     //start sending files
                     for (String filePath : filesList) {
-                        try (RandomAccessFile fromFile = new RandomAccessFile(filePath, "r");
-                                FileChannel fileChannel = fromFile.getChannel();) {
-                            long fileSize = fileChannel.size();
-                            fileProperties.initialize(filePath, fileSize, replicaId, false,
-                                    IMetaDataPageManager.INVALID_LSN_OFFSET, false);
-                            outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
-                                    ReplicationRequestType.REPLICATE_FILE);
+                        String relativeFilePath = PersistentLocalResourceRepository.getResourceRelativePath(filePath);
+                        //if the file already exists on the requester, skip it
+                        if (!requesterExistingFiles.contains(relativeFilePath)) {
+                            try (RandomAccessFile fromFile = new RandomAccessFile(filePath, "r");
+                                    FileChannel fileChannel = fromFile.getChannel();) {
+                                long fileSize = fileChannel.size();
+                                fileProperties.initialize(filePath, fileSize, replicaId, false,
+                                        IMetaDataPageManager.INVALID_LSN_OFFSET, false);
+                                outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
+                                        ReplicationRequestType.REPLICATE_FILE);
 
-                            //send file info
-                            NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
+                                //send file info
+                                NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
 
-                            //transfer file
-                            NetworkingUtil.sendFile(fileChannel, socketChannel);
+                                //transfer file
+                                NetworkingUtil.sendFile(fileChannel, socketChannel);
+                            }
                         }
                     }
                 }
@@ -416,11 +442,23 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             ReplicaLogsRequest request = ReplicationProtocol.readReplicaLogsRequest(inBuffer);
 
             Set<String> replicaIds = request.getReplicaIds();
+            //get list of partitions that belong to the replicas in the request
+            Set<Integer> requestedPartitions = new HashSet<>();
+            Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
+                    .getAppContext()).getMetadataProperties().getNodePartitions();
+            for (String replicaId : replicaIds) {
+                //get replica partitions
+                ClusterPartition[] replicaPatitions = nodePartitions.get(replicaId);
+                for (ClusterPartition partition : replicaPatitions) {
+                    requestedPartitions.add(partition.getPartitionId());
+                }
+            }
+
             long fromLSN = request.getFromLSN();
             long minLocalFirstLSN = asterixAppRuntimeContextProvider.getAppContext().getTransactionSubsystem()
                     .getRecoveryManager().getLocalMinFirstLSN();
 
-            //get Log read
+            //get Log reader
             ILogReader logReader = logManager.getLogReader(true);
             try {
                 if (fromLSN < logManager.getReadableSmallestLSN()) {
@@ -429,25 +467,34 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
                 logReader.initializeScan(fromLSN);
                 ILogRecord logRecord = logReader.next();
+                Set<Integer> requestedPartitionsJobs = new HashSet<>();
                 while (logRecord != null) {
                     //we should not send any local log which has already been converted to disk component
                     if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLSN() < minLocalFirstLSN) {
                         logRecord = logReader.next();
                         continue;
                     }
-
-                    //since flush logs are not required for recovery, skip them
-                    if (replicaIds.contains(logRecord.getNodeId()) && logRecord.getLogType() != LogType.FLUSH) {
-                        if (logRecord.getSerializedLogSize() > outBuffer.capacity()) {
-                            int requestSize = logRecord.getSerializedLogSize()
-                                    + ReplicationProtocol.REPLICATION_REQUEST_HEADER_SIZE;
-                            outBuffer = ByteBuffer.allocate(requestSize);
-                        }
-
-                        //set log source to REMOTE_RECOVERY to avoid re-logging on the recipient side
-                        logRecord.setLogSource(LogSource.REMOTE_RECOVERY);
-                        ReplicationProtocol.writeRemoteRecoveryLogRequest(outBuffer, logRecord);
-                        NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
+                    //send only logs that belong to the partitions of the request and required for recovery
+                    switch (logRecord.getLogType()) {
+                        case LogType.UPDATE:
+                        case LogType.ENTITY_COMMIT:
+                        case LogType.UPSERT_ENTITY_COMMIT:
+                            if (requestedPartitions.contains(logRecord.getResourcePartition())) {
+                                sendRemoteRecoveryLog(logRecord, socketChannel, outBuffer);
+                                requestedPartitionsJobs.add(logRecord.getJobId());
+                            }
+                            break;
+                        case LogType.JOB_COMMIT:
+                            if (requestedPartitionsJobs.contains(logRecord.getJobId())) {
+                                sendRemoteRecoveryLog(logRecord, socketChannel, outBuffer);
+                                requestedPartitionsJobs.remove(logRecord.getJobId());
+                            }
+                            break;
+                        case LogType.ABORT:
+                        case LogType.FLUSH:
+                            break;
+                        default:
+                            throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
                     }
                     logRecord = logReader.next();
                 }
@@ -457,12 +504,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
             //send goodbye (end of logs)
             ReplicationProtocol.sendGoodbye(socketChannel);
-        }
-
-        private void handleUpdateReplica() throws IOException {
-            inBuffer = ReplicationProtocol.readRequest(socketChannel, inBuffer);
-            Replica replica = ReplicationProtocol.readReplicaUpdateRequest(inBuffer);
-            replicationManager.updateReplicaInfo(replica);
         }
 
         private void handleReplicaEvent() throws IOException {
@@ -484,37 +525,45 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             inBuffer = ReplicationProtocol.readRequest(socketChannel, inBuffer);
 
             //Deserialize log
-            remoteLog.readRemoteLog(inBuffer, false, localNodeID);
+            remoteLog.readRemoteLog(inBuffer, false);
             remoteLog.setLogSource(LogSource.REMOTE);
 
-            if (remoteLog.getLogType() == LogType.JOB_COMMIT) {
-                LogRecord jobCommitLog = new LogRecord();
-                TransactionUtil.formJobTerminateLogRecord(jobCommitLog, remoteLog.getJobId(), true,
-                        remoteLog.getNodeId());
-                jobCommitLog.setReplicationThread(this);
-                jobCommitLog.setLogSource(LogSource.REMOTE);
-                logManager.log(jobCommitLog);
-            } else if (remoteLog.getLogType() == LogType.FLUSH) {
-                LogRecord flushLog = new LogRecord();
-                TransactionUtil.formFlushLogRecord(flushLog, remoteLog.getDatasetId(), null, remoteLog.getNodeId(),
-                        remoteLog.getNumOfFlushedIndexes());
-                flushLog.setReplicationThread(this);
-                flushLog.setLogSource(LogSource.REMOTE);
-                synchronized (localLSN2RemoteLSNMap) {
-                    logManager.log(flushLog);
-
-                    //store mapping information for flush logs to use them in incoming LSM components.
-                    RemoteLogMapping flushLogMap = new RemoteLogMapping();
-                    flushLogMap.setRemoteLSN(remoteLog.getLSN());
-                    flushLogMap.setRemoteNodeID(remoteLog.getNodeId());
-                    flushLogMap.setLocalLSN(flushLog.getLSN());
-                    flushLogMap.numOfFlushedIndexes.set(remoteLog.getNumOfFlushedIndexes());
-                    localLSN2RemoteLSNMap.put(flushLog.getLSN(), flushLogMap);
-                    localLSN2RemoteLSNMap.notifyAll();
-                }
-            } else {
-                //send log to LogManager as a remote log
-                logManager.log(remoteLog);
+            switch (remoteLog.getLogType()) {
+                case LogType.UPDATE:
+                case LogType.ENTITY_COMMIT:
+                case LogType.UPSERT_ENTITY_COMMIT:
+                    //if the log partition belongs to a partitions hosted on this node, replicate it
+                    if (nodeHostedPartitions.contains(remoteLog.getResourcePartition())) {
+                        logManager.log(remoteLog);
+                    }
+                    break;
+                case LogType.JOB_COMMIT:
+                    LogRecord jobCommitLog = new LogRecord();
+                    TransactionUtil.formJobTerminateLogRecord(jobCommitLog, remoteLog.getJobId(), true);
+                    jobCommitLog.setReplicationThread(this);
+                    jobCommitLog.setLogSource(LogSource.REMOTE);
+                    logManager.log(jobCommitLog);
+                    break;
+                case LogType.FLUSH:
+                    LogRecord flushLog = new LogRecord();
+                    TransactionUtil.formFlushLogRecord(flushLog, remoteLog.getDatasetId(), null, remoteLog.getNodeId(),
+                            remoteLog.getNumOfFlushedIndexes());
+                    flushLog.setReplicationThread(this);
+                    flushLog.setLogSource(LogSource.REMOTE);
+                    synchronized (localLSN2RemoteLSNMap) {
+                        logManager.log(flushLog);
+                        //store mapping information for flush logs to use them in incoming LSM components.
+                        RemoteLogMapping flushLogMap = new RemoteLogMapping();
+                        flushLogMap.setRemoteLSN(remoteLog.getLSN());
+                        flushLogMap.setRemoteNodeID(remoteLog.getNodeId());
+                        flushLogMap.setLocalLSN(flushLog.getLSN());
+                        flushLogMap.numOfFlushedIndexes.set(remoteLog.getNumOfFlushedIndexes());
+                        localLSN2RemoteLSNMap.put(flushLog.getLSN(), flushLogMap);
+                        localLSN2RemoteLSNMap.notifyAll();
+                    }
+                    break;
+                default:
+                    throw new ACIDException("Unsupported LogType: " + remoteLog.getLogType());
             }
         }
 

@@ -45,7 +45,7 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
 
     protected AbstractIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
-            byte resourceType, IndexOperation indexOp) {
+            int resourcePartition, byte resourceType, IndexOperation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
@@ -58,8 +58,8 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setJobId(txnCtx.getJobId().getId());
         logRecord.setDatasetId(datasetId);
         logRecord.setResourceId(resourceId);
+        logRecord.setResourcePartition(resourcePartition);
         logRecord.setNewOp((byte) (indexOp.ordinal()));
-        logRecord.setNodeId(txnSubsystem.getId());
     }
 
     protected void log(int PKHash, ITupleReference newValue) throws ACIDException {

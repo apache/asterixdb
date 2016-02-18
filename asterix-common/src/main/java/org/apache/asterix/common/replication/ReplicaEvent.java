@@ -23,23 +23,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
+
 public class ReplicaEvent {
 
-    /*
-     * FAIL: remote replica failed.
-     * JOIN: remote replica rejoined the cluster.
-     * SHUTDOWN: remote replica is shutting down normally
-     * */
-    public enum ReplicaEventType {
-        FAIL,
-        JOIN,
-        SHUTDOWN
-    }
-
     Replica replica;
-    ReplicaEventType eventType;
+    ClusterEventType eventType;
 
-    public ReplicaEvent(Replica replica, ReplicaEventType eventType) {
+    public ReplicaEvent(Replica replica, ClusterEventType eventType) {
         this.replica = replica;
         this.eventType = eventType;
     }
@@ -52,11 +43,11 @@ public class ReplicaEvent {
         this.replica = replica;
     }
 
-    public ReplicaEventType getEventType() {
+    public ClusterEventType getEventType() {
         return eventType;
     }
 
-    public void setEventType(ReplicaEventType eventType) {
+    public void setEventType(ClusterEventType eventType) {
         this.eventType = eventType;
     }
 
@@ -68,7 +59,7 @@ public class ReplicaEvent {
 
     public static ReplicaEvent create(DataInput input) throws IOException {
         Replica replica = Replica.create(input);
-        ReplicaEventType eventType = ReplicaEventType.values()[input.readInt()];
+        ClusterEventType eventType = ClusterEventType.values()[input.readInt()];
         ReplicaEvent event = new ReplicaEvent(replica, eventType);
         return event;
     }

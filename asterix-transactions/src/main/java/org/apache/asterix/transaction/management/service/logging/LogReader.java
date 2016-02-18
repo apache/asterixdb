@@ -26,10 +26,9 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
+import org.apache.asterix.common.transactions.ILogRecord.RECORD_STATUS;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.MutableLong;
-
-import static org.apache.asterix.common.transactions.LogRecord.*;
 
 /**
  * NOTE: Many method calls of this class are not thread safe.

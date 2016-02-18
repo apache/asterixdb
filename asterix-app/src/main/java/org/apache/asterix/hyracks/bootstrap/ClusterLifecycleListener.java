@@ -62,17 +62,15 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         t.start();
     }
 
-    public enum ClusterEventType {
-        NODE_JOIN,
-        NODE_FAILURE
-    }
-
     @Override
     public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("NC: " + nodeId + " joined");
         }
         AsterixClusterProperties.INSTANCE.addNCConfiguration(nodeId, ncConfiguration);
+        //if metadata node rejoining, we need to rebind the proxy connection when it is active again.
+        MetadataManager.INSTANCE.rebindMetadataNode = !AsterixClusterProperties.INSTANCE.isMetadataNodeActive();
+
         Set<String> nodeAddition = new HashSet<String>();
         nodeAddition.add(nodeId);
         updateProgress(ClusterEventType.NODE_JOIN, nodeAddition);
@@ -90,17 +88,16 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
     }
 
+    @Override
     public void notifyNodeFailure(Set<String> deadNodeIds) {
         for (String deadNode : deadNodeIds) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NC: " + deadNode + " left");
             }
-            //if metadata node failed, we need to rebind the proxy connection when it joins again.
-            String metadataNode = AsterixClusterProperties.INSTANCE.getCurrentMetadataNode();
-            if (deadNode.equals(metadataNode)) {
-                MetadataManager.INSTANCE.rebindMetadataNode = true;
-            }
             AsterixClusterProperties.INSTANCE.removeNCConfiguration(deadNode);
+
+            //if metadata node failed, we need to rebind the proxy connection when it is active again
+            MetadataManager.INSTANCE.rebindMetadataNode = !AsterixClusterProperties.INSTANCE.isMetadataNodeActive();
         }
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
         Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();

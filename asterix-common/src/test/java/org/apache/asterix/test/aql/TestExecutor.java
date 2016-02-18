@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -39,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
@@ -56,7 +56,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -262,6 +261,17 @@ public class TestExecutor {
         return method.getResponseBodyAsStream();
     }
 
+    public InputStream executeClusterStateQuery(OutputFormat fmt, String url) throws Exception {
+        HttpMethodBase method = new GetMethod(url);
+
+        //Set accepted output response type
+        method.setRequestHeader("Accept", fmt.mimeType());
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+        executeHttpMethod(method);
+        return method.getResponseBodyAsStream();
+    }
+
     // To execute Update statements
     // Insert and Delete statements are executed here
     public void executeUpdate(String str, String url) throws Exception {
@@ -301,7 +311,7 @@ public class TestExecutor {
     }
 
     private InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
-        final String url = "http://" + host + ":" + port + "/query/result";
+        final String url = "http://" + host + ":" + port + Servlets.QUERY_RESULT.getPath();
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
@@ -366,6 +376,14 @@ public class TestExecutor {
 
     private static String executeVagrantScript(ProcessBuilder pb, String node, String scriptName) throws Exception {
         pb.command("vagrant", "ssh", node, "--", pb.environment().get("SCRIPT_HOME") + scriptName);
+        Process p = pb.start();
+        p.waitFor();
+        InputStream input = p.getInputStream();
+        return IOUtils.toString(input, StandardCharsets.UTF_8.name());
+    }
+
+    private static String executeVagrantManagix(ProcessBuilder pb, String command) throws Exception {
+        pb.command("vagrant", "ssh", "cc", "--", pb.environment().get("MANAGIX_HOME") + command);
         Process p = pb.start();
         p.waitFor();
         InputStream input = p.getInputStream();
@@ -439,9 +457,9 @@ public class TestExecutor {
                     switch (ctx.getType()) {
                         case "ddl":
                             if (ctx.getFile().getName().endsWith("aql")) {
-                                executeDDL(statement, "http://" + host + ":" + port + "/ddl");
+                                executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
                             } else {
-                                executeDDL(statement, "http://" + host + ":" + port + "/ddl/sqlpp");
+                                executeDDL(statement, "http://" + host + ":" + port + Servlets.SQLPP_DDL.getPath());
                             }
                             break;
                         case "update":
@@ -451,9 +469,10 @@ public class TestExecutor {
                                         "127.0.0.1://../../../../../../asterix-app/");
                             }
                             if (ctx.getFile().getName().endsWith("aql")) {
-                                executeUpdate(statement, "http://" + host + ":" + port + "/update");
+                                executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
                             } else {
-                                executeUpdate(statement, "http://" + host + ":" + port + "/update/sqlpp");
+                                executeUpdate(statement,
+                                        "http://" + host + ":" + port + Servlets.SQLPP_UPDATE.getPath());
                             }
                             break;
                         case "query":
@@ -471,24 +490,26 @@ public class TestExecutor {
                             if (ctx.getFile().getName().endsWith("aql")) {
                                 if (ctx.getType().equalsIgnoreCase("query")) {
                                     resultStream = executeQuery(statement, fmt,
-                                            "http://" + host + ":" + port + "/query", cUnit.getParameter());
+                                            "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(),
+                                            cUnit.getParameter());
                                 } else if (ctx.getType().equalsIgnoreCase("async")) {
                                     resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://" + host + ":" + port + "/aql");
+                                            "http://" + host + ":" + port + Servlets.AQL.getPath());
                                 } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                                     resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://" + host + ":" + port + "/aql");
+                                            "http://" + host + ":" + port + Servlets.AQL.getPath());
                                 }
                             } else {
                                 if (ctx.getType().equalsIgnoreCase("query")) {
                                     resultStream = executeQuery(statement, fmt,
-                                            "http://" + host + ":" + port + "/query/sqlpp", cUnit.getParameter());
+                                            "http://" + host + ":" + port + Servlets.SQLPP_QUERY.getPath(),
+                                            cUnit.getParameter());
                                 } else if (ctx.getType().equalsIgnoreCase("async")) {
                                     resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://" + host + ":" + port + "/sqlpp");
+                                            "http://" + host + ":" + port + Servlets.SQLPP.getPath());
                                 } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                                     resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://" + host + ":" + port + "/sqlpp");
+                                            "http://" + host + ":" + port + Servlets.SQLPP.getPath());
                                 }
                             }
 
@@ -505,9 +526,6 @@ public class TestExecutor {
 
                             runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
                                     actualResultFile);
-                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
-                                    + " PASSED ");
-
                             queryCount++;
                             break;
                         case "mgx":
@@ -515,7 +533,7 @@ public class TestExecutor {
                             break;
                         case "txnqbc": //qbc represents query before crash
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://" + host + ":" + port + "/query", cUnit.getParameter());
+                                    "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -524,20 +542,17 @@ public class TestExecutor {
                             break;
                         case "txnqar": //qar represents query after recovery
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://" + host + ":" + port + "/query", cUnit.getParameter());
+                                    "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
                             qarFile.getParentFile().mkdirs();
                             writeOutputToFile(qarFile, resultStream);
                             runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
-
-                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
-                                    + " PASSED ");
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
-                                executeUpdate(statement, "http://" + host + ":" + port + "/update");
+                                executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
                             } catch (Exception e) {
                                 //An exception is expected.
                                 failed = true;
@@ -565,7 +580,7 @@ public class TestExecutor {
                             break;
                         case "errddl": // a ddlquery that expects error
                             try {
-                                executeDDL(statement, "http://" + host + ":" + port + "/ddl");
+                                executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
                             } catch (Exception e) {
                                 // expected error happens
                                 failed = true;
@@ -576,7 +591,7 @@ public class TestExecutor {
                             }
                             System.err.println("...but that was expected.");
                             break;
-                        case "vagrant_script":
+                        case "vscript": //a script that will be executed on a vagrant virtual node
                             try {
                                 String[] command = statement.trim().split(" ");
                                 if (command.length != 2) {
@@ -588,6 +603,32 @@ public class TestExecutor {
                                 if (output.contains("ERROR")) {
                                     throw new Exception(output);
                                 }
+                            } catch (Exception e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
+                            break;
+                        case "vmgx": //a managix command that will be executed on vagrant cc node
+                            try {
+                                String output = executeVagrantManagix(pb, statement);
+                                if (output.contains("ERROR")) {
+                                    throw new Exception(output);
+                                }
+                            } catch (Exception e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
+                            break;
+                        case "cstate": //cluster state query
+                            try {
+                                fmt = OutputFormat.forCompilationUnit(cUnit);
+                                resultStream = executeClusterStateQuery(fmt,
+                                        "http://" + host + ":" + port + Servlets.CLUSTER_STATE.getPath());
+                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+                                actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                                actualResultFile.getParentFile().mkdirs();
+                                writeOutputToFile(actualResultFile, resultStream);
+                                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                                        actualResultFile);
+                                queryCount++;
                             } catch (Exception e) {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
@@ -626,6 +667,9 @@ public class TestExecutor {
                                 "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
                         e.printStackTrace();
                         throw e;
+                    } else if (numOfFiles == testFileCtxs.size()) {
+                        LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
+                                + " PASSED ");
                     }
                 }
             }

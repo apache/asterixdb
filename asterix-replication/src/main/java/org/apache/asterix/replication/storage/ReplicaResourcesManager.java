@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,7 +54,6 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
     public final static String LSM_COMPONENT_MASK_SUFFIX = "_mask";
     private final static String REPLICA_INDEX_LSN_MAP_NAME = ".LSN_MAP";
     public static final long REPLICA_INDEX_CREATION_LSN = -1;
-    private final AtomicLong lastMinRemoteLSN;
     private final PersistentLocalResourceRepository localRepository;
     private final Map<String, ClusterPartition[]> nodePartitions;
 
@@ -63,7 +61,6 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
             AsterixMetadataProperties metadataProperties) {
         this.localRepository = (PersistentLocalResourceRepository) localRepository;
         nodePartitions = metadataProperties.getNodePartitions();
-        lastMinRemoteLSN = new AtomicLong(-1);
     }
 
     public void deleteIndexFile(LSMIndexFileProperties afp) {
@@ -126,7 +123,6 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
 
         //update map on disk
         updateReplicaIndexLSNMap(lsmComponentProperties.getReplicaComponentPath(this), lsnMap);
-
     }
 
     public Set<File> getReplicaIndexes(String replicaId) {
@@ -139,35 +135,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
     }
 
     @Override
-    public long getMinRemoteLSN(Set<String> replicaIds) {
-        if (lastMinRemoteLSN.get() != -1) {
-            return lastMinRemoteLSN.get();
-        }
-        long minRemoteLSN = Long.MAX_VALUE;
-        for (String replica : replicaIds) {
-            //for every index in replica
-            Set<File> remoteIndexes = getReplicaIndexes(replica);
-            for (File indexFolder : remoteIndexes) {
-                //read LSN map
-                try {
-                    //get max LSN per index
-                    long remoteIndexMaxLSN = getReplicaIndexMaxLSN(indexFolder);
-
-                    //get min of all maximums
-                    minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
-                } catch (IOException e) {
-                    LOGGER.log(Level.INFO,
-                            indexFolder.getAbsolutePath() + " Couldn't read LSN map for index " + indexFolder);
-                    continue;
-                }
-            }
-        }
-        lastMinRemoteLSN.set(minRemoteLSN);
-        return minRemoteLSN;
-    }
-
-    @Override
-    public long getPartitionsMinLSN(Integer[] partitions) {
+    public long getPartitionsMinLSN(Set<Integer> partitions) {
         long minRemoteLSN = Long.MAX_VALUE;
         for (Integer partition : partitions) {
             //for every index in replica
@@ -219,7 +187,6 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                 remoteIndexMaxLSN = Math.max(remoteIndexMaxLSN, lsn);
             }
         }
-
         return remoteIndexMaxLSN;
     }
 
@@ -271,7 +238,6 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                 ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(lsnMap);
             oosToFos.flush();
-            lastMinRemoteLSN.set(-1);
         }
     }
 
@@ -293,7 +259,9 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                         File[] indexFileList = dataverseFile.listFiles();
                         if (indexFileList != null) {
                             for (File indexFile : indexFileList) {
-                                partitionIndexes.add(indexFile);
+                                if (indexFile.isDirectory()) {
+                                    partitionIndexes.add(indexFile);
+                                }
                             }
                         }
                     }
@@ -307,7 +275,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
      * @param partition
      * @return Absolute paths to all partition files
      */
-    public List<String> getPartitionIndexesFiles(int partition) {
+    public List<String> getPartitionIndexesFiles(int partition, boolean relativePath) {
         List<String> partitionFiles = new ArrayList<String>();
         Set<File> partitionIndexes = getPartitionIndexes(partition);
         for (File indexDir : partitionIndexes) {
@@ -315,7 +283,12 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                 File[] indexFiles = indexDir.listFiles(LSM_INDEX_FILES_FILTER);
                 if (indexFiles != null) {
                     for (File file : indexFiles) {
-                        partitionFiles.add(file.getAbsolutePath());
+                        if (!relativePath) {
+                            partitionFiles.add(file.getAbsolutePath());
+                        } else {
+                            partitionFiles.add(
+                                    PersistentLocalResourceRepository.getResourceRelativePath(file.getAbsolutePath()));
+                        }
                     }
                 }
             }
@@ -324,18 +297,21 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
     }
 
     private static final FilenameFilter LSM_COMPONENTS_MASKS_FILTER = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return name.endsWith(LSM_COMPONENT_MASK_SUFFIX);
         }
     };
 
     private static final FilenameFilter LSM_COMPONENTS_NON_MASKS_FILTER = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return !name.endsWith(LSM_COMPONENT_MASK_SUFFIX);
         }
     };
 
     private static final FilenameFilter LSM_INDEX_FILES_FILTER = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return name.equalsIgnoreCase(PersistentLocalResourceRepository.METADATA_FILE_NAME) || !name.startsWith(".");
         }

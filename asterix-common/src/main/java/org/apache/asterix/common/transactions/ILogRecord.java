@@ -31,10 +31,10 @@ public interface ILogRecord {
         OK
     }
 
-    public static final int JOB_TERMINATE_LOG_SIZE = 18; //JOB_COMMIT or ABORT log type
+    public static final int JOB_TERMINATE_LOG_SIZE = 14; //JOB_COMMIT or ABORT log type
     public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 30;
     public static final int UPDATE_LOG_BASE_SIZE = 59;
-    public static final int FLUSH_LOG_SIZE = 22;
+    public static final int FLUSH_LOG_SIZE = 18;
 
     public LogRecord.RECORD_STATUS readLogRecord(ByteBuffer buffer);
 
@@ -112,11 +112,9 @@ public interface ILogRecord {
 
     public String getNodeId();
 
-    public void setNodeId(String nodeId);
-
     public int writeRemoteRecoveryLog(ByteBuffer buffer);
 
-    public void readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId);
+    public RECORD_STATUS readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog);
 
     public void setReplicationThread(IReplicationThread replicationThread);
 
@@ -130,4 +128,16 @@ public interface ILogRecord {
 
     public ByteBuffer getSerializedLog();
 
+    public void setNodeId(String nodeId);
+
+    public int getResourcePartition();
+
+    public void setResourcePartition(int resourcePartition);
+
+    public void setReplicated(boolean replicated);
+
+    /**
+     * @return a flag indicating whether the log record should be sent to remote replicas
+     */
+    public boolean isReplicated();
 }

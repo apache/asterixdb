@@ -16,6 +16,7 @@ asterix-app/parserts/
 asterix-app/opt_parserts/
 asterix-app/runtime_parserts/
 asterix-installer/ittest/
+asterix-installer/repliationtest/
 build
 asterix_logs
 bin/

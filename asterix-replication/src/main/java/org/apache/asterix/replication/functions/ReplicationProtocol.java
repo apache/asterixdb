@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.management.NetworkingUtil;
@@ -52,7 +51,6 @@ public class ReplicationProtocol {
      * GET_REPLICA_LOGS: used during remote recovery to request lost txn logs
      * GET_REPLICA_MAX_LSN: used during remote recovery initialize a log manager LSN
      * GET_REPLICA_MIN_LSN: used during remote recovery to specify the low water mark per replica
-     * UPDATE_REPLICA: used to update replica info such as IP Address change.
      * GOODBYE: used to notify replicas that the replication request has been completed
      * REPLICA_EVENT: used to notify replicas about a remote replica split/merge.
      * LSM_COMPONENT_PROPERTIES: used to send the properties of an LSM Component before its physical files are sent
@@ -67,7 +65,6 @@ public class ReplicationProtocol {
         GET_REPLICA_LOGS,
         GET_REPLICA_MAX_LSN,
         GET_REPLICA_MIN_LSN,
-        UPDATE_REPLICA,
         GOODBYE,
         REPLICA_EVENT,
         LSM_COMPONENT_PROPERTIES,
@@ -115,8 +112,7 @@ public class ReplicationProtocol {
         //read replication request type
         NetworkingUtil.readBytes(socketChannel, byteBuffer, REPLICATION_REQUEST_TYPE_SIZE);
 
-        ReplicationRequestType requestType = ReplicationProtocol.ReplicationRequestType.values()[byteBuffer
-                .getInt()];
+        ReplicationRequestType requestType = ReplicationProtocol.ReplicationRequestType.values()[byteBuffer.getInt()];
         return requestType;
     }
 
@@ -215,21 +211,6 @@ public class ReplicationProtocol {
         return requestBuffer;
     }
 
-    public static ByteBuffer writeUpdateReplicaRequest(Replica replica) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-
-        oos.writeInt(ReplicationRequestType.UPDATE_REPLICA.ordinal());
-        replica.writeFields(oos);
-        oos.close();
-
-        ByteBuffer buffer = ByteBuffer.allocate(REPLICATION_REQUEST_HEADER_SIZE + oos.size());
-        buffer.putInt(ReplicationRequestType.UPDATE_REPLICA.ordinal());
-        buffer.putInt(oos.size());
-        buffer.put(outputStream.toByteArray());
-        return buffer;
-    }
-
     public static ByteBuffer writeReplicaEventRequest(ReplicaEvent event) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream oos = new DataOutputStream(outputStream);
@@ -244,12 +225,6 @@ public class ReplicationProtocol {
         return buffer;
     }
 
-    public static Replica readReplicaUpdateRequest(ByteBuffer buffer) throws IOException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
-        DataInputStream dis = new DataInputStream(bais);
-        return Replica.create(dis);
-    }
-
     public static ReplicaEvent readReplicaEventRequest(ByteBuffer buffer) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
         DataInputStream dis = new DataInputStream(bais);
@@ -257,22 +232,24 @@ public class ReplicationProtocol {
         return ReplicaEvent.create(dis);
     }
 
-    public static void writeGetReplicaFilesRequest(ByteBuffer buffer, ReplicaFilesRequest request) throws IOException {
+    public static ByteBuffer writeGetReplicaFilesRequest(ByteBuffer buffer, ReplicaFilesRequest request)
+            throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        request.serialize(oos);
-        oos.close();
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            request.serialize(oos);
 
-        int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
-        if (buffer.capacity() < requestSize) {
-            buffer = ByteBuffer.allocate(requestSize);
-        } else {
-            buffer.clear();
+            int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
+            if (buffer.capacity() < requestSize) {
+                buffer = ByteBuffer.allocate(requestSize);
+            } else {
+                buffer.clear();
+            }
+            buffer.putInt(ReplicationRequestType.GET_REPLICA_FILES.ordinal());
+            buffer.putInt(oos.size());
+            buffer.put(outputStream.toByteArray());
+            buffer.flip();
+            return buffer;
         }
-        buffer.putInt(ReplicationRequestType.GET_REPLICA_FILES.ordinal());
-        buffer.putInt(oos.size());
-        buffer.put(outputStream.toByteArray());
-        buffer.flip();
     }
 
     public static ByteBuffer writeGetReplicaIndexFlushRequest(ByteBuffer buffer, ReplicaIndexFlushRequest request)

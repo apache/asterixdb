@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.replication;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -54,12 +54,13 @@ public interface IReplicationManager extends IIOReplicationManager {
      *            Get logs that belong to those replicas.
      * @param fromLSN
      *            Low water mark for logs to be requested.
-     * @return The logs received that belong to the local node.
+     * @param recoveryLogsFile
+     *            a temporary file to store the logs required for recovery
      * @throws IOException
      * @throws ACIDException
      */
-    public ArrayList<ILogRecord> requestReplicaLogs(String remoteReplicaId, Set<String> replicasDataToRecover,
-            long fromLSN) throws IOException, ACIDException;
+    public void requestReplicaLogs(String remoteReplicaId, Set<String> replicasDataToRecover, long fromLSN,
+            File recoveryLogsFile) throws IOException, ACIDException;
 
     /**
      * Requests LSM components files from a remote replica.
@@ -68,9 +69,12 @@ public interface IReplicationManager extends IIOReplicationManager {
      *            The replica id to send the request to.
      * @param replicasDataToRecover
      *            Get files that belong to those replicas.
+     * @param existingFiles
+     *            a list of already existing files on the requester
      * @throws IOException
      */
-    public void requestReplicaFiles(String remoteReplicaId, Set<String> replicasDataToRecover) throws IOException;
+    public void requestReplicaFiles(String remoteReplicaId, Set<String> replicasDataToRecover,
+            Set<String> existingFiles) throws IOException;
 
     /**
      * Requests current maximum LSN from remote replicas.
@@ -81,13 +85,6 @@ public interface IReplicationManager extends IIOReplicationManager {
      * @throws IOException
      */
     public long getMaxRemoteLSN(Set<String> remoteReplicaIds) throws IOException;
-
-    /**
-     * Sends the IP address of the local replica to all remote replicas.
-     *
-     * @throws IOException
-     */
-    public void broadcastNewIPAddress() throws IOException;
 
     /**
      * @return The number of remote replicas that are in ACTIVE state.
@@ -146,5 +143,4 @@ public interface IReplicationManager extends IIOReplicationManager {
      * @throws IOException
      */
     public void requestFlushLaggingReplicaIndexes(long nonSharpCheckpointTargetLSN) throws IOException;
-
 }

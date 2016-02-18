@@ -58,7 +58,9 @@ public class ReplicationIT {
     private static ProcessBuilder pb;
     private static Map<String, String> env;
     private final static TestExecutor testExecutor = new TestExecutor(CLUSTER_CC_ADDRESS, CLUSTER_CC_API_PORT);
-    private static String SCRIPT_HOME;
+    private static String SCRIPT_HOME = "/vagrant/scripts/";
+    private static String MANAGIX_HOME = "/tmp/asterix/bin/managix ";
+    private static final String INSTANCE_NAME = "asterix";
     protected TestCaseContext tcCtx;
 
     public ReplicationIT(TestCaseContext tcCtx) {
@@ -107,10 +109,10 @@ public class ReplicationIT {
 
         remoteInvoke("cp -r /vagrant/" + managixFolderName + " /tmp/asterix");
 
-        SCRIPT_HOME = "/vagrant/scripts/";
         pb = new ProcessBuilder();
         env = pb.environment();
         env.put("SCRIPT_HOME", SCRIPT_HOME);
+        env.put("MANAGIX_HOME", MANAGIX_HOME);
         File cwd = new File(asterixProjectDir.toString() + "/" + CLUSTER_BASE);
         pb.directory(cwd);
         pb.redirectErrorStream(true);
@@ -141,13 +143,13 @@ public class ReplicationIT {
     @Before
     public void beforeTest() throws Exception {
         //create instance
-        managixInvoke("create -n vagrant-ssh -c /vagrant/cluster_with_replication.xml").getInputStream();
+        managixInvoke("create -n " + INSTANCE_NAME + " -c /vagrant/cluster_with_replication.xml").getInputStream();
     }
 
     @After
     public void afterTest() throws Exception {
         //stop instance
-        managixInvoke("stop -n vagrant-ssh");
+        managixInvoke("stop -n " + INSTANCE_NAME);
 
         //verify that all processes have been stopped
         String killProcesses = "kill_cc_and_nc.sh";
@@ -162,7 +164,7 @@ public class ReplicationIT {
         executeVagrantScript("nc2", deleteStorage);
 
         //delete instance
-        managixInvoke("delete -n vagrant-ssh");
+        managixInvoke("delete -n " + INSTANCE_NAME);
     }
 
     @Test
@@ -244,7 +246,7 @@ public class ReplicationIT {
     }
 
     private static Process managixInvoke(String cmd) throws Exception {
-        return remoteInvoke("/tmp/asterix/bin/managix " + cmd);
+        return remoteInvoke(MANAGIX_HOME + cmd);
     }
 
     private static String executeVagrantScript(String node, String scriptName) throws Exception {

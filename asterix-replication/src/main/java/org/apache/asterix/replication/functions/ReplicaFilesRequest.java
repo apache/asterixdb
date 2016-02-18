@@ -26,10 +26,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ReplicaFilesRequest {
-    Set<String> replicaIds;
+    private final Set<String> replicaIds;
+    private final Set<String> existingFiles;
 
-    public ReplicaFilesRequest(Set<String> replicaIds) {
+    public ReplicaFilesRequest(Set<String> replicaIds, Set<String> existingFiles) {
         this.replicaIds = replicaIds;
+        this.existingFiles = existingFiles;
     }
 
     public void serialize(OutputStream out) throws IOException {
@@ -37,6 +39,10 @@ public class ReplicaFilesRequest {
         dos.writeInt(replicaIds.size());
         for (String replicaId : replicaIds) {
             dos.writeUTF(replicaId);
+        }
+        dos.writeInt(existingFiles.size());
+        for (String fileName : existingFiles) {
+            dos.writeUTF(fileName);
         }
     }
 
@@ -46,15 +52,19 @@ public class ReplicaFilesRequest {
         for (int i = 0; i < size; i++) {
             replicaIds.add(input.readUTF());
         }
-
-        return new ReplicaFilesRequest(replicaIds);
+        int filesCount = input.readInt();
+        Set<String> existingFiles = new HashSet<String>(filesCount);
+        for (int i = 0; i < filesCount; i++) {
+            existingFiles.add(input.readUTF());
+        }
+        return new ReplicaFilesRequest(replicaIds, existingFiles);
     }
 
     public Set<String> getReplicaIds() {
         return replicaIds;
     }
 
-    public void setReplicaIds(Set<String> replicaIds) {
-        this.replicaIds = replicaIds;
+    public Set<String> getExistingFiles() {
+        return existingFiles;
     }
 }

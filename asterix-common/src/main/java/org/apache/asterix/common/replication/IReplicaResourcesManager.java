@@ -23,14 +23,8 @@ import java.util.Set;
 public interface IReplicaResourcesManager {
 
     /**
-     * @param remoteNodes
-     * @return The minimum LSN of all indexes that belong to {@code remoteNodes}.
-     */
-    public long getMinRemoteLSN(Set<String> remoteNodes);
-
-    /**
      * @param partitions
      * @return the minimum LSN of all indexes that belong to {@code partitions}.
      */
-    public long getPartitionsMinLSN(Integer[] partitions);
+    public long getPartitionsMinLSN(Set<Integer> partitions);
 }

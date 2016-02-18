@@ -28,11 +28,13 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +42,7 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.replication.AsterixReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IODeviceHandle;
@@ -67,6 +70,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private boolean isReplicationEnabled = false;
     private Set<String> filesToBeReplicated;
     private final SortedMap<Integer, ClusterPartition> clusterPartitions;
+    private final Set<Integer> nodeOriginalPartitions;
+    private final Set<Integer> nodeActivePartitions;
+    private Set<Integer> nodeInactivePartitions;
 
     public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId,
             AsterixMetadataProperties metadataProperties) throws HyracksDataException {
@@ -86,6 +92,15 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         }
         resourceCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHED_RESOURCES).build();
+
+        ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
+        //initially the node active partitions are the same as the original partitions
+        nodeOriginalPartitions = new HashSet<>(nodePartitions.length);
+        nodeActivePartitions = new HashSet<>(nodePartitions.length);
+        for (ClusterPartition partition : nodePartitions) {
+            nodeOriginalPartitions.add(partition.getPartitionId());
+            nodeActivePartitions.add(partition.getPartitionId());
+        }
     }
 
     private static String getStorageMetadataDirPath(String mountPoint, String nodeId, int ioDeviceId) {
@@ -301,6 +316,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private static final FilenameFilter METADATA_FILES_FILTER = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             if (name.equalsIgnoreCase(METADATA_FILE_NAME)) {
                 return true;
@@ -316,6 +332,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
         if (isReplicationEnabled) {
             filesToBeReplicated = new HashSet<String>();
+            nodeInactivePartitions = ConcurrentHashMap.newKeySet();
         }
     }
 
@@ -403,5 +420,44 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public String getPartitionPath(int partition) {
         //currently each partition is replicated on the same IO device number on all NCs.
         return mountPoints[clusterPartitions.get(partition).getIODeviceNum()];
+    }
+
+    public Set<Integer> getActivePartitions() {
+        return Collections.unmodifiableSet(nodeActivePartitions);
+    }
+
+    public Set<Integer> getInactivePartitions() {
+        return Collections.unmodifiableSet(nodeInactivePartitions);
+    }
+
+    public Set<Integer> getNodeOrignalPartitions() {
+        return Collections.unmodifiableSet(nodeOriginalPartitions);
+    }
+
+    public synchronized void addActivePartition(int partitonId) {
+        nodeActivePartitions.add(partitonId);
+        nodeInactivePartitions.remove(partitonId);
+    }
+
+    public synchronized void addInactivePartition(int partitonId) {
+        nodeInactivePartitions.add(partitonId);
+        nodeActivePartitions.remove(partitonId);
+    }
+
+    /**
+     * @param resourceAbsolutePath
+     * @return the resource relative path starting from the partition directory
+     */
+    public static String getResourceRelativePath(String resourceAbsolutePath) {
+        String[] tokens = resourceAbsolutePath.split(File.separator);
+        //partiton/dataverse/idx/fileName
+        return tokens[tokens.length - 4] + File.separator + tokens[tokens.length - 3] + File.separator
+                + tokens[tokens.length - 2] + File.separator + tokens[tokens.length - 1];
+    }
+
+    public static int getResourcePartition(String resourceAbsolutePath) {
+        String[] tokens = resourceAbsolutePath.split(File.separator);
+        //partiton/dataverse/idx/fileName
+        return StoragePathUtil.getPartitonNumFromName(tokens[tokens.length - 4]);
     }
 }

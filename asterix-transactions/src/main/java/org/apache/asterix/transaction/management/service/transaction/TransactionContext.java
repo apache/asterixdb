@@ -110,7 +110,6 @@ public class TransactionContext implements ITransactionContext, Serializable {
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
         logRecord = new LogRecord();
-        logRecord.setNodeId(transactionSubsystem.getId());
         transactorNumActiveOperations = new AtomicInteger(0);
     }
 

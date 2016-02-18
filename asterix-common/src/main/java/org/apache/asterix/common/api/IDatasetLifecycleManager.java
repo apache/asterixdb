@@ -94,4 +94,11 @@ public interface IDatasetLifecycleManager extends IIndexLifecycleManager {
      * @return a list of all indexes that are open at the time of the call.
      */
     List<IndexInfo> getOpenIndexesInfo();
+
+    /**
+     * Flushes and closes all user datasets (non-metadata datasets)
+     *
+     * @throws HyracksDataException
+     */
+    void closeUserDatasets() throws HyracksDataException;
 }

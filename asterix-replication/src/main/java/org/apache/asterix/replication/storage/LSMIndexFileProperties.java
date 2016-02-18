@@ -69,11 +69,7 @@ public class LSMIndexFileProperties {
         this.fileName = tokens[arraySize - 1];
         this.idxName = tokens[arraySize - 2];
         this.dataverse = tokens[arraySize - 3];
-        this.partition = getPartitonNumFromName(tokens[arraySize - 4]);
-    }
-
-    private static int getPartitonNumFromName(String name) {
-        return Integer.parseInt(name.substring(StoragePathUtil.PARTITION_DIR_PREFIX.length()));
+        this.partition = StoragePathUtil.getPartitonNumFromName(tokens[arraySize - 4]);
     }
 
     public void serialize(OutputStream out) throws IOException {
@@ -112,10 +108,6 @@ public class LSMIndexFileProperties {
 
     public String getNodeId() {
         return nodeId;
-    }
-
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
     }
 
     public String getDataverse() {
