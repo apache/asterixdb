@@ -1,0 +1,11 @@
+use dataverse experiments;
+
+create dataset Tweets(TweetMessageType) primary key tweetid;
+create index BtreeExtraFieldIdx1 on Tweets(btree-extra-field1) type btree;
+create index BtreeExtraFieldIdx2 on Tweets(btree-extra-field2) type btree;
+create index BtreeExtraFieldIdx3 on Tweets(btree-extra-field3) type btree;
+create index BtreeExtraFieldIdx4 on Tweets(btree-extra-field4) type btree;
+create index BtreeExtraFieldIdx5 on Tweets(btree-extra-field5) type btree;
+create index BtreeExtraFieldIdx6 on Tweets(btree-extra-field6) type btree;
+create index BtreeExtraFieldIdx7 on Tweets(btree-extra-field7) type btree;
+create index BtreeExtraFieldIdx8 on Tweets(btree-extra-field8) type btree;

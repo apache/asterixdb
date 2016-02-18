@@ -1,0 +1,3 @@
+use dataverse experiments;
+create dataset Tweets(TweetMessageType) primary key tweetid;
+create index shbtreeLocation on Tweets(sender-location) type shbtree(-180.0, -90.0, 180.0, 90.0);

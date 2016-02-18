@@ -1,0 +1,10 @@
+use dataverse experiments;
+
+let $count1 := count(for $t in dataset Tweets1 return $t.tweetid)
+return {"count1": $count1}
+
+let $count2 := count(for $t in dataset Tweets2 return $t.tweetid)
+return {"count2": $count2}
+
+let $count3 := count(for $t in dataset Tweets3 return $t.tweetid)
+return {"count3": $count3}

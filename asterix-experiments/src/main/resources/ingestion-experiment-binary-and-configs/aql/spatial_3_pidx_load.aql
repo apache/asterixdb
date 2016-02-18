@@ -1,0 +1,26 @@
+use dataverse experiments;
+
+load dataset JoinSeedTweets
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="128.195.9.22:///scratch/youngsk2/spatial-index-experiment/data/QuerySeedTweets10K-from-SyntheticTweets100M-psi27-pid0.adm"),("format"="adm"));
+
+/* for testing */
+/*
+load dataset Tweets 
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="128.195.9.22:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets2M-psi27-pid0.adm"),("format"="adm"));
+*/
+
+/* for measurement */
+load dataset Tweets 
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"=
+"128.195.9.22:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi27-pid0.adm, 
+128.195.9.23:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi26-pid1.adm,
+128.195.9.24:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi25-pid2.adm,
+128.195.9.25:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi24-pid3.adm,
+128.195.9.26:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi23-pid4.adm,
+128.195.9.27:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi22-pid5.adm,
+128.195.9.28:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi21-pid6.adm,
+128.195.9.29:///scratch/youngsk2/spatial-index-experiment/data/SyntheticTweets100M-psi20-pid7.adm"),
+("format"="adm"));

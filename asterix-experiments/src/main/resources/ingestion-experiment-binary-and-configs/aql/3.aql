@@ -1,0 +1,7 @@
+use dataverse experiments;
+
+create dataset Tweets(TweetMessageType) primary key tweetid;
+create index BtreeExtraFieldIdx on Tweets(btree-extra-field1) type btree;
+create index RtreeLocationIdx on Tweets(sender-location) type rtree;
+create index InvMessageKeywordIdx on Tweets(message-text) type keyword;
+create index InvMessagetNgramIdx on Tweets(message-text) type ngram(3);

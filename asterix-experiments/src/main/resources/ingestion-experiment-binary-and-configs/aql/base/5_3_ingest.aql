@@ -1,0 +1,37 @@
+use dataverse experiments;
+
+create feed TweetFeed1 using socket_adapter
+(
+    ("sockets"="128.195.9.22:10001,128.195.9.23:10001,128.195.9.24:10001,128.195.9.25:10001,
+                128.195.9.26:10001,128.195.9.27:10001,128.195.9.28:10001,128.195.9.29:10001"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+create feed TweetFeed2 using socket_adapter
+(
+    ("sockets"="128.195.9.22:10002,128.195.9.23:10002,128.195.9.24:10002,128.195.9.25:10002,
+                128.195.9.26:10002,128.195.9.27:10002,128.195.9.28:10002,128.195.9.29:10002"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+create feed TweetFeed3 using socket_adapter
+(
+    ("sockets"="128.195.9.22:10003,128.195.9.23:10003,128.195.9.24:10003,128.195.9.25:10003,
+                128.195.9.26:10003,128.195.9.27:10003,128.195.9.28:10003,128.195.9.29:10003"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+set wait-for-completion-feed "false";
+
+connect feed TweetFeed1 to dataset Tweets1 using policy Br;
+connect feed TweetFeed2 to dataset Tweets2 using policy Br;
+connect feed TweetFeed3 to dataset Tweets3 using policy Br;

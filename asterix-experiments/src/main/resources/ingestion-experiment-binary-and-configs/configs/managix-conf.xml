@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="installer">
+    <backup>
+        <hdfs>
+            <version>0.20.2</version>
+            <url></url>
+        </hdfs>
+        <backupDir>/home/youngsk2/managix/clusters/local/working_dir/backup</backupDir>
+    </backup>
+    <zookeeper>
+        <homeDir>/home/youngsk2/managix/.installer/zookeeper_home</homeDir>
+        <clientPort>2900</clientPort>
+        <servers>
+            <java_home>/home/youngsk2/jdk1.7.0_65</java_home>
+            <server>128.195.9.21</server>
+        </servers>
+    </zookeeper>
+</configuration>

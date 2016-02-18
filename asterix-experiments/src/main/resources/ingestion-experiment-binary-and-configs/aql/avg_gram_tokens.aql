@@ -1,0 +1,6 @@
+use dataverse experiments;
+
+let $avg := avg(for $t in dataset Tweets
+let $c := count(gram-tokens($t.message-text, 3, 1))
+return $c)
+return {"avg-grams-per-record": $avg}

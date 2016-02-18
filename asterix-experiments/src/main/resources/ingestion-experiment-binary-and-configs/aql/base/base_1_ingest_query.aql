@@ -1,0 +1,24 @@
+use dataverse experiments;
+
+create feed TweetFeed1 using socket_adapter
+(
+    ("sockets"="127.0.0.1:10001"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+create feed TweetFeed2 using socket_adapter
+(
+    ("sockets"="127.0.0.1:10002"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+set wait-for-completion-feed "false";
+
+connect feed TweetFeed1 to dataset Tweets using policy Brittle;
+connect feed TweetFeed2 to dataset Tweets using policy Brittle;

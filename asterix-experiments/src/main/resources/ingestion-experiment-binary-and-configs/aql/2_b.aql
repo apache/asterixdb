@@ -1,0 +1,4 @@
+use dataverse experiments;
+
+create dataset Tweets(TweetMessageType) primary key tweetid;
+create index RtreeLocationIdx on Tweets(sender-location) type rtree;

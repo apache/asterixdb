@@ -1,0 +1,3 @@
+use dataverse experiments;
+create dataset Tweets(TweetMessageType) primary key tweetid;
+create index sifLocation on Tweets(sender-location) type sif(-180.0, -90.0, 180.0, 90.0);

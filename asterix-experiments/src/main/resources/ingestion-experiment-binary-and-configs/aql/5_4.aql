@@ -1,0 +1,6 @@
+use dataverse experiments;
+
+create dataset Tweets1(TweetMessageType) primary key tweetid;
+create dataset Tweets2(TweetMessageType) primary key tweetid;
+create dataset Tweets3(TweetMessageType) primary key tweetid;
+create dataset Tweets4(TweetMessageType) primary key tweetid;

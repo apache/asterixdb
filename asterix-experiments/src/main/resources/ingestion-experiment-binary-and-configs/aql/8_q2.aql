@@ -1,0 +1,8 @@
+use dataverse experiments;
+
+let $count := count(
+for $t in dataset Tweets
+where $t.btree-extra-field1 > $LKEY$ and $t.btree-extra-field1 <= $HKEY$
+return $t
+)
+return {"rangeQueryCount": $count}

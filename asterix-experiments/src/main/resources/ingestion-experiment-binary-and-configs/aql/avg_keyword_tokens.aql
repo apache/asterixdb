@@ -1,0 +1,6 @@
+use dataverse experiments;
+
+let $avg := avg(for $t in dataset Tweets
+let $c := count(word-tokens($t.message-text))
+return $c)
+return {"avg-keywords-per-record": $avg}

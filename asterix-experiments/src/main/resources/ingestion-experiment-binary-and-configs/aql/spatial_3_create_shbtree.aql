@@ -1,0 +1,2 @@
+use dataverse experiments;
+create index shbtreeLocation on Tweets(sender-location) type shbtree(-180.0, -90.0, 180.0, 90.0);

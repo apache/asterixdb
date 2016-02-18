@@ -1,0 +1,2 @@
+use dataverse experiments;
+create index rtreeLocation on Tweets(sender-location) type rtree;

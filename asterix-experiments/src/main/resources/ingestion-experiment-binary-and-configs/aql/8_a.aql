@@ -1,0 +1,4 @@
+use dataverse experiments;
+
+create dataset Tweets(TweetMessageType) primary key tweetid using compaction policy constant(("num-components"="3"));
+create index BtreeExtraFieldIdx on Tweets(btree-extra-field1) type btree;

@@ -370,6 +370,7 @@
         <module>asterix-fuzzyjoin</module>
         <module>asterix-yarn</module>
         <module>asterix-replication</module>
+        <module>asterix-experiments</module>
     </modules>
 
     <repositories>

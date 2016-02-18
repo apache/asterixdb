@@ -1,0 +1,8 @@
+use dataverse experiments;
+
+let $count := count(
+for $t in dataset Tweets
+where $t.tweetid = int64("1")
+return $t
+)
+return $count

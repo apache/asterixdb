@@ -1,0 +1,165 @@
+<!--
+ ! Copyright 2009-2013 by The Regents of the University of California
+ ! Licensed under the Apache License, Version 2.0 (the "License");
+ ! you may not use this file except in compliance with the License.
+ ! you may obtain a copy of the License from
+ ! 
+ !     http://www.apache.org/licenses/LICENSE-2.0
+ ! 
+ ! Unless required by applicable law or agreed to in writing, software
+ ! distributed under the License is distributed on an "AS IS" BASIS,
+ ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ! See the License for the specific language governing permissions and
+ ! limitations under the License.
+ !-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>asterix</artifactId>
+		<groupId>org.apache.asterix</groupId>
+		<version>0.8.8-SNAPSHOT</version>
+	</parent>
+	<artifactId>asterix-experiments</artifactId>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.0.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+					<fork>true</fork>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<configuration>
+							<programs>
+								<program>
+									<mainClass>org.apache.asterix.experiment.client.LSMExperimentSetRunner</mainClass>
+									<name>lsmexprunner</name>
+								</program>
+								<program>
+									<mainClass>org.apache.asterix.experiment.client.SocketTweetGeneratorDriver</mainClass>
+									<name>datagenrunner</name>
+								</program>
+								<program>
+									<mainClass>org.apache.asterix.experiment.client.SpatialQueryGeneratorDriver</mainClass>
+									<name>querygenrunner</name>
+								</program>
+								<program>
+									<mainClass>org.apache.asterix.experiment.client.RecordCountingServer</mainClass>
+									<name>rcserver</name>
+								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
+				<executions>
+					<execution>
+						<configuration>
+							<descriptors>
+								<descriptor>src/main/assembly/binary-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>attached</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-lang-common</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-lang-aql</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-algebra</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-external-data</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-metadata</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.2.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.2.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hyracks</groupId>
+			<artifactId>hyracks-control-cc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hyracks</groupId>
+			<artifactId>hyracks-control-nc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-app</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+		</dependency>
+<!-- 		<dependency>
+			<groupId>net.schmizz</groupId>
+			<artifactId>sshj</artifactId>
+			<version>0.9.0</version>
+		</dependency> -->
+		<dependency>
+		  <groupId>com.hierynomus</groupId>
+		  <artifactId>sshj</artifactId>
+		  <version>0.13.0</version>
+		</dependency>
+	</dependencies>
+
+</project>
