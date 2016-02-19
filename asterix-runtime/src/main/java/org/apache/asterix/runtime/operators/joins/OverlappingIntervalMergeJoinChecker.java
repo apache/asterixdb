@@ -35,11 +35,11 @@ public class OverlappingIntervalMergeJoinChecker extends AbstractIntervalMergeJo
     @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
 
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
 
         if (start0 < partitionStart && start1 < partitionStart) {
             // Both tuples will match in a different partition.

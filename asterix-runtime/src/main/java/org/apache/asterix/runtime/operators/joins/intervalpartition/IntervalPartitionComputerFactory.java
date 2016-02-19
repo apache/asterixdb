@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
+import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
@@ -62,12 +63,12 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
 
             public long getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)
                     throws HyracksDataException {
-                return getIntervalPartition(IntervalPartitionUtil.getIntervalStart(accessor, tIndex, fieldId));
+                return getIntervalPartition(IntervalJoinUtil.getIntervalStart(accessor, tIndex, fieldId));
             }
 
             public long getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId)
                     throws HyracksDataException {
-                return getIntervalPartition(IntervalPartitionUtil.getIntervalEnd(accessor, tIndex, fieldId));
+                return getIntervalPartition(IntervalJoinUtil.getIntervalEnd(accessor, tIndex, fieldId));
             }
 
         };

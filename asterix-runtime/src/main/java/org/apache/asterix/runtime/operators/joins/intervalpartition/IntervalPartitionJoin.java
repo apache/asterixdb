@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;

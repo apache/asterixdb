@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import org.apache.asterix.runtime.operators.joins.intervalpartition.IntervalPartitionUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -45,8 +46,8 @@ public class EndsIntervalMergeJoinChecker extends AbstractIntervalMergeJoinCheck
     @Override
     public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
         return (end0 <= end1);
     }
 

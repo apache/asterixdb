@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
-import org.apache.asterix.runtime.operators.joins.IntervalPartitionJoinOperatorDescriptor;
+import org.apache.asterix.runtime.operators.joins.intervalpartition.IntervalPartitionJoinOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;

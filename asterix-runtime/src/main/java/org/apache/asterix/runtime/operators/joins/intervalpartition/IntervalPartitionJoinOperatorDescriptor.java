@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -26,6 +26,8 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
+import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;

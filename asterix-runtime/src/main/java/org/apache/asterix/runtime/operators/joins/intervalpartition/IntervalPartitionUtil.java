@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
+import org.apache.asterix.runtime.operators.joins.EqualsIntervalMergeJoinChecker;
+import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -216,22 +218,6 @@ public class IntervalPartitionUtil {
         }
         p += i;
         return p;
-    }
-
-    public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId)
-            throws HyracksDataException {
-        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
-        return intervalStart;
-    }
-
-    public static long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId)
-            throws HyracksDataException {
-        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
-        long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
-        return intervalEnd;
     }
 
     public static long getStartOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {

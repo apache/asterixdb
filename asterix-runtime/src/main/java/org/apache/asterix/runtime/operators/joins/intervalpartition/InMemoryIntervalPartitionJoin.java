@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
 import java.util.logging.Logger;
 
+import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;

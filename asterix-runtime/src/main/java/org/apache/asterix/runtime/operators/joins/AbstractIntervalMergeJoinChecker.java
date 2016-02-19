@@ -39,25 +39,25 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
 
     public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
         return !(start0 <= end1);
     }
 
     public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start1 <= end0);
     }
 
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
 
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        long end1 = IntervalPartitionUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
 
         return compareInterval(start0, end0, start1, end1);
     }

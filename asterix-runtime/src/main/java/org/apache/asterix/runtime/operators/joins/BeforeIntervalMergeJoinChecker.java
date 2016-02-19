@@ -33,24 +33,24 @@ public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChe
     @Override
     public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start0 < start1);
     }
 
     @Override
     public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = IntervalPartitionUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start1 < end0);
     }
 
     @Override
     public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalPartitionUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalPartitionUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         return (start0 < start1);
     }
 
