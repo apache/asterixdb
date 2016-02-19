@@ -20,7 +20,6 @@ package org.apache.asterix.external.api;
 
 import java.util.Map;
 
-import org.apache.asterix.common.parse.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

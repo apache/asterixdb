@@ -54,7 +54,6 @@ public class CommitRuntime implements IPushRuntime {
     protected final long[] longHashes;
     protected final LogRecord logRecord;
     protected final FrameTupleReference frameTupleReference;
-    protected final IHyracksTaskContext ctx;
 
     protected ITransactionContext transactionContext;
     protected FrameTupleAccessor frameTupleAccessor;
@@ -64,7 +63,6 @@ public class CommitRuntime implements IPushRuntime {
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition) {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.ctx = ctx;
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
         this.logMgr = runtimeCtx.getTransactionSubsystem().getLogManager();
         this.jobId = jobId;

@@ -20,7 +20,7 @@ package org.apache.asterix.external.dataflow;
 
 import java.util.Map;
 
-import org.apache.asterix.common.parse.ITupleForwarder;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;

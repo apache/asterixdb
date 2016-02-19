@@ -21,7 +21,7 @@ package org.apache.asterix.external.dataflow;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.asterix.common.parse.ITupleForwarder;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.FeedMessageUtils;
 import org.apache.hyracks.api.comm.IFrame;

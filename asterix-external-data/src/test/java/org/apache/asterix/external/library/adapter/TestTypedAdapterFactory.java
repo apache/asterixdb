@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.parse.ITupleForwarder;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.parser.ADMDataParser;

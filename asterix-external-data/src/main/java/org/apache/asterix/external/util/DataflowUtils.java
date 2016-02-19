@@ -21,8 +21,8 @@ package org.apache.asterix.external.util;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.parse.ITupleForwarder;
-import org.apache.asterix.common.parse.ITupleForwarder.TupleForwardPolicy;
+import org.apache.asterix.external.api.ITupleForwarder;
+import org.apache.asterix.external.api.ITupleForwarder.TupleForwardPolicy;
 import org.apache.asterix.external.dataflow.CounterTimerTupleForwarder;
 import org.apache.asterix.external.dataflow.FeedTupleForwarder;
 import org.apache.asterix.external.dataflow.FrameFullTupleForwarder;

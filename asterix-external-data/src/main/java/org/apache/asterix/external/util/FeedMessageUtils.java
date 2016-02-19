@@ -25,5 +25,5 @@ public class FeedMessageUtils {
     }
 
     public static final byte NULL_FEED_MESSAGE = (byte) MessageType.NULL.ordinal();
-    public static final byte ACK_REQ_FEED_MESSAGE = (byte) MessageType.ACK_REQUEST.ordinal();;
+    public static final byte ACK_REQ_FEED_MESSAGE = (byte) MessageType.ACK_REQUEST.ordinal();
 }
