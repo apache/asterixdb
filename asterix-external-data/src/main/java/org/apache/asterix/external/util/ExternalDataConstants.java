@@ -83,7 +83,7 @@ public class ExternalDataConstants {
     public static final String KEY_NODES = "nodes";
     // a string representing the password used to authenticate with the external data source
     public static final String KEY_PASSWORD = "password";
-    // an integer representing the number of raw records that can be bufferred in the parsing queue 
+    // an integer representing the number of raw records that can be bufferred in the parsing queue
     public static final String KEY_QUEUE_SIZE = "queue-size";
     // a comma delimited integers representing the indexes of the meta fields in the raw record (i,e: "3,1,0,2" denotes that the first meta field is in index 3 in the actual record)
     public static final String KEY_META_INDEXES = "meta-indexes";
