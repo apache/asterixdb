@@ -28,7 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 
 /*
  * Author: Guangqiang Li
- * Created on Jul 9, 2009 
+ * Created on Jul 9, 2009
  */
 public class ALogicalPlanImpl implements ILogicalPlan {
     private List<Mutable<ILogicalOperator>> roots;
