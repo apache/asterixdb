@@ -26,6 +26,20 @@
         <dir>/tmp/asterix-installer</dir>
         <NFS>true</NFS>
     </working_dir>
+    <!-- Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000) -->
+    <heartbeat_period>10000</heartbeat_period>
+    <!-- Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5) -->
+    <max_heartbeat_lapse_periods>5</max_heartbeat_lapse_periods>
+    <!-- Sets the time duration between two profile dumps from each node controller in milliseconds. 0 to disable. (default: 0) -->
+    <profile_dump_period>0</profile_dump_period>
+    <!-- Sets the default number of job attempts allowed if not specified in the job specification. (default: 5) -->
+    <default_max_job_attempts>5</default_max_job_attempts>
+    <!-- Limits the number of historical jobs remembered by the system to the specified value. (default: 10) -->
+    <job_history_size>10</job_history_size>
+    <!-- Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds. (default: 24 hours) -->
+    <result_time_to_live>86400000</result_time_to_live>
+    <!-- The duration within which an instance of the result cleanup should be invoked in milliseconds. (default: 1 minute) -->
+    <result_sweep_threshold>60000</result_sweep_threshold>
     <master_node>
         <id>master</id>
         <client_ip>127.0.0.1</client_ip>

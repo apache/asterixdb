@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.event.schema.cluster.Property;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.MasterNode;
 import org.apache.asterix.event.schema.yarnCluster.Node;
@@ -93,13 +94,12 @@ import org.apache.log4j.PatternLayout;
 
 public class AsterixApplicationMaster {
 
-    static
-    {
+    static {
         Logger rootLogger = Logger.getRootLogger();
         rootLogger.setLevel(Level.INFO);
-        rootLogger.addAppender(new ConsoleAppender(
-                new PatternLayout("%-6r [%p] %c - %m%n")));
+        rootLogger.addAppender(new ConsoleAppender(new PatternLayout("%-6r [%p] %c - %m%n")));
     }
+
     private static final Log LOG = LogFactory.getLog(AsterixApplicationMaster.class);
     private static final String CLUSTER_DESC_PATH = "cluster-config.xml";
     private static final String ASTERIX_CONF_NAME = "asterix-configuration.xml";
@@ -134,7 +134,7 @@ public class AsterixApplicationMaster {
     // Hostname of the container
     private String appMasterHostname = "";
     // Port on which the app master listens for status updates from clients
-    private int appMasterRpcPort = new Random().nextInt(65535-49152);
+    private int appMasterRpcPort = new Random().nextInt(65535 - 49152);
     // Tracking url to which app master publishes info for clients to monitor
     private String appMasterTrackingUrl = "";
 
@@ -284,7 +284,7 @@ public class AsterixApplicationMaster {
         if (cliParser.hasOption("obliterate")) {
             obliterate = true;
         }
-        if(cliParser.hasOption("initial")){
+        if (cliParser.hasOption("initial")) {
             initial = true;
         }
 
@@ -327,14 +327,14 @@ public class AsterixApplicationMaster {
             appAttemptID = containerId.getApplicationAttemptId();
         }
 
-        if (!envs.containsKey(ApplicationConstants.APP_SUBMIT_TIME_ENV)
-                || !envs.containsKey(Environment.NM_HOST.name()) || !envs.containsKey(Environment.NM_HTTP_PORT.name())
+        if (!envs.containsKey(ApplicationConstants.APP_SUBMIT_TIME_ENV) || !envs.containsKey(Environment.NM_HOST.name())
+                || !envs.containsKey(Environment.NM_HTTP_PORT.name())
                 || !envs.containsKey(Environment.NM_PORT.name())) {
             throw new IllegalArgumentException(
                     "Environment is not set correctly- please check client submission settings");
         }
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, envs.get("PWD") + File.separator + "bin" + File.separator
-                + ASTERIX_CONF_NAME);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY,
+                envs.get("PWD") + File.separator + "bin" + File.separator + ASTERIX_CONF_NAME);
 
         LOG.info("Application master for app" + ", appId=" + appAttemptID.getApplicationId().getId()
                 + ", clustertimestamp=" + appAttemptID.getApplicationId().getClusterTimestamp() + ", attemptId="
@@ -350,11 +350,10 @@ public class AsterixApplicationMaster {
 
         instanceConfPath = envs.get(AConstants.INSTANCESTORE);
         //the only time this is null is during testing, when asterix-yarn isn't packaged in a JAR yet.
-        if(envs.get(AConstants.APPLICATIONMASTERJARLOCATION) != null
-                && !envs.get(AConstants.APPLICATIONMASTERJARLOCATION).endsWith(File.separator)){
+        if (envs.get(AConstants.APPLICATIONMASTERJARLOCATION) != null
+                && !envs.get(AConstants.APPLICATIONMASTERJARLOCATION).endsWith(File.separator)) {
             appMasterJar = new Path(envs.get(AConstants.APPLICATIONMASTERJARLOCATION));
-        }
-        else{
+        } else {
             appMasterJar = null;
         }
 
@@ -473,7 +472,7 @@ public class AsterixApplicationMaster {
             resourceManager.addContainerRequest(hostToRequest(n.getClusterIp(), false));
             LOG.info("Asked for NC: " + n.getClusterIp());
             numNodes++;
-            synchronized(pendingNCs){
+            synchronized (pendingNCs) {
                 pendingNCs.add(n);
             }
         }
@@ -776,7 +775,7 @@ public class AsterixApplicationMaster {
                         + ", diagnostics=" + containerStatus.getDiagnostics());
 
                 // non complete containers should not be here
-                if(containerStatus.getState() != ContainerState.COMPLETE){
+                if (containerStatus.getState() != ContainerState.COMPLETE) {
                     throw new IllegalStateException("Non-completed container given as completed by RM.");
                 }
 
@@ -803,13 +802,14 @@ public class AsterixApplicationMaster {
             LOG.info("Got response from RM for container ask, allocatedCnt=" + allocatedContainers.size());
             numAllocatedContainers.addAndGet(allocatedContainers.size());
             for (Container allocatedContainer : allocatedContainers) {
-                synchronized(pendingNCs){
+                synchronized (pendingNCs) {
                     try {
                         if (!pendingNCs.contains(containerToNode(allocatedContainer, clusterDesc)) && ccUp.get()) {
-                            nmClientAsync.stopContainerAsync(allocatedContainer.getId(), allocatedContainer.getNodeId());
+                            nmClientAsync.stopContainerAsync(allocatedContainer.getId(),
+                                    allocatedContainer.getNodeId());
                             continue;
                         }
-                    } catch(UnknownHostException ex){
+                    } catch (UnknownHostException ex) {
                         LOG.error("Unknown host allocated for us by RM- this shouldn't happen.", ex);
                     }
                 }
@@ -826,12 +826,12 @@ public class AsterixApplicationMaster {
                 // I want to know if this node is the CC, because it must start before the NCs.
                 LOG.info("Allocated: " + allocatedContainer.getNodeId().getHost());
                 LOG.info("CC : " + cC.getId());
-                synchronized(pendingNCs){
+                synchronized (pendingNCs) {
                     try {
                         if (ccUp.get()) {
                             pendingNCs.remove(containerToNode(allocatedContainer, clusterDesc));
                         }
-                    } catch(UnknownHostException ex){
+                    } catch (UnknownHostException ex) {
                         LOG.error("Unknown host allocated for us by RM- this shouldn't happen.", ex);
                     }
                 }
@@ -1035,6 +1035,34 @@ public class AsterixApplicationMaster {
                 vargs.add("-app-cc-main-class org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
                 vargs.add("-cluster-net-ip-address " + cC.getClusterIp());
                 vargs.add("-client-net-ip-address " + cC.getClientIp());
+                //pass CC optional parameters
+                if (clusterDesc.getHeartbeatPeriod() != null) {
+                    vargs.add("-heartbeat-period " + String.valueOf(clusterDesc.getHeartbeatPeriod().intValue()));
+                }
+                if (clusterDesc.getMaxHeartbeatLapsePeriods() != null) {
+                    vargs.add("-max-heartbeat-lapse-periods "
+                            + String.valueOf(clusterDesc.getMaxHeartbeatLapsePeriods().intValue()));
+                }
+                if (clusterDesc.getProfileDumpPeriod() != null) {
+                    vargs.add("-profile-dump-period " + String.valueOf(clusterDesc.getProfileDumpPeriod().intValue()));
+                }
+                if (clusterDesc.getDefaultMaxJobAttempts() != null) {
+                    vargs.add("-default-max-job-attempts "
+                            + String.valueOf(clusterDesc.getDefaultMaxJobAttempts().intValue()));
+                }
+                if (clusterDesc.getJobHistorySize() != null) {
+                    vargs.add("-job-history-size " + String.valueOf(clusterDesc.getJobHistorySize().intValue()));
+                }
+                if (clusterDesc.getResultTimeToLive() != null) {
+                    vargs.add("-result-time-to-live " + String.valueOf(clusterDesc.getResultTimeToLive().intValue()));
+                }
+                if (clusterDesc.getResultSweepThreshold() != null) {
+                    vargs.add("-result-sweep-threshold "
+                            + String.valueOf(clusterDesc.getResultSweepThreshold().intValue()));
+                }
+                if (clusterDesc.getCcRoot() != null) {
+                    vargs.add("-cc-root " + clusterDesc.getCcRoot());
+                }
                 ccStarted.set(true);
 
             } else {
@@ -1058,7 +1086,7 @@ public class AsterixApplicationMaster {
                     vargs.add("-data-ip-address " + local.getClusterIp());
                     vargs.add("-result-ip-address " + local.getClusterIp());
                     vargs.add("--");
-                    if(initial){
+                    if (initial) {
                         vargs.add("-initial-run ");
                     }
                 } catch (UnknownHostException e) {
@@ -1096,8 +1124,7 @@ public class AsterixApplicationMaster {
                 if (!containerIsCC(container)) {
                     LOG.error("Unable to find NC configured for host: " + container.getId() + e);
                     return null;
-                }
-                else {
+                } else {
                     return Arrays.asList("");
                 }
             }
@@ -1143,7 +1170,7 @@ public class AsterixApplicationMaster {
                 if (!containerIsCC(container)) {
                     LOG.error("Unable to find NC configured for host: " + container.getId() + e);
                     return null;
-                }else {
+                } else {
                     return Arrays.asList("");
                 }
             }

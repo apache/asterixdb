@@ -83,7 +83,14 @@
     <xs:element
         name="nc_container_mem"
         type="xs:string" />
-	
+    <xs:element name="heartbeat_period" type="xs:integer" />
+    <xs:element name="max_heartbeat_lapse_periods" type="xs:integer" />
+    <xs:element name="profile_dump_period" type="xs:integer" />
+    <xs:element name="default_max_job_attempts" type="xs:integer" />
+    <xs:element name="job_history_size" type="xs:integer" />
+    <xs:element name="result_time_to_live" type="xs:long" />
+    <xs:element name="result_sweep_threshold" type="xs:long" />
+    <xs:element name="cc_root" type="xs:string" />
 
 	<!-- definition of complex elements -->
 
@@ -189,6 +196,14 @@
                     ref="cl:node"
                     maxOccurs="unbounded" />
                 <xs:element ref="cl:substitute_nodes" />
+                <xs:element ref="cl:heartbeat_period" minOccurs="0" />
+                <xs:element ref="cl:max_heartbeat_lapse_periods" minOccurs="0" />
+                <xs:element ref="cl:profile_dump_period" minOccurs="0" />
+                <xs:element ref="cl:default_max_job_attempts" minOccurs="0" />
+                <xs:element ref="cl:job_history_size" minOccurs="0" />
+                <xs:element ref="cl:result_time_to_live" minOccurs="0" />
+                <xs:element ref="cl:result_sweep_threshold" minOccurs="0" />
+                <xs:element ref="cl:cc_root" minOccurs="0" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>
