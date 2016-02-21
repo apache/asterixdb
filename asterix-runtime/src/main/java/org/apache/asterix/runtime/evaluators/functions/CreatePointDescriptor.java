@@ -83,7 +83,7 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                         byte[] bytes0 = inputArg0.getByteArray();
                         int offset0 = inputArg0.getStartOffset();
                         byte[] bytes1 = inputArg1.getByteArray();
-                        int offset1 = inputArg0.getStartOffset();
+                        int offset1 = inputArg1.getStartOffset();
 
                         // type-check: (double, double)
                         if ((bytes0[offset0] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG
