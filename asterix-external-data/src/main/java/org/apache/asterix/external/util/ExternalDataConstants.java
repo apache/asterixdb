@@ -118,6 +118,7 @@ public class ExternalDataConstants {
     public static final String READER_DELIMITED = "delimited-text";
     public static final String READER_TWITTER_PUSH = "twitter-push";
     public static final String READER_TWITTER_PULL = "twitter-pull";
+    public static final String READER_LINE_SEPARATED = "line-separated";
 
     public static final String CLUSTER_LOCATIONS = "cluster-locations";
     public static final String SCHEDULER = "hdfs-scheduler";
@@ -204,4 +205,5 @@ public class ExternalDataConstants {
      * Expected parameter values
      */
     public static final String PARAMETER_OF_SIZE_ONE = "Value of size 1";
+    public static final String LARGE_RECORD_ERROR_MESSAGE = "Record is too large";
 }

@@ -20,6 +20,7 @@ package org.apache.asterix.file;
 
 import java.util.List;
 
+import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;

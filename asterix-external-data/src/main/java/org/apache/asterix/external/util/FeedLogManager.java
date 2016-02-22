@@ -37,7 +37,8 @@ public class FeedLogManager {
         START,      // partition start
         END,        // partition end
         COMMIT,     // a record commit within a partition
-        SNAPSHOT    // an identifier that partitions with identifiers before this one should be ignored
+        SNAPSHOT    // an identifier that partitions with identifiers before this one should be
+                    // ignored
     }
 
     public static final String PROGRESS_LOG_FILE_NAME = "progress.log";
@@ -52,10 +53,15 @@ public class FeedLogManager {
     private BufferedWriter progressLogger;
     private BufferedWriter errorLogger;
     private BufferedWriter recordLogger;
+    private StringBuilder stringBuilder = new StringBuilder();
 
-    public FeedLogManager(File file) {
+    public FeedLogManager(File file) throws IOException {
         this.dir = file.toPath();
         this.completed = new TreeSet<String>();
+        if (!exists()) {
+            create();
+        }
+        open();
     }
 
     public void endPartition() throws IOException {
@@ -124,22 +130,31 @@ public class FeedLogManager {
     }
 
     public void logProgress(String log) throws IOException {
-        progressLogger.write(log);
-        progressLogger.newLine();
+        stringBuilder.setLength(0);
+        stringBuilder.append(log);
+        stringBuilder.append(ExternalDataConstants.LF);
+        progressLogger.write(stringBuilder.toString());
+        progressLogger.flush();
     }
 
     public void logError(String error, Throwable th) throws IOException {
-        errorLogger.append(error);
-        errorLogger.newLine();
-        errorLogger.append(th.toString());
-        errorLogger.newLine();
+        stringBuilder.setLength(0);
+        stringBuilder.append(error);
+        stringBuilder.append(ExternalDataConstants.LF);
+        stringBuilder.append(th.toString());
+        stringBuilder.append(ExternalDataConstants.LF);
+        errorLogger.write(stringBuilder.toString());
+        errorLogger.flush();
     }
 
-    public void logRecord(String record, Exception e) throws IOException {
-        recordLogger.append(record);
-        recordLogger.newLine();
-        recordLogger.append(e.toString());
-        recordLogger.newLine();
+    public void logRecord(String record, String errorMessage) throws IOException {
+        stringBuilder.setLength(0);
+        stringBuilder.append(record);
+        stringBuilder.append(ExternalDataConstants.LF);
+        stringBuilder.append(errorMessage);
+        stringBuilder.append(ExternalDataConstants.LF);
+        recordLogger.write(stringBuilder.toString());
+        recordLogger.flush();
     }
 
     public static String getSplitId(String log) {

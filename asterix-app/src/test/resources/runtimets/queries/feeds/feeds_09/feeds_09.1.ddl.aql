@@ -32,22 +32,22 @@ create dataverse feeds_09;
 use dataverse feeds_09;
 
 create type TwitterUserType as closed {
-	screen_name: string,
-	language: string,
-	friends_count: int32,
-	status_count: int32,
-	name: string,
-	followers_count: int32
+ screen_name: string,
+ language: string,
+ friends_count: int32,
+ status_count: int32,
+ name: string,
+ followers_count: int32
 } 
 
 create type TweetMessageType as closed {
-    id: int64,
-    user: TwitterUserType,
-    latitude: double,
-    longitude: double,
-    message_text: string,
-    created_at: string,
-    country: string
+ id: int64,
+ user: TwitterUserType,
+ latitude: double,
+ longitude: double,
+ message_text: string,
+ created_at: string,
+ country: string
 }
 
 create dataset SyntheticTweets(TweetMessageType)
@@ -57,4 +57,4 @@ create index message_text on SyntheticTweets(message_text) type btree;
 
 create feed  SyntheticTweetFeed
 using twitter_firehose
-(("duration"="5"),("tps"="50"),("tput-duration"="5"),("type-name"="TweetMessageType"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+(("duration"="5"),("tps"="50"),("tput-duration"="5"),("type-name"="TweetMessageType"),("dataverse-dataset"="feeds:SyntheticTweets"),("reader"="adm"),("format"="adm"),("reader-stream"="twitter_firehose"),("mode"="controlled"));

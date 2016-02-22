@@ -21,6 +21,7 @@ package org.apache.asterix.external.input.stream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -33,10 +34,13 @@ public class LocalFileSystemInputStream extends AInputStream {
     private FileInputStream in;
     private byte lastByte;
 
-    public LocalFileSystemInputStream(Path inputResource, String expression, FeedLogManager logManager, boolean isFeed)
-            throws IOException {
-        this.watcher = new FileSystemWatcher(logManager, inputResource, expression, isFeed);
-        this.watcher.init();
+    public LocalFileSystemInputStream(Path inputResource, String expression, boolean isFeed) throws IOException {
+        this.watcher = new FileSystemWatcher(inputResource, expression, isFeed);
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager logManager) {
+        watcher.setFeedLogManager(logManager);
     }
 
     @Override
@@ -102,7 +106,8 @@ public class LocalFileSystemInputStream extends AInputStream {
         }
         int result = in.read(b, off, len);
         while (result < 0 && advance()) {
-            // return a new line at the end of every file <--Might create problems for some cases depending on the parser implementation-->
+            // return a new line at the end of every file <--Might create problems for some cases
+            // depending on the parser implementation-->
             if (lastByte != ExternalDataConstants.BYTE_LF && lastByte != ExternalDataConstants.BYTE_LF) {
                 lastByte = ExternalDataConstants.BYTE_LF;
                 b[off] = ExternalDataConstants.BYTE_LF;
@@ -127,5 +132,10 @@ public class LocalFileSystemInputStream extends AInputStream {
     public boolean stop() throws Exception {
         watcher.close();
         return true;
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration) throws IOException {
+        watcher.init();
     }
 }

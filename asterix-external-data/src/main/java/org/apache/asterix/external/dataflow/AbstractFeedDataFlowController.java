@@ -20,8 +20,12 @@ package org.apache.asterix.external.dataflow;
 
 import java.util.Map;
 
-import org.apache.asterix.external.api.ITupleForwarder;
+
+import javax.annotation.Nonnull;
+
 import org.apache.asterix.external.api.IDataFlowController;
+import org.apache.asterix.external.api.ITupleForwarder;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,6 +37,11 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     protected Map<String, String> configuration;
     protected static final int NUMBER_OF_TUPLE_FIELDS = 1;
     protected ArrayTupleBuilder tb = new ArrayTupleBuilder(NUMBER_OF_TUPLE_FIELDS);
+    protected FeedLogManager feedLogManager;
+
+    public AbstractFeedDataFlowController(@Nonnull FeedLogManager feedLogManager) {
+        this.feedLogManager = feedLogManager;
+    }
 
     @Override
     public ITupleForwarder getTupleForwarder() {
@@ -45,6 +54,7 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     }
 
     protected void initializeTupleForwarder(IFrameWriter writer) throws HyracksDataException {
+        tupleForwarder.configure(configuration);
         tupleForwarder.initialize(ctx, writer);
     }
 

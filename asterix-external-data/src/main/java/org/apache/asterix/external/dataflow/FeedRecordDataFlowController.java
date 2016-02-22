@@ -20,25 +20,40 @@ package org.apache.asterix.external.dataflow;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nonnull;
+
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.external.api.IRecordFlowController;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.log4j.Logger;
 
-public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController
-        implements IRecordFlowController<T> {
-    protected IRecordDataParser<T> dataParser;
-    protected IRecordReader<? extends T> recordReader;
+public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
+    private static final Logger LOGGER = Logger.getLogger(FeedRecordDataFlowController.class.getName());
+    protected final IRecordDataParser<T> dataParser;
+    protected final IRecordReader<? extends T> recordReader;
+    protected final AtomicBoolean closed = new AtomicBoolean(false);
     protected long interval;
-    protected AtomicBoolean closed = new AtomicBoolean(false);
+    protected boolean failed = false;
+
+    public FeedRecordDataFlowController(@Nonnull FeedLogManager feedLogManager,
+            @Nonnull IRecordDataParser<T> dataParser, @Nonnull IRecordReader<T> recordReader) {
+        super(feedLogManager);
+        this.dataParser = dataParser;
+        this.recordReader = recordReader;
+        recordReader.setFeedLogManager(feedLogManager);
+        recordReader.setController(this);
+    }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         HyracksDataException hde = null;
         try {
+            failed = false;
             initializeTupleForwarder(writer);
             while (recordReader.hasNext()) {
                 IRawRecord<? extends T> record = recordReader.next();
@@ -50,10 +65,18 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 tb.reset();
                 dataParser.parse(record, tb.getDataOutput());
                 tb.addFieldEndOffset();
+                if (tb.getSize() > tupleForwarder.getMaxRecordSize()) {
+                    // log
+                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.LARGE_RECORD_ERROR_MESSAGE);
+                    continue;
+                }
                 tupleForwarder.addTuple(tb);
             }
         } catch (Throwable th) {
-            hde = new HyracksDataException(th);
+            failed = true;
+            tupleForwarder.flush();
+            LOGGER.warn("Failure during while operating a feed source", th);
+            throw new HyracksDataException(th);
         }
         try {
             tupleForwarder.close();
@@ -63,10 +86,13 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         try {
             recordReader.close();
         } catch (Throwable th) {
+            LOGGER.warn("Failure during while operating a feed sourcec", th);
             hde = ExternalDataExceptionUtils.suppress(hde, th);
-            throw hde;
         } finally {
             closeSignal();
+            if (hde != null) {
+                throw hde;
+            }
         }
     }
 
@@ -87,11 +113,29 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     @Override
     public boolean stop() throws HyracksDataException {
+        HyracksDataException hde = null;
         if (recordReader.stop()) {
-            try {
-                waitForSignal();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+            if (failed) {
+                // failed, close here
+                try {
+                    tupleForwarder.close();
+                } catch (Throwable th) {
+                    hde = ExternalDataExceptionUtils.suppress(hde, th);
+                }
+                try {
+                    recordReader.close();
+                } catch (Throwable th) {
+                    hde = ExternalDataExceptionUtils.suppress(hde, th);
+                }
+                if (hde != null) {
+                    throw hde;
+                }
+            } else {
+                try {
+                    waitForSignal();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException(e);
+                }
             }
             return true;
         }
@@ -101,16 +145,5 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     @Override
     public boolean handleException(Throwable th) {
         return true;
-    }
-
-    @Override
-    public void setRecordParser(IRecordDataParser<T> dataParser) {
-        this.dataParser = dataParser;
-    }
-
-    @Override
-    public void setRecordReader(IRecordReader<T> recordReader) {
-        this.recordReader = recordReader;
-        recordReader.setController(this);
     }
 }

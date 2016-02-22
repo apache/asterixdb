@@ -23,6 +23,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Collection;
 
+import org.apache.asterix.app.external.TestLibrarian;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.runtime.RepeatRule.Repeat;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
@@ -31,10 +35,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-
-import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.runtime.RepeatRule.Repeat;
-import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Runs runtime test cases that have been identified in the repeatedtestsuite.xml.
@@ -94,14 +94,16 @@ public class RepeatedTest extends ExecutionTest {
 
     public RepeatedTest(TestCaseContext tcCtx) {
         super(tcCtx);
+        testExecutor.setLibrarian(new TestLibrarian());
         count = 0;
     }
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
 
+    @Override
     @Test
-    @Repeat(times = 10000)
+    @Repeat(times = 100)
     public void test() throws Exception {
         System.err.println("***** Test Count: " + (++count) + " ******");
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);

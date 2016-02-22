@@ -22,6 +22,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.asterix.external.util.FeedLogManager;
+
 /**
  * This interface represents a record reader that reads data from external source as a set of records
  * @param <T>
@@ -57,11 +59,17 @@ public interface IRecordReader<T> extends Closeable {
      */
     public boolean stop();
 
+    // TODO: Find a better way to do flushes, this doesn't fit here
     /**
      * set a pointer to the controller of the feed. the controller can be used to flush()
      * parsed records when waiting for more records to be pushed
      */
-    public default void setController(IDataFlowController controller) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
-    };
+    public void setController(IDataFlowController controller);
+
+    // TODO: Find a better way to perform logging. this doesn't fit here
+    /**
+     * set a pointer to the log manager of the feed. the log manager can be used to log
+     * progress and errors
+     */
+    public void setFeedLogManager(FeedLogManager feedLogManager);
 }

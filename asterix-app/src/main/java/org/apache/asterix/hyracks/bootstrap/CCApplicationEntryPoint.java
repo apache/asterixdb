@@ -34,6 +34,9 @@ import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
+import org.apache.asterix.app.external.CentralFeedManager;
+import org.apache.asterix.app.external.ExternalLibraryUtils;
+import org.apache.asterix.app.external.FeedLifecycleListener;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExternalProperties;
@@ -43,8 +46,6 @@ import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.event.service.ILookupService;
 import org.apache.asterix.external.feed.api.ICentralFeedManager;
-import org.apache.asterix.feed.CentralFeedManager;
-import org.apache.asterix.feed.FeedLifecycleListener;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -110,7 +111,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         setupFeedServer(externalProperties);
         feedServer.start();
 
-        ExternalLibraryBootstrap.setUpExternaLibraries(false);
+        ExternalLibraryUtils.setUpExternaLibraries(false);
         centralFeedManager = CentralFeedManager.getInstance();
         centralFeedManager.start();
 

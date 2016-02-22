@@ -18,19 +18,26 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import javax.annotation.Nonnull;
+
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.external.api.IRecordFlowController;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class RecordDataFlowController<T> extends AbstractDataFlowController implements IRecordFlowController<T> {
+public class RecordDataFlowController<T> extends AbstractDataFlowController {
 
-    protected IRecordDataParser<T> dataParser;
-    protected IRecordReader<? extends T> recordReader;
+    protected final IRecordDataParser<T> dataParser;
+    protected final IRecordReader<? extends T> recordReader;
     protected int numOfTupleFields = 1;
+
+    public RecordDataFlowController(@Nonnull IRecordDataParser<T> dataParser,
+            @Nonnull IRecordReader<? extends T> recordReader) {
+        this.dataParser = dataParser;
+        this.recordReader = recordReader;
+    }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
@@ -63,16 +70,6 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController impl
     @Override
     public boolean handleException(Throwable th) {
         return false;
-    }
-
-    @Override
-    public void setRecordParser(IRecordDataParser<T> dataParser) {
-        this.dataParser = dataParser;
-    }
-
-    @Override
-    public void setRecordReader(IRecordReader<T> recordReader) throws Exception {
-        this.recordReader = recordReader;
     }
 
     @Override

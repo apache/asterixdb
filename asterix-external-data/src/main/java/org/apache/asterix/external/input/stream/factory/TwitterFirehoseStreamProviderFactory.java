@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.input.stream.provider.TwitterFirehoseInputStreamProvider;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -91,6 +92,6 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
 
     @Override
     public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception {
-        return null;
+        return new TwitterFirehoseInputStreamProvider(configuration, ctx, partition);
     }
 }

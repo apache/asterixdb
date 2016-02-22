@@ -265,7 +265,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 break;
             }
             case AdmLexer.TOKEN_INT_LITERAL: {
-                // For an INT value without any suffix, we return it as INT64 type value since it is the default integer type.
+                // For an INT value without any suffix, we return it as INT64 type value since it is
+                // the default integer type.
                 parseAndCastNumeric(ATypeTag.INT64, objectType, out);
                 break;
             }
@@ -506,7 +507,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             } else {
                 return null;
             }
-            //            return ATypeHierarchy.canPromote(expectedTypeTag, typeTag) ? typeTag : null;
+            // return ATypeHierarchy.canPromote(expectedTypeTag, typeTag) ? typeTag : null;
         } else { // union
             List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
             for (IAType t : unionList) {
@@ -531,7 +532,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
         BitSet nulls = null;
         if (recType != null) {
-            //TODO: use BitSet Pool
+            // TODO: use BitSet Pool
             nulls = new BitSet(recType.getFieldNames().length);
             recBuilder.reset(recType);
         } else {
@@ -569,7 +570,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                                 admLexer.getLastTokenImage().length() - 1);
                         fieldId = recBuilder.getFieldId(fldName);
                         if (fieldId < 0 && !recType.isOpen()) {
-                            throw new ParseException("This record is closed, you can not add extra fields !!");
+                            throw new ParseException(
+                                    "This record is closed, you can not add extra fields! new field name: " + fldName);
                         } else if (fieldId < 0 && recType.isOpen()) {
                             aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
                                     admLexer.getLastTokenImage().length() - 1));
@@ -895,7 +897,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
 
-        // If two type tags are not the same, either we try to promote or demote source type to the target type
+        // If two type tags are not the same, either we try to promote or demote source type to the
+        // target type
         if (targetTypeTag != typeTag) {
             if (ATypeHierarchy.canPromote(typeTag, targetTypeTag)) {
                 // can promote typeTag to targetTypeTag
@@ -907,7 +910,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 promoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
                         castBuffer.getLength() - 1, out);
             } else if (ATypeHierarchy.canDemote(typeTag, targetTypeTag)) {
-                //can demote source type to the target type
+                // can demote source type to the target type
                 ITypeConvertComputer demoteComputer = ATypeHierarchy.getTypeDemoteComputer(typeTag, targetTypeTag);
                 if (demoteComputer == null) {
                     throw new ParseException("Can't cast the " + typeTag + " type to the " + targetTypeTag + " type.");
@@ -942,7 +945,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                         if (targetTypeTag != typeTag) {
                             ITypeConvertComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag,
                                     targetTypeTag);
-                            // the availability if the promote computer should be consistent with the availability of a target type
+                            // the availability if the promote computer should be consistent with
+                            // the availability of a target type
                             assert promoteComputer != null;
                             // do the promotion; note that the type tag field should be skipped
                             promoteComputer.convertType(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,

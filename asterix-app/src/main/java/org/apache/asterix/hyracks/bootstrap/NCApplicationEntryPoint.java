@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixAppRuntimeContext;
+import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
@@ -212,7 +213,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (isMetadataNode && !pendingFailbackCompletion) {
             runtimeContext.initializeMetadata(systemState == SystemState.NEW_UNIVERSE);
         }
-        ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode && !pendingFailbackCompletion);
+        ExternalLibraryUtils.setUpExternaLibraries(isMetadataNode && !pendingFailbackCompletion);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");

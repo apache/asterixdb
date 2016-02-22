@@ -56,8 +56,7 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
 
     @Override
     public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new LocalFSInputStreamProvider(inputFileSplits, ctx, configuration, partition, expression, isFeed,
-                feedLogFileSplits);
+        return new LocalFSInputStreamProvider(inputFileSplits, ctx, configuration, partition, expression, isFeed);
     }
 
     @Override

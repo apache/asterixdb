@@ -63,8 +63,8 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         try {
             setArguments(tuple);
             evaluate(functionHelper);
-            functionHelper.reset();
             result.set(resultBuffer.getByteArray(), resultBuffer.getStartOffset(), resultBuffer.getLength());
+            functionHelper.reset();
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException(e);
@@ -73,6 +73,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
 
     @Override
     public void evaluate(IFunctionHelper argumentProvider) throws Exception {
+        resultBuffer.reset();
         ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
         /*
          * Make sure that if "setResult" is not called,

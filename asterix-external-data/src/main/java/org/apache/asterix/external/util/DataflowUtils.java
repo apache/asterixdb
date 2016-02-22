@@ -43,12 +43,13 @@ public class DataflowUtils {
         }
     }
 
-    public static ITupleForwarder getTupleForwarder(Map<String, String> configuration) throws AsterixException {
+    public static ITupleForwarder getTupleForwarder(Map<String, String> configuration, FeedLogManager feedLogManager)
+            throws AsterixException {
         ITupleForwarder policy = null;
         ITupleForwarder.TupleForwardPolicy policyType = null;
         String propValue = configuration.get(ITupleForwarder.FORWARD_POLICY);
         if (ExternalDataUtils.isFeed(configuration)) {
-            //TODO pass this value in the configuration and avoid this check for feeds
+            // TODO pass this value in the configuration and avoid this check for feeds
             policyType = TupleForwardPolicy.FEED;
         } else if (propValue == null) {
             policyType = TupleForwardPolicy.FRAME_FULL;
@@ -57,7 +58,7 @@ public class DataflowUtils {
         }
         switch (policyType) {
             case FEED:
-                policy = new FeedTupleForwarder();
+                policy = new FeedTupleForwarder(feedLogManager);
                 break;
             case FRAME_FULL:
                 policy = new FrameFullTupleForwarder();

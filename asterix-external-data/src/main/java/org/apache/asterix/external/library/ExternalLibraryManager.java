@@ -23,8 +23,14 @@ import java.util.Map;
 
 public class ExternalLibraryManager {
 
-    private static Map<String, ClassLoader> libraryClassLoaders = new HashMap<String, ClassLoader>();
+    private static final Map<String, ClassLoader> libraryClassLoaders = new HashMap<String, ClassLoader>();
 
+    /**
+     * Register the library class loader with the external library manager
+     * @param dataverseName
+     * @param libraryName
+     * @param classLoader
+     */
     public static void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {

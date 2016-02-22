@@ -19,10 +19,12 @@
 package org.apache.asterix.external.input.stream.provider;
 
 import java.net.ServerSocket;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.input.stream.SocketInputStream;
+import org.apache.asterix.external.util.FeedLogManager;
 
 public class SocketInputStreamProvider implements IInputStreamProvider {
     private ServerSocket server;
@@ -34,5 +36,13 @@ public class SocketInputStreamProvider implements IInputStreamProvider {
     @Override
     public AInputStream getInputStream() throws Exception {
         return new SocketInputStream(server);
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration) {
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
     }
 }

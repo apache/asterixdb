@@ -26,11 +26,13 @@ import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.couchbase.CouchbaseReaderFactory;
+import org.apache.asterix.external.input.record.reader.stream.EmptyLineSeparatedRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.LineRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamProviderFactory;
 import org.apache.asterix.external.input.stream.factory.SocketInputStreamProviderFactory;
+import org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamProviderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
@@ -64,6 +66,9 @@ public class DatasourceFactoryProvider {
                     break;
                 case ExternalDataConstants.STREAM_SOCKET:
                     streamFactory = new SocketInputStreamProviderFactory();
+                    break;
+                case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
+                    streamFactory = new TwitterFirehoseStreamProviderFactory();
                     break;
                 default:
                     throw new AsterixException("unknown input stream factory");
@@ -100,6 +105,11 @@ public class DatasourceFactoryProvider {
                     break;
                 case ExternalDataConstants.READER_COUCHBASE:
                     readerFactory = new CouchbaseReaderFactory();
+                    break;
+                case ExternalDataConstants.READER_LINE_SEPARATED:
+                    readerFactory = new EmptyLineSeparatedRecordReaderFactory()
+                            .setInputStreamFactoryProvider(DatasourceFactoryProvider.getInputStreamFactory(
+                                    ExternalDataUtils.getRecordReaderStreamName(configuration), configuration));
                     break;
                 default:
                     throw new AsterixException("unknown record reader factory: " + reader);

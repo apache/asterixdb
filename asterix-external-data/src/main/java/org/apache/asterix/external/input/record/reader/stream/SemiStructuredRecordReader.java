@@ -81,7 +81,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
             if (bufferPosn >= bufferLength) {
                 startPosn = bufferPosn = 0;
                 bufferLength = reader.read(inputBuffer);
-                if (bufferLength <= 0) {
+                if (bufferLength < 0) {
                     close();
                     return false; // EOF
                 }
@@ -99,7 +99,9 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
                             && inputBuffer[bufferPosn] != ExternalDataConstants.LF
                             && inputBuffer[bufferPosn] != ExternalDataConstants.CR) {
                         // corrupted file. clear the buffer and stop reading
-                        reader.skipError();
+                        if (!reader.skipError()) {
+                            reader.close();
+                        }
                         bufferPosn = bufferLength = 0;
                         throw new IOException("Malformed input stream");
                     }

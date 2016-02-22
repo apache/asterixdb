@@ -21,12 +21,13 @@ package org.apache.asterix.external.library.adapter;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.util.DataflowUtils;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -59,6 +60,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
 
     @Override
     public IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        final String nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
         ITupleParserFactory tupleParserFactory = new ITupleParserFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -69,10 +71,13 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ArrayTupleBuilder tb;
                 try {
                     parser = new ADMDataParser();
-                    forwarder = DataflowUtils.getTupleForwarder(configuration);
+                    forwarder = DataflowUtils.getTupleForwarder(configuration,
+                            FeedUtils.getFeedLogManager(ctx, partition,
+                                    FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
+                                            ExternalDataUtils.getFeedName(configuration), nodeId, partition)));
                     forwarder.configure(configuration);
                     tb = new ArrayTupleBuilder(1);
-                } catch (AsterixException e) {
+                } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
                 return new ITupleParser() {

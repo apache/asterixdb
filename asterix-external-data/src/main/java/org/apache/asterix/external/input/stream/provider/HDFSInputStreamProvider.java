@@ -23,11 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.provider.ExternalIndexerProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -115,5 +117,21 @@ public class HDFSInputStreamProvider<K> extends HDFSRecordReader<K, Text> implem
         public boolean stop() throws Exception {
             return false;
         }
+
+        @Override
+        public void configure(Map<String, String> configuration) {
+        }
+
+        @Override
+        public void setFeedLogManager(FeedLogManager logManager) {
+        }
+
+        @Override
+        public void setController(AbstractFeedDataFlowController controller) {
+        }
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration) {
     }
 }

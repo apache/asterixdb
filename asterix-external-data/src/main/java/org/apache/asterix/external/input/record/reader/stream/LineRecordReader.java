@@ -29,6 +29,7 @@ public class LineRecordReader extends AbstractStreamRecordReader {
     protected boolean prevCharCR;
     protected int newlineLength;
     protected int recordNumber = 0;
+    private boolean configured = false;
 
     @Override
     public boolean hasNext() throws IOException {
@@ -85,6 +86,7 @@ public class LineRecordReader extends AbstractStreamRecordReader {
             readLength = bufferPosn - startPosn;
             if (prevCharCR && newlineLength == 0) {
                 --readLength; //CR at the end of the buffer
+                prevCharCR = false;
             }
             if (readLength > 0) {
                 record.append(inputBuffer, startPosn, readLength);
@@ -96,11 +98,14 @@ public class LineRecordReader extends AbstractStreamRecordReader {
 
     @Override
     public void configure(Map<String, String> configuration) throws Exception {
-        super.configure(configuration);
-        if (ExternalDataUtils.hasHeader(configuration)) {
-            if (hasNext()) {
-                next();
+        if (!configured) {
+            super.configure(configuration);
+            if (ExternalDataUtils.hasHeader(configuration)) {
+                if (hasNext()) {
+                    next();
+                }
             }
         }
+        configured = true;
     }
 }

@@ -47,21 +47,23 @@ public class FileSystemWatcher {
     private final LinkedList<File> files = new LinkedList<File>();
     private Iterator<File> it;
     private final String expression;
-    private final FeedLogManager logManager;
+    private FeedLogManager logManager;
     private final Path path;
     private final boolean isFeed;
     private boolean done;
     private File current;
     private AbstractFeedDataFlowController controller;
 
-    public FileSystemWatcher(FeedLogManager logManager, Path inputResource, String expression, boolean isFeed)
-            throws IOException {
+    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) throws IOException {
         this.watcher = isFeed ? FileSystems.getDefault().newWatchService() : null;
         this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
-        this.logManager = logManager;
         this.expression = expression;
         this.path = inputResource;
         this.isFeed = isFeed;
+    }
+
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+        this.logManager = feedLogManager;
     }
 
     public void init() throws IOException {
@@ -89,13 +91,6 @@ public class FileSystemWatcher {
 
     private void resume() throws IOException {
         if (logManager == null) {
-            return;
-        }
-        if (logManager.exists()) {
-            logManager.open();
-        } else {
-            logManager.create();
-            logManager.open();
             return;
         }
         /*
@@ -210,6 +205,9 @@ public class FileSystemWatcher {
             return false;
         }
         files.clear();
+        if (keys.isEmpty()) {
+            return false;
+        }
         // Read new Events (Polling first to add all available files)
         WatchKey key;
         key = watcher.poll();

@@ -32,13 +32,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.app.external.CentralFeedManager;
 import org.apache.asterix.external.feed.api.IFeedLoadManager;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.watch.FeedActivity;
 import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
-import org.apache.asterix.feed.CentralFeedManager;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;

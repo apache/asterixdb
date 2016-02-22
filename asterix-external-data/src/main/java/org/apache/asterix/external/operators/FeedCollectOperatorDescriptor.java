@@ -23,11 +23,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.external.feed.api.IFeedManager;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.api.IFeedSubscriptionManager;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.runtime.IngestionRuntime;
@@ -151,7 +151,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
         ISubscribableRuntime ingestionRuntime = subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
         while (ingestionRuntime == null && waitCycleCount < 10) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(3000);
                 waitCycleCount++;
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("waiting to obtain ingestion runtime for subscription " + subscribableRuntimeId);

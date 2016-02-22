@@ -34,6 +34,7 @@ import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.input.record.RecordWithMetadata;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -80,7 +81,8 @@ public class CouchbaseReader implements IRecordReader<RecordWithMetadata<char[]>
     private CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
     private ByteBuffer bytes = ByteBuffer.allocateDirect(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
     private CharBuffer chars = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-    // metaTypes = {key(string), bucket(string), vbucket(int32), seq(long), cas(long), creationTime(long),expiration(int32),flags(int32),revSeqNumber(long),lockTime(int32)}
+    // metaTypes = {key(string), bucket(string), vbucket(int32), seq(long), cas(long),
+    // creationTime(long),expiration(int32),flags(int32),revSeqNumber(long),lockTime(int32)}
     private static final IAType[] metaTypes = new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
             BuiltinType.AINT32, BuiltinType.AINT64, BuiltinType.AINT64, BuiltinType.AINT64, BuiltinType.AINT32,
             BuiltinType.AINT32, BuiltinType.AINT64, BuiltinType.AINT32 };
@@ -255,5 +257,9 @@ public class CouchbaseReader implements IRecordReader<RecordWithMetadata<char[]>
             record.append(chars);
         }
         record.endRecord();
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
     }
 }

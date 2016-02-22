@@ -18,23 +18,26 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import javax.annotation.Nonnull;
+
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
+import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class IndexingDataFlowController<T> extends RecordDataFlowController<T> {
-    IExternalIndexer indexer;
+    private final IExternalIndexer indexer;
+
+    public IndexingDataFlowController(@Nonnull IRecordDataParser<T> dataParser,
+            @Nonnull IRecordReader<? extends T> recordReader) throws Exception {
+        super(dataParser, recordReader);
+        indexer = ((IIndexingDatasource) recordReader).getIndexer();
+        numOfTupleFields += indexer.getNumberOfFields();
+    }
 
     @Override
     protected void appendOtherTupleFields(ArrayTupleBuilder tb) throws Exception {
         indexer.index(tb);
-    }
-
-    @Override
-    public void setRecordReader(IRecordReader<T> recordReader) throws Exception {
-        super.setRecordReader(recordReader);
-        indexer = ((IIndexingDatasource) recordReader).getIndexer();
-        numOfTupleFields += indexer.getNumberOfFields();
     }
 }

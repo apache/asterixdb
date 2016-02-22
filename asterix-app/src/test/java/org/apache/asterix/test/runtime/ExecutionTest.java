@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import org.apache.asterix.app.external.TestLibrarian;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -57,6 +58,9 @@ public class ExecutionTest {
         try {
             File outdir = new File(PATH_ACTUAL);
             outdir.mkdirs();
+            // remove library directory
+            TestLibrarian.removeLibraryDir();
+            testExecutor.setLibrarian(new TestLibrarian());
             ExecutionTestUtil.setUp();
         } catch (Throwable th) {
             th.printStackTrace();
@@ -66,6 +70,8 @@ public class ExecutionTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
+        // remove library directory
+        TestLibrarian.removeLibraryDir();
         ExecutionTestUtil.tearDown();
     }
 

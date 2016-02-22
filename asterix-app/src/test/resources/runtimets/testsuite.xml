@@ -29,12 +29,27 @@
         QueryOffsetPath="queries"
         QueryFileExtension=".aql">
     <test-group name="feeds">
+        <!-- Fails constantly and not clear what is intended
+        <test-case FilePath="feeds">
+          <compilation-unit name="feeds_06">
+            <output-dir compare="Text">feeds_06</output-dir>
+          </compilation-unit>
+        </test-case> -->
+        <test-case FilePath="feeds">
+            <compilation-unit name="feed-with-external-parser">
+                <output-dir compare="Text">feed-with-external-parser</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="feeds">
+            <compilation-unit name="feeds_07">
+                <output-dir compare="Text">feeds_07</output-dir>
+            </compilation-unit>
+        </test-case>
         <test-case FilePath="feeds">
             <compilation-unit name="feeds_01">
                 <output-dir compare="Text">feeds_01</output-dir>
             </compilation-unit>
         </test-case>
-        <!--Disable it because of sporadic failures. Abdullah will re-enable it.
         <test-case FilePath="feeds">
             <compilation-unit name="feeds_02">
                 <output-dir compare="Text">feeds_02</output-dir>
@@ -45,23 +60,13 @@
                 <output-dir compare="Text">feeds_03</output-dir>
             </compilation-unit>
         </test-case>
+        <!-- Fails constantly
         <test-case FilePath="feeds">
             <compilation-unit name="feeds_04">
                 <output-dir compare="Text">feeds_04</output-dir>
             </compilation-unit>
         </test-case>
-
-        <test-case FilePath="feeds">
-          <compilation-unit name="feeds_06">
-            <output-dir compare="Text">feeds_06</output-dir>
-          </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_07">
-                <output-dir compare="Text">feeds_07</output-dir>
-            </compilation-unit>
-        </test-case>
-
+         -->
         <test-case FilePath="feeds">
             <compilation-unit name="feeds_08">
                 <output-dir compare="Text">feeds_08</output-dir>
@@ -95,14 +100,34 @@
                 <output-dir compare="Text">issue_230_feeds</output-dir>
             </compilation-unit>
         </test-case>
-
+<!-- 
         <test-case FilePath="feeds">
             <compilation-unit name="issue_711_feeds">
                 <output-dir compare="Text">issue_711_feeds</output-dir>
             </compilation-unit>
+        </test-case>  -->
+    </test-group>
+    <test-group name="external-library">
+        <test-case FilePath="external-library">
+            <compilation-unit name="typed_adapter">
+                <output-dir compare="Text">typed_adapter</output-dir>
+            </compilation-unit>
         </test-case>
-        -->
-
+        <test-case FilePath="external-library">
+            <compilation-unit name="classad-parser">
+                <output-dir compare="Text">classad-parser</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-library">
+            <compilation-unit name="classad-parser2">
+                <output-dir compare="Text">classad-parser2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-library">
+            <compilation-unit name="getCapital">
+                <output-dir compare="Text">getCapital</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="flwor">
         <test-case FilePath="flwor">
@@ -6055,13 +6080,13 @@
         <test-case FilePath="load">
             <compilation-unit name="issue14_query">
                 <output-dir compare="Text">issue14_query</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified format parameter for local file system adapter</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified ("reader" or "format") parameter for local filesystem adapter</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="issue315_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified format parameter for local file system adapter</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified ("reader" or "format") parameter for local filesystem adapter</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">

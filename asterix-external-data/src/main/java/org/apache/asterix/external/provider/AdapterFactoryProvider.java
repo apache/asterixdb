@@ -57,6 +57,7 @@ public class AdapterFactoryProvider {
         // Compatability
         adapterFactories.put(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME, GenericAdapterFactory.class);
         adapterFactories.put(ExternalDataConstants.ADAPTER_LOCALFS_CLASSNAME, GenericAdapterFactory.class);
+        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER, GenericAdapterFactory.class);
         return adapterFactories;
     }
 

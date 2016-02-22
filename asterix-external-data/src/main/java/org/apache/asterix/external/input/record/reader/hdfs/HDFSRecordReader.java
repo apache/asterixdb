@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IRawRecord;
@@ -29,6 +30,7 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.input.record.reader.EmptyRecordReader;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -181,5 +183,13 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
 
     public RecordReader<K, Writable> getReader() {
         return reader;
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public void setController(IDataFlowController controller) {
     }
 }

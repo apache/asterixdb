@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.app.external.CentralFeedManager;
+import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
@@ -32,8 +34,6 @@ import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransaction
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.feed.CentralFeedManager;
-import org.apache.asterix.file.ExternalIndexingOperations;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;

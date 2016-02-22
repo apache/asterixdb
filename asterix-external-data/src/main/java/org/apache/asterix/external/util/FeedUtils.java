@@ -19,6 +19,8 @@
 package org.apache.asterix.external.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +31,12 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class FeedUtils {
@@ -38,13 +44,27 @@ public class FeedUtils {
         return dataverseName + File.separator + feedName;
     }
 
+    public static FileSplit[] splitsForAdapter(String dataverseName, String feedName, String nodeName, int partition) {
+        File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
+        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        ClusterPartition nodePartition = AsterixClusterProperties.INSTANCE.getNodePartitions(nodeName)[0];
+        String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(storageDirName,
+                nodePartition.getPartitionId());
+        // format: 'storage dir name'/partition_#/dataverse/feed/adapter_#
+        File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator
+                + StoragePathUtil.ADAPTER_INSTANCE_PREFIX + partition);
+        return new FileSplit[] { StoragePathUtil.getFileSplitForClusterPartition(nodePartition, f) };
+    }
+
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
             AlgebricksPartitionConstraint partitionConstraints) throws Exception {
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
+        String[] locations = null;
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             throw new AlgebricksException("Can't create file splits for adapter with count partitioning constraints");
+        } else {
+            locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         }
-        String[] locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         List<FileSplit> splits = new ArrayList<FileSplit>();
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
         int i = 0;
@@ -66,4 +86,22 @@ public class FeedUtils {
         return ioManager.getAbsoluteFileRef(ioDeviceId, relativePath);
     }
 
+    public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, int partition,
+            FileSplit[] feedLogFileSplits) throws IOException {
+        return new FeedLogManager(
+                FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
+                        feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager()).getFile());
+    }
+
+    public static void processFeedMessage(ByteBuffer input, ByteBuffer message, FrameTupleAccessor fta) {
+        // read the message and reduce the number of tuples
+        fta.reset(input);
+        int tc = fta.getTupleCount() - 1;
+        int offset = fta.getTupleStartOffset(tc);
+        int len = fta.getTupleLength(tc);
+        message.clear();
+        message.put(input.array(), offset, len);
+        message.flip();
+        IntSerDeUtils.putInt(input.array(), FrameHelper.getTupleCountOffset(input.capacity()), tc);
+    }
 }

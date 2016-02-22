@@ -24,15 +24,14 @@
         <version>0.8.8-SNAPSHOT</version>
     </parent>
     <artifactId>asterix-app</artifactId>
-
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
     <build>
         <plugins>
             <plugin>
@@ -95,9 +94,32 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+    <artifactId>maven-resources-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>copy-external-library</id>
+            <phase>generate-resources</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>src/test/resources/externallib</outputDirectory>
+                <overwrite>true</overwrite>
+                <resources>
+                    <resource>
+                        <directory>../asterix-external-data/target</directory>
+                        <includes>
+                            <include>testlib-zip-binary-assembly.zip</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
         </plugins>
     </build>
-
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -137,41 +159,41 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-algebra</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-tools</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -181,7 +203,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-transactions</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -217,7 +239,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-test-framework</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -235,13 +257,13 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-replication</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-external-data</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -15,3 +15,6 @@
 
 # Declare files that will always have LF line endings on checkout.
 *.lf test eol=lf
+
+# Explicitly declare binary files
+*testdata.txt binary

@@ -33,7 +33,7 @@ import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
 import org.apache.asterix.external.feed.runtime.FeedRuntime;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
-import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -41,7 +41,6 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -119,7 +118,6 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
             } else {
                 reviveOldFeedRuntime(runtimeId);
             }
-
             coreOperator.open();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to open feed store operator", e);
@@ -167,24 +165,12 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         try {
-            processFeedMessage(buffer);
+            FeedUtils.processFeedMessage(buffer, message, fta);
             inputSideHandler.nextFrame(buffer);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
         }
-    }
-
-    private void processFeedMessage(ByteBuffer buffer) {
-        // read the message and reduce the number of tuples
-        fta.reset(buffer);
-        int tc = fta.getTupleCount() - 1;
-        int offset = fta.getTupleStartOffset(tc);
-        int len = fta.getTupleLength(tc);
-        message.clear();
-        message.put(buffer.array(), offset, len);
-        message.flip();
-        IntSerDeUtils.putInt(buffer.array(), FrameHelper.getTupleCountOffset(buffer.capacity()), tc);
     }
 
     @Override

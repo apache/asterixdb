@@ -82,13 +82,6 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     private FrameEventCallback frameEventCallback;
 
     public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            IFrameWriter coreOperator, FeedPolicyAccessor fpa, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedManager feedManager, int nPartitions) throws HyracksDataException {
-        this(ctx, connectionId, runtimeId, coreOperator, fpa, fpa.bufferingEnabled(), fta, recordDesc, feedManager,
-                nPartitions);
-    }
-
-    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
             IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
             RecordDescriptor recordDesc, IFeedManager feedManager, int nPartitions) throws HyracksDataException {
         this.connectionId = connectionId;
@@ -281,7 +274,12 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
                             bucket.setContentType(ContentType.DATA);
                         } else {
                             bucket.setContentType(ContentType.EOD);
+                            setFinished(true);
+                            synchronized (coreOperator) {
+                                coreOperator.notifyAll();
+                            }
                         }
+                        // TODO: fix handling of eod case with monitored buffers.
                         bucket.setDesiredReadCount(1);
                         mBuffer.sendMessage(bucket);
                         mBuffer.sendReport(frame);

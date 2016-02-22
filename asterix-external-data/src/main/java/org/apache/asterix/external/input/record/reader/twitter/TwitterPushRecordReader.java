@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.TwitterUtil;
 
 import twitter4j.FilterQuery;
@@ -122,5 +124,13 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
         @Override
         public void onTrackLimitationNotice(int arg0) {
         }
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public void setController(IDataFlowController controller) {
     }
 }

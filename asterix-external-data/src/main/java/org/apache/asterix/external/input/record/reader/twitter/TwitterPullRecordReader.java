@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -96,5 +98,13 @@ public class TwitterPullRecordReader implements IRecordReader<Status> {
     @Override
     public boolean stop() {
         return false;
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public void setController(IDataFlowController controller) {
     }
 }

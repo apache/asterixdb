@@ -31,6 +31,7 @@ import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.input.stream.AInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.FeedLogManager;
 
 public abstract class AbstractStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
     protected AInputStreamReader reader;
@@ -40,6 +41,7 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     protected int bufferPosn = 0;
     protected IExternalIndexer indexer;
     protected boolean done = false;
+    protected FeedLogManager feedLogManager;
 
     @Override
     public IRawRecord<char[]> next() throws IOException {
@@ -88,5 +90,11 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     @Override
     public void setController(IDataFlowController controller) {
         reader.setController((AbstractFeedDataFlowController) controller);
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+        this.feedLogManager = feedLogManager;
+        reader.setFeedLogManager(feedLogManager);
     }
 }

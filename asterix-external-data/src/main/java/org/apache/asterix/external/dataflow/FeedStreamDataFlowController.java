@@ -21,6 +21,7 @@ package org.apache.asterix.external.dataflow;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.api.IStreamFlowController;
 import org.apache.asterix.external.input.stream.AInputStream;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -28,6 +29,10 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
 
     private IStreamDataParser dataParser;
     private AInputStream stream;
+
+    public FeedStreamDataFlowController(FeedLogManager feedLogManager) {
+        super(feedLogManager);
+    }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {

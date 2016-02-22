@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.log4j.Logger;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
@@ -134,6 +136,14 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
             List<? extends SyndEntryImpl> fetchedFeeds = feed.getEntries();
             rssFeedBuffer.addAll(fetchedFeeds);
         }
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public void setController(IDataFlowController controller) {
     }
 }
 

@@ -93,7 +93,8 @@ public class ExternalDataUtils {
     }
 
     public static boolean isExternal(String aString) {
-        return (aString.contains(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR) && aString.trim().length() > 1);
+        return (aString != null && aString.contains(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR)
+                && aString.trim().length() > 1);
     }
 
     public static ClassLoader getClassLoader(String dataverse, String library) {

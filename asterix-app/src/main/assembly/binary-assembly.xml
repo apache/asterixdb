@@ -34,4 +34,14 @@
 			<outputDirectory>lib</outputDirectory>
 		</fileSet>
 	</fileSets>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>externallib</outputDirectory>
+            <includes>
+                <include>asterix-external-data:*:zip</include>
+            </includes>
+            <unpack>false</unpack>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+        </dependencySet>
+    </dependencySets>
 </assembly>

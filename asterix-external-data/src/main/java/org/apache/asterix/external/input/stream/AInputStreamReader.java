@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.asterix.external.util.FeedLogManager;
 
 public class AInputStreamReader extends InputStreamReader {
     private AInputStream in;
@@ -45,5 +46,9 @@ public class AInputStreamReader extends InputStreamReader {
 
     public void setController(AbstractFeedDataFlowController controller) {
         in.setController(controller);
+    }
+
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+        in.setFeedLogManager(feedLogManager);
     }
 }

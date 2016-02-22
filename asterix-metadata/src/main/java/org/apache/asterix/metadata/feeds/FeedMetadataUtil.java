@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataConstants;
-import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -46,6 +45,7 @@ import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
+import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.metadata.MetadataException;
@@ -158,17 +158,13 @@ public class FeedMetadataUtil {
                         orig.getFeedConnectionId(), orig.getSourceFeedId(), (ARecordType) orig.getOutputType(),
                         orig.getRecordDescriptor(), orig.getFeedPolicyProperties(), orig.getSubscriptionLocation());
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
-            } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
+            } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor
+                    && ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
+                // only introduce store before primary index
                 operandId = ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                 metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc, feedPolicyProperties,
                         FeedRuntimeType.STORE, false, operandId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
-            } else if (opDesc instanceof AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) {
-                operandId = ((AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) opDesc).getIndexName();
-                metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc, feedPolicyProperties,
-                        FeedRuntimeType.STORE, false, operandId);
-                oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
-
             } else {
                 FeedRuntimeType runtimeType = null;
                 boolean enableSubscriptionMode = false;
@@ -487,6 +483,7 @@ public class FeedMetadataUtil {
                 adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
             }
 
+            ExternalDataCompatibilityUtils.addCompatabilityParameters(adapterName, adapterOutputType, configuration);
             if (adapterEntity != null) {
                 adapterType = adapterEntity.getType();
                 adapterFactoryClassname = adapterEntity.getClassname();
@@ -511,8 +508,7 @@ public class FeedMetadataUtil {
             feedProps = new Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType>(adapterFactory,
                     adapterOutputType, adapterType);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new AlgebricksException("unable to create adapter " + e);
+            throw new AlgebricksException("unable to create adapter", e);
         }
         return feedProps;
     }

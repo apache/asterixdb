@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import org.apache.asterix.app.external.CentralFeedManager;
 import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.external.util.FeedConstants;
-import org.apache.asterix.feed.CentralFeedManager;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 

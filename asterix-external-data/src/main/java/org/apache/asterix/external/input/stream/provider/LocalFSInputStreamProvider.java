@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.input.stream.provider;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.input.stream.LocalFileSystemInputStream;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.asterix.external.util.FeedUtils;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 
@@ -36,29 +34,31 @@ public class LocalFSInputStreamProvider implements IInputStreamProvider {
     private String expression;
     private boolean isFeed;
     private Path path;
-    private File feedLogFile;
+    private FeedLogManager feedLogManager;
+    private Map<String, String> configuration;
 
     public LocalFSInputStreamProvider(FileSplit[] fileSplits, IHyracksTaskContext ctx,
-            Map<String, String> configuration, int partition, String expression, boolean isFeed,
-            FileSplit[] feedLogFileSplits) {
+            Map<String, String> configuration, int partition, String expression, boolean isFeed) {
         this.expression = expression;
         this.isFeed = isFeed;
         this.path = fileSplits[partition].getLocalFile().getFile().toPath();
-        if (feedLogFileSplits != null) {
-            this.feedLogFile = FeedUtils
-                    .getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
-                            feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager())
-                    .getFile();
-
-        }
     }
 
     @Override
     public AInputStream getInputStream() throws IOException {
-        FeedLogManager feedLogManager = null;
-        if (isFeed && feedLogFile != null) {
-            feedLogManager = new FeedLogManager(feedLogFile);
-        }
-        return new LocalFileSystemInputStream(path, expression, feedLogManager, isFeed);
+        LocalFileSystemInputStream stream = new LocalFileSystemInputStream(path, expression, isFeed);
+        stream.setFeedLogManager(feedLogManager);
+        stream.configure(configuration);
+        return stream;
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
+        this.feedLogManager = feedLogManager;
     }
 }

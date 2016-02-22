@@ -30,7 +30,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.api.IInputStreamProvider;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.stream.AInputStream;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.TweetGenerator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -80,8 +82,11 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
             return true;
         }
 
-        public void start() {
-            executorService.execute(dataProvider);
+        public synchronized void start() {
+            if (!started) {
+                executorService.execute(dataProvider);
+                started = true;
+            }
         }
 
         @Override
@@ -93,7 +98,6 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
         public int read() throws IOException {
             if (!started) {
                 start();
-                started = true;
             }
             return in.read();
         }
@@ -105,6 +109,18 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
                 started = true;
             }
             return in.read(b, off, len);
+        }
+
+        @Override
+        public void configure(Map<String, String> configuration) {
+        }
+
+        @Override
+        public void setFeedLogManager(FeedLogManager logManager) {
+        }
+
+        @Override
+        public void setController(AbstractFeedDataFlowController controller) {
         }
     }
 
@@ -170,7 +186,7 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
                     break;
                 } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Exception in adaptor " + e.getMessage());
+                        LOGGER.warning("Exception in adapter " + e.getMessage());
                     }
                 }
             }
@@ -180,5 +196,13 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
             continuePush = false;
         }
 
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration) {
+    }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager feedLogManager) {
     }
 }

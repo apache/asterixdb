@@ -17,6 +17,13 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+<test-group name="library-parsers">
+    <test-case FilePath="library-parsers">
+      <compilation-unit name="record-parser">
+        <output-dir compare="Text">record-parser</output-dir>
+      </compilation-unit>
+    </test-case>
+    </test-group>
   <test-group name="library-functions">
     <test-case FilePath="library-functions">
       <compilation-unit name="mysum">

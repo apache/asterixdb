@@ -64,6 +64,9 @@ import org.json.JSONObject;
 
 public class TestExecutor {
 
+    /*
+     * Static variables
+     */
     protected static final Logger LOGGER = Logger.getLogger(TestExecutor.class.getName());
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
@@ -71,8 +74,12 @@ public class TestExecutor {
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
 
+    /*
+     * Instance members
+     */
     private String host;
     private int port;
+    private ITestLibrarian librarian;
 
     public TestExecutor() {
         host = "127.0.0.1";
@@ -82,6 +89,10 @@ public class TestExecutor {
     public TestExecutor(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public void setLibrarian(ITestLibrarian librarian) {
+        this.librarian = librarian;
     }
 
     /**
@@ -127,11 +138,9 @@ public class TestExecutor {
                 ++num;
             }
             lineActual = readerActual.readLine();
-            // Assert.assertEquals(null, lineActual);
             if (lineActual != null) {
                 throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
             }
-            // actualFile.delete();
         } finally {
             readerExpected.close();
             readerActual.close();
@@ -581,7 +590,8 @@ public class TestExecutor {
                             }
                             break;
                         case "sleep":
-                            Thread.sleep(Long.parseLong(statement.trim()));
+                            String[] lines = statement.split("\n");
+                            Thread.sleep(Long.parseLong(lines[lines.length - 1].trim()));
                             break;
                         case "errddl": // a ddlquery that expects error
                             try {
@@ -641,7 +651,7 @@ public class TestExecutor {
                         case "server": // (start <test server name> <port>
                                        // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                             try {
-                                String[] lines = statement.trim().split("\n");
+                                lines = statement.trim().split("\n");
                                 String[] command = lines[lines.length - 1].trim().split(" ");
                                 if (command.length < 2) {
                                     throw new Exception("invalid server command format. expected format ="
@@ -684,6 +694,36 @@ public class TestExecutor {
                                 }
                             } catch (Exception e) {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
+                            break;
+                        case "lib": // expected format <dataverse-name> <library-name>
+                                    // <library-directory>
+                            // TODO: make this case work well with entity names containing spaces by
+                            // looking for \"
+                            lines = statement.split("\n");
+                            String lastLine = lines[lines.length - 1];
+                            String[] command = lastLine.trim().split(" ");
+                            if (command.length < 3) {
+                                throw new Exception("invalid library format");
+                            }
+                            String dataverse = command[1];
+                            String library = command[2];
+                            switch (command[0]) {
+                                case "install":
+                                    if (command.length != 4) {
+                                        throw new Exception("invalid library format");
+                                    }
+                                    String libPath = command[3];
+                                    librarian.install(dataverse, library, libPath);
+                                    break;
+                                case "uninstall":
+                                    if (command.length != 3) {
+                                        throw new Exception("invalid library format");
+                                    }
+                                    librarian.uninstall(dataverse, library);
+                                    break;
+                                default:
+                                    throw new Exception("invalid library format");
                             }
                             break;
                         default:
