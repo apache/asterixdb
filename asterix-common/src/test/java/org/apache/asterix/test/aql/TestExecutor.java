@@ -31,6 +31,8 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +41,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
+import org.apache.asterix.test.server.ITestServer;
+import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
@@ -65,6 +69,7 @@ public class TestExecutor {
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
     private static Method managixExecuteMethod = null;
+    private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
 
     private String host;
     private int port;
@@ -237,7 +242,7 @@ public class TestExecutor {
             throws Exception {
         HttpMethodBase method = null;
         if (str.length() + url.length() < MAX_URL_LENGTH) {
-            //Use GET for small-ish queries
+            // Use GET for small-ish queries
             method = new GetMethod(url);
             NameValuePair[] parameters = new NameValuePair[params.size() + 1];
             parameters[0] = new NameValuePair("query", str);
@@ -247,13 +252,13 @@ public class TestExecutor {
             }
             method.setQueryString(parameters);
         } else {
-            //Use POST for bigger ones to avoid 413 FULL_HEAD
+            // Use POST for bigger ones to avoid 413 FULL_HEAD
             // QQQ POST API doesn't allow encoding additional parameters
             method = new PostMethod(url);
             ((PostMethod) method).setRequestEntity(new StringRequestEntity(str));
         }
 
-        //Set accepted output response type
+        // Set accepted output response type
         method.setRequestHeader("Accept", fmt.mimeType());
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -264,7 +269,7 @@ public class TestExecutor {
     public InputStream executeClusterStateQuery(OutputFormat fmt, String url) throws Exception {
         HttpMethodBase method = new GetMethod(url);
 
-        //Set accepted output response type
+        // Set accepted output response type
         method.setRequestHeader("Accept", fmt.mimeType());
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -463,7 +468,7 @@ public class TestExecutor {
                             }
                             break;
                         case "update":
-                            //isDmlRecoveryTest: set IP address
+                            // isDmlRecoveryTest: set IP address
                             if (isDmlRecoveryTest && statement.contains("nc1://")) {
                                 statement = statement.replaceAll("nc1://",
                                         "127.0.0.1://../../../../../../asterix-app/");
@@ -531,7 +536,7 @@ public class TestExecutor {
                         case "mgx":
                             executeManagixCommand(statement);
                             break;
-                        case "txnqbc": //qbc represents query before crash
+                        case "txnqbc": // qbc represents query before crash
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
                                     "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
                             qbcFile = new File(actualPath + File.separator
@@ -540,7 +545,7 @@ public class TestExecutor {
                             qbcFile.getParentFile().mkdirs();
                             writeOutputToFile(qbcFile, resultStream);
                             break;
-                        case "txnqar": //qar represents query after recovery
+                        case "txnqar": // qar represents query after recovery
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
                                     "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
                             qarFile = new File(actualPath + File.separator
@@ -550,11 +555,11 @@ public class TestExecutor {
                             writeOutputToFile(qarFile, resultStream);
                             runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
                             break;
-                        case "txneu": //eu represents erroneous update
+                        case "txneu": // eu represents erroneous update
                             try {
                                 executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
                             } catch (Exception e) {
-                                //An exception is expected.
+                                // An exception is expected.
                                 failed = true;
                                 e.printStackTrace();
                             }
@@ -591,7 +596,7 @@ public class TestExecutor {
                             }
                             System.err.println("...but that was expected.");
                             break;
-                        case "vscript": //a script that will be executed on a vagrant virtual node
+                        case "vscript": // a script that will be executed on a vagrant virtual node
                             try {
                                 String[] command = statement.trim().split(" ");
                                 if (command.length != 2) {
@@ -607,7 +612,7 @@ public class TestExecutor {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
-                        case "vmgx": //a managix command that will be executed on vagrant cc node
+                        case "vmgx": // a managix command that will be executed on vagrant cc node
                             try {
                                 String output = executeVagrantManagix(pb, statement);
                                 if (output.contains("ERROR")) {
@@ -617,7 +622,7 @@ public class TestExecutor {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
-                        case "cstate": //cluster state query
+                        case "cstate": // cluster state query
                             try {
                                 fmt = OutputFormat.forCompilationUnit(cUnit);
                                 resultStream = executeClusterStateQuery(fmt,
@@ -629,6 +634,54 @@ public class TestExecutor {
                                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
                                         actualResultFile);
                                 queryCount++;
+                            } catch (Exception e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
+                            break;
+                        case "server": // (start <test server name> <port>
+                                       // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                            try {
+                                String[] lines = statement.trim().split("\n");
+                                String[] command = lines[lines.length - 1].trim().split(" ");
+                                if (command.length < 2) {
+                                    throw new Exception("invalid server command format. expected format ="
+                                            + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]"
+                                            + "...|stop (<port>|all))");
+                                }
+                                String action = command[0];
+                                if (action.equals("start")) {
+                                    if (command.length < 3) {
+                                        throw new Exception("invalid server start command. expected format ="
+                                                + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]...");
+                                    }
+                                    String name = command[1];
+                                    Integer port = new Integer(command[2]);
+                                    if (runningTestServers.containsKey(port)) {
+                                        throw new Exception("server with port " + port + " is already running");
+                                    }
+                                    ITestServer server = TestServerProvider.createTestServer(name, port);
+                                    server.configure(Arrays.copyOfRange(command, 3, command.length));
+                                    server.start();
+                                    runningTestServers.put(port, server);
+                                } else if (action.equals("stop")) {
+                                    String target = command[1];
+                                    if (target.equals("all")) {
+                                        for (ITestServer server : runningTestServers.values()) {
+                                            server.stop();
+                                        }
+                                        runningTestServers.clear();
+                                    } else {
+                                        Integer port = new Integer(command[1]);
+                                        ITestServer server = runningTestServers.get(port);
+                                        if (server == null) {
+                                            throw new Exception("no server is listening to port " + port);
+                                        }
+                                        server.stop();
+                                        runningTestServers.remove(port);
+                                    }
+                                } else {
+                                    throw new Exception("unknown server action");
+                                }
                             } catch (Exception e) {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
