@@ -178,6 +178,7 @@ import org.apache.asterix.runtime.evaluators.functions.CreateLineDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateMBRDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreatePointDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CreateQueryUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DeepEqualityDescriptor;
@@ -560,6 +561,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DeepEqualityDescriptor.FACTORY);
 
         temp.add(CreateUUIDDescriptor.FACTORY);
+        temp.add(CreateQueryUIDDescriptor.FACTORY);
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
         temp.add(CreateLineDescriptor.FACTORY);

@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ABinaryTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ABooleanTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ADateTimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ADateTypeComputer;
@@ -508,8 +509,8 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
 
-    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
@@ -610,6 +611,8 @@ public class AsterixBuiltinFunctions {
 
     public final static FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-uuid", 0);
+    public final static FunctionIdentifier CREATE_QUERY_UID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-query-uid", 0);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -769,6 +772,7 @@ public class AsterixBuiltinFunctions {
         addFunction(CREATE_POLYGON, OptionalAPolygonTypeComputer.INSTANCE, true);
         addFunction(CREATE_RECTANGLE, OptionalARectangleTypeComputer.INSTANCE, true);
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
+        addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
 
         addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE, true);
@@ -1306,9 +1310,10 @@ public class AsterixBuiltinFunctions {
 
         IFunctionInfo finfo = getAsterixFunctionInfo(fi);
         IFunctionInfo serializableFinfo = aggregateToSerializableAggregate.get(finfo);
-        if (serializableFinfo == null)
+        if (serializableFinfo == null) {
             throw new IllegalStateException(
                     "no serializable implementation for aggregate function " + serializableFinfo);
+        }
 
         IFunctionInfo fiLocal = aggregateToLocalAggregate.get(serializableFinfo);
         IFunctionInfo fiGlobal = aggregateToGlobalAggregate.get(serializableFinfo);

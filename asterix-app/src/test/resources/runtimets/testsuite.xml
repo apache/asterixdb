@@ -6756,6 +6756,11 @@
                 <output-dir compare="Text">length</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="binary">
+            <compilation-unit name="query_id">
+                <output-dir compare="Text">query_id</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="temp-dataset">
         <test-case FilePath="temp-dataset">
