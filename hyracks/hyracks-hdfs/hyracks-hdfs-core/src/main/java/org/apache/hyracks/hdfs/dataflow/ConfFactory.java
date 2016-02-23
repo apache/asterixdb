@@ -25,10 +25,8 @@ import java.io.DataOutputStream;
 import java.io.Serializable;
 
 import org.apache.hadoop.mapred.JobConf;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-@SuppressWarnings("deprecation")
 public class ConfFactory implements Serializable {
     private static final long serialVersionUID = 1L;
     private byte[] confBytes;
