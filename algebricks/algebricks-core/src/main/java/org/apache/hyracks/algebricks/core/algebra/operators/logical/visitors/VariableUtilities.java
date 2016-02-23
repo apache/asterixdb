@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -38,9 +39,9 @@ public class VariableUtilities {
      * Adds the used variables in the logical operator to the list of used variables
      *
      * @param op
-     *          The target operator
+     *            The target operator
      * @param usedVariables
-     *          A list to be filled with variables used in the logical operator op.
+     *            A list to be filled with variables used in the logical operator op.
      * @throws AlgebricksException
      */
     public static void getUsedVariables(ILogicalOperator op, Collection<LogicalVariable> usedVariables)
@@ -51,10 +52,11 @@ public class VariableUtilities {
 
     /**
      * Adds the variables produced in the logical operator in the list of produced variables
+     *
      * @param op
-     *          The target operator
+     *            The target operator
      * @param producedVariables
-     *          The variables produced in the logical operator
+     *            The variables produced in the logical operator
      * @throws AlgebricksException
      */
     public static void getProducedVariables(ILogicalOperator op, Collection<LogicalVariable> producedVariables)
@@ -65,10 +67,11 @@ public class VariableUtilities {
 
     /**
      * Adds the variables that are live after the execution of this operator to the list of schema variables.
+     *
      * @param op
-     *          The target logical operator
+     *            The target logical operator
      * @param schemaVariables
-     *          The list of live variables. The output of the operator and the propagated outputs of its children
+     *            The list of live variables. The output of the operator and the propagated outputs of its children
      * @throws AlgebricksException
      */
     public static void getLiveVariables(ILogicalOperator op, Collection<LogicalVariable> schemaVariables)
@@ -129,6 +132,16 @@ public class VariableUtilities {
             substituteVariablesInDescendantsAndSelf(childOp.getValue(), v1, v2, ctx);
         }
         substituteVariables(op, v1, v2, true, ctx);
+    }
+
+    public static void substituteVariablesInDescendantsAndSelf(ILogicalOperator op,
+            Map<LogicalVariable, LogicalVariable> varMap, ITypingContext ctx) throws AlgebricksException {
+        for (Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
+            for (Mutable<ILogicalOperator> childOp : op.getInputs()) {
+                substituteVariablesInDescendantsAndSelf(childOp.getValue(), entry.getKey(), entry.getValue(), ctx);
+            }
+            substituteVariables(op, entry.getKey(), entry.getValue(), true, ctx);
+        }
     }
 
     public static void substituteVariables(ILogicalOperator op, LogicalVariable v1, LogicalVariable v2,

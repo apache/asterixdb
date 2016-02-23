@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.typing;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
@@ -25,13 +26,18 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public interface ITypingContext {
-    public abstract IVariableTypeEnvironment getOutputTypeEnvironment(ILogicalOperator op);
+    public IVariableTypeEnvironment getOutputTypeEnvironment(ILogicalOperator op);
 
-    public abstract void setOutputTypeEnvironment(ILogicalOperator op, IVariableTypeEnvironment env);
+    public void setOutputTypeEnvironment(ILogicalOperator op, IVariableTypeEnvironment env);
 
-    public abstract IExpressionTypeComputer getExpressionTypeComputer();
+    public IExpressionTypeComputer getExpressionTypeComputer();
 
-    public abstract INullableTypeComputer getNullableTypeComputer();
+    public INullableTypeComputer getNullableTypeComputer();
 
-    public abstract IMetadataProvider<?, ?> getMetadataProvider();
+    public IMetadataProvider<?, ?> getMetadataProvider();
+
+    public void invalidateTypeEnvironmentForOperator(ILogicalOperator op);
+
+    public void computeAndSetTypeEnvironmentForOperator(ILogicalOperator op) throws AlgebricksException;
+
 }

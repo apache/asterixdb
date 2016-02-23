@@ -26,7 +26,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -40,13 +40,13 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVis
 
 public class LogicalExpressionDeepCopyWithNewVariablesVisitor
         implements ILogicalExpressionVisitor<ILogicalExpression, Void> {
-    private final IOptimizationContext context;
+    private final IVariableContext varContext;
     private final Map<LogicalVariable, LogicalVariable> inVarMapping;
     private final Map<LogicalVariable, LogicalVariable> outVarMapping;
 
-    public LogicalExpressionDeepCopyWithNewVariablesVisitor(IOptimizationContext context,
+    public LogicalExpressionDeepCopyWithNewVariablesVisitor(IVariableContext varContext,
             Map<LogicalVariable, LogicalVariable> inVarMapping, Map<LogicalVariable, LogicalVariable> variableMapping) {
-        this.context = context;
+        this.varContext = varContext;
         this.inVarMapping = inVarMapping;
         this.outVarMapping = variableMapping;
     }
@@ -147,7 +147,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
         }
         LogicalVariable varCopy = outVarMapping.get(var);
         if (varCopy == null) {
-            varCopy = context.newVar();
+            varCopy = varContext.newVar();
             outVarMapping.put(var, varCopy);
         }
         return new VariableReferenceExpression(varCopy);

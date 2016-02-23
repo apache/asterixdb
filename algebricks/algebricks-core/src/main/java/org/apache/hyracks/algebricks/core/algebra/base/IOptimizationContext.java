@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.base;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
@@ -33,13 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
-public interface IOptimizationContext extends ITypingContext {
-
-    public abstract int getVarCounter();
-
-    public abstract void setVarCounter(int varCounter);
-
-    public abstract LogicalVariable newVar();
+public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     @Override
     public abstract IMetadataProvider<?, ?> getMetadataProvider();
@@ -86,10 +79,6 @@ public interface IOptimizationContext extends ITypingContext {
     public abstract IMergeAggregationExpressionFactory getMergeAggregationExpressionFactory();
 
     public abstract PhysicalOptimizationConfig getPhysicalOptimizationConfig();
-
-    public abstract void invalidateTypeEnvironmentForOperator(ILogicalOperator op);
-
-    public abstract void computeAndSetTypeEnvironmentForOperator(ILogicalOperator op) throws AlgebricksException;
 
     public abstract void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
 

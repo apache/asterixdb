@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPre
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     private int varCounter;
@@ -118,7 +119,6 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public IMetadataProvider getMetadataProvider() {
         return metadataProvider;
     }

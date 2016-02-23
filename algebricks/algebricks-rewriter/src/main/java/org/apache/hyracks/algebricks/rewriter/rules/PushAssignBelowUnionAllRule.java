@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -66,7 +65,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -127,11 +127,10 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
 
     private AssignOperator createAssignBelowUnionAllBranch(UnionAllOperator unionOp, int inputIndex,
             AssignOperator originalAssignOp, Set<LogicalVariable> assignUsedVars, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AssignOperator newAssignOp = cloneAssignOperator(originalAssignOp, context);
         newAssignOp.getInputs()
                 .add(new MutableObject<ILogicalOperator>(unionOp.getInputs().get(inputIndex).getValue()));
-        context.computeAndSetTypeEnvironmentForOperator(newAssignOp);
         unionOp.getInputs().get(inputIndex).setValue(newAssignOp);
         int numVarMappings = unionOp.getVariableMappings().size();
         for (int i = 0; i < numVarMappings; i++) {
@@ -146,6 +145,7 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
                 VariableUtilities.substituteVariables(newAssignOp, varMapping.third, replacementVar, context);
             }
         }
+        context.computeAndSetTypeEnvironmentForOperator(newAssignOp);
         return newAssignOp;
     }
 
@@ -159,8 +159,8 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
         int numVars = assignOp.getVariables().size();
         for (int i = 0; i < numVars; i++) {
             vars.add(context.newVar());
-            exprs.add(new MutableObject<ILogicalExpression>(assignOp.getExpressions().get(i).getValue()
-                    .cloneExpression()));
+            exprs.add(new MutableObject<ILogicalExpression>(
+                    assignOp.getExpressions().get(i).getValue().cloneExpression()));
         }
         AssignOperator assignCloneOp = new AssignOperator(vars, exprs);
         assignCloneOp.setExecutionMode(assignOp.getExecutionMode());

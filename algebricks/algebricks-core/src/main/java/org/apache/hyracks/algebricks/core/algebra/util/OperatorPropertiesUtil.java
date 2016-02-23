@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -39,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
 public class OperatorPropertiesUtil {
@@ -300,5 +300,10 @@ public class OperatorPropertiesUtil {
             return ((ConstantExpression) cond).getValue().isTrue();
         }
         return false;
+    }
+
+    public static boolean isCardinalityOne(ILogicalOperator operator) throws AlgebricksException {
+        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
+        return operator.accept(visitor, null) == 1L;
     }
 }

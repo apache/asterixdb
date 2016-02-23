@@ -406,8 +406,8 @@ public class SubstituteVariableVisitor
     }
 
     @Override
-    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
+    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op,
+            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
         op.getPayloadExpression().getValue().substituteVar(pair.first, pair.second);
         for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
             e.getValue().substituteVar(pair.first, pair.second);

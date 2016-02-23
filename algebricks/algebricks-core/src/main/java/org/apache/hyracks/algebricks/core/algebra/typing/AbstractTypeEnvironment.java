@@ -42,7 +42,12 @@ public abstract class AbstractTypeEnvironment implements IVariableTypeEnvironmen
 
     @Override
     public Object getType(ILogicalExpression expr) throws AlgebricksException {
-        return expressionTypeComputer.getType(expr, metadataProvider, this);
+        try {
+            return expressionTypeComputer.getType(expr, metadataProvider, this);
+        } catch (Exception e) {
+            throw new AlgebricksException("Could not resolve type for " + expr.toString() + ","
+                    + "please check whether the used variables has been defined!", e);
+        }
     }
 
     @Override

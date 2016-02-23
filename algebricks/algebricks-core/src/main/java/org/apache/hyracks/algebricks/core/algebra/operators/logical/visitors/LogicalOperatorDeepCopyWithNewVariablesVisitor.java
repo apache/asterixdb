@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -64,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
@@ -74,7 +76,8 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor
  */
 public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         implements IQueryOperatorVisitor<ILogicalOperator, ILogicalOperator> {
-    private final IOptimizationContext context;
+    private final ITypingContext typeContext;
+    private final IVariableContext varContext;
     private final LogicalExpressionDeepCopyWithNewVariablesVisitor exprDeepCopyVisitor;
 
     // Key: Variable in the original plan. Value: New variable replacing the
@@ -88,11 +91,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
      * @param IOptimizationContext,
      *            the optimization context
      */
-    public LogicalOperatorDeepCopyWithNewVariablesVisitor(IOptimizationContext context) {
-        this.context = context;
+    public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext) {
+        this.varContext = varContext;
+        this.typeContext = typeContext;
         this.inputVarToOutputVarMapping = new HashMap<>();
         this.outputVarToInputVarMapping = new HashMap<>();
-        this.exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(context,
+        this.exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(varContext,
                 outputVarToInputVarMapping, inputVarToOutputVarMapping);
     }
 
@@ -104,12 +108,13 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
      *            Those variables are replaced by their corresponding value in
      *            the map in the copied plan.
      */
-    public LogicalOperatorDeepCopyWithNewVariablesVisitor(IOptimizationContext context,
+    public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext,
             Map<LogicalVariable, LogicalVariable> inVarMapping) {
-        this.context = context;
+        this.varContext = varContext;
+        this.typeContext = typeContext;
         this.inputVarToOutputVarMapping = inVarMapping;
         this.outputVarToInputVarMapping = new HashMap<>();
-        exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(context, inVarMapping,
+        exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(varContext, inVarMapping,
                 inputVarToOutputVarMapping);
     }
 
@@ -123,8 +128,13 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     private ILogicalOperator deepCopy(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
+        if (op == null) {
+            return null;
+        }
         ILogicalOperator opCopy = op.accept(this, arg);
-        OperatorManipulationUtil.computeTypeEnvironmentBottomUp(opCopy, context);
+        if (typeContext != null) {
+            OperatorManipulationUtil.computeTypeEnvironmentBottomUp(opCopy, typeContext);
+        }
         return opCopy;
     }
 
@@ -198,7 +208,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         }
         LogicalVariable varCopy = inputVarToOutputVarMapping.get(var);
         if (varCopy == null) {
-            varCopy = context.newVar();
+            varCopy = varContext.newVar();
             inputVarToOutputVarMapping.put(var, varCopy);
         }
         return varCopy;

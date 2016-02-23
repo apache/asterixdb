@@ -129,8 +129,9 @@ public class OperatorManipulationUtil {
                     AbstractLogicalOperator inputOp = (AbstractLogicalOperator) i.getValue();
                     switch (inputOp.getExecutionMode()) {
                         case PARTITIONED: {
-                            if (forceUnpartitioned)
+                            if (forceUnpartitioned) {
                                 break;
+                            }
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
                             change = true;
                             exit = true;
@@ -216,8 +217,9 @@ public class OperatorManipulationUtil {
     public static ILogicalOperator bottomUpCopyOperators(ILogicalOperator op) throws AlgebricksException {
         ILogicalOperator newOp = deepCopy(op);
         newOp.getInputs().clear();
-        for (Mutable<ILogicalOperator> child : op.getInputs())
+        for (Mutable<ILogicalOperator> child : op.getInputs()) {
             newOp.getInputs().add(new MutableObject<ILogicalOperator>(bottomUpCopyOperators(child.getValue())));
+        }
         return newOp;
     }
 
@@ -241,7 +243,7 @@ public class OperatorManipulationUtil {
      *            optimization context.
      * @throws AlgebricksException
      */
-    public static void computeTypeEnvironmentBottomUp(ILogicalOperator op, IOptimizationContext context)
+    public static void computeTypeEnvironmentBottomUp(ILogicalOperator op, ITypingContext context)
             throws AlgebricksException {
         for (Mutable<ILogicalOperator> children : op.getInputs()) {
             computeTypeEnvironmentBottomUp(children.getValue(), context);

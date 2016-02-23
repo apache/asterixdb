@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -34,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -59,7 +59,8 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (!invoked) {
             rootRef = opRef;
             invoked = true;
@@ -104,14 +105,14 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
                 if (rootRefs.size() != 1) {
                     continue;
                 }
-                Set<Mutable<ILogicalOperator>> ntsSet = new ListSet<Mutable<ILogicalOperator>>();
-                findNts(rootRefs.get(0), ntsSet);
 
-                /** Replaces nts with the input operator of the subplan. */
-                for (Mutable<ILogicalOperator> nts : ntsSet) {
-                    nts.setValue(subplanInputOperator);
-                }
-                subplanRef.setValue(rootRefs.get(0).getValue());
+                // Replaces all Nts' in the nested plan with the Subplan input operator or its deep copy.
+                ILogicalOperator topOperator = rootRefs.get(0).getValue();
+                ReplaceNtsWithSubplanInputOperatorVisitor visitor = new ReplaceNtsWithSubplanInputOperatorVisitor(
+                        context, subplan);
+                ILogicalOperator newTopOperator = topOperator.accept(visitor, null);
+                subplanRef.setValue(newTopOperator);
+                OperatorManipulationUtil.computeTypeEnvironmentBottomUp(newTopOperator, context);
                 changed = true;
             } else {
                 continue;
@@ -140,7 +141,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
     }
 
     /**
-     * Recursively adding variables which has cardinality one and in int the input free variable set.
+     * Recursively adding variables which has cardinality one into the input free variable set.
      *
      * @param opRef
      *            , the current operator reference.
@@ -155,22 +156,27 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
      */
     private void isCardinalityOne(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> freeVars,
             Set<LogicalVariable> varsWithCardinalityOne, Set<LogicalVariable> varsLiveAtUnnestAndJoin)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AbstractLogicalOperator operator = (AbstractLogicalOperator) opRef.getValue();
-        List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getProducedVariables(operator, producedVars);
-        if (operator.getOperatorTag() == LogicalOperatorTag.UNNEST
-                || operator.getOperatorTag() == LogicalOperatorTag.INNERJOIN
-                || operator.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
-            VariableUtilities.getLiveVariables(operator, varsLiveAtUnnestAndJoin);
-        }
-        if (operator.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
-            for (LogicalVariable producedVar : producedVars) {
-                if (freeVars.contains(producedVar)) {
-                    varsWithCardinalityOne.add(producedVar);
+        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getLiveVariables(operator, liveVars);
+
+        if (OperatorPropertiesUtil.isCardinalityOne(operator)) {
+            for (LogicalVariable liveVar : liveVars) {
+                if (freeVars.contains(liveVar)) {
+                    varsWithCardinalityOne.add(liveVar);
                 }
             }
+        } else {
+            // Operators with the following tags could still have have cardinality one,
+            // hence they are in this "else" branch.
+            if (operator.getOperatorTag() == LogicalOperatorTag.UNNEST
+                    || operator.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                    || operator.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+                VariableUtilities.getLiveVariables(operator, varsLiveAtUnnestAndJoin);
+            }
         }
+
         if (varsWithCardinalityOne.size() == freeVars.size()) {
             return;
         }
@@ -179,25 +185,4 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
         }
     }
 
-    /**
-     * Find the NestedTupleSource operator in the direct/undirect input operators of opRef.
-     *
-     * @param opRef
-     *            , the current operator reference.
-     * @param ntsSet
-     *            , the set NestedTupleSource operator references.
-     */
-    private void findNts(Mutable<ILogicalOperator> opRef, Set<Mutable<ILogicalOperator>> ntsSet) {
-        int childSize = opRef.getValue().getInputs().size();
-        if (childSize == 0) {
-            AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-            if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                ntsSet.add(opRef);
-            }
-            return;
-        }
-        for (Mutable<ILogicalOperator> childRef : opRef.getValue().getInputs()) {
-            findNts(childRef, ntsSet);
-        }
-    }
 }
