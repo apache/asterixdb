@@ -9,6 +9,7 @@ ittest
 asterix_logs
 build
 bin
+asterix-app/src/test/resources/externallib/
 asterix-app/rttest/
 asterix-app/mdtest/
 asterix-app/opttest/
