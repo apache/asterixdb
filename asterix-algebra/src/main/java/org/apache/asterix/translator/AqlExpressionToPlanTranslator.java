@@ -19,6 +19,7 @@
 package org.apache.asterix.translator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
@@ -41,17 +42,17 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 
 /**
@@ -133,7 +134,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             result = produceFlworPlan(noFlworClause, isTop, resOpRef, rRes.second);
         }
         if (!isTop) {
-            context.existSubplan();
+            context.exitSubplan();
         }
 
         return result;
@@ -163,22 +164,53 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(UnionExpr unionExpr, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        //Translate the AQL union into an assign [var] <- [function-call: asterix:union, Args:[..]]
-        //The rule "IntroduceUnionRule" will translates this assign operator into the UnionAll operator.
-        Mutable<ILogicalOperator> ts = tupSource;
-        LogicalVariable assignedVar = context.newVar();
-        List<Mutable<ILogicalExpression>> inputVars = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalOperator>> inputOpRefsToUnion = new ArrayList<>();
+        List<LogicalVariable> vars = new ArrayList<>();
         for (Expression e : unionExpr.getExprs()) {
-            Pair<ILogicalOperator, LogicalVariable> op_var = e.accept(this, ts);
-            ts = new MutableObject<ILogicalOperator>(op_var.first);
-            VariableReferenceExpression var = new VariableReferenceExpression(op_var.second);
-            inputVars.add(new MutableObject<ILogicalExpression>(var));
+            // Visits the expression of one branch.
+            Pair<ILogicalOperator, LogicalVariable> opAndVar = e.accept(this, tupSource);
+
+            // Creates an unnest operator.
+            LogicalVariable unnestVar = context.newVar();
+            List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(opAndVar.second)));
+            UnnestOperator unnestOp = new UnnestOperator(unnestVar,
+                    new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), args)));
+            unnestOp.getInputs().add(new MutableObject<ILogicalOperator>(opAndVar.first));
+            inputOpRefsToUnion.add(new MutableObject<ILogicalOperator>(unnestOp));
+            vars.add(unnestVar);
         }
-        AbstractFunctionCallExpression union = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.UNION), inputVars);
-        AssignOperator a = new AssignOperator(assignedVar, new MutableObject<ILogicalExpression>(union));
-        a.getInputs().add(ts);
-        return new Pair<ILogicalOperator, LogicalVariable>(a, assignedVar);
+
+        // Creates a tree of binary union-all operators.
+        UnionAllOperator topUnionAllOp = null;
+        LogicalVariable topUnionVar = null;
+        Iterator<Mutable<ILogicalOperator>> inputOpRefIterator = inputOpRefsToUnion.iterator();
+        Mutable<ILogicalOperator> leftInputBranch = inputOpRefIterator.next();
+        Iterator<LogicalVariable> inputVarIterator = vars.iterator();
+        LogicalVariable leftInputVar = inputVarIterator.next();
+
+        while (inputOpRefIterator.hasNext()) {
+            // Generates the variable triple <leftVar, rightVar, outputVar> .
+            topUnionVar = context.newVar();
+            Triple<LogicalVariable, LogicalVariable, LogicalVariable> varTriple = new Triple<>(leftInputVar,
+                    inputVarIterator.next(), topUnionVar);
+            List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varTriples = new ArrayList<>();
+            varTriples.add(varTriple);
+
+            // Creates a binary union-all operator.
+            topUnionAllOp = new UnionAllOperator(varTriples);
+            topUnionAllOp.getInputs().add(leftInputBranch);
+            topUnionAllOp.getInputs().add(inputOpRefIterator.next());
+
+            // Re-assigns leftInputBranch and leftInputVar.
+            leftInputBranch = new MutableObject<ILogicalOperator>(topUnionAllOp);
+            leftInputVar = topUnionVar;
+        }
+
+        Pair<ILogicalOperator, LogicalVariable> result = aggListifyForSubquery(topUnionVar,
+                new MutableObject<ILogicalOperator>(topUnionAllOp), false);
+        return result;
     }
 
     private Pair<ILogicalOperator, LogicalVariable> produceFlworPlan(boolean noForClause, boolean isTop,

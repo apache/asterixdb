@@ -48,7 +48,6 @@ import org.apache.asterix.optimizer.rules.IntroduceRandomPartitioningFeedComputa
 import org.apache.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectAssignRule;
 import org.apache.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import org.apache.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
-import org.apache.asterix.optimizer.rules.IntroduceUnionRule;
 import org.apache.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
 import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
 import org.apache.asterix.optimizer.rules.NestGroupByRule;
@@ -78,7 +77,6 @@ import org.apache.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRu
 import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
-import org.apache.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
@@ -110,6 +108,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.PushSortDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushUnnestDownThroughUnionRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
+import org.apache.hyracks.algebricks.rewriter.rules.RemoveCartesianProductWithEmptyBranchRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveUnnecessarySortMergeExchange;
@@ -183,7 +182,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new CancelUnnestWithNestedListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
-        condPushDownAndJoinInference.add(new ComplexJoinInferenceRule());
         condPushDownAndJoinInference.add(new DisjunctivePredicateToJoinRule());
         condPushDownAndJoinInference.add(new PushSelectIntoJoinRule());
         condPushDownAndJoinInference.add(new IntroJoinInsideSubplanRule());
@@ -222,7 +220,6 @@ public final class RuleCollections {
         fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new RemoveRedundantSelectRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
-        fieldLoads.add(new ComplexJoinInferenceRule());
         fieldLoads.add(new InlineSubplanInputForNestedTupleSourceRule());
         return fieldLoads;
     }
@@ -244,8 +241,7 @@ public final class RuleCollections {
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVars());
-        //unionRule => PushUnnestDownUnion => RemoveRedundantListifyRule cause these rules are correlated
-        consolidation.add(new IntroduceUnionRule());
+        //PushUnnestDownUnion => RemoveRedundantListifyRule cause these rules are correlated
         consolidation.add(new PushUnnestDownThroughUnionRule());
         consolidation.add(new RemoveRedundantListifyRule());
         return consolidation;
@@ -274,6 +270,7 @@ public final class RuleCollections {
         planCleanupRules.add(new IntroduceDynamicTypeCastRule());
         planCleanupRules.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
+        planCleanupRules.add(new RemoveCartesianProductWithEmptyBranchRule());
         return planCleanupRules;
     }
 

@@ -701,8 +701,6 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-points", 1);
 
-    public final static FunctionIdentifier UNION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "union", 2);
-
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -941,7 +939,6 @@ public class AsterixBuiltinFunctions {
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE, true);
         addPrivateFunction(TYPE_OF, null, true);
-        addPrivateFunction(UNION, UnorderedListConstructorResultType.INSTANCE, true);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
 

@@ -610,13 +610,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Create first copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, newProbeSubTreeVarMap);
+                context, context, newProbeSubTreeVarMap);
         ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root);
         inferTypes(newProbeSubTree, context);
         Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);
         // Create second copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, joinInputSubTreeVarMap);
+                context, context, joinInputSubTreeVarMap);
         ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root);
         inferTypes(joinInputSubTree, context);
         probeSubTree.rootRef.setValue(joinInputSubTree);
@@ -694,7 +694,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Copy the scan subtree in indexSubTree.
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context);
+                context, context);
         ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root);
 
         Map<LogicalVariable, LogicalVariable> copyVarMap = deepCopyVisitor.getInputToOutputVariableMapping();

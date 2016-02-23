@@ -24,9 +24,10 @@ import java.util.Stack;
 
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
+import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
-public final class TranslationContext {
+public final class TranslationContext implements IVariableContext {
 
     private Counter varCounter;
 
@@ -39,8 +40,22 @@ public final class TranslationContext {
         this.varCounter = varCounter;
     }
 
+    @Override
     public int getVarCounter() {
         return varCounter.get();
+    }
+
+    @Override
+    public LogicalVariable newVar() {
+        varCounter.inc();
+        LogicalVariable var = new LogicalVariable(varCounter.get());
+        currentVarMap.put(varCounter.get(), var);
+        return var;
+    }
+
+    @Override
+    public void setVarCounter(int count) {
+        varCounter.set(count);
     }
 
     public boolean isTopFlwor() {
@@ -73,13 +88,6 @@ public final class TranslationContext {
         currentVarMap.put(v.getVar().getId(), var);
     }
 
-    public LogicalVariable newVar() {
-        varCounter.inc();
-        LogicalVariable var = new LogicalVariable(varCounter.get());
-        currentVarMap.put(varCounter.get(), var);
-        return var;
-    }
-
     /**
      * Within a subplan, an unbounded variable can be rebound in
      * the group-by operator. But the rebinding only exists
@@ -96,7 +104,7 @@ public final class TranslationContext {
     /***
      * This method marks that the translation exits a subplan.
      */
-    public void existSubplan() {
+    public void exitSubplan() {
         if (!stack.isEmpty()) {
             currentVarMap = stack.pop();
         }

@@ -1298,6 +1298,22 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="custord">
+            <compilation-unit name="join_q_05">
+                <output-dir compare="Text">join_q_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="custord">
+            <compilation-unit name="join_q_06">
+                <output-dir compare="Text">join_q_06</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="custord">
+            <compilation-unit name="join_q_07">
+                <output-dir compare="Text">join_q_06</output-dir>
+                 <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not resolve type for function-call: asterix:scan-collection, Args:[%0->$$8],please check whether the used variables has been defined!</expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="custord">
             <compilation-unit name="load-test">
                 <output-dir compare="Text">load-test</output-dir>
             </compilation-unit>

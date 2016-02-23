@@ -266,7 +266,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         context.setVarCounter(counter.get());
 
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context);
+                context, context);
 
         translator.addOperatorToMetaScope(new Identifier("#LEFT"), leftInputOp);
         translator.addVariableToMetaScope(new Identifier("$$LEFT"), leftInputVar);

@@ -18,6 +18,7 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue51
+ */
 
 drop  database test if exists;
 create  database test;

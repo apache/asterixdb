@@ -402,7 +402,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             return op;
         }
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context);
+                context, context);
         ILogicalOperator copiedInputOperator = deepCopyVisitor.deepCopy(subplanInputOperator);
 
         // Updates the primary key info in the copied plan segment.
@@ -668,9 +668,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
     private void subtituteVariables(ILogicalOperator op) throws AlgebricksException {
         VariableUtilities.substituteVariables(op, subplanInputVarToCurrentVarMap, context);
-        for (Pair<LogicalVariable, LogicalVariable> pair : varMapIntroducedByRewriting) {
-            VariableUtilities.substituteVariables(op, pair.first, pair.second, context);
-        }
+        VariableUtilities.substituteVariables(op, varMapIntroducedByRewriting, context);
     }
 
     private void updateInputToOutputVarMapping(LogicalVariable oldVar, LogicalVariable newVar, boolean inNts) {

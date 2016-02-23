@@ -2,8 +2,8 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$100(DESC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$100(DESC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$89(DESC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$89(DESC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- EXTERNAL_GROUP_BY[$$119]  |PARTITIONED|
                       {
@@ -19,7 +19,7 @@
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- HYBRID_HASH_JOIN [$$81, $$98][$$115, $$88]  |PARTITIONED|
+                          -- HYBRID_HASH_JOIN [$$94, $$81][$$88, $$115]  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
@@ -66,8 +66,8 @@
                                                     -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- HYBRID_HASH_JOIN [$$89][$$87]  |PARTITIONED|
-                                                            -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
+                                                          -- HYBRID_HASH_JOIN [$$90][$$87]  |PARTITIONED|
+                                                            -- HASH_PARTITION_EXCHANGE [$$90]  |PARTITIONED|
                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                 -- ASSIGN  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

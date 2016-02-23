@@ -177,6 +177,36 @@
                 <output-dir compare="Text">union</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="union2">
+                <output-dir compare="Text">union2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="query-ASTERIXDB-300">
+                <output-dir compare="Text">query-ASTERIXDB-300</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="query-ASTERIXDB-1205">
+                <output-dir compare="Text">query-ASTERIXDB-1205</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="query-ASTERIXDB-1205-2">
+                <output-dir compare="Text">query-ASTERIXDB-1205-2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="query-ASTERIXDB-1205-3">
+                <output-dir compare="Text">query-ASTERIXDB-1205-3</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="union">
+            <compilation-unit name="query-ASTERIXDB-1047">
+                <output-dir compare="Text">query-ASTERIXDB-1047</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-case FilePath="flwor">
         <compilation-unit name="let33">

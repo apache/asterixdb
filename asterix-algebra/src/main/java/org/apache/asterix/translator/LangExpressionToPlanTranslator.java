@@ -21,8 +21,12 @@ package org.apache.asterix.translator;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
@@ -112,6 +116,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -129,6 +134,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
@@ -403,6 +410,7 @@ class LangExpressionToPlanTranslator
         }
         globalPlanRoots.add(new MutableObject<ILogicalOperator>(topOp));
         ILogicalPlan plan = new ALogicalPlanImpl(globalPlanRoots);
+        eliminateSharedOperatorReferenceForPlan(plan);
         return plan;
     }
 
@@ -721,7 +729,7 @@ class LangExpressionToPlanTranslator
         SelectOperator sel1 = new SelectOperator(
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)), false, null);
         sel1.getInputs().add(new MutableObject<ILogicalOperator>(pThen.first));
-        context.existSubplan();
+        context.exitSubplan();
 
         context.enterSubplan();
         Pair<ILogicalOperator, LogicalVariable> pElse = ifexpr.getElseExpr().accept(this, nestedSource);
@@ -730,7 +738,7 @@ class LangExpressionToPlanTranslator
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)));
         SelectOperator sel2 = new SelectOperator(new MutableObject<ILogicalExpression>(notVarCond), false, null);
         sel2.getInputs().add(new MutableObject<ILogicalOperator>(pElse.first));
-        context.existSubplan();
+        context.exitSubplan();
 
         ILogicalPlan p1 = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(sel1));
         sp.getNestedPlans().add(p1);
@@ -1228,7 +1236,7 @@ class LangExpressionToPlanTranslator
         return k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
                 || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION || k == Kind.CALL_EXPRESSION
                 || k == Kind.OP_EXPRESSION || k == Kind.FIELD_ACCESSOR_EXPRESSION || k == Kind.INDEX_ACCESSOR_EXPRESSION
-                || k == Kind.UNARY_EXPRESSION || k == Kind.UNION_EXPRESSION;
+                || k == Kind.UNARY_EXPRESSION;
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {
@@ -1238,11 +1246,12 @@ class LangExpressionToPlanTranslator
     }
 
     protected ILogicalExpression makeUnnestExpression(ILogicalExpression expr) {
+        List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
+        argRefs.add(new MutableObject<ILogicalExpression>(expr));
         switch (expr.getExpressionTag()) {
             case VARIABLE: {
                 return new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
-                        new MutableObject<ILogicalExpression>(expr));
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), argRefs);
             }
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
@@ -1250,8 +1259,7 @@ class LangExpressionToPlanTranslator
                     return expr;
                 } else {
                     return new UnnestingFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
-                            new MutableObject<ILogicalExpression>(expr));
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), argRefs);
                 }
             }
             default: {
@@ -1277,4 +1285,99 @@ class LangExpressionToPlanTranslator
         return false;
     }
 
+    /**
+     * Eliminate shared operator references in a query plan.
+     * Deep copy a new query plan subtree whenever there is a shared operator reference.
+     *
+     * @param plan,
+     *            the query plan.
+     * @throws AsterixException
+     */
+    private void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws AsterixException {
+        for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
+            Set<Mutable<ILogicalOperator>> opRefSet = new HashSet<>();
+            eliminateSharedOperatorReference(opRef, opRefSet);
+        }
+    }
+
+    /**
+     * Eliminate shared operator references in a query plan rooted at <code>currentOpRef.getValue()</code>.
+     * Deep copy a new query plan subtree whenever there is a shared operator reference.
+     *
+     * @param currentOpRef,
+     *            the operator reference to consider
+     * @param opRefSet,
+     *            the set storing seen operator references so far.
+     * @return a mapping that maps old variables to new variables, for the ancestors of
+     *         <code>currentOpRef</code> to replace variables properly.
+     * @throws AsterixException
+     */
+    private Map<LogicalVariable, LogicalVariable> eliminateSharedOperatorReference(
+            Mutable<ILogicalOperator> currentOpRef, Set<Mutable<ILogicalOperator>> opRefSet) throws AsterixException {
+        try {
+            opRefSet.add(currentOpRef);
+            AbstractLogicalOperator currentOperator = (AbstractLogicalOperator) currentOpRef.getValue();
+
+            // Recursively eliminates shared references in nested plans.
+            if (currentOperator.hasNestedPlans()) {
+                // Since a nested plan tree itself can never be shared with another nested plan tree in
+                // another operator, the operation called in the if block does not need to replace
+                // any variables further for <code>currentOpRef.getValue()</code> nor its ancestor.
+                AbstractOperatorWithNestedPlans opWithNestedPlan = (AbstractOperatorWithNestedPlans) currentOperator;
+                for (ILogicalPlan plan : opWithNestedPlan.getNestedPlans()) {
+                    for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+                        Set<Mutable<ILogicalOperator>> nestedOpRefSet = new HashSet<>();
+                        eliminateSharedOperatorReference(rootRef, nestedOpRefSet);
+                    }
+                }
+            }
+
+            int childIndex = 0;
+            Map<LogicalVariable, LogicalVariable> varMap = new HashMap<>();
+            for (Mutable<ILogicalOperator> childRef : currentOperator.getInputs()) {
+                if (opRefSet.contains(childRef)) {
+                    // There is a shared operator reference in the query plan.
+                    // Deep copies the child plan.
+                    LogicalOperatorDeepCopyWithNewVariablesVisitor visitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
+                            context, null);
+                    ILogicalOperator newChild = childRef.getValue().accept(visitor, null);
+                    Map<LogicalVariable, LogicalVariable> cloneVarMap = visitor.getInputToOutputVariableMapping();
+
+                    // Substitute variables according to the deep copy which generates new variables.
+                    VariableUtilities.substituteVariables(currentOperator, cloneVarMap, null);
+                    varMap.putAll(cloneVarMap);
+
+                    // Sets the new child.
+                    childRef = new MutableObject<ILogicalOperator>(newChild);
+                    currentOperator.getInputs().set(childIndex, childRef);
+                }
+
+                // Recursively eliminate shared operator reference for the operator subtree,
+                // even if it is a deep copy of some other one.
+                Map<LogicalVariable, LogicalVariable> childVarMap = eliminateSharedOperatorReference(childRef,
+                        opRefSet);
+                // Substitute variables according to the new subtree.
+                VariableUtilities.substituteVariables(currentOperator, childVarMap, null);
+
+                // Updates mapping like <$a, $b> in varMap to <$a, $c>, where there is a mapping <$b, $c>
+                // in childVarMap.
+                for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
+                    LogicalVariable newVar = childVarMap.get(entry.getValue());
+                    if (newVar != null) {
+                        entry.setValue(newVar);
+                    }
+                }
+                varMap.putAll(childVarMap);
+                ++childIndex;
+            }
+
+            // Only retain live variables for parent operators to substitute variables.
+            Set<LogicalVariable> liveVars = new HashSet<>();
+            VariableUtilities.getLiveVariables(currentOperator, liveVars);
+            varMap.values().retainAll(liveVars);
+            return varMap;
+        } catch (AlgebricksException e) {
+            throw new AsterixException(e);
+        }
+    }
 }

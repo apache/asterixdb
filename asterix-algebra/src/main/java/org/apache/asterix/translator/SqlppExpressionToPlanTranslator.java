@@ -20,9 +20,11 @@ package org.apache.asterix.translator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -72,7 +74,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
@@ -92,6 +93,7 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
  */
 class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator implements ILangExpressionToPlanTranslator,
         ISqlppVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
+    private Stack<Mutable<ILogicalOperator>> uncorrelatedLeftBranchStack = new Stack<Mutable<ILogicalOperator>>();
 
     public SqlppExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter)
             throws AlgebricksException {
@@ -145,7 +147,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         Pair<ILogicalOperator, LogicalVariable> result = produceSelectPlan(selectExpression.isSubquery(), currentOpRef,
                 select.second);
         if (selectExpression.isSubquery()) {
-            context.existSubplan();
+            context.exitSubplan();
         }
         return result;
     }
@@ -230,7 +232,14 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         Mutable<ILogicalOperator> topOpRef = new MutableObject<ILogicalOperator>(unnestOp);
         if (fromTerm.hasCorrelateClauses()) {
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                topOpRef = new MutableObject<ILogicalOperator>(correlateClause.accept(this, topOpRef).first);
+                if (correlateClause.getClauseType() == ClauseType.UNNEST_CLAUSE) {
+                    // Correlation is allowed.
+                    topOpRef = new MutableObject<ILogicalOperator>(correlateClause.accept(this, topOpRef).first);
+                } else {
+                    // Correlation is dis-allowed.
+                    uncorrelatedLeftBranchStack.push(topOpRef);
+                    topOpRef = new MutableObject<ILogicalOperator>(correlateClause.accept(this, tupSource).first);
+                }
             }
         }
         return new Pair<ILogicalOperator, LogicalVariable>(topOpRef.getValue(), fromVar);
@@ -239,12 +248,13 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> inputRef)
             throws AsterixException {
+        Mutable<ILogicalOperator> leftInputRef = uncorrelatedLeftBranchStack.pop();
         if (joinClause.getJoinType() == JoinType.INNER) {
             Pair<ILogicalOperator, LogicalVariable> rightBranch = generateUnnestForBinaryCorrelateRightBranch(
-                    joinClause, new MutableObject<ILogicalOperator>(new EmptyTupleSourceOperator()));
+                    joinClause, inputRef);
             // A join operator with condition TRUE.
             AbstractBinaryJoinOperator joinOperator = new InnerJoinOperator(
-                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), inputRef,
+                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), leftInputRef,
                     new MutableObject<ILogicalOperator>(rightBranch.first));
             Mutable<ILogicalOperator> joinOpRef = new MutableObject<ILogicalOperator>(joinOperator);
 
@@ -260,7 +270,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             SubplanOperator subplanOp = new SubplanOperator();
             Mutable<ILogicalOperator> ntsRef = new MutableObject<ILogicalOperator>(
                     new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplanOp)));
-            subplanOp.getInputs().add(inputRef);
+            subplanOp.getInputs().add(leftInputRef);
 
             // Enters the translation for a subplan.
             context.enterSubplan();
@@ -322,7 +332,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             aggOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTopOp));
 
             // Exits the translation of a subplan.
-            context.existSubplan();
+            context.exitSubplan();
 
             // Sets the nested subplan of the subplan operator.
             ILogicalPlan subplan = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(aggOp));

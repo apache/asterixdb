@@ -1,0 +1,19 @@
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+        -- STABLE_SORT [$$20(ASC), $$21(ASC)]  |UNPARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+            -- UNION_ALL  |UNPARTITIONED|
+              -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                -- ASSIGN  |UNPARTITIONED|
+                  -- STREAM_PROJECT  |UNPARTITIONED|
+                    -- UNNEST  |UNPARTITIONED|
+                      -- ASSIGN  |UNPARTITIONED|
+                        -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+              -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                -- ASSIGN  |UNPARTITIONED|
+                  -- STREAM_PROJECT  |UNPARTITIONED|
+                    -- UNNEST  |UNPARTITIONED|
+                      -- ASSIGN  |UNPARTITIONED|
+                        -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
