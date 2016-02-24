@@ -72,13 +72,16 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
     public void updatePartitionIndexes(short numTokens) {
         partitionIndexLock.writeLock().lock();
-        if (numTokens < minPartitionIndex) {
-            minPartitionIndex = numTokens;
+        try {
+            if (numTokens < minPartitionIndex) {
+                minPartitionIndex = numTokens;
+            }
+            if (numTokens > maxPartitionIndex) {
+                maxPartitionIndex = numTokens;
+            }
+        } finally {
+            partitionIndexLock.writeLock().unlock();
         }
-        if (numTokens > maxPartitionIndex) {
-            maxPartitionIndex = numTokens;
-        }
-        partitionIndexLock.writeLock().unlock();
     }
 
     @Override

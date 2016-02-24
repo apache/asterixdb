@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.hyracks.util.MathUtil;
+
 public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<String> {
     private final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
     private final String LAST_NAMES_FILE = "dist.all.last.cleaned";
@@ -82,7 +84,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
     @Override
     public String next() {
         StringBuilder strBuilder = new StringBuilder();
-        int numWords = Math.abs(rnd.nextInt()) % (docMaxWords - docMinWords + 1) + docMinWords;
+        int numWords = MathUtil.stripSignBit(rnd.nextInt()) % (docMaxWords - docMinWords + 1) + docMinWords;
         for (int i = 0; i < numWords; i++) {
             int ix = ProbabilityHelper.choose(cumulIntRanges, rnd.nextInt());
             strBuilder.append(tokenDict.get(ix));

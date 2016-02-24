@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.MathUtil;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -84,7 +85,7 @@ public class TreeIndexBufferCacheWarmup {
 
 					int remainingLength = pageIds.size();
 					for (int j = 0; j < pageIds.size(); j++) {
-						int index = Math.abs(rnd.nextInt()) % remainingLength;
+						int index = MathUtil.stripSignBit(rnd.nextInt()) % remainingLength;
 						int pageId = remainingPageIds[index];
 
 						// pin & latch then immediately unlatch & unpin

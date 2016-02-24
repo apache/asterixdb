@@ -17,28 +17,42 @@
  * under the License.
  */
 
-package org.apache.hyracks.dataflow.std.util;
+package org.apache.hyracks.util;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.Random;
-
-import org.junit.Test;
-
-public class MathTest {
-
-    @Test
-    public void testLog2() {
-        Random random = new Random(System.currentTimeMillis());
-        for (int i = 0; i < 31; i++) {
-            assertTrue(MathUtil.log2Floor((int) Math.pow(2, i)) == i);
-            for(int x = 0; x < 10; x++){
-                float extra = random.nextFloat();
-                while (extra >= 1.0){
-                    extra = random.nextFloat();
-                }
-                assertTrue(MathUtil.log2Floor((int) Math.pow(2, i + extra)) == i);
-            }
+public class MathUtil {
+    /**
+     * Fast way to calculate the log2(x). Note: x should be >= 1.
+     *
+     * @param n
+     * @return
+     */
+    public static int log2Floor(int n) {
+        assert n >= 1;
+        int log = 0;
+        if (n > 0xffff) {
+            n >>>= 16;
+            log = 16;
         }
+
+        if (n > 0xff) {
+            n >>>= 8;
+            log |= 8;
+        }
+
+        if (n > 0xf) {
+            n >>>= 4;
+            log |= 4;
+        }
+
+        if (n > 0b11) {
+            n >>>= 2;
+            log |= 2;
+        }
+
+        return log + (n >>> 1);
+    }
+
+    public static int stripSignBit(int n) {
+        return n & 0x7fffffff;
     }
 }

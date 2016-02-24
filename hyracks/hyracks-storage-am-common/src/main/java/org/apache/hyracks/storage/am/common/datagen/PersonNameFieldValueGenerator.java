@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.hyracks.util.MathUtil;
+
 public class PersonNameFieldValueGenerator implements IFieldValueGenerator<String> {
     private final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
     private final String LAST_NAMES_FILE = "dist.all.last.cleaned";
@@ -76,20 +78,20 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
         StringBuilder strBuilder = new StringBuilder();
 
         // First name.
-        int fix = Math.abs(rnd.nextInt()) % firstNames.size();
+        int fix = MathUtil.stripSignBit(rnd.nextInt()) % firstNames.size();
         strBuilder.append(firstNames.get(fix));
         strBuilder.append(" ");
 
         // Optional middle initial.
         double d = Math.abs(rnd.nextDouble());
         if (d <= middleInitialProb) {
-            int mix = Math.abs(rnd.nextInt()) % letters.length();
+            int mix = MathUtil.stripSignBit(rnd.nextInt()) % letters.length();
             strBuilder.append(letters.charAt(mix));
             strBuilder.append(". ");
         }
 
         // Last name.
-        int lix = Math.abs(rnd.nextInt()) % lastNames.size();
+        int lix = MathUtil.stripSignBit(rnd.nextInt()) % lastNames.size();
         strBuilder.append(lastNames.get(lix));
 
         return strBuilder.toString();

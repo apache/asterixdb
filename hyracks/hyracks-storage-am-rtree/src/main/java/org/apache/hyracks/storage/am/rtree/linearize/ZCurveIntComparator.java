@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.rtree.linearize;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.common.ophelpers.DoubleArrayList;
 
 /*
@@ -48,7 +47,7 @@ public class ZCurveIntComparator implements ILinearizeComparator {
     }
 
     private void resetStateMachine() {
-        stepsize = Integer.MAX_VALUE / 2;
+        stepsize = Integer.MAX_VALUE / 2.0f;
         bounds = new double[dim];
         boundsStack.clear();
     }

@@ -72,13 +72,16 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
 
     @Override
     public IIndex getIndexInstance() {
-        if (index != null)
+        if (index != null) {
             return index;
+        }
         synchronized (lcManager) {
-            try {
-                index = lcManager.getIndex(resourcePath);
-            } catch (HyracksDataException e) {
-                return null;
+            if (index == null) {
+                try {
+                    index = lcManager.getIndex(resourcePath);
+                } catch (HyracksDataException e) {
+                    return null;
+                }
             }
         }
         return index;

@@ -448,7 +448,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         buffer.append("cpid -> [fileId:pageId, pinCount, valid/invalid, confiscated/physical, dirty/clean]");
         int nCachedPages = 0;
         for (int i = 0; i < pageMap.length; ++i) {
-            CacheBucket cb = pageMap[i];
+            final CacheBucket cb = pageMap[i];
             cb.bucketLock.lock();
             try {
                 CachedPage cp = cb.cachedPage;
@@ -786,7 +786,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private void sweepAndFlush(int fileId, boolean flushDirtyPages) throws HyracksDataException {
         for (int i = 0; i < pageMap.length; ++i) {
-            CacheBucket bucket = pageMap[i];
+            final CacheBucket bucket = pageMap[i];
             bucket.bucketLock.lock();
             try {
                 CachedPage prev = bucket.cachedPage;

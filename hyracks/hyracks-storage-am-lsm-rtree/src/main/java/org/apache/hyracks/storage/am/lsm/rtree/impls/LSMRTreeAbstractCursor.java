@@ -67,7 +67,7 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
 
     public LSMRTreeAbstractCursor(ILSMIndexOperationContext opCtx) {
         this.opCtx = opCtx;
-        btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
+        btreeRangePredicate = new RangePredicate(null, null, true, true, null, null);
     }
 
     public RTreeSearchCursor getCursor(int cursorIndex) {

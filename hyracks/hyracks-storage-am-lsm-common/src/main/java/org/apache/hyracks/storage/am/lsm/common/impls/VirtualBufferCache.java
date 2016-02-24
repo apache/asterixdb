@@ -96,7 +96,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
 
         for (int i = 0; i < buckets.length; i++) {
-            CacheBucket bucket = buckets[i];
+            final CacheBucket bucket = buckets[i];
             bucket.bucketLock.lock();
             try {
                 VirtualPage prev = null;
