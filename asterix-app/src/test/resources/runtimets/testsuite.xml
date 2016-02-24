@@ -6053,6 +6053,16 @@
                 <output-dir compare="Text">query-ASTERIXDB-1298</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="user-defined-functions">
+            <compilation-unit name="query-ASTERIXDB-1308-1">
+                <output-dir compare="Text">query-ASTERIXDB-1308-1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <!-- <test-case FilePath="user-defined-functions">
+            <compilation-unit name="query-ASTERIXDB-1308-2">
+                <output-dir compare="Text">query-ASTERIXDB-1308-2</output-dir>
+            </compilation-unit>
+        </test-case>  -->
         <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
         <!-- <test-case FilePath="user-defined-functions">
             <compilation-unit name="invoke-private-function">

@@ -1,0 +1,45 @@
+-- DISTRIBUTE_RESULT  |LOCAL|
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    -- AGGREGATE  |LOCAL|
+      -- AGGREGATE  |LOCAL|
+        -- STREAM_PROJECT  |UNPARTITIONED|
+          -- STREAM_SELECT  |UNPARTITIONED|
+            -- STREAM_PROJECT  |UNPARTITIONED|
+              -- ASSIGN  |UNPARTITIONED|
+                -- STREAM_PROJECT  |UNPARTITIONED|
+                  -- UNNEST  |UNPARTITIONED|
+                    -- SUBPLAN  |UNPARTITIONED|
+                            {
+                              -- AGGREGATE  |UNPARTITIONED|
+                                -- IN_MEMORY_STABLE_SORT [$$28(ASC)]  |UNPARTITIONED|
+                                  -- UNNEST  |UNPARTITIONED|
+                                    -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                            }
+                      -- AGGREGATE  |UNPARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          -- STABLE_SORT [$$59(ASC)]  |UNPARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              -- STREAM_PROJECT  |UNPARTITIONED|
+                                -- ASSIGN  |UNPARTITIONED|
+                                  -- STREAM_PROJECT  |UNPARTITIONED|
+                                    -- UNNEST  |UNPARTITIONED|
+                                      -- SUBPLAN  |UNPARTITIONED|
+                                              {
+                                                -- SUBPLAN  |UNPARTITIONED|
+                                                        {
+                                                          -- AGGREGATE  |UNPARTITIONED|
+                                                            -- STREAM_SELECT  |UNPARTITIONED|
+                                                              -- UNNEST  |UNPARTITIONED|
+                                                                -- SUBPLAN  |UNPARTITIONED|
+                                                                        {
+                                                                          -- AGGREGATE  |UNPARTITIONED|
+                                                                            -- IN_MEMORY_STABLE_SORT [$$21(ASC)]  |UNPARTITIONED|
+                                                                              -- UNNEST  |UNPARTITIONED|
+                                                                                -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                                                        }
+                                                                  -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                                        }
+                                                  -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                              }
+                                        -- ASSIGN  |UNPARTITIONED|
+                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

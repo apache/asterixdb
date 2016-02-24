@@ -56,12 +56,13 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
         VariableSubstitutionEnvironment resultEnv = new VariableSubstitutionEnvironment(env);
         resultEnv.removeSubstitution(varExpr);
 
-        VariableExpr posVarExpr = null;
+        VariableExpr newPosVarExpr = null;
         if (fc.hasPosVar()) {
-            posVarExpr = fc.getPosVarExpr();
+            VariableExpr posVarExpr = fc.getPosVarExpr();
+            newPosVarExpr = generateNewVariable(context, posVarExpr);
             resultEnv.removeSubstitution(posVarExpr);
         }
-        ForClause newFor = new ForClause(newVe, (Expression) p1.first, posVarExpr);
+        ForClause newFor = new ForClause(newVe, (Expression) p1.first, newPosVarExpr);
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newFor, resultEnv);
     }
 
