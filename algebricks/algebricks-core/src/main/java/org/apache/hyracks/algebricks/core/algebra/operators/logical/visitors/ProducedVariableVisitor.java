@@ -20,7 +20,9 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -187,11 +189,16 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
+        Set<LogicalVariable> producedVars = new HashSet<>();
+        Set<LogicalVariable> liveVars = new HashSet<>();
         for (ILogicalPlan p : op.getNestedPlans()) {
             for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                VariableUtilities.getLiveVariables(r.getValue(), producedVariables);
+                VariableUtilities.getProducedVariablesInDescendantsAndSelf(r.getValue(), producedVars);
+                VariableUtilities.getSubplanLocalLiveVariables(r.getValue(), liveVars);
             }
         }
+        producedVars.retainAll(liveVars);
+        producedVariables.addAll(producedVars);
         return null;
     }
 
@@ -283,8 +290,9 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
         producedVariables.addAll(op.getVariables());
         LogicalVariable positionalVariable = op.getPositionalVariable();
         if (positionalVariable != null) {
-            if (!producedVariables.contains(positionalVariable))
+            if (!producedVariables.contains(positionalVariable)) {
                 producedVariables.add(positionalVariable);
+            }
         }
         return null;
     }

@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -264,15 +263,17 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                             break;
                         }
                     }
-                    // TODO: For now we bail here, but we could remember such ops and determine their target partition at a later point.
-                    if (targetUsedVars == null) {
-                        return false;
-                    }
                 } else if (innerMatches != 0 && outerMatches != 0) {
                     // The current operator produces variables that are used by both partitions, so the inner and outer are not independent and, therefore, we cannot create a join.
                     // TODO: We may still be able to split the operator to create a viable partitioning.
                     return false;
                 }
+
+                // TODO: For now we bail here, but we could remember such ops and determine their target partition at a later point.
+                if (targetUsedVars == null) {
+                    return false;
+                }
+
                 // Update used variables of partition that op belongs to.
                 if (op.hasNestedPlans() && op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
                     AbstractOperatorWithNestedPlans opWithNestedPlans = (AbstractOperatorWithNestedPlans) op;

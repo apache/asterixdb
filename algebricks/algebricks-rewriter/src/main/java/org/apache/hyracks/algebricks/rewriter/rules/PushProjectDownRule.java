@@ -167,7 +167,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             IOptimizationContext context, ILogicalOperator initialOp) throws AlgebricksException {
         HashSet<LogicalVariable> allP = new HashSet<LogicalVariable>();
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        VariableUtilities.getLiveVariables(op, allP);
+        VariableUtilities.getSubplanLocalLiveVariables(op, allP);
 
         HashSet<LogicalVariable> toProject = new HashSet<LogicalVariable>();
         for (LogicalVariable v : toPush) {
