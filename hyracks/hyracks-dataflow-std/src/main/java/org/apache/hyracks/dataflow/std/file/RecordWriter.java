@@ -36,7 +36,7 @@ public abstract class RecordWriter implements IRecordWriter {
     public RecordWriter(Object[] args) throws Exception {
         OutputStream outputStream = createOutputStream(args);
         if (outputStream != null) {
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(createOutputStream(args)));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
         } else {
             bufferedWriter = null;
         }

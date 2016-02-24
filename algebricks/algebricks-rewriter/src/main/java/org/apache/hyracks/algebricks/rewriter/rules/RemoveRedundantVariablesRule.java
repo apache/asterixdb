@@ -100,7 +100,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
             equivalentVarsMap.put(rhs, equivalentVars);
         }
         equivalentVarsMap.put(lhs, equivalentVars);
-        equivalentVars.get(0);
     }
 
     private boolean removeRedundantVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)

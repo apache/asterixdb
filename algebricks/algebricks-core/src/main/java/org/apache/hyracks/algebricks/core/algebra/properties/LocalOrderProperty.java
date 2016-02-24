@@ -84,8 +84,12 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
 
     @Override
     public boolean equals(Object object) {
-        LocalOrderProperty lop = (LocalOrderProperty) object;
-        return orderColumns.equals(lop.orderColumns);
+        if (object instanceof LocalOrderProperty) {
+            LocalOrderProperty lop = (LocalOrderProperty) object;
+            return orderColumns.equals(lop.orderColumns);
+        } else {
+            return false;
+        }
     }
 
     /**

@@ -30,14 +30,18 @@ public class RTreeCheckTuple<T> extends CheckTuple {
 
     @Override
     public boolean equals(Object o) {
-        RTreeCheckTuple<T> other = (RTreeCheckTuple<T>) o;
-        for (int i = 0; i < fields.length; i++) {
-            int cmp = fields[i].compareTo(other.getField(i));
-            if (cmp != 0) {
-                return false;
+        if (o instanceof RTreeCheckTuple) {
+            RTreeCheckTuple<T> other = (RTreeCheckTuple<T>) o;
+            for (int i = 0; i < fields.length; i++) {
+                int cmp = fields[i].compareTo(other.getField(i));
+                if (cmp != 0) {
+                    return false;
+                }
             }
+            return true;
+        } else {
+            return false;
         }
-        return true;
     }
 
     public boolean intersect(T o) {
