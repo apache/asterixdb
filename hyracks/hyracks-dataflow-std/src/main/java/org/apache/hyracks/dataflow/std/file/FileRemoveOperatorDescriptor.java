@@ -23,13 +23,13 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -49,6 +49,9 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         final FileSplit split = fileSplitProvider.getFileSplits()[partition];
+        final String path = split.getLocalFile().getFile().getPath();
+        final int deviceId = split.getIODeviceId();
+        final IIOManager ioManager = ctx.getIOManager();
         return new AbstractOperatorNodePushable() {
 
             @Override
@@ -58,7 +61,7 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
 
             @Override
             public void initialize() throws HyracksDataException {
-                File f = split.getLocalFile().getFile();
+                File f = ioManager.getAbsoluteFileRef(deviceId, path).getFile();
                 try {
                     FileUtils.deleteDirectory(f);
                 } catch (IOException e) {
