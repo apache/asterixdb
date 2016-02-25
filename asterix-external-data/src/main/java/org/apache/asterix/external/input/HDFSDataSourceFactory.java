@@ -60,6 +60,7 @@ public class HDFSDataSourceFactory
     protected static Scheduler hdfsScheduler;
     protected static IndexingScheduler indexingScheduler;
     protected static Boolean initialized = false;
+    protected static final Object initLock = new Object();
     protected List<ExternalFile> files;
     protected Map<String, String> configuration;
     protected Class<?> recordClass;
@@ -70,9 +71,7 @@ public class HDFSDataSourceFactory
 
     @Override
     public void configure(Map<String, String> configuration) throws Exception {
-        if (!HDFSDataSourceFactory.initialized) {
-            HDFSDataSourceFactory.initialize();
-        }
+        initialize();
         this.configuration = configuration;
         JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
         confFactory = new ConfFactory(conf);
@@ -146,11 +145,13 @@ public class HDFSDataSourceFactory
      * HDFS
      */
     private static void initialize() {
-        synchronized (initialized) {
-            if (!initialized) {
-                hdfsScheduler = HDFSUtils.initializeHDFSScheduler();
-                indexingScheduler = HDFSUtils.initializeIndexingHDFSScheduler();
-                initialized = true;
+        if (!initialized) {
+            synchronized (initLock) {
+                if (!initialized) {
+                    hdfsScheduler = HDFSUtils.initializeHDFSScheduler();
+                    indexingScheduler = HDFSUtils.initializeIndexingHDFSScheduler();
+                    initialized = true;
+                }
             }
         }
     }
