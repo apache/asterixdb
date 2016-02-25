@@ -232,7 +232,7 @@ public class ClassAdUnitTester {
         if (parameters.checkAll || parameters.checkOperator) {
         }
         if (parameters.checkAll || parameters.checkCollection) {
-            //test_collection(parameters, results);
+            // test_collection(parameters, results);
         }
         if (parameters.checkAll || parameters.checkUtils) {
             testUtils(parameters, results);
@@ -329,7 +329,7 @@ public class ClassAdUnitTester {
         AMutableDouble r = new AMutableDouble(0);
         AMutableCharArrayString s = new AMutableCharArrayString();
         ClassAd c = new ClassAd();
-        //ExprList *l;
+        // ExprList *l;
 
         basic = parser.parseClassAd(input_basic);
 
@@ -395,7 +395,6 @@ public class ClassAdUnitTester {
                         haveSeconds = false;
                         haveOther = false;
                         for (String entry : refs) {
-                            System.out.println(entry);
                             if (entry.compareTo("other.Environment") == 0) {
                                 haveEnvironment = true;
                             } else if (entry.compareTo("other.Time") == 0) {
@@ -439,7 +438,7 @@ public class ClassAdUnitTester {
                 results);
 
         /* ----- Test chained ClassAds ----- */
-        //classad1 and classad2 from above test are used.
+        // classad1 and classad2 from above test are used.
         ClassAd classad3 = new ClassAd();
 
         classad1.chainToAd(classad2);
@@ -686,41 +685,6 @@ public class ClassAdUnitTester {
         test("GetType gives CLASSAD_VALUE", (v.getType() == ValueType.CLASSAD_VALUE), results);
         return;
     }
-
-    /*********************************************************************
-     * This test suite was deleted since I don't think we need it
-     * Function: test_collection
-     * Purpose: Test the ClassAdCollection class. Note that we test the
-     * local Collections only: we don't test the server/client
-     * versions available in ClassAdCollectionServer and
-     * ClassAdCollectionClient.
-     *********************************************************************/
-
-    /*
-     * This one is deleted too since I don't think we need it
-    public static boolean check_in_view(ClassAdCollection collection, String view_name, String classad_name) {
-        boolean have_view;
-        boolean in_view;
-
-        in_view = false;
-
-        LocalCollectionQuery query;
-
-        query.Bind(collection);
-
-        have_view = query.Query(view_name, null);
-        if (have_view) {
-            String classad_key;
-            for (query.ToFirst(), query.Current(classad_key); !query.IsAfterLast(); query.Next(classad_key)) {
-                if (!classad_key.compare(classad_name)) {
-                    in_view = true;
-                    break;
-                }
-            }
-        }
-        return in_view;
-    }
-    */
 
     /*********************************************************************
      * Function: test_utils

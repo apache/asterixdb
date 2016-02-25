@@ -80,22 +80,14 @@ public class ClassAdToADMTest extends TestCase {
                 int i = 0;
                 while (recordReader.hasNext()) {
                     i++;
-                    System.out.print("{ ");
                     val.clear();
                     IRawRecord<char[]> record = recordReader.next();
                     lexerSource.setNewSource(record.get());
                     parser.setLexerSource(lexerSource);
                     parser.parseNext(pAd);
-                    //System.out.println(pAd);
                     Map<CaseInsensitiveString, ExprTree> attrs = pAd.getAttrList();
-                    boolean notFirst = false;
                     for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
-                        CaseInsensitiveString name = entry.getKey();
                         ExprTree tree = entry.getValue();
-                        if (notFirst) {
-                            System.out.print(", ");
-                        }
-                        notFirst = true;
                         switch (tree.getKind()) {
                             case ATTRREF_NODE:
                             case CLASSAD_NODE:
@@ -103,25 +95,15 @@ public class ClassAdToADMTest extends TestCase {
                             case EXPR_LIST_NODE:
                             case FN_CALL_NODE:
                             case OP_NODE:
-                                if (pAd.evaluateAttr(name.get(), val)) {
-                                    System.out.print("\"" + name + "Expr\":" + "\"expr=" + tree + "\"");
-                                    System.out.print(", \"" + name + "\":" + val);
-                                } else {
-                                    System.out.print("\"" + name + "\":" + tree);
-                                }
                                 break;
                             case LITERAL_NODE:
-                                // No need to do anything
-                                System.out.print("\"" + name + "\":" + tree);
                                 break;
                             default:
                                 System.out.println("Something is wrong");
                                 break;
                         }
                     }
-                    System.out.println(" }");
                 }
-                System.out.println(i + " number of records found");
                 recordReader.close();
             }
         } catch (Exception e) {

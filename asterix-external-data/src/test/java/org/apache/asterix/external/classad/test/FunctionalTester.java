@@ -145,7 +145,7 @@ public class FunctionalTester {
             // Then we parse to see what the user wants.
             for (int argIndex = 1; argIndex < argc; argIndex++) {
                 if (argv[argIndex].equalsIgnoreCase("-d") || argv[argIndex].equalsIgnoreCase("-debug")) {
-                    debug = true;
+                    debug = false;
                 } else if (argv[argIndex].equalsIgnoreCase("-v") || argv[argIndex].equalsIgnoreCase("-verbose")) {
                     verbose = true;
                 } else {
@@ -558,9 +558,6 @@ public class FunctionalTester {
                 } else {
                     variable = new Variable(variable_name.getStringValue(), value);
                     variables.put(variable_name.getStringValue(), variable);
-                    if (true) {
-                        System.out.println(variable_name.getStringValue() + " = " + value);
-                    }
                 }
             }
         }
@@ -751,84 +748,9 @@ public class FunctionalTester {
     }
 
     /*********************************************************************
-     * Function: handle_writexml
+     * Function: handle_echo
      * Purpose:
-     *
-     * @throws IOException
      *********************************************************************/
-    /*
-    public static void handle_writexml(AMutableString line, State state, Parameters parameters) throws IOException {
-    AMutableString filename = new AMutableString("");
-    ExprTree expr;
-    BufferedWriter xml_file;
-
-    if (get_file_name(line, filename, state, parameters)) {
-    if ((expr = get_expr(line, state, parameters)) != null) {
-    if (expr_okay_for_xml_file(expr, state, parameters)) {
-    xml_file = Files.newBufferedWriter(Paths.get(filename.getStringValue()));
-    ClassAdXMLUnParser unparser = new ClassAdXMLUnParser();
-    AMutableCharArrayString classad_text = new AMutableCharArrayString();
-    xml_file.write("<classads>\n");
-    if (expr.getKind() == NodeKind.CLASSAD_NODE) {
-    unparser.Unparse(classad_text, expr);
-    xml_file.write(classad_text.toString());
-    } else {
-    ExprList list = (ExprList) expr;
-    for (ExprTree classad : list.getExprList()) {
-    classad_text.setValue("");
-    unparser.Unparse(classad_text, classad);
-    xml_file.write(classad_text.toString());
-    xml_file.newLine();
-    }
-    }
-    xml_file.write("</classads>\n");
-    xml_file.close();
-    }
-    }
-    }
-    return;
-    }
-
-    *//*********************************************************************
-      * Function: handle_readxml
-      * Purpose:
-      *
-      * @throws IOException
-      *********************************************************************/
-
-    /*
-    public static void handle_readxml(AMutableString line, State state, Parameters parameters) throws IOException {
-    AMutableString variable_name = new AMutableString(null);
-    AMutableString file_name = new AMutableString(null);
-
-    if (get_variable_name(line, false, variable_name, state, parameters)) {
-    if (get_file_name(line, file_name, state, parameters)) {
-    InputStream xml_file = Files.newInputStream(Paths.get(file_name.getStringValue()));
-    ExprList list;
-    ClassAd classad;
-    ClassAdXMLParser parser = new ClassAdXMLParser();
-    Variable variable;
-
-    list = new ExprList();
-    do {
-    classad = parser.ParseClassAd(new InputStreamLexerSource(xml_file));
-    if (classad != null) {
-    list.add(classad);
-    }
-    } while (classad != null);
-    variable = new Variable(variable_name.getStringValue(), list);
-    variables.put(variable_name.getStringValue(), variable);
-    if (parameters.interactive) {
-    print_expr(list, state, parameters);
-    }
-    }
-    }
-    }
-
-    *//*********************************************************************
-      * Function: handle_echo
-      * Purpose:
-      *********************************************************************/
     public static void handle_echo(String line, State state, Parameters parameters) {
         AMutableCharArrayString new_line = new AMutableCharArrayString();
         int index;
@@ -1066,13 +988,17 @@ public class FunctionalTester {
             PrettyPrint unparser = new PrettyPrint();
             unparser.unparse(output, tree);
         } else if (state.format == PrintFormat.print_XML) {/*
-                                                           ClassAdXMLUnParser unparser = new ClassAdXMLUnParser();
-                                                           unparser.SetCompactSpacing(true);
-                                                           unparser.Unparse(output, tree);
-                                                           } else if (state.format == PrintFormat.print_XMLPretty) {
-                                                           ClassAdXMLUnParser unparser = new ClassAdXMLUnParser();
-                                                           unparser.SetCompactSpacing(false);
-                                                           unparser.Unparse(output, tree);*/
+                                                            * ClassAdXMLUnParser unparser = new
+                                                            * ClassAdXMLUnParser();
+                                                            * unparser.SetCompactSpacing(true);
+                                                            * unparser.Unparse(output, tree);
+                                                            * } else if (state.format ==
+                                                            * PrintFormat.print_XMLPretty) {
+                                                            * ClassAdXMLUnParser unparser = new
+                                                            * ClassAdXMLUnParser();
+                                                            * unparser.SetCompactSpacing(false);
+                                                            * unparser.Unparse(output, tree);
+                                                            */
         }
         System.out.println(output);
     }

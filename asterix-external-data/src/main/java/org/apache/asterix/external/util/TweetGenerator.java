@@ -68,7 +68,6 @@ public class TweetGenerator {
 
     private void writeTweetString(TweetMessage tweetMessage) throws IOException {
         String tweet = tweetMessage.getAdmEquivalent(fields) + "\n";
-        System.out.println(tweet);
         tweetCount++;
         byte[] b = tweet.getBytes();
         if (outputBuffer.position() + b.length > outputBuffer.limit()) {

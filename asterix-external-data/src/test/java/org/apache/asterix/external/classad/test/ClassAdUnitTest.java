@@ -53,7 +53,6 @@ public class ClassAdUnitTest extends TestCase {
         try {
             ClassAdUnitTester.test(args.length, args);
         } catch (IOException e) {
-            e.printStackTrace();
             assertTrue(false);
         }
         assertTrue(true);
