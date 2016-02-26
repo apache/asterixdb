@@ -20,8 +20,6 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -38,6 +36,11 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
+import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
+import org.apache.hyracks.dataflow.std.buffermanager.EnumFreeSlotPolicy;
+import org.apache.hyracks.dataflow.std.buffermanager.FrameFreeSlotPolicyFactory;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFrameMemoryManager;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 
 public class NestedLoopJoin {
     private final FrameTupleAccessor accessorInner;
@@ -46,39 +49,38 @@ public class NestedLoopJoin {
     private final ITuplePairComparator tpComparator;
     private final IFrame outBuffer;
     private final IFrame innerBuffer;
-    private final List<ByteBuffer> outBuffers;
-    private final int memSize;
-    private final IHyracksTaskContext ctx;
+    private final VariableFrameMemoryManager outerBufferMngr;
     private RunFileReader runFileReader;
-    private int currentMemSize = 0;
     private final RunFileWriter runFileWriter;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuilder;
     private final IPredicateEvaluator predEvaluator;
     private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
+    private BufferInfo tempInfo = new BufferInfo(null, -1, -1);
 
-    public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
-            ITuplePairComparator comparators, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
+    public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorOuter, FrameTupleAccessor accessorInner,
+            ITuplePairComparator comparatorsOuter2Inner, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
             INullWriter[] nullWriters1) throws HyracksDataException {
-        this.accessorInner = accessor1;
-        this.accessorOuter = accessor0;
+        this.accessorInner = accessorInner;
+        this.accessorOuter = accessorOuter;
         this.appender = new FrameTupleAppender();
-        this.tpComparator = comparators;
+        this.tpComparator = comparatorsOuter2Inner;
         this.outBuffer = new VSizeFrame(ctx);
         this.innerBuffer = new VSizeFrame(ctx);
         this.appender.reset(outBuffer, true);
-        this.outBuffers = new ArrayList<ByteBuffer>();
-        this.memSize = memSize;
         if (memSize < 3) {
             throw new HyracksDataException("Not enough memory is available for Nested Loop Join");
         }
+        this.outerBufferMngr = new VariableFrameMemoryManager(
+                new VariableFramePool(ctx, ctx.getInitialFrameSize() * (memSize - 2)),
+                FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, memSize - 2));
+
         this.predEvaluator = predEval;
         this.isReversed = false;
-        this.ctx = ctx;
 
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
-            int innerFieldCount = accessorInner.getFieldCount();
+            int innerFieldCount = this.accessorInner.getFieldCount();
             nullTupleBuilder = new ArrayTupleBuilder(innerFieldCount);
             DataOutput out = nullTupleBuilder.getDataOutput();
             for (int i = 0; i < innerFieldCount; i++) {
@@ -89,8 +91,8 @@ public class NestedLoopJoin {
             nullTupleBuilder = null;
         }
 
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                this.getClass().getSimpleName() + this.toString());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
         runFileWriter = new RunFileWriter(file, ctx.getIOManager());
         runFileWriter.open();
     }
@@ -100,45 +102,26 @@ public class NestedLoopJoin {
     }
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
-        if (outBuffers.size() < memSize - 3) {
-            createAndCopyFrame(outerBuffer);
-            return;
-        }
-        if (currentMemSize < memSize - 3) {
-            reloadFrame(outerBuffer);
-            return;
-        }
-        runFileReader = runFileWriter.createReader();
-        runFileReader.open();
-        while (runFileReader.nextFrame(innerBuffer)) {
-            for (ByteBuffer outBuffer : outBuffers) {
-                blockJoin(outBuffer, innerBuffer.getBuffer(), writer);
+        if (outerBufferMngr.insertFrame(outerBuffer) < 0) {
+            runFileReader = runFileWriter.createReader();
+            runFileReader.open();
+            while (runFileReader.nextFrame(innerBuffer)) {
+                for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                    blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                }
+            }
+            runFileReader.close();
+            outerBufferMngr.reset();
+            if (outerBufferMngr.insertFrame(outerBuffer) < 0) {
+                throw new HyracksDataException("The given outer frame of size:" + outerBuffer.capacity()
+                        + " is too big to cache in the buffer. Please choose a larger buffer memory size");
             }
         }
-        runFileReader.close();
-        currentMemSize = 0;
-        reloadFrame(outerBuffer);
     }
 
-    private void createAndCopyFrame(ByteBuffer outerBuffer) throws HyracksDataException {
-        ByteBuffer outerBufferCopy = ctx.allocateFrame(outerBuffer.capacity());
-        FrameUtils.copyAndFlip(outerBuffer, outerBufferCopy);
-        outBuffers.add(outerBufferCopy);
-        currentMemSize++;
-    }
-
-    private void reloadFrame(ByteBuffer outerBuffer) throws HyracksDataException {
-        outBuffers.get(currentMemSize).clear();
-        if (outBuffers.get(currentMemSize).capacity() != outerBuffer.capacity()) {
-            outBuffers.set(currentMemSize, ctx.allocateFrame(outerBuffer.capacity()));
-        }
-        FrameUtils.copyAndFlip(outerBuffer, outBuffers.get(currentMemSize));
-        currentMemSize++;
-    }
-
-    private void blockJoin(ByteBuffer outerBuffer, ByteBuffer innerBuffer, IFrameWriter writer)
+    private void blockJoin(BufferInfo outerBufferInfo, ByteBuffer innerBuffer, IFrameWriter writer)
             throws HyracksDataException {
-        accessorOuter.reset(outerBuffer);
+        accessorOuter.reset(outerBufferInfo.getBuffer(), outerBufferInfo.getStartOffset(), outerBufferInfo.getLength());
         accessorInner.reset(innerBuffer);
         int tupleCount0 = accessorOuter.getTupleCount();
         int tupleCount1 = accessorInner.getTupleCount();
@@ -173,11 +156,10 @@ public class NestedLoopJoin {
     }
 
     private void appendToResults(int outerTupleId, int innerTupleId, IFrameWriter writer) throws HyracksDataException {
-        if (!isReversed) {
-            appendResultToFrame(accessorOuter, outerTupleId, accessorInner, innerTupleId, writer);
-        } else {
-            //Role Reversal Optimization is triggered
+        if (isReversed) {
             appendResultToFrame(accessorInner, innerTupleId, accessorOuter, outerTupleId, writer);
+        } else {
+            appendResultToFrame(accessorOuter, outerTupleId, accessorInner, innerTupleId, writer);
         }
     }
 
@@ -196,13 +178,12 @@ public class NestedLoopJoin {
         runFileReader = runFileWriter.createDeleteOnCloseReader();
         runFileReader.open();
         while (runFileReader.nextFrame(innerBuffer)) {
-            for (int i = 0; i < currentMemSize; i++) {
-                blockJoin(outBuffers.get(i), innerBuffer.getBuffer(), writer);
+            for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
             }
         }
         runFileReader.close();
-        outBuffers.clear();
-        currentMemSize = 0;
+        outerBufferMngr.reset();
 
         appender.write(writer, true);
     }

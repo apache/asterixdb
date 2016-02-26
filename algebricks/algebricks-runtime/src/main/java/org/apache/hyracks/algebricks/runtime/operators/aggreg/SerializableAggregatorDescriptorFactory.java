@@ -113,12 +113,12 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
             }
 
             @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
+            public boolean outputPartialResult(ArrayTupleBuilder tb, IFrameTupleAccessor stateAccessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                byte[] data = accessor.getBuffer().array();
-                int startOffset = accessor.getTupleStartOffset(tIndex);
-                int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);
-                int refOffset = startOffset + accessor.getFieldSlotsLength() + aggFieldOffset;
+                byte[] data = stateAccessor.getBuffer().array();
+                int startOffset = stateAccessor.getTupleStartOffset(tIndex);
+                int aggFieldOffset = stateAccessor.getFieldStartOffset(tIndex, offsetFieldIndex);
+                int refOffset = startOffset + stateAccessor.getFieldSlotsLength() + aggFieldOffset;
                 int start = refOffset;
                 for (int i = 0; i < aggs.length; i++) {
                     try {
@@ -133,12 +133,12 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
             }
 
             @Override
-            public boolean outputFinalResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
+            public boolean outputFinalResult(ArrayTupleBuilder tb, IFrameTupleAccessor stateAccessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                byte[] data = accessor.getBuffer().array();
-                int startOffset = accessor.getTupleStartOffset(tIndex);
-                int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);
-                int refOffset = startOffset + accessor.getFieldSlotsLength() + aggFieldOffset;
+                byte[] data = stateAccessor.getBuffer().array();
+                int startOffset = stateAccessor.getTupleStartOffset(tIndex);
+                int aggFieldOffset = stateAccessor.getFieldStartOffset(tIndex, offsetFieldIndex);
+                int refOffset = startOffset + stateAccessor.getFieldSlotsLength() + aggFieldOffset;
                 int start = refOffset;
                 for (int i = 0; i < aggs.length; i++) {
                     try {

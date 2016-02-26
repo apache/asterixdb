@@ -18,19 +18,14 @@
  */
 package org.apache.hyracks.dataflow.std.sort;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 
 public class FrameSorterQuickSort extends AbstractFrameSorter {
-
-    private FrameTupleAccessor fta2;
 
     public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
@@ -44,19 +39,15 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
             RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
         super(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
                 outputLimit);
-        fta2 = new FrameTupleAccessor(recordDescriptor);
     }
 
     @Override
     void sortTupleReferences() throws HyracksDataException {
-        sort(tPointers, 0, tupleCount);
+        sort(0, tupleCount);
     }
 
-    void sort(int[] tPointers, int offset, int length) throws HyracksDataException {
+    void sort(int offset, int length) throws HyracksDataException {
         int m = offset + (length >> 1);
-        int mi = tPointers[m * 4];
-        int mj = tPointers[m * 4 + 1];
-        int mv = tPointers[m * 4 + 3];
 
         int a = offset;
         int b = a;
@@ -64,7 +55,7 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         int d = c;
         while (true) {
             while (b <= c) {
-                int cmp = compare(tPointers, b, mi, mj, mv);
+                int cmp = compare(b, m);
                 if (cmp > 0) {
                     break;
                 }
@@ -74,7 +65,7 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
                 ++b;
             }
             while (c >= b) {
-                int cmp = compare(tPointers, c, mi, mj, mv);
+                int cmp = compare(c, m);
                 if (cmp < 0) {
                     break;
                 }
@@ -96,10 +87,10 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         vecswap(tPointers, b, n - s, s);
 
         if ((s = b - a) > 1) {
-            sort(tPointers, offset, s);
+            sort(offset, s);
         }
         if ((s = d - c) > 1) {
-            sort(tPointers, n - s, s);
+            sort(n - s, s);
         }
     }
 
@@ -115,39 +106,6 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         for (int i = 0; i < n; i++, a++, b++) {
             swap(x, a, b);
         }
-    }
-
-    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) throws HyracksDataException {
-        int i1 = tPointers[tp1 * 4];
-        int j1 = tPointers[tp1 * 4 + 1];
-        int v1 = tPointers[tp1 * 4 + 3];
-        if (v1 != tp2v) {
-            return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
-        }
-        int i2 = tp2i;
-        int j2 = tp2j;
-        ByteBuffer buf1 = super.bufferManager.getFrame(i1);
-        ByteBuffer buf2 = super.bufferManager.getFrame(i2);
-        byte[] b1 = buf1.array();
-        byte[] b2 = buf2.array();
-        inputTupleAccessor.reset(buf1);
-        fta2.reset(buf2);
-        for (int f = 0; f < comparators.length; ++f) {
-            int fIdx = sortFields[f];
-            int f1Start = fIdx == 0 ? 0 : buf1.getInt(j1 + (fIdx - 1) * 4);
-            int f1End = buf1.getInt(j1 + fIdx * 4);
-            int s1 = j1 + inputTupleAccessor.getFieldSlotsLength() + f1Start;
-            int l1 = f1End - f1Start;
-            int f2Start = fIdx == 0 ? 0 : buf2.getInt(j2 + (fIdx - 1) * 4);
-            int f2End = buf2.getInt(j2 + fIdx * 4);
-            int s2 = j2 + fta2.getFieldSlotsLength() + f2Start;
-            int l2 = f2End - f2Start;
-            int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
-            if (c != 0) {
-                return c;
-            }
-        }
-        return 0;
     }
 
 }

@@ -31,13 +31,13 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import org.apache.hyracks.dataflow.std.sort.AbstractExternalSortRunMerger;
 import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
-import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
 import org.apache.hyracks.dataflow.std.sort.ISorter;
-import org.apache.hyracks.dataflow.std.sort.RunAndMaxFrameSizePair;
 
 /**
  * This Operator pushes group-by aggregation into the external sort.
@@ -57,17 +57,28 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
     private Algorithm alg = Algorithm.MERGE_SORT;
 
     /**
-     * @param spec                      , the Hyracks job specification
-     * @param framesLimit               , the frame limit for this operator
-     * @param sortFields                , the fields to sort
-     * @param groupFields               , the fields to group, which can be a prefix subset of sortFields
-     * @param firstKeyNormalizerFactory , the normalized key computer factory of the first key
-     * @param comparatorFactories       , the comparator factories of sort keys
-     * @param partialAggregatorFactory  , for aggregating the input of this operator
-     * @param mergeAggregatorFactory    , for aggregating the intermediate data of this operator
-     * @param partialAggRecordDesc      , the record descriptor of intermediate data
-     * @param outRecordDesc             , the record descriptor of output data
-     * @param finalStage                , whether the operator is used for final stage aggregation
+     * @param spec
+     *            , the Hyracks job specification
+     * @param framesLimit
+     *            , the frame limit for this operator
+     * @param sortFields
+     *            , the fields to sort
+     * @param groupFields
+     *            , the fields to group, which can be a prefix subset of sortFields
+     * @param firstKeyNormalizerFactory
+     *            , the normalized key computer factory of the first key
+     * @param comparatorFactories
+     *            , the comparator factories of sort keys
+     * @param partialAggregatorFactory
+     *            , for aggregating the input of this operator
+     * @param mergeAggregatorFactory
+     *            , for aggregating the intermediate data of this operator
+     * @param partialAggRecordDesc
+     *            , the record descriptor of intermediate data
+     * @param outRecordDesc
+     *            , the record descriptor of output data
+     * @param finalStage
+     *            , whether the operator is used for final stage aggregation
      */
     public SortGroupByOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
             int[] groupFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
@@ -86,30 +97,6 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
         this.partialAggRecordDesc = partialAggRecordDesc;
         this.outputRecordDesc = outRecordDesc;
         this.finalStage = finalStage;
-    }
-
-    /**
-     * @param spec                      , the Hyracks job specification
-     * @param framesLimit               , the frame limit for this operator
-     * @param sortFields                , the fields to sort
-     * @param groupFields               , the fields to group, which can be a prefix subset of sortFields
-     * @param firstKeyNormalizerFactory , the normalized key computer factory of the first key
-     * @param comparatorFactories       , the comparator factories of sort keys
-     * @param partialAggregatorFactory  , for aggregating the input of this operator
-     * @param mergeAggregatorFactory    , for aggregating the intermediate data of this operator
-     * @param partialAggRecordDesc      , the record descriptor of intermediate data
-     * @param outRecordDesc             , the record descriptor of output data
-     * @param finalStage                , whether the operator is used for final stage aggregation
-     * @param alg                       , the in-memory sort algorithm
-     */
-    public SortGroupByOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
-            int[] groupFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
-            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory partialAggregatorFactory,
-            IAggregatorDescriptorFactory mergeAggregatorFactory, RecordDescriptor partialAggRecordDesc,
-            RecordDescriptor outRecordDesc, boolean finalStage, Algorithm alg) {
-        this(spec, framesLimit, sortFields, groupFields, firstKeyNormalizerFactory, comparatorFactories,
-                partialAggregatorFactory, mergeAggregatorFactory, partialAggRecordDesc, outRecordDesc, finalStage);
-        this.alg = alg;
     }
 
     @Override
@@ -131,9 +118,9 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
         return new AbstractSorterOperatorDescriptor.MergeActivity(id) {
 
             @Override
-            protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
+            protected AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                    List<RunAndMaxFrameSizePair> runs, IBinaryComparator[] comparators,
+                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
                     INormalizedKeyComputer nmkComputer, int necessaryFrames) {
                 return new ExternalSortGroupByRunMerger(ctx, sorter, runs, sortFields,
                         recordDescProvider.getInputRecordDescriptor(new ActivityId(odId, SORT_ACTIVITY_ID), 0),

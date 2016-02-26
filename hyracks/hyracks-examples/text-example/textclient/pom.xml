@@ -67,24 +67,7 @@
               <goal>assemble</goal>
             </goals>
           </execution>
-          <execution>
-          	<id>groupclient</id>
-            <configuration>
-              <programs>
-                <program>
-                  <mainClass>org.apache.hyracks.examples.text.client.ExternalGroupClient</mainClass>
-                  <name>groupclient</name>
-                </program>
-              </programs>
-              <repositoryLayout>flat</repositoryLayout>
-              <repositoryName>lib</repositoryName>
-            </configuration>
-            <phase>package</phase>
-            <goals>
-              <goal>assemble</goal>
-            </goals>
-          </execution>
-        </executions>
+       </executions>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>

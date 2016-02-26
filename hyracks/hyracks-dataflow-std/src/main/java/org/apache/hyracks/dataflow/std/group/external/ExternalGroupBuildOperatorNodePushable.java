@@ -18,125 +18,123 @@
  */
 package org.apache.hyracks.dataflow.std.group.external;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.ISpillableTable;
 import org.apache.hyracks.dataflow.std.group.ISpillableTableFactory;
 
-class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable
+        implements IRunFileWriterGenerator {
+
+    private static Logger LOGGER = Logger.getLogger("ExternalGroupBuildPhase");
     private final IHyracksTaskContext ctx;
     private final Object stateId;
     private final int[] keyFields;
-    private final IBinaryComparatorFactory[] comparatorFactories;
-    private final INormalizedKeyComputerFactory firstNormalizerFactory;
+    private final IBinaryComparator[] comparators;
+    private final INormalizedKeyComputer firstNormalizerComputer;
     private final IAggregatorDescriptorFactory aggregatorFactory;
     private final int framesLimit;
     private final ISpillableTableFactory spillableTableFactory;
     private final RecordDescriptor inRecordDescriptor;
     private final RecordDescriptor outRecordDescriptor;
-    private final FrameTupleAccessor accessor;
+    private final int tableSize;
+    private final long fileSize;
 
+    private ExternalHashGroupBy externalGroupBy;
     private ExternalGroupState state;
+    private boolean isFailed = false;
 
-    ExternalGroupBuildOperatorNodePushable(IHyracksTaskContext ctx, Object stateId, int[] keyFields, int framesLimit,
-            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
-            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, ISpillableTableFactory spillableTableFactory) {
+    public ExternalGroupBuildOperatorNodePushable(IHyracksTaskContext ctx, Object stateId, int tableSize, long fileSize,
+            int[] keyFields, int framesLimit, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory firstNormalizerFactory, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor,
+            ISpillableTableFactory spillableTableFactory) {
         this.ctx = ctx;
         this.stateId = stateId;
         this.framesLimit = framesLimit;
         this.aggregatorFactory = aggregatorFactory;
         this.keyFields = keyFields;
-        this.comparatorFactories = comparatorFactories;
-        this.firstNormalizerFactory = firstNormalizerFactory;
+        this.comparators = new IBinaryComparator[comparatorFactories.length];
+        for (int i = 0; i < comparatorFactories.length; ++i) {
+            comparators[i] = comparatorFactories[i].createBinaryComparator();
+        }
+        this.firstNormalizerComputer = firstNormalizerFactory.createNormalizedKeyComputer();
         this.spillableTableFactory = spillableTableFactory;
         this.inRecordDescriptor = inRecordDescriptor;
         this.outRecordDescriptor = outRecordDescriptor;
-        this.accessor = new FrameTupleAccessor(inRecordDescriptor);
+        this.tableSize = tableSize;
+        this.fileSize = fileSize;
     }
 
     @Override
     public void open() throws HyracksDataException {
         state = new ExternalGroupState(ctx.getJobletContext().getJobId(), stateId);
-        state.setRuns(new LinkedList<RunFileReader>());
-        ISpillableTable table = spillableTableFactory.buildSpillableTable(ctx, keyFields, comparatorFactories,
-                firstNormalizerFactory, aggregatorFactory, inRecordDescriptor, outRecordDescriptor, framesLimit);
-        table.reset();
+        ISpillableTable table = spillableTableFactory.buildSpillableTable(ctx, tableSize, fileSize, keyFields,
+                comparators, firstNormalizerComputer, aggregatorFactory, inRecordDescriptor, outRecordDescriptor,
+                framesLimit, 0);
+        RunFileWriter[] runFileWriters = new RunFileWriter[table.getNumPartitions()];
+        this.externalGroupBy = new ExternalHashGroupBy(this, table, runFileWriters, inRecordDescriptor);
+
         state.setSpillableTable(table);
+        state.setRuns(runFileWriters);
+        state.setSpilledNumTuples(externalGroupBy.getSpilledNumTuples());
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        accessor.reset(buffer);
-        int tupleCount = accessor.getTupleCount();
-        ISpillableTable gTable = state.getSpillableTable();
-        for (int i = 0; i < tupleCount; i++) {
-            /**
-             * If the group table is too large, flush the table into
-             * a run file.
-             */
-            if (!gTable.insert(accessor, i)) {
-                flushFramesToRun();
-                if (!gTable.insert(accessor, i))
-                    throw new HyracksDataException("Failed to insert a new buffer into the aggregate operator!");
-            }
-        }
+        externalGroupBy.insert(buffer);
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        //do nothing for failures
+        isFailed = true;
     }
 
     @Override
     public void close() throws HyracksDataException {
-        ISpillableTable gTable = state.getSpillableTable();
-        if (gTable.getFrameCount() >= 0) {
-            if (state.getRuns().size() > 0) {
-                /**
-                 * flush the memory into the run file.
-                 */
-                flushFramesToRun();
-                gTable.close();
-                gTable = null;
+        if (isFailed) {
+            for (int i = 0; i < state.getRuns().length; i++) {
+                RunFileWriter run = state.getRuns()[i];
+                if (run != null) {
+                    run.getFileReference().delete();
+                }
+            }
+        } else {
+            externalGroupBy.flushSpilledPartitions();
+            ctx.setStateObject(state);
+            if (LOGGER.isLoggable(Level.FINE)) {
+                int numOfPartition = state.getSpillableTable().getNumPartitions();
+                int numOfSpilledPart = 0;
+                for (int i = 0; i < numOfPartition; i++) {
+                    if (state.getSpilledNumTuples()[i] > 0) {
+                        numOfSpilledPart++;
+                    }
+                }
+                LOGGER.fine("level 0:" + "build with " + numOfPartition + " partitions" + ", spilled "
+                        + numOfSpilledPart + " partitions");
             }
         }
-        ctx.setStateObject(state);
+        state = null;
+        externalGroupBy = null;
     }
 
-    private void flushFramesToRun() throws HyracksDataException {
-        FileReference runFile;
-        try {
-            runFile = ctx.getJobletContext().createManagedWorkspaceFile(
-                    ExternalGroupOperatorDescriptor.class.getSimpleName());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-        RunFileWriter writer = new RunFileWriter(runFile, ctx.getIOManager());
-        writer.open();
-        ISpillableTable gTable = state.getSpillableTable();
-        try {
-            gTable.sortFrames();
-            gTable.flushFrames(writer, true);
-        } catch (Exception ex) {
-            throw new HyracksDataException(ex);
-        } finally {
-            writer.close();
-        }
-        gTable.reset();
-        state.getRuns().add(writer.createDeleteOnCloseReader());
+    @Override
+    public RunFileWriter getRunFileWriter() throws HyracksDataException {
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(ExternalGroupOperatorDescriptor.class.getSimpleName());
+        return new RunFileWriter(file, ctx.getIOManager());
     }
 }

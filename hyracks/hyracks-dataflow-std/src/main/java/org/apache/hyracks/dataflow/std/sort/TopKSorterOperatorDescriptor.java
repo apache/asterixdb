@@ -19,13 +19,19 @@
 
 package org.apache.hyracks.dataflow.std.sort;
 
+import java.util.List;
+
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
-import org.apache.hyracks.api.dataflow.value.*;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-
-import java.util.List;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 
 public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescriptor {
 
@@ -56,10 +62,11 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
         return new MergeActivity(id) {
             @Override
             protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter, List<RunAndMaxFrameSizePair> runs, IBinaryComparator[] comparators,
+                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
+                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
                     INormalizedKeyComputer nmkComputer, int necessaryFrames) {
-                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators,
-                        nmkComputer, recordDescriptors[0], necessaryFrames, topK, writer);
+                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
+                        recordDescriptors[0], necessaryFrames, topK, writer);
             }
         };
     }

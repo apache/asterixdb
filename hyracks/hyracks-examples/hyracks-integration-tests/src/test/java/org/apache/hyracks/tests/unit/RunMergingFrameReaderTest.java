@@ -55,10 +55,9 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.io.RunFileReader;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
-import org.apache.hyracks.dataflow.std.sort.RunAndMaxFrameSizePair;
 import org.apache.hyracks.dataflow.std.sort.RunMergingFrameReader;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
 import org.junit.Test;
@@ -234,8 +233,8 @@ public class RunMergingFrameReaderTest {
             List<Map<Integer, String>> keyValueMapList = new ArrayList<>(numRuns);
             List<TestFrameReader> readerList = new ArrayList<>(numRuns);
             List<IFrame> frameList = new ArrayList<>(numRuns);
-            prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize,
-                    readerList, frameList, keyValueMapList);
+            prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                    frameList, keyValueMapList);
 
             RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields,
                     Comparators, null, RecordDesc, topK);
@@ -313,8 +312,8 @@ public class RunMergingFrameReaderTest {
         int maxRecordSize = pageSize / 2;
 
         IHyracksTaskContext ctx = testUtils.create(pageSize);
-        ExternalSortRunGenerator runGenerator = new ExternalSortRunGenerator(ctx, SortFields, null,
-                ComparatorFactories, RecordDesc, Algorithm.MERGE_SORT, numFramesPerRun);
+        ExternalSortRunGenerator runGenerator = new ExternalSortRunGenerator(ctx, SortFields, null, ComparatorFactories,
+                RecordDesc, Algorithm.MERGE_SORT, numFramesPerRun);
 
         runGenerator.open();
         Map<Integer, String> keyValuePair = new HashMap<>();
@@ -336,20 +335,19 @@ public class RunMergingFrameReaderTest {
         }
         runGenerator.close();
         List<IFrame> inFrame = new ArrayList<>(runGenerator.getRuns().size());
-        for (RunAndMaxFrameSizePair max : runGenerator.getRuns()) {
-            inFrame.add(new GroupVSizeFrame(ctx, max.maxFrameSize));
+        for (GeneratedRunFileReader max : runGenerator.getRuns()) {
+            inFrame.add(new GroupVSizeFrame(ctx, max.getMaxFrameSize()));
         }
 
         // Let each run file reader not delete the run file when it is read and closed.
-        for (RunAndMaxFrameSizePair run : runGenerator.getRuns()) {
-            RunFileReader runFileReader = (RunFileReader) run.run;
-            PA.setValue(runFileReader, "deleteAfterClose", false);
+        for (GeneratedRunFileReader run : runGenerator.getRuns()) {
+            PA.setValue(run, "deleteAfterClose", false);
         }
         matchResult(ctx, runGenerator.getRuns(), keyValuePair);
 
         List<IFrameReader> runs = new ArrayList<>();
-        for (RunAndMaxFrameSizePair run : runGenerator.getRuns()) {
-            runs.add(run.run);
+        for (GeneratedRunFileReader run : runGenerator.getRuns()) {
+            runs.add(run);
         }
         RunMergingFrameReader reader = new RunMergingFrameReader(ctx, runs, inFrame, SortFields, Comparators, null,
                 RecordDesc);

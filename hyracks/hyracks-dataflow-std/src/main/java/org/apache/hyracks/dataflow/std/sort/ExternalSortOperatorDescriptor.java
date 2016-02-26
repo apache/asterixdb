@@ -18,15 +18,21 @@
  */
 package org.apache.hyracks.dataflow.std.sort;
 
+import java.util.List;
+
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
-import org.apache.hyracks.api.dataflow.value.*;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.EnumFreeSlotPolicy;
-
-import java.util.List;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
+import org.apache.hyracks.dataflow.std.buffermanager.EnumFreeSlotPolicy;
 
 public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescriptor {
 
@@ -61,8 +67,8 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
             @Override
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) throws HyracksDataException {
-                return new ExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory,
-                        comparatorFactories, recordDescriptors[0], alg, policy, framesLimit, outputLimit);
+                return new ExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
+                        recordDescriptors[0], alg, policy, framesLimit, outputLimit);
             }
         };
     }
@@ -72,10 +78,11 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
         return new AbstractSorterOperatorDescriptor.MergeActivity(id) {
             @Override
             protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter, List<RunAndMaxFrameSizePair> runs, IBinaryComparator[] comparators,
+                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
+                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
                     INormalizedKeyComputer nmkComputer, int necessaryFrames) {
-                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators,
-                        nmkComputer, recordDescriptors[0], necessaryFrames, outputLimit, writer);
+                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
+                        recordDescriptors[0], necessaryFrames, outputLimit, writer);
             }
         };
     }

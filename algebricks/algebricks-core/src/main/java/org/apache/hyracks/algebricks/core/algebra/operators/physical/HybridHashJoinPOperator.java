@@ -150,7 +150,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     case INNER: {
                         opDesc = new HybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                                 maxInputBuildSizeInFrames, aveRecordsPerFrame, getFudgeFactor(), keysLeft, keysRight,
-                                hashFunFactories, comparatorFactories, recDescriptor, predEvaluatorFactory);
+                                hashFunFactories, comparatorFactories, recDescriptor, predEvaluatorFactory, false, null);
                         break;
                     }
                     case LEFT_OUTER: {

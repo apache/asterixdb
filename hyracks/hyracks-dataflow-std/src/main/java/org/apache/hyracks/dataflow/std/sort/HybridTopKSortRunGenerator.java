@@ -30,9 +30,10 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotBiggestFirst;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.VariableFrameMemoryManager;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.VariableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.EnumFreeSlotPolicy;
+import org.apache.hyracks.dataflow.std.buffermanager.FrameFreeSlotPolicyFactory;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFrameMemoryManager;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 
 public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
     private static final Logger LOG = Logger.getLogger(HybridTopKSortRunGenerator.class.getName());
@@ -59,8 +60,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
 
     @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                HybridTopKSortRunGenerator.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(HybridTopKSortRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIOManager());
     }
 
@@ -95,7 +96,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
             if (frameSorter == null) {
                 VariableFrameMemoryManager bufferManager = new VariableFrameMemoryManager(
                         new VariableFramePool(ctx, (frameLimit - 1) * ctx.getInitialFrameSize()),
-                        new FrameFreeSlotBiggestFirst(frameLimit - 1));
+                        FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.BIGGEST_FIT,
+                                frameLimit - 1));
                 frameSorter = new FrameSorterMergeSort(ctx, bufferManager, sortFields, nmkFactory, comparatorFactories,
                         recordDescriptor, topK);
                 if (LOG.isLoggable(Level.FINE)) {

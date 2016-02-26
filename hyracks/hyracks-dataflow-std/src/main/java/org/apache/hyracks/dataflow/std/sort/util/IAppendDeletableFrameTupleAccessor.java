@@ -26,7 +26,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Basically it a union of the {@link IFrameTupleAccessor} and {@link IFrameTupleAppender}.
+ * Basically, it is an union of the {@link IFrameTupleAccessor} and {@link IFrameTupleAppender}.
  * Moreover, it has the delete function as well.
  * This is a special TupleAccessor used for TopK sorting.
  * In HeapSort, or other Tuple-based operators, we need to append the tuple, access the arbitrary previously

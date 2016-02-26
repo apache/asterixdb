@@ -54,6 +54,7 @@ public class RunFileReader implements IFrameReader {
             return false;
         }
         frame.reset();
+
         int readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
         if (readLength <= 0) {
             throw new HyracksDataException("Premature end of file");

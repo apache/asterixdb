@@ -22,15 +22,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ISerializableTable {
 
-    public void insert(int entry, TuplePointer tuplePointer) throws HyracksDataException;
+    void insert(int entry, TuplePointer tuplePointer) throws HyracksDataException;
 
-    public void getTuplePointer(int entry, int offset, TuplePointer tuplePointer);
+    void delete(int entry);
 
-    public int getFrameCount();
+    boolean getTuplePointer(int entry, int offset, TuplePointer tuplePointer);
 
-    public int getTupleCount();
+    int getFrameCount();
 
-    public void reset();
+    int getTupleCount();
 
-    public void close();
+    int getTupleCount(int entry);
+
+    void reset();
+
+    void close();
 }

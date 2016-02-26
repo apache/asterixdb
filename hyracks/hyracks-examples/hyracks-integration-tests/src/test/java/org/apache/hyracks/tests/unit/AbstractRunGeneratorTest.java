@@ -45,8 +45,8 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
-import org.apache.hyracks.dataflow.std.sort.RunAndMaxFrameSizePair;
 import org.apache.hyracks.dataflow.std.sort.util.GroupFrameAccessor;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
 import org.apache.hyracks.test.support.TestUtils;
@@ -54,8 +54,8 @@ import org.junit.Test;
 
 public abstract class AbstractRunGeneratorTest {
     static TestUtils testUtils = new TestUtils();
-    static ISerializerDeserializer[] SerDers = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
+    static ISerializerDeserializer[] SerDers = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer() };
     static RecordDescriptor RecordDesc = new RecordDescriptor(SerDers);
     static Random GRandom = new Random(System.currentTimeMillis());
     static int[] SortFields = new int[] { 0, 1 };
@@ -63,17 +63,17 @@ public abstract class AbstractRunGeneratorTest {
             PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
             PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
-    static void assertMaxFrameSizesAreAllEqualsTo(List<RunAndMaxFrameSizePair> maxSize, int pageSize) {
+    static void assertMaxFrameSizesAreAllEqualsTo(List<GeneratedRunFileReader> maxSize, int pageSize) {
         for (int i = 0; i < maxSize.size(); i++) {
-            assertTrue(maxSize.get(i).maxFrameSize == pageSize);
+            assertTrue(maxSize.get(i).getMaxFrameSize() == pageSize);
         }
     }
 
     abstract AbstractSortRunGenerator getSortRunGenerator(IHyracksTaskContext ctx, int frameLimit, int numOfInputRecord)
             throws HyracksDataException;
 
-    protected List<RunAndMaxFrameSizePair> testSortRecords(int pageSize, int frameLimit, int numRuns,
-            int minRecordSize, int maxRecordSize, HashMap<Integer, String> specialData) throws HyracksDataException {
+    protected List<GeneratedRunFileReader> testSortRecords(int pageSize, int frameLimit, int numRuns, int minRecordSize,
+            int maxRecordSize, HashMap<Integer, String> specialData) throws HyracksDataException {
         IHyracksTaskContext ctx = testUtils.create(pageSize);
 
         HashMap<Integer, String> keyValuePair = new HashMap<>();
@@ -90,12 +90,12 @@ public abstract class AbstractRunGeneratorTest {
         return runGenerator.getRuns();
     }
 
-    static void matchResult(IHyracksTaskContext ctx, List<RunAndMaxFrameSizePair> runs,
+    static void matchResult(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs,
             Map<Integer, String> keyValuePair) throws HyracksDataException {
         HashMap<Integer, String> copyMap2 = new HashMap<>(keyValuePair);
         int maxFrameSizes = 0;
-        for (RunAndMaxFrameSizePair run : runs) {
-            maxFrameSizes = Math.max(maxFrameSizes, run.maxFrameSize);
+        for (GeneratedRunFileReader run : runs) {
+            maxFrameSizes = Math.max(maxFrameSizes, run.getMaxFrameSize());
         }
         GroupVSizeFrame gframe = new GroupVSizeFrame(ctx, maxFrameSizes);
         GroupFrameAccessor gfta = new GroupFrameAccessor(ctx.getInitialFrameSize(), RecordDesc);
@@ -125,25 +125,25 @@ public abstract class AbstractRunGeneratorTest {
         return preKey;
     }
 
-    static void assertReadSorted(List<RunAndMaxFrameSizePair> runs, IFrameTupleAccessor fta, IFrame frame,
+    static void assertReadSorted(List<GeneratedRunFileReader> runs, IFrameTupleAccessor fta, IFrame frame,
             Map<Integer, String> keyValuePair) throws HyracksDataException {
 
         assertTrue(runs.size() > 0);
-        for (RunAndMaxFrameSizePair run : runs) {
-            run.run.open();
+        for (GeneratedRunFileReader run : runs) {
+            run.open();
             int preKey = Integer.MIN_VALUE;
-            while (run.run.nextFrame(frame)) {
+            while (run.nextFrame(frame)) {
                 fta.reset(frame.getBuffer());
                 preKey = assertFTADataIsSorted(fta, keyValuePair, preKey);
             }
-            run.run.close();
+            run.close();
         }
         assertTrue(keyValuePair.isEmpty());
     }
 
     static void prepareData(IHyracksTaskContext ctx, List<IFrame> frameList, int minDataSize, int minRecordSize,
             int maxRecordSize, Map<Integer, String> specialData, Map<Integer, String> keyValuePair)
-            throws HyracksDataException {
+                    throws HyracksDataException {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(RecordDesc.getFieldCount());
         FrameTupleAppender appender = new FrameTupleAppender();
@@ -223,7 +223,7 @@ public abstract class AbstractRunGeneratorTest {
         int numRuns = 2;
         int minRecordSize = pageSize / 8;
         int maxRecordSize = pageSize / 8;
-        List<RunAndMaxFrameSizePair> maxSize = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize,
+        List<GeneratedRunFileReader> maxSize = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize,
                 maxRecordSize, null);
         assertMaxFrameSizesAreAllEqualsTo(maxSize, pageSize);
     }
@@ -235,8 +235,8 @@ public abstract class AbstractRunGeneratorTest {
         int numRuns = 2;
         int minRecordSize = pageSize;
         int maxRecordSize = (int) (pageSize * 1.8);
-        List<RunAndMaxFrameSizePair> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize,
-                maxRecordSize, null);
+        List<GeneratedRunFileReader> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize, maxRecordSize,
+                null);
         assertMaxFrameSizesAreAllEqualsTo(size, pageSize * 2);
     }
 
@@ -248,12 +248,12 @@ public abstract class AbstractRunGeneratorTest {
         int minRecordSize = 20;
         int maxRecordSize = pageSize / 2;
         HashMap<Integer, String> specialPair = generateBigObject(pageSize, frameLimit - 1);
-        List<RunAndMaxFrameSizePair> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize,
-                maxRecordSize, specialPair);
+        List<GeneratedRunFileReader> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize, maxRecordSize,
+                specialPair);
 
         int max = 0;
-        for (RunAndMaxFrameSizePair run : size) {
-            max = Math.max(max, run.maxFrameSize);
+        for (GeneratedRunFileReader run : size) {
+            max = Math.max(max, run.getMaxFrameSize());
         }
         assertTrue(max == pageSize * (frameLimit - 1));
     }
@@ -266,8 +266,8 @@ public abstract class AbstractRunGeneratorTest {
         HashMap<Integer, String> specialPair = generateBigObject(pageSize, frameLimit);
         int minRecordSize = 10;
         int maxRecordSize = pageSize / 2;
-        List<RunAndMaxFrameSizePair> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize,
-                maxRecordSize, specialPair);
+        List<GeneratedRunFileReader> size = testSortRecords(pageSize, frameLimit, numRuns, minRecordSize, maxRecordSize,
+                specialPair);
 
     }
 }

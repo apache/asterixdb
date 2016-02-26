@@ -24,26 +24,27 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 
 public abstract class AbstractSortRunGenerator implements IRunGenerator {
-    protected final List<RunAndMaxFrameSizePair> runAndMaxSizes;
+    protected final List<GeneratedRunFileReader> generatedRunFileReaders;
 
     public AbstractSortRunGenerator() {
-        runAndMaxSizes = new LinkedList<>();
+        generatedRunFileReaders = new LinkedList<>();
     }
 
     abstract public ISorter getSorter() throws HyracksDataException;
 
     @Override
     public void open() throws HyracksDataException {
-        runAndMaxSizes.clear();
+        generatedRunFileReaders.clear();
     }
 
     @Override
     public void close() throws HyracksDataException {
         if (getSorter().hasRemaining()) {
-            if (runAndMaxSizes.size() <= 0) {
+            if (generatedRunFileReaders.size() <= 0) {
                 getSorter().sort();
             } else {
                 flushFramesToRun();
@@ -60,13 +61,12 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
         RunFileWriter runWriter = getRunFileWriter();
         IFrameWriter flushWriter = getFlushableFrameWriter(runWriter);
         flushWriter.open();
-        int maxFlushedFrameSize;
         try {
-            maxFlushedFrameSize = getSorter().flush(flushWriter);
+            getSorter().flush(flushWriter);
         } finally {
             flushWriter.close();
         }
-        runAndMaxSizes.add(new RunAndMaxFrameSizePair(runWriter.createDeleteOnCloseReader(), maxFlushedFrameSize));
+        generatedRunFileReaders.add(runWriter.createDeleteOnCloseReader());
         getSorter().reset();
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
     }
 
     @Override
-    public List<RunAndMaxFrameSizePair> getRuns() {
-        return runAndMaxSizes;
+    public List<GeneratedRunFileReader> getRuns() {
+        return generatedRunFileReaders;
     }
 }

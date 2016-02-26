@@ -36,8 +36,10 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
+import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
@@ -59,6 +61,9 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
 
     protected int[] tPointers;
     protected int tupleCount;
+
+    private FrameTupleAccessor fta2;
+    private BufferInfo info = new BufferInfo(null, -1, -1);
 
     public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
@@ -82,6 +87,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         this.outputAppender = new FrameTupleAppender();
         this.outputFrame = new VSizeFrame(ctx);
         this.outputLimit = outputLimit;
+        this.fta2 = new FrameTupleAccessor(recordDescriptor);
     }
 
     @Override
@@ -106,9 +112,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     public void sort() throws HyracksDataException {
         tupleCount = 0;
         for (int i = 0; i < bufferManager.getNumFrames(); ++i) {
-            inputTupleAccessor
-                    .reset(bufferManager.getFrame(i), bufferManager.getFrameStartOffset(i),
-                            bufferManager.getFrameSize(i));
+            bufferManager.getFrame(i, info);
+            inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             tupleCount += inputTupleAccessor.getTupleCount();
         }
         if (tPointers == null || tPointers.length < tupleCount * PTR_SIZE) {
@@ -117,9 +122,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         int ptr = 0;
         int sfIdx = sortFields[0];
         for (int i = 0; i < bufferManager.getNumFrames(); ++i) {
-            inputTupleAccessor
-                    .reset(bufferManager.getFrame(i), bufferManager.getFrameStartOffset(i),
-                            bufferManager.getFrameSize(i));
+            bufferManager.getFrame(i, info);
+            inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             int tCount = inputTupleAccessor.getTupleCount();
             byte[] array = inputTupleAccessor.getBuffer().array();
             for (int j = 0; j < tCount; ++j) {
@@ -163,9 +167,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
             int i = tPointers[ptr * PTR_SIZE + ID_FRAMEID];
             int tStart = tPointers[ptr * PTR_SIZE + ID_TUPLE_START];
             int tEnd = tPointers[ptr * PTR_SIZE + ID_TUPLE_END];
-            ByteBuffer buffer = bufferManager.getFrame(i);
-            inputTupleAccessor.reset(buffer, bufferManager.getFrameStartOffset(i), bufferManager.getFrameSize(i));
-
+            bufferManager.getFrame(i, info);
+            inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             int flushed = FrameUtils.appendToWriter(writer, outputAppender, inputTupleAccessor, tStart, tEnd);
             if (flushed > 0) {
                 maxFrameSize = Math.max(maxFrameSize, flushed);
@@ -179,6 +182,45 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
                     "Flushed records:" + limit + " out of " + tupleCount + "; Flushed through " + (io + 1) + " frames");
         }
         return maxFrameSize;
+    }
+
+    protected final int compare(int tp1, int tp2) throws HyracksDataException {
+        int i1 = tPointers[tp1 * 4];
+        int j1 = tPointers[tp1 * 4 + 1];
+        int v1 = tPointers[tp1 * 4 + 3];
+
+        int tp2i = tPointers[tp2 * 4];
+        int tp2j = tPointers[tp2 * 4 + 1];
+        int tp2v = tPointers[tp2 * 4 + 3];
+
+        if (v1 != tp2v) {
+            return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
+        }
+        int i2 = tp2i;
+        int j2 = tp2j;
+        bufferManager.getFrame(i1, info);
+        byte[] b1 = info.getBuffer().array();
+        inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
+
+        bufferManager.getFrame(i2, info);
+        byte[] b2 = info.getBuffer().array();
+        fta2.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
+        for (int f = 0; f < comparators.length; ++f) {
+            int fIdx = sortFields[f];
+            int f1Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b1, j1 + (fIdx - 1) * 4);
+            int f1End = IntSerDeUtils.getInt(b1, j1 + fIdx * 4);
+            int s1 = j1 + inputTupleAccessor.getFieldSlotsLength() + f1Start;
+            int l1 = f1End - f1Start;
+            int f2Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b2, j2 + (fIdx - 1) * 4);
+            int f2End = IntSerDeUtils.getInt(b2, j2 + fIdx * 4);
+            int s2 = j2 + fta2.getFieldSlotsLength() + f2Start;
+            int l2 = f2End - f2Start;
+            int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
+            if (c != 0) {
+                return c;
+            }
+        }
+        return 0;
     }
 
     @Override

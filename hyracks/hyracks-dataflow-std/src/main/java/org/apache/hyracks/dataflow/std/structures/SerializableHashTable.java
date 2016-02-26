@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.std.structures;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -36,14 +37,14 @@ public class SerializableHashTable implements ISerializableTable {
     private IntSerDeBuffer[] headers;
     private List<IntSerDeBuffer> contents = new ArrayList<IntSerDeBuffer>();
     private List<Integer> frameCurrentIndex = new ArrayList<Integer>();
-    private final IHyracksTaskContext ctx;
-    private int frameCapacity = 0;
+    private final IHyracksFrameMgrContext ctx;
+    private final int frameCapacity;
     private int currentLargestFrameIndex = 0;
     private int tupleCount = 0;
     private int headerFrameCount = 0;
     private TuplePointer tempTuplePointer = new TuplePointer();
 
-    public SerializableHashTable(int tableSize, final IHyracksTaskContext ctx) throws HyracksDataException {
+    public SerializableHashTable(int tableSize, final IHyracksFrameMgrContext ctx) throws HyracksDataException {
         this.ctx = ctx;
         int frameSize = ctx.getInitialFrameSize();
 
@@ -81,28 +82,45 @@ public class SerializableHashTable implements ISerializableTable {
     }
 
     @Override
-    public void getTuplePointer(int entry, int offset, TuplePointer dataPointer) {
+    public void delete(int entry) {
+        int hFrameIndex = getHeaderFrameIndex(entry);
+        int headerOffset = getHeaderFrameOffset(entry);
+        IntSerDeBuffer header = headers[hFrameIndex];
+        if (header != null) {
+            int frameIndex = header.getInt(headerOffset);
+            int offsetIndex = header.getInt(headerOffset + 1);
+            if (frameIndex >= 0) {
+                IntSerDeBuffer frame = contents.get(frameIndex);
+                int entryUsedItems = frame.getInt(offsetIndex + 1);
+                frame.writeInt(offsetIndex + 1, 0);
+                tupleCount -= entryUsedItems;
+            }
+        }
+    }
+
+    @Override
+    public boolean getTuplePointer(int entry, int offset, TuplePointer dataPointer) {
         int hFrameIndex = getHeaderFrameIndex(entry);
         int headerOffset = getHeaderFrameOffset(entry);
         IntSerDeBuffer header = headers[hFrameIndex];
         if (header == null) {
             dataPointer.frameIndex = -1;
             dataPointer.tupleIndex = -1;
-            return;
+            return false;
         }
         int frameIndex = header.getInt(headerOffset);
         int offsetIndex = header.getInt(headerOffset + 1);
         if (frameIndex < 0) {
             dataPointer.frameIndex = -1;
             dataPointer.tupleIndex = -1;
-            return;
+            return false;
         }
         IntSerDeBuffer frame = contents.get(frameIndex);
         int entryUsedItems = frame.getInt(offsetIndex + 1);
         if (offset > entryUsedItems - 1) {
             dataPointer.frameIndex = -1;
             dataPointer.tupleIndex = -1;
-            return;
+            return false;
         }
         int startIndex = offsetIndex + 2 + offset * 2;
         while (startIndex >= frameCapacity) {
@@ -112,6 +130,7 @@ public class SerializableHashTable implements ISerializableTable {
         frame = contents.get(frameIndex);
         dataPointer.frameIndex = frame.getInt(startIndex);
         dataPointer.tupleIndex = frame.getInt(startIndex + 1);
+        return true;
     }
 
     @Override
@@ -139,9 +158,26 @@ public class SerializableHashTable implements ISerializableTable {
     }
 
     @Override
+    public int getTupleCount(int entry) {
+        int hFrameIndex = getHeaderFrameIndex(entry);
+        int headerOffset = getHeaderFrameOffset(entry);
+        IntSerDeBuffer header = headers[hFrameIndex];
+        if (header != null) {
+            int frameIndex = header.getInt(headerOffset);
+            int offsetIndex = header.getInt(headerOffset + 1);
+            if (frameIndex >= 0) {
+                IntSerDeBuffer frame = contents.get(frameIndex);
+                int entryUsedItems = frame.getInt(offsetIndex + 1);
+                return entryUsedItems;
+            }
+        }
+        return 0;
+    }
+
+    @Override
     public void close() {
         int nFrames = contents.size();
-    	for (int i = 0; i < headers.length; i++)
+        for (int i = 0; i < headers.length; i++)
             headers[i] = null;
         contents.clear();
         frameCurrentIndex.clear();
@@ -259,31 +295,30 @@ public class SerializableHashTable implements ISerializableTable {
         return offset;
     }
 
-}
+    class IntSerDeBuffer {
 
-class IntSerDeBuffer {
+        private byte[] bytes;
 
-    private byte[] bytes;
+        public IntSerDeBuffer(byte[] data) {
+            this.bytes = data;
+        }
 
-    public IntSerDeBuffer(byte[] data) {
-        this.bytes = data;
-    }
+        public int getInt(int pos) {
+            int offset = pos * 4;
+            return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16)
+                    + ((bytes[offset + 2] & 0xff) << 8) + ((bytes[offset + 3] & 0xff) << 0);
+        }
 
-    public int getInt(int pos) {
-        int offset = pos * 4;
-        return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
-                + ((bytes[offset + 3] & 0xff) << 0);
-    }
+        public void writeInt(int pos, int value) {
+            int offset = pos * 4;
+            bytes[offset++] = (byte) (value >> 24);
+            bytes[offset++] = (byte) (value >> 16);
+            bytes[offset++] = (byte) (value >> 8);
+            bytes[offset++] = (byte) (value);
+        }
 
-    public void writeInt(int pos, int value) {
-        int offset = pos * 4;
-        bytes[offset++] = (byte) (value >> 24);
-        bytes[offset++] = (byte) (value >> 16);
-        bytes[offset++] = (byte) (value >> 8);
-        bytes[offset++] = (byte) (value);
-    }
-
-    public int capacity() {
-        return bytes.length / 4;
+        public int capacity() {
+            return bytes.length / 4;
+        }
     }
 }

@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFrameAppender {
+
     /**
      * Reset to attach to a new frame.
      *

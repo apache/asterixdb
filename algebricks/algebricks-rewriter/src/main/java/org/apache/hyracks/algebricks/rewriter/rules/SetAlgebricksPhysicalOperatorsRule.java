@@ -166,7 +166,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                                     ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
                                             gby.getGroupByList(),
                                             physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
-                                            physicalOptimizationConfig.getExternalGroupByTableSize());
+                                            physicalOptimizationConfig.getExternalGroupByTableSize(),
+                                            (long) physicalOptimizationConfig.getMaxFramesExternalGroupBy()
+                                                    * physicalOptimizationConfig.getFrameSize());
                                     op.setPhysicalOperator(externalGby);
                                     break;
                                 }

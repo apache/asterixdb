@@ -42,6 +42,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
@@ -92,7 +93,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
     }
 
     public static class SortTaskState extends AbstractStateObject {
-        public List<RunAndMaxFrameSizePair> runAndMaxFrameSizePairs;
+        public List<GeneratedRunFileReader> generatedRunFileReaders;
         public ISorter sorter;
 
         public SortTaskState(JobId jobId, TaskId taskId) {
@@ -142,7 +143,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     SortTaskState state = new SortTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
                     runGen.close();
-                    state.runAndMaxFrameSizePairs = runGen.getRuns();
+                    state.generatedRunFileReaders = runGen.getRuns();
                     state.sorter = runGen.getSorter();
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("InitialNumberOfRuns:" + runGen.getRuns().size());
@@ -166,9 +167,9 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
             super(id);
         }
 
-        protected abstract ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
+        protected abstract AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                List<RunAndMaxFrameSizePair> runs, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
+                List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
                 int necessaryFrames);
 
         @Override
@@ -180,17 +181,16 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                 public void initialize() throws HyracksDataException {
                     SortTaskState state = (SortTaskState) ctx
                             .getStateObject(new TaskId(new ActivityId(getOperatorId(), SORT_ACTIVITY_ID), partition));
-                    List<RunAndMaxFrameSizePair> runs = state.runAndMaxFrameSizePairs;
+                    List<GeneratedRunFileReader> runs = state.generatedRunFileReaders;
                     ISorter sorter = state.sorter;
                     IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
                     for (int i = 0; i < comparatorFactories.length; ++i) {
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
-                    INormalizedKeyComputer nmkComputer = firstKeyNormalizerFactory == null ?
-                            null :
-                            firstKeyNormalizerFactory.createNormalizedKeyComputer();
-                    ExternalSortRunMerger merger = getSortRunMerger(ctx, recordDescProvider, writer, sorter, runs,
-                            comparators, nmkComputer, framesLimit);
+                    INormalizedKeyComputer nmkComputer = firstKeyNormalizerFactory == null ? null
+                            : firstKeyNormalizerFactory.createNormalizedKeyComputer();
+                    AbstractExternalSortRunMerger merger = getSortRunMerger(ctx, recordDescProvider, writer, sorter,
+                            runs, comparators, nmkComputer, framesLimit);
                     merger.process();
                 }
             };

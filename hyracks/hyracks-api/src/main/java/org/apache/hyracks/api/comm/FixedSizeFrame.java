@@ -23,11 +23,19 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FixedSizeFrame implements IFrame{
+public class FixedSizeFrame implements IFrame {
 
-    private final ByteBuffer buffer;
+    private ByteBuffer buffer;
 
-    public FixedSizeFrame(ByteBuffer buffer){
+    public FixedSizeFrame() {
+
+    }
+
+    public FixedSizeFrame(ByteBuffer buffer) {
+        this.buffer = buffer;
+    }
+
+    public void reset(ByteBuffer buffer) {
         this.buffer = buffer;
     }
 

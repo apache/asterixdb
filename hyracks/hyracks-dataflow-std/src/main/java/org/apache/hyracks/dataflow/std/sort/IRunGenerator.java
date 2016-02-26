@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.std.sort;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 
 /**
  * @author pouria
@@ -31,5 +32,5 @@ public interface IRunGenerator extends IFrameWriter {
     /**
      * @return the list of generated (sorted) runs
      */
-    List<RunAndMaxFrameSizePair> getRuns();
+    List<GeneratedRunFileReader> getRuns();
 }

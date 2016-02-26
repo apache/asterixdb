@@ -24,9 +24,9 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IHyracksFrameMgrContext {
+
     int getInitialFrameSize();
 
-    //TODO tobedeleted
     ByteBuffer allocateFrame() throws HyracksDataException;
 
     ByteBuffer allocateFrame(int bytes) throws HyracksDataException;

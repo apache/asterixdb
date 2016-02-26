@@ -1,8 +1,3 @@
-package org.apache.hyracks.storage.am.common.api;
-
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,6 +16,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.hyracks.storage.am.common.api;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+
 public interface ITwoPCIndexBulkLoader {
 
     /**

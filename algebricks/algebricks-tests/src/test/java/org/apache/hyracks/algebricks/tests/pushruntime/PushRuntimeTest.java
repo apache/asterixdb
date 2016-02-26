@@ -46,7 +46,6 @@ import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.TupleFieldEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.aggreg.AggregateRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.aggreg.NestedPlansAccumulatingAggregatorFactory;
-import org.apache.hyracks.algebricks.runtime.operators.aggreg.SimpleAlgebricksAccumulatingAggregatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.group.MicroPreClusteredGroupRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.algebricks.runtime.operators.meta.SubplanRuntimeFactory;
@@ -67,15 +66,12 @@ import org.apache.hyracks.algebricks.tests.util.AlgebricksHyracksIntegrationUtil
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
@@ -85,7 +81,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
-import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -93,8 +88,6 @@ import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.LineFileWriteOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import org.apache.hyracks.dataflow.std.group.hash.HashGroupOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
@@ -472,75 +465,6 @@ public class PushRuntimeTest {
 
         spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, sort, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sort, 0, gby, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), gby, 0, algebricksOp, 0);
-        spec.addRoot(algebricksOp);
-
-        AlgebricksHyracksIntegrationUtil.runJob(spec);
-        StringBuilder buf = new StringBuilder();
-        readFileToString(outFile, buf);
-        Assert.assertEquals("9", buf.toString());
-        outFile.delete();
-    }
-
-    @Test
-    public void scanHashGbySelectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification(FRAME_SIZE);
-
-        // the scanner
-        FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl")));
-        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
-        RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
-                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
-                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
-        IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
-                UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
-                UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                UTF8StringParserFactory.INSTANCE };
-        FileScanOperatorDescriptor scanner = new FileScanOperatorDescriptor(spec, splitProvider,
-                new DelimitedDataTupleParserFactory(valueParsers, '|'), scannerDesc);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scanner,
-                new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
-
-        // the group-by
-        RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
-        ITuplePartitionComputerFactory tpcf = new FieldHashPartitionComputerFactory(new int[] { 3 },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) });
-        IAggregateEvaluatorFactory[] aggFuns = new IAggregateEvaluatorFactory[] { new TupleCountAggregateFunctionFactory() };
-        IAggregatorDescriptorFactory aggFactory = new SimpleAlgebricksAccumulatingAggregatorFactory(aggFuns,
-                new int[] { 3 });
-        HashGroupOperatorDescriptor gby = new HashGroupOperatorDescriptor(spec, new int[] { 3 }, tpcf,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
-                aggFactory, gbyDesc, 1024);
-
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, gby,
-                new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
-
-        // the algebricks op.
-        IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
-                new TupleFieldEvaluatorFactory(0)); // Canadian customers
-        StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.FACTORY, false, -1, null);
-        RecordDescriptor selectDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
-
-        String filePath = PATH_ACTUAL + SEPARATOR + "scanHashGbySelectWrite.out";
-        File outFile = new File(filePath);
-        SinkWriterRuntimeFactory writer = new SinkWriterRuntimeFactory(new int[] { 0 },
-                new IPrinterFactory[] { IntegerPrinterFactory.INSTANCE }, outFile, PrinterBasedWriterFactory.INSTANCE,
-                selectDesc);
-
-        AlgebricksMetaOperatorDescriptor algebricksOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                new IPushRuntimeFactory[] { select, writer }, new RecordDescriptor[] { selectDesc, null });
-
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, algebricksOp,
-                new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, gby, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), gby, 0, algebricksOp, 0);
         spec.addRoot(algebricksOp);
 

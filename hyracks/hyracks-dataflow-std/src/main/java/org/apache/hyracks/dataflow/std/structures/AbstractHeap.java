@@ -72,9 +72,7 @@ public abstract class AbstractHeap implements IHeap<IResetableComparable> {
 
     @Override
     public void reset() {
-        for (int i = 0; i < numEntry; i++) {
-            entries[i] = null;
-        }
+        Arrays.fill(entries, null);
         numEntry = 0;
     }
 

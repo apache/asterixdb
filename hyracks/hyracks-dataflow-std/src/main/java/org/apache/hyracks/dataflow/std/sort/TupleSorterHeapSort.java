@@ -36,8 +36,8 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.ITupleBufferAccessor;
-import org.apache.hyracks.dataflow.std.sort.buffermanager.ITupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
 import org.apache.hyracks.dataflow.std.structures.IResetableComparableFactory;
 import org.apache.hyracks.dataflow.std.structures.MaxHeap;
@@ -70,8 +70,8 @@ public class TupleSorterHeapSort implements ITupleSorter {
             }
             bufferAccessor1.reset(tuplePointer);
             bufferAccessor2.reset(o.tuplePointer);
-            byte[] b1 = bufferAccessor1.getTupleBuffer().array();
-            byte[] b2 = bufferAccessor2.getTupleBuffer().array();
+            byte[] b1 = bufferAccessor1.getBuffer().array();
+            byte[] b2 = bufferAccessor2.getBuffer().array();
 
             for (int f = 0; f < comparators.length; ++f) {
                 int fIdx = sortFields[f];
@@ -104,9 +104,9 @@ public class TupleSorterHeapSort implements ITupleSorter {
         }
     }
 
-    private final ITupleBufferManager bufferManager;
-    private final ITupleBufferAccessor bufferAccessor1;
-    private final ITupleBufferAccessor bufferAccessor2;
+    private final IDeletableTupleBufferManager bufferManager;
+    private final ITuplePointerAccessor bufferAccessor1;
+    private final ITuplePointerAccessor bufferAccessor2;
     private final int topK;
     private final FrameTupleAppender outputAppender;
     private final IFrame outputFrame;
@@ -120,12 +120,13 @@ public class TupleSorterHeapSort implements ITupleSorter {
     private MaxHeap heap;
     private boolean isSorted;
 
-    public TupleSorterHeapSort(IHyracksTaskContext ctx, ITupleBufferManager bufferManager, int topK, int[] sortFields,
+    public TupleSorterHeapSort(IHyracksTaskContext ctx, IDeletableTupleBufferManager bufferManager, int topK,
+            int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories)
             throws HyracksDataException {
         this.bufferManager = bufferManager;
-        this.bufferAccessor1 = bufferManager.getTupleAccessor();
-        this.bufferAccessor2 = bufferManager.getTupleAccessor();
+        this.bufferAccessor1 = bufferManager.createTupleAccessor();
+        this.bufferAccessor2 = bufferManager.createTupleAccessor();
         this.topK = topK;
         this.outputFrame = new VSizeFrame(ctx);
         this.outputAppender = new FrameTupleAppender();
@@ -190,7 +191,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
         }
         bufferAccessor2.reset(maxEntry.tuplePointer);
         byte[] b1 = frameTupleAccessor.getBuffer().array();
-        byte[] b2 = bufferAccessor2.getTupleBuffer().array();
+        byte[] b2 = bufferAccessor2.getBuffer().array();
 
         for (int f = 0; f < comparators.length; ++f) {
             int fIdx = sortFields[f];
@@ -236,7 +237,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
     };
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
         heap = null;
         bufferManager.close();
         isSorted = false;
@@ -254,7 +255,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
             HeapEntry minEntry = (HeapEntry) entries[i];
             bufferAccessor1.reset(minEntry.tuplePointer);
             int flushed = FrameUtils
-                    .appendToWriter(writer, outputAppender, bufferAccessor1.getTupleBuffer().array(),
+                    .appendToWriter(writer, outputAppender, bufferAccessor1.getBuffer().array(),
                             bufferAccessor1.getTupleStartOffset(), bufferAccessor1.getTupleLength());
             if (flushed > 0) {
                 maxFrameSize = Math.max(maxFrameSize, flushed);
