@@ -16,22 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.server;
+package org.apache.asterix.test.client;
 
-public class TestServerProvider {
+public interface ITestClient {
 
-    public static ITestServer createTestServer(String name, Integer port) throws Exception {
-        switch (name) {
-            case "file":
-                return new FileTestServer(port);
-            case "rss":
-                return new RSSTestServer(port);
-            case "open-socket-file":
-                return new OpenSocketFileTestServer(port);
-            case "client":
-                return new TestClientServer(port);
-            default:
-                throw new Exception("Unknown test server");
-        }
-    }
+    public void start() throws Exception;
+
+    public void stop() throws Exception;
+
 }

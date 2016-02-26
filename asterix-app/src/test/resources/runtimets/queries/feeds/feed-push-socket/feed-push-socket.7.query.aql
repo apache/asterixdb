@@ -16,22 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.server;
+/*
+ * Description  : Create a socket feed with a client that pushes
+ * 10 records. The feed is connected to a dataset that is then
+ * queried for the data.
+ * Expected Res : Success
+ * Date         : 24th Feb 2016
+ */
 
-public class TestServerProvider {
+use dataverse experiments;
 
-    public static ITestServer createTestServer(String name, Integer port) throws Exception {
-        switch (name) {
-            case "file":
-                return new FileTestServer(port);
-            case "rss":
-                return new RSSTestServer(port);
-            case "open-socket-file":
-                return new OpenSocketFileTestServer(port);
-            case "client":
-                return new TestClientServer(port);
-            default:
-                throw new Exception("Unknown test server");
-        }
-    }
-}
+for $x in dataset Tweets
+order by $x.tweetid
+return $x;

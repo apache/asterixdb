@@ -25,5 +25,4 @@ public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
     public IRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition) throws Exception;
 
     public Class<? extends T> getRecordClass();
-
 }

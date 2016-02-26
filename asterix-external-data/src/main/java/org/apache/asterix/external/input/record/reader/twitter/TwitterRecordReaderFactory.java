@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -30,8 +31,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import twitter4j.Status;
@@ -46,6 +46,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
 
     private Map<String, String> configuration;
     private boolean pull;
+    private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -53,8 +54,9 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(INTAKE_CARDINALITY);
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, INTAKE_CARDINALITY);
+        return clusterLocations;
     }
 
     @Override

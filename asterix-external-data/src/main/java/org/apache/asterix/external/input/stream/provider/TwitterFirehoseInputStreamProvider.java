@@ -58,7 +58,6 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
 
     @Override
     public AInputStream getInputStream() throws Exception {
-        twitterServer.start();
         return twitterServer;
     }
 

@@ -25,7 +25,9 @@ import java.net.Socket;
 import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SocketInputStream extends AInputStream {
     private ServerSocket server;
@@ -34,8 +36,13 @@ public class SocketInputStream extends AInputStream {
 
     public SocketInputStream(ServerSocket server) throws IOException {
         this.server = server;
-        socket = server.accept();
-        connectionStream = socket.getInputStream();
+        socket = new Socket();
+        connectionStream = new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return -1;
+            }
+        };
     }
 
     @Override
@@ -56,20 +63,31 @@ public class SocketInputStream extends AInputStream {
 
     @Override
     public int read(byte b[]) throws IOException {
-        int read = connectionStream.read(b, 0, b.length);
-        while (read < 0) {
-            accept();
-            read = connectionStream.read(b, 0, b.length);
-        }
-        return read;
+        return read(b, 0, b.length);
     }
 
     @Override
     public int read(byte b[], int off, int len) throws IOException {
-        int read = connectionStream.read(b, off, len);
-        while (read < 0) {
-            accept();
+        if (server == null) {
+            return -1;
+        }
+        int read = -1;
+        try {
             read = connectionStream.read(b, off, len);
+        } catch (IOException e) {
+            e.printStackTrace();
+            read = -1;
+        }
+        while (read < 0) {
+            if (!accept()) {
+                return -1;
+            }
+            try {
+                read = connectionStream.read(b, off, len);
+            } catch (IOException e) {
+                e.printStackTrace();
+                read = -1;
+            }
         }
         return read;
     }
@@ -85,22 +103,57 @@ public class SocketInputStream extends AInputStream {
     }
 
     @Override
-    public void close() throws IOException {
-        connectionStream.close();
-        socket.close();
-        server.close();
+    public synchronized void close() throws IOException {
+        HyracksDataException hde = null;
+        try {
+            if (connectionStream != null) {
+                connectionStream.close();
+            }
+            connectionStream = null;
+        } catch (IOException e) {
+            hde = new HyracksDataException(e);
+        }
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+            socket = null;
+        } catch (IOException e) {
+            hde = ExternalDataExceptionUtils.suppress(hde, e);
+        }
+        try {
+            if (server != null) {
+                server.close();
+            }
+        } catch (IOException e) {
+            hde = ExternalDataExceptionUtils.suppress(hde, e);
+        } finally {
+            server = null;
+        }
+        if (hde != null) {
+            throw hde;
+        }
     }
 
-    private void accept() throws IOException {
-        connectionStream.close();
-        socket.close();
-        socket = server.accept();
-        connectionStream = socket.getInputStream();
+    private boolean accept() throws IOException {
+        try {
+            connectionStream.close();
+            connectionStream = null;
+            socket.close();
+            socket = null;
+            socket = server.accept();
+            connectionStream = socket.getInputStream();
+            return true;
+        } catch (Exception e) {
+            close();
+            return false;
+        }
     }
 
     @Override
     public boolean stop() throws Exception {
-        return false;
+        close();
+        return true;
     }
 
     @Override

@@ -27,7 +27,6 @@ import org.apache.asterix.app.external.TestLibrarian;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

@@ -28,14 +28,14 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 
 public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
 
     protected static final long serialVersionUID = 1L;
-    protected transient AlgebricksPartitionConstraint clusterLocations;
+    protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
     protected ConfFactory confFactory;
     protected Map<String, String> configuration;
 
@@ -48,7 +48,7 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
         clusterLocations = HDFSUtils.getPartitionConstraints(clusterLocations);
         return clusterLocations;
     }

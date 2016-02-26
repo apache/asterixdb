@@ -35,7 +35,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.util.AsterixRuntimeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -106,7 +105,7 @@ public class SocketInputStreamProviderFactory implements IInputStreamProviderFac
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         List<String> locations = new ArrayList<String>();
         for (Pair<String, Integer> socket : sockets) {
             locations.add(socket.first);

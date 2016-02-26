@@ -23,14 +23,14 @@ import java.util.Map;
 
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -48,14 +48,17 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
 
     private Map<String, String> configuration;
 
+    private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+
     @Override
     public String getAlias() {
         return "test_typed";
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(1);
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
+        return clusterLocations;
     }
 
     @Override

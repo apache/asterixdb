@@ -18,20 +18,32 @@
  */
 package org.apache.asterix.test.server;
 
-public class TestServerProvider {
+import org.apache.asterix.test.client.ITestClient;
+import org.apache.asterix.test.client.TestClientProvider;
 
-    public static ITestServer createTestServer(String name, Integer port) throws Exception {
-        switch (name) {
-            case "file":
-                return new FileTestServer(port);
-            case "rss":
-                return new RSSTestServer(port);
-            case "open-socket-file":
-                return new OpenSocketFileTestServer(port);
-            case "client":
-                return new TestClientServer(port);
-            default:
-                throw new Exception("Unknown test server");
-        }
+public class TestClientServer implements ITestServer {
+
+    // port of the server to connect to
+    private final int port;
+    private ITestClient client;
+
+    public TestClientServer(int port) {
+        this.port = port;
     }
+
+    @Override
+    public void configure(String[] args) throws Exception {
+        client = TestClientProvider.createTestClient(args, port);
+    }
+
+    @Override
+    public void start() throws Exception {
+        client.start();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        client.stop();
+    }
+
 }

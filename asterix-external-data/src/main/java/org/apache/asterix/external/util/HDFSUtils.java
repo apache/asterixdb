@@ -42,7 +42,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
@@ -199,8 +198,8 @@ public class HDFSUtils {
         return conf;
     }
 
-    public static AlgebricksPartitionConstraint getPartitionConstraints(
-            AlgebricksPartitionConstraint clusterLocations) {
+    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(
+            AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
             ArrayList<String> locs = new ArrayList<String>();
             Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();

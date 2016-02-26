@@ -20,16 +20,28 @@ package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 
 public class AInputStreamReader extends InputStreamReader {
     private AInputStream in;
+    private byte[] bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+    private ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+    private CharBuffer charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+    private CharsetDecoder decoder;
+    private boolean done = false;
 
     public AInputStreamReader(AInputStream in) {
         super(in);
         this.in = in;
+        this.decoder = StandardCharsets.UTF_8.newDecoder();
+        this.byteBuffer.flip();
     }
 
     public boolean skipError() throws Exception {
@@ -50,5 +62,34 @@ public class AInputStreamReader extends InputStreamReader {
 
     public void setFeedLogManager(FeedLogManager feedLogManager) {
         in.setFeedLogManager(feedLogManager);
+    }
+
+    @Override
+    public int read(char cbuf[]) throws IOException {
+        return read(cbuf, 0, cbuf.length);
+    }
+
+    @Override
+    public int read(char cbuf[], int offset, int length) throws IOException {
+        if (done) {
+            return -1;
+        }
+        charBuffer.clear();
+        if (byteBuffer.hasRemaining()) {
+            decoder.decode(byteBuffer, charBuffer, false);
+            System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
+            return charBuffer.position();
+        }
+        int len = in.read(bytes, 0, bytes.length);
+        if (len == -1) {
+            done = true;
+            return len;
+        }
+        byteBuffer.clear();
+        byteBuffer.position(len);
+        byteBuffer.flip();
+        decoder.decode(byteBuffer, charBuffer, false);
+        System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
+        return charBuffer.position();
     }
 }

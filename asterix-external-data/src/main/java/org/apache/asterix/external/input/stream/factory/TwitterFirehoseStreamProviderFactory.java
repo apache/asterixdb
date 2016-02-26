@@ -27,7 +27,6 @@ import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.input.stream.provider.TwitterFirehoseInputStreamProvider;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -54,7 +53,7 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
     private Map<String, String> configuration;
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
         String ingestionCardinalityParam = configuration.get(KEY_INGESTION_CARDINALITY);
         String ingestionLocationParam = configuration.get(KEY_INGESTION_LOCATIONS);
         String[] locations = null;

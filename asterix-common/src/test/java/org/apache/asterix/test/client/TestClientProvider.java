@@ -16,22 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.server;
+package org.apache.asterix.test.client;
 
-public class TestServerProvider {
+import java.util.Arrays;
 
-    public static ITestServer createTestServer(String name, Integer port) throws Exception {
-        switch (name) {
-            case "file":
-                return new FileTestServer(port);
-            case "rss":
-                return new RSSTestServer(port);
-            case "open-socket-file":
-                return new OpenSocketFileTestServer(port);
-            case "client":
-                return new TestClientServer(port);
+public class TestClientProvider {
+
+    public static ITestClient createTestClient(String[] args, int port) throws Exception {
+        if (args.length < 1) {
+            throw new Exception("Unspecified test client");
+        }
+        String clientName = args[0];
+        String[] clientArgs = Arrays.copyOfRange(args, 1, args.length);
+        switch (clientName) {
+            case "file-client":
+                return new FileFeedSocketAdapterClient(port, clientArgs);
             default:
-                throw new Exception("Unknown test server");
+                throw new Exception("Unknown test client: " + clientName);
         }
     }
+
 }

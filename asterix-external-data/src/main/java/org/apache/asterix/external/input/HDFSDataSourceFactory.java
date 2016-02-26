@@ -40,7 +40,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
@@ -51,7 +50,7 @@ public class HDFSDataSourceFactory
         implements IInputStreamProviderFactory, IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
 
     protected static final long serialVersionUID = 1L;
-    protected transient AlgebricksPartitionConstraint clusterLocations;
+    protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
     protected String[] readSchedule;
     protected boolean read[];
     protected InputSplitsFactory inputSplitsFactory;
@@ -76,7 +75,7 @@ public class HDFSDataSourceFactory
         JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
         confFactory = new ConfFactory(conf);
         clusterLocations = getPartitionConstraint();
-        int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
+        int numPartitions = clusterLocations.getLocations().length;
         // if files list was set, we restrict the splits to the list
         InputSplit[] inputSplits;
         if (files == null) {
@@ -99,7 +98,8 @@ public class HDFSDataSourceFactory
         }
     }
 
-    // Used to tell the factory to restrict the splits to the intersection between this list and the actual files on hdfs side
+    // Used to tell the factory to restrict the splits to the intersection between this list and the
+    // actual files on hdfs side
     @Override
     public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
         this.files = files;
@@ -108,7 +108,8 @@ public class HDFSDataSourceFactory
 
     /*
      * The method below was modified to take care of the following
-     * 1. when target files are not null, it generates a file aware input stream that validate against the files
+     * 1. when target files are not null, it generates a file aware input stream that validate
+     * against the files
      * 2. if the data is binary, it returns a generic reader
      */
     @Override
@@ -135,7 +136,7 @@ public class HDFSDataSourceFactory
      * @return
      */
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         clusterLocations = HDFSUtils.getPartitionConstraints(clusterLocations);
         return clusterLocations;
     }

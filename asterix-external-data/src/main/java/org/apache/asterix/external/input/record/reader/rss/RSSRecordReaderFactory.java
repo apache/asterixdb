@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
@@ -36,6 +36,7 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
     private static final long serialVersionUID = 1L;
     private Map<String, String> configuration;
     private List<String> urls = new ArrayList<String>();
+    private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -43,8 +44,10 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(urls.size());
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+        int count = urls.size();
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, count);
+        return clusterLocations;
     }
 
     @Override

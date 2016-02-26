@@ -149,7 +149,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     private IngestionRuntime getIntakeRuntime(SubscribableFeedRuntimeId subscribableRuntimeId) {
         int waitCycleCount = 0;
         ISubscribableRuntime ingestionRuntime = subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
-        while (ingestionRuntime == null && waitCycleCount < 10) {
+        while (ingestionRuntime == null && waitCycleCount < 1000) {
             try {
                 Thread.sleep(3000);
                 waitCycleCount++;

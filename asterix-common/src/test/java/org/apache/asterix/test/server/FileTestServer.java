@@ -26,10 +26,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class FileTestServer implements ITestServer {
-    private String[] paths;
-    private final int port;
-    private ServerSocket serverSocket;
-    private Thread listenerThread;
+    protected String[] paths;
+    protected final int port;
+    protected ServerSocket serverSocket;
+    protected Thread listenerThread;
 
     public FileTestServer(int port) {
         this.port = port;

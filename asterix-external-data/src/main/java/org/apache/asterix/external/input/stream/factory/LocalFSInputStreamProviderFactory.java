@@ -34,7 +34,6 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
@@ -48,7 +47,8 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
     protected FileSplit[] inputFileSplits;
-    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log storage
+    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log
+                                             // storage
     protected boolean isFeed;
     protected String expression;
     // transient fields (They don't need to be serialized and transferred)
@@ -84,7 +84,7 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
         return constraints;
     }
 

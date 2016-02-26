@@ -87,7 +87,8 @@ public class AsterixHyracksIntegrationUtil {
             if (tempPath.endsWith(File.separator)) {
                 tempPath = tempPath.substring(0, tempPath.length() - 1);
             }
-            //get initial partitions from properties
+            System.err.println("Using the path: " + tempPath);
+            // get initial partitions from properties
             String[] nodeStores = propertiesAccessor.getStores().get(ncName);
             if (nodeStores == null) {
                 throw new Exception("Coudn't find stores for NC: " + ncName);
@@ -97,7 +98,7 @@ public class AsterixHyracksIntegrationUtil {
                 tempDirPath += File.separator;
             }
             for (int p = 0; p < nodeStores.length; p++) {
-                //create IO devices based on stores
+                // create IO devices based on stores
                 String iodevicePath = tempDirPath + ncConfig1.nodeId + File.separator + nodeStores[p];
                 File ioDeviceDir = new File(iodevicePath);
                 ioDeviceDir.mkdirs();

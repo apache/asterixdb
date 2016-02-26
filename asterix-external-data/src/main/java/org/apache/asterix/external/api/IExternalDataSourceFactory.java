@@ -19,9 +19,12 @@
 package org.apache.asterix.external.api;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Map;
 
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 
 public interface IExternalDataSourceFactory extends Serializable {
 
@@ -45,7 +48,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @return
      * @throws Exception
      */
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception;
 
     /**
      * Configure the data parser factory. The passed map contains key value pairs from the
@@ -61,6 +64,34 @@ public interface IExternalDataSourceFactory extends Serializable {
      */
     public default boolean isIndexible() {
         return false;
+    }
+
+    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(
+            AlgebricksAbsolutePartitionConstraint constraints, int count) {
+        if (constraints == null) {
+            ArrayList<String> locs = new ArrayList<String>();
+            Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
+            int i = 0;
+            while (i < count) {
+                for (String node : stores.keySet()) {
+                    int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
+                    for (int k = 0; k < numIODevices; k++) {
+                        locs.add(node);
+                        i++;
+                        if (i == count) {
+                            break;
+                        }
+                    }
+                    if (i == count) {
+                        break;
+                    }
+                }
+            }
+            String[] cluster = new String[locs.size()];
+            cluster = locs.toArray(cluster);
+            constraints = new AlgebricksAbsolutePartitionConstraint(cluster);
+        }
+        return constraints;
     }
 
 }

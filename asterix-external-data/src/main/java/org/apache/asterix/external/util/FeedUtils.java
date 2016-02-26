@@ -58,13 +58,12 @@ public class FeedUtils {
 
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
             AlgebricksPartitionConstraint partitionConstraints) throws Exception {
-        File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
-        String[] locations = null;
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             throw new AlgebricksException("Can't create file splits for adapter with count partitioning constraints");
-        } else {
-            locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         }
+        File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
+        String[] locations = null;
+        locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         List<FileSplit> splits = new ArrayList<FileSplit>();
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
         int i = 0;

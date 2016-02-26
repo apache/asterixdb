@@ -241,7 +241,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         FeedRuntimeId runtimeId = null;
         FeedRuntimeType subscribableRuntimeType = ((EndFeedMessage) message).getSourceRuntimeType();
         if (endFeedMessage.isCompleteDisconnection()) {
-            // subscribableRuntimeType represents the location at which the feed connection receives data
+            // subscribableRuntimeType represents the location at which the feed connection receives
+            // data
             FeedRuntimeType runtimeType = null;
             switch (subscribableRuntimeType) {
                 case INTAKE:
@@ -257,15 +258,19 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             runtimeId = new FeedRuntimeId(runtimeType, partition, FeedRuntimeId.DEFAULT_OPERAND_ID);
             CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager()
                     .getFeedRuntime(connectionId, runtimeId);
-            feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
+            if (feedRuntime != null) {
+                feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
+            }
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Complete Unsubscription of " + endFeedMessage.getFeedConnectionId());
             }
         } else {
-            // subscribaleRuntimeType represents the location for data hand-off in presence of subscribers
+            // subscribaleRuntimeType represents the location for data hand-off in presence of
+            // subscribers
             switch (subscribableRuntimeType) {
                 case INTAKE:
-                    // illegal state as data hand-off from one feed to another does not happen at intake
+                    // illegal state as data hand-off from one feed to another does not happen at
+                    // intake
                     throw new IllegalStateException("Illegal State, invalid runtime type  " + subscribableRuntimeType);
                 case COMPUTE:
                     // feed could be primary or secondary, doesn't matter

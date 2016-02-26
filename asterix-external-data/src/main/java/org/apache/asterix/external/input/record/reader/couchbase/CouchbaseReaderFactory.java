@@ -29,7 +29,7 @@ import org.apache.asterix.external.input.record.RecordWithMetadata;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import com.couchbase.client.core.CouchbaseCore;
@@ -71,7 +71,7 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
     }
 
     @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
         return AsterixClusterProperties.INSTANCE.getClusterLocations();
     }
 
@@ -100,7 +100,8 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
     }
 
     /*
-     * We distribute the work of streaming vbuckets between all the partitions in a round robin fashion.
+     * We distribute the work of streaming vbuckets between all the partitions in a round robin
+     * fashion.
      */
     private void schedule() {
         schedule = new int[numOfVBuckets];

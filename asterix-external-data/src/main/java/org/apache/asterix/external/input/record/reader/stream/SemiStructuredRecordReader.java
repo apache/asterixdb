@@ -77,7 +77,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
         inString = false;
         depth = 0;
         do {
-            int startPosn = bufferPosn; //starting from where we left off the last time
+            int startPosn = bufferPosn; // starting from where we left off the last time
             if (bufferPosn >= bufferLength) {
                 startPosn = bufferPosn = 0;
                 bufferLength = reader.read(inputBuffer);
@@ -87,7 +87,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
                 }
             }
             if (!hasStarted) {
-                for (; bufferPosn < bufferLength; ++bufferPosn) { //search for record begin
+                for (; bufferPosn < bufferLength; ++bufferPosn) { // search for record begin
                     if (inputBuffer[bufferPosn] == recordStart) {
                         startPosn = bufferPosn;
                         hasStarted = true;
@@ -108,7 +108,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
                 }
             }
             if (hasStarted) {
-                for (; bufferPosn < bufferLength; ++bufferPosn) { //search for record begin
+                for (; bufferPosn < bufferLength; ++bufferPosn) { // search for record begin
                     if (inString) {
                         // we are in a string, we only care about the string end
                         if (inputBuffer[bufferPosn] == ExternalDataConstants.QUOTE && !prevCharEscape) {

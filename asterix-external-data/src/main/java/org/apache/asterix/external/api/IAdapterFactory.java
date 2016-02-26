@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -50,7 +50,7 @@ public interface IAdapterFactory extends Serializable {
      * In the former case, the IP address is translated to a node controller id
      * running on the node with the given IP address.
      */
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception;
 
     /**
      * Creates an instance of IDatasourceAdapter.

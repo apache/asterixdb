@@ -20,7 +20,7 @@ package org.apache.asterix.test.server;
 
 public interface ITestServer {
 
-    public void configure(String[] args);
+    public void configure(String[] args) throws Exception;
 
     public void start() throws Exception;
 
