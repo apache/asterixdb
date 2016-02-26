@@ -88,13 +88,15 @@ public class ARecord implements IAObject {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("ARecord: { ");
-        for (int i = 0; i < fields.length; i++) {
-            if (i > 0) {
-                sb.append(", ");
+        if (fields != null) {
+            for (int i = 0; i < fields.length; i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(type.getFieldNames()[i]);
+                sb.append(": ");
+                sb.append(fields[i]);
             }
-            sb.append(type.getFieldNames()[i]);
-            sb.append(": ");
-            sb.append(fields[i]);
         }
         sb.append(" }");
         return sb.toString();
