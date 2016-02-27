@@ -28,9 +28,7 @@ import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class DatasetDataSource extends AqlDataSource {
@@ -38,20 +36,20 @@ public class DatasetDataSource extends AqlDataSource {
     private Dataset dataset;
 
     public DatasetDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
-            AqlDataSourceType datasourceType) throws AlgebricksException {
-        super(id, itemType, datasourceType);
+            IAType metaItemType, AqlDataSourceType datasourceType) throws AlgebricksException {
+        super(id, itemType, metaItemType, datasourceType);
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
             dataset = MetadataManager.INSTANCE.getDataset(ctx, id.getDataverseName(), id.getDatasourceName());
             if (dataset == null) {
-                throw new AlgebricksException("Unknown dataset " + datasourceName + " in dataverse "
-                        + datasourceDataverse);
+                throw new AlgebricksException(
+                        "Unknown dataset " + datasourceName + " in dataverse " + datasourceDataverse);
             }
             MetadataManager.INSTANCE.commitTransaction(ctx);
             switch (dataset.getDatasetType()) {
                 case INTERNAL:
-                    initInternalDataset(itemType);
+                    initInternalDataset(itemType, metaItemType);
                     break;
                 case EXTERNAL:
                     initExternalDataset(itemType);
@@ -76,15 +74,18 @@ public class DatasetDataSource extends AqlDataSource {
         return dataset;
     }
 
-    private void initInternalDataset(IAType itemType) throws IOException, AlgebricksException {
+    private void initInternalDataset(IAType itemType, IAType metaItemType) throws IOException, AlgebricksException {
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         ARecordType recordType = (ARecordType) itemType;
         int n = partitioningKeys.size();
-        schemaTypes = new IAType[n + 1];
+        schemaTypes = metaItemType == null ? new IAType[n + 1] : new IAType[n + 2];
         for (int i = 0; i < n; i++) {
             schemaTypes[i] = recordType.getSubFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
+        if (metaItemType != null) {
+            schemaTypes[n + 1] = metaItemType;
+        }
         domain = new DefaultNodeGroupDomain(dataset.getNodeGroupName());
     }
 

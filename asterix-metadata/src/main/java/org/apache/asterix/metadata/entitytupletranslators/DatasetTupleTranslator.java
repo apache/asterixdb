@@ -84,7 +84,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     private final ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
     private final AMutableInt32 aInt32;
-    protected ISerializerDeserializer<AInt32> aInt32Serde;
+    protected final ISerializerDeserializer<AInt32> aInt32Serde;
+    private final ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
 
     @SuppressWarnings("unchecked")
     public DatasetTupleTranslator(boolean getTuple) {
@@ -223,8 +224,21 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         Map<String, String> hints = getDatasetHints(datasetRecord);
 
-        return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, nodeGroupName, compactionPolicy,
-                compactionPolicyProperties, datasetDetails, hints, datasetType, datasetId, pendingOp);
+        String metaTypeDataverseName = null;
+        String metaTypeName = null;
+        int metaTypeDataverseNameIndex = datasetRecord.getType()
+                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_METATYPEDATAVERSENAME_FIELD_NAME);
+        if (metaTypeDataverseNameIndex >= 0) {
+            metaTypeDataverseName = ((AString) datasetRecord.getValueByPos(metaTypeDataverseNameIndex))
+                    .getStringValue();
+            int metaTypeNameIndex = datasetRecord.getType()
+                    .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_METATYPENAME_FIELD_NAME);
+            metaTypeName = ((AString) datasetRecord.getValueByPos(metaTypeNameIndex)).getStringValue();
+        }
+
+        return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName, metaTypeName,
+                nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
+                datasetId, pendingOp);
     }
 
     @Override
@@ -340,6 +354,27 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         aInt32.setValue(dataset.getPendingOp());
         aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
+
+        // write open fields
+        if (dataset.hasMetaPart()) {
+            // write open field 1, the meta item type Dataverse name.
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_METATYPEDATAVERSENAME_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(dataset.getMetaItemTypeDataverseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+
+            // write open field 2, the meta item type name.
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_METATYPENAME_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(dataset.getMetaItemTypeName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+        }
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);

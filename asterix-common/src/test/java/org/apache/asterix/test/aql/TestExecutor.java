@@ -130,9 +130,36 @@ public class TestExecutor {
                             "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
 
-                if (!equalStrings(lineExpected.split("Time")[0], lineActual.split("Time")[0])) {
+                // Comparing result equality but ignore "Time"-prefixed fields. (for metadata tests.)
+                String[] lineSplitsExpected = lineExpected.split("Time");
+                String[] lineSplitsActual = lineActual.split("Time");
+                if (lineSplitsExpected.length != lineSplitsActual.length) {
                     throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
                             + "\n> " + lineActual);
+                }
+                if (!equalStrings(lineSplitsExpected[0], lineSplitsActual[0])) {
+                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
+                            + "\n> " + lineActual);
+                }
+
+                for (int i = 1; i < lineSplitsExpected.length; i++) {
+                    String[] splitsByCommaExpected = lineSplitsExpected[i].split(",");
+                    String[] splitsByCommaActual = lineSplitsActual[i].split(",");
+                    if (splitsByCommaExpected.length != splitsByCommaActual.length) {
+                        throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< "
+                                + lineExpected + "\n> " + lineActual);
+                    }
+                    for (int j = 1; j < splitsByCommaExpected.length; j++) {
+                        if (splitsByCommaExpected[j].indexOf("DatasetId") >= 0) {
+                            // Ignore the field "DatasetId", which is different for different runs.
+                            // (for metadata tests)
+                            continue;
+                        }
+                        if (!equalStrings(splitsByCommaExpected[j], splitsByCommaActual[j])) {
+                            throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< "
+                                    + lineExpected + "\n> " + lineActual);
+                        }
+                    }
                 }
 
                 ++num;
@@ -156,8 +183,9 @@ public class TestExecutor {
             String row1 = rowsOne[i];
             String row2 = rowsTwo[i];
 
-            if (row1.equals(row2))
+            if (row1.equals(row2)) {
                 continue;
+            }
 
             String[] fields1 = row1.split(" ");
             String[] fields2 = row2.split(" ");
@@ -170,11 +198,11 @@ public class TestExecutor {
                 if (j >= fields2.length) {
                     return false;
                 } else if (fields1[j].equals(fields2[j])) {
-                    if (fields1[j].equals("{{"))
-                        bagEncountered = true;
+                    bagEncountered = fields1[j].equals("{{");
                     if (fields1[j].startsWith("}}")) {
-                        if (!bagElements1.equals(bagElements2))
+                        if (!bagElements1.equals(bagElements2)) {
                             return false;
+                        }
                         bagEncountered = false;
                         bagElements1.clear();
                         bagElements2.clear();
@@ -198,9 +226,9 @@ public class TestExecutor {
                         float float1 = (float) double1.doubleValue();
                         float float2 = (float) double2.doubleValue();
 
-                        if (Math.abs(float1 - float2) == 0)
+                        if (Math.abs(float1 - float2) == 0) {
                             continue;
-                        else {
+                        } else {
                             return false;
                         }
                     } catch (NumberFormatException ignored) {
@@ -698,8 +726,8 @@ public class TestExecutor {
                             break;
                         case "lib": // expected format <dataverse-name> <library-name>
                                     // <library-directory>
-                            // TODO: make this case work well with entity names containing spaces by
-                            // looking for \"
+                                    // TODO: make this case work well with entity names containing spaces by
+                                    // looking for \"
                             lines = statement.split("\n");
                             String lastLine = lines[lines.length - 1];
                             String[] command = lastLine.trim().split(" ");

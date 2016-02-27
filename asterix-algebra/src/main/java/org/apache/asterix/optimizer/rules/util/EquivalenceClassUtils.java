@@ -66,6 +66,8 @@ public class EquivalenceClassUtils {
      *            is the record variable.
      * @param recordType
      *            , the record type of an index payload record.
+     * @param metaRecordType
+     *            , the type of a meta record associated with an index payload record.
      * @param dataset
      *            , the accessed dataset.
      * @param context
@@ -74,7 +76,7 @@ public class EquivalenceClassUtils {
      */
     @SuppressWarnings("unchecked")
     public static void addEquivalenceClassesForPrimaryIndexAccess(ILogicalOperator operator,
-            List<LogicalVariable> indexSearchVars, ARecordType recordType, Dataset dataset,
+            List<LogicalVariable> indexSearchVars, ARecordType recordType, ARecordType metaRecordType, Dataset dataset,
             IOptimizationContext context) throws AlgebricksException {
         if (dataset.getDatasetDetails().getDatasetType() != DatasetType.INTERNAL) {
             return;
@@ -86,15 +88,30 @@ public class EquivalenceClassUtils {
         for (int fieldIndex = 0; fieldIndex < fieldNames.length; ++fieldIndex) {
             fieldNameToIndexMap.put(fieldNames[fieldIndex], fieldIndex);
         }
-
-        LogicalVariable recordVar = indexSearchVars.get(indexSearchVars.size() - 1);
+        boolean hasMeta = dataset.hasMetaPart();
+        Map<String, Integer> metaFieldNameToIndexMap = new HashMap<>();
+        if (hasMeta) {
+            String[] metaFieldNames = metaRecordType.getFieldNames();
+            for (int metaFieldIndex = 0; metaFieldIndex < metaFieldNames.length; ++metaFieldIndex) {
+                metaFieldNameToIndexMap.put(metaFieldNames[metaFieldIndex], metaFieldIndex);
+            }
+        }
+        LogicalVariable recordVar = hasMeta ? indexSearchVars.get(indexSearchVars.size() - 2)
+                : indexSearchVars.get(indexSearchVars.size() - 1);
+        LogicalVariable metaRecordVar = hasMeta ? indexSearchVars.get(indexSearchVars.size() - 1) : null;
         for (int pkIndex = 0; pkIndex < primaryKey.size(); ++pkIndex) {
+            LogicalVariable referredRecordVar = recordVar;
             String pkFieldName = primaryKey.get(pkIndex).get(0);
-            int fieldIndexInRecord = fieldNameToIndexMap.get(pkFieldName);
+            Integer fieldIndexInRecord = fieldNameToIndexMap.get(pkFieldName);
+            if (fieldIndexInRecord == null && hasMeta) {
+                referredRecordVar = metaRecordVar;
+                pkFieldName = primaryKey.get(pkIndex).get(1);
+                fieldIndexInRecord = metaFieldNameToIndexMap.get(pkFieldName);
+            }
             LogicalVariable var = indexSearchVars.get(pkIndex);
             ILogicalExpression expr = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
+                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(referredRecordVar)),
                     new MutableObject<ILogicalExpression>(
                             new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
             EquivalenceClass equivClass = new EquivalenceClass(SingletonList.newSingletonList(var), var,

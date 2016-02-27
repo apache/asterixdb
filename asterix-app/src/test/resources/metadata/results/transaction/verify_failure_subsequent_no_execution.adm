@@ -1,1 +1,0 @@
-{ "DataverseName": "custord", "DatasetName": "Customers", "IndexName": "Customers", "IndexStructure": "BTREE", "SearchKeyName": [ [ "cid" ], [ "name" ] ], "IsPrimary": true, "Timestamp": "Sat Nov 24 17:23:18 PST 2012", "SearchKeyType": [ ] }

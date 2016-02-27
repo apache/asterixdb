@@ -292,13 +292,22 @@ public class MetadataLockManager {
     }
 
     public void createDatasetBegin(String dataverseName, String itemTypeDataverseName,
-            String itemTypeFullyQualifiedName, String nodeGroupName, String compactionPolicyName,
-            String datasetFullyQualifiedName, boolean isDefaultCompactionPolicy) {
+            String itemTypeFullyQualifiedName, String metaItemTypeDataverseName, String metaItemTypeFullyQualifiedName,
+            String nodeGroupName, String compactionPolicyName, String datasetFullyQualifiedName,
+            boolean isDefaultCompactionPolicy) {
         acquireDataverseReadLock(dataverseName);
         if (!dataverseName.equals(itemTypeDataverseName)) {
             acquireDataverseReadLock(itemTypeDataverseName);
         }
+        if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(dataverseName)
+                && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
+            acquireDataverseReadLock(metaItemTypeDataverseName);
+        }
         acquireDataTypeReadLock(itemTypeFullyQualifiedName);
+        if (metaItemTypeFullyQualifiedName != null
+                && !metaItemTypeFullyQualifiedName.equals(itemTypeFullyQualifiedName)) {
+            acquireDataTypeReadLock(metaItemTypeFullyQualifiedName);
+        }
         acquireNodeGroupReadLock(nodeGroupName);
         if (!isDefaultCompactionPolicy) {
             acquireCompactionPolicyReadLock(compactionPolicyName);
@@ -307,14 +316,22 @@ public class MetadataLockManager {
     }
 
     public void createDatasetEnd(String dataverseName, String itemTypeDataverseName, String itemTypeFullyQualifiedName,
-            String nodeGroupName, String compactionPolicyName, String datasetFullyQualifiedName,
-            boolean isDefaultCompactionPolicy) {
+            String metaItemTypeDataverseName, String metaItemTypeFullyQualifiedName, String nodeGroupName,
+            String compactionPolicyName, String datasetFullyQualifiedName, boolean isDefaultCompactionPolicy) {
         releaseDatasetWriteLock(datasetFullyQualifiedName);
         if (!isDefaultCompactionPolicy) {
             releaseCompactionPolicyReadLock(compactionPolicyName);
         }
         releaseNodeGroupReadLock(nodeGroupName);
+        if (metaItemTypeFullyQualifiedName != null
+                && !metaItemTypeFullyQualifiedName.equals(itemTypeFullyQualifiedName)) {
+            releaseDataTypeReadLock(metaItemTypeFullyQualifiedName);
+        }
         releaseDataTypeReadLock(itemTypeFullyQualifiedName);
+        if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(dataverseName)
+                && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
+            releaseDataverseReadLock(metaItemTypeDataverseName);
+        }
         if (!dataverseName.equals(itemTypeDataverseName)) {
             releaseDataverseReadLock(itemTypeDataverseName);
         }

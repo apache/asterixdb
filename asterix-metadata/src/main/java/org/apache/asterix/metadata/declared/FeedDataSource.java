@@ -39,10 +39,10 @@ public class FeedDataSource extends AqlDataSource {
     private final String[] locations;
     private final int computeCardinality;
 
-    public FeedDataSource(AqlSourceId id, String targetDataset, IAType itemType, AqlDataSourceType dataSourceType,
-            FeedId sourceFeedId, IFeed.FeedType sourceFeedType, ConnectionLocation location, String[] locations)
-                    throws AlgebricksException {
-        super(id, itemType, dataSourceType);
+    public FeedDataSource(AqlSourceId id, String targetDataset, IAType itemType, IAType metaItemType,
+            AqlDataSourceType dataSourceType, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
+            ConnectionLocation location, String[] locations) throws AlgebricksException {
+        super(id, itemType, metaItemType, dataSourceType);
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
         this.sourceFeedType = sourceFeedType;

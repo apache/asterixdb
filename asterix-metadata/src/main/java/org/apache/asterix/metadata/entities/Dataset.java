@@ -51,14 +51,29 @@ public class Dataset implements IMetadataEntity<Dataset> {
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
 
+    // Dataverse of Meta ItemType for this dataset.
+    private final String metaItemTypeDataverseName;
+    // Type of Meta items stored in this dataset.
+    private final String metaItemTypeName;
+
     public Dataset(String dataverseName, String datasetName, String itemTypeDataverseName, String itemTypeName,
             String nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
             IDatasetDetails datasetDetails, Map<String, String> hints, DatasetType datasetType, int datasetId,
             int pendingOp) {
+        this(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, null, null, nodeGroupName,
+                compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType, datasetId, pendingOp);
+    }
+
+    public Dataset(String dataverseName, String datasetName, String itemTypeDataverseName, String itemTypeName,
+            String metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
+            DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
         this.itemTypeDataverseName = itemTypeDataverseName;
+        this.metaItemTypeDataverseName = metaItemTypeDataverseName;
+        this.metaItemTypeName = metaItemTypeName;
         this.nodeGroupName = nodeGroupName;
         this.compactionPolicy = compactionPolicy;
         this.compactionPolicyProperties = compactionPolicyProperties;
@@ -115,6 +130,18 @@ public class Dataset implements IMetadataEntity<Dataset> {
 
     public int getPendingOp() {
         return pendingOp;
+    }
+
+    public String getMetaItemTypeDataverseName() {
+        return metaItemTypeDataverseName;
+    }
+
+    public String getMetaItemTypeName() {
+        return metaItemTypeName;
+    }
+
+    public boolean hasMetaPart() {
+        return metaItemTypeDataverseName != null && metaItemTypeName != null;
     }
 
     public void setPendingOp(int pendingOp) {

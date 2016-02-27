@@ -249,6 +249,8 @@ public final class MetadataRecordTypes {
     public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 11;
     public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 12;
     public static final int DATASET_ARECORD_PENDINGOP_FIELD_INDEX = 13;
+    public static final String DATASET_ARECORD_METATYPEDATAVERSENAME_FIELD_NAME = "MetatypeDataverseName";
+    public static final String DATASET_ARECORD_METATYPENAME_FIELD_NAME = "MetatypeName";
 
     private static final ARecordType createDatasetRecordType() throws AsterixException {
         String[] fieldNames = { "DataverseName", "DatasetName", "DatatypeDataverseName", "DatatypeName", "DatasetType",

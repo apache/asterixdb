@@ -63,7 +63,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -107,34 +108,40 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 String datasetName = datasetReference.second;
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
                 if (dataset == null) {
-                    throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse "
-                            + dataverseName);
+                    throw new AlgebricksException(
+                            "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
                 }
 
                 AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
-
-                ArrayList<LogicalVariable> v = new ArrayList<LogicalVariable>();
+                List<LogicalVariable> variables = new ArrayList<LogicalVariable>();
 
                 if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                     int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
                     for (int i = 0; i < numPrimaryKeys; i++) {
-                        v.add(context.newVar());
+                        variables.add(context.newVar());
                     }
                 }
-                v.add(unnest.getVariable());
+                variables.add(unnest.getVariable());
                 AqlDataSource dataSource = metadataProvider.findDataSource(asid);
-                DataSourceScanOperator scan = new DataSourceScanOperator(v, dataSource);
+                boolean hasMeta = dataSource.hasMeta();
+                if (hasMeta) {
+                    variables.add(context.newVar());
+                }
+                DataSourceScanOperator scan = new DataSourceScanOperator(variables, dataSource);
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
                 opRef.setValue(scan);
-                addPrimaryKey(v, context);
+                addPrimaryKey(variables, context);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
 
                 // Adds equivalence classes --- one equivalent class between a primary key
                 // variable and a record field-access expression.
                 IAType[] schemaTypes = dataSource.getSchemaTypes();
-                ARecordType recordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
-                EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, v, recordType, dataset, context);
+                ARecordType recordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 2]
+                        : schemaTypes[schemaTypes.length - 1]);
+                ARecordType metaRecordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 1] : null);
+                EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
+                        metaRecordType, dataset, context);
                 return true;
             }
 
@@ -166,8 +173,10 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 v.add(unnest.getVariable());
 
                 String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
-                DataSourceScanOperator scan = new DataSourceScanOperator(v, createFeedDataSource(asid, targetDataset,
-                        sourceFeedName, subscriptionLocation, metadataProvider, policy, outputType, csLocations));
+                DataSourceScanOperator scan = new DataSourceScanOperator(v,
+                        createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
+                                metadataProvider, policy, outputType,
+                                null /* TODO(Adbullah): to figure out the meta type name*/, csLocations));
 
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
@@ -194,16 +203,16 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
     private AqlDataSource createFeedDataSource(AqlSourceId aqlId, String targetDataset, String sourceFeedName,
             String subscriptionLocation, AqlMetadataProvider metadataProvider, FeedPolicyEntity feedPolicy,
-            String outputType, String locations) throws AlgebricksException {
-        if (!aqlId.getDataverseName().equals(
-                metadataProvider.getDefaultDataverse() == null ? null : metadataProvider.getDefaultDataverse()
-                        .getDataverseName())) {
+            String outputType, String outputMetaType, String locations) throws AlgebricksException {
+        if (!aqlId.getDataverseName().equals(metadataProvider.getDefaultDataverse() == null ? null
+                : metadataProvider.getDefaultDataverse().getDataverseName())) {
             return null;
         }
         IAType feedOutputType = metadataProvider.findType(aqlId.getDataverseName(), outputType);
+        IAType feedOutputMetaType = metadataProvider.findType(aqlId.getDataverseName(), outputMetaType);
         Feed sourceFeed = metadataProvider.findFeed(aqlId.getDataverseName(), sourceFeedName);
 
-        FeedDataSource feedDataSource = new FeedDataSource(aqlId, targetDataset, feedOutputType,
+        FeedDataSource feedDataSource = new FeedDataSource(aqlId, targetDataset, feedOutputType, feedOutputMetaType,
                 AqlDataSource.AqlDataSourceType.FEED, sourceFeed.getFeedId(), sourceFeed.getFeedType(),
                 ConnectionLocation.valueOf(subscriptionLocation), locations.split(","));
         feedDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);

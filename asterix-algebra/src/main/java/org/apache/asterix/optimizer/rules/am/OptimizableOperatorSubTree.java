@@ -68,6 +68,7 @@ public class OptimizableOperatorSubTree {
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
     public Dataset dataset = null;
     public ARecordType recordType = null;
+    public ARecordType metaRecordType = null;
 
     // Additional datasources can exist if IntroduceJoinAccessMethodRule has been applied.
     // (E.g. There are index-nested-loop-joins in the plan.)
@@ -264,10 +265,15 @@ public class OptimizableOperatorSubTree {
             }
             rType = (ARecordType) itemType;
 
+            // Get the meta record type for that dataset.
+            IAType metaItemType = metadataProvider.findType(ds.getMetaItemTypeDataverseName(),
+                    ds.getMetaItemTypeName());
+
             // First index is always the primary datasource in this subtree.
             if (i == 0) {
                 dataset = ds;
                 recordType = rType;
+                metaRecordType = (ARecordType) metaItemType;
             } else {
                 ixJoinOuterAdditionalDatasets.add(ds);
                 ixJoinOuterAdditionalRecordTypes.add(rType);

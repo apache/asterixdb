@@ -59,7 +59,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractData
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -124,8 +123,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             IOptimizationContext context) throws AlgebricksException {
         SelectOperator select = (SelectOperator) selectRef.getValue();
         Mutable<ILogicalExpression> conditionRef = select.getCondition();
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, subTree, null,
-                chosenIndex, analysisCtx, false, false, false, context);
+        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, subTree, null, chosenIndex,
+                analysisCtx, false, false, false, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
@@ -185,8 +184,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
 
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, indexSubTree,
-                probeSubTree, chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context);
+        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, indexSubTree, probeSubTree,
+                chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
@@ -212,12 +211,13 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef, OptimizableOperatorSubTree indexSubTree,
-            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-                    throws AlgebricksException {
+    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
+            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
+        ARecordType metaRecordType = indexSubTree.metaRecordType;
         // we made sure indexSubTree has datasource scan
         AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.dataSourceRef.getValue();
         List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.indexExprsAndVars.get(chosenIndex);
@@ -499,7 +499,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
             EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp,
-                    dataSourceOp.getVariables(), recordType, dataset, context);
+                    dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
             try {
@@ -527,7 +527,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
             EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp, scanVariables,
-                    recordType, dataset, context);
+                    recordType, metaRecordType, dataset, context);
         }
 
         return primaryIndexUnnestOp;

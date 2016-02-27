@@ -20,8 +20,8 @@ package org.apache.asterix.lang.common.statement;
 
 import java.util.Map;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -40,9 +40,13 @@ public class DatasetDecl implements Statement {
     protected final Map<String, String> hints;
     protected final boolean ifNotExists;
 
+    protected final Identifier metaItemTypeDataverse;
+    protected final Identifier metaItemTypeName;
+
     public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
-            Identifier nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
-            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
+            Identifier metaItemTypeDataverse, Identifier metaItemTypeName, Identifier nodeGroupName,
+            String compactionPolicy, Map<String, String> compactionPolicyProperties, Map<String, String> hints,
+            DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
         this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
@@ -50,6 +54,12 @@ public class DatasetDecl implements Statement {
             this.itemTypeDataverse = dataverse;
         } else {
             this.itemTypeDataverse = itemTypeDataverse;
+        }
+        this.metaItemTypeName = metaItemTypeName;
+        if (metaItemTypeDataverse == null || metaItemTypeDataverse.getValue() == null) {
+            this.metaItemTypeDataverse = dataverse;
+        } else {
+            this.metaItemTypeDataverse = metaItemTypeDataverse;
         }
         this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
                 : nodeGroupName;
@@ -86,6 +96,26 @@ public class DatasetDecl implements Statement {
             return itemTypeName.getValue();
         } else {
             return itemTypeDataverse.getValue() + "." + itemTypeName.getValue();
+        }
+    }
+
+    public Identifier getMetaName() {
+        return name;
+    }
+
+    public Identifier getMetaItemTypeName() {
+        return metaItemTypeName == null ? new Identifier() : metaItemTypeName;
+    }
+
+    public Identifier getMetaItemTypeDataverse() {
+        return metaItemTypeDataverse == null ? new Identifier() : metaItemTypeDataverse;
+    }
+
+    public String getQualifiedMetaTypeName() {
+        if (metaItemTypeDataverse == dataverse) {
+            return metaItemTypeName.getValue();
+        } else {
+            return metaItemTypeDataverse.getValue() + "." + metaItemTypeName.getValue();
         }
     }
 

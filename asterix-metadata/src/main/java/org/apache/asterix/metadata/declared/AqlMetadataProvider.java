@@ -642,9 +642,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             ITypeTraits[] typeTraits;
             IBinaryComparatorFactory[] comparatorFactories;
 
-            String itemTypeName = dataset.getItemTypeName();
-            ARecordType itemType = (ARecordType) MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
+            ARecordType itemType = (ARecordType) this.findType(dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName());
             ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
             IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
                     itemType, context.getBinaryComparatorFactoryProvider());
@@ -985,12 +984,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (dataset == null) {
             throw new AlgebricksException("Datasource with id " + aqlId + " was not found.");
         }
-        String tName = dataset.getItemTypeName();
-        IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), tName)
-                .getDatatype();
+        IAType itemType = findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        IAType metaItemType = findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         AqlDataSourceType datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL)
                 ? AqlDataSourceType.EXTERNAL_DATASET : AqlDataSourceType.INTERNAL_DATASET;
-        return new DatasetDataSource(aqlId, aqlId.getDataverseName(), aqlId.getDatasourceName(), itemType,
+        return new DatasetDataSource(aqlId, aqlId.getDataverseName(), aqlId.getDatasourceName(), itemType, metaItemType,
                 datasourceType);
     }
 
@@ -2126,6 +2124,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public IAType findType(String dataverse, String typeName) throws AlgebricksException {
+        if (dataverse == null || typeName == null) {
+            return null;
+        }
         Datatype type;
         try {
             type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverse, typeName);

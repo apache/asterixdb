@@ -2905,6 +2905,18 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="meta">
+        <test-case FilePath="meta">
+            <compilation-unit name="query_dataset_with_meta-1">
+                <output-dir compare="Text">query_dataset_with_meta-1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="meta">
+            <compilation-unit name="query_dataset_with_meta-2">
+                <output-dir compare="Text">query_dataset_with_meta-2</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="misc">
         <test-case FilePath="misc">
             <compilation-unit name="partition-by-nonexistent-field"> <!-- Seriously?? 3 expected errors -->

@@ -218,7 +218,8 @@ public class DatasetUtils {
         }
 
         List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
-        int[] btreeFields = new int[partitioningKeys.size() + 1];
+        int valueFields = dataset.hasMetaPart() ? 2 : 1;
+        int[] btreeFields = new int[partitioningKeys.size() + valueFields];
         for (int i = 0; i < btreeFields.length; ++i) {
             btreeFields[i] = i;
         }

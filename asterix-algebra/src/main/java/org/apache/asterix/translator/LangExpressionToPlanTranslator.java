@@ -183,13 +183,15 @@ class LangExpressionToPlanTranslator
                     "Unable to load dataset " + clffs.getDatasetName() + " since it does not exist");
         }
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
+                dataset.getMetaItemTypeName());
         DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                 stmt.getDatasetName());
         List<List<String>> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
 
         LoadableDataSource lds;
         try {
-            lds = new LoadableDataSource(dataset, itemType, clffs.getAdapter(), clffs.getProperties());
+            lds = new LoadableDataSource(dataset, itemType, metaItemType, clffs.getAdapter(), clffs.getProperties());
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -451,10 +453,11 @@ class LangExpressionToPlanTranslator
             throw new AlgebricksException("Cannot write output to an external dataset.");
         }
         AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
-        String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), itemTypeName);
+        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
+                dataset.getMetaItemTypeName());
         DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset.getDataverseName(),
-                dataset.getDatasetName(), itemType, AqlDataSourceType.INTERNAL_DATASET);
+                dataset.getDatasetName(), itemType, metaItemType, AqlDataSourceType.INTERNAL_DATASET);
 
         return dataSource;
     }

@@ -48,6 +48,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     private final AqlSourceId id;
     private final IAType itemType;
+    private final IAType metaItemType;
     private final AqlDataSourceType datasourceType;
     protected IAType[] schemaTypes;
     protected INodeDomain domain;
@@ -60,9 +61,11 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         LOADABLE
     }
 
-    public AqlDataSource(AqlSourceId id, IAType itemType, AqlDataSourceType datasourceType) throws AlgebricksException {
+    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, AqlDataSourceType datasourceType)
+            throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
+        this.metaItemType = metaItemType;
         this.datasourceType = datasourceType;
     }
 
@@ -192,6 +195,14 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     public IAType getItemType() {
         return itemType;
+    }
+
+    public IAType getMetaItemType() {
+        return metaItemType;
+    }
+
+    public boolean hasMeta() {
+        return metaItemType != null;
     }
 
     public void setProperties(Map<String, Serializable> properties) {
