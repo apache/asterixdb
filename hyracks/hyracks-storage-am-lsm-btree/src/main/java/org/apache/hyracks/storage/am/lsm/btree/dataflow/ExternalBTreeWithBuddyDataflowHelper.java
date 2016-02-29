@@ -57,9 +57,6 @@ public class ExternalBTreeWithBuddyDataflowHelper extends AbstractLSMIndexDatafl
 
     @Override
     public IIndex getIndexInstance() {
-        if (index != null) {
-            return index;
-        }
         synchronized (lcManager) {
             if (index == null) {
                 try {
