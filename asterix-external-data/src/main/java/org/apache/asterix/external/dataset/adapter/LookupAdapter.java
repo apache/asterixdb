@@ -43,7 +43,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 public final class LookupAdapter<T> implements IFrameWriter {
 
     private boolean propagateInput;
-    private int[] propagatedFields;
     private boolean retainNull;
     private ArrayTupleBuilder tb;
     private FrameTupleAppender appender;
@@ -56,13 +55,12 @@ public final class LookupAdapter<T> implements IFrameWriter {
     private ArrayTupleBuilder nullTupleBuild;
 
     public LookupAdapter(IRecordDataParser<T> dataParser, ILookupRecordReader<? extends T> recordReader,
-            RecordDescriptor inRecDesc, RecordIdReader ridReader, boolean propagateInput, int[] propagatedFields,
-            boolean retainNull, INullWriterFactory iNullWriterFactory, IHyracksTaskContext ctx, IFrameWriter writer)
+            RecordDescriptor inRecDesc, RecordIdReader ridReader, boolean propagateInput, boolean retainNull,
+            INullWriterFactory iNullWriterFactory, IHyracksTaskContext ctx, IFrameWriter writer)
                     throws HyracksDataException {
         this.dataParser = dataParser;
         this.recordReader = recordReader;
         this.propagateInput = propagateInput;
-        this.propagatedFields = propagatedFields;
         this.retainNull = retainNull;
         this.tupleAccessor = new FrameTupleAccessor(inRecDesc);
         this.ridReader = ridReader;
@@ -74,7 +72,9 @@ public final class LookupAdapter<T> implements IFrameWriter {
 
     private void configurePropagation(INullWriterFactory iNullWriterFactory) {
         if (propagateInput) {
-            tb = new ArrayTupleBuilder(propagatedFields.length + 1);
+            // This LookupAdapter generates an external record as its output.
+            // Thus, we add 1.
+            tb = new ArrayTupleBuilder(tupleAccessor.getFieldCount() + 1);
             frameTuple = new FrameTupleReference();
         } else {
             tb = new ArrayTupleBuilder(1);
@@ -124,7 +124,7 @@ public final class LookupAdapter<T> implements IFrameWriter {
                 }
                 tb.reset();
                 if (propagateInput) {
-                    propagate(tupleIndex);
+                    propagateInputFields(tupleIndex);
                 }
                 if (record != null) {
                     dataParser.parse(record, tb.getDataOutput());
@@ -142,11 +142,11 @@ public final class LookupAdapter<T> implements IFrameWriter {
         }
     }
 
-    private void propagate(int idx) throws IOException {
+    private void propagateInputFields(int idx) throws IOException {
         frameTuple.reset(tupleAccessor, idx);
-        for (int i = 0; i < propagatedFields.length; i++) {
-            tb.getDataOutput().write(frameTuple.getFieldData(propagatedFields[i]),
-                    frameTuple.getFieldStart(propagatedFields[i]), frameTuple.getFieldLength(propagatedFields[i]));
+        for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+            tb.getDataOutput().write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
+                    frameTuple.getFieldLength(i));
             tb.addFieldEndOffset();
         }
     }

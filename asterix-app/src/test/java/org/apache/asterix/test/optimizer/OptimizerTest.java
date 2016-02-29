@@ -38,6 +38,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
+import org.apache.asterix.test.runtime.HDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -77,6 +78,8 @@ public class OptimizerTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
+        HDFSCluster.getInstance().setup();
+
         AsterixHyracksIntegrationUtil.init(true);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
@@ -92,6 +95,9 @@ public class OptimizerTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
+
+        HDFSCluster.getInstance().cleanup();
+
         AsterixHyracksIntegrationUtil.deinit(true);
     }
 

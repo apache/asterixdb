@@ -1,0 +1,69 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : Test that left-outer-join may use available indexes, one for a secondary index in prob subtree and another for secondary btree index in index subtree.
+ * Issue        : 1325, 1326
+ * Expected Res : Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+    screen-name: string,
+    lang: string,
+    friends-count: int64,
+    statuses-count: int64,
+    name: string,
+    followers-count: int64
+}
+
+create type TweetMessageType as closed {
+    tweetid: int64,
+        user: TwitterUserType,
+        sender-location: point,
+    send-time: datetime,
+        referred-topics: {{ string }},
+    message-text: string,
+    countA: int64,
+    countB: int64
+}
+
+create external dataset TweetMessages(TweetMessageType) using hdfs(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/tw_for_indexleftouterjoin.adm"),("input-format"="text-input-format"),("format"="adm"));
+
+create index IdIx on TweetMessages(tweetid) type btree;
+create index msgCountAIx on TweetMessages(countA) type btree;
+create index msgCountBIx on TweetMessages(countB) type btree;
+
+write output to asterix_nc1:"rttest/external-indexing_leftouterjoin-probe-sidx-with-join-btree-sidx_01.adm";
+
+for $t1 in dataset('TweetMessages')
+where $t1.tweetid < int64("10")
+order by $t1.tweetid
+return {
+"tweetid1": $t1.tweetid,
+"count1":$t1.countA,
+"t2info": for $t2 in dataset('TweetMessages')
+          where $t1.countA /* +indexnl */= $t2.countB
+          order by $t2.tweetid
+          return {"tweetid2": $t2.tweetid,
+                  "count2":$t2.countB}
+};

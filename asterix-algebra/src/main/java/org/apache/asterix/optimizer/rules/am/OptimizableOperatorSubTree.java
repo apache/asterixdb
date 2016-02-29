@@ -117,10 +117,6 @@ public class OptimizableOperatorSubTree {
             dataSourceType = DataSourceType.DATASOURCE_SCAN;
             dataSourceRef = subTreeOpRef;
             return true;
-        } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EXTERNAL_LOOKUP) {
-            dataSourceType = DataSourceType.EXTERNAL_SCAN;
-            dataSourceRef = subTreeOpRef;
-            return true;
         } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
             dataSourceType = DataSourceType.COLLECTION_SCAN;
             dataSourceRef = subTreeOpRef;
@@ -152,16 +148,23 @@ public class OptimizableOperatorSubTree {
                                 }
                                 dataSourceFound = true;
                             }
+                        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.EXTERNAL_LOOKUP)) {
+                            // External lookup case
+                            if (dataSourceRef == null) {
+                                dataSourceRef = subTreeOpRef;
+                                dataSourceType = DataSourceType.EXTERNAL_SCAN;
+                            } else {
+                                // One datasource already exists. This is an additional datasource.
+                                initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
+                                ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.EXTERNAL_SCAN);
+                                ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
+                            }
+                            dataSourceFound = true;
                         }
                     }
                 } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                     initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
                     ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.DATASOURCE_SCAN);
-                    ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
-                    dataSourceFound = true;
-                } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EXTERNAL_LOOKUP) {
-                    initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                    ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.EXTERNAL_SCAN);
                     ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
                     dataSourceFound = true;
                 } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {

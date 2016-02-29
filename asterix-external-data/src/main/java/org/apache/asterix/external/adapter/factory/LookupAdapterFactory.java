@@ -49,7 +49,6 @@ public class LookupAdapterFactory<T> implements Serializable {
     private Map<String, String> configuration;
     private boolean retainInput;
     private boolean retainNull;
-    private int[] propagatedFields;
     private INullWriterFactory iNullWriterFactory;
 
     public LookupAdapterFactory(ARecordType recordType, int[] ridFields, boolean retainInput, boolean retainNull,
@@ -70,9 +69,8 @@ public class LookupAdapterFactory<T> implements Serializable {
                     snapshotAccessor);
             reader.configure(configuration);
             RecordIdReader ridReader = RecordIdReaderFactory.create(configuration, ridFields);
-            configurePropagatedFields(inRecDesc);
-            return new LookupAdapter<T>(dataParser, reader, inRecDesc, ridReader, retainInput, propagatedFields,
-                    retainNull, iNullWriterFactory, ctx, writer);
+            return new LookupAdapter<T>(dataParser, reader, inRecDesc, ridReader, retainInput, retainNull,
+                    iNullWriterFactory, ctx, writer);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -87,25 +85,4 @@ public class LookupAdapterFactory<T> implements Serializable {
         dataParserFactory.configure(configuration);
     }
 
-    private void configurePropagatedFields(RecordDescriptor inRecDesc) {
-        int ptr = 0;
-        boolean skip = false;
-        propagatedFields = new int[inRecDesc.getFieldCount() - ridFields.length];
-        for (int i = 0; i < inRecDesc.getFieldCount(); i++) {
-            if (ptr < ridFields.length) {
-                skip = false;
-                for (int j = 0; j < ridFields.length; j++) {
-                    if (ridFields[j] == i) {
-                        ptr++;
-                        skip = true;
-                        break;
-                    }
-                }
-                if (!skip)
-                    propagatedFields[i - ptr] = i;
-            } else {
-                propagatedFields[i - ptr] = i;
-            }
-        }
-    }
 }
