@@ -1,0 +1,2 @@
+{ "DataverseName": "test", "DatasetName": "Book", "IndexName": "Book", "IndexStructure": "BTREE", "SearchKey": [ [ "id" ] ], "IsPrimary": true, "Timestamp": "Mon Feb 29 18:45:56 PST 2016", "PendingOp": 0i32 }
+{ "DataverseName": "test", "DatasetName": "Book", "IndexName": "MetaIndex", "IndexStructure": "BTREE", "SearchKey": [ [ "id" ], [ "id" ] ], "IsPrimary": false, "Timestamp": "Mon Feb 29 18:45:57 PST 2016", "PendingOp": 0i32, "SearchKeySourceIndicator": [ 1i8, 0i8 ] }

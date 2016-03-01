@@ -96,16 +96,21 @@ public class EquivalenceClassUtils {
                 metaFieldNameToIndexMap.put(metaFieldNames[metaFieldIndex], metaFieldIndex);
             }
         }
+        List<Integer> keySourceIndicators = datasetDetails.getKeySourceIndicator();
         LogicalVariable recordVar = hasMeta ? indexSearchVars.get(indexSearchVars.size() - 2)
                 : indexSearchVars.get(indexSearchVars.size() - 1);
         LogicalVariable metaRecordVar = hasMeta ? indexSearchVars.get(indexSearchVars.size() - 1) : null;
         for (int pkIndex = 0; pkIndex < primaryKey.size(); ++pkIndex) {
             LogicalVariable referredRecordVar = recordVar;
             String pkFieldName = primaryKey.get(pkIndex).get(0);
-            Integer fieldIndexInRecord = fieldNameToIndexMap.get(pkFieldName);
-            if (fieldIndexInRecord == null && hasMeta) {
+            int source = keySourceIndicators == null ? 0 : keySourceIndicators.get(pkIndex);
+            Integer fieldIndexInRecord;
+            if (source == 0) {
+                // The field is from the main record.
+                fieldIndexInRecord = fieldNameToIndexMap.get(pkFieldName);
+            } else {
+                // The field is from the auxiliary meta record.
                 referredRecordVar = metaRecordVar;
-                pkFieldName = primaryKey.get(pkIndex).get(1);
                 fieldIndexInRecord = metaFieldNameToIndexMap.get(pkFieldName);
             }
             LogicalVariable var = indexSearchVars.get(pkIndex);

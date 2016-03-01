@@ -174,7 +174,7 @@ public class MetadataNode implements IMetadataNode {
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException(
                     "A dataverse with this name " + dataverse.getDataverseName() + " already exists.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -191,15 +191,15 @@ public class MetadataNode implements IMetadataNode {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), id.getPrimaryKeyType(), false,
-                        true, dataset.getPendingOp());
+                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), id.getKeySourceIndicator(),
+                        id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
 
                 addIndex(jobId, primaryIndex);
             }
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataset with this name " + dataset.getDatasetName()
                     + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -212,7 +212,7 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("An index with name '" + index.getIndexName() + "' already exists.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -225,7 +225,7 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.NODE_DATASET, tuple);
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A node with name '" + node.getNodeName() + "' already exists.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -239,7 +239,7 @@ public class MetadataNode implements IMetadataNode {
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A nodegroup with name '" + nodeGroup.getNodeGroupName() + "' already exists.",
                     e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -252,7 +252,7 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A datatype with name '" + datatype.getDatatypeName() + "' already exists.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -268,7 +268,7 @@ public class MetadataNode implements IMetadataNode {
         } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A function with this name " + function.getName() + " and arity "
                     + function.getArity() + " already exists in dataverse '" + function.getDataverseName() + "'.", e);
-        } catch (ACIDException|IndexException|IOException e) {
+        } catch (ACIDException | IndexException | IOException e) {
             throw new MetadataException(e);
         }
     }
@@ -1082,6 +1082,7 @@ public class MetadataNode implements IMetadataNode {
     // TODO: Can use Hyrack's TupleUtils for this, once we switch to a newer
     // Hyracks version.
     public ITupleReference createTuple(String... fields) throws HyracksDataException {
+        @SuppressWarnings("unchecked")
         ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         AMutableString aString = new AMutableString("");

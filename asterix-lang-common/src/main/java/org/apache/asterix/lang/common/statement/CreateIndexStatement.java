@@ -34,7 +34,8 @@ public class CreateIndexStatement implements Statement {
     private Identifier indexName;
     private Identifier dataverseName;
     private Identifier datasetName;
-    private List<Pair<List<String>, TypeExpression>> fieldExprs = new ArrayList<Pair<List<String>, TypeExpression>>();
+    private List<Pair<List<String>, TypeExpression>> fieldExprs = new ArrayList<>();
+    private List<Integer> fieldIndexIndicators = new ArrayList<>();
     private IndexType indexType = IndexType.BTREE;
     private boolean enforced;
     private boolean ifNotExists;
@@ -83,6 +84,14 @@ public class CreateIndexStatement implements Statement {
 
     public void addFieldExprPair(Pair<List<String>, TypeExpression> fp) {
         this.fieldExprs.add(fp);
+    }
+
+    public List<Integer> getFieldSourceIndicators() {
+        return fieldIndexIndicators;
+    }
+
+    public void addFieldIndexIndicator(Integer index) {
+        fieldIndexIndicators.add(index);
     }
 
     public IndexType getIndexType() {

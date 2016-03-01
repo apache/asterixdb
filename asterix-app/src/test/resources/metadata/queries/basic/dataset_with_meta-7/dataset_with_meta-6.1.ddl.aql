@@ -16,13 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create dataverse & query Metadata dataset Dataverse to verify.
- * Expected Res : Success
- * Date         : 15 Sep 2012
- */
 
 drop dataverse test if exists;
-drop dataverse testdv if exists;
-create dataverse testdv;
+create dataverse test;
+use dataverse test;
+
+create type EmptyType as open {
+    id: string
+}
+
+create type LineType as open {
+  id:int32,
+  text: string
+}
+
+create dataset Book(LineType) with meta(EmptyType)
+primary key id;
+
+create index MetaIndex on Book(meta().id, id) type btree;
 

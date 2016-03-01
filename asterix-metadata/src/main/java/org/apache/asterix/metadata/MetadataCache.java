@@ -156,8 +156,8 @@ public class MetadataCache {
                 if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                     InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                     Index index = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                            dataset.getDatasetName(), IndexType.BTREE, id.getPartitioningKey(), id.getPrimaryKeyType(),
-                            false, true, dataset.getPendingOp());
+                            dataset.getDatasetName(), IndexType.BTREE, id.getPartitioningKey(),
+                            id.getKeySourceIndicator(), id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
                     addIndexIfNotExistsInternal(index);
                 }
 

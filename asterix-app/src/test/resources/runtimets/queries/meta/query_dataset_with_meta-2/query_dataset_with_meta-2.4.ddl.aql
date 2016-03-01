@@ -16,13 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create dataverse & query Metadata dataset Dataverse to verify.
- * Expected Res : Success
- * Date         : 15 Sep 2012
- */
 
 drop dataverse test if exists;
-drop dataverse testdv if exists;
-create dataverse testdv;
-

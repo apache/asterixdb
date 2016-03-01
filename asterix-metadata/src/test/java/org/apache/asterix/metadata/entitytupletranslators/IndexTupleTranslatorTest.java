@@ -18,25 +18,36 @@
  */
 package org.apache.asterix.metadata.entitytupletranslators;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatasetTupleTranslatorTest {
+public class IndexTupleTranslatorTest {
 
     @Test
     public void test() throws MetadataException, IOException {
@@ -52,24 +63,32 @@ public class DatasetTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList(), false);
 
-            Dataset dataset = new Dataset("test", "log", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
+            Dataset dataset = new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
                     "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115,
                     0);
 
+            Index index = new Index("test", "d1", "i1", IndexType.BTREE,
+                    Collections.singletonList(Collections.singletonList("row_id")),
+                    indicator == null ? null : Collections.singletonList(indicator),
+                    Collections.singletonList(BuiltinType.AINT64), -1, false, false, 0);
+
             MetadataRecordTypes.init();
             MetadataPrimaryIndexes.init();
-            DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
-            ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
-            Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);
-            Assert.assertEquals(dataset.getMetaItemTypeDataverseName(),
-                    deserializedDataset.getMetaItemTypeDataverseName());
-            Assert.assertEquals(dataset.getMetaItemTypeName(), deserializedDataset.getMetaItemTypeName());
+
+            MetadataNode mockMetadataNode = mock(MetadataNode.class);
+            when(mockMetadataNode.getDatatype(any(), anyString(), anyString())).thenReturn(new Datatype("test", "d1",
+                    new ARecordType("", new String[] { "row_id" }, new IAType[] { BuiltinType.AINT64 }, true), true));
+            when(mockMetadataNode.getDataset(any(), anyString(), anyString())).thenReturn(dataset);
+
+            IndexTupleTranslator idxTranslator = new IndexTupleTranslator(null, mockMetadataNode, true);
+            ITupleReference tuple = idxTranslator.getTupleFromMetadataEntity(index);
+            Index deserializedIndex = idxTranslator.getMetadataEntityFromTuple(tuple);
             if (indicator == null) {
                 Assert.assertEquals(Collections.singletonList(new Integer(0)),
-                        ((InternalDatasetDetails) deserializedDataset.getDatasetDetails()).getKeySourceIndicator());
+                        deserializedIndex.getKeyFieldSourceIndicators());
             } else {
-                Assert.assertEquals(((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator(),
-                        ((InternalDatasetDetails) deserializedDataset.getDatasetDetails()).getKeySourceIndicator());
+                Assert.assertEquals(index.getKeyFieldSourceIndicators(),
+                        deserializedIndex.getKeyFieldSourceIndicators());
             }
         }
     }

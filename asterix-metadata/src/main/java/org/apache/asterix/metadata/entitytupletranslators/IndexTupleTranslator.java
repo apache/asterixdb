@@ -41,6 +41,8 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -70,17 +72,23 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";
     public static final String INDEX_SEARCHKEY_TYPE_FIELD_NAME = "SearchKeyType";
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
+    public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
 
     private OrderedListBuilder listBuilder = new OrderedListBuilder();
     private OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
     private AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
+    private AOrderedListType int8List = new AOrderedListType(BuiltinType.AINT8, null);
     private ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
     private List<List<String>> searchKey;
     private List<IAType> searchKeyType;
+    private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
+    @SuppressWarnings("unchecked")
+    private ISerializerDeserializer<AInt8> int8Serde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.INDEX_RECORDTYPE);
@@ -161,8 +169,22 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (gramLenPos >= 0) {
             gramLength = ((AInt32) rec.getValueByPos(gramLenPos)).getIntegerValue();
         }
-        return new Index(dvName, dsName, indexName, indexStructure, searchKey, searchKeyType, gramLength,
-                isEnforcingKeys, isPrimaryIndex, pendingOp);
+
+        // Read a field-source-indicator field.
+        List<Integer> keyFieldSourceIndicator = new ArrayList<>();
+        int keyFieldSourceIndicatorIndex = rec.getType().getFieldIndex(INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME);
+        if (keyFieldSourceIndicatorIndex >= 0) {
+            IACursor cursor = ((AOrderedList) rec.getValueByPos(keyFieldSourceIndicatorIndex)).getCursor();
+            while (cursor.next()) {
+                keyFieldSourceIndicator.add((int) ((AInt8) cursor.get()).getByteValue());
+            }
+        } else {
+            for (int index = 0; index < searchKey.size(); ++index) {
+                keyFieldSourceIndicator.add(0);
+            }
+        }
+        return new Index(dvName, dsName, indexName, indexStructure, searchKey, keyFieldSourceIndicator, searchKeyType,
+                gramLength, isEnforcingKeys, isPrimaryIndex, pendingOp);
     }
 
     @Override
@@ -285,6 +307,33 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
             booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
 
+            recordBuilder.addField(nameValue, fieldValue);
+        }
+
+        List<Integer> keySourceIndicator = instance.getKeyFieldSourceIndicators();
+        boolean needSerialization = false;
+        if (keySourceIndicator != null) {
+            for (int source : keySourceIndicator) {
+                if (source != 0) {
+                    needSerialization = true;
+                    break;
+                }
+            }
+        }
+        if (needSerialization) {
+            listBuilder.reset(int8List);
+            ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
+            nameValue.reset();
+            aString.setValue(INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            for (int source : keySourceIndicator) {
+                itemValue.reset();
+                aInt8.setValue((byte) source);
+                int8Serde.serialize(aInt8, itemValue.getDataOutput());
+                listBuilder.addItem(itemValue);
+            }
+            fieldValue.reset();
+            listBuilder.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(nameValue, fieldValue);
         }
 

@@ -46,6 +46,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     private final String indexName;
     private final IndexType indexType;
     private final List<List<String>> keyFieldNames;
+    private final List<Integer> keyFieldSourceIndicators;
     private final List<IAType> keyFieldTypes;
     private final boolean enforceKeyFields;
     private final boolean isPrimaryIndex;
@@ -55,13 +56,14 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     private int pendingOp;
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<List<String>> keyFieldNames, List<IAType> keyFieldTypes, int gramLength, boolean enforceKeyFields,
-            boolean isPrimaryIndex, int pendingOp) {
+            List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
+            int gramLength, boolean enforceKeyFields, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.indexName = indexName;
         this.indexType = indexType;
         this.keyFieldNames = keyFieldNames;
+        this.keyFieldSourceIndicators = keyFieldSourceIndicators;
         this.keyFieldTypes = keyFieldTypes;
         this.gramLength = gramLength;
         this.enforceKeyFields = enforceKeyFields;
@@ -70,18 +72,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     }
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<List<String>> keyFieldNames, List<IAType> keyFieldTypes, boolean enforceKeyFields,
-            boolean isPrimaryIndex, int pendingOp) {
-        this.dataverseName = dataverseName;
-        this.datasetName = datasetName;
-        this.indexName = indexName;
-        this.indexType = indexType;
-        this.keyFieldNames = keyFieldNames;
-        this.keyFieldTypes = keyFieldTypes;
-        this.gramLength = -1;
-        this.enforceKeyFields = enforceKeyFields;
-        this.isPrimaryIndex = isPrimaryIndex;
-        this.pendingOp = pendingOp;
+            List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
+            boolean enforceKeyFields, boolean isPrimaryIndex, int pendingOp) {
+        this(dataverseName, datasetName, indexName, indexType, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
+                -1, enforceKeyFields, isPrimaryIndex, pendingOp);
     }
 
     public String getDataverseName() {
@@ -98,6 +92,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     public List<List<String>> getKeyFieldNames() {
         return keyFieldNames;
+    }
+
+    public List<Integer> getKeyFieldSourceIndicators() {
+        return keyFieldSourceIndicators;
     }
 
     public List<IAType> getKeyFieldTypes() {

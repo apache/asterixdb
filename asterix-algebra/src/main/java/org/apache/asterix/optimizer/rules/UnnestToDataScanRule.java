@@ -176,7 +176,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator scan = new DataSourceScanOperator(v,
                         createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
                                 metadataProvider, policy, outputType,
-                                null /* TODO(Adbullah): to figure out the meta type name*/, csLocations));
+                                null /* TODO(Abdullah): to figure out the meta type name*/, csLocations));
 
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
