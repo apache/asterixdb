@@ -141,6 +141,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.metadata.utils.MetadataLockManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -811,6 +812,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
         String dataverseName = getActiveDataverse(stmtCreateIndex.getDataverseName());
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
+        List<Integer> keySourceIndicators = stmtCreateIndex.getFieldSourceIndicators();
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -838,19 +840,24 @@ public class QueryTranslator extends AbstractLangTranslator {
             indexName = stmtCreateIndex.getIndexName().getValue();
             Index idx = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName, indexName);
-
-            String itemTypeName = ds.getItemTypeName();
             Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
-                    ds.getItemTypeDataverseName(), itemTypeName);
-            IAType itemType = dt.getDatatype();
-            ARecordType aRecordType = (ARecordType) itemType;
+                    ds.getItemTypeDataverseName(), ds.getItemTypeName());
+            ARecordType aRecordType = (ARecordType) dt.getDatatype();
+            ARecordType metaRecordType = null;
+            if (ds.hasMetaPart()) {
+                Datatype metaDt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                        ds.getMetaItemTypeDataverseName(), ds.getMetaItemTypeName());
+                metaRecordType = (ARecordType) metaDt.getDatatype();
+            }
 
             List<List<String>> indexFields = new ArrayList<List<String>>();
             List<IAType> indexFieldTypes = new ArrayList<IAType>();
+            int keyIndex = 0;
             for (Pair<List<String>, TypeExpression> fieldExpr : stmtCreateIndex.getFieldExprs()) {
                 IAType fieldType = null;
-                boolean isOpen = aRecordType.isOpen();
-                ARecordType subType = aRecordType;
+                ARecordType subType = KeyFieldTypeUtils.chooseSource(keySourceIndicators, keyIndex, aRecordType,
+                        metaRecordType);
+                boolean isOpen = subType.isOpen();
                 int i = 0;
                 if (fieldExpr.first.size() > 1 && !isOpen) {
                     for (; i < fieldExpr.first.size() - 1;) {
@@ -885,9 +892,11 @@ public class QueryTranslator extends AbstractLangTranslator {
 
                 indexFields.add(fieldExpr.first);
                 indexFieldTypes.add(fieldType);
+                ++keyIndex;
             }
 
-            ValidateUtil.validateKeyFields(aRecordType, indexFields, indexFieldTypes, stmtCreateIndex.getIndexType());
+            ValidateUtil.validateKeyFields(aRecordType, metaRecordType, indexFields, keySourceIndicators,
+                    indexFieldTypes, stmtCreateIndex.getIndexType());
 
             if (idx != null) {
                 if (stmtCreateIndex.getIfNotExists()) {
@@ -995,8 +1004,8 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             //#. add a new index with PendingAddOp
             Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(), indexFields,
-                    stmtCreateIndex.getFieldSourceIndicators(), indexFieldTypes, stmtCreateIndex.getGramLength(),
-                    stmtCreateIndex.isEnforced(), false, IMetadataEntity.PENDING_ADD_OP);
+                    keySourceIndicators, indexFieldTypes, stmtCreateIndex.getGramLength(), stmtCreateIndex.isEnforced(),
+                    false, IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
 
             ARecordType enforcedType = null;

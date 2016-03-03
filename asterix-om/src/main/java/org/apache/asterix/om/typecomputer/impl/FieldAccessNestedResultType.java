@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,16 +77,12 @@ public class FieldAccessNestedResultType implements IResultTypeComputer {
         } else {
             throw new AlgebricksException("Typing error: expecting a String, found " + ce + " instead.");
         }
-        try {
-            IAType subType = t0.getSubFieldType(fieldPath);
-            if (subType != null) {
-                return subType;
-            } else {
-                // Open field. Type can only be determined at runtime.
-                return BuiltinType.ANY;
-            }
-        } catch (IOException e) {
-            throw new AlgebricksException("FieldPath was invalid.");
+        IAType subType = t0.getSubFieldType(fieldPath);
+        if (subType != null) {
+            return subType;
+        } else {
+            // Open field. Type can only be determined at runtime.
+            return BuiltinType.ANY;
         }
     }
 

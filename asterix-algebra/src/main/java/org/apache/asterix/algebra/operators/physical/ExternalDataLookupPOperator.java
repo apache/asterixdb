@@ -114,7 +114,8 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
         AqlDataSource ds = new DatasetDataSource(datasetId, datasetId.getDataverseName(), datasetId.getDatasourceName(),
-                recordType, null /*external dataset doesn't have meta records.*/, AqlDataSourceType.EXTERNAL_DATASET);
+                recordType, null /*external dataset doesn't have meta records.*/, AqlDataSourceType.EXTERNAL_DATASET,
+                dataset.getDatasetDetails());
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
         deliveredProperties = dspp.computePropertiesVector(as.getVariables());

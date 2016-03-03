@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -229,9 +228,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     //Prune indexes based on field types
                     List<IAType> indexedTypes = new ArrayList<IAType>();
                     //retrieve types of expressions joined/selected with an indexed field
-                    for (int j = 0; j < optFuncExpr.getNumLogicalVars(); j++)
-                        if (j != exprAndVarIdx.second)
+                    for (int j = 0; j < optFuncExpr.getNumLogicalVars(); j++) {
+                        if (j != exprAndVarIdx.second) {
                             indexedTypes.add(optFuncExpr.getFieldType(j));
+                        }
+                    }
 
                     //add constants in case of select
                     if (indexedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1
@@ -247,8 +248,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                                 @Override
                                 public Object getVarType(LogicalVariable var) throws AlgebricksException {
-                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second)))
+                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second))) {
                                         return keyType;
+                                    }
                                     throw new IllegalArgumentException();
                                 }
 
@@ -256,8 +258,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                                 public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
                                         List<List<LogicalVariable>> correlatedNullableVariableLists)
                                                 throws AlgebricksException {
-                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second)))
+                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second))) {
                                         return keyType;
+                                    }
                                     throw new IllegalArgumentException();
                                 }
 
@@ -282,9 +285,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     boolean jaccardSimilarity = optFuncExpr.getFuncExpr().getFunctionIdentifier().getName()
                             .startsWith("similarity-jaccard-check");
 
-                    for (int j = 0; j < indexedTypes.size(); j++)
-                        for (int k = j + 1; k < indexedTypes.size(); k++)
+                    for (int j = 0; j < indexedTypes.size(); j++) {
+                        for (int k = j + 1; k < indexedTypes.size(); k++) {
                             typeMatch &= isMatched(indexedTypes.get(j), indexedTypes.get(k), jaccardSimilarity);
+                        }
+                    }
 
                     // Check if any field name in the optFuncExpr matches.
                     if (optFuncExpr.findFieldName(keyField) != -1) {
@@ -333,8 +338,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
     private boolean isMatched(IAType type1, IAType type2, boolean useListDomain) throws AlgebricksException {
         if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1).first.getTypeTag(),
-                Index.getNonNullableType(type2).first.getTypeTag(), useListDomain))
+                Index.getNonNullableType(type2).first.getTypeTag(), useListDomain)) {
             return true;
+        }
         return ATypeHierarchy.canPromote(Index.getNonNullableType(type1).first.getTypeTag(),
                 Index.getNonNullableType(type2).first.getTypeTag());
     }
@@ -438,9 +444,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             if (index.getKeyFieldNames().contains(fieldName) && index.getPendingOp() == IMetadataEntity.PENDING_NO_OP) {
                 indexCandidates.add(index);
                 if (optFuncExpr.getFieldType(varIdx) == BuiltinType.ANULL
-                        || optFuncExpr.getFieldType(varIdx) == BuiltinType.ANY)
+                        || optFuncExpr.getFieldType(varIdx) == BuiltinType.ANY) {
                     optFuncExpr.setFieldType(varIdx,
                             index.getKeyFieldTypes().get(index.getKeyFieldNames().indexOf(fieldName)));
+                }
                 analysisCtx.addIndexExpr(matchedSubTree.dataset, index, matchedFuncExprIndex, varIdx);
             }
         }
@@ -455,9 +462,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             IOptimizationContext context) throws AlgebricksException {
         int optFuncExprIndex = 0;
         List<Index> datasetIndexes = new ArrayList<Index>();
-        if (subTree.dataSourceType != DataSourceType.COLLECTION_SCAN)
+        if (subTree.dataSourceType != DataSourceType.COLLECTION_SCAN) {
             datasetIndexes = metadataProvider.getDatasetIndexes(subTree.dataset.getDataverseName(),
                     subTree.dataset.getDatasetName());
+        }
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             // Try to match variables from optFuncExpr to assigns or unnests.
             for (int assignOrUnnestIndex = 0; assignOrUnnestIndex < subTree.assignsAndUnnests
@@ -744,12 +752,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
 
                 if (!isByName) {
-                    try {
-                        fieldName = ((ARecordType) recordType.getSubFieldType(parentFieldNames))
-                                .getFieldNames()[fieldIndex];
-                    } catch (IOException e) {
-                        throw new AlgebricksException(e);
-                    }
+                    fieldName = ((ARecordType) recordType.getSubFieldType(parentFieldNames))
+                            .getFieldNames()[fieldIndex];
                 }
                 optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
                 //add fieldName to the nested fieldName, return

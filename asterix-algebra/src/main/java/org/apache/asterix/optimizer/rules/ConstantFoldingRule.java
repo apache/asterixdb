@@ -90,7 +90,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
             AsterixBuiltinFunctions.GET_ITEM, AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
             AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, AsterixBuiltinFunctions.CAST_RECORD,
-            AsterixBuiltinFunctions.CAST_LIST);
+            AsterixBuiltinFunctions.CAST_LIST, AsterixBuiltinFunctions.META);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {

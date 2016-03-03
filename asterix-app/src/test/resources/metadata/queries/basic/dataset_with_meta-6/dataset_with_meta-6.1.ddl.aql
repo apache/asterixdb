@@ -21,7 +21,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-create type EmptyType as open {
+create type AuxiliaryType as open {
     id: string
 }
 
@@ -30,7 +30,7 @@ create type LineType as open {
   text: string
 }
 
-create dataset Book(LineType) with meta(EmptyType)
+create dataset Book(LineType) with meta(AuxiliaryType)
 primary key id;
 
 create index MetaIndex on Book(meta().id) type btree;

@@ -90,6 +90,7 @@ import org.apache.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OptionalATemporalInstanceTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OptionalAYearMonthDurationTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.OptionalOpenARecordTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt64TypeComputer;
@@ -723,6 +724,9 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier EXTERNAL_LOOKUP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "external-lookup", FunctionIdentifier.VARARGS);
 
+    public static final FunctionIdentifier META = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta",
+            FunctionIdentifier.VARARGS);
+
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         return registeredFunctions.get(fid);
     }
@@ -1027,6 +1031,9 @@ public class AsterixBuiltinFunctions {
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE, true);
+
+        // meta() function
+        addFunction(META, OptionalOpenARecordTypeComputer.INSTANCE, true);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 

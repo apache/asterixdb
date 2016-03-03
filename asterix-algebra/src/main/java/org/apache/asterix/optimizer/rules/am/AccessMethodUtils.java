@@ -19,7 +19,6 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +35,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -47,7 +47,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -82,14 +81,17 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  */
 public class AccessMethodUtils {
 
-    public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, List<Object> target)
-            throws IOException, AlgebricksException {
+    public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, IAType metaItemType,
+            List<Object> target) throws AlgebricksException {
         ARecordType recordType = (ARecordType) itemType;
-        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-        for (List<String> partitioningKey : partitioningKeys) {
-            target.add(recordType.getSubFieldType(partitioningKey));
-        }
+        ARecordType metaRecordType = (ARecordType) metaItemType;
+        target.addAll(KeyFieldTypeUtils.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
+        // Adds data record type.
         target.add(itemType);
+        // Adds meta record type if any.
+        if (dataset.hasMetaPart()) {
+            target.add(metaItemType);
+        }
     }
 
     public static ConstantExpression createStringConstant(String str) {
@@ -172,8 +174,9 @@ public class AccessMethodUtils {
                 constantExpressionType);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
-            if (optFuncExpr.getFuncExpr().equals(funcExpr))
+            if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
                 return true;
+            }
         }
         analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
         return true;
@@ -196,61 +199,29 @@ public class AccessMethodUtils {
                 new LogicalVariable[] { fieldVar1, fieldVar2 }, new ILogicalExpression[0], new IAType[0]);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
-            if (optFuncExpr.getFuncExpr().equals(funcExpr))
+            if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
                 return true;
+            }
         }
         analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
         return true;
     }
 
-    public static int getNumSecondaryKeys(Index index, ARecordType recordType) throws AlgebricksException {
-        switch (index.getIndexType()) {
-            case BTREE:
-            case SINGLE_PARTITION_WORD_INVIX:
-            case SINGLE_PARTITION_NGRAM_INVIX:
-            case LENGTH_PARTITIONED_WORD_INVIX:
-            case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                return index.getKeyFieldNames().size();
-            }
-            case RTREE: {
-                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                        index.getKeyFieldNames().get(0), recordType);
-                IAType keyType = keyPairType.first;
-                int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
-                return numDimensions * 2;
-            }
-            default: {
-                throw new AlgebricksException("Unknown index kind: " + index.getIndexType());
-            }
-        }
-    }
-
     /**
      * Appends the types of the fields produced by the given secondary index to dest.
      */
-    public static void appendSecondaryIndexTypes(Dataset dataset, ARecordType recordType, Index index,
-            boolean primaryKeysOnly, List<Object> dest) throws AlgebricksException {
+    public static void appendSecondaryIndexTypes(Dataset dataset, ARecordType recordType, ARecordType metaRecordType,
+            Index index, boolean primaryKeysOnly, List<Object> dest) throws AlgebricksException {
         if (!primaryKeysOnly) {
             switch (index.getIndexType()) {
                 case BTREE:
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX: {
-                    for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
-                                index.getKeyFieldTypes().get(i), index.getKeyFieldNames().get(i), recordType);
-                        dest.add(keyPairType.first);
-                    }
+                    dest.addAll(KeyFieldTypeUtils.getBTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 }
                 case RTREE: {
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
-                            index.getKeyFieldTypes().get(0), index.getKeyFieldNames().get(0), recordType);
-                    IAType keyType = keyPairType.first;
-                    IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
-                    int numKeys = getNumSecondaryKeys(index, recordType);
-                    for (int i = 0; i < numKeys; i++) {
-                        dest.add(nestedKeyType);
-                    }
+                    dest.addAll(KeyFieldTypeUtils.getRTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 }
                 case LENGTH_PARTITIONED_NGRAM_INVIX:
@@ -268,20 +239,13 @@ public class AccessMethodUtils {
                 throw new AlgebricksException(e);
             }
         } else {
-            List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-            for (List<String> partitioningKey : partitioningKeys) {
-                try {
-                    dest.add(recordType.getSubFieldType(partitioningKey));
-                } catch (IOException e) {
-                    throw new AlgebricksException(e);
-                }
-            }
+            dest.addAll(KeyFieldTypeUtils.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
         }
     }
 
-    public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType, Index index,
-            boolean primaryKeysOnly, IOptimizationContext context, List<LogicalVariable> dest)
-                    throws AlgebricksException {
+    public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType,
+            ARecordType metaRecordType, Index index, boolean primaryKeysOnly, IOptimizationContext context,
+            List<LogicalVariable> dest) throws AlgebricksException {
         int numPrimaryKeys = 0;
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             numPrimaryKeys = IndexingConstants
@@ -289,7 +253,7 @@ public class AccessMethodUtils {
         } else {
             numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         }
-        int numSecondaryKeys = getNumSecondaryKeys(index, recordType);
+        int numSecondaryKeys = KeyFieldTypeUtils.getNumSecondaryKeys(index, recordType, metaRecordType);
         int numVars = (primaryKeysOnly) ? numPrimaryKeys : numPrimaryKeys + numSecondaryKeys;
         for (int i = 0; i < numVars; i++) {
             dest.add(context.newVar());
@@ -422,9 +386,10 @@ public class AccessMethodUtils {
         return indexExprs.get(0).second;
     }
 
-    public static UnnestMapOperator createSecondaryIndexUnnestMap(Dataset dataset, ARecordType recordType, Index index,
-            ILogicalOperator inputOp, AccessMethodJobGenParams jobGenParams, IOptimizationContext context,
-            boolean outputPrimaryKeysOnly, boolean retainInput) throws AlgebricksException {
+    public static UnnestMapOperator createSecondaryIndexUnnestMap(Dataset dataset, ARecordType recordType,
+            ARecordType metaRecordType, Index index, ILogicalOperator inputOp, AccessMethodJobGenParams jobGenParams,
+            IOptimizationContext context, boolean outputPrimaryKeysOnly, boolean retainInput)
+                    throws AlgebricksException {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
         ArrayList<Mutable<ILogicalExpression>> secondaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
         jobGenParams.writeToFuncArgs(secondaryIndexFuncArgs);
@@ -432,9 +397,10 @@ public class AccessMethodUtils {
         List<LogicalVariable> secondaryIndexUnnestVars = new ArrayList<LogicalVariable>();
         List<Object> secondaryIndexOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the secondary-index search (not forwarded from input).
-        appendSecondaryIndexOutputVars(dataset, recordType, index, outputPrimaryKeysOnly, context,
+        appendSecondaryIndexOutputVars(dataset, recordType, metaRecordType, index, outputPrimaryKeysOnly, context,
                 secondaryIndexUnnestVars);
-        appendSecondaryIndexTypes(dataset, recordType, index, outputPrimaryKeysOnly, secondaryIndexOutputTypes);
+        appendSecondaryIndexTypes(dataset, recordType, metaRecordType, index, outputPrimaryKeysOnly,
+                secondaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
         IFunctionInfo secondaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
         UnnestingFunctionCallExpression secondaryIndexSearchFunc = new UnnestingFunctionCallExpression(
@@ -452,9 +418,9 @@ public class AccessMethodUtils {
     }
 
     public static UnnestMapOperator createPrimaryIndexUnnestMap(AbstractDataSourceOperator dataSourceOp,
-            Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
-            boolean sortPrimaryKeys, boolean retainInput, boolean retainNull, boolean requiresBroadcast)
-                    throws AlgebricksException {
+            Dataset dataset, ARecordType recordType, ARecordType metaRecordType, ILogicalOperator inputOp,
+            IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput, boolean retainNull,
+            boolean requiresBroadcast) throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
                 inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
@@ -488,11 +454,7 @@ public class AccessMethodUtils {
         List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the primary-index search (not forwarded from input).
         primaryIndexUnnestVars.addAll(dataSourceOp.getVariables());
-        try {
-            appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+        appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
         IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
         AbstractFunctionCallExpression primaryIndexSearchFunc = new ScalarFunctionCallExpression(primaryIndexSearch,

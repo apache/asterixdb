@@ -209,4 +209,20 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         this.properties = properties;
     }
 
+    public LogicalVariable getMetaVariable(List<LogicalVariable> dataScanVariables) {
+        if (hasMeta()) {
+            return dataScanVariables.get(dataScanVariables.size() - 1);
+        } else {
+            return null;
+        }
+    }
+
+    public LogicalVariable getDataRecordVariable(List<LogicalVariable> dataScanVariables) {
+        if (hasMeta()) {
+            return dataScanVariables.get(dataScanVariables.size() - 2);
+        } else {
+            return dataScanVariables.get(dataScanVariables.size() - 1);
+        }
+    }
+
 }

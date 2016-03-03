@@ -783,12 +783,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
-            IAType keyType = null;
-            try {
-                keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            IAType keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -989,7 +984,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         AqlDataSourceType datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL)
                 ? AqlDataSourceType.EXTERNAL_DATASET : AqlDataSourceType.INTERNAL_DATASET;
         return new DatasetDataSource(aqlId, aqlId.getDataverseName(), aqlId.getDatasourceName(), itemType, metaItemType,
-                datasourceType);
+                datasourceType, dataset.getDatasetDetails());
     }
 
     @Override
@@ -1510,8 +1505,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1679,8 +1672,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        } catch (IOException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -1892,8 +1883,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -2038,7 +2027,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         NoOpOperationCallbackFactory.INSTANCE);
             }
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
-        } catch (MetadataException | IOException e) {
+        } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -2654,8 +2643,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -2808,7 +2795,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     filterFactory, false, indexName, null, modificationCallbackFactory,
                     NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
-        } catch (MetadataException | IOException e) {
+        } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -2958,8 +2945,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        } catch (IOException e) {
             throw new AlgebricksException(e);
         }
     }

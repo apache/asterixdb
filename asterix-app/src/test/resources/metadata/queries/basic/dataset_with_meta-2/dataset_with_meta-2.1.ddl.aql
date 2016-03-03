@@ -20,7 +20,7 @@
 drop dataverse meta if exists;
 create dataverse meta;
 use dataverse meta;
-create type EmptyType as open {
+create type AuxiliaryType as open {
     id: string
 }
 
@@ -34,6 +34,6 @@ create type LineType as open {
   text: string
 }
 
-create dataset Book(LineType) with meta(meta.EmptyType)
+create dataset Book(LineType) with meta(meta.AuxiliaryType)
 primary key id;
 

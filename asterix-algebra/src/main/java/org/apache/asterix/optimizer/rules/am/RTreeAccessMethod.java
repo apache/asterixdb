@@ -179,6 +179,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
+        ARecordType metaRecordType = indexSubTree.metaRecordType;
 
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
@@ -239,7 +240,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
 
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                chosenIndex, assignSearchKeys, jobGenParams, context, false, retainInput);
+                metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, false, retainInput);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
@@ -248,8 +249,8 @@ public class RTreeAccessMethod implements IAccessMethod {
             return externalDataAccessOp;
         } else {
             UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,
-                    dataset, recordType, secondaryIndexUnnestOp, context, true, retainInput, false, false);
-
+                    dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, false,
+                    false);
             return primaryIndexUnnestOp;
         }
     }

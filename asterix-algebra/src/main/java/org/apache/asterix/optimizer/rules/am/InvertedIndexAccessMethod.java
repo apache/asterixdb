@@ -66,7 +66,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -364,13 +363,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx,
-            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-                    throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
+        ARecordType metaRecordType = indexSubTree.metaRecordType;
         // we made sure indexSubTree has datasource scan
         DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.dataSourceRef.getValue();
 
@@ -407,11 +406,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         jobGenParams.setKeyVarList(keyVarList);
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                chosenIndex, inputOp, jobGenParams, context, true, retainInput);
+                metaRecordType, chosenIndex, inputOp, jobGenParams, context, true, retainInput);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset,
-                recordType, secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
+                recordType, metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
 
         return primaryIndexUnnestOp;
     }
@@ -436,8 +435,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, subTree, null, chosenIndex, analysisCtx, false,
-                false, false, context);
+        ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, subTree, null, chosenIndex, analysisCtx,
+                false, false, false, context);
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.dataSourceRef.setValue(indexPlanRootOp);
         return true;

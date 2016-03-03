@@ -103,7 +103,7 @@ public class EquivalenceClassUtils {
         for (int pkIndex = 0; pkIndex < primaryKey.size(); ++pkIndex) {
             LogicalVariable referredRecordVar = recordVar;
             String pkFieldName = primaryKey.get(pkIndex).get(0);
-            int source = keySourceIndicators == null ? 0 : keySourceIndicators.get(pkIndex);
+            int source = keySourceIndicators.get(pkIndex);
             Integer fieldIndexInRecord;
             if (source == 0) {
                 // The field is from the main record.

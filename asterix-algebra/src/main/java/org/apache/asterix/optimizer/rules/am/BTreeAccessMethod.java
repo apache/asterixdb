@@ -19,7 +19,6 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -481,7 +480,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
 
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                chosenIndex, inputOp, jobGenParams, context, false, retainInput);
+                metaRecordType, chosenIndex, inputOp, jobGenParams, context, false, retainInput);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         UnnestMapOperator primaryIndexUnnestOp = null;
@@ -494,7 +493,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             return externalDataAccessOp;
         } else if (!isPrimaryIndex) {
             primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp, dataset, recordType,
-                    secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
+                    metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
 
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
@@ -502,11 +501,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
-            try {
-                AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
             List<LogicalVariable> scanVariables = dataSourceOp.getVariables();
             primaryIndexUnnestOp = new UnnestMapOperator(scanVariables, secondaryIndexUnnestOp.getExpressionRef(),
                     primaryIndexOutputTypes, retainInput);

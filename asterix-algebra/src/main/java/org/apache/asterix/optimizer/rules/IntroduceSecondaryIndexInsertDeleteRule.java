@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -558,67 +557,62 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             throws AsterixException, AlgebricksException {
         ARecordType enforcedType = initialType;
         for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-            try {
-                Stack<Pair<ARecordType, String>> nestedTypeStack = new Stack<Pair<ARecordType, String>>();
-                List<String> splits = index.getKeyFieldNames().get(i);
-                ARecordType nestedFieldType = enforcedType;
-                boolean openRecords = false;
-                String bridgeName = nestedFieldType.getTypeName();
-                int j;
-                // Build the stack for the enforced type
-                for (j = 1; j < splits.size(); j++) {
-                    nestedTypeStack.push(new Pair<ARecordType, String>(nestedFieldType, splits.get(j - 1)));
-                    bridgeName = nestedFieldType.getTypeName();
-                    nestedFieldType = (ARecordType) enforcedType.getSubFieldType(splits.subList(0, j));
-                    if (nestedFieldType == null) {
-                        openRecords = true;
-                        break;
-                    }
+
+            Stack<Pair<ARecordType, String>> nestedTypeStack = new Stack<Pair<ARecordType, String>>();
+            List<String> splits = index.getKeyFieldNames().get(i);
+            ARecordType nestedFieldType = enforcedType;
+            boolean openRecords = false;
+            String bridgeName = nestedFieldType.getTypeName();
+            int j;
+            // Build the stack for the enforced type
+            for (j = 1; j < splits.size(); j++) {
+                nestedTypeStack.push(new Pair<ARecordType, String>(nestedFieldType, splits.get(j - 1)));
+                bridgeName = nestedFieldType.getTypeName();
+                nestedFieldType = (ARecordType) enforcedType.getSubFieldType(splits.subList(0, j));
+                if (nestedFieldType == null) {
+                    openRecords = true;
+                    break;
                 }
-                if (openRecords == true) {
-                    // create the smallest record
-                    enforcedType = new ARecordType(splits.get(splits.size() - 2),
-                            new String[] { splits.get(splits.size() - 1) },
-                            new IAType[] { AUnionType.createNullableType(index.getKeyFieldTypes().get(i)) }, true);
-                    // create the open part of the nested field
-                    for (int k = splits.size() - 3; k > (j - 2); k--) {
-                        enforcedType = new ARecordType(splits.get(k), new String[] { splits.get(k + 1) },
-                                new IAType[] { AUnionType.createNullableType(enforcedType) }, true);
-                    }
-                    // Bridge the gap
-                    Pair<ARecordType, String> gapPair = nestedTypeStack.pop();
-                    ARecordType parent = gapPair.first;
-
-                    IAType[] parentFieldTypes = ArrayUtils.addAll(parent.getFieldTypes().clone(),
-                            new IAType[] { AUnionType.createNullableType(enforcedType) });
-                    enforcedType = new ARecordType(bridgeName,
-                            ArrayUtils.addAll(parent.getFieldNames(), enforcedType.getTypeName()), parentFieldTypes,
-                            true);
-
-                } else {
-                    // Schema is closed all the way to the field
-                    // enforced fields are either null or strongly typed
-                    enforcedType = new ARecordType(nestedFieldType.getTypeName(),
-                            ArrayUtils.addAll(nestedFieldType.getFieldNames(), splits.get(splits.size() - 1)),
-                            ArrayUtils.addAll(nestedFieldType.getFieldTypes(),
-                                    AUnionType.createNullableType(index.getKeyFieldTypes().get(i))),
-                            nestedFieldType.isOpen());
+            }
+            if (openRecords == true) {
+                // create the smallest record
+                enforcedType = new ARecordType(splits.get(splits.size() - 2),
+                        new String[] { splits.get(splits.size() - 1) },
+                        new IAType[] { AUnionType.createNullableType(index.getKeyFieldTypes().get(i)) }, true);
+                // create the open part of the nested field
+                for (int k = splits.size() - 3; k > (j - 2); k--) {
+                    enforcedType = new ARecordType(splits.get(k), new String[] { splits.get(k + 1) },
+                            new IAType[] { AUnionType.createNullableType(enforcedType) }, true);
                 }
+                // Bridge the gap
+                Pair<ARecordType, String> gapPair = nestedTypeStack.pop();
+                ARecordType parent = gapPair.first;
 
-                // Create the enforcedtype for the nested fields in the schema, from the ground up
-                if (nestedTypeStack.size() > 0) {
-                    while (!nestedTypeStack.isEmpty()) {
-                        Pair<ARecordType, String> nestedTypePair = nestedTypeStack.pop();
-                        ARecordType nestedRecType = nestedTypePair.first;
-                        IAType[] nestedRecTypeFieldTypes = nestedRecType.getFieldTypes().clone();
-                        nestedRecTypeFieldTypes[nestedRecType.getFieldIndex(nestedTypePair.second)] = enforcedType;
-                        enforcedType = new ARecordType(nestedRecType.getTypeName(), nestedRecType.getFieldNames(),
-                                nestedRecTypeFieldTypes, nestedRecType.isOpen());
-                    }
+                IAType[] parentFieldTypes = ArrayUtils.addAll(parent.getFieldTypes().clone(),
+                        new IAType[] { AUnionType.createNullableType(enforcedType) });
+                enforcedType = new ARecordType(bridgeName,
+                        ArrayUtils.addAll(parent.getFieldNames(), enforcedType.getTypeName()), parentFieldTypes, true);
+
+            } else {
+                // Schema is closed all the way to the field
+                // enforced fields are either null or strongly typed
+                enforcedType = new ARecordType(nestedFieldType.getTypeName(),
+                        ArrayUtils.addAll(nestedFieldType.getFieldNames(), splits.get(splits.size() - 1)),
+                        ArrayUtils.addAll(nestedFieldType.getFieldTypes(),
+                                AUnionType.createNullableType(index.getKeyFieldTypes().get(i))),
+                        nestedFieldType.isOpen());
+            }
+
+            // Create the enforcedtype for the nested fields in the schema, from the ground up
+            if (nestedTypeStack.size() > 0) {
+                while (!nestedTypeStack.isEmpty()) {
+                    Pair<ARecordType, String> nestedTypePair = nestedTypeStack.pop();
+                    ARecordType nestedRecType = nestedTypePair.first;
+                    IAType[] nestedRecTypeFieldTypes = nestedRecType.getFieldTypes().clone();
+                    nestedRecTypeFieldTypes[nestedRecType.getFieldIndex(nestedTypePair.second)] = enforcedType;
+                    enforcedType = new ARecordType(nestedRecType.getTypeName(), nestedRecType.getFieldNames(),
+                            nestedRecTypeFieldTypes, nestedRecType.isOpen());
                 }
-
-            } catch (IOException e) {
-                throw new AsterixException(e);
             }
         }
         return enforcedType;
@@ -628,6 +622,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
      * This method takes a list of {fields}: a subset of {recordFields}, the original record variable
      * and populate expressions with expressions which evaluate to those fields (using field access functions) and
      * variables to represent them
+     *
      * @param fields
      *            desired fields
      * @param recordFields

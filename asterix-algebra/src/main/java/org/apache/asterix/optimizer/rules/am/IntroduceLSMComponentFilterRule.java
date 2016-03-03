@@ -29,6 +29,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -109,7 +110,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
         for (int i = 0; i < analysisCtx.matchedFuncExprs.size(); i++) {
             IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(i);
-            boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes);
+            boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes, context);
             if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)) {
                 optFuncExprs.add(optFuncExpr);
             }
@@ -301,7 +302,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
     }
 
     private boolean findMacthedExprFieldName(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
-            Dataset dataset, ARecordType recType, List<Index> datasetIndexes) throws AlgebricksException {
+            Dataset dataset, ARecordType recType, List<Index> datasetIndexes, IOptimizationContext context)
+                    throws AlgebricksException {
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
@@ -368,7 +370,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         }
                     }
 
-                    int numSecondaryKeys = AccessMethodUtils.getNumSecondaryKeys(index, recType);
+                    IAType metaItemType = ((AqlMetadataProvider) context.getMetadataProvider())
+                            .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+                    ARecordType metaRecType = (ARecordType) metaItemType;
+                    int numSecondaryKeys = KeyFieldTypeUtils.getNumSecondaryKeys(index, recType, metaRecType);
                     List<String> fieldName;
                     if (varIndex >= numSecondaryKeys) {
                         fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex - numSecondaryKeys);

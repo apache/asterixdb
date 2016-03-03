@@ -20,7 +20,6 @@
 package org.apache.asterix.file;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -255,12 +254,7 @@ public abstract class SecondaryIndexOperationsHelper {
             secondaryBTreeFields[i] = i;
         }
 
-        IAType type;
-        try {
-            type = itemType.getSubFieldType(filterFieldName);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+        IAType type = itemType.getSubFieldType(filterFieldName);
         filterCmpFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true);
         filterTypeTraits[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
         secondaryFilterFields[0] = getNumSecondaryKeys() + numPrimaryKeys;
@@ -278,12 +272,7 @@ public abstract class SecondaryIndexOperationsHelper {
         primaryBloomFilterKeyFields = new int[numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType;
-            try {
-                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(keyType, true);

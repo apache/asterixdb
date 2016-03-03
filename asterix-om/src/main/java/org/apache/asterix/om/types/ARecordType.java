@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.types;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -155,9 +154,9 @@ public class ARecordType extends AbstractComplexType {
      * @param subFieldName
      *            The full pathname of the child
      * @return the type of the child
-     * @throws IOException
+     * @throws AsterixException
      */
-    public IAType getSubFieldType(List<String> subFieldName) throws IOException {
+    public IAType getSubFieldType(List<String> subFieldName) throws AsterixException {
         IAType subRecordType = getFieldType(subFieldName.get(0));
         for (int i = 1; i < subFieldName.size(); i++) {
             if (subRecordType == null) {
@@ -166,8 +165,8 @@ public class ARecordType extends AbstractComplexType {
             if (subRecordType.getTypeTag().equals(ATypeTag.UNION)) {
                 //enforced SubType
                 subRecordType = ((AUnionType) subRecordType).getNullableType();
-                if (subRecordType.getTypeTag().serialize() != ATypeTag.RECORD.serialize()) {
-                    throw new IOException(
+                if (subRecordType.getTypeTag() != ATypeTag.RECORD) {
+                    throw new AsterixException(
                             "Field accessor is not defined for values of type " + subRecordType.getTypeTag());
                 }
 

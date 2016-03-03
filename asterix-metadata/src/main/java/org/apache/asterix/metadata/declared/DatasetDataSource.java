@@ -21,10 +21,12 @@ package org.apache.asterix.metadata.declared;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -36,7 +38,8 @@ public class DatasetDataSource extends AqlDataSource {
     private Dataset dataset;
 
     public DatasetDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
-            IAType metaItemType, AqlDataSourceType datasourceType) throws AlgebricksException {
+            IAType metaItemType, AqlDataSourceType datasourceType, IDatasetDetails datasetDetails)
+                    throws AlgebricksException {
         super(id, itemType, metaItemType, datasourceType);
         MetadataTransactionContext ctx = null;
         try {
@@ -49,7 +52,7 @@ public class DatasetDataSource extends AqlDataSource {
             MetadataManager.INSTANCE.commitTransaction(ctx);
             switch (dataset.getDatasetType()) {
                 case INTERNAL:
-                    initInternalDataset(itemType, metaItemType);
+                    initInternalDataset(itemType, metaItemType, datasetDetails);
                     break;
                 case EXTERNAL:
                     initExternalDataset(itemType);
@@ -74,13 +77,17 @@ public class DatasetDataSource extends AqlDataSource {
         return dataset;
     }
 
-    private void initInternalDataset(IAType itemType, IAType metaItemType) throws IOException, AlgebricksException {
-        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+    private void initInternalDataset(IAType itemType, IAType metaItemType, IDatasetDetails datasetDetails)
+            throws IOException, AlgebricksException {
+        InternalDatasetDetails internalDatasetDetails = (InternalDatasetDetails) datasetDetails;
         ARecordType recordType = (ARecordType) itemType;
-        int n = partitioningKeys.size();
+        ARecordType metaRecordType = (ARecordType) metaItemType;
+        List<IAType> partitioningKeyTypes = KeyFieldTypeUtils.getPartitioningKeyTypes(internalDatasetDetails,
+                recordType, metaRecordType);
+        int n = partitioningKeyTypes.size();
         schemaTypes = metaItemType == null ? new IAType[n + 1] : new IAType[n + 2];
-        for (int i = 0; i < n; i++) {
-            schemaTypes[i] = recordType.getSubFieldType(partitioningKeys.get(i));
+        for (int keyIndex = 0; keyIndex < n; ++keyIndex) {
+            schemaTypes[keyIndex] = partitioningKeyTypes.get(keyIndex);
         }
         schemaTypes[n] = itemType;
         if (metaItemType != null) {

@@ -457,8 +457,8 @@ class LangExpressionToPlanTranslator
         IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
                 dataset.getMetaItemTypeName());
         DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset.getDataverseName(),
-                dataset.getDatasetName(), itemType, metaItemType, AqlDataSourceType.INTERNAL_DATASET);
-
+                dataset.getDatasetName(), itemType, metaItemType, AqlDataSourceType.INTERNAL_DATASET,
+                dataset.getDatasetDetails());
         return dataSource;
     }
 

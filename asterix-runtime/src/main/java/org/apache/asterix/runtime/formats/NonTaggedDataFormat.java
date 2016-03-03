@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.formats;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -880,12 +879,8 @@ public class NonTaggedDataFormat implements IDataFormat {
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                     new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(as))));
-            try {
-                return new Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory,
-                        partitionFun, recType.getSubFieldType(fldName));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            return new Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
+                    recType.getSubFieldType(fldName));
         }
         throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
     }

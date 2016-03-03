@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
@@ -38,6 +39,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
@@ -142,18 +144,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             IAType fieldType = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName, false);
             searchKeyType.add(fieldType);
         }
-        // index key type information is not persisted, thus we extract type information from the record metadata
-        if (searchKeyType.isEmpty()) {
-            Dataset dSet = metadataNode.getDataset(jobId, dvName, dsName);
-            String datatypeName = dSet.getItemTypeName();
-            String datatypeDataverseName = dSet.getItemTypeDataverseName();
-            ARecordType recordDt = (ARecordType) metadataNode.getDatatype(jobId, datatypeDataverseName, datatypeName)
-                    .getDatatype();
-            for (int i = 0; i < searchKey.size(); i++) {
-                IAType fieldType = recordDt.getSubFieldType(searchKey.get(i));
-                searchKeyType.add(fieldType);
-            }
-        }
+
         int isEnforcedFieldPos = rec.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
         Boolean isEnforcingKeys = false;
         if (isEnforcedFieldPos > 0) {
@@ -181,6 +172,27 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         } else {
             for (int index = 0; index < searchKey.size(); ++index) {
                 keyFieldSourceIndicator.add(0);
+            }
+        }
+
+        // index key type information is not persisted, thus we extract type information from the record metadata
+        if (searchKeyType.isEmpty()) {
+            Dataset dSet = metadataNode.getDataset(jobId, dvName, dsName);
+            String datatypeName = dSet.getItemTypeName();
+            String datatypeDataverseName = dSet.getItemTypeDataverseName();
+            ARecordType recordDt = (ARecordType) metadataNode.getDatatype(jobId, datatypeDataverseName, datatypeName)
+                    .getDatatype();
+            String metatypeName = dSet.getMetaItemTypeName();
+            String metatypeDataverseName = dSet.getMetaItemTypeDataverseName();
+            ARecordType metaDt = null;
+            if (metatypeName != null && metatypeDataverseName != null) {
+                metaDt = (ARecordType) metadataNode.getDatatype(jobId, metatypeDataverseName, metatypeName)
+                        .getDatatype();
+            }
+            try {
+                searchKeyType = KeyFieldTypeUtils.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
+            } catch (AsterixException e) {
+                throw new MetadataException(e);
             }
         }
         return new Index(dvName, dsName, indexName, indexStructure, searchKey, keyFieldSourceIndicator, searchKeyType,

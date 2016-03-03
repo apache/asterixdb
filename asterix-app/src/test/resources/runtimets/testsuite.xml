@@ -2916,6 +2916,22 @@
                 <output-dir compare="Text">query_dataset_with_meta-2</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="meta">
+            <compilation-unit name="query_dataset_with_meta_primary_index-1">
+                <output-dir compare="Text">query_dataset_with_meta_primary_index-1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="meta">
+            <compilation-unit name="query_dataset_with_meta_primary_index-2">
+                <output-dir compare="Text">query_dataset_with_meta_primary_index-2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="meta">
+            <compilation-unit name="query_dataset_with_meta_failure">
+                <output-dir compare="Text">query_dataset_with_meta_failure</output-dir>
+                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot resolve to ambiguity on the meta function call -- there are more than once dataset choices!</expected-error>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="misc">
         <test-case FilePath="misc">

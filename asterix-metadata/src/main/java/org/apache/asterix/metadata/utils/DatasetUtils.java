@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.utils;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -73,12 +72,7 @@ public class DatasetUtils {
             }
         } else {
             for (int i = 0; i < partitioningKeys.size(); i++) {
-                IAType keyType;
-                try {
-                    keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-                } catch (IOException e) {
-                    throw new AlgebricksException(e);
-                }
+                IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
                 bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
             }
         }
@@ -105,12 +99,7 @@ public class DatasetUtils {
         List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[partitioningKeys.size()];
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            IAType keyType;
-            try {
-                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
             bhffs[i] = hashFunProvider.getBinaryHashFunctionFactory(keyType);
         }
         return bhffs;
@@ -125,12 +114,7 @@ public class DatasetUtils {
         int numKeys = partitioningKeys.size();
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys + 1];
         for (int i = 0; i < numKeys; i++) {
-            IAType keyType;
-            try {
-                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
+            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
         typeTraits[numKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
@@ -159,12 +143,7 @@ public class DatasetUtils {
             return null;
         }
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[1];
-        IAType type;
-        try {
-            type = itemType.getSubFieldType(filterField);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+        IAType type = itemType.getSubFieldType(filterField);
         bcfs[0] = comparatorFactoryProvider.getBinaryComparatorFactory(type, true);
         return bcfs;
     }
@@ -179,13 +158,7 @@ public class DatasetUtils {
             return null;
         }
         ITypeTraits[] typeTraits = new ITypeTraits[1];
-
-        IAType type;
-        try {
-            type = itemType.getSubFieldType(filterField);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+        IAType type = itemType.getSubFieldType(filterField);
         typeTraits[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
         return typeTraits;
     }

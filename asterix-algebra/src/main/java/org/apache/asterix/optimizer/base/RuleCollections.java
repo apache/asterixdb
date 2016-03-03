@@ -50,6 +50,7 @@ import org.apache.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRul
 import org.apache.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
 import org.apache.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
 import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
+import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
 import org.apache.asterix.optimizer.rules.NestGroupByRule;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
@@ -167,6 +168,7 @@ public final class RuleCollections {
         normalization.add(new ConstantFoldingRule());
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule());
+        normalization.add(new MetaFunctionToMetaVariableRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
         normalization.add(new FuzzyEqRule());
         normalization.add(new SimilarityCheckRule());

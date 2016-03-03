@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.common.exceptions;
 
-public class AsterixException extends Exception {
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+
+public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
     public AsterixException() {
