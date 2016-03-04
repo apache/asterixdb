@@ -1,0 +1,21 @@
+DataverseUse TinySocial
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : string
+  }
+]
+TypeDecl FacebookUserType [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl FacebookMessageType [
+  open RecordType {
+    message-id : int64
+  }
+]

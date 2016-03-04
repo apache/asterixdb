@@ -1,0 +1,61 @@
+DataverseUse TinySocial
+Query:
+SELECT [
+Variable [ Name=h ]
+hour
+FunctionCall TinySocial.count@1[
+  Variable [ Name=t ]
+]
+count
+(
+  SELECT [
+  Variable [ Name=min ]
+  minute
+  FunctionCall TinySocial.count@1[
+    Variable [ Name=k ]
+  ]
+  sum
+  ]
+  FROM [    Variable [ Name=t ]
+    AS
+    Variable [ Name=k ]
+  ]
+  Groupby
+    Variable [ Name=min ]
+    :=
+    FunctionCall TinySocial.get-minute@1[
+      FieldAccessor [
+        Variable [ Name=k ]
+        Field=send-time
+      ]
+    ]
+    With
+    Variable [ Name=k ]
+    Variable [ Name=t ]
+    Variable [ Name=h ]
+
+  Orderby
+    Variable [ Name=min ]
+    ASC
+
+)
+finer
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Groupby
+  Variable [ Name=h ]
+  :=
+  FunctionCall TinySocial.get-hour@1[
+    FieldAccessor [
+      Variable [ Name=t ]
+      Field=send-time
+    ]
+  ]
+  With
+  Variable [ Name=t ]
+

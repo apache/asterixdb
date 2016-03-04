@@ -37,8 +37,9 @@ public class Substring2TypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if (fce.getArguments().size() < 2)
+        if (fce.getArguments().size() < 2) {
             throw new AlgebricksException("Wrong Argument Number.");
+        }
         ILogicalExpression arg0 = fce.getArguments().get(0).getValue();
         ILogicalExpression arg1 = fce.getArguments().get(1).getValue();
         IAType t0, t1;
@@ -50,15 +51,22 @@ public class Substring2TypeComputer implements IResultTypeComputer {
         }
 
         ATypeTag tag0, tag1;
-        if (NonTaggedFormatUtil.isOptional(t0))
+        if (NonTaggedFormatUtil.isOptional(t0)) {
             tag0 = ((AUnionType) t0).getNullableType().getTypeTag();
-        else
+        } else {
             tag0 = t0.getTypeTag();
+        }
 
-        if (NonTaggedFormatUtil.isOptional(t1))
+        if (NonTaggedFormatUtil.isOptional(t1)) {
             tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
-        else
+        } else {
             tag1 = t1.getTypeTag();
+        }
+
+        // Allow substring to work with ANY types, i.e., types that are unknown at compile time.
+        if (tag0 == ATypeTag.ANY || tag1 == ATypeTag.ANY) {
+            return BuiltinType.ANY;
+        }
 
         if (tag0 != ATypeTag.NULL && tag0 != ATypeTag.STRING) {
             throw new AlgebricksException("First argument should be String Type.");

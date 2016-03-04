@@ -1,0 +1,73 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [message]
+    :
+    FieldAccessor [
+      Variable [ Name=t ]
+      Field=message-text
+    ]
+  )
+  (
+    LiteralExpr [STRING] [nearby-messages]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [msgtxt]
+          :
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=message-text
+          ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [TweetMessages]
+        ]
+        AS
+        Variable [ Name=t2 ]
+      ]
+      Where
+        OperatorExpr [
+          FunctionCall TinySocial.spatial-distance@2[
+            FieldAccessor [
+              Variable [ Name=t ]
+              Field=sender-location
+            ]
+            FieldAccessor [
+              Variable [ Name=t2 ]
+              Field=sender-location
+            ]
+          ]
+          <=
+          LiteralExpr [LONG] [1]
+        ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=message-text
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t ]
+    Field=message-text
+  ]
+  ASC
+

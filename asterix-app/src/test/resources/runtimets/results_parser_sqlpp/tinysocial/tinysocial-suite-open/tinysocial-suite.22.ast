@@ -1,0 +1,26 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+FunctionCall TinySocial.count@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=t ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [TweetMessages]
+      ]
+      AS
+      Variable [ Name=t ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=tweetid
+        ]
+        =
+        LiteralExpr [STRING] [13]
+      ]
+  )
+]
+]

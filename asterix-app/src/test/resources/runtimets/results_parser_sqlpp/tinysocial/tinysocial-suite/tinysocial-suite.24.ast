@@ -1,0 +1,86 @@
+DataverseUse TinySocial
+Query:
+SELECT [
+FieldAccessor [
+  Variable [ Name=user ]
+  Field=name
+]
+uname
+FieldAccessor [
+  Variable [ Name=user ]
+  Field=alias
+]
+alias
+FunctionCall TinySocial.substring@2[
+  FieldAccessor [
+    Variable [ Name=message ]
+    Field=message
+  ]
+  LiteralExpr [LONG] [30]
+]
+msg
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookMessages]
+  ]
+  AS
+  Variable [ Name=message ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=user ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=author-id
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=id
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=in-response-to
+      ]
+      >=
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=in-response-to
+      ]
+      <
+      LiteralExpr [LONG] [11]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=user ]
+    Field=name
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=user ]
+    Field=alias
+  ]
+  ASC
+  FunctionCall TinySocial.substring@2[
+    FieldAccessor [
+      Variable [ Name=message ]
+      Field=message
+    ]
+    LiteralExpr [LONG] [30]
+  ]
+  ASC
+

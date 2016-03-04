@@ -6432,6 +6432,11 @@
                 <output-dir compare="AST">tinysocial-suite</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="tinysocial">
+            <compilation-unit name="tinysocial-suite-open">
+                <output-dir compare="AST">tinysocial-suite-open</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="types">
         <test-case FilePath="types">
