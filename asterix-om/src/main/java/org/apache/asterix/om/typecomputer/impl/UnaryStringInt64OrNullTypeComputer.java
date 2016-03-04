@@ -47,8 +47,9 @@ public class UnaryStringInt64OrNullTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if (fce.getArguments().isEmpty())
+        if (fce.getArguments().isEmpty()) {
             throw new AlgebricksException("Wrong Argument Number.");
+        }
         ILogicalExpression arg0 = fce.getArguments().get(0).getValue();
         IAType t0;
         try {
@@ -56,10 +57,12 @@ public class UnaryStringInt64OrNullTypeComputer implements IResultTypeComputer {
         } catch (AlgebricksException e) {
             throw new AlgebricksException(e);
         }
-        if (t0.getTypeTag() != ATypeTag.NULL
-                && t0.getTypeTag() != ATypeTag.STRING
-                && (t0.getTypeTag() == ATypeTag.UNION && !((AUnionType) t0).getUnionList()
-                        .contains(BuiltinType.ASTRING))) {
+        if (t0.getTypeTag() == ATypeTag.ANY) {
+            return BuiltinType.ANY;
+        }
+
+        if (t0.getTypeTag() != ATypeTag.NULL && t0.getTypeTag() != ATypeTag.STRING && (t0.getTypeTag() == ATypeTag.UNION
+                && !((AUnionType) t0).getUnionList().contains(BuiltinType.ASTRING))) {
             throw new NotImplementedException("Expects String Type.");
         }
 

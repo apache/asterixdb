@@ -1,0 +1,42 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+FunctionCall TinySocial.avg@1[
+  (
+    SELECT ELEMENT [
+    FunctionCall TinySocial.string-length@1[
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=message
+      ]
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [FacebookMessages]
+      ]
+      AS
+      Variable [ Name=message ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=message ]
+            Field=in-response-to
+          ]
+          >=
+          LiteralExpr [LONG] [1]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=message ]
+            Field=in-response-to
+          ]
+          <
+          LiteralExpr [LONG] [11]
+        ]
+      ]
+  )
+]
+]
