@@ -42,7 +42,8 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
-import org.apache.hyracks.dataflow.std.buffermanager.VGroupTupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedMemoryConstrain;
+import org.apache.hyracks.dataflow.std.buffermanager.VPartitionTupleBufferManager;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
@@ -78,8 +79,8 @@ public class IntervalPartitionJoin {
     private final int numOfPartitions;
     private InMemoryIntervalPartitionJoin inMemJoiner[]; //Used for joining resident partitions
 
-    private VGroupTupleBufferManager buildBufferManager;
-    private VGroupTupleBufferManager probeBufferManager;
+    private VPartitionTupleBufferManager buildBufferManager;
+    private VPartitionTupleBufferManager probeBufferManager;
 
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAccessor accessorProbe;
@@ -120,7 +121,18 @@ public class IntervalPartitionJoin {
     }
 
     public void initBuild() throws HyracksDataException {
-        buildBufferManager = new VGroupTupleBufferManager(ctx, numOfPartitions, memForJoin * ctx.getInitialFrameSize());
+        buildBufferManager = new VPartitionTupleBufferManager(ctx, getPartitionMemoryConstrain(), numOfPartitions,
+                memForJoin * ctx.getInitialFrameSize());
+    }
+
+    private IPartitionedMemoryConstrain getPartitionMemoryConstrain() {
+        IPartitionedMemoryConstrain constrain = new IPartitionedMemoryConstrain() {
+            @Override
+            public int frameLimit(int partitionId) {
+                return Integer.MAX_VALUE;
+            }
+        };
+        return constrain;
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
@@ -332,7 +344,7 @@ public class IntervalPartitionJoin {
 
     public void initProbe() throws HyracksDataException {
         int probeMemory = numOfPartitions > memForJoin ? memForJoin : numOfPartitions;
-        probeBufferManager = new VGroupTupleBufferManager(ctx, numOfPartitions,
+        probeBufferManager = new VPartitionTupleBufferManager(ctx, getPartitionMemoryConstrain(), numOfPartitions,
                 (probeMemory) * ctx.getInitialFrameSize());
 
         probeRFWriters = new RunFileWriter[numOfPartitions];

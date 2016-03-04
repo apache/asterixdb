@@ -55,8 +55,8 @@ import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.buffermanager.IFramePool;
-import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
@@ -253,8 +253,8 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                     }
                     IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(rightKeys, leftKeys, partition);
 
-                    ITupleBufferAccessor leftAccessor = leftState.bufferManager.getTupleAccessor();
-                    ITupleBufferAccessor rightAccessor = rightState.bufferManager.getTupleAccessor();
+                    ITuplePointerAccessor leftAccessor = leftState.bufferManager.createTupleAccessor();
+                    ITuplePointerAccessor rightAccessor = rightState.bufferManager.createTupleAccessor();
 
                     EndPointIndexItem leftItem;
                     EndPointIndexItem rightItem;
