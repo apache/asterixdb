@@ -168,8 +168,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         final Waiters waiters = jobResultLocations.get(jobId).waiters;
         if (waiters != null) {
             for (ResultSetId rsId : waiters.keySet()) {
-                waiters.get(rsId).callback.setException(exceptions.get(0));
-                waiters.remove(rsId);
+                waiters.remove(rsId).callback.setException(exceptions.get(0));
             }
         }
         notifyAll();

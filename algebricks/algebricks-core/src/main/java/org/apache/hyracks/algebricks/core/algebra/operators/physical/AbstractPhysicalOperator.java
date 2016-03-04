@@ -145,8 +145,8 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
                     + " operator descriptors. Currently, nested plans can only consist in linear pipelines of Asterix micro operators.");
         }
 
-        for (OperatorDescriptorId oid : opMap.keySet()) {
-            IOperatorDescriptor opd = opMap.get(oid);
+        for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> opEntry : opMap.entrySet()) {
+            IOperatorDescriptor opd = opEntry.getValue();
             if (!(opd instanceof AlgebricksMetaOperatorDescriptor)) {
                 throw new AlgebricksException(
                         "Can only generate Hyracks jobs for pipelinable Asterix nested plans, not for "

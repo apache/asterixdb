@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -295,7 +294,7 @@ public class SerializableHashTable implements ISerializableTable {
         return offset;
     }
 
-    class IntSerDeBuffer {
+    private static class IntSerDeBuffer {
 
         private byte[] bytes;
 

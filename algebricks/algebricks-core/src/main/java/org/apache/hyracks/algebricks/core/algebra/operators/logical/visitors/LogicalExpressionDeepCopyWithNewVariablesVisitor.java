@@ -61,9 +61,9 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
     private void deepCopyAnnotations(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {
         Map<Object, IExpressionAnnotation> srcAnnotations = src.getAnnotations();
         Map<Object, IExpressionAnnotation> destAnnotations = dest.getAnnotations();
-        for (Object k : srcAnnotations.keySet()) {
-            IExpressionAnnotation annotation = srcAnnotations.get(k).copy();
-            destAnnotations.put(k, annotation);
+        for (Map.Entry<Object, IExpressionAnnotation> annotationEntry : srcAnnotations.entrySet()) {
+            IExpressionAnnotation annotation = annotationEntry.getValue().copy();
+            destAnnotations.put(annotationEntry.getKey(), annotation);
         }
     }
 

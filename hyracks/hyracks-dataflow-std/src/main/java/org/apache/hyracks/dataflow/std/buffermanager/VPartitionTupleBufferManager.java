@@ -208,7 +208,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         Arrays.fill(partitionArray, null);
     }
 
-    private class PartitionFrameBufferManager implements IFrameBufferManager {
+    private static class PartitionFrameBufferManager implements IFrameBufferManager {
 
         ArrayList<ByteBuffer> buffers = new ArrayList<>();
 

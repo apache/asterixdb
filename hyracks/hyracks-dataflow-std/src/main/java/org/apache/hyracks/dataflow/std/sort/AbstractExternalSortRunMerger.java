@@ -158,10 +158,14 @@ public abstract class AbstractExternalSortRunMerger {
                 }
             }
         } catch (Exception e) {
-            finalWriter.fail();
+            if (finalWriter != null) {
+                finalWriter.fail();
+            }
             throw new HyracksDataException(e);
         } finally {
-            finalWriter.close();
+            if (finalWriter != null) {
+                finalWriter.close();
+            }
         }
     }
 
