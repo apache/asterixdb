@@ -64,7 +64,7 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
         this.stateId = stateId;
         this.spillableTableFactory = spillableTableFactory;
         this.frameLimit = framesLimit;
-        this.nmkComputer = nmkFactory.createNormalizedKeyComputer();
+        this.nmkComputer = nmkFactory == null ? null : nmkFactory.createNormalizedKeyComputer();
 
         this.partialAggRecordDesc = partialAggRecordDesc;
         this.outRecordDesc = outRecordDesc;
