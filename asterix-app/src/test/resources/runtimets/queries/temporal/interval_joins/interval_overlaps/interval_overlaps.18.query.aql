@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+/*
+ * Description      :   Check temporal join functionality for interval
+ * Expected Result  :   Success
+ * Date             :   26th Jun, 2015
+ */
 
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
+use dataverse TinyCollege;
 
-public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
-
-    public boolean checkToRemoveLeftActive();
-
-    public boolean checkToRemoveRightActive();
-
-    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1);
-
-    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1);
-
-}
+for $f in dataset Staff
+for $d in dataset Students
+where /*+ interval-index-join [11000, 12000, 14000] */ interval-overlaps($f.employment, $d.attendance)
+/*+ range ["F", "L", "R"] */
+order by $f.name, $d.name
+return { "staff" : $f.name, "student" : $d.name }

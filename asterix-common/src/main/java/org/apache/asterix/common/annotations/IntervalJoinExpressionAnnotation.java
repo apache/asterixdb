@@ -23,10 +23,11 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
 
-    public static final String RAW_HINT_STRING = "interval-raw-join";
-    public static final String PARTITION_HINT_STRING = "interval-partition-join";
-    public static final String MERGE_HINT_STRING = "interval-merge-join";
-    public static final String SPATIAL_HINT_STRING = "interval-spatial-join";
+    private static final String RAW_HINT_STRING = "interval-raw-join";
+    private static final String PARTITION_HINT_STRING = "interval-partition-join";
+    private static final String MERGE_HINT_STRING = "interval-merge-join";
+    private static final String SPATIAL_HINT_STRING = "interval-spatial-join";
+    private static final String INDEX_HINT_STRING = "interval-index-join";
     public static final IntervalJoinExpressionAnnotation INSTANCE = new IntervalJoinExpressionAnnotation();
 
     private Object object;
@@ -67,6 +68,8 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
             joinType = MERGE_HINT_STRING;
         } else if (hint.startsWith(SPATIAL_HINT_STRING)) {
             joinType = SPATIAL_HINT_STRING;
+        } else if (hint.startsWith(INDEX_HINT_STRING)) {
+            joinType = INDEX_HINT_STRING;
         }
     }
 
@@ -109,9 +112,17 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
         return false;
     }
 
+    public boolean isIndexJoin() {
+        if (joinType.equals(INDEX_HINT_STRING)) {
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isIntervalJoinHint(String hint) {
         if (hint.startsWith(RAW_HINT_STRING) || hint.startsWith(PARTITION_HINT_STRING)
-                || hint.startsWith(MERGE_HINT_STRING) || hint.startsWith(SPATIAL_HINT_STRING)) {
+                || hint.startsWith(MERGE_HINT_STRING) || hint.startsWith(SPATIAL_HINT_STRING)
+                || hint.startsWith(INDEX_HINT_STRING)) {
             return true;
         } else {
             return false;
@@ -127,6 +138,8 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
             return MERGE_HINT_STRING.length();
         } else if (hint.startsWith(SPATIAL_HINT_STRING)) {
             return SPATIAL_HINT_STRING.length();
+        } else if (hint.startsWith(INDEX_HINT_STRING)) {
+            return INDEX_HINT_STRING.length();
         }
         return 0;
     }

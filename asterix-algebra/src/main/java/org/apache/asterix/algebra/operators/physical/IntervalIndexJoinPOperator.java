@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
-import org.apache.asterix.runtime.operators.joins.intervalpartition.IntervalPartitionJoinOperatorDescriptor;
+import org.apache.asterix.runtime.operators.joins.intervalindex.IntervalIndexJoinOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -49,51 +49,41 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
-public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
+public class IntervalIndexJoinPOperator extends AbstractJoinPOperator {
 
     private final List<LogicalVariable> keysLeftBranch;
     private final List<LogicalVariable> keysRightBranch;
     private final int memSizeInFrames;
-    private final int probeTupleCount;
-    private final int probeMaxDuration;
-    private final int buildTupleCount;
-    private final int buildMaxDuration;
-    private final int avgTuplesInFrame;
+    private final int leftCountInFrames;
+    private final int rightCountInFrames;
     private final IIntervalMergeJoinCheckerFactory mjcf;
     private final IRangeMap rangeMap;
 
-    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinPOperator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoinPOperator.class.getName());
 
-    public IntervalPartitionJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
+    public IntervalIndexJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, int buildTupleCount, int probeTupleCount, int buildMaxDuration, int probeMaxDuration,
-            int avgTuplesInFrame, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            int memSizeInFrames, int leftCountInFrames, int rightCountInFrames, IIntervalMergeJoinCheckerFactory mjcf,
+            IRangeMap rangeMap) {
         super(kind, partitioningType);
         this.keysLeftBranch = sideLeftOfEqualities;
         this.keysRightBranch = sideRightOfEqualities;
         this.memSizeInFrames = memSizeInFrames;
-        this.buildTupleCount = buildTupleCount;
-        this.probeTupleCount = probeTupleCount;
-        this.buildMaxDuration = buildMaxDuration;
-        this.probeMaxDuration = probeMaxDuration;
-        this.avgTuplesInFrame = avgTuplesInFrame;
+        this.leftCountInFrames = leftCountInFrames;
+        this.rightCountInFrames = rightCountInFrames;
         this.mjcf = mjcf;
         this.rangeMap = rangeMap;
 
-        LOGGER.fine("IntervalPartitionJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
+        LOGGER.fine("IntervalIndexJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
-                + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int buildTupleCount="
-                + buildTupleCount + ", int probeTupleCount=" + probeTupleCount + ", int buildMaxDuration="
-                + buildMaxDuration + ", int probeMaxDuration=" + probeMaxDuration + ", int avgTuplesInFrame="
-                + avgTuplesInFrame + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap
-                + ".");
+                + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int leftCountInFrames="
+                + leftCountInFrames + ", int rightCountInFrames=" + rightCountInFrames
+                + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
     }
 
     @Override
@@ -103,7 +93,7 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
 
     @Override
     public String toString() {
-        return "INTERVAL_PARTITION_JOIN " + keysLeftBranch + " " + keysRightBranch;
+        return "INTERVAL_INDEX_JOIN " + keysLeftBranch + " " + keysRightBranch;
     }
 
     @Override
@@ -162,6 +152,7 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
                     throws AlgebricksException {
+
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
 
@@ -177,14 +168,8 @@ public class IntervalPartitionJoinPOperator extends AbstractJoinPOperator {
             comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(env.getVarType(v), true);
         }
 
-        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context
-                .getPredicateEvaluatorFactoryProvider();
-        IPredicateEvaluatorFactory predEvaluatorFactory = (predEvaluatorFactoryProvider == null ? null
-                : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight));
-
-        IntervalPartitionJoinOperatorDescriptor opDesc = new IntervalPartitionJoinOperatorDescriptor(spec,
-                memSizeInFrames, buildTupleCount, probeTupleCount, buildMaxDuration, probeMaxDuration, avgTuplesInFrame,
-                keysLeft, keysRight, recordDescriptor, comparatorFactories, mjcf, rangeMap, predEvaluatorFactory);
+        IntervalIndexJoinOperatorDescriptor opDesc = new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames,
+                leftCountInFrames, rightCountInFrames, keysLeft, keysRight, recordDescriptor, mjcf);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();

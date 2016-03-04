@@ -46,27 +46,28 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
     public ITuplePartitionComputer createPartitioner() {
         return new ITuplePartitionComputer() {
             @Override
-            public int partition(IFrameTupleAccessor accessor, int tIndex, int nPartitions) throws HyracksDataException {
-                long partitionI = getIntervalPartitionI(accessor, tIndex, intervalFieldId);
-                long partitionJ = getIntervalPartitionJ(accessor, tIndex, intervalFieldId);
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int nPartitions)
+                    throws HyracksDataException {
+                int partitionI = getIntervalPartitionI(accessor, tIndex, intervalFieldId);
+                int partitionJ = getIntervalPartitionJ(accessor, tIndex, intervalFieldId);
                 return IntervalPartitionUtil.intervalPartitionMap(partitionI, partitionJ, k);
             }
 
-            private long getIntervalPartition(long point) throws HyracksDataException {
+            private int getIntervalPartition(long point) throws HyracksDataException {
                 if (point < partitionStart) {
                     return 0;
                 }
                 point = Math.floorDiv((point - partitionStart), partitionDuration);
                 // Add one to the partition, since 0 represents any point before the start partition point.
-                return Math.min(point + 1, k - 1l);
+                return (int) Math.min(point + 1, k - 1l);
             }
 
-            public long getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)
+            public int getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)
                     throws HyracksDataException {
                 return getIntervalPartition(IntervalJoinUtil.getIntervalStart(accessor, tIndex, fieldId));
             }
 
-            public long getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId)
+            public int getIntervalPartitionJ(IFrameTupleAccessor accessor, int tIndex, int fieldId)
                     throws HyracksDataException {
                 return getIntervalPartition(IntervalJoinUtil.getIntervalEnd(accessor, tIndex, fieldId));
             }

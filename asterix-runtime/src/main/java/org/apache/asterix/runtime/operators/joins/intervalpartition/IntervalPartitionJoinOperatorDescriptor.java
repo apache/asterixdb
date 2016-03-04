@@ -64,7 +64,11 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
     private final int[] buildKeys;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
 
-    private final int inputSizeBuild;
+    private final int probeTupleCount;
+    private final int probeMaxDuration;
+    private final int buildTupleCount;
+    private final int buildMaxDuration;
+    private final int avgTuplesPerFrame;
     private final int probeKey;
     private final int buildKey;
     private final IIntervalMergeJoinCheckerFactory imjcf;
@@ -75,15 +79,20 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinOperatorDescriptor.class.getName());
 
-    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputSizeBuild,
-            int[] leftKeys, int[] rightKeys, RecordDescriptor recordDescriptor,
-            IBinaryComparatorFactory[] comparatorFactories, IIntervalMergeJoinCheckerFactory imjcf, IRangeMap rangeMap,
+    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int leftTupleCount,
+            int rightTupleCount, int leftMaxDuration, int rightMaxDuration, int avgTuplesPerFrame, int[] leftKeys,
+            int[] rightKeys, RecordDescriptor recordDescriptor, IBinaryComparatorFactory[] comparatorFactories,
+            IIntervalMergeJoinCheckerFactory imjcf, IRangeMap rangeMap,
             IPredicateEvaluatorFactory predEvaluatorFactory) {
         super(spec, 2, 1);
         this.memsize = memsize;
-        this.inputSizeBuild = inputSizeBuild;
         this.buildKey = leftKeys[0];
         this.probeKey = rightKeys[0];
+        this.buildTupleCount = leftTupleCount;
+        this.probeTupleCount = rightTupleCount;
+        this.buildMaxDuration = leftMaxDuration;
+        this.probeMaxDuration = rightMaxDuration;
+        this.avgTuplesPerFrame = avgTuplesPerFrame;
         this.buildKeys = leftKeys;
         this.probeKeys = rightKeys;
         recordDescriptors[0] = recordDescriptor;
@@ -153,7 +162,8 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
             final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(probeAid, 0);
-            final int k = IntervalPartitionUtil.determineK();
+            final int k = IntervalPartitionUtil.determineK(buildTupleCount, buildMaxDuration, probeTupleCount,
+                    probeMaxDuration, avgTuplesPerFrame);
             final long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeMap, partition);
             final long partitionEnd = IntervalPartitionUtil.getEndOfPartition(rangeMap, partition);
 
@@ -170,8 +180,13 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                         // Dedicated buffers: One buffer to read and one buffer for output
                         throw new HyracksDataException("not enough memory for join");
                     }
+                    state.k = k;
                     if (k <= 2) {
-                        throw new HyracksDataException("not enough partitions (k) for interval partition join");
+                        state.k = 3;
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("IntervalPartitionJoin has overridden the suggested value of k (" + state.k
+                                    + ") with 3.");
+                        }
                     }
                     ITuplePartitionComputer buildHpc = new IntervalPartitionComputerFactory(buildKey, k, partitionStart,
                             partitionEnd).createPartitioner();
@@ -179,9 +194,8 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                             partitionEnd).createPartitioner();
 
                     state.partition = partition;
-                    state.k = k;
                     state.intervalPartitions = IntervalPartitionUtil.getMaxPartitions(state.k);
-                    state.memoryForJoin = memsize - 2;
+                    state.memoryForJoin = memsize;
                     IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition);
                     state.ipj = new IntervalPartitionJoin(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
                             BUILD_REL, PROBE_REL, buildKeys, probeKeys, imjc, comparatorFactories, buildRd, probeRd,
@@ -189,8 +203,9 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                     state.ipj.initBuild();
                     if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.intervalPartitions
-                                + " interval partitions using " + state.memoryForJoin + " frames for memory.");
+                        LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.k
+                                + " granules repesenting " + state.intervalPartitions + " interval partitions using "
+                                + state.memoryForJoin + " frames for memory.");
                     }
                 }
 

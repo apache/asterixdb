@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.algebra.operators.physical.IntervalIndexJoinPOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalPartitionJoinPOperator;
 import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -84,11 +85,15 @@ public class JoinUtils {
                 setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
             } else if (ijea.isPartitionJoin()) {
                 // Overlapping Interval Partition.
-                LOGGER.fine("Interval Join - IOP");
+                LOGGER.fine("Interval Join - Cluster Parititioning");
                 setIntervalPartitionJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
             } else if (ijea.isSpatialJoin()) {
                 // Spatial Partition.
                 LOGGER.fine("Interval Join - Spatial Partitioning");
+            } else if (ijea.isIndexJoin()) {
+                // Endpoint Index.
+                LOGGER.fine("Interval Join - Endpoint Index");
+                setIntervalIndexJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
             }
         }
     }
@@ -108,8 +113,8 @@ public class JoinUtils {
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
         IMergeJoinCheckerFactory mjcf = (IMergeJoinCheckerFactory) getIntervalMergeJoinCheckerFactory(fi, rangeMap);
-        op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
+        op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST, sideLeft,
+                sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
     }
 
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
@@ -118,9 +123,28 @@ public class JoinUtils {
         IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new IntervalPartitionJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
-                context.getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(),
-                mjcf,
-                rangeMap));
+                getCardinality(sideLeft, context), getCardinality(sideRight, context),
+                getMaxDuration(sideLeft, context), getMaxDuration(sideRight, context),
+                context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), mjcf, rangeMap));
+    }
+
+    private static void setIntervalIndexJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
+            IOptimizationContext context) {
+        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
+        op.setPhysicalOperator(new IntervalIndexJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
+                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
+                getCardinality(sideLeft, context), getCardinality(sideRight, context), mjcf, rangeMap));
+    }
+
+    private static int getMaxDuration(List<LogicalVariable> lv, IOptimizationContext context) {
+        // TODO Base on real statistics
+        return context.getPhysicalOptimizationConfig().getMaxIntervalDuration();
+    }
+
+    private static int getCardinality(List<LogicalVariable> lv, IOptimizationContext context) {
+        // TODO Base on real statistics
+        return context.getPhysicalOptimizationConfig().getMaxFramesForJoinLeftInput();
     }
 
     private static FunctionIdentifier isIntervalJoinCondition(ILogicalExpression e,

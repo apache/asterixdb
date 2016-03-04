@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
-import org.apache.asterix.runtime.operators.joins.intervalpartition.IntervalPartitionUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 

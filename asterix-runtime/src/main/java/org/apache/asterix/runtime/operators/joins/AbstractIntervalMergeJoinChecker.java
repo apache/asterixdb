@@ -32,6 +32,14 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         this.idRight = idRight;
     }
 
+    public boolean checkToRemoveLeftActive() {
+        return true;
+    }
+
+    public boolean checkToRemoveRightActive() {
+        return true;
+    }
+
     public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         return checkToLoadNextRightTuple(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
@@ -65,4 +73,5 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
     public abstract <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1);
 
     public abstract <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1);
+
 }

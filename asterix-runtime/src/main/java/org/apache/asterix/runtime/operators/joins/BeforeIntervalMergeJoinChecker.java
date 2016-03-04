@@ -31,6 +31,11 @@ public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChe
     }
 
     @Override
+    public boolean checkToRemoveLeftActive() {
+        return false;
+    }
+
+    @Override
     public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);

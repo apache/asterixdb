@@ -266,10 +266,15 @@ public class APIFramework {
         int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
         int groupFrameLimit = (int) (compilerProperties.getGroupMemorySize() / frameSize);
         int joinFrameLimit = (int) (compilerProperties.getJoinMemorySize() / frameSize);
+        int joinFrameLeftInputLimit = (int) (compilerProperties.getJoinLeftInputSize() / frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalGroupBy(groupFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesForJoin(joinFrameLimit);
+        OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesForJoinLeftInput(joinFrameLeftInputLimit);
+
+        int intervalMaxDuration = (int) (compilerProperties.getIntervalMaxDuration());
+        OptimizationConfUtil.getPhysicalOptimizationConfig().getMaxIntervalDuration(intervalMaxDuration);
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);

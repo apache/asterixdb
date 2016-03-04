@@ -21,19 +21,58 @@ package org.apache.asterix.runtime.operators.joins.intervalpartition;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map.Entry;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.runtime.operators.joins.EqualsIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalPartitionUtil {
+    public static final double C_CPU = 0.5;
+    public static final double C_IO = 10;
 
     public static int determineK() {
         return 4;
+    }
+
+    public static int determineK(int countR, int maxDurationR, int countS, int maxDurationS, int avgTuplePerFrame) {
+        double deltaR = 1.0 / maxDurationR;
+        double deltaS = 1.0 / maxDurationS;
+
+        int knMinusTwo = 0;
+        int knMinusOne = 0;
+        int kn = 1;
+
+        int prn = determinePn(kn, countR, deltaR);
+        double tn = determineTn(kn, determinePn(kn, countS, deltaS));
+
+        while ((kn != knMinusOne) && (kn != knMinusTwo)) {
+            knMinusTwo = knMinusOne;
+            knMinusOne = kn;
+            kn = determineKn(countR, countS, avgTuplePerFrame, prn, tn);
+            prn = determinePn(kn, countR, deltaR);
+            tn = determineTn(kn, determinePn(kn, countS, deltaS));
+        }
+        return kn;
+    }
+
+    public static int determineKn(int countR, int countS, int avgTuplePerFrame, int prn, double tn) {
+        double factorS = (3.0 * countS) / (2 * (C_IO + 2 * C_CPU) * tn);
+        double factorR = (C_IO / avgTuplePerFrame) + ((4.0 * countR * C_CPU) / prn);
+        return (int) Math.cbrt(factorS * factorR);
+    }
+
+    public static int determinePn(int kn, int count, double delta) {
+        long knDelta = (long) Math.ceil(kn * delta);
+        return Math.min((int) ((kn * knDelta) + kn - ((knDelta * knDelta) / 2.0) - (knDelta / 2.0)), count);
+    }
+
+    public static double determineTn(int kn, int Pn) {
+        return Pn / ((kn * kn + kn) / 2.0);
     }
 
     public static void main(String[] args) {
@@ -75,22 +114,51 @@ public class IntervalPartitionUtil {
         //        test = new MeetsIntervalMergeJoinChecker(new int[1], new int[1]);
         //        System.err.println("Build - Meets");
         //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        test = new EqualsIntervalMergeJoinChecker(new int[1], new int[1]);
+        //        System.err.println("Build - Equal");
+        //        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
+        //
+        //        ArrayList<HashSet<Integer>> mapBuild = getJoinPartitionListOfSets(k, test);
+        //        System.err.println("Build");
+        //        printJoinPartitionMap(mapBuild);
+        //        System.err.println("Spill Order");
+        //        printPartitionSpillOrder(getPartitionSpillOrder(mapBuild));
+        //        System.err.println("Build");
+        //        printJoinPartitionMap(mapBuild);
+        //
+        //        System.err.println("Probe");
+        //        ArrayList<HashSet<Integer>> mapProbe = getProbeJoinPartitionListOfSets(mapBuild);
+        //        printJoinPartitionMap(mapProbe);
+        //
+        //        int countR = 100;
+        //        int maxDurationR = 1;
+        //        int countS = 10;
+        //        int maxDurationS = 10;
+        //        int avgTuplesPerFrame = 14;
+        //        k = determineK(countR, maxDurationR, countS, maxDurationS, avgTuplesPerFrame);
+        //        System.err.println("k = " + k);
+        //
+        //        countR = 1000;
+        //        countS = 10;
+        //        k = determineK(countR, maxDurationR, countS, maxDurationS, avgTuplesPerFrame);
+        //        System.err.println("k = " + k);
+        //
+        //        countR = 10000;
+        //        countS = 10;
+        //        k = determineK(countR, maxDurationR, countS, maxDurationS, avgTuplesPerFrame);
+        //        System.err.println("k = " + k);
+        //
+        //        countR = 100000;
+        //        countS = 10;
+        //        k = determineK(countR, maxDurationR, countS, maxDurationS, avgTuplesPerFrame);
+        //        System.err.println("k = " + k);
+        //
+        //        countR = 1000000;
+        //        countS = 10;
+        //        k = determineK(countR, maxDurationR, countS, maxDurationS, avgTuplesPerFrame);
+        //        System.err.println("k = " + k);
 
-        test = new EqualsIntervalMergeJoinChecker(new int[1], new int[1]);
-        System.err.println("Build - Equal");
-        printJoinPartitionMap(getJoinPartitionListOfSets(k, test));
-
-        ArrayList<HashSet<Integer>> mapBuild = getJoinPartitionListOfSets(k, test);
-        System.err.println("Build");
-        printJoinPartitionMap(mapBuild);
-        System.err.println("Spill Order");
-        printPartitionSpillOrder(getPartitionSpillOrder(mapBuild));
-        System.err.println("Build");
-        printJoinPartitionMap(mapBuild);
-
-        System.err.println("Probe");
-        ArrayList<HashSet<Integer>> mapProbe = getProbeJoinPartitionListOfSets(mapBuild);
-        printJoinPartitionMap(mapProbe);
     }
 
     public static int getMaxPartitions(int k) {
@@ -205,19 +273,49 @@ public class IntervalPartitionUtil {
     public static void printPartitionMap(int k) {
         for (int i = 0; i < k; ++i) {
             for (int j = i; j < k; ++j) {
-                System.out.println(
-                        "Map partition (" + i + ", " + j + ") to partition id: " + intervalPartitionMap(i, j, k));
+                int pid = intervalPartitionMap(i, j, k);
+                Pair<Integer, Integer> partition = getIntervalPartition(pid, k);
+                System.out.println("Map partition (" + i + ", " + j + ") to partition id: " + pid + " back to pair ("
+                        + partition.first + ", " + partition.second + ")");
             }
         }
     }
 
-    public static int intervalPartitionMap(long i, long j, int k) {
-        int p = 0;
-        for (long duration = j - i; duration > 0; --duration) {
-            p += k - duration + 1;
+    /**
+     * Map the partition start and end points to a single value.
+     * The mapped partitions are sorted in interval starting at 0.
+     *
+     * @param partitionI
+     *            start point
+     * @param partitionJ
+     *            end point
+     * @param k
+     *            granules
+     * @return mapping
+     */
+    public static int intervalPartitionMap(int partitionI, int partitionJ, int k) {
+        int p = ((partitionI * (k + k - partitionI + 1)) / 2);
+        return p + partitionJ - partitionI;
+    }
+
+    /**
+     * Reverse the map to individual start and end points.
+     *
+     * @param i
+     *            map id
+     * @param k
+     *            granules
+     * @return start and end points
+     */
+    public static Pair<Integer, Integer> getIntervalPartition(int pid, int k) {
+        int i = 0;
+        int sum = 0;
+        for (int p = k; p <= pid; p += k - i) {
+            ++i;
+            sum = p;
         }
-        p += i;
-        return p;
+        int j = i + pid - sum;
+        return new Pair<Integer, Integer>(i, j);
     }
 
     public static long getStartOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {
@@ -272,6 +370,46 @@ public class IntervalPartitionUtil {
             }
         }
         return probeJoinMapSpilled;
+    }
+
+    public static LinkedHashSet<Integer> getProbeJoinPartitions(int pid, int[] buildPSizeInTups,
+            IIntervalMergeJoinChecker imjc, int k) {
+        LinkedHashSet<Integer> joinMap = new LinkedHashSet<Integer>();
+        Pair<Integer, Integer> map = getIntervalPartition(pid, k);
+        int probeStart = map.first;
+        int probeEnd = map.second;
+        // Build partitions with data
+        for (int buildStart = 0; buildStart < k; ++buildStart) {
+            for (int buildEnd = buildStart; buildEnd < k; ++buildEnd) {
+                int buildId = intervalPartitionMap(buildStart, buildEnd, k);
+                if (buildPSizeInTups[buildId] > 0) {
+                    // Join partitions for probe's pid
+                    if (imjc.compareIntervalPartition(buildStart, buildEnd, probeStart, probeEnd)) {
+                        joinMap.add(buildId);
+                    }
+                }
+            }
+        }
+        return joinMap;
+    }
+
+    public static LinkedHashMap<Integer, LinkedHashSet<Integer>> getInMemorySpillJoinMap(
+            LinkedHashMap<Integer, LinkedHashSet<Integer>> probeJoinMap, BitSet buildInMemoryStatus,
+            BitSet probeSpilledStatus) {
+        LinkedHashMap<Integer, LinkedHashSet<Integer>> inMemoryMap = new LinkedHashMap<Integer, LinkedHashSet<Integer>>();
+        for (Entry<Integer, LinkedHashSet<Integer>> entry : probeJoinMap.entrySet()) {
+            if (probeSpilledStatus.get(entry.getKey())) {
+                for (Integer i : entry.getValue()) {
+                    if (buildInMemoryStatus.get(i)) {
+                        if (!inMemoryMap.containsKey(entry.getKey())) {
+                            inMemoryMap.put(entry.getKey(), new LinkedHashSet<Integer>());
+                        }
+                        inMemoryMap.get(entry.getKey()).add(i);
+                    }
+                }
+            }
+        }
+        return inMemoryMap;
     }
 
 }
