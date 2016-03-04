@@ -32,3 +32,5 @@ asterix-app/data/csv/beer.csv
 asterix.ipr
 asterix.iws
 git.properties
+asterix-app/data/webkit/webkit.meta.txt
+asterix-app/data/webkit/webkit.txt
