@@ -25,9 +25,6 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -47,18 +44,13 @@ public class InMemoryIntervalPartitionJoin {
     private static final Logger LOGGER = Logger.getLogger(InMemoryIntervalPartitionJoin.class.getName());
 
     public InMemoryIntervalPartitionJoin(IHyracksTaskContext ctx, IFrameBufferManager fbm,
-            IIntervalMergeJoinChecker imjc, IPredicateEvaluator predEval, boolean reverse, int[] buildFields,
-            int[] probeFields, IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor buildRd,
-            RecordDescriptor probeRd, int outputLimit) throws HyracksDataException {
+            IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd, RecordDescriptor probeRd)
+            throws HyracksDataException {
         bufferInfo = new BufferInfo(null, -1, -1);
         this.accessorBuild = new FrameTupleAccessor(buildRd);
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.imjc = imjc;
         this.fbm = fbm;
-        IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-        for (int i = 0; i < comparatorFactories.length; ++i) {
-            comparators[i] = comparatorFactories[i].createBinaryComparator();
-        }
         LOGGER.fine(
                 "InMemoryIntervalPartitionJoin has been created for Thread ID " + Thread.currentThread().getId() + ".");
     }

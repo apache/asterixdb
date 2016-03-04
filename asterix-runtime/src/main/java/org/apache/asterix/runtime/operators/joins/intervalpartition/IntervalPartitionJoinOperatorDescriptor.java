@@ -34,9 +34,6 @@ import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -62,7 +59,6 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
     private final int memsize;
     private final int[] probeKeys;
     private final int[] buildKeys;
-    private final IPredicateEvaluatorFactory predEvaluatorFactory;
 
     private final int probeTupleCount;
     private final int probeMaxDuration;
@@ -73,17 +69,13 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
     private final int buildKey;
     private final IIntervalMergeJoinCheckerFactory imjcf;
     private final IRangeMap rangeMap;
-    private final IBinaryComparatorFactory[] comparatorFactories;
-
-    private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinOperatorDescriptor.class.getName());
 
     public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int leftTupleCount,
             int rightTupleCount, int leftMaxDuration, int rightMaxDuration, int avgTuplesPerFrame, int[] leftKeys,
-            int[] rightKeys, RecordDescriptor recordDescriptor, IBinaryComparatorFactory[] comparatorFactories,
-            IIntervalMergeJoinCheckerFactory imjcf, IRangeMap rangeMap,
-            IPredicateEvaluatorFactory predEvaluatorFactory) {
+            int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf,
+            IRangeMap rangeMap) {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.buildKey = leftKeys[0];
@@ -98,8 +90,6 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
         recordDescriptors[0] = recordDescriptor;
         this.imjcf = imjcf;
         this.rangeMap = rangeMap;
-        this.comparatorFactories = comparatorFactories;
-        this.predEvaluatorFactory = predEvaluatorFactory;
     }
 
     @Override
@@ -167,9 +157,6 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
             final long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeMap, partition);
             final long partitionEnd = IntervalPartitionUtil.getEndOfPartition(rangeMap, partition);
 
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
-                    : predEvaluatorFactory.createPredicateEvaluator());
-
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
@@ -198,8 +185,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                     state.memoryForJoin = memsize;
                     IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition);
                     state.ipj = new IntervalPartitionJoin(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
-                            BUILD_REL, PROBE_REL, buildKeys, probeKeys, imjc, comparatorFactories, buildRd, probeRd,
-                            buildHpc, probeHpc, predEvaluator, isReversed, null);
+                            BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
 
                     state.ipj.initBuild();
                     if (LOGGER.isLoggable(Level.FINE)) {

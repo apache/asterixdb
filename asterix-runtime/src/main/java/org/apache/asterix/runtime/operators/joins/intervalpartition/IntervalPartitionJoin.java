@@ -34,10 +34,6 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -68,11 +64,6 @@ public class IntervalPartitionJoin {
     private final String buildRelName;
     private final String probeRelName;
 
-    private final int[] buildKeys;
-    private final int[] probeKeys;
-
-    private final IBinaryComparatorFactory[] comparatorFactories;
-
     private final ITuplePartitionComputer buildHpc;
     private final ITuplePartitionComputer probeHpc;
 
@@ -81,10 +72,6 @@ public class IntervalPartitionJoin {
 
     private RunFileWriter[] buildRFWriters; //writing spilled build partitions
     private RunFileWriter[] probeRFWriters; //writing spilled probe partitions
-
-    private final IPredicateEvaluator predEvaluator;
-    private final boolean isLeftOuter;
-    private final INullWriter[] nullWriters1;
 
     private final int memForJoin;
     private final int k;
@@ -97,8 +84,6 @@ public class IntervalPartitionJoin {
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAccessor accessorProbe;
 
-    private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal
-
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoin.class.getName());
 
     // stats information
@@ -110,10 +95,8 @@ public class IntervalPartitionJoin {
     private IIntervalMergeJoinChecker imjc;
 
     public IntervalPartitionJoin(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
-            String buildRelName, String probeRelName, int[] buildKeys, int[] probeKeys, IIntervalMergeJoinChecker imjc,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor buildRd, RecordDescriptor probeRd,
-            ITuplePartitionComputer buildHpc, ITuplePartitionComputer probeHpc, IPredicateEvaluator predEval,
-            boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) {
+            String buildRelName, String probeRelName, IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd,
+            RecordDescriptor probeRd, ITuplePartitionComputer buildHpc, ITuplePartitionComputer probeHpc) {
         this.ctx = ctx;
         this.memForJoin = memForJoin;
         this.k = k;
@@ -121,9 +104,6 @@ public class IntervalPartitionJoin {
         this.probeRd = probeRd;
         this.buildHpc = buildHpc;
         this.probeHpc = probeHpc;
-        this.buildKeys = buildKeys;
-        this.probeKeys = probeKeys;
-        this.comparatorFactories = comparatorFactories;
         this.imjc = imjc;
         this.buildRelName = buildRelName;
         this.probeRelName = probeRelName;
@@ -135,17 +115,6 @@ public class IntervalPartitionJoin {
 
         this.accessorBuild = new FrameTupleAccessor(buildRd);
         this.accessorProbe = new FrameTupleAccessor(probeRd);
-
-        this.predEvaluator = predEval;
-        this.isLeftOuter = isLeftOuter;
-        this.isReversed = false;
-
-        this.nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
-        if (isLeftOuter) {
-            for (int i = 0; i < nullWriterFactories1.length; i++) {
-                nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
-            }
-        }
 
         ipjd = new IntervalPartitionJoinData(k, imjc, numOfPartitions);
     }
@@ -353,8 +322,7 @@ public class IntervalPartitionJoin {
 
     private void createInMemoryJoiner(int pid) throws HyracksDataException {
         this.inMemJoiner[pid] = new InMemoryIntervalPartitionJoin(ctx,
-                buildBufferManager.getPartitionFrameBufferManager(pid), imjc, predEvaluator, isReversed, buildKeys,
-                probeKeys, comparatorFactories, buildRd, probeRd, buildBufferManager.getNumTuples(pid));
+                buildBufferManager.getPartitionFrameBufferManager(pid), imjc, buildRd, probeRd);
     }
 
     private void closeInMemoryJoiner(int pid, IFrameWriter writer) throws HyracksDataException {
@@ -383,7 +351,7 @@ public class IntervalPartitionJoin {
             }
 
             // Tuple has potential match from build phase
-            if (!ipjd.isProbeJoinMapEmpty(pid) || isLeftOuter) {
+            if (!ipjd.isProbeJoinMapEmpty(pid)) {
                 if (ipjd.probeHasSpilled(pid)) {
                     // pid is Spilled
                     while (!probeBufferManager.insertTuple(pid, accessorProbe, i, tempPtr)) {
@@ -446,10 +414,6 @@ public class IntervalPartitionJoin {
 
     public RunFileReader getProbeRFReader(int pid) throws HyracksDataException {
         return ((probeRFWriters[pid] == null) ? null : (probeRFWriters[pid]).createReader());
-    }
-
-    public void setIsReversed(boolean b) {
-        this.isReversed = b;
     }
 
     public void joinSpilledPartitions(IFrameWriter writer) throws HyracksDataException {
