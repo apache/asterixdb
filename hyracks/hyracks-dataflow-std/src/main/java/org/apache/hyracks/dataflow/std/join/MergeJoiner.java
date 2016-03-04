@@ -41,7 +41,7 @@ import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
-import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferAccessor;
+import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
 import org.apache.hyracks.dataflow.std.join.MergeStatus.BranchStatus;
 import org.apache.hyracks.dataflow.std.join.MergeStatus.RunFileStatus;
@@ -74,7 +74,7 @@ public class MergeJoiner {
     private final List<TuplePointer> memoryTuples;
     private final IDeallocatableFramePool framePool;
     private IDeletableTupleBufferManager bufferManager;
-    private ITupleBufferAccessor memoryAccessor;
+    private ITuplePointerAccessor memoryAccessor;
 
     private final IFrame runFileBuffer;
     private final FrameTupleAppender runFileAppender;
@@ -357,6 +357,6 @@ public class MergeJoiner {
     public void setRightRecordDescriptor(RecordDescriptor rightRd) {
         accessorRight = new FrameTupleAccessor(rightRd);
         bufferManager = new VariableDeletableTupleMemoryManager(framePool, rightRd);
-        memoryAccessor = bufferManager.getTupleAccessor();
+        memoryAccessor = bufferManager.createTupleAccessor();
     }
 }
