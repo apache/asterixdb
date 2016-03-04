@@ -92,7 +92,7 @@ public class JoinUtils {
             throws AlgebricksException {
         op.setPhysicalOperator(new HybridHashJoinPOperator(op.getJoinKind(), partitioningType, sideLeft, sideRight,
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), context
-                        .getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(), context
+                        .getPhysicalOptimizationConfig().getMaxFramesForJoinLeftInput(), context
                         .getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), context
                         .getPhysicalOptimizationConfig().getFudgeFactor()));
         if (partitioningType == JoinPartitioningType.BROADCAST) {
