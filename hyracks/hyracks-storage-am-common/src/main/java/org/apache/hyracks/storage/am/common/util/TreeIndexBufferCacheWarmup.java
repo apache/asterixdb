@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.MathUtil;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.api.storage.IGrowableIntArray;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -32,78 +30,75 @@ import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.MathUtil;
 
 public class TreeIndexBufferCacheWarmup {
-	private final IBufferCache bufferCache;
-	private final IMetaDataPageManager metaDataPageManager;
-	private final int fileId;
-	private final ArrayList<IntArrayList> pagesByLevel = new ArrayList<IntArrayList>();
-	private final Random rnd = new Random();
+    private final IBufferCache bufferCache;
+    private final IMetaDataPageManager metaDataPageManager;
+    private final int fileId;
+    private final ArrayList<IntArrayList> pagesByLevel = new ArrayList<IntArrayList>();
+    private final Random rnd = new Random();
 
-	public TreeIndexBufferCacheWarmup(IBufferCache bufferCache,
-	        IMetaDataPageManager metaDataPageManager, int fileId) {
-		this.bufferCache = bufferCache;
-		this.metaDataPageManager = metaDataPageManager;
-		this.fileId = fileId;
-	}
+    public TreeIndexBufferCacheWarmup(IBufferCache bufferCache, IMetaDataPageManager metaDataPageManager, int fileId) {
+        this.bufferCache = bufferCache;
+        this.metaDataPageManager = metaDataPageManager;
+        this.fileId = fileId;
+    }
 
-	public void warmup(ITreeIndexFrame frame,
-			ITreeIndexMetaDataFrame metaFrame, int[] warmupTreeLevels,
-			int[] warmupRepeats) throws HyracksDataException {
-		bufferCache.openFile(fileId);
+    public void warmup(ITreeIndexFrame frame, ITreeIndexMetaDataFrame metaFrame, int[] warmupTreeLevels,
+            int[] warmupRepeats) throws HyracksDataException {
+        bufferCache.openFile(fileId);
 
-		// scan entire file to determine pages in each level
-		int maxPageId = metaDataPageManager.getMaxPage(metaFrame);
-		for (int pageId = 0; pageId <= maxPageId; pageId++) {
-			ICachedPage page = bufferCache.pin(
-					BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-			page.acquireReadLatch();
-			try {
-				frame.setPage(page);
-				byte level = frame.getLevel();
-				while (level >= pagesByLevel.size()) {
-					pagesByLevel.add(new IntArrayList(100, 100));
-				}
-				if (level >= 0) {
-					// System.out.println("ADDING: " + level + " " + pageId);
-					pagesByLevel.get(level).add(pageId);
-				}
-			} finally {
-				page.releaseReadLatch();
-				bufferCache.unpin(page);
-			}
-		}
+        // scan entire file to determine pages in each level
+        int maxPageId = metaDataPageManager.getMaxPage(metaFrame);
+        for (int pageId = 0; pageId <= maxPageId; pageId++) {
+            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+            page.acquireReadLatch();
+            try {
+                frame.setPage(page);
+                byte level = frame.getLevel();
+                while (level >= pagesByLevel.size()) {
+                    pagesByLevel.add(new IntArrayList(100, 100));
+                }
+                if (level >= 0) {
+                    // System.out.println("ADDING: " + level + " " + pageId);
+                    pagesByLevel.get(level).add(pageId);
+                }
+            } finally {
+                page.releaseReadLatch();
+                bufferCache.unpin(page);
+            }
+        }
 
-		// pin certain pages again to simulate frequent access
-		for (int i = 0; i < warmupTreeLevels.length; i++) {
-			if (warmupTreeLevels[i] < pagesByLevel.size()) {
-				int repeats = warmupRepeats[i];
-				IGrowableIntArray pageIds = pagesByLevel.get(warmupTreeLevels[i]);
-				int[] remainingPageIds = new int[pageIds.size()];
-				for (int r = 0; r < repeats; r++) {
-					for (int j = 0; j < pageIds.size(); j++) {
-						remainingPageIds[j] = pageIds.get(j);
-					}
+        // pin certain pages again to simulate frequent access
+        for (int i = 0; i < warmupTreeLevels.length; i++) {
+            if (warmupTreeLevels[i] < pagesByLevel.size()) {
+                int repeats = warmupRepeats[i];
+                IGrowableIntArray pageIds = pagesByLevel.get(warmupTreeLevels[i]);
+                int[] remainingPageIds = new int[pageIds.size()];
+                for (int r = 0; r < repeats; r++) {
+                    for (int j = 0; j < pageIds.size(); j++) {
+                        remainingPageIds[j] = pageIds.get(j);
+                    }
 
-					int remainingLength = pageIds.size();
-					for (int j = 0; j < pageIds.size(); j++) {
-						int index = MathUtil.stripSignBit(rnd.nextInt()) % remainingLength;
-						int pageId = remainingPageIds[index];
+                    int remainingLength = pageIds.size();
+                    for (int j = 0; j < pageIds.size(); j++) {
+                        int index = MathUtil.stripSignBit(rnd.nextInt()) % remainingLength;
+                        int pageId = remainingPageIds[index];
 
-						// pin & latch then immediately unlatch & unpin
-						ICachedPage page = bufferCache.pin(BufferedFileHandle
-								.getDiskPageId(fileId, pageId), false);
-						page.acquireReadLatch();
-						page.releaseReadLatch();
-						bufferCache.unpin(page);
+                        // pin & latch then immediately unlatch & unpin
+                        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                        page.acquireReadLatch();
+                        page.releaseReadLatch();
+                        bufferCache.unpin(page);
 
-						remainingPageIds[index] = remainingPageIds[remainingLength - 1];
-						remainingLength--;
-					}
-				}
-			}
-		}
+                        remainingPageIds[index] = remainingPageIds[remainingLength - 1];
+                        remainingLength--;
+                    }
+                }
+            }
+        }
 
-		bufferCache.closeFile(fileId);
-	}
+        bufferCache.closeFile(fileId);
+    }
 }

@@ -163,7 +163,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         return tPointers[ptr * PTR_SIZE + ID_TUPLE_START];
     }
 
-    public int getTuplecount() {
+    public int getTupleCount() {
         return tupleCount;
     }
 

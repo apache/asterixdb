@@ -51,9 +51,6 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
             private int partionCount;
             private double rangesPerPart = 1;
 
-            /*
-             * Determine the range partition.
-             */
             public void partition(IFrameTupleAccessor accessor, int tIndex, int nParts, IGrowableIntArray map)
                     throws HyracksDataException {
                 if (nParts == 1) {
