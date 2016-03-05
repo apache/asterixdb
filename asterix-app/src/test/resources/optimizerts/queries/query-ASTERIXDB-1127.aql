@@ -1,0 +1,89 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse tpch if exists;
+create dataverse tpch;
+use dataverse tpch;
+
+create type LineItemType as
+{ l_orderkey: int64, l_partkey: int64, l_suppkey: int64, l_linenumber: int32, l_quantity: int32, l_extendedprice: double, l_discount: double, l_tax: double, l_returnflag: string, l_linestatus: string, l_shipdate: string, l_commitdate: string, l_receiptdate: string, l_shipinstruct: string, l_shipmode: string, l_comment: string }
+
+create type OrderType as
+{ o_orderkey: int64, o_custkey: int64, o_orderstatus: string, o_totalprice: double, o_orderdate: string, o_orderpriority: string, o_clerk: string, o_shippriority: int32, o_comment: string }
+
+create type CustomerType as
+{ c_custkey: int64, c_name: string, c_address: string, c_nationkey: int32, c_phone: string, c_acctbal: double, c_mktsegment: string, c_comment: string }
+
+create type PartType as
+{ p_partkey: int64, p_name: string, p_mfgr: string, p_brand: string, p_type: string, p_size: int32, p_container: string, p_retailprice: double, p_comment: string }
+
+create type PartSuppType as
+{ ps_partkey: int64, ps_suppkey: int64, ps_availqty: int32, ps_supplycost: double, ps_comment: string }
+
+create type SupplierType as
+{ s_suppkey: int64, s_name: string, s_address: string, s_nationkey: int32, s_phone: string, s_acctbal: double, s_comment: string }
+
+create type NationType as
+{ n_nationkey: int32, n_name: string, n_regionkey: int32, n_comment: string }
+
+create type RegionType as
+{ r_regionkey: int32, r_name: string, r_comment: string }
+
+create dataset LineItem(LineItemType) primary key l_orderkey, l_linenumber;
+create dataset Orders(OrderType) primary key o_orderkey;
+create dataset Customer(CustomerType) primary key c_custkey;
+create dataset Part(PartType) primary key p_partkey;
+create dataset Partsupp(PartSuppType) primary key ps_partkey, ps_suppkey;
+create dataset Supplier(SupplierType) primary key s_suppkey;
+create dataset Region(RegionType) primary key r_regionkey;
+create dataset Nation(NationType) primary key n_nationkey;
+
+
+create index nation_fk_region on Nation(n_regionkey);
+create index supplier_fk_nation on Supplier (s_nationkey);
+create index partsupp_fk_part on Partsupp (ps_partkey);
+create index partsupp_fk_supplier on Partsupp (ps_suppkey);
+create index customer_fk_nation on Customer (c_nationkey);
+create index orders_fk_customer on Orders (o_custkey);
+create index lineitem_fk_orders on LineItem (l_orderkey);
+create index lineitem_fk_part on LineItem (l_partkey);
+create index lineitem_fk_supplier on LineItem (l_suppkey);
+create index orders_orderdateIx on Orders (o_orderdate);
+create index lineitem_shipdateIx on LineItem (l_shipdate);
+create index lineitem_receiptdateIx on LineItem (l_receiptdate);
+
+
+
+for $c in dataset('Customer')
+for $o in dataset('Orders')
+    where $c.c_mktsegment = 'BUILDING' and $c.c_custkey = $o.o_custkey
+    for $l in dataset('LineItem')
+    where $l.l_orderkey = $o.o_orderkey and $o.o_orderdate < '1995-03-15' and $l.l_shipdate > '1995-03-15'
+/*+ hash */
+group by $l_orderkey := $l.l_orderkey, $o_orderdate := $o.o_orderdate, $o_shippriority := $o.o_shippriority
+with $l
+let $revenue := sum (
+    for $i in $l
+    return $i.l_extendedprice * (1 - $i.l_discount)
+)
+order by $revenue desc, $o_orderdate
+limit 10
+return
+{ "l_orderkey": $l_orderkey, "revenue": $revenue, "o_orderdate": $o_orderdate, "o_shippriority": $o_shippriority }
+

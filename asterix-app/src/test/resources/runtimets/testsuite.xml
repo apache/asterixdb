@@ -5591,6 +5591,11 @@
                 <output-dir compare="Text">query-issue827-2</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="query-ASTERIXDB-1127">
+                <output-dir compare="Text">query-ASTERIXDB-1127</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="tpch-sql-like">
         <test-case FilePath="tpch-sql-like">

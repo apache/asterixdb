@@ -21,13 +21,11 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -69,6 +67,7 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         this.keyVarList = keyVarList;
     }
 
+    @Override
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.writeToFuncArgs(funcArgs);
         // Write search modifier type.
@@ -87,6 +86,7 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         }
     }
 
+    @Override
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.readFromFuncArgs(funcArgs);
         int index = super.getNumParams();
@@ -94,8 +94,7 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         int searchModifierOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index));
         searchModifierType = SearchModifierType.values()[searchModifierOrdinal];
         // Read similarity threshold. Concrete type depends on search modifier.
-        similarityThreshold = ((AsterixConstantValue) ((ConstantExpression) funcArgs.get(index + 1).getValue())
-                .getValue());
+        similarityThreshold = (((ConstantExpression) funcArgs.get(index + 1).getValue()).getValue());
         // Read type of search key.
         int typeTagOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index + 2));
         searchKeyType = ATypeTag.values()[typeTagOrdinal];
