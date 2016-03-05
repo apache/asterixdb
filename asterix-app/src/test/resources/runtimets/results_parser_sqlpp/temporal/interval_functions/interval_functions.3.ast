@@ -162,13 +162,13 @@ Let Variable [ Name=$blnOverlapped2 ]
     Variable [ Name=$itv8 ]
     Variable [ Name=$itv9 ]
   ]
-Let Variable [ Name=$blnOverlap1 ]
+LetVariable [ Name=$blnOverlapping1 ]
   :=
   FunctionCall test.interval-overlapping@2[
     Variable [ Name=$itv9 ]
     Variable [ Name=$itv7 ]
   ]
-Let Variable [ Name=$blnOverlap2 ]
+LetVariable [ Name=$blnOverlapping2 ]
   :=
   FunctionCall test.interval-overlapping@2[
     Variable [ Name=$itv9 ]
@@ -377,14 +377,14 @@ RecordConstructor [
     Variable [ Name=$blnOverlapped2 ]
   )
   (
-    LiteralExpr [STRING] [overlap1]
+    LiteralExpr [STRING] [overlapping1]
     :
-    Variable [ Name=$blnOverlap1 ]
+    Variable [ Name=$blnOverlapping1 ]
   )
   (
-    LiteralExpr [STRING] [overlap2]
+    LiteralExpr [STRING] [overlapping2]
     :
-    Variable [ Name=$blnOverlap2 ]
+    Variable [ Name=$blnOverlapping2 ]
   )
   (
     LiteralExpr [STRING] [starts1]
