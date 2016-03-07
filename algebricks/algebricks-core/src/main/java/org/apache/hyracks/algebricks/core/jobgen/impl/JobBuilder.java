@@ -233,7 +233,7 @@ public class JobBuilder implements IHyracksJobBuilder {
                     AlgebricksPartitionConstraint pc = partitionConstraintMap.get(parentOp);
                     if (pc != null) {
                         opConstraint = pc;
-                    } else if (opInputs == null || opInputs.size() == 0) {
+                    } else if ((opInputs == null || opInputs.size() == 0) && finalPass) {
                         opConstraint = new AlgebricksCountPartitionConstraint(1);
                     }
                 }

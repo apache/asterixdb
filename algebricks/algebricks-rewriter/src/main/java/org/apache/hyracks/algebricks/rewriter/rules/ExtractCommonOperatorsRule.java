@@ -47,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOper
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
+import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
@@ -67,8 +68,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 && op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
             return false;
         }
-        if (!roots.contains(op))
+        if (!roots.contains(op)) {
             roots.add(new MutableObject<ILogicalOperator>(op));
+        }
         return false;
     }
 
@@ -89,10 +91,12 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 topDownMaterialization(roots);
                 genCandidates(context);
                 removeTrivialShare();
-                if (equivalenceClasses.size() > 0)
+                if (equivalenceClasses.size() > 0) {
                     changed = rewrite(context);
-                if (!rewritten)
+                }
+                if (!rewritten) {
                     rewritten = changed;
+                }
                 equivalenceClasses.clear();
                 childrenToParents.clear();
                 opToCandidateInputs.clear();
@@ -110,22 +114,27 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             for (int i = candidates.size() - 1; i >= 0; i--) {
                 Mutable<ILogicalOperator> opRef = candidates.get(i);
                 AbstractLogicalOperator aop = (AbstractLogicalOperator) opRef.getValue();
-                if (aop.getOperatorTag() == LogicalOperatorTag.EXCHANGE)
+                if (aop.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
                     aop = (AbstractLogicalOperator) aop.getInputs().get(0).getValue();
-                if (aop.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE)
+                }
+                if (aop.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
                     candidates.remove(i);
+                }
             }
         }
-        for (int i = equivalenceClasses.size() - 1; i >= 0; i--)
-            if (equivalenceClasses.get(i).size() < 2)
+        for (int i = equivalenceClasses.size() - 1; i >= 0; i--) {
+            if (equivalenceClasses.get(i).size() < 2) {
                 equivalenceClasses.remove(i);
+            }
+        }
     }
 
     private boolean rewrite(IOptimizationContext context) throws AlgebricksException {
         boolean changed = false;
         for (List<Mutable<ILogicalOperator>> members : equivalenceClasses) {
-            if (rewriteForOneEquivalentClass(members, context))
+            if (rewriteForOneEquivalentClass(members, context)) {
                 changed = true;
+            }
         }
         return changed;
     }
@@ -191,11 +200,13 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             List<LogicalVariable> liveVarsNew = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(candidate.getValue(), liveVarsNew);
             ArrayList<Mutable<ILogicalExpression>> assignExprs = new ArrayList<Mutable<ILogicalExpression>>();
-            for (LogicalVariable liveVar : liveVarsNew)
+            for (LogicalVariable liveVar : liveVarsNew) {
                 assignExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(liveVar)));
+            }
             for (Mutable<ILogicalOperator> ref : group) {
-                if (ref.equals(candidate))
+                if (ref.equals(candidate)) {
                     continue;
+                }
                 ArrayList<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
                 Map<LogicalVariable, LogicalVariable> variableMappingBack = new HashMap<LogicalVariable, LogicalVariable>();
                 IsomorphismUtilities.mapVariablesTopDown(ref.getValue(), candidate.getValue(), variableMappingBack);
@@ -227,20 +238,13 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 for (Mutable<ILogicalOperator> parentOpRef : parentOpList) {
                     AbstractLogicalOperator parentOp = (AbstractLogicalOperator) parentOpRef.getValue();
                     int index = parentOp.getInputs().indexOf(ref);
-                    if (parentOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                        AbstractLogicalOperator parentOpNext = (AbstractLogicalOperator) childrenToParents
-                                .get(parentOpRef).get(0).getValue();
-                        if (parentOpNext.isMap()) {
-                            index = parentOpNext.getInputs().indexOf(parentOpRef);
-                            parentOp = parentOpNext;
-                        }
-                    }
-
                     ILogicalOperator childOp = parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator
                             : projectOperator;
-                    if (parentOp.isMap()) {
+                    if (!HeuristicOptimizer.isHyracksOp(parentOp.getPhysicalOperator().getOperatorTag())) {
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(childOp));
                     } else {
+                        // If the parent operator is a hyracks operator,
+                        // an extra one-to-one exchange is needed.
                         AbstractLogicalOperator exchg = new ExchangeOperator();
                         exchg.setPhysicalOperator(new OneToOneExchangePOperator());
                         exchg.setExecutionMode(childOp.getExecutionMode());
@@ -270,16 +274,19 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 if (candidates.size() > 0) {
                     for (Mutable<ILogicalOperator> opRef : candidates) {
                         List<Mutable<ILogicalOperator>> refs = childrenToParents.get(opRef);
-                        if (refs != null)
+                        if (refs != null) {
                             currentLevelOpRefs.addAll(refs);
+                        }
                     }
                 }
-                if (currentLevelOpRefs.size() == 0)
+                if (currentLevelOpRefs.size() == 0) {
                     continue;
+                }
                 candidatesGrow(currentLevelOpRefs, candidates);
             }
-            if (currentLevelOpRefs.size() == 0)
+            if (currentLevelOpRefs.size() == 0) {
                 break;
+            }
             prune(context);
         }
         if (equivalenceClasses.size() < 1 && previousEquivalenceClasses.size() > 0) {
@@ -301,8 +308,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 }
                 opRefList.add(op);
             }
-            if (op.getValue().getInputs().size() == 0)
+            if (op.getValue().getInputs().size() == 0) {
                 candidates.add(op);
+            }
         }
         if (equivalenceClasses.size() > 0) {
             equivalenceClasses.get(0).addAll(candidates);
@@ -344,10 +352,12 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            if (!validCandidate)
+            if (!validCandidate) {
                 continue;
-            if (!candidates.contains(op))
+            }
+            if (!candidates.contains(op)) {
                 candidates.add(op);
+            }
         }
     }
 
@@ -361,8 +371,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         equivalenceClasses.clear();
         for (List<Mutable<ILogicalOperator>> candidates : previousEquivalenceClasses) {
             boolean[] reserved = new boolean[candidates.size()];
-            for (int i = 0; i < reserved.length; i++)
+            for (int i = 0; i < reserved.length; i++) {
                 reserved[i] = false;
+            }
             for (int i = candidates.size() - 1; i >= 0; i--) {
                 if (reserved[i] == false) {
                     List<Mutable<ILogicalOperator>> equivalentClass = new ArrayList<Mutable<ILogicalOperator>>();

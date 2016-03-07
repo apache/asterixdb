@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 
 public class HeuristicOptimizer {
 
-    public static PhysicalOperatorTag[] hyraxOperators = new PhysicalOperatorTag[] {
+    public static PhysicalOperatorTag[] hyracksOperators = new PhysicalOperatorTag[] {
             PhysicalOperatorTag.DATASOURCE_SCAN, PhysicalOperatorTag.BTREE_SEARCH,
             PhysicalOperatorTag.EXTERNAL_GROUP_BY, PhysicalOperatorTag.HASH_GROUP_BY, PhysicalOperatorTag.HDFS_READER,
             PhysicalOperatorTag.HYBRID_HASH_JOIN, PhysicalOperatorTag.IN_MEMORY_HASH_JOIN,
@@ -44,8 +44,8 @@ public class HeuristicOptimizer {
             PhysicalOperatorTag.UNION_ALL };
     public static PhysicalOperatorTag[] hyraxOperatorsBelowWhichJobGenIsDisabled = new PhysicalOperatorTag[] {};
 
-    public static boolean isHyraxOp(PhysicalOperatorTag opTag) {
-        for (PhysicalOperatorTag t : hyraxOperators) {
+    public static boolean isHyracksOp(PhysicalOperatorTag opTag) {
+        for (PhysicalOperatorTag t : hyracksOperators) {
             if (t == opTag) {
                 return true;
             }
