@@ -27,9 +27,13 @@ import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.Statement.Kind;
 import org.apache.asterix.aql.expression.CallExpr;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
+import org.apache.asterix.aql.expression.FieldAccessor;
+import org.apache.asterix.aql.expression.FieldBinding;
 import org.apache.asterix.aql.expression.ForClause;
+import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.expression.LiteralExpr;
 import org.apache.asterix.aql.expression.Query;
+import org.apache.asterix.aql.expression.RecordConstructor;
 import org.apache.asterix.aql.expression.VariableExpr;
 import org.apache.asterix.aql.expression.WhereClause;
 import org.apache.asterix.aql.literal.StringLiteral;
@@ -38,6 +42,8 @@ import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -77,8 +83,8 @@ public class CompiledStatements {
 
     // added by yasser
     public static class CompiledCreateDataverseStatement implements ICompiledStatement {
-        private final String dataverseName;
-        private final String format;
+        private String dataverseName;
+        private String format;
 
         public CompiledCreateDataverseStatement(String dataverseName, String format) {
             this.dataverseName = dataverseName;
@@ -100,7 +106,7 @@ public class CompiledStatements {
     }
 
     public static class CompiledNodeGroupDropStatement implements ICompiledStatement {
-        private final String nodeGroupName;
+        private String nodeGroupName;
 
         public CompiledNodeGroupDropStatement(String nodeGroupName) {
             this.nodeGroupName = nodeGroupName;
@@ -117,9 +123,9 @@ public class CompiledStatements {
     }
 
     public static class CompiledIndexDropStatement implements ICompiledStatement {
-        private final String dataverseName;
-        private final String datasetName;
-        private final String indexName;
+        private String dataverseName;
+        private String datasetName;
+        private String indexName;
 
         public CompiledIndexDropStatement(String dataverseName, String datasetName, String indexName) {
             this.dataverseName = dataverseName;
@@ -146,8 +152,8 @@ public class CompiledStatements {
     }
 
     public static class CompiledDataverseDropStatement implements ICompiledStatement {
-        private final String dataverseName;
-        private final boolean ifExists;
+        private String dataverseName;
+        private boolean ifExists;
 
         public CompiledDataverseDropStatement(String dataverseName, boolean ifExists) {
             this.dataverseName = dataverseName;
@@ -169,7 +175,7 @@ public class CompiledStatements {
     }
 
     public static class CompiledTypeDropStatement implements ICompiledStatement {
-        private final String typeName;
+        private String typeName;
 
         public CompiledTypeDropStatement(String nodeGroupName) {
             this.typeName = nodeGroupName;
@@ -205,8 +211,7 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledCreateIndexStatement(String indexName, String dataverseName, String datasetName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
-                IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
             this.indexName = indexName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -217,12 +222,10 @@ public class CompiledStatements {
             this.indexType = indexType;
         }
 
-        @Override
         public String getDatasetName() {
             return datasetName;
         }
 
-        @Override
         public String getDataverseName() {
             return dataverseName;
         }
@@ -258,11 +261,11 @@ public class CompiledStatements {
     }
 
     public static class CompiledLoadFromFileStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
-        private final String datasetName;
-        private final boolean alreadySorted;
-        private final String adapter;
-        private final Map<String, String> properties;
+        private String dataverseName;
+        private String datasetName;
+        private boolean alreadySorted;
+        private String adapter;
+        private Map<String, String> properties;
 
         public CompiledLoadFromFileStatement(String dataverseName, String datasetName, String adapter,
                 Map<String, String> properties, boolean alreadySorted) {
@@ -273,12 +276,10 @@ public class CompiledStatements {
             this.properties = properties;
         }
 
-        @Override
         public String getDataverseName() {
             return dataverseName;
         }
 
-        @Override
         public String getDatasetName() {
             return datasetName;
         }
@@ -314,12 +315,10 @@ public class CompiledStatements {
             this.varCounter = varCounter;
         }
 
-        @Override
         public String getDataverseName() {
             return dataverseName;
         }
 
-        @Override
         public String getDatasetName() {
             return datasetName;
         }
@@ -339,12 +338,12 @@ public class CompiledStatements {
     }
 
     public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
-        private final String feedName;
-        private final String datasetName;
-        private final String policyName;
+        private String dataverseName;
+        private String feedName;
+        private String datasetName;
+        private String policyName;
         private Query query;
-        private final int varCounter;
+        private int varCounter;
 
         public CompiledConnectFeedStatement(String dataverseName, String feedName, String datasetName,
                 String policyName, Query query, int varCounter) {
@@ -391,7 +390,7 @@ public class CompiledStatements {
             return policyName;
         }
     }
-
+    
     public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
 
         private final FeedConnectionRequest request;
@@ -433,10 +432,11 @@ public class CompiledStatements {
 
     }
 
+
     public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
-        private final String datasetName;
-        private final String feedName;
+        private String dataverseName;
+        private String datasetName;
+        private String feedName;
         private Query query;
         private int varCounter;
 
@@ -476,15 +476,15 @@ public class CompiledStatements {
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {
-        private final VariableExpr var;
-        private final String dataverseName;
-        private final String datasetName;
-        private final Expression condition;
-        private final int varCounter;
-        private final AqlMetadataProvider metadataProvider;
+        private VariableExpr var;
+        private String dataverseName;
+        private String datasetName;
+        private Expression condition;
+        private int varCounter;
+        private AqlMetadataProvider metadataProvider;
 
-        public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName, Expression condition,
-                int varCounter, AqlMetadataProvider metadataProvider) {
+        public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName,
+                Expression condition, int varCounter, AqlMetadataProvider metadataProvider) {
             this.var = var;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -529,7 +529,23 @@ public class CompiledStatements {
                 clauseList.add(whereClause);
             }
 
-            FLWOGRExpression flowgr = new FLWOGRExpression(clauseList, var);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            if (dataset == null) {
+                throw new AlgebricksException("Unknown dataset " + datasetName);
+            }
+            String itemTypeName = dataset.getItemTypeName();
+            IAType itemType = metadataProvider.findType(dataset.getDataverseName(), itemTypeName);
+            ARecordType recType = (ARecordType) itemType;
+            String[] fieldNames = recType.getFieldNames();
+            List<FieldBinding> fieldBindings = new ArrayList<FieldBinding>();
+            for (int i = 0; i < fieldNames.length; i++) {
+                FieldAccessor fa = new FieldAccessor(var, new Identifier(fieldNames[i]));
+                FieldBinding fb = new FieldBinding(new LiteralExpr(new StringLiteral(fieldNames[i])), fa);
+                fieldBindings.add(fb);
+            }
+            RecordConstructor rc = new RecordConstructor(fieldBindings);
+
+            FLWOGRExpression flowgr = new FLWOGRExpression(clauseList, rc);
             Query query = new Query();
             query.setBody(flowgr);
             return query;
@@ -576,8 +592,7 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
-                IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
             super(dataverseName, datasetName);
             this.indexName = indexName;
             this.keyFields = keyFields;

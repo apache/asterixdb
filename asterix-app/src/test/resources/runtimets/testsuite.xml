@@ -2928,22 +2928,15 @@
     <test-group name="open-index-enforced">
         <test-group FilePath="open-index-enforced/error-checking">
             <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="index-on-closed-type">
-                    <output-dir compare="Text">index-on-closed-type</output-dir>
+                <compilation-unit name="enforced-field-name-collision">
+                    <output-dir compare="Text">enforced-field-name-collision</output-dir>
                     <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException
                     </expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="index-type-collision">
-                    <output-dir compare="Text">index-type-collision</output-dir>
-                    <expected-error>org.apache.asterix.common.exceptions.AsterixException
-                    </expected-error>
-                </compilation-unit>
-            </test-case>
-            <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="index-type-promotion-collision">
-                    <output-dir compare="Text">index-type-promotion-collision</output-dir>
+                <compilation-unit name="enforced-field-type-collision">
+                    <output-dir compare="Text">enforced-field-type-collision</output-dir>
                     <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
                 </compilation-unit>
             </test-case>
@@ -2955,9 +2948,10 @@
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="record-type-collision">
-                    <output-dir compare="Text">record-type-collision</output-dir>
-                    <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+                <compilation-unit name="index-on-closed-type">
+                    <output-dir compare="Text">index-on-closed-type</output-dir>
+                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException
+                    </expected-error>
                 </compilation-unit>
             </test-case>
         </test-group>
@@ -3089,16 +3083,6 @@
             <test-case FilePath="open-index-enforced/index-selection">
                 <compilation-unit name="inverted-index-word-jaccard">
                     <output-dir compare="Text">inverted-index-word-jaccard</output-dir>
-                </compilation-unit>
-            </test-case>
-            <test-case FilePath="open-index-enforced/index-selection">
-                <compilation-unit name="multi-index">
-                    <output-dir compare="Text">multi-index</output-dir>
-                </compilation-unit>
-            </test-case>
-            <test-case FilePath="open-index-enforced/index-selection">
-                <compilation-unit name="multi-index-composite-key">
-                    <output-dir compare="Text">multi-index-composite-key</output-dir>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/index-selection">

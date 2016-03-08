@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+drop dataverse test if exists;
+create dataverse test;
 use dataverse test;
 
-for $o in dataset('DBLPOpen')
-where $o.title = "Multimedia Information Systems  Issues and Approaches."
-order by $o.title
-return {
-  "id": $o.id,
-  "dblpid": $o.dblpid,
-  "title": $o.title,
-  "authors": $o.authors,
-  "misc": $o.misc
+create type testType as open {
+   "id": int32,
+   "value": string
 }
+
+create dataset testDS(testType) primary key id;
+create index testIdx on testDS(value: string) enforced;

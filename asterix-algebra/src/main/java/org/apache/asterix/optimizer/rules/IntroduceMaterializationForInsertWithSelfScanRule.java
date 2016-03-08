@@ -42,7 +42,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MaterializePOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-// TODO: Reconsider if materialization is needed in delete pipeline
 public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgebraicRewriteRule {
 
     @Override
