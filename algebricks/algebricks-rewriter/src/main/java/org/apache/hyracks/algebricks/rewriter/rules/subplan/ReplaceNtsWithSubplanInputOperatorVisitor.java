@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -62,9 +63,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
 /**
- * This visitor replaces NTS' in a subplan with its input operator or its deep copies.
- * Note that this visitor can only be used in the rule EliminateSubplanWithInputCardinalityOneRule,
- * for cases where the Subplan input operator is of cardinality one and its variables are not needed after
+ * This visitor replaces NTS' in a subplan with its input operator or its deep
+ * copies. Note that this visitor can only be used in the rule
+ * EliminateSubplanWithInputCardinalityOneRule, for cases where the Subplan
+ * input operator is of cardinality one and its variables are not needed after
  * the Subplan.
  */
 class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor<ILogicalOperator, Void> {
@@ -74,7 +76,8 @@ class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor
     // The input operator to the subplan.
     private final ILogicalOperator subplanInputOperator;
 
-    // The map that maps the input variables to the subplan to their deep-copied variables.
+    // The map that maps the input variables to the subplan to their deep-copied
+    // variables.
     private final Map<LogicalVariable, LogicalVariable> varMap = new HashMap<>();
 
     // Whether the original copy has been used.
@@ -216,6 +219,12 @@ class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor
     }
 
     @Override
+    public ILogicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg)
+            throws AlgebricksException {
+        return visit(op);
+    }
+
+    @Override
     public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
         return visit(op);
     }
@@ -245,7 +254,8 @@ class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor
         for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
             ILogicalOperator newChild = childRef.getValue().accept(this, null);
             childRef.setValue(newChild);
-            // Replaces variables in op with the mapping obtained from one child.
+            // Replaces variables in op with the mapping obtained from one
+            // child.
             VariableUtilities.substituteVariables(op, varMap, ctx);
             // Keep the map from current child and move to the next child.
             varMapSnapshots.add(new HashMap<LogicalVariable, LogicalVariable>(varMap));

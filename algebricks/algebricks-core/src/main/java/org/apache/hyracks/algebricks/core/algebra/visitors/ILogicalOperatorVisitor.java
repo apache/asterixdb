@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -102,6 +103,8 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitOuterUnnestOperator(OuterUnnestOperator op, T arg) throws AlgebricksException;
 
     public R visitUnnestMapOperator(UnnestMapOperator op, T arg) throws AlgebricksException;
+
+    public R visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, T arg) throws AlgebricksException;
 
     public R visitDataScanOperator(DataSourceScanOperator op, T arg) throws AlgebricksException;
 

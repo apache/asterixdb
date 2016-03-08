@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -57,11 +58,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultO
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
- * A visitor that provides the basic inference of tuple cardinalities of an operator's
- * output.
- * There are only two cases:
- * 1. the cardinality is one in the worst case;
- * 2. the cardinality is some unknown value.
+ * A visitor that provides the basic inference of tuple cardinalities of an
+ * operator's output. There are only two cases: 1. the cardinality is one in the
+ * worst case; 2. the cardinality is some unknown value.
  */
 public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long, Void> {
     private static final Long ONE = 1L;
@@ -182,6 +181,11 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
+        return UNKNOWN;
+    }
+
+    @Override
+    public Long visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
         return UNKNOWN;
     }
 

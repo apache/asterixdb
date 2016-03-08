@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -41,9 +42,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -306,13 +308,13 @@ public class SubstituteVariableVisitor
     public Void visitIntersectOperator(IntersectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         for (int i = 0; i < op.getOutputVars().size(); i++) {
-            if (op.getOutputVars().get(i).equals(pair.first)){
+            if (op.getOutputVars().get(i).equals(pair.first)) {
                 op.getOutputVars().set(i, pair.second);
             }
         }
-        for(int i = 0; i < op.getNumInput(); i++){
-            for (int j = 0; j < op.getInputVariables(i).size(); j++){
-                if (op.getInputVariables(i).get(j).equals(pair.first)){
+        for (int i = 0; i < op.getNumInput(); i++) {
+            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
+                if (op.getInputVariables(i).get(j).equals(pair.first)) {
                     op.getInputVariables(i).set(j, pair.second);
                 }
             }
@@ -323,16 +325,28 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
+        substituteVarsForAbstractUnnestMapOp(op, pair);
+        return null;
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op,
+            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
+        substituteVarsForAbstractUnnestMapOp(op, pair);
+        return null;
+    }
+
+    private void substituteVarsForAbstractUnnestMapOp(AbstractUnnestMapOperator op,
+            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
         List<LogicalVariable> variables = op.getVariables();
         for (int i = 0; i < variables.size(); i++) {
             if (variables.get(i) == pair.first) {
                 variables.set(i, pair.second);
-                return null;
+                return;
             }
         }
         op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
-        return null;
     }
 
     @Override

@@ -46,6 +46,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -70,9 +71,9 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
 /**
- * This visitor deep-copies a query plan but uses a new set of variables.
- * Method getInputToOutputVariableMapping() will return a map that maps
- * input variables to their corresponding output variables.
+ * This visitor deep-copies a query plan but uses a new set of variables. Method
+ * getInputToOutputVariableMapping() will return a map that maps input variables
+ * to their corresponding output variables.
  */
 public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         implements IQueryOperatorVisitor<ILogicalOperator, ILogicalOperator> {
@@ -84,12 +85,13 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     // original one in the copied plan.
     private final Map<LogicalVariable, LogicalVariable> inputVarToOutputVarMapping;
 
-    // Key: New variable in the new plan. Value: The old variable in the original plan.
+    // Key: New variable in the new plan. Value: The old variable in the
+    // original plan.
     private final Map<LogicalVariable, LogicalVariable> outputVarToInputVarMapping;
 
     /**
-     * @param IOptimizationContext,
-     *            the optimization context
+     * @param IOptimizationContext
+     *            , the optimization context
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext) {
         this.varContext = varContext;
@@ -478,7 +480,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         List<List<LogicalVariable>> liveVarsInInputs = getLiveVarsInInputs(op);
         List<LogicalVariable> outputCopy = new ArrayList<>();
-        for (LogicalVariable var : op.getOutputVars()){
+        for (LogicalVariable var : op.getOutputVars()) {
             outputCopy.add(deepCopyVariable(var));
         }
         IntersectOperator opCopy = new IntersectOperator(outputCopy, liveVarsInInputs);
@@ -504,6 +506,16 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
+                op.propagatesInput());
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        LeftOuterUnnestMapOperator opCopy = new LeftOuterUnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
                 op.propagatesInput());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);

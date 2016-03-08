@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -220,6 +221,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     @Override
+    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        mapVariablesStandard(op, arg);
+        return null;
+    }
+
+    @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, ILogicalOperator arg) throws AlgebricksException {
         mapVariablesStandard(op, arg);
         return null;
@@ -257,7 +265,8 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, ILogicalOperator arg) throws AlgebricksException {
+    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
         mapVariablesStandard(op, arg);
         return null;
     }
@@ -435,12 +444,12 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
 
     private void mapVariablesForIntersect(IntersectOperator op, ILogicalOperator arg) {
         IntersectOperator opArg = (IntersectOperator) arg;
-        if (op.getNumInput() != opArg.getNumInput()){
+        if (op.getNumInput() != opArg.getNumInput()) {
             return;
         }
-        for (int i = 0; i < op.getNumInput(); i++){
-            for (int j = 0; j < op.getInputVariables(i).size(); j++){
-                if (!varEquivalent(op.getInputVariables(i).get(j), opArg.getInputVariables(i).get(j))){
+        for (int i = 0; i < op.getNumInput(); i++) {
+            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
+                if (!varEquivalent(op.getInputVariables(i).get(j), opArg.getInputVariables(i).get(j))) {
                     return;
                 }
             }

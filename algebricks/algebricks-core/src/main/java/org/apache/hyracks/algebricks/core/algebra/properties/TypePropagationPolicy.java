@@ -70,9 +70,9 @@ public abstract class TypePropagationPolicy {
                 Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList,
                         correlatedNullableVariableLists);
                 if (t != null) {
-                    if (i == 0) { // inner branch
+                    if (i == 0) { // outer branch
                         return t;
-                    } else { // outer branch
+                    } else { // inner branch
                         boolean nonNullVarIsProduced = false;
                         for (LogicalVariable v : nonNullVariableList) {
                             if (v == var) {
