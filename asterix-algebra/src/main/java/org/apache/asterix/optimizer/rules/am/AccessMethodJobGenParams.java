@@ -20,12 +20,11 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -41,23 +40,21 @@ public class AccessMethodJobGenParams {
     protected String dataverseName;
     protected String datasetName;
     protected boolean retainInput;
-    protected boolean retainNull;
     protected boolean requiresBroadcast;
     protected boolean isPrimaryIndex;
 
-    private final int NUM_PARAMS = 7;
+    private final int NUM_PARAMS = 6;
 
     public AccessMethodJobGenParams() {
     }
 
     public AccessMethodJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean retainNull, boolean requiresBroadcast) {
+            boolean retainInput, boolean requiresBroadcast) {
         this.indexName = indexName;
         this.indexType = indexType;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.retainInput = retainInput;
-        this.retainNull = retainNull;
         this.requiresBroadcast = requiresBroadcast;
         this.isPrimaryIndex = datasetName.equals(indexName);
     }
@@ -68,7 +65,6 @@ public class AccessMethodJobGenParams {
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(dataverseName)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(datasetName)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(retainInput)));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(retainNull)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
     }
 
@@ -78,8 +74,7 @@ public class AccessMethodJobGenParams {
         dataverseName = AccessMethodUtils.getStringConstant(funcArgs.get(2));
         datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(3));
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
-        retainNull = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
-        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(6));
+        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
         isPrimaryIndex = datasetName.equals(indexName);
     }
 
@@ -101,10 +96,6 @@ public class AccessMethodJobGenParams {
 
     public boolean getRetainInput() {
         return retainInput;
-    }
-
-    public boolean getRetainNull() {
-        return retainNull;
     }
 
     public boolean getRequiresBroadcast() {

@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -174,7 +175,7 @@ public class RTreeAccessMethod implements IAccessMethod {
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.dataset;
@@ -195,7 +196,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         // we made sure indexSubTree has datasource scan
         AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.dataSourceRef.getValue();
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
+                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.
         // The R-Tree expects as input an MBR represented with 1 field per dimension.
         // Here we generate vars and funcs for extracting MBR fields from the constant into fields of a tuple (as the R-Tree expects them).
@@ -239,8 +240,8 @@ public class RTreeAccessMethod implements IAccessMethod {
             assignSearchKeys.getInputs().add(probeSubTree.rootRef);
         }
 
-        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, false, retainInput);
+        ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
+                metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, false, retainInput, retainNull);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
@@ -248,7 +249,7 @@ public class RTreeAccessMethod implements IAccessMethod {
                     dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull);
             return externalDataAccessOp;
         } else {
-            UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,
+            AbstractUnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,
                     dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, false,
                     false);
             return primaryIndexUnnestOp;

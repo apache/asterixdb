@@ -137,7 +137,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
     private boolean intersectAllSecondaryIndexes(List<Pair<IAccessMethod, Index>> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         Pair<IAccessMethod, Index> chosenIndex = null;
         Optional<Pair<IAccessMethod, Index>> primaryIndex = chosenIndexes.stream()
                 .filter(pair -> pair.second.isPrimaryIndex()).findFirst();
@@ -160,7 +160,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         for (Pair<IAccessMethod, Index> pair : chosenIndexes) {
             AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(pair.first);
             subRoots.add(pair.first.createSecondaryToPrimaryPlan(conditionRef, subTree, null, pair.second, analysisCtx,
-                    true, true, false, context));
+                    false, false, false, context));
         }
         ILogicalOperator primaryUnnest = connectAll2ndarySearchPlanWithIntersect(subRoots, context);
 

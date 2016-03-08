@@ -51,11 +51,11 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -71,7 +71,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
@@ -98,13 +99,14 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 ILogicalPlan p0 = gby.getNestedPlans().get(0);
                 if (p0.getRoots().size() == 1) {
                     Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
-                    if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().equals(
-                            LogicalOperatorTag.AGGREGATE)) {
+                    if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
+                            .equals(LogicalOperatorTag.AGGREGATE)) {
                         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
                         boolean serializable = true;
                         for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
                             AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef.getValue();
-                            if (!AsterixBuiltinFunctions.isAggregateFunctionSerializable(expr.getFunctionIdentifier())) {
+                            if (!AsterixBuiltinFunctions
+                                    .isAggregateFunctionSerializable(expr.getFunctionIdentifier())) {
                                 serializable = false;
                                 break;
                             }
@@ -170,8 +172,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
                             }
                         }
-                    } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().equals(
-                            LogicalOperatorTag.RUNNINGAGGREGATE)) {
+                    } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
+                            .equals(LogicalOperatorTag.RUNNINGAGGREGATE)) {
                         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
                         List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
                         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
@@ -199,9 +201,10 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                     JoinUtils.setJoinAlgorithmAndExchangeAlgo((LeftOuterJoinOperator) op, context);
                     break;
                 }
-                case UNNEST_MAP: {
-                    UnnestMapOperator unnestMap = (UnnestMapOperator) op;
-                    ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
+                case UNNEST_MAP:
+                case LEFT_OUTER_UNNEST_MAP: {
+                    ILogicalExpression unnestExpr = null;
+                    unnestExpr = ((AbstractUnnestMapOperator) op).getExpressionRef().getValue();
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                         FunctionIdentifier fid = f.getFunctionIdentifier();
@@ -291,8 +294,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         int n = aggOp.getExpressions().size();
         List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
         for (int i = 0; i < n; i++) {
-            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory.createMergeAggregation(
-                    aggProducedVars.get(i), aggFuncRefs.get(i).getValue(), context);
+            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory
+                    .createMergeAggregation(aggProducedVars.get(i), aggFuncRefs.get(i).getValue(), context);
             if (mergeExpr == null) {
                 throw new AlgebricksException("The aggregation function " + aggFuncRefs.get(i).getValue()
                         + " does not have a registered intermediate aggregation function.");

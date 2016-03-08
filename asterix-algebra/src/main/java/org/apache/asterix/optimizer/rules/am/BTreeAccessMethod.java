@@ -33,6 +33,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -48,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
@@ -57,7 +59,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -458,7 +462,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 assignKeyExprList, keyVarList, context, constantAtRuntimeExpressions, constAtRuntimeExprVars);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
+                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         jobGenParams.setLowKeyInclusive(lowKeyInclusive[0]);
         jobGenParams.setHighKeyInclusive(highKeyInclusive[0]);
         jobGenParams.setIsEqCondition(isEqCondition);
@@ -479,11 +483,12 @@ public class BTreeAccessMethod implements IAccessMethod {
             inputOp = probeSubTree.root;
         }
 
-        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, inputOp, jobGenParams, context, false, retainInput);
+        ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
+                metaRecordType, chosenIndex, inputOp, jobGenParams, context, false, retainInput, retainNull);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
-        UnnestMapOperator primaryIndexUnnestOp = null;
+        AbstractUnnestMapOperator primaryIndexUnnestOp = null;
+
         boolean isPrimaryIndex = chosenIndex.isPrimaryIndex();
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
@@ -503,10 +508,12 @@ public class BTreeAccessMethod implements IAccessMethod {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
             AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
             List<LogicalVariable> scanVariables = dataSourceOp.getVariables();
-            primaryIndexUnnestOp = new UnnestMapOperator(scanVariables, secondaryIndexUnnestOp.getExpressionRef(),
-                    primaryIndexOutputTypes, retainInput);
-            primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
 
+            // Checks whether the primary index search can replace the given
+            // SELECT condition.
+            // If so, condition will be set to null and eventually the SELECT
+            // operator will be removed.
+            // If not, we create a new condition based on remaining ones.
             if (!primaryIndexPostProccessingIsNeeded) {
                 List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
                 getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
@@ -518,6 +525,48 @@ public class BTreeAccessMethod implements IAccessMethod {
                     conditionRef.setValue(null);
                 }
             }
+
+            // Checks whether LEFT_OUTER_UNNESTMAP operator is required.
+            boolean leftOuterUnnestMapRequired = false;
+            if (retainNull && retainInput) {
+                leftOuterUnnestMapRequired = true;
+            } else {
+                leftOuterUnnestMapRequired = false;
+            }
+
+            if (conditionRef.getValue() != null) {
+                // The job gen parameters are transferred to the actual job gen
+                // via the UnnestMapOperator's function arguments.
+                List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
+                jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
+                // An index search is expressed as an unnest-map over an
+                // index-search function.
+                IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+                UnnestingFunctionCallExpression primaryIndexSearchFunc = new UnnestingFunctionCallExpression(
+                        primaryIndexSearch, primaryIndexFuncArgs);
+                primaryIndexSearchFunc.setReturnsUniqueValues(true);
+                if (!leftOuterUnnestMapRequired) {
+                    primaryIndexUnnestOp = new UnnestMapOperator(scanVariables,
+                            new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
+                            retainInput);
+                } else {
+                    primaryIndexUnnestOp = new LeftOuterUnnestMapOperator(scanVariables,
+                            new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
+                            true);
+                }
+            } else {
+                if (!leftOuterUnnestMapRequired) {
+                    primaryIndexUnnestOp = new UnnestMapOperator(scanVariables,
+                            ((UnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(), primaryIndexOutputTypes,
+                            retainInput);
+                } else {
+                    primaryIndexUnnestOp = new LeftOuterUnnestMapOperator(scanVariables,
+                            ((LeftOuterUnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(),
+                            primaryIndexOutputTypes, true);
+                }
+            }
+
+            primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
 
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.

@@ -58,6 +58,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -129,10 +130,12 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     // The input operator to the subplan.
     private final ILogicalOperator subplanInputOperator;
 
-    // Maps live variables at <code>subplanInputOperator</code> to variables in the flattened nested plan.
+    // Maps live variables at <code>subplanInputOperator</code> to variables in
+    // the flattened nested plan.
     private final Map<LogicalVariable, LogicalVariable> subplanInputVarToCurrentVarMap = new HashMap<>();
 
-    // Maps variables in the flattened nested plan to live variables at <code>subplannputOperator</code>.
+    // Maps variables in the flattened nested plan to live variables at
+    // <code>subplannputOperator</code>.
     private final Map<LogicalVariable, LogicalVariable> currentVarToSubplanInputVarMap = new HashMap<>();
 
     // The set of key variables at the current operator that is being visited.
@@ -141,14 +144,16 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     // The list of variables determining the ordering.
     private final List<Pair<IOrder, Mutable<ILogicalExpression>>> orderingExprs = new ArrayList<>();
 
-    // Maps variables in the flattened nested plan to live variables at <code>subplannputOperator</code>.
+    // Maps variables in the flattened nested plan to live variables at
+    // <code>subplannputOperator</code>.
     private final List<Pair<LogicalVariable, LogicalVariable>> varMapIntroducedByRewriting = new ArrayList<>();
 
     /**
      * @param context
      *            the optimization context
      * @param subplanInputOperator
-     *            the input operator to the target subplan operator, which is to be inlined.
+     *            the input operator to the target subplan operator, which is to
+     *            be inlined.
      * @throws AlgebricksException
      */
     public InlineAllNtsInSubplanVisitor(IOptimizationContext context, ILogicalOperator subplanOperator)
@@ -191,7 +196,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     public ILogicalOperator visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         visitSingleInputOperator(op);
         Set<LogicalVariable> groupKeyVars = new HashSet<>();
-        // Maps group by key variables if the corresponding expressions are VariableReferenceExpressions.
+        // Maps group by key variables if the corresponding expressions are
+        // VariableReferenceExpressions.
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> keyVarExprRef : op.getGroupByList()) {
             ILogicalExpression expr = keyVarExprRef.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -297,15 +303,18 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         GroupByOperator gbyOp = new GroupByOperator();
         List<Pair<LogicalVariable, LogicalVariable>> keyVarNewVarPairs = new ArrayList<>();
         for (LogicalVariable keyVar : correlatedKeyVars) {
-            // This limits the visitor can only be applied to a nested logical plan inside a Subplan operator,
-            // where the keyVarsToEnforce forms a candidate key which can uniquely identify a tuple out of the nested-tuple-source.
+            // This limits the visitor can only be applied to a nested logical
+            // plan inside a Subplan operator,
+            // where the keyVarsToEnforce forms a candidate key which can
+            // uniquely identify a tuple out of the nested-tuple-source.
             LogicalVariable newVar = context.newVar();
             gbyOp.getGroupByList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(newVar,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(keyVar))));
             keyVarNewVarPairs.add(new Pair<LogicalVariable, LogicalVariable>(keyVar, newVar));
         }
 
-        // Creates an aggregate operator doing LISTIFY, as the root of the nested plan of the added group-by operator.
+        // Creates an aggregate operator doing LISTIFY, as the root of the
+        // nested plan of the added group-by operator.
         List<LogicalVariable> aggVarList = new ArrayList<LogicalVariable>();
         List<Mutable<ILogicalExpression>> aggExprList = new ArrayList<Mutable<ILogicalExpression>>();
         LogicalVariable aggVar = context.newVar();
@@ -318,7 +327,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         aggExprList.add(new MutableObject<ILogicalExpression>(aggExpr));
         AggregateOperator aggOp = new AggregateOperator(aggVarList, aggExprList);
 
-        // Adds the original limit operator as the input operator to the added aggregate operator.
+        // Adds the original limit operator as the input operator to the added
+        // aggregate operator.
         aggOp.getInputs().add(new MutableObject<ILogicalOperator>(op));
         op.getInputs().clear();
         ILogicalOperator currentOp = op;
@@ -328,7 +338,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             currentOp = orderOp;
         }
 
-        // Adds a nested tuple source operator as the input operator to the limit operator.
+        // Adds a nested tuple source operator as the input operator to the
+        // limit operator.
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(gbyOp));
         currentOp.getInputs().add(new MutableObject<ILogicalOperator>(nts));
 
@@ -364,7 +375,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             Set<LogicalVariable> inputLiveVars) {
         List<LogicalVariable> fieldAccessVars = new ArrayList<>();
         List<Mutable<ILogicalExpression>> fieldAccessExprs = new ArrayList<>();
-        //Adds field access by name.
+        // Adds field access by name.
         for (LogicalVariable inputLiveVar : inputLiveVars) {
             if (!correlatedKeyVars.contains(inputLiveVar)) {
                 // field Var
@@ -454,7 +465,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         visitSingleInputOperator(op);
         List<Mutable<ILogicalExpression>> assignedExprRefs = op.getExpressions();
         List<LogicalVariable> assignedVars = op.getVariables();
-        // Maps assigning variables if assignment expressions are VariableReferenceExpressions.
+        // Maps assigning variables if assignment expressions are
+        // VariableReferenceExpressions.
         for (int index = 0; index < assignedVars.size(); ++index) {
             ILogicalExpression expr = assignedExprRefs.get(index).getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -565,6 +577,13 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     @Override
+    public ILogicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg)
+            throws AlgebricksException {
+        throw new AlgebricksException(
+                "The subquery de-correlation rule should always be applied before index-access-method related rules.");
+    }
+
+    @Override
     public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
         return visitSingleInputOperator(op);
     }
@@ -593,16 +612,18 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     /**
-     * Wraps an AggregateOperator or RunningAggregateOperator with a group-by operator where
-     * the group-by keys are variables in keyVarsToEnforce.
-     * Note that the function here prevents this visitor being used to rewrite arbitrary query plans.
-     * Instead, it could only be used for rewriting a nested plan within a subplan operator.
+     * Wraps an AggregateOperator or RunningAggregateOperator with a group-by
+     * operator where the group-by keys are variables in keyVarsToEnforce. Note
+     * that the function here prevents this visitor being used to rewrite
+     * arbitrary query plans. Instead, it could only be used for rewriting a
+     * nested plan within a subplan operator.
      *
      * @param op
      *            the logical operator for aggregate or running aggregate.
      * @param keyVarsToEnforce
      *            the set of variables that needs to preserve.
-     * @return the wrapped group-by operator if {@code keyVarsToEnforce} is not empty, and {@code op} otherwise.
+     * @return the wrapped group-by operator if {@code keyVarsToEnforce} is not
+     *         empty, and {@code op} otherwise.
      * @throws AlgebricksException
      */
     private ILogicalOperator visitAggregateOperator(ILogicalOperator op) throws AlgebricksException {
@@ -612,8 +633,10 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
         GroupByOperator gbyOp = new GroupByOperator();
         for (LogicalVariable keyVar : correlatedKeyVars) {
-            // This limits the visitor can only be applied to a nested logical plan inside a Subplan operator,
-            // where the keyVarsToEnforce forms a candidate key which can uniquely identify a tuple out of the nested-tuple-source.
+            // This limits the visitor can only be applied to a nested logical
+            // plan inside a Subplan operator,
+            // where the keyVarsToEnforce forms a candidate key which can
+            // uniquely identify a tuple out of the nested-tuple-source.
             LogicalVariable newVar = context.newVar();
             gbyOp.getGroupByList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(newVar,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(keyVar))));

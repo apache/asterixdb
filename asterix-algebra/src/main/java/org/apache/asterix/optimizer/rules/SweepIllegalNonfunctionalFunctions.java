@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -254,6 +255,12 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
         }
 
         @Override
+        public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg)
+                throws AlgebricksException {
+            return null;
+        }
+
+        @Override
         public Void visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
             return null;
         }
@@ -287,12 +294,14 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
         }
 
         @Override
-        public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Void tag) throws AlgebricksException {
+        public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Void tag)
+                throws AlgebricksException {
             return null;
         }
 
         @Override
-        public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void tag) throws AlgebricksException {
+        public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void tag)
+                throws AlgebricksException {
             return null;
         }
 

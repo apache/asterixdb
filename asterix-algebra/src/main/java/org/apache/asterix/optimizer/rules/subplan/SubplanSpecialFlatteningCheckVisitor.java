@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -204,6 +205,11 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
     }
 
     @Override
+    public Boolean visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
+        return false;
+    }
+
+    @Override
     public Boolean visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
         return false;
     }
@@ -238,7 +244,8 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
      * If an operator reduces its input cardinality, the operator should not be a descendant
      * of a join operator.
      *
-     * @param op,
+     * @param op
+     *            ,
      *            the operator to consider
      * @return FALSE if it is certainly disqualified; TRUE otherwise.
      * @throws AlgebricksException
@@ -251,7 +258,8 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
      * If an operator discard tuples variables before the join, the query's
      * semantics cannot be preserved after applying the <code>FlatternSubplanJoinRule</code> rule.
      *
-     * @param op,
+     * @param op
+     *            ,
      *            the operator to consider
      * @return FALSE if it is certainly disqualified; TRUE otherwise.
      * @throws AlgebricksException
