@@ -402,6 +402,11 @@
                 <output-dir compare="Text">count_null</output-dir>
             </compilation-unit>
         </test-case>
+         <test-case FilePath="aggregate">
+            <compilation-unit name="query-ASTERIXDB-923">
+                <output-dir compare="Text">query-ASTERIXDB-923</output-dir>
+            </compilation-unit>
+        </test-case>
         <!--
         <test-case FilePath="aggregate">
           <compilation-unit name="droptype">
