@@ -17,17 +17,16 @@
  * under the License.
  */
 /**
- * This query is to verify the fix of ASTERIXDB-1291.
+ * This query is to verify the fix of ASTERIXDB-1168.
  */
 
 USE test;
 
 FROM Customers c
-GROUP BY c.c_custkey AS ccustkey, c.c_nationkey AS cnationkey
 LET orders = (
     FROM Orders o
-    WHERE cnationkey = 5 and o.o_custkey = ccustkey
+    WHERE c.c_nationkey = 5 and o.o_custkey = c.c_custkey
     SELECT ELEMENT o
   )
-SELECT ccustkey customer_name, orders orders
+SELECT c.c_custkey customer_name, orders orders
 ORDER BY customer_name;

@@ -218,7 +218,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
     }
 
-    protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
+    protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         // First check that the operator is a join and its condition is a function call.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op1)) {

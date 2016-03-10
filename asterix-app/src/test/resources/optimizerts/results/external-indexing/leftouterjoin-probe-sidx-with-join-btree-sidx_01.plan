@@ -2,40 +2,44 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$27(ASC), $$28(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$19, $$21]  |PARTITIONED|
-                  {
-                    -- AGGREGATE  |LOCAL|
-                      -- STREAM_SELECT  |LOCAL|
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+        -- SORT_MERGE_EXCHANGE [$$19(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$19(ASC), $$21(ASC), $$22(ASC)]  |PARTITIONED|
-                -- HASH_PARTITION_EXCHANGE [$$19, $$21]  |PARTITIONED|
-                  -- STREAM_SELECT  |PARTITIONED|
-                    -- ASSIGN  |PARTITIONED|
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- EXTERNAL_LOOKUP  |PARTITIONED|
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- STABLE_SORT [$$34(ASC), $$35(ASC)]  |PARTITIONED|
+              -- STREAM_PROJECT  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- PRE_CLUSTERED_GROUP_BY[$$26]  |PARTITIONED|
+                          {
+                            -- AGGREGATE  |LOCAL|
+                              -- STREAM_SELECT  |LOCAL|
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          }
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- STABLE_SORT [$$26(ASC), $$22(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$26]  |PARTITIONED|
+                          -- STREAM_SELECT  |PARTITIONED|
+                            -- ASSIGN  |PARTITIONED|
+                              -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- STREAM_PROJECT  |PARTITIONED|
+                                  -- EXTERNAL_LOOKUP  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH  |PARTITIONED|
-                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                      -- STABLE_SORT [$$34(ASC), $$35(ASC)]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
-                                            -- ASSIGN  |PARTITIONED|
-                                              -- STREAM_SELECT  |PARTITIONED|
-                                                -- ASSIGN  |PARTITIONED|
-                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- EXTERNAL_LOOKUP  |PARTITIONED|
-                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- STABLE_SORT [$$31(ASC), $$32(ASC)]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                    -- ASSIGN  |PARTITIONED|
+                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                        -- ASSIGN  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                            -- EXTERNAL_LOOKUP  |PARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                -- STABLE_SORT [$$31(ASC), $$32(ASC)]  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- ASSIGN  |PARTITIONED|
-                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            -- ASSIGN  |PARTITIONED|
+                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

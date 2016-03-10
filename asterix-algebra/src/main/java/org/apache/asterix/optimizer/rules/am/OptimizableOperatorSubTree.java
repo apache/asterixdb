@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScan
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
@@ -77,7 +78,7 @@ public class OptimizableOperatorSubTree {
     public List<Dataset> ixJoinOuterAdditionalDatasets = null;
     public List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
 
-    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
+    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
         reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
@@ -96,11 +97,14 @@ public class OptimizableOperatorSubTree {
                 return initializeDataSource(subTreeOpRef);
             }
             // Match (assign | unnest)+.
-            while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
-                    || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-                assignsAndUnnestsRefs.add(subTreeOpRef);
-                assignsAndUnnests.add(subTreeOp);
-
+            while ((subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
+                    || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST)) {
+                if (OperatorPropertiesUtil.isStatefulAssign(subTreeOp)) {
+                    return false;
+                } else {
+                    assignsAndUnnestsRefs.add(subTreeOpRef);
+                    assignsAndUnnests.add(subTreeOp);
+                }
                 subTreeOpRef = subTreeOp.getInputs().get(0);
                 subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
             };

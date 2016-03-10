@@ -137,7 +137,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
     private boolean intersectAllSecondaryIndexes(List<Pair<IAccessMethod, Index>> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         Pair<IAccessMethod, Index> chosenIndex = null;
         Optional<Pair<IAccessMethod, Index>> primaryIndex = chosenIndexes.stream()
                 .filter(pair -> pair.second.isPrimaryIndex()).findFirst();
@@ -205,7 +205,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         return lop;
     }
 
-    protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
+    protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         // First check that the operator is a select and its condition is a function call.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op1)) {

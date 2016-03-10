@@ -225,4 +225,12 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         }
     }
 
+    public List<LogicalVariable> getPrimaryKeyVariables(List<LogicalVariable> dataScanVariables) {
+        if (hasMeta()) {
+            return new ArrayList<>(dataScanVariables.subList(0, dataScanVariables.size() - 2));
+        } else {
+            return new ArrayList<>(dataScanVariables.subList(0, dataScanVariables.size() - 1));
+        }
+    }
+
 }

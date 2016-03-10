@@ -16,18 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /**
- * This query is to verify the fix of ASTERIXDB-1291.
+ * This query is to verify the fix of ASTERIXDB-1168.
  */
 
-USE test;
+use test;
 
-FROM Customers c
-GROUP BY c.c_custkey AS ccustkey, c.c_nationkey AS cnationkey
-LET orders = (
-    FROM Orders o
-    WHERE cnationkey = 5 and o.o_custkey = ccustkey
-    SELECT ELEMENT o
-  )
-SELECT ccustkey customer_name, orders orders
-ORDER BY customer_name;
+
+select element {
+        'tweetid1': t1.tweetid,
+        'count1': t1.countA,
+        't2info': (
+            select element {'tweetid2':t2.tweetid,'count2':t2.countB}
+            from  TweetMessages as t2
+            where t1.countA = 2 and t1.countA /*+ indexnl */  = t2.countB
+            order by t2.tweetid
+        )}
+from  TweetMessages as t1
+where (t1.tweetid < test.int64('10'))
+order by t1.tweetid
+;

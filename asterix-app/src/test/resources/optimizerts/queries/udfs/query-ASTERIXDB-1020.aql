@@ -50,7 +50,7 @@ for $emergency in dataset CHPReports
     let $dangerzone := create-circle($emergency.epicenter,$emergency.radius)
     where (some $user in dataset userLocations satisfies
     $user.user-id = $userid and spatial-intersect($dangerzone,$user.location))
-return { "shelter locations":"for $shelter in dataset tornadoShelters return $shelter.location"}
+return { "shelter locations": for $shelter in dataset tornadoShelters return $shelter.location}
 };
 
 

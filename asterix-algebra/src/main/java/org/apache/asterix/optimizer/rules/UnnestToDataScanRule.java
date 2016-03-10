@@ -131,7 +131,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
                 opRef.setValue(scan);
-                addPrimaryKey(variables, context);
+                addPrimaryKey(variables, dataSource, context);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
 
                 // Adds equivalence classes --- one equivalent class between a primary key
@@ -173,15 +173,15 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 v.add(unnest.getVariable());
 
                 String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
-                DataSourceScanOperator scan = new DataSourceScanOperator(v,
-                        createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
-                                metadataProvider, policy, outputType,
-                                null /* TODO(Abdullah): to figure out the meta type name*/, csLocations));
+                AqlDataSource dataSource = createFeedDataSource(asid, targetDataset, sourceFeedName,
+                        subscriptionLocation, metadataProvider, policy, outputType,
+                        null /* TODO(Abdullah): to figure out the meta type name*/, csLocations);
+                DataSourceScanOperator scan = new DataSourceScanOperator(v, dataSource);
 
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
                 opRef.setValue(scan);
-                addPrimaryKey(v, context);
+                addPrimaryKey(v, dataSource, context);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
 
                 return true;
@@ -192,12 +192,12 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    public void addPrimaryKey(List<LogicalVariable> scanVariables, IOptimizationContext context) {
-        int n = scanVariables.size();
-        List<LogicalVariable> head = new ArrayList<LogicalVariable>(scanVariables.subList(0, n - 1));
-        List<LogicalVariable> tail = new ArrayList<LogicalVariable>(1);
-        tail.add(scanVariables.get(n - 1));
-        FunctionalDependency pk = new FunctionalDependency(head, tail);
+    private void addPrimaryKey(List<LogicalVariable> scanVariables, AqlDataSource dataSource,
+            IOptimizationContext context) {
+        List<LogicalVariable> primaryKey = dataSource.getPrimaryKeyVariables(scanVariables);
+        List<LogicalVariable> tail = new ArrayList<LogicalVariable>();
+        tail.addAll(scanVariables);
+        FunctionalDependency pk = new FunctionalDependency(primaryKey, tail);
         context.addPrimaryKey(pk);
     }
 

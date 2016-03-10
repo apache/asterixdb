@@ -337,19 +337,24 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             return traverseNonSubplanOperator(subplanOp, context);
         }
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
-        ILogicalOperator inputOp = inputOpRef.getValue();
+        ILogicalOperator inputOpBackup = inputOpRef.getValue();
+        // Creates parameters for the left outer join operator.
+        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars = EquivalenceClassUtils
+                .findOrCreatePrimaryKeyOpAndVariables(inputOpBackup, true, context);
+        ILogicalOperator inputOp = primaryOpAndVars.first;
+        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.second;
+        inputOpRef.setValue(inputOp);
+        Set<LogicalVariable> inputLiveVars = new HashSet<LogicalVariable>();
+        VariableUtilities.getLiveVariables(inputOp, inputLiveVars);
+
         Pair<Map<LogicalVariable, LogicalVariable>, List<Pair<IOrder, Mutable<ILogicalExpression>>>> varMapAndOrderExprs = SubplanFlatteningUtil
                 .inlineAllNestedTupleSource(subplanOp, context);
         Map<LogicalVariable, LogicalVariable> varMap = varMapAndOrderExprs.first;
         if (varMap == null) {
+            inputOpRef.setValue(inputOpBackup);
             // Traverses the operator as if it is not a subplan.
             return traverseNonSubplanOperator(subplanOp, context);
         }
-
-        // Creates parameters for the left outer join operator.
-        Set<LogicalVariable> inputLiveVars = new HashSet<LogicalVariable>();
-        VariableUtilities.getLiveVariables(inputOp, inputLiveVars);
-        Set<LogicalVariable> fdCoveringVars = EquivalenceClassUtils.findFDHeaderVariables(context, inputOp);
 
         Mutable<ILogicalOperator> rightInputOpRef = subplanOp.getNestedPlans().get(0).getRoots().get(0).getValue()
                 .getInputs().get(0);
@@ -365,7 +370,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         // Constructs the join predicate for the leftOuter join.
         List<Mutable<ILogicalExpression>> joinPredicates = new ArrayList<Mutable<ILogicalExpression>>();
-        for (LogicalVariable liveVar : fdCoveringVars) {
+        for (LogicalVariable liveVar : primaryKeyVars) {
             List<Mutable<ILogicalExpression>> arguments = new ArrayList<Mutable<ILogicalExpression>>();
             arguments.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(liveVar)));
             LogicalVariable rightVar = varMap.get(liveVar);
@@ -378,7 +383,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         ILogicalExpression joinExpr = joinPredicates.size() > 1
                 ? new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND),
                         joinPredicates)
-                : joinPredicates.get(0).getValue();
+                : joinPredicates.size() > 0 ? joinPredicates.get(0).getValue() : ConstantExpression.TRUE;
         LeftOuterJoinOperator leftOuterJoinOp = new LeftOuterJoinOperator(
                 new MutableObject<ILogicalExpression>(joinExpr), inputOpRef, rightInputOpRef);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rightInputOp, context);
@@ -391,7 +396,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         GroupByOperator groupbyOp = new GroupByOperator(groupByList, groupByDecorList, nestedPlans);
 
         Map<LogicalVariable, LogicalVariable> replacedVarMap = new HashMap<>();
-        for (LogicalVariable liveVar : fdCoveringVars) {
+        for (LogicalVariable liveVar : primaryKeyVars) {
             LogicalVariable newVar = context.newVar();
             groupByList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(newVar,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(liveVar))));
@@ -399,7 +404,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             replacedVarMap.put(liveVar, newVar);
         }
         for (LogicalVariable liveVar : inputLiveVars) {
-            if (fdCoveringVars.contains(liveVar)) {
+            if (primaryKeyVars.contains(liveVar)) {
                 continue;
             }
             groupByDecorList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null,
@@ -458,7 +463,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
     private Pair<Boolean, Map<LogicalVariable, LogicalVariable>> applySpecialFlattening(Mutable<ILogicalOperator> opRef,
             IOptimizationContext context) throws AlgebricksException {
         SubplanOperator subplanOp = (SubplanOperator) opRef.getValue();
-        ILogicalOperator inputOp = subplanOp.getInputs().get(0).getValue();
+        Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
         Map<LogicalVariable, LogicalVariable> replacedVarMap = new HashMap<>();
 
         // Recursively applies this rule to the nested plan of the subplan operator,
@@ -466,19 +471,25 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         Pair<Boolean, Map<LogicalVariable, LogicalVariable>> result = rewriteSubplanOperator(
                 subplanOp.getNestedPlans().get(0).getRoots().get(0), context);
 
+        ILogicalOperator inputOpBackup = inputOpRef.getValue();
+        // Gets live variables and covering variables from the subplan's input operator.
+        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars = EquivalenceClassUtils
+                .findOrCreatePrimaryKeyOpAndVariables(inputOpBackup, false, context);
+        ILogicalOperator inputOp = primaryOpAndVars.first;
+        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.second;
+        inputOpRef.setValue(inputOp);
+        Set<LogicalVariable> liveVars = new HashSet<>();
+        VariableUtilities.getLiveVariables(inputOp, liveVars);
+
         Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> notNullVarsAndTopJoinRef = SubplanFlatteningUtil
                 .inlineLeftNtsInSubplanJoin(subplanOp, context);
         if (notNullVarsAndTopJoinRef.first == null) {
+            inputOpRef.setValue(inputOpBackup);
             return new Pair<Boolean, Map<LogicalVariable, LogicalVariable>>(false, replacedVarMap);
         }
 
         Set<LogicalVariable> notNullVars = notNullVarsAndTopJoinRef.first;
         Mutable<ILogicalOperator> topJoinRef = notNullVarsAndTopJoinRef.second;
-
-        // Gets live variables and covering variables from the subplan's input operator.
-        Set<LogicalVariable> fdCoveringVars = EquivalenceClassUtils.findFDHeaderVariables(context, inputOp);
-        Set<LogicalVariable> liveVars = new HashSet<>();
-        VariableUtilities.getLiveVariables(inputOp, liveVars);
 
         // Creates a group-by operator.
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
@@ -486,7 +497,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         GroupByOperator groupbyOp = new GroupByOperator(groupByList, groupByDecorList, subplanOp.getNestedPlans());
 
         Map<LogicalVariable, LogicalVariable> gbyVarMap = new HashMap<LogicalVariable, LogicalVariable>();
-        for (LogicalVariable coverVar : fdCoveringVars) {
+        for (LogicalVariable coverVar : primaryKeyVars) {
             LogicalVariable newVar = context.newVar();
             gbyVarMap.put(coverVar, newVar);
             groupByList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(newVar,
@@ -495,7 +506,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             replacedVarMap.put(coverVar, newVar);
         }
         for (LogicalVariable liveVar : liveVars) {
-            if (fdCoveringVars.contains(liveVar)) {
+            if (primaryKeyVars.contains(liveVar)) {
                 continue;
             }
             groupByDecorList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null,

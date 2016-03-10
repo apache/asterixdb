@@ -19,11 +19,13 @@
 package org.apache.asterix.optimizer.rules.subplan;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -79,6 +81,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
@@ -418,10 +421,11 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
         // Updates the primary key info in the copied plan segment.
         Map<LogicalVariable, LogicalVariable> varMap = deepCopyVisitor.getInputToOutputVariableMapping();
-        context.updatePrimaryKeys(varMap);
-
+        addPrimaryKeys(varMap);
+        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars = EquivalenceClassUtils
+                .findOrCreatePrimaryKeyOpAndVariables(copiedInputOperator, true, context);
         correlatedKeyVars.clear();
-        correlatedKeyVars.addAll(EquivalenceClassUtils.findFDHeaderVariables(context, subplanInputOperator));
+        correlatedKeyVars.addAll(primaryOpAndVars.second);
         // Update key variables and input-output-var mapping.
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
             LogicalVariable oldVar = entry.getKey();
@@ -432,7 +436,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             }
             updateInputToOutputVarMapping(oldVar, newVar, true);
         }
-        return copiedInputOperator;
+        return primaryOpAndVars.first;
     }
 
     @Override
@@ -724,6 +728,26 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                     new MutableObject<ILogicalExpression>(orderExpr.second.getValue().cloneExpression())));
         }
         return clonedOrderExprs;
+    }
+
+    private void addPrimaryKeys(Map<LogicalVariable, LogicalVariable> varMap) {
+        for (Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
+            List<LogicalVariable> dependencyVars = context.findPrimaryKey(entry.getKey());
+            if (dependencyVars == null) {
+                // No key dependencies
+                continue;
+            }
+            List<LogicalVariable> newDependencies = new ArrayList<>();
+            for (LogicalVariable dependencyVar : dependencyVars) {
+                LogicalVariable newDependencyVar = varMap.get(dependencyVar);
+                if (newDependencyVar == null) {
+                    continue;
+                }
+                newDependencies.add(newDependencyVar);
+            }
+            context.addPrimaryKey(
+                    new FunctionalDependency(newDependencies, Collections.singletonList(entry.getValue())));
+        }
     }
 
 }

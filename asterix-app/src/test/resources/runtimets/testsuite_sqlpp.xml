@@ -4973,6 +4973,21 @@
                 <output-dir compare="Text">gby_inline</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="subquery">
+            <compilation-unit name="query-ASTERIXDB-1168">
+                <output-dir compare="Text">query-ASTERIXDB-1168</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="subquery">
+            <compilation-unit name="decorrelate_with_unique_id">
+                <output-dir compare="Text">decorrelate_with_unique_id</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="subquery">
+            <compilation-unit name="decorrelate_with_unique_id_2">
+                <output-dir compare="Text">decorrelate_with_unique_id_2</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="subset-collection">
         <test-case FilePath="subset-collection">

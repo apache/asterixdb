@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -85,7 +86,7 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
         for (int exprIndex = 0; exprIndex < exprRefs.size(); ++exprIndex) {
             ILogicalExpression expr = exprRefs.get(exprIndex).getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
+                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                 FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
                 if (fid == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR
                         || fid == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
@@ -99,7 +100,7 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
 
     @SuppressWarnings("unchecked")
     private boolean propagateEquivalenceClassesForRecordConstructor(LogicalVariable recordVar,
-            ScalarFunctionCallExpression funcExpr, AssignOperator assignOp, IOptimizationContext context) {
+            AbstractFunctionCallExpression funcExpr, AssignOperator assignOp, IOptimizationContext context) {
         List<Mutable<ILogicalExpression>> argRefs = funcExpr.getArguments();
         boolean changed = false;
         // Only odd position arguments are field value expressions.
