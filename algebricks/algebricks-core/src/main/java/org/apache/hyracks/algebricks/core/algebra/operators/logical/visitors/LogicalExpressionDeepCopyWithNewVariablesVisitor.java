@@ -123,7 +123,11 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalExpression visitStatefulFunctionCallExpression(StatefulFunctionCallExpression expr, Void arg)
             throws AlgebricksException {
-        throw new UnsupportedOperationException();
+        StatefulFunctionCallExpression exprCopy = new StatefulFunctionCallExpression(expr.getFunctionInfo(),
+                expr.getPropertiesComputer(), deepCopyExpressionReferenceList(expr.getArguments()));
+        deepCopyAnnotations(expr, exprCopy);
+        deepCopyOpaqueParameters(expr, exprCopy);
+        return exprCopy;
     }
 
     @Override

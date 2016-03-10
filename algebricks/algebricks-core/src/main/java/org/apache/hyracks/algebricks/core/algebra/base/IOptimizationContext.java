@@ -56,7 +56,7 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     public abstract void addPrimaryKey(FunctionalDependency pk);
 
-    public abstract List<LogicalVariable> findPrimaryKey(LogicalVariable recordVar);
+    public abstract List<LogicalVariable> findPrimaryKey(LogicalVariable var);
 
     public abstract void putEquivalenceClassMap(ILogicalOperator op, Map<LogicalVariable, EquivalenceClass> eqClassMap);
 

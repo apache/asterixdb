@@ -66,7 +66,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     private Map<ILogicalOperator, HashSet<ILogicalOperator>> alreadyCompared = new HashMap<ILogicalOperator, HashSet<ILogicalOperator>>();
     private Map<IAlgebraicRewriteRule, HashSet<ILogicalOperator>> dontApply = new HashMap<IAlgebraicRewriteRule, HashSet<ILogicalOperator>>();
-    private Map<LogicalVariable, FunctionalDependency> recordToPrimaryKey = new HashMap<LogicalVariable, FunctionalDependency>();
+    private Map<LogicalVariable, FunctionalDependency> varToPrimaryKey = new HashMap<LogicalVariable, FunctionalDependency>();
 
     private IMetadataProvider metadataProvider;
     private HashSet<LogicalVariable> notToBeInlinedVars = new HashSet<LogicalVariable>();
@@ -189,18 +189,18 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     @Override
     public void addPrimaryKey(FunctionalDependency pk) {
-        assert (pk.getTail().size() == 1);
-        LogicalVariable recordVar = pk.getTail().get(0);
-        recordToPrimaryKey.put(recordVar, pk);
+        for (LogicalVariable var : pk.getTail()) {
+            varToPrimaryKey.put(var, pk);
+        }
     }
 
     @Override
     public List<LogicalVariable> findPrimaryKey(LogicalVariable recordVar) {
-        FunctionalDependency fd = recordToPrimaryKey.get(recordVar);
+        FunctionalDependency fd = varToPrimaryKey.get(recordVar);
         if (fd == null) {
             return null;
         }
-        return fd.getHead();
+        return new ArrayList<LogicalVariable>(fd.getHead());
     }
 
     @Override
@@ -291,7 +291,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     @Override
     public void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars) {
-        for (Map.Entry<LogicalVariable, FunctionalDependency> me : recordToPrimaryKey.entrySet()) {
+        for (Map.Entry<LogicalVariable, FunctionalDependency> me : varToPrimaryKey.entrySet()) {
             FunctionalDependency fd = me.getValue();
             List<LogicalVariable> hd = new ArrayList<LogicalVariable>();
             for (LogicalVariable v : fd.getHead()) {

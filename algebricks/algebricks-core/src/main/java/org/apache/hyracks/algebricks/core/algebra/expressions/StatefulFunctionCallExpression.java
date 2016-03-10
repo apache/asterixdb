@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -65,5 +64,9 @@ public class StatefulFunctionCallExpression extends AbstractFunctionCallExpressi
     @Override
     public <R, T> R accept(ILogicalExpressionVisitor<R, T> visitor, T arg) throws AlgebricksException {
         return visitor.visitStatefulFunctionCallExpression(this, arg);
+    }
+
+    public IPropertiesComputer getPropertiesComputer() {
+        return propertiesComputer;
     }
 }

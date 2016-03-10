@@ -37,8 +37,10 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsExpressionStatefulVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
 public class OperatorPropertiesUtil {
@@ -264,5 +266,28 @@ public class OperatorPropertiesUtil {
     public static boolean isCardinalityOne(ILogicalOperator operator) throws AlgebricksException {
         CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
         return operator.accept(visitor, null) == 1L;
+    }
+
+    /**
+     * Whether the operator is an assign operator that calls a stateful function.
+     *
+     * @param op
+     *            the operator to consider.
+     * @return true if the operator is an assign operator and it calls a stateful function.
+     * @throws AlgebricksException
+     */
+    public static boolean isStatefulAssign(ILogicalOperator op) throws AlgebricksException {
+        if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            return false;
+        }
+        AssignOperator assignOp = (AssignOperator) op;
+        IsExpressionStatefulVisitor visitor = new IsExpressionStatefulVisitor();
+        for (Mutable<ILogicalExpression> exprRef : assignOp.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
+            if (expr.accept(visitor, null)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -32,24 +31,31 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
-import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class PhysicalOptimizationsUtil {
 
-    public static void computeFDsAndEquivalenceClasses(AbstractLogicalOperator op, IOptimizationContext ctx)
+    public static void computeFDsAndEquivalenceClasses(ILogicalOperator op, IOptimizationContext ctx)
             throws AlgebricksException {
         FDsAndEquivClassesVisitor visitor = new FDsAndEquivClassesVisitor();
+        visitOperatorAndItsDescendants(op, visitor, ctx);
+    }
+
+    public static <R> void visitOperatorAndItsDescendants(ILogicalOperator op, ILogicalOperatorVisitor<R, IOptimizationContext> visitor,
+            IOptimizationContext ctx) throws AlgebricksException {
         Set<ILogicalOperator> visitSet = new HashSet<ILogicalOperator>();
         computeFDsAndEqClassesWithVisitorRec(op, ctx, visitor, visitSet);
     }
 
-    private static void computeFDsAndEqClassesWithVisitorRec(AbstractLogicalOperator op, IOptimizationContext ctx,
-            FDsAndEquivClassesVisitor visitor, Set<ILogicalOperator> visitSet) throws AlgebricksException {
+    private static <R> void computeFDsAndEqClassesWithVisitorRec(ILogicalOperator op, IOptimizationContext ctx,
+            ILogicalOperatorVisitor<R, IOptimizationContext> visitor, Set<ILogicalOperator> visitSet)
+                    throws AlgebricksException {
         visitSet.add(op);
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
             computeFDsAndEqClassesWithVisitorRec((AbstractLogicalOperator) i.getValue(), ctx, visitor, visitSet);
         }
-        if (op.hasNestedPlans()) {
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
+        if (aop.hasNestedPlans()) {
             for (ILogicalPlan p : ((AbstractOperatorWithNestedPlans) op).getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     AbstractLogicalOperator rootOp = (AbstractLogicalOperator) r.getValue();
@@ -65,11 +71,6 @@ public class PhysicalOptimizationsUtil {
             }
         }
         op.accept(visitor, ctx);
-        if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine("--> op. type = " + op.getOperatorTag() + "\n"
-                    + "    equiv. classes = " + ctx.getEquivalenceClassMap(op) + "\n" + "    FDs = "
-                    + ctx.getFDList(op) + "\n");
-        }
     }
 
 }

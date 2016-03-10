@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScan
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
@@ -109,7 +110,8 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
                     && boundaryOpRef.getValue().getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
                 List<LogicalVariable> opUsedVars = new ArrayList<LogicalVariable>();
                 VariableUtilities.getUsedVariables(boundaryOpRef.getValue(), opUsedVars);
-                if (opUsedVars.size() == 0) {
+                if (opUsedVars.size() == 0 && !OperatorPropertiesUtil.isStatefulAssign(boundaryOpRef.getValue())
+                /* We cannot freely move the location of stateful assigns. */) {
                     // move down the boundary if the operator is a const assigns.
                     boundaryOpRef = boundaryOpRef.getValue().getInputs().get(0);
                 } else {
