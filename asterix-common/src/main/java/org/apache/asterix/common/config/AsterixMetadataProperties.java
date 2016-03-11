@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -46,7 +46,7 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
         return accessor.getStores();
     }
 
-    public Set<String> getNodeNames() {
+    public List<String> getNodeNames() {
         return accessor.getNodeNames();
     }
 

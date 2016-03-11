@@ -115,7 +115,7 @@ public class MetadataBootstrap {
     private static IIOManager ioManager;
 
     private static String metadataNodeName;
-    private static Set<String> nodeNames;
+    private static List<String> nodeNames;
     private static String outputDir;
 
     private static IMetadataIndex[] primaryIndexes;

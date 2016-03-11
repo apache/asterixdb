@@ -20,7 +20,7 @@ package org.apache.asterix.api.common;
 
 import java.io.File;
 import java.util.EnumSet;
-import java.util.Set;
+import java.util.List;
 
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -72,7 +72,7 @@ public class AsterixHyracksIntegrationUtil {
 
         // Starts ncs.
         int n = 0;
-        Set<String> nodes = propertiesAccessor.getNodeNames();
+        List<String> nodes = propertiesAccessor.getNodeNames();
         for (String ncName : nodes) {
             NCConfig ncConfig1 = new NCConfig();
             ncConfig1.ccHost = "localhost";

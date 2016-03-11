@@ -26,16 +26,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -771,11 +770,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             } else {
                 nodegroupCardinality = Integer.parseInt(dd.getHints().get(DatasetNodegroupCardinalityHint.NAME));
             }
-            Set<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
-            Set<String> nodeNamesClone = new HashSet<String>();
-            for (String node : nodeNames) {
-                nodeNamesClone.add(node);
-            }
+            List<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
+            List<String> nodeNamesClone = new ArrayList<String>(nodeNames);
             String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
             List<String> selectedNodes = new ArrayList<String>();
             selectedNodes.add(metadataNodeName);
