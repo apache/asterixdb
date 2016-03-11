@@ -370,7 +370,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                     //#. create index instance and register to indexLifeCycleManager
                                     localResourceMetadata = (ILocalResourceMetadata) localResource.getResourceObject();
                                     index = localResourceMetadata.createIndexInstance(appRuntimeContext,
-                                            resourceAbsolutePath, localResource.getPartition());
+                                            resourceAbsolutePath, localResource.getPartition(),
+                                            localResourceRepository.getIODeviceNum(localResource.getPartition()));
                                     datasetLifecycleManager.register(resourceAbsolutePath, index);
                                     datasetLifecycleManager.open(resourceAbsolutePath);
 

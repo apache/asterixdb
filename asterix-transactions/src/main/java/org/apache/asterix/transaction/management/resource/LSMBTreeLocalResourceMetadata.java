@@ -19,9 +19,9 @@
 package org.apache.asterix.transaction.management.resource;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetadata {
 
@@ -62,17 +61,15 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
 
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition) {
+                                         int partition, int ioDeviceNum) {
         FileReference file = new FileReference(new File(filePath));
-        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file,
-                runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
-                cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getDatasetLifecycleManager()),
+        final IDatasetLifecycleManager datasetLifecycleManager = runtimeContextProvider.getDatasetLifecycleManager();
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(datasetLifecycleManager.getVirtualBufferCaches(datasetID,
+                ioDeviceNum), file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(),
+                typeTraits, cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, datasetLifecycleManager),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID)
-                        : new BaseOperationTracker(datasetID,
-                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                        : new BaseOperationTracker(datasetID, datasetLifecycleManager.getDatasetInfo(datasetID)),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), isPrimary, filterTypeTraits,
                 filterCmpFactories, btreeFields, filterFields, true);

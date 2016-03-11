@@ -54,7 +54,7 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
 
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition) throws HyracksDataException {
+                                         int partition, int ioDeviceNum) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
         try {
             return LSMRTreeUtils.createExternalRTree(file, runtimeContextProvider.getBufferCache(),

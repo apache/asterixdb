@@ -349,8 +349,8 @@ public class MetadataBootstrap {
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
         FileReference file = ioManager.getAbsoluteFileRef(metadataDeviceId, resourceName);
 
-        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext
-                .getVirtualBufferCaches(index.getDatasetId().getId());
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext.getDatasetLifecycleManager()
+                .getVirtualBufferCaches(index.getDatasetId().getId(), metadataPartition.getIODeviceNum());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();

@@ -53,7 +53,7 @@ import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeCycleComponent {
     private final AsterixStorageProperties storageProperties;
-    private final Map<Integer, List<IVirtualBufferCache>> datasetVirtualBufferCaches;
+    private final Map<Integer, DatasetVirtualBufferCaches> datasetVirtualBufferCachesMap;
     private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
     private final Map<Integer, DatasetInfo> datasetInfos;
     private final ILocalResourceRepository resourceRepository;
@@ -62,14 +62,17 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private long used;
     private final ILogManager logManager;
     private final LogRecord logRecord;
+    private final int numPartitions;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
-            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID, ILogManager logManager) {
+                                   ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID,
+                                   ILogManager logManager, int numPartitions) {
         this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
         this.firstAvilableUserDatasetID = firstAvilableUserDatasetID;
-        datasetVirtualBufferCaches = new HashMap<Integer, List<IVirtualBufferCache>>();
+        this.numPartitions = numPartitions;
+        datasetVirtualBufferCachesMap = new HashMap<>();
         datasetOpTrackers = new HashMap<Integer, ILSMOperationTracker>();
         datasetInfos = new HashMap<Integer, DatasetInfo>();
         capacity = storageProperties.getMemoryComponentGlobalBudget();
@@ -305,45 +308,36 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return openIndexesInfo;
     }
 
-    @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
-        synchronized (datasetVirtualBufferCaches) {
-            List<IVirtualBufferCache> vbcs = datasetVirtualBufferCaches.get(datasetID);
+    private DatasetVirtualBufferCaches getVirtualBufferCaches(int datasetID) {
+        synchronized (datasetVirtualBufferCachesMap) {
+            DatasetVirtualBufferCaches vbcs = datasetVirtualBufferCachesMap.get(datasetID);
             if (vbcs == null) {
-                initializeDatasetVirtualBufferCache(datasetID);
-                vbcs = datasetVirtualBufferCaches.get(datasetID);
-                if (vbcs == null) {
-                    throw new IllegalStateException("Could not find dataset " + datasetID + " virtual buffer cache.");
-                }
+                vbcs = initializeDatasetVirtualBufferCache(datasetID);
             }
             return vbcs;
         }
     }
 
+    @Override
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID, int ioDeviceNum) {
+        DatasetVirtualBufferCaches dvbcs = getVirtualBufferCaches(datasetID);
+        return dvbcs.getVirtualBufferCaches(ioDeviceNum);
+    }
+
     private void removeDatasetFromCache(int datasetID) throws HyracksDataException {
         deallocateDatasetMemory(datasetID);
         datasetInfos.remove(datasetID);
-        datasetVirtualBufferCaches.remove(datasetID);
+        datasetVirtualBufferCachesMap.remove(datasetID);
         datasetOpTrackers.remove(datasetID);
     }
 
-    private void initializeDatasetVirtualBufferCache(int datasetID) {
-        List<IVirtualBufferCache> vbcs = new ArrayList<IVirtualBufferCache>();
-        synchronized (datasetVirtualBufferCaches) {
-            int numPages = datasetID < firstAvilableUserDatasetID
-                    ? storageProperties.getMetadataMemoryComponentNumPages()
-                    : storageProperties.getMemoryComponentNumPages();
-            for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
-                MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
-                        new VirtualBufferCache(new ResourceHeapBufferAllocator(this, Integer.toString(datasetID)),
-                                storageProperties.getMemoryComponentPageSize(),
-                                numPages / storageProperties.getMemoryComponentsNum()));
-                vbcs.add(vbc);
-            }
-            datasetVirtualBufferCaches.put(datasetID, vbcs);
+    private DatasetVirtualBufferCaches initializeDatasetVirtualBufferCache(int datasetID) {
+        synchronized (datasetVirtualBufferCachesMap) {
+            DatasetVirtualBufferCaches dvbcs = new DatasetVirtualBufferCaches(datasetID);
+            datasetVirtualBufferCachesMap.put(datasetID, dvbcs);
+            return dvbcs;
         }
     }
-
     @Override
     public ILSMOperationTracker getOperationTracker(int datasetID) {
         synchronized (datasetOpTrackers) {
@@ -356,7 +350,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
-    private abstract class Info {
+    private static abstract class Info {
         protected int referenceCount;
         protected boolean isOpen;
 
@@ -374,7 +368,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
-    public class IndexInfo extends Info {
+    public static class IndexInfo extends Info {
         private final ILSMIndex index;
         private final long resourceId;
         private final int datasetId;
@@ -398,7 +392,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
-    public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
+    public static class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         private final Map<Long, IndexInfo> indexes;
         private final int datasetID;
         private long lastAccess;
@@ -639,7 +633,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         closeAllDatasets();
 
-        datasetVirtualBufferCaches.clear();
+        datasetVirtualBufferCachesMap.clear();
         datasetOpTrackers.clear();
         datasetInfos.clear();
     }
@@ -687,11 +681,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         synchronized (dsInfo) {
             // This is not needed for external datasets' indexes since they never use the virtual buffer cache.
             if (!dsInfo.memoryAllocated && !dsInfo.isExternal) {
-                List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(dsInfo.datasetID);
-                long additionalSize = 0;
-                for (IVirtualBufferCache vbc : vbcs) {
-                    additionalSize += vbc.getNumPages() * vbc.getPageSize();
-                }
+                long additionalSize = getVirtualBufferCaches(dsInfo.datasetID).getTotalSize();
                 while (used + additionalSize > capacity) {
                     if (!evictCandidateDataset()) {
                         throw new HyracksDataException("Cannot allocate dataset " + dsInfo.datasetID
@@ -712,10 +702,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
         synchronized (dsInfo) {
             if (dsInfo.isOpen && dsInfo.memoryAllocated) {
-                List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(dsInfo.datasetID);
-                for (IVirtualBufferCache vbc : vbcs) {
-                    used -= (vbc.getNumPages() * vbc.getPageSize());
-                }
+                used -= getVirtualBufferCaches(dsInfo.datasetID).getTotalSize();
                 dsInfo.memoryAllocated = false;
             }
         }
@@ -727,4 +714,49 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         int did = Integer.parseInt(resourcePath);
         allocateDatasetMemory(did);
     }
+
+    private class DatasetVirtualBufferCaches {
+        private final int datasetID;
+        private final Map<Integer, List<IVirtualBufferCache>> ioDeviceVirtualBufferCaches = new HashMap<>();
+
+        public DatasetVirtualBufferCaches(int datasetID) {
+            this.datasetID = datasetID;
+        }
+
+        private List<IVirtualBufferCache> initializeVirtualBufferCaches(int ioDeviceNum) {
+            assert ioDeviceVirtualBufferCaches.size() < numPartitions;
+            int numPages = datasetID < firstAvilableUserDatasetID
+                    ? storageProperties.getMetadataMemoryComponentNumPages()
+                    : storageProperties.getMemoryComponentNumPages();
+            List<IVirtualBufferCache> vbcs = new ArrayList<>();
+            for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
+                MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
+                        new VirtualBufferCache(new ResourceHeapBufferAllocator(DatasetLifecycleManager.this,
+                                Integer.toString(datasetID)), storageProperties.getMemoryComponentPageSize(),
+                                numPages / storageProperties.getMemoryComponentsNum() / numPartitions));
+                vbcs.add(vbc);
+            }
+            ioDeviceVirtualBufferCaches.put(ioDeviceNum, vbcs);
+            return vbcs;
+        }
+
+        public List<IVirtualBufferCache> getVirtualBufferCaches(int ioDeviceNum) {
+            synchronized (ioDeviceVirtualBufferCaches) {
+                List<IVirtualBufferCache> vbcs = ioDeviceVirtualBufferCaches.get(ioDeviceNum);
+                if (vbcs == null) {
+                    vbcs = initializeVirtualBufferCaches(ioDeviceNum);
+                }
+                return vbcs;
+            }
+        }
+
+        public long getTotalSize() {
+            int numPages = datasetID < firstAvilableUserDatasetID
+                    ? storageProperties.getMetadataMemoryComponentNumPages()
+                    : storageProperties.getMemoryComponentNumPages();
+
+            return storageProperties.getMemoryComponentPageSize() * numPages;
+        }
+    }
+
 }

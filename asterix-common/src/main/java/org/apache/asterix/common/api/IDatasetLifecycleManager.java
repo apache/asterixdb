@@ -81,9 +81,10 @@ public interface IDatasetLifecycleManager extends IIndexLifecycleManager {
      * creates (if necessary) and returns the dataset virtual buffer caches.
      *
      * @param datasetID
+     * @param ioDeviceNum
      * @return
      */
-    List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
+    List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID, int ioDeviceNum);
 
     /**
      * Flushes then closes all open datasets

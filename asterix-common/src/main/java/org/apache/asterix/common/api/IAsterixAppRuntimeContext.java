@@ -20,7 +20,6 @@ package org.apache.asterix.common.api;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -35,7 +34,6 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
@@ -74,8 +72,6 @@ public interface IAsterixAppRuntimeContext {
     public void deinitialize() throws HyracksDataException;
 
     public double getBloomFilterFalsePositiveRate();
-
-    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
     public Object getFeedManager();
 

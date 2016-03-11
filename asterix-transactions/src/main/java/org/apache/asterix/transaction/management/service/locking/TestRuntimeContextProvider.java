@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.transaction.management.service.locking;
 
-import static org.mockito.Mockito.mock;
-
-import java.util.List;
 import java.util.concurrent.Executors;
 
 import org.apache.asterix.common.api.AsterixThreadExecutor;
@@ -31,11 +28,12 @@ import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
+
+import static org.mockito.Mockito.mock;
 
 class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
 
@@ -94,11 +92,6 @@ class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
 
     @Override
     public IIOManager getIOManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
         throw new UnsupportedOperationException();
     }
 

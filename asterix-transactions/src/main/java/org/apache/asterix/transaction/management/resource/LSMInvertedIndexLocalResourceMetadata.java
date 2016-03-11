@@ -73,8 +73,9 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
 
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition) throws HyracksDataException {
-        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
+                                         int partition, int ioDeviceNum) throws HyracksDataException {
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getDatasetLifecycleManager()
+                .getVirtualBufferCaches(datasetID, ioDeviceNum);
         try {
             if (isPartitioned) {
                 return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches,

@@ -21,7 +21,6 @@ package org.apache.asterix.api.common;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,7 +76,6 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -175,7 +173,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
 
-        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
+        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);
@@ -189,7 +187,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         initializeResourceIdFactory();
 
         datasetLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
-                MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID, txnSubsystem.getLogManager());
+                MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID, txnSubsystem.getLogManager(),
+                ioManager.getIODevices().size());
 
         isShuttingdown = false;
 
@@ -358,11 +357,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public AsterixBuildProperties getBuildProperties() {
         return buildProperties;
-    }
-
-    @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
-        return datasetLifecycleManager.getVirtualBufferCaches(datasetID);
     }
 
     @Override

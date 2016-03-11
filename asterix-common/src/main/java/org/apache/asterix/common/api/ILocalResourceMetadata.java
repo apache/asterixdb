@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 public interface ILocalResourceMetadata extends Serializable {
 
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition) throws HyracksDataException;
+                                         int partition, int ioDeviceNum) throws HyracksDataException;
 
     public int getDatasetID();
 }

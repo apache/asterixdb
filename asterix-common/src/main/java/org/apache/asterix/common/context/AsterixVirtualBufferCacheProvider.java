@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 
@@ -35,9 +36,11 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
     }
 
     @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx) {
+    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx, IFileSplitProvider fileSplitProvider) {
+        final int partition = ctx.getTaskAttemptId().getTaskId().getPartition();
+        final int ioDeviceNum = fileSplitProvider.getFileSplits()[partition].getIODeviceId();
         return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
-                .getVirtualBufferCaches(datasetID);
+                .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, ioDeviceNum);
     }
 
 }

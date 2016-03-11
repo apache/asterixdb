@@ -419,7 +419,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      */
     public String getPartitionPath(int partition) {
         //currently each partition is replicated on the same IO device number on all NCs.
-        return mountPoints[clusterPartitions.get(partition).getIODeviceNum()];
+        return mountPoints[getIODeviceNum(partition)];
+    }
+
+    public int getIODeviceNum(int partition) {
+        return clusterPartitions.get(partition).getIODeviceNum();
     }
 
     public Set<Integer> getActivePartitions() {
