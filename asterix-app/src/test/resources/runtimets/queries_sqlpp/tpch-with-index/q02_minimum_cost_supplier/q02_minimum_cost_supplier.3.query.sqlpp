@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+declare function tmp1() {
+(
+    select element {'s_acctbal':pssrn.s_acctbal,'s_name':pssrn.s_name,'n_name':pssrn.n_name,'p_partkey':p.p_partkey,'ps_supplycost':pssrn.ps_supplycost,'p_mfgr':p.p_mfgr,'s_address':pssrn.s_address,'s_phone':pssrn.s_phone,'s_comment':pssrn.s_comment}
+    from  Part as p,
+          (
+        select element {'n_name':srn.n_name,'p_partkey':ps.ps_partkey,'ps_supplycost':ps.ps_supplycost,'s_name':srn.s_name,'s_acctbal':srn.s_acctbal,'s_address':srn.s_address,'s_phone':srn.s_phone,'s_comment':srn.s_comment}
+        from  Partsupp as ps,
+              (
+            select element {'s_suppkey':s.s_suppkey,'n_name':rn.n_name,'s_name':s.s_name,'s_acctbal':s.s_acctbal,'s_address':s.s_address,'s_phone':s.s_phone,'s_comment':s.s_comment}
+            from  Supplier as s,
+                  (
+                select element {'n_nationkey':n.n_nationkey,'n_name':n.n_name}
+                from  Region as r,
+                      Nation as n
+                where ((n.n_regionkey = r.r_regionkey) and (r.r_name = 'EUROPE'))
+            ) as rn
+            where (s.s_nationkey = rn.n_nationkey)
+        ) as srn
+        where (srn.s_suppkey = ps.ps_suppkey)
+    ) as pssrn
+    where ((p.p_partkey = pssrn.p_partkey) and tpch.like(p.p_type,'%BRASS'))
+)
+};
+declare function tmp2() {
+(
+    select element {'p_partkey':p_partkey,'ps_min_supplycost':tpch.min((
+            select element i.ps_supplycost
+            from  pssrn as i
+        ))}
+    from  Part as p,
+          (
+        select element {'n_name':srn.n_name,'p_partkey':ps.ps_partkey,'ps_supplycost':ps.ps_supplycost,'s_name':srn.s_name,'s_acctbal':srn.s_acctbal,'s_address':srn.s_address,'s_phone':srn.s_phone,'s_comment':srn.s_comment}
+        from  Partsupp as ps,
+              (
+            select element {'s_suppkey':s.s_suppkey,'n_name':rn.n_name,'s_name':s.s_name,'s_acctbal':s.s_acctbal,'s_address':s.s_address,'s_phone':s.s_phone,'s_comment':s.s_comment}
+            from  Supplier as s,
+                  (
+                select element {'n_nationkey':n.n_nationkey,'n_name':n.n_name}
+                from  Region as r,
+                      Nation as n
+                where ((n.n_regionkey = r.r_regionkey) and (r.r_name = 'EUROPE'))
+            ) as rn
+            where (s.s_nationkey = rn.n_nationkey)
+        ) as srn
+        where (srn.s_suppkey = ps.ps_suppkey)
+    ) as pssrn
+    where ((p.p_partkey = pssrn.p_partkey) and tpch.like(p.p_type,'%BRASS'))
+    /* +hash */
+    group by pssrn.p_partkey as p_partkey
+)
+};
+select element {'s_acctbal':t1.s_acctbal,'s_name':t1.s_name,'n_name':t1.n_name,'p_partkey':t1.p_partkey,'p_mfgr':t1.p_mfgr,'s_address':t1.s_address,'s_phone':t1.s_phone,'s_comment':t1.s_comment}
+from  tpch.tmp2() as t2,
+      tpch.tmp1() as t1
+where ((t1.p_partkey = t2.p_partkey) and (t1.ps_supplycost = t2.ps_min_supplycost))
+order by t1.s_acctbal desc,t1.n_name,t1.s_name,t1.p_partkey
+limit 100
+;

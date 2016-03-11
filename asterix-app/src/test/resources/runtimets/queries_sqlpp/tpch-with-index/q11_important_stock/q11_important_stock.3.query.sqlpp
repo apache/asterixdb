@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+with  sum as tpch.sum((
+      select element (ps.ps_supplycost * ps.ps_availqty)
+      from  Partsupp as ps,
+            (
+          select element {'s_suppkey':s.s_suppkey}
+          from  Supplier as s,
+                Nation as n
+          where (s.s_nationkey = n.n_nationkey)
+      ) as sn
+      where (ps.ps_suppkey = sn.s_suppkey)
+  ))
+select element {'partkey':t1.ps_partkey,'part_value':t1.part_value}
+from  (
+    select element {'ps_partkey':ps_partkey,'part_value':tpch.sum((
+            select element (i.ps_supplycost * i.ps_availqty)
+            from  ps as i
+        ))}
+    from  Partsupp as ps,
+          (
+        select element {'s_suppkey':s.s_suppkey}
+        from  Supplier as s,
+              Nation as n
+        where (s.s_nationkey = n.n_nationkey)
+    ) as sn
+    where (ps.ps_suppkey = sn.s_suppkey)
+    group by ps.ps_partkey as ps_partkey
+) as t1
+where (t1.part_value > (sum * 0.00001))
+order by t1.part_value desc
+;

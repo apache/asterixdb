@@ -1,0 +1,8 @@
+{ "l_orderkey": 1637, "revenue": 164224.9253d, "o_orderdate": "1995-02-08", "o_shippriority": 0i32 }
+{ "l_orderkey": 5191, "revenue": 49378.309400000006d, "o_orderdate": "1994-12-11", "o_shippriority": 0i32 }
+{ "l_orderkey": 742, "revenue": 43728.048d, "o_orderdate": "1994-12-23", "o_shippriority": 0i32 }
+{ "l_orderkey": 3492, "revenue": 43716.072400000005d, "o_orderdate": "1994-11-24", "o_shippriority": 0i32 }
+{ "l_orderkey": 2883, "revenue": 36666.9612d, "o_orderdate": "1995-01-23", "o_shippriority": 0i32 }
+{ "l_orderkey": 998, "revenue": 11785.548600000002d, "o_orderdate": "1994-11-26", "o_shippriority": 0i32 }
+{ "l_orderkey": 3430, "revenue": 4726.6775d, "o_orderdate": "1994-12-12", "o_shippriority": 0i32 }
+{ "l_orderkey": 4423, "revenue": 3055.9365d, "o_orderdate": "1995-02-17", "o_shippriority": 0i32 }

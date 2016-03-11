@@ -1,0 +1,57 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+select element {'t_partkey':l_partkey,'t_count':tpch.count(l),'t_avg_quantity':(0.2 * tpch.avg((
+          select element i.l_quantity
+          from  l as i
+      ))),'t_max_suppkey':tpch.max((
+        select element i.l_suppkey
+        from  l as i
+    )),'t_max_linenumber':tpch.max((
+        select element i.l_linenumber
+        from  l as i
+    )),'t_avg_extendedprice':tpch.avg((
+        select element i.l_extendedprice
+        from  l as i
+    )),'t_avg_discount':tpch.avg((
+        select element i.l_discount
+        from  l as i
+    )),'t_avg_tax':tpch.avg((
+        select element i.l_tax
+        from  l as i
+    )),'t_max_shipdate':tpch.max((
+        select element i.l_shipdate
+        from  l as i
+    )),'t_min_commitdate':tpch.min((
+        select element i.l_commitdate
+        from  l as i
+    )),'t_min_receiptdate':tpch.min((
+        select element i.l_receiptdate
+        from  l as i
+    )),'t_max_comment':tpch.max((
+        select element i.l_comment
+        from  l as i
+    ))}
+from  LineItem as l
+group by l.l_partkey as l_partkey
+order by l_partkey
+;

@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue786
+ * https://code.google.com/p/asterixdb/issues/detail?id=786
+ * Expected Res : SUCCESS
+ * Date         : 10th Oct. 2014
+ */
+
+use tpch;
+
+
+select element {'nation_key':nation.n_nationkey,'name':nation.n_name,'aggregates':(
+        select element {'order_date':orderdate,'sum_price':sum}
+        from  Orders as orders,
+              Customer as customer
+        where ((orders.o_custkey = customer.c_custkey) and (customer.c_nationkey = nation.n_nationkey))
+        group by orders.o_orderdate as orderdate
+        with  sum as tpch.sum((
+              select element o.o_totalprice
+              from  orders as o
+          ))
+        order by sum desc
+        limit 3
+    )}
+from  Nation as nation,
+      SelectedNation as sn
+where (nation.n_nationkey = sn.sn_nationkey)
+;
