@@ -32,7 +32,7 @@ create type twitter.Tweet as
   text : string
 }
 
-create external  table TwitterData(Tweet) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="asterix_nc1://data/twitter/smalltweets.txt"),("format"="adm"));
+create external  table TwitterData(Tweet) using localfs(("path"="asterix_nc1://data/twitter/smalltweets.txt"),("format"="adm"));
 
 write output to asterix_nc1:"/tmp/count-tweets.adm"
 select element {'word':tok,'count':twitter.count(token)}

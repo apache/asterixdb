@@ -31,6 +31,6 @@ declare dataset Users(UserType)
   primary key uid on group1;
 
 load dataset Users 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///asterix/asterix-app/data/users-visitors-small/users.json"),("format"="adm")) pre-sorted;
 

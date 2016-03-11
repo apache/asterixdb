@@ -26,6 +26,6 @@
 use dataverse OpenSocialNetworkData;
 
 load dataset TweetMessages
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/twitter/tw_messages.adm"),("format"="adm"));
 

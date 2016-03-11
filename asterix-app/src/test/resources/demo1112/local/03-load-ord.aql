@@ -33,5 +33,5 @@ declare dataset Orders(OrderType)
   primary key oid on group1;
 
 load dataset Orders 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///tmp/orderData.adm"),("format"="adm")) pre-sorted;

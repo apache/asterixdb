@@ -123,33 +123,33 @@ declare dataset PartSupp(PartSuppType)
   primary key ps_partkey, ps_suppkey on group1;  
 
 load dataset LineItems 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/lineitem.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/orders.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Customers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/region.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/part.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///opt/tpch/onegig/partsupp.tbl"),("delimiter"="|")) pre-sorted;

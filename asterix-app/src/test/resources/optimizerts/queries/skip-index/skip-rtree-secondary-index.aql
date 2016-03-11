@@ -44,7 +44,7 @@ create dataset MyData(MyRecord)
   primary key id on group1;
 
 load dataset MyData 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
 create index rtree_index_point on MyData(point) type rtree;

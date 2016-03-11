@@ -26,6 +26,6 @@
 use dataverse test;
 
 load dataset MyData 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/spatial/spatialDataNulls.json"),("format"="adm")) pre-sorted;
 

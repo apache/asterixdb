@@ -22,11 +22,11 @@ use dataverse test1;
 use dataverse test2;
 
 load dataset test1.Customers
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/nontagged/customerData.json"),
 ("format"="adm"));
 
 load dataset test2.Orders
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/nontagged/orderData.json"),("format"="adm"));
 

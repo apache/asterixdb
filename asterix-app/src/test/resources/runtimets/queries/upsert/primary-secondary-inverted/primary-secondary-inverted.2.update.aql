@@ -19,11 +19,11 @@
 use dataverse test;
 
 load dataset UpsertToDBLP
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 
 load dataset UpsertFromDBLP
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/dblp-small/more-dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 
 upsert into dataset UpsertToDBLP(

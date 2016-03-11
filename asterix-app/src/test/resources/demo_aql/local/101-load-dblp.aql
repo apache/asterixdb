@@ -32,5 +32,5 @@ declare dataset DBLP(DBLPType)
  primary key id on group1;
 
 load dataset DBLP 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///tmp/dblp-id.txt"),("format"="delimited-text"),("delimiter"=":"));

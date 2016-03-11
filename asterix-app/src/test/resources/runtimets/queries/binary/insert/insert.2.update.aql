@@ -19,11 +19,11 @@
 use dataverse test;
 
 load dataset UserOpen
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/adm-load/usermd5.adm"),("format"="adm")) ;
 
 load dataset UserCopyClose
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/adm-load/usermd5copy.adm"),("format"="adm")) ;
 
 

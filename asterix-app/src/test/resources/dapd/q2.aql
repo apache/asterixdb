@@ -58,7 +58,7 @@ declare dataset Event(EventType)
   primary key event_id on group1;
 
 load dataset Event 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///home/nicnic/Work/Asterix/adg/event.adm"),("format"="adm"));
 
 write output to asterix_nc1:"/tmp/dapd_q2.adm";

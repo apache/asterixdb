@@ -24,4 +24,4 @@
 
 use fuzzyjoin;
 
-load  table Users using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));
+load  table Users using localfs (("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));

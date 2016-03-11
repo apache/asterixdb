@@ -125,33 +125,33 @@ declare dataset PartSupp(PartSuppType)
 
 
 load dataset Customers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/supplier.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/nation.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/part.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset LineItems 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/delim_data/onegig/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

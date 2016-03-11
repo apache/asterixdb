@@ -25,5 +25,5 @@
 use dataverse fuzzyjoin;
 
 load dataset Users 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));

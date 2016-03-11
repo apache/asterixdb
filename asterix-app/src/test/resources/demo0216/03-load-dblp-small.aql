@@ -33,6 +33,6 @@ declare dataset DBLPSmall(DBLPType)
  primary key id on group1;
 
 load dataset DBLPSmall 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="rainbow-01:///home/hyracks/demo-data/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":") pre-sorted;
 

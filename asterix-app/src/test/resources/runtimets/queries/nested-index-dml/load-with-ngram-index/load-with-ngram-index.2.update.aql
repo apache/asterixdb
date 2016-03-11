@@ -20,6 +20,6 @@
 use dataverse TinySocial;
 
 load dataset TweetMessages
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/tinysocial/twm-nested.adm"),("format"="adm"));
 

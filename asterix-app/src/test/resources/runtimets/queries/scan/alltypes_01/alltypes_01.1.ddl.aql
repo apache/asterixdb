@@ -56,5 +56,5 @@ create type AllType as open {
 }
 
 create external dataset All(AllType)
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/nontagged/allData.adm"),("format"="adm"));

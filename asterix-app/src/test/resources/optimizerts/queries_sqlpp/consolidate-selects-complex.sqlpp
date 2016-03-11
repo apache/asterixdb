@@ -38,7 +38,7 @@ create  nodegroup group1 if not exists  on
 ;
 create  table DBLP(DBLPType) primary key id on group1;
 
-load  table DBLP using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+load  table DBLP using localfs (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 write output to asterix_nc1:"rttest/consolidate-complex-selects.aql"
 select element {'Paper':paper_tokens,'Query':query_tokens}

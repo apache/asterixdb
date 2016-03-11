@@ -38,5 +38,5 @@ create type testtype as open {
 }
 
 create external dataset testds(testtype)
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/temporal/temporalData.json"),("format"="adm"));

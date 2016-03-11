@@ -33,6 +33,6 @@ declare dataset DBLP(DBLPType)
 
 // load dataset DBLP from asterix_nc1:'/asterix/asterix-app/data/pub-small/dblp-small-id.txt'
 load dataset DBLP 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///fuzzyjoin/data/dblp/dblp-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 

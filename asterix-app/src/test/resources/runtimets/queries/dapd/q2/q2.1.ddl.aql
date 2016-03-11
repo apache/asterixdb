@@ -50,6 +50,6 @@ create type EventType as closed {
 }
 
 create external dataset Event(EventType)
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/events/tiny/event.adm"),("format"="adm"));
 

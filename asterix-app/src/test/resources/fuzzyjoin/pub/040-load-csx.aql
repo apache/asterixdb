@@ -33,6 +33,6 @@ declare dataset CSX(CSXType)
 
 // load dataset CSX from asterix_nc1:'/asterix/asterix-app/data/pub-small/csx-small-id.txt'
 load dataset  CSX
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///asterix/asterix-app/data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
 

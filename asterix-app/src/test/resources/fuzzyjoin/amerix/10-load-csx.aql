@@ -32,7 +32,7 @@ declare dataset CSX(CSXType)
   primary key id on group1;
 
 load dataset CSX 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/fuzzyjoin/pub/csx-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 

@@ -32,5 +32,5 @@ declare dataset MyData(MyRecord)
   primary key id on group1;
 
 load dataset MyData 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1:///tmp/data.json"),("format"="adm")) pre-sorted;

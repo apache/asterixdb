@@ -19,11 +19,11 @@
 use dataverse test;
 
 load dataset UpsertTo
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm"));
 
 load dataset UpsertFrom
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/spatial/moreSpatialData.json"),("format"="adm"));
 
 

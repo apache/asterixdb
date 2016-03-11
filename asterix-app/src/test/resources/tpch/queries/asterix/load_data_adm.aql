@@ -125,33 +125,33 @@ declare dataset PartSupp(PartSuppType)
 
 
 load dataset LineItems 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/lineitem.adm"),("format"="adm")) pre-sorted;
 
 load dataset Orders 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/orders.adm"),("format"="adm")) pre-sorted;
 
 load dataset Customers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/customer.adm"),("format"="adm")) pre-sorted;
 
 load dataset Suppliers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/supplier.adm"),("format"="adm")) pre-sorted;
 
 load dataset Nations 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/nation.adm"),("format"="adm")) pre-sorted;
 
 load dataset Regions 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/region.adm"),("format"="adm")) pre-sorted;
 
 load dataset Parts 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/part.adm"),("format"="adm")) pre-sorted;
 
 load dataset PartSupp 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/partsupp.adm"),("format"="adm")) pre-sorted;

@@ -19,10 +19,10 @@
 use dataverse fuzzyjoin;
 
 load dataset DBLP 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 load dataset TOKENSRANKEDADM 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/pub-small/tokensranked.adm"),("format"="adm"));
 

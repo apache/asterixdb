@@ -42,7 +42,7 @@ create  nodegroup group1 if not exists  on
 ;
 create  table Orders(OrderType) primary key o_orderkey on group1;
 
-load  table Orders using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Orders using localfs (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 create  index idx_Orders_Custkey  on Orders (o_custkey) type btree;
 

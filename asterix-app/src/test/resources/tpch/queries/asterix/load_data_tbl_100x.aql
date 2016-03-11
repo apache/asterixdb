@@ -125,27 +125,27 @@ declare dataset PartSupp(PartSuppType)
 
 
 load dataset Customers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-002:///mnt/data/sdb/space/onose/delim_data/hundredgigs/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-002:///mnt/data/sdb/space/onose/delim_data/hundredgigs/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-002:///mnt/data/sdb/space/onose/delim_data/hundredgigs/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-002:///mnt/data/sdb/space/onose/delim_data/hundredgigs/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-002:///mnt/data/sdb/space/onose/delim_data/hundredgigs/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///mnt/data/sdb/space/onose/splits/partsupp_part00,
   asterix-002:///mnt/data/sdb/space/onose/splits/partsupp_part01,
   asterix-003:///mnt/data/sdb/space/onose/splits/partsupp_part02,
@@ -159,7 +159,7 @@ using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 ("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///mnt/data/sdb/space/onose/splits/orders_part00,
   asterix-002:///mnt/data/sdb/space/onose/splits/orders_part01,
   asterix-003:///mnt/data/sdb/space/onose/splits/orders_part02,
@@ -173,7 +173,7 @@ using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 ("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset LineItems 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix-001:///mnt/data/sdb/space/onose/splits/lineitems_part00,
   asterix-002:///mnt/data/sdb/space/onose/splits/lineitems_part01,
   asterix-003:///mnt/data/sdb/space/onose/splits/lineitems_part02,

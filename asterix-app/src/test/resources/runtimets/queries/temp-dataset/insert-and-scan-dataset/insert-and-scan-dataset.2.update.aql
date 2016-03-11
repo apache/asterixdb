@@ -27,7 +27,7 @@
 use dataverse test;
 
 load dataset myData 
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using localfs
 (("path"="asterix_nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
 
 
