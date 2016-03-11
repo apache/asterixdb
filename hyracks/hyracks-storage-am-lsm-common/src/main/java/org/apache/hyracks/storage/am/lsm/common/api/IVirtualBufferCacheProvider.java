@@ -22,7 +22,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public interface IVirtualBufferCacheProvider extends Serializable {
-    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx, IFileSplitProvider fileSplitProvider);
 }
