@@ -33,6 +33,7 @@ public class SocketInputStream extends AInputStream {
     private ServerSocket server;
     private Socket socket;
     private InputStream connectionStream;
+    private AbstractFeedDataFlowController controller;
 
     public SocketInputStream(ServerSocket server) throws IOException {
         this.server = server;
@@ -73,6 +74,9 @@ public class SocketInputStream extends AInputStream {
         }
         int read = -1;
         try {
+            if (connectionStream.available() < 1) {
+                controller.flush();
+            }
             read = connectionStream.read(b, off, len);
         } catch (IOException e) {
             e.printStackTrace();
@@ -166,5 +170,6 @@ public class SocketInputStream extends AInputStream {
 
     @Override
     public void setController(AbstractFeedDataFlowController controller) {
+        this.controller = controller;
     }
 }
