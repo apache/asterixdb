@@ -245,9 +245,8 @@
         <connection>scm:git:https://github.com/apache/incubator-asterixdb</connection>
         <developerConnection>scm:git:ssh://asterix-gerrit.ics.uci.edu:29418/asterixdb</developerConnection>
         <url>https://github.com/apache/incubator-asterixdb</url>
-
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <profiles>
         <profile>
