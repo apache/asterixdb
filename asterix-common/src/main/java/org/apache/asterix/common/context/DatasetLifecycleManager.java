@@ -214,16 +214,18 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {
-        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory),
-        // that is not being used (refcount == 0) and has been least recently used. The sort order defined
-        // for DatasetInfo maintains this. See DatasetInfo.compareTo().
+        /**
+         * We will take a dataset that has no active transactions, it is open (a dataset consuming memory),
+         * that is not being used (refcount == 0) and has been least recently used, excluding metadata datasets.
+         * The sort order defined for DatasetInfo maintains this. See DatasetInfo.compareTo().
+         */
         List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
         Collections.sort(datasetInfosList);
         for (DatasetInfo dsInfo : datasetInfosList) {
             PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers
                     .get(dsInfo.datasetID);
             if (opTracker != null && opTracker.getNumActiveOperations() == 0 && dsInfo.referenceCount == 0
-                    && dsInfo.isOpen) {
+                    && dsInfo.isOpen && dsInfo.datasetID >= firstAvilableUserDatasetID) {
                 closeDataset(dsInfo);
                 return true;
             }
@@ -607,8 +609,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
             assert iInfo.referenceCount == 0;
         }
-        dsInfo.isOpen = false;
         removeDatasetFromCache(dsInfo.datasetID);
+        dsInfo.isOpen = false;
     }
 
     @Override
