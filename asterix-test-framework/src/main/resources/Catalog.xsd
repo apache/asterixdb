@@ -37,8 +37,6 @@
             <xs:element ref="test:test-group" maxOccurs="unbounded"/>
          </xs:sequence>
 
-         <xs:attribute name="CatalogDesignDate" type="xs:date" use="required"/>
-
          <xs:attribute name="ResultOffsetPath" type="test:SimplifiedRelativeFilePath" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -52,6 +50,15 @@
             <xs:annotation>
                <xs:documentation>
                   offset from root to Query expression files
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+
+         <xs:attribute name="QueryFileExtension" type="xs:string"
+                       use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  extension of query expression files
                </xs:documentation>
             </xs:annotation>
          </xs:attribute>
@@ -70,7 +77,7 @@
 
    <xs:simpleType name="SimplifiedRelativeFilePath">
       <xs:restriction base="xs:anyURI">
-         <xs:pattern value="([a-zA-Z0-9\-\.]+/)+"/>
+         <xs:pattern value="([a-zA-Z0-9\-_\.]+\/?)+"/>
       </xs:restriction>
    </xs:simpleType>
 
@@ -111,12 +118,23 @@
 
    <xs:complexType name="test-case">
       <xs:sequence>
-         <xs:element name="description" type="test:description"/>
+         <xs:element name="description" type="test:description" minOccurs="0" />
 
          <xs:element name="compilation-unit" minOccurs="1" maxOccurs="unbounded">
             <xs:complexType>
                <xs:sequence>
                   <xs:element name="description" type="test:description" minOccurs="0"/>
+                  <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Parameter to send to the HTTP API.
+                        </xs:documentation>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" />
+                        <xs:attribute name="value" type="xs:string" />
+                     </xs:complexType>
+                  </xs:element>
                   <xs:element name="output-dir" minOccurs="0">
                      <xs:annotation>
                         <xs:documentation>
@@ -131,33 +149,15 @@
                         </xs:simpleContent>
                      </xs:complexType>
                   </xs:element>
-                  <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
-                     <xs:annotation>
-                        <xs:documentation>
-                           Parameter to send to the HTTP API.
-                        </xs:documentation>
-                     </xs:annotation>
-                     <xs:complexType>
-                        <xs:attribute name="name" type="xs:string" />
-                        <xs:attribute name="value" type="xs:string" />
-                     </xs:complexType>
-                  </xs:element>
 
                   <!-- Zero or more expected errors for this query -->
 
-                  <xs:element name="expected-error" minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="expected-error" type="xs:string" minOccurs="0" maxOccurs="unbounded">
                      <xs:annotation>
                         <xs:documentation>
                            Zero or more expected errors for this query.
                         </xs:documentation>
                      </xs:annotation>
-
-                     <xs:complexType>
-                        <xs:simpleContent>
-                           <xs:extension base="test:ErrorCode">
-                           </xs:extension>
-                        </xs:simpleContent>
-                     </xs:complexType>
                   </xs:element>
 
                </xs:sequence>
@@ -179,7 +179,6 @@
       <!--    the QueryFileExtension                                         -->
 
       <xs:attribute name="FilePath" type="test:SimplifiedRelativeFilePath" use="required"/>
-      <xs:attribute name="date" type="xs:date" use="required"/>
       <xs:attribute name="category" type="test:category-enum"/>
    </xs:complexType>
 

@@ -289,11 +289,6 @@
             </compilation-unit>
         </test-case>
     </test-group>
-    <test-case FilePath="flwor">
-        <compilation-unit name="let33">
-            <output-dir compare="Text">let33</output-dir>
-        </compilation-unit>
-    </test-case>
     <test-group name="aggregate">
         <test-case FilePath="aggregate">
             <compilation-unit name="issue531_string_min_max">
@@ -2118,6 +2113,11 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="flwor">
+        <compilation-unit name="let33">
+          <output-dir compare="Text">let33</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
         <compilation-unit name="order-by-01">
           <output-dir compare="Text">order-by-01</output-dir>
         </compilation-unit>
@@ -2482,7 +2482,6 @@
                 <output-dir compare="Text">dblp-csx-3_5</output-dir>
             </compilation-unit>
         </test-case>
-        -->
         <test-case FilePath="fuzzyjoin">
             <compilation-unit name="dblp-csx-aqlplus_1">
                 <output-dir compare="Text">dblp-csx-aqlplus_1</output-dir>
@@ -3070,17 +3069,23 @@
         </test-case>
     </test-group>
     <test-group name="open-index-enforced">
-        <test-group FilePath="open-index-enforced/error-checking">
-            <test-case FilePath="open-index-enforced/error-checking"><!-- This test case doesn't throw an exception? commenting it out -->
-                <compilation-unit name="enforced-field-name-collision">
-                    <output-dir compare="Text">enforced-field-name-collision</output-dir>
-                    <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
+        <test-group name="open-index-enforced/error-checking">
+            <test-case FilePath="open-index-enforced/error-checking">
+                <compilation-unit name="index-on-closed-type">
+                    <output-dir compare="Text">index-on-closed-type</output-dir>
+                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Typed index on "[value]" field could be created only for open datatype</expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="enforced-field-type-collision">
-                    <output-dir compare="Text">enforced-field-type-collision</output-dir>
-                    <expected-error>SyntaxError: A field "[value]" is already defined with the type "STRING"</expected-error>
+                <compilation-unit name="index-type-collision">
+                    <output-dir compare="Text">index-type-collision</output-dir>
+                    <expected-error>org.apache.asterix.common.exceptions.AsterixException: Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[INT32]"</expected-error>
+                </compilation-unit>
+            </test-case>
+            <test-case FilePath="open-index-enforced/error-checking">
+                <compilation-unit name="index-type-promotion-collision">
+                    <output-dir compare="Text">index-type-promotion-collision</output-dir>
+                    <expected-error>org.apache.asterix.common.exceptions.AsterixException: Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[INT64]"</expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
@@ -3090,13 +3095,13 @@
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
-                <compilation-unit name="index-on-closed-type">
-                    <output-dir compare="Text">index-on-closed-type</output-dir>
-                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Typed index on "[value]" field could be created only for open datatype</expected-error>
+                <compilation-unit name="record-type-collision">
+                    <output-dir compare="Text">record-type-collision</output-dir>
+                    <expected-error>org.apache.asterix.common.exceptions.AsterixException: A field "[value]" is already defined with the type "STRING"</expected-error>
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="open-index-enforced/index-join">
+        <test-group name="open-index-enforced/index-join">
             <test-case FilePath="open-index-enforced/index-join">
                 <compilation-unit name="btree-secondary-equi-join">
                     <output-dir compare="Text">btree-secondary-equi-join</output-dir>
@@ -3138,7 +3143,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="open-index-enforced/index-leftouterjoin">
+        <test-group name="open-index-enforced/index-leftouterjoin">
             <test-case FilePath="open-index-enforced/index-leftouterjoin">
                 <compilation-unit name="probe-pidx-with-join-btree-sidx1">
                     <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3170,7 +3175,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="open-index-enforced/index-selection">
+        <test-group name="open-index-enforced/index-selection">
             <test-case FilePath="open-index-enforced/index-selection">
                 <compilation-unit name="btree-index-composite-key">
                     <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -3227,6 +3232,16 @@
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/index-selection">
+                <compilation-unit name="multi-index">
+                    <output-dir compare="Text">multi-index</output-dir>
+                </compilation-unit>
+            </test-case>
+            <test-case FilePath="open-index-enforced/index-selection">
+                <compilation-unit name="multi-index-composite-key">
+                    <output-dir compare="Text">multi-index-composite-key</output-dir>
+                </compilation-unit>
+            </test-case>
+            <test-case FilePath="open-index-enforced/index-selection">
                 <compilation-unit name="orders-index-custkey">
                     <output-dir compare="Text">orders-index-custkey</output-dir>
                 </compilation-unit>
@@ -3271,8 +3286,8 @@
         </test-group>
     </test-group>
     <test-group name="nested-open-index">
-        <test-group FilePath="nested-open-index/index-join">
-            <test-case FilePath="nested-open-index/index-join">
+        <test-group name="nested-open-index/index-join">
+            <test-case FilePath="index-join">
                 <compilation-unit name="btree-secondary-equi-join">
                     <output-dir compare="Text">btree-secondary-equi-join</output-dir>
                 </compilation-unit>
@@ -3313,7 +3328,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="nested-open-index/index-leftouterjoin">
+        <test-group name="nested-open-index/index-leftouterjoin">
             <test-case FilePath="nested-open-index/index-leftouterjoin">
                 <compilation-unit name="probe-pidx-with-join-btree-sidx1">
                     <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3345,7 +3360,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="nested-open-index/index-selection">
+        <test-group name="nested-open-index/index-selection">
             <test-case FilePath="nested-open-index/index-selection">
                 <compilation-unit name="btree-index-composite-key">
                     <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -3444,7 +3459,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group name="nested-open-index/highly-open-highly-nested">
+        <test-group name="highly-open-highly-nested">
             <test-case FilePath="nested-open-index/highly-open-highly-nested">
                 <compilation-unit name="bottom-closed-top-closed">
                     <output-dir compare="Text">bottom-closed-top-closed</output-dir>
@@ -3468,7 +3483,7 @@
         </test-group>
     </test-group>
     <test-group name="nested-index">
-        <test-group FilePath="nested-index/index-join">
+        <test-group name="nested-index/index-join">
             <test-case FilePath="nested-index/index-join">
                 <compilation-unit name="btree-primary-equi-join">
                     <output-dir compare="Text">btree-primary-equi-join</output-dir>
@@ -3515,7 +3530,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="nested-index/index-leftouterjoin">
+        <test-group name="nested-index/index-leftouterjoin">
             <test-case FilePath="nested-index/index-leftouterjoin">
                 <compilation-unit name="probe-pidx-with-join-btree-sidx1">
                     <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3547,7 +3562,7 @@
                 </compilation-unit>
             </test-case>
         </test-group>
-        <test-group FilePath="nested-index/index-selection">
+        <test-group name="nested-index/index-selection">
             <test-case FilePath="nested-index/index-selection">
                 <compilation-unit name="btree-index-composite-key">
                     <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -6338,7 +6353,7 @@
             </compilation-unit>
         </test-case>
     </test-group>
-    <test-group>
+    <test-group name="big-object">
         <test-case FilePath="big-object">
             <compilation-unit name="big_object_sort">
                 <output-dir compare="Text">big_object_sort</output-dir>

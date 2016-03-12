@@ -190,6 +190,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.collect.Lists;
+
 /*
  * Provides functionality for executing a batch of Query statements (queries included)
  * sequentially.
@@ -991,9 +993,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                 for (Index index : indexes) {
                     if (index.getKeyFieldNames().equals(indexFields)
                             && !index.getKeyFieldTypes().equals(indexFieldTypes) && index.isEnforcingKeyFileds()) {
-                        throw new AsterixException(
-                                "Cannot create index " + indexName + " , enforced index " + index.getIndexName()
-                                        + " on field \"" + StringUtils.join(indexFields, ',') + "\" already exist");
+                        throw new AsterixException("Cannot create index " + indexName + " , enforced index "
+                                + index.getIndexName() + " on field \"" + StringUtils.join(indexFields, ',')
+                                + "\" is already defined with type \"" + index.getKeyFieldTypes() + "\"");
                     }
                 }
             }
@@ -1006,7 +1008,8 @@ public class QueryTranslator extends AbstractLangTranslator {
 
             ARecordType enforcedType = null;
             if (stmtCreateIndex.isEnforced()) {
-                enforcedType = IntroduceSecondaryIndexInsertDeleteRule.createEnforcedType(aRecordType, index);
+                enforcedType = IntroduceSecondaryIndexInsertDeleteRule.createEnforcedType(aRecordType,
+                        Lists.newArrayList(index));
             }
 
             //#. prepare to create the index artifact in NC.
@@ -2467,11 +2470,15 @@ public class QueryTranslator extends AbstractLangTranslator {
                         "Cannot compact the extrenal dataset " + datasetName + " because it has no indexes");
             }
 
+            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
+                    dataverseName);
+            jobsToExecute.add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
+            ARecordType aRecordType = (ARecordType) dt.getDatatype();
+            ARecordType enforcedType = IntroduceSecondaryIndexInsertDeleteRule.createEnforcedType(aRecordType, indexes);
+
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 for (int j = 0; j < indexes.size(); j++) {
                     if (indexes.get(j).isSecondaryIndex()) {
-                        Dataverse dataverse = MetadataManager.INSTANCE
-                                .getDataverse(metadataProvider.getMetadataTxnContext(), dataverseName);
                         jobsToExecute
                                 .add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
                     }
@@ -2483,15 +2490,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                                 datasetName, indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(),
                                 indexes.get(j).getKeyFieldTypes(), indexes.get(j).isEnforcingKeyFileds(),
                                 indexes.get(j).getGramLength(), indexes.get(j).getIndexType());
-                        ARecordType aRecordType = (ARecordType) dt.getDatatype();
-                        ARecordType enforcedType = null;
-                        if (cics.isEnforced()) {
-                            enforcedType = IntroduceSecondaryIndexInsertDeleteRule.createEnforcedType(aRecordType,
-                                    indexes.get(j));
-                        }
                         jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, aRecordType,
                                 enforcedType, metadataProvider, ds));
-
                     }
 
                 }

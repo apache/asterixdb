@@ -47,7 +47,6 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
-import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.ExpectedError;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
@@ -766,8 +765,8 @@ public class TestExecutor {
                         unExpectedFailure = true;
                     } else {
                         // Get the expected exception
-                        ExpectedError expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
-                        if (e.toString().contains(expectedError.getValue())) {
+                        String expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
+                        if (e.toString().contains(expectedError)) {
                             System.err.println("...but that was expected.");
                         } else {
                             unExpectedFailure = true;
