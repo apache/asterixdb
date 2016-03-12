@@ -407,6 +407,11 @@
                 <output-dir compare="Text">query-ASTERIXDB-923</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="aggregate">
+            <compilation-unit name="group_only">
+                <output-dir compare="Text">group_only</output-dir>
+            </compilation-unit>
+        </test-case>
         <!--
         <test-case FilePath="aggregate">
           <compilation-unit name="droptype">
