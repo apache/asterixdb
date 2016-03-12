@@ -83,12 +83,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
         final AggregateState aggregateState = aggregator.createAggregateStates();
 
-        final ArrayTupleBuilder stateTupleBuilder;
-        if (keyFields.length < outRecordDescriptor.getFields().length) {
-            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
-        } else {
-            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
-        }
+        final ArrayTupleBuilder stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
         //TODO(jf) research on the optimized partition size
         final int numPartitions = getNumOfPartitions((int) (dataBytesSize / ctx.getInitialFrameSize()),
