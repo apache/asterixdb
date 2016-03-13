@@ -168,7 +168,6 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
         }
 
-        commitResponseMessage.getIntakePartition();
         SubscribableFeedRuntimeId sid = new SubscribableFeedRuntimeId(connectionId.getFeedId(), FeedRuntimeType.INTAKE,
                 partition);
         IngestionRuntime ingestionRuntime = (IngestionRuntime) feedManager.getFeedSubscriptionManager()

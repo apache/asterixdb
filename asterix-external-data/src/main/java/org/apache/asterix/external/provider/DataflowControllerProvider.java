@@ -78,22 +78,27 @@ public class DataflowControllerProvider {
                 IDataFlowController recordDataFlowController = null;
                 IRecordReaderFactory<?> recordReaderFactory = (IRecordReaderFactory<?>) dataSourceFactory;
                 IRecordReader<?> recordReader = recordReaderFactory.createRecordReader(ctx, partition);
-                recordReader.configure(configuration);
-                IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
-                IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
-                dataParser.configure(configuration, recordType);
-                if (indexingOp) {
-                    recordDataFlowController = new IndexingDataFlowController(dataParser, recordReader);
-                } else if (isFeed) {
-                    recordDataFlowController = new FeedRecordDataFlowController(feedLogManager, dataParser,
-                            recordReader);
-                } else {
-                    recordDataFlowController = new RecordDataFlowController(dataParser, recordReader);
+                try {
+                    recordReader.configure(configuration);
+                    IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
+                    IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
+                    dataParser.configure(configuration, recordType);
+                    if (indexingOp) {
+                        recordDataFlowController = new IndexingDataFlowController(dataParser, recordReader);
+                    } else if (isFeed) {
+                        recordDataFlowController = new FeedRecordDataFlowController(feedLogManager, dataParser,
+                                recordReader);
+                    } else {
+                        recordDataFlowController = new RecordDataFlowController(dataParser, recordReader);
+                    }
+                    recordDataFlowController.configure(configuration, ctx);
+                    recordDataFlowController
+                            .setTupleForwarder(DataflowUtils.getTupleForwarder(configuration, feedLogManager));
+                    return recordDataFlowController;
+                } catch (Exception e) {
+                    recordReader.close();
+                    throw e;
                 }
-                recordDataFlowController.configure(configuration, ctx);
-                recordDataFlowController
-                        .setTupleForwarder(DataflowUtils.getTupleForwarder(configuration, feedLogManager));
-                return recordDataFlowController;
             case STREAM:
                 IStreamFlowController streamDataFlowController = null;
                 if (isFeed) {

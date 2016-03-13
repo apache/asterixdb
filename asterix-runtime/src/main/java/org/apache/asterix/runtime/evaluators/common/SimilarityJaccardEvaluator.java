@@ -199,7 +199,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         }
     }
 
-    protected int probeHashMap(AbstractAsterixListIterator probeIter, int probeListSize, int buildListSize)
+    protected int probeHashMap(AbstractAsterixListIterator probeIter, int buildListSize, int probeListSize)
             throws HyracksDataException {
         // Probe phase: Probe items from second list, and compute intersection size.
         int intersectionSize = 0;

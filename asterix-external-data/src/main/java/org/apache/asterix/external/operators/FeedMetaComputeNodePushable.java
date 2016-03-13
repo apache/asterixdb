@@ -185,20 +185,18 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         boolean stalled = inputSideHandler.getMode().equals(Mode.STALL);
         boolean end = inputSideHandler.getMode().equals(Mode.END);
         try {
-            if (inputSideHandler != null) {
-                if (!(stalled || end)) {
-                    inputSideHandler.nextFrame(null); // signal end of data
-                    while (!inputSideHandler.isFinished()) {
-                        synchronized (coreOperator) {
-                            if (inputSideHandler.isFinished()) {
-                                break;
-                            }
-                            coreOperator.wait();
+            if (!(stalled || end)) {
+                inputSideHandler.nextFrame(null); // signal end of data
+                while (!inputSideHandler.isFinished()) {
+                    synchronized (coreOperator) {
+                        if (inputSideHandler.isFinished()) {
+                            break;
                         }
+                        coreOperator.wait();
                     }
-                } else {
-                    inputSideHandler.setFinished(true);
                 }
+            } else {
+                inputSideHandler.setFinished(true);
             }
             coreOperator.close();
             System.out.println("CLOSED " + coreOperator + " STALLED ?" + stalled + " ENDED " + end);
@@ -211,9 +209,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             } else {
                 System.out.println("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
             }
-            if (inputSideHandler != null) {
-                inputSideHandler.close();
-            }
+            inputSideHandler.close();
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ending Operator  " + this.feedRuntime.getRuntimeId());
             }

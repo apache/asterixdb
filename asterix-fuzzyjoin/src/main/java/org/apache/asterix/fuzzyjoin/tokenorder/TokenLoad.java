@@ -41,10 +41,9 @@ public class TokenLoad implements Serializable {
     }
 
     public void loadTokenRank(int factor) {
-        try {
-            BufferedReader fis = new BufferedReader(
-            // new FileReader(path.toString())
-                    new InputStreamReader(new FileInputStream(path), "UTF-8"));
+        try (BufferedReader fis = new BufferedReader(
+                // new FileReader(path.toString())
+                new InputStreamReader(new FileInputStream(path), "UTF-8"))) {
             String token = null;
             while ((token = fis.readLine()) != null) {
                 rank.add(token);

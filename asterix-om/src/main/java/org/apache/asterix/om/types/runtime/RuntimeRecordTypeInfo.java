@@ -131,7 +131,7 @@ public class RuntimeRecordTypeInfo {
         int fIndex;
         int probeFieldHash = fieldNameHashFunction.hash(bytes, start, length);
         int i = Arrays.binarySearch(hashCodeIndexPairs, ((long) probeFieldHash) << 32);
-        i = (i < 0) ? (i = -1 * (i + 1)) : i;
+        i = (i < 0) ? -1 * (i + 1) : i;
 
         while (i < hashCodeIndexPairs.length && (int) (hashCodeIndexPairs[i] >>> 32) == probeFieldHash) {
             fIndex = (int) hashCodeIndexPairs[i];

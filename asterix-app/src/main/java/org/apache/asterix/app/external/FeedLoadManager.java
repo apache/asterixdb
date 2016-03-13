@@ -222,7 +222,6 @@ public class FeedLoadManager implements IFeedLoadManager {
     public int getOutflowRate(FeedConnectionId connectionId, FeedRuntimeType runtimeType) {
         int rVal;
         String key = "" + connectionId + ":" + runtimeType;
-        feedMetrics.get(key);
         Pair<Integer, Integer> value = feedMetrics.get(key);
         if (value == null) {
             rVal = UNKNOWN;

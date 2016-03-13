@@ -70,7 +70,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     private final IFeedManager feedManager;
     private boolean bufferingEnabled;
     private IFrameWriter coreOperator;
-    private MonitoredBuffer mBuffer;
+    private final MonitoredBuffer mBuffer;
     private DataBucketPool pool;
     private FrameCollection frameCollection;
     private Mode mode;
@@ -186,7 +186,8 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
                 if (fpa.spillToDiskOnCongestion()) {
                     if (frame != null) {
                         spiller.processMessage(frame);
-                    } // TODO handle the else case
+                    } // TODO handle the else casec
+
                 } else {
                     discarder.processMessage(frame);
                 }
@@ -366,19 +367,17 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
 
     @Override
     public void close() {
-        if (mBuffer != null) {
-            boolean disableMonitoring = !this.mode.equals(Mode.STALL);
-            if (frameCollection != null) {
-                feedManager.getFeedMemoryManager().releaseMemoryComponent(frameCollection);
-            }
-            if (pool != null) {
-                feedManager.getFeedMemoryManager().releaseMemoryComponent(pool);
-            }
-            mBuffer.close(false, disableMonitoring);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Closed input side handler for " + this.runtimeId + " disabled monitoring "
-                        + disableMonitoring + " Mode for runtime " + this.mode);
-            }
+        boolean disableMonitoring = !this.mode.equals(Mode.STALL);
+        if (frameCollection != null) {
+            feedManager.getFeedMemoryManager().releaseMemoryComponent(frameCollection);
+        }
+        if (pool != null) {
+            feedManager.getFeedMemoryManager().releaseMemoryComponent(pool);
+        }
+        mBuffer.close(false, disableMonitoring);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Closed input side handler for " + this.runtimeId + " disabled monitoring "
+                    + disableMonitoring + " Mode for runtime " + this.mode);
         }
     }
 
@@ -424,9 +423,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Reset number of partitions to " + nPartitions + " for " + this.runtimeId);
         }
-        if (mBuffer != null) {
-            mBuffer.reset();
-        }
+        mBuffer.reset();
     }
 
     public FeedConnectionId getConnectionId() {

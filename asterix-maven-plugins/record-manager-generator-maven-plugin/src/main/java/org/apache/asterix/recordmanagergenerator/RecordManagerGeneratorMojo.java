@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;
@@ -86,17 +87,18 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         typeMap = new HashMap<String, RecordType>();
 
         for (int i = 0; i < inputFiles.length; ++i) {
-            try {
-                getLog().info("reading " + inputFiles[i].toString());
-                Reader read = new FileReader(inputFiles[i]);
+            getLog().info("reading " + inputFiles[i].toString());
+            try (Reader read = new FileReader(inputFiles[i])) {
                 RecordType type = RecordType.read(read);
                 // always add allocId to enable tracking of allocations
                 type.addField("alloc id", RecordType.Type.SHORT, null);
                 type.addToMap(typeMap);
             } catch (FileNotFoundException fnfe) {
-                throw new MojoExecutionException("cound not find type description file " + inputFiles[i], fnfe);
+                throw new MojoExecutionException("could not find type description file " + inputFiles[i], fnfe);
             } catch (JSONException jse) {
-                throw new MojoExecutionException("cound not parse type description file " + inputFiles[i], jse);
+                throw new MojoExecutionException("could not parse type description file " + inputFiles[i], jse);
+            } catch (IOException e) {
+                throw new MojoExecutionException("error closing type description file " + inputFiles[i], e);
             }
         }
     }

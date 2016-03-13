@@ -171,38 +171,38 @@ public class APIServlet extends HttpServlet {
             resourcePath = requestURI;
         }
 
-        InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
-        if (is == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
+        try (InputStream is = APIServlet.class.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            // Special handler for font files and .png resources
+            if (resourcePath.endsWith(".png")) {
+
+                BufferedImage img = ImageIO.read(is);
+                OutputStream outputStream = response.getOutputStream();
+                String formatName = "png";
+                response.setContentType("image/png");
+                ImageIO.write(img, formatName, outputStream);
+                outputStream.close();
+                return;
+            }
+
+            response.setCharacterEncoding("utf-8");
+            InputStreamReader isr = new InputStreamReader(is);
+            StringBuilder sb = new StringBuilder();
+            BufferedReader br = new BufferedReader(isr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+
+            PrintWriter out = response.getWriter();
+            out.println(sb.toString());
         }
-
-        // Special handler for font files and .png resources
-        if (resourcePath.endsWith(".png")) {
-
-            BufferedImage img = ImageIO.read(is);
-            OutputStream outputStream = response.getOutputStream();
-            String formatName = "png";
-            response.setContentType("image/png");
-            ImageIO.write(img, formatName, outputStream);
-            outputStream.close();
-            return;
-
-        }
-
-        response.setCharacterEncoding("utf-8");
-        InputStreamReader isr = new InputStreamReader(is);
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(isr);
-        String line = br.readLine();
-
-        while (line != null) {
-            sb.append(line);
-            line = br.readLine();
-        }
-
-        PrintWriter out = response.getWriter();
-        out.println(sb.toString());
     }
 
     private static boolean isSet(String requestParameter) {

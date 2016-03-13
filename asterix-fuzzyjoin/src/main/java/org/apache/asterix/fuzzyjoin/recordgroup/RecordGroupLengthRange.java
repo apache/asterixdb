@@ -33,8 +33,7 @@ public class RecordGroupLengthRange extends RecordGroup {
 
     public RecordGroupLengthRange(int noGroups, SimilarityFilters fuzzyFilters, String lengthstatsPath) {
         super(noGroups, fuzzyFilters);
-        try {
-            DataInputStream in = new DataInputStream(new FileInputStream(lengthstatsPath.toString()));
+        try (DataInputStream in = new DataInputStream(new FileInputStream(lengthstatsPath))) {
             min = in.readInt();
             max = in.readInt();
             groupSize = (int) Math.ceil((max - min + 1f) / noGroups);

@@ -141,7 +141,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         long resourceID = getResourceIDfromResourcePath(resourcePath);
 
         DatasetInfo dsInfo = datasetInfos.get(did);
-        IndexInfo iInfo = dsInfo.indexes.get(resourceID);
+        IndexInfo iInfo = dsInfo == null ? null : dsInfo.indexes.get(resourceID);
 
         if (dsInfo == null || iInfo == null) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " does not exist.");
