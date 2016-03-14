@@ -36,6 +36,11 @@
           </compilation-unit>
         </test-case> -->
         <test-case FilePath="feeds">
+            <compilation-unit name="feed-with-filtered-dataset">
+                <output-dir compare="Text">feed-with-filtered-dataset</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="feeds">
             <compilation-unit name="feed-push-socket">
                 <output-dir compare="Text">feed-push-socket</output-dir>
             </compilation-unit>

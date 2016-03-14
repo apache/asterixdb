@@ -398,9 +398,10 @@ class LangExpressionToPlanTranslator
                     break;
                 }
                 case SUBSCRIBE_FEED: {
-                    ILogicalOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                    InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
                             varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                    insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     break;
