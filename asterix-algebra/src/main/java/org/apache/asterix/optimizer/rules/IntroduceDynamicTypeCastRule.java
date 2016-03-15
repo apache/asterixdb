@@ -99,8 +99,9 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                 if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
                     InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
-                    if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE)
+                    if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE) {
                         return false;
+                    }
 
                     // Remember this is the operator we need to modify
                     op = insertDeleteOp;
@@ -108,8 +109,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     // Derive the required ARecordType based on the schema of the AqlDataSource
                     InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
                     AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
-                    IAType[] schemaTypes = dataSource.getSchemaTypes();
-                    requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
+                    requiredRecordType = (ARecordType) dataSource.getItemType();
 
                     // Derive the Variable which we will potentially wrap with cast/null functions
                     ILogicalExpression expr = insertDeleteOperator.getPayloadExpression().getValue();

@@ -19,7 +19,6 @@
 package org.apache.asterix.external.input.record.reader.twitter;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.asterix.external.api.IDataFlowController;
@@ -27,7 +26,6 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.asterix.external.util.TwitterUtil;
 
 import twitter4j.FilterQuery;
 import twitter4j.StallWarning;
@@ -42,6 +40,22 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
     private GenericRecord<Status> record;
     private boolean closed = false;
 
+    public TwitterPushRecordReader(TwitterStream twitterStream, FilterQuery query) {
+        record = new GenericRecord<Status>();
+        inputQ = new LinkedBlockingQueue<Status>();
+        this.twitterStream = twitterStream;//TwitterUtil.getTwitterStream(configuration);
+        this.twitterStream.addListener(new TweetListener(inputQ));
+        this.twitterStream.filter(query);
+    }
+
+    public TwitterPushRecordReader(TwitterStream twitterStream) {
+        record = new GenericRecord<Status>();
+        inputQ = new LinkedBlockingQueue<Status>();
+        this.twitterStream = twitterStream;//
+        this.twitterStream.addListener(new TweetListener(inputQ));
+        twitterStream.sample();
+    }
+
     @Override
     public void close() throws IOException {
         if (!closed) {
@@ -49,20 +63,6 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
             twitterStream.cleanUp();
             twitterStream = null;
             closed = true;
-        }
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        record = new GenericRecord<Status>();
-        inputQ = new LinkedBlockingQueue<Status>();
-        twitterStream = TwitterUtil.getTwitterStream(configuration);
-        twitterStream.addListener(new TweetListener(inputQ));
-        FilterQuery query = TwitterUtil.getFilterQuery(configuration);
-        if (query != null) {
-            twitterStream.filter(query);
-        } else {
-            twitterStream.sample();
         }
     }
 

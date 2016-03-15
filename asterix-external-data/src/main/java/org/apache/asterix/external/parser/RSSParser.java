@@ -20,17 +20,14 @@ package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.external.api.IDataParser;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.om.base.AMutableRecord;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 
@@ -43,14 +40,7 @@ public class RSSParser implements IRecordDataParser<SyndEntryImpl> {
     private RecordBuilder recordBuilder = new RecordBuilder();
     private int numFields;
 
-    @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType)
-            throws HyracksDataException, IOException {
+    public RSSParser(ARecordType recordType) {
         mutableFields = new AMutableString[] { new AMutableString(null), new AMutableString(null),
                 new AMutableString(null), new AMutableString(null) };
         mutableRecord = new AMutableRecord(recordType, mutableFields);
@@ -74,10 +64,4 @@ public class RSSParser implements IRecordDataParser<SyndEntryImpl> {
         IDataParser.writeRecord(mutableRecord, out, recordBuilder);
         id++;
     }
-
-    @Override
-    public Class<? extends SyndEntryImpl> getRecordClass() {
-        return SyndEntryImpl.class;
-    }
-
 }

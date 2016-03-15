@@ -22,16 +22,19 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
+import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
-import org.apache.asterix.external.input.record.reader.couchbase.CouchbaseReaderFactory;
+import org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory;
+import org.apache.asterix.external.input.record.reader.kv.KVReaderFactory;
+import org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.EmptyLineSeparatedRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.LineRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.factory.SocketInputStreamProviderFactory;
+import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamProviderFactory;
 import org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamProviderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -39,82 +42,108 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 public class DatasourceFactoryProvider {
 
     public static IExternalDataSourceFactory getExternalDataSourceFactory(Map<String, String> configuration)
-            throws Exception {
-        switch (ExternalDataUtils.getDataSourceType(configuration)) {
-            case RECORDS:
-                return DatasourceFactoryProvider.getRecordReaderFactory(configuration);
-            case STREAM:
-                return DatasourceFactoryProvider
-                        .getInputStreamFactory(configuration.get(ExternalDataConstants.KEY_STREAM), configuration);
+            throws AsterixException {
+        if (ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.RECORDS)) {
+            String reader = configuration.get(ExternalDataConstants.KEY_READER);
+            return DatasourceFactoryProvider.getRecordReaderFactory(reader, configuration);
+        } else {
+            // get stream source
+            String streamSource = configuration.get(ExternalDataConstants.KEY_STREAM_SOURCE);
+            return DatasourceFactoryProvider.getInputStreamFactory(streamSource, configuration);
         }
-        return null;
     }
 
-    public static IInputStreamProviderFactory getInputStreamFactory(String stream, Map<String, String> configuration)
-            throws Exception {
-        IInputStreamProviderFactory streamFactory;
-        if (ExternalDataUtils.isExternal(stream)) {
+    public static IInputStreamProviderFactory getInputStreamFactory(String streamSource,
+            Map<String, String> configuration) throws AsterixException {
+        IInputStreamProviderFactory streamSourceFactory;
+        if (ExternalDataUtils.isExternal(streamSource)) {
             String dataverse = ExternalDataUtils.getDataverse(configuration);
-            streamFactory = ExternalDataUtils.createExternalInputStreamFactory(dataverse, stream);
+            streamSourceFactory = ExternalDataUtils.createExternalInputStreamFactory(dataverse, streamSource);
         } else {
-            switch (stream) {
+            switch (streamSource) {
                 case ExternalDataConstants.STREAM_HDFS:
-                    streamFactory = new HDFSDataSourceFactory();
+                    streamSourceFactory = new HDFSDataSourceFactory();
                     break;
                 case ExternalDataConstants.STREAM_LOCAL_FILESYSTEM:
-                    streamFactory = new LocalFSInputStreamProviderFactory();
+                    streamSourceFactory = new LocalFSInputStreamProviderFactory();
                     break;
                 case ExternalDataConstants.STREAM_SOCKET:
-                    streamFactory = new SocketInputStreamProviderFactory();
+                case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
+                    streamSourceFactory = new SocketServerInputStreamProviderFactory();
+                    break;
+                case ExternalDataConstants.STREAM_SOCKET_CLIENT:
+                    streamSourceFactory = new SocketServerInputStreamProviderFactory();
                     break;
                 case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
-                    streamFactory = new TwitterFirehoseStreamProviderFactory();
+                    streamSourceFactory = new TwitterFirehoseStreamProviderFactory();
                     break;
                 default:
                     throw new AsterixException("unknown input stream factory");
             }
         }
-        return streamFactory;
+        return streamSourceFactory;
     }
 
-    public static IRecordReaderFactory<?> getRecordReaderFactory(Map<String, String> configuration) throws Exception {
-        String reader = configuration.get(ExternalDataConstants.KEY_READER);
-        IRecordReaderFactory<?> readerFactory;
-        if (ExternalDataUtils.isExternal(reader)) {
-            String dataverse = ExternalDataUtils.getDataverse(configuration);
-            readerFactory = ExternalDataUtils.createExternalRecordReaderFactory(dataverse, reader);
-        } else {
-            switch (reader) {
-                case ExternalDataConstants.READER_HDFS:
-                    readerFactory = new HDFSDataSourceFactory();
-                    break;
-                case ExternalDataConstants.READER_ADM:
-                case ExternalDataConstants.READER_SEMISTRUCTURED:
-                    readerFactory = new SemiStructuredRecordReaderFactory()
-                            .setInputStreamFactoryProvider(DatasourceFactoryProvider.getInputStreamFactory(
-                                    ExternalDataUtils.getRecordReaderStreamName(configuration), configuration));
-                    break;
-                case ExternalDataConstants.READER_DELIMITED:
-                    readerFactory = new LineRecordReaderFactory()
-                            .setInputStreamFactoryProvider(DatasourceFactoryProvider.getInputStreamFactory(
-                                    ExternalDataUtils.getRecordReaderStreamName(configuration), configuration));;
-                    break;
-                case ExternalDataConstants.READER_TWITTER_PULL:
-                case ExternalDataConstants.READER_TWITTER_PUSH:
-                    readerFactory = new TwitterRecordReaderFactory();
-                    break;
-                case ExternalDataConstants.READER_COUCHBASE:
-                    readerFactory = new CouchbaseReaderFactory();
-                    break;
-                case ExternalDataConstants.READER_LINE_SEPARATED:
-                    readerFactory = new EmptyLineSeparatedRecordReaderFactory()
-                            .setInputStreamFactoryProvider(DatasourceFactoryProvider.getInputStreamFactory(
-                                    ExternalDataUtils.getRecordReaderStreamName(configuration), configuration));
-                    break;
-                default:
-                    throw new AsterixException("unknown record reader factory: " + reader);
+    public static IRecordReaderFactory<?> getRecordReaderFactory(String reader, Map<String, String> configuration)
+            throws AsterixException {
+        if (reader.equals(ExternalDataConstants.EXTERNAL)) {
+            return ExternalDataUtils.createExternalRecordReaderFactory(configuration);
+        }
+        String parser = configuration.get(ExternalDataConstants.KEY_PARSER);
+        IInputStreamProviderFactory inputStreamFactory;
+        switch (parser) {
+            case ExternalDataConstants.FORMAT_ADM:
+            case ExternalDataConstants.FORMAT_JSON:
+            case ExternalDataConstants.FORMAT_SEMISTRUCTURED:
+                inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                return new SemiStructuredRecordReaderFactory().setInputStreamFactoryProvider(inputStreamFactory);
+            case ExternalDataConstants.FORMAT_LINE_SEPARATED:
+                inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                return new EmptyLineSeparatedRecordReaderFactory().setInputStreamFactoryProvider(inputStreamFactory);
+            case ExternalDataConstants.FORMAT_DELIMITED_TEXT:
+            case ExternalDataConstants.FORMAT_CSV:
+                inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                return new LineRecordReaderFactory().setInputStreamFactoryProvider(inputStreamFactory);
+            case ExternalDataConstants.FORMAT_RECORD_WITH_METADATA:
+                switch (reader) {
+                    case ExternalDataConstants.READER_KV:
+                        return new KVReaderFactory();
+                    case ExternalDataConstants.READER_KV_TEST:
+                        return new KVTestReaderFactory();
+                }
+        }
+        String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
+        if (format != null) {
+            switch (format) {
+                case ExternalDataConstants.FORMAT_ADM:
+                case ExternalDataConstants.FORMAT_JSON:
+                case ExternalDataConstants.FORMAT_SEMISTRUCTURED:
+                    inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                    return new SemiStructuredRecordReaderFactory().setInputStreamFactoryProvider(inputStreamFactory);
+                case ExternalDataConstants.FORMAT_LINE_SEPARATED:
+                    inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                    return new EmptyLineSeparatedRecordReaderFactory()
+                            .setInputStreamFactoryProvider(inputStreamFactory);
+                case ExternalDataConstants.FORMAT_DELIMITED_TEXT:
+                case ExternalDataConstants.FORMAT_CSV:
+                    inputStreamFactory = DatasourceFactoryProvider.getInputStreamFactory(reader, configuration);
+                    return new LineRecordReaderFactory().setInputStreamFactoryProvider(inputStreamFactory);
             }
         }
-        return readerFactory;
+        switch (reader) {
+            case ExternalDataConstants.READER_HDFS:
+                return new HDFSDataSourceFactory();
+            case ExternalDataConstants.READER_TWITTER_PULL:
+            case ExternalDataConstants.READER_TWITTER_PUSH:
+                return new TwitterRecordReaderFactory();
+            case ExternalDataConstants.READER_KV:
+                return new KVReaderFactory();
+            case ExternalDataConstants.READER_KV_TEST:
+                return new KVTestReaderFactory();
+            case ExternalDataConstants.TEST_RECORD_WITH_PK:
+                return new RecordWithPKTestReaderFactory();
+            default:
+                throw new AsterixException("unknown record reader factory: " + reader);
+        }
     }
 }

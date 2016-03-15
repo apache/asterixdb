@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.external.api.IAdapterRuntimeManager;
-import org.apache.asterix.external.api.IFeedAdapter;
+import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.feed.api.IIntakeProgressTracker;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.feed.management.FeedId;
@@ -38,7 +38,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private final FeedId feedId;                    // (dataverse-feed)
 
-    private final IFeedAdapter feedAdapter;         // The adapter
+    private final FeedAdapter feedAdapter;         // The adapter
 
     private final IIntakeProgressTracker tracker;   // Not used. needs to be fixed soon.
 
@@ -54,7 +54,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
     private State state;                            // One of {ACTIVE_INGESTION, NACTIVE_INGESTION, FINISHED_INGESTION,
                                                     // FAILED_INGESTION}
 
-    public AdapterRuntimeManager(FeedId feedId, IFeedAdapter feedAdapter, IIntakeProgressTracker tracker,
+    public AdapterRuntimeManager(FeedId feedId, FeedAdapter feedAdapter, IIntakeProgressTracker tracker,
             DistributeFeedFrameWriter writer, int partition) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -107,7 +107,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
     }
 
     @Override
-    public IFeedAdapter getFeedAdapter() {
+    public FeedAdapter getFeedAdapter() {
         return feedAdapter;
     }
 

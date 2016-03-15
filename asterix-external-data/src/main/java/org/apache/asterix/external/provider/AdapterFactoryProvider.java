@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.provider;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,82 +26,43 @@ import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;
-import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
-import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
 
+/**
+ * This class represents the entry point to all things adapters
+ */
 public class AdapterFactoryProvider {
 
-    public static final Map<String, Class<? extends IAdapterFactory>> adapterFactories = initializeAdapterFactoryMapping();
-
-    private static Map<String, Class<? extends IAdapterFactory>> initializeAdapterFactoryMapping() {
-        Map<String, Class<? extends IAdapterFactory>> adapterFactories = new HashMap<String, Class<? extends IAdapterFactory>>();
-        // Class names
-        adapterFactories.put(GenericAdapter.class.getName(), GenericAdapterFactory.class);
-        // Aliases
-        adapterFactories.put(ExternalDataConstants.ALIAS_GENERIC_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_HDFS_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_SOCKET_CLIENT_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_FILE_FEED_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_PULL_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_PUSH_ADAPTER, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_LOCALFS_PUSH_ADAPTER, GenericAdapterFactory.class);
-
-        // Compatability
-        adapterFactories.put(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ADAPTER_LOCALFS_CLASSNAME, GenericAdapterFactory.class);
-        adapterFactories.put(ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER, GenericAdapterFactory.class);
-        return adapterFactories;
-    }
-
-    public static IAdapterFactory getAdapterFactory(String adapterClassname, Map<String, String> configuration,
-            ARecordType itemType) throws Exception {
-        ExternalDataCompatibilityUtils.addCompatabilityParameters(adapterClassname, itemType, configuration);
-        if (!adapterFactories.containsKey(adapterClassname)) {
-            throw new AsterixException("Unknown adapter: " + adapterClassname);
-        }
-        IAdapterFactory adapterFactory = adapterFactories.get(adapterClassname).newInstance();
-        adapterFactory.configure(configuration, itemType);
+    // Internal Adapters
+    public static IAdapterFactory getAdapterFactory(String adapterName, Map<String, String> configuration,
+            ARecordType itemType, ARecordType metaType) throws AsterixException {
+        ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
+        ExternalDataUtils.validateParameters(configuration);
+        GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
+        adapterFactory.configure(configuration, itemType, metaType);
         return adapterFactory;
     }
 
-    public static IIndexingAdapterFactory getAdapterFactory(String adapterClassname, Map<String, String> configuration,
-            ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp)
-                    throws AsterixException, InstantiationException, IllegalAccessException {
-        ExternalDataCompatibilityUtils.addCompatabilityParameters(adapterClassname, itemType, configuration);
-        if (!adapterFactories.containsKey(adapterClassname)) {
-            throw new AsterixException("Unknown adapter");
-        }
-        try {
-            IIndexingAdapterFactory adapterFactory = (IIndexingAdapterFactory) adapterFactories.get(adapterClassname)
-                    .newInstance();
-            adapterFactory.setSnapshot(snapshot, indexingOp);
-            adapterFactory.configure(configuration, itemType);
-            return adapterFactory;
-        } catch (Exception e) {
-            throw new AsterixException("Failed to create indexing adapter factory.", e);
-        }
+    // Indexing Adapters
+    public static IIndexingAdapterFactory getIndexingAdapterFactory(String adapterName,
+            Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
+            ARecordType metaType) throws AsterixException {
+        ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
+        ExternalDataUtils.validateParameters(configuration);
+        GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
+        adapterFactory.setSnapshot(snapshot, indexingOp);
+        adapterFactory.configure(configuration, itemType, metaType);
+        return adapterFactory;
     }
 
-    @SuppressWarnings("unchecked")
-    public static void addNewAdapter(String dataverseName, String adapterClassName, String adapterAlias,
-            String adapterFactoryClassName, String libraryName) throws ClassNotFoundException {
-        ClassLoader classLoader = ExternalLibraryManager.getLibraryClassLoader(dataverseName, libraryName);
-        Class<? extends IAdapterFactory> adapterFactoryClass = (Class<? extends IAdapterFactory>) classLoader
-                .loadClass(adapterFactoryClassName);
-        adapterFactories.put(adapterClassName, adapterFactoryClass);
-        adapterFactories.put(adapterAlias, adapterFactoryClass);
-    }
-
-    public static LookupAdapterFactory<?> getAdapterFactory(Map<String, String> configuration, ARecordType recordType,
-            int[] ridFields, boolean retainInput, boolean retainNull, INullWriterFactory iNullWriterFactory)
-                    throws Exception {
+    // Lookup Adapters
+    public static LookupAdapterFactory<?> getLookupAdapterFactory(Map<String, String> configuration,
+            ARecordType recordType, int[] ridFields, boolean retainInput, boolean retainNull,
+            INullWriterFactory iNullWriterFactory) throws AsterixException {
         LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
                 retainNull, iNullWriterFactory);
         adapterFactory.configure(configuration);

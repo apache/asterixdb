@@ -726,6 +726,8 @@ public class AsterixBuiltinFunctions {
 
     public static final FunctionIdentifier META = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta",
             FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier META_KEY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta-key",
+            FunctionIdentifier.VARARGS);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         return registeredFunctions.get(fid);
@@ -1034,6 +1036,7 @@ public class AsterixBuiltinFunctions {
 
         // meta() function
         addFunction(META, OptionalOpenARecordTypeComputer.INSTANCE, true);
+        addPrivateFunction(META_KEY, AnyTypeComputer.INSTANCE, false);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 

@@ -95,29 +95,48 @@
                 </executions>
             </plugin>
             <plugin>
-    <artifactId>maven-resources-plugin</artifactId>
-    <executions>
-        <execution>
-            <id>copy-external-library</id>
-            <phase>generate-resources</phase>
-            <goals>
-                <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-                <outputDirectory>src/test/resources/externallib</outputDirectory>
-                <overwrite>true</overwrite>
-                <resources>
-                    <resource>
-                        <directory>../asterix-external-data/target</directory>
-                        <includes>
-                            <include>testlib-zip-binary-assembly.zip</include>
-                        </includes>
-                    </resource>
-                </resources>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-external-library</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>src/test/resources/externallib</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>../asterix-external-data/target</directory>
+                                    <includes>
+                                        <include>testlib-zip-binary-assembly.zip</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-beer-csv</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>data/csv</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>../asterix-external-data/src/test/resources</directory>
+                                    <includes>
+                                        <include>beer.csv</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <dependencies>

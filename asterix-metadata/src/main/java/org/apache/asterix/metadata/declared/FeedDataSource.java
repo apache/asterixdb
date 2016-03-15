@@ -18,57 +18,46 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import java.util.List;
+
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class FeedDataSource extends AqlDataSource {
 
-    private Feed feed;
+    private final Feed feed;
     private final FeedId sourceFeedId;
     private final IFeed.FeedType sourceFeedType;
     private final ConnectionLocation location;
     private final String targetDataset;
     private final String[] locations;
     private final int computeCardinality;
+    private final List<IAType> pkTypes;
+    private final List<ScalarFunctionCallExpression> keyAccessExpression;
 
-    public FeedDataSource(AqlSourceId id, String targetDataset, IAType itemType, IAType metaItemType,
-            AqlDataSourceType dataSourceType, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
+    public FeedDataSource(Feed feed, AqlSourceId id, String targetDataset, IAType itemType, IAType metaType,
+            List<IAType> pkTypes, List<List<String>> partitioningKeys,
+            List<ScalarFunctionCallExpression> keyAccessExpression, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
             ConnectionLocation location, String[] locations) throws AlgebricksException {
-        super(id, itemType, metaItemType, dataSourceType);
+        super(id, itemType, metaType, AqlDataSourceType.FEED);
+        this.feed = feed;
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
         this.sourceFeedType = sourceFeedType;
         this.location = location;
         this.locations = locations;
+        this.pkTypes = pkTypes;
+        this.keyAccessExpression = keyAccessExpression;
         this.computeCardinality = AsterixClusterProperties.INSTANCE.getParticipantNodes().size();
-        MetadataTransactionContext ctx = null;
-        try {
-            MetadataManager.INSTANCE.acquireReadLatch();
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            this.feed = MetadataManager.INSTANCE.getFeed(ctx, id.getDataverseName(), id.getDatasourceName());
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-            initFeedDataSource(itemType);
-        } catch (Exception e) {
-            if (ctx != null) {
-                try {
-                    MetadataManager.INSTANCE.abortTransaction(ctx);
-                } catch (Exception e2) {
-                    e2.addSuppressed(e);
-                    throw new IllegalStateException("Unable to abort " + e2.getMessage());
-                }
-            }
-
-        } finally {
-            MetadataManager.INSTANCE.releaseReadLatch();
-        }
+        initFeedDataSource();
     }
 
     public Feed getFeed() {
@@ -96,9 +85,19 @@ public class FeedDataSource extends AqlDataSource {
         return locations;
     }
 
-    private void initFeedDataSource(IAType itemType) {
-        schemaTypes = new IAType[1];
-        schemaTypes[0] = itemType;
+    private void initFeedDataSource() {
+        int i = 0;
+        // record + meta (if exists) + PKs (if exists)
+        schemaTypes = new IAType[(1 + (metaItemType != null ? 1 : 0) + (pkTypes != null ? pkTypes.size() : 0))];
+        schemaTypes[i++] = itemType;
+        if (metaItemType != null) {
+            schemaTypes[i++] = metaItemType;
+        }
+        if (pkTypes != null) {
+            for (IAType type : pkTypes) {
+                schemaTypes[i++] = type;
+            }
+        }
         INodeDomain domainForExternalData = new INodeDomain() {
             @Override
             public Integer cardinality() {
@@ -119,5 +118,38 @@ public class FeedDataSource extends AqlDataSource {
 
     public int getComputeCardinality() {
         return computeCardinality;
+    }
+
+    public List<IAType> getPkTypes() {
+        return pkTypes;
+    }
+
+    public List<ScalarFunctionCallExpression> getKeyAccessExpression() {
+        return keyAccessExpression;
+    }
+
+    @Override
+    public LogicalVariable getMetaVariable(List<LogicalVariable> dataScanVariables) {
+        return metaItemType == null ? null : dataScanVariables.get(1);
+    }
+
+    @Override
+    public LogicalVariable getDataRecordVariable(List<LogicalVariable> dataScanVariables) {
+        return dataScanVariables.get(0);
+    }
+
+    public boolean isChange() {
+        return pkTypes != null;
+    }
+
+    public List<LogicalVariable> getPkVars(List<LogicalVariable> allVars) {
+        if (pkTypes == null) {
+            return null;
+        }
+        if (metaItemType != null) {
+            return allVars.subList(2, allVars.size());
+        } else {
+            return allVars.subList(1, allVars.size());
+        }
     }
 }

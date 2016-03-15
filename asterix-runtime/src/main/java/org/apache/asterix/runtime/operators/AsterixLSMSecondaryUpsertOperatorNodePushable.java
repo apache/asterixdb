@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.operators;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -88,10 +87,6 @@ public class AsterixLSMSecondaryUpsertOperatorNodePushable extends LSMIndexInser
         return true;
     }
 
-    private boolean isNull(PermutingFrameTupleReference t1) {
-        return t1.getFieldData(0)[t1.getFieldStart(0)] == ATypeTag.SERIALIZED_NULL_TYPE_TAG;
-    }
-
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
@@ -102,8 +97,8 @@ public class AsterixLSMSecondaryUpsertOperatorNodePushable extends LSMIndexInser
                 // if both previous value and new value are null, then we skip
                 tuple.reset(accessor, i);
                 prevValueTuple.reset(accessor, i);
-                isNewNull = isNull(tuple);
-                isPrevValueNull = isNull(prevValueTuple);
+                isNewNull = AsterixLSMPrimaryUpsertOperatorNodePushable.isNull(tuple, 0);
+                isPrevValueNull = AsterixLSMPrimaryUpsertOperatorNodePushable.isNull(prevValueTuple, 0);
                 if (isNewNull && isPrevValueNull) {
                     continue;
                 }

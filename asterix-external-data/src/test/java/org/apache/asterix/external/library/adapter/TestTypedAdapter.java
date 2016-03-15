@@ -28,15 +28,16 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.api.IFeedAdapter;
+import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapter implements IFeedAdapter {
+public class TestTypedAdapter extends FeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -56,6 +57,7 @@ public class TestTypedAdapter implements IFeedAdapter {
 
     public TestTypedAdapter(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
             Map<String, String> configuration, int partition) throws IOException {
+        super(null);
         pos = new PipedOutputStream();
         pis = new PipedInputStream(pos);
         this.configuration = configuration;
@@ -64,7 +66,7 @@ public class TestTypedAdapter implements IFeedAdapter {
     }
 
     @Override
-    public void start(int partition, IFrameWriter writer) throws Exception {
+    public void start(int partition, IFrameWriter writer) throws HyracksDataException {
         generator = new DummyGenerator(configuration, pos);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(generator);
@@ -137,7 +139,7 @@ public class TestTypedAdapter implements IFeedAdapter {
     }
 
     @Override
-    public boolean stop() throws Exception {
+    public boolean stop() {
         generator.stop();
         return true;
     }

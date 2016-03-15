@@ -84,10 +84,6 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         return String.valueOf(value, 0, size);
     }
 
-    public void setValue(char[] value) {
-        this.value = value;
-    }
-
     public void endRecord() {
         if (value[size - 1] != ExternalDataConstants.LF) {
             appendChar(ExternalDataConstants.LF);
@@ -116,5 +112,11 @@ public class CharArrayRecord implements IRawRecord<char[]> {
     public void set(char[] value) {
         this.value = value;
         this.size = value.length;
+    }
+
+    public void set(StringBuilder builder) {
+        ensureCapacity(builder.length());
+        builder.getChars(0, builder.length(), value, 0);
+        this.size = builder.length();
     }
 }

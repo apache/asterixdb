@@ -31,14 +31,15 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class FileOffsetIndexer implements IExternalIndexer {
 
     private static final long serialVersionUID = 1L;
     public static final int NUM_OF_FIELDS = 2;
-    protected AMutableInt32 fileNumber = new AMutableInt32(0);
-    protected AMutableInt64 offset = new AMutableInt64(0);
+    protected final AMutableInt32 fileNumber = new AMutableInt32(0);
+    protected final AMutableInt64 offset = new AMutableInt64(0);
     protected RecordReader<?, Writable> recordReader;
 
     @SuppressWarnings("unchecked")
@@ -49,21 +50,29 @@ public class FileOffsetIndexer implements IExternalIndexer {
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     @Override
-    public void reset(IRecordReader<?> reader) throws IOException {
-        //TODO: Make it more generic since we can't assume it is always going to be HDFS records.
-        @SuppressWarnings("unchecked")
-        HDFSRecordReader<?, Writable> hdfsReader = (HDFSRecordReader<?, Writable>) reader;
-        fileNumber.setValue(hdfsReader.getSnapshot().get(hdfsReader.getCurrentSplitIndex()).getFileNumber());
-        recordReader = hdfsReader.getReader();
-        offset.setValue(recordReader.getPos());
+    public void reset(IRecordReader<?> reader) throws HyracksDataException {
+        try {
+            //TODO: Make it more generic since we can't assume it is always going to be HDFS records.
+            @SuppressWarnings("unchecked")
+            HDFSRecordReader<?, Writable> hdfsReader = (HDFSRecordReader<?, Writable>) reader;
+            fileNumber.setValue(hdfsReader.getSnapshot().get(hdfsReader.getCurrentSplitIndex()).getFileNumber());
+            recordReader = hdfsReader.getReader();
+            offset.setValue(recordReader.getPos());
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
-    public void index(ArrayTupleBuilder tb) throws IOException {
-        tb.addField(intSerde, fileNumber);
-        tb.addField(longSerde, offset);
-        // Get position for next index(tb) call
-        offset.setValue(recordReader.getPos());
+    public void index(ArrayTupleBuilder tb) throws HyracksDataException {
+        try {
+            tb.addField(intSerde, fileNumber);
+            tb.addField(longSerde, offset);
+            // Get position for next index(tb) call
+            offset.setValue(recordReader.getPos());
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

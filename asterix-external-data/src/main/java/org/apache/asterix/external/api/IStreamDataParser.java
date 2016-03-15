@@ -25,6 +25,8 @@ import java.io.InputStream;
 public interface IStreamDataParser extends IDataParser {
     /**
      * Sets the inputStream for the parser. called only for parsers that support InputStreams
+     *
+     * @throws IOException
      */
     public void setInputStream(InputStream in) throws IOException;
 
@@ -34,6 +36,7 @@ public interface IStreamDataParser extends IDataParser {
      *
      * @param out
      *            DataOutput instance that for writing the parser output.
+     * @throws IOException
      */
     public boolean parse(DataOutput out) throws IOException;
 

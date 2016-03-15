@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.asterix.external.indexing.ExternalFile;
 
 public interface IIndexibleExternalDataSource extends IExternalDataSourceFactory {
-    public void setSnapshot(List<ExternalFile> files, boolean indexingOp) throws Exception;
+    public void setSnapshot(List<ExternalFile> files, boolean indexingOp);
 
     /**
      * Specify whether the external data source is configured for indexing

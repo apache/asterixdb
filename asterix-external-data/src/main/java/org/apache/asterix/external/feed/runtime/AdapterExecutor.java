@@ -20,7 +20,7 @@ package org.apache.asterix.external.feed.runtime;
 
 import org.apache.asterix.external.api.IAdapterRuntimeManager;
 import org.apache.asterix.external.api.IAdapterRuntimeManager.State;
-import org.apache.asterix.external.api.IFeedAdapter;
+import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.log4j.Logger;
@@ -34,10 +34,10 @@ public class AdapterExecutor implements Runnable {
 
     private final DistributeFeedFrameWriter writer;     // A writer that sends frames to multiple receivers (that can
                                                         // increase or decrease at any time)
-    private final IFeedAdapter adapter;                 // The adapter
+    private final FeedAdapter adapter;                 // The adapter
     private final IAdapterRuntimeManager adapterManager;// The runtime manager <-- two way visibility -->
 
-    public AdapterExecutor(int partition, DistributeFeedFrameWriter writer, IFeedAdapter adapter,
+    public AdapterExecutor(int partition, DistributeFeedFrameWriter writer, FeedAdapter adapter,
             IAdapterRuntimeManager adapterManager) {
         this.writer = writer;
         this.adapter = adapter;

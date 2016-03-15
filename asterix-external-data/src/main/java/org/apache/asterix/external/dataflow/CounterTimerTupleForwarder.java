@@ -52,20 +52,27 @@ public class CounterTimerTupleForwarder implements ITupleForwarder {
     private Object lock = new Object();
     private boolean activeTimer = false;
 
-    @Override
-    public void configure(Map<String, String> configuration) {
+    private CounterTimerTupleForwarder(int batchSize, long batchInterval) {
+        this.batchSize = batchSize;
+        this.batchInterval = batchInterval;
+        if (batchInterval > 0L) {
+            activeTimer = true;
+        }
+    }
+
+    // Factory method
+    public static CounterTimerTupleForwarder create(Map<String, String> configuration) {
+        int batchSize = -1;
+        long batchInterval = 0L;
         String propValue = configuration.get(BATCH_SIZE);
         if (propValue != null) {
             batchSize = Integer.parseInt(propValue);
-        } else {
-            batchSize = -1;
         }
-
         propValue = configuration.get(BATCH_INTERVAL);
         if (propValue != null) {
             batchInterval = Long.parseLong(propValue);
-            activeTimer = true;
         }
+        return new CounterTimerTupleForwarder(batchSize, batchInterval);
     }
 
     @Override
@@ -152,6 +159,5 @@ public class CounterTimerTupleForwarder implements ITupleForwarder {
                 e.printStackTrace();
             }
         }
-
     }
 }

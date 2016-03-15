@@ -20,11 +20,12 @@ package org.apache.asterix.external.parser.factory;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
-import org.apache.asterix.external.parser.HiveRecordParser;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
+import org.apache.asterix.external.parser.HiveRecordParser;
+import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hadoop.io.Writable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -35,6 +36,7 @@ public class HiveDataParserFactory implements IRecordDataParserFactory<Writable>
     private static final long serialVersionUID = 1L;
     private Map<String, String> configuration;
     private ARecordType recordType;
+    private String hiveSerdeClassName;
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -44,6 +46,10 @@ public class HiveDataParserFactory implements IRecordDataParserFactory<Writable>
     @Override
     public void configure(Map<String, String> configuration) {
         this.configuration = configuration;
+        hiveSerdeClassName = configuration.get(ExternalDataConstants.KEY_HIVE_SERDE);
+        if (hiveSerdeClassName == null) {
+            throw new IllegalArgumentException("no hive serde provided for hive deserialized records");
+        }
     }
 
     @Override
@@ -52,16 +58,17 @@ public class HiveDataParserFactory implements IRecordDataParserFactory<Writable>
     }
 
     @Override
-    public IRecordDataParser<Writable> createRecordParser(IHyracksTaskContext ctx)
-            throws HyracksDataException, AsterixException {
-        HiveRecordParser hiveParser = new HiveRecordParser();
-        hiveParser.configure(configuration, recordType);
-        return hiveParser;
+    public IRecordDataParser<Writable> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
+        return new HiveRecordParser(recordType, HDFSUtils.configureHDFSJobConf(configuration), hiveSerdeClassName);
     }
 
     @Override
     public Class<? extends Writable> getRecordClass() {
         return Writable.class;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
     }
 
 }

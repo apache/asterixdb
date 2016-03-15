@@ -22,12 +22,11 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -67,7 +66,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -78,29 +78,32 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
          * pattern match: sink/insert/assign record type is propagated from
          * insert data source to the record-constructor expression
          */
-        if (context.checkIfInDontApplySet(this, opRef.getValue()))
+        if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
+        }
         context.addToDontApplySet(this, opRef.getValue());
 
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         List<LogicalVariable> producedVariables = new ArrayList<LogicalVariable>();
         LogicalVariable oldRecordVariable;
 
-        if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
+        if (op1.getOperatorTag() != LogicalOperatorTag.SINK) {
             return false;
+        }
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE_UPSERT)
+        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE_UPSERT) {
             return false;
+        }
         InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
-        if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE)
+        if (insertDeleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE) {
             return false;
+        }
         /**
          * get required record type
          */
         InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
         AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
-        IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
-        IAType requiredRecordType = schemaTypes[schemaTypes.length - 1];
+        IAType requiredRecordType = dataSource.getItemType();
 
         List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
         insertDeleteOperator.getPayloadExpression().getValue().getUsedVariables(usedVariables);
@@ -108,8 +111,9 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
         // the used variable should contain the record that will be inserted
         // but it will not fail in many cases even if the used variable set is
         // empty
-        if (usedVariables.size() == 0)
+        if (usedVariables.size() == 0) {
             return false;
+        }
 
         oldRecordVariable = usedVariables.get(0);
         LogicalVariable inputRecordVar = usedVariables.get(0);
@@ -150,10 +154,11 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
                     context.computeAndSetTypeEnvironmentForOperator(originalAssign);
                 }
             }
-            if (currentOperator.getInputs().size() > 0)
+            if (currentOperator.getInputs().size() > 0) {
                 currentOperator = (AbstractLogicalOperator) currentOperator.getInputs().get(0).getValue();
-            else
+            } else {
                 break;
+            }
         } while (currentOperator != null);
         return true;
     }

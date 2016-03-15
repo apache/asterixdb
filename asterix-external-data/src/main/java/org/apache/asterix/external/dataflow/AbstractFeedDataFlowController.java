@@ -18,50 +18,28 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.util.Map;
-
-
 import javax.annotation.Nonnull;
 
 import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public abstract class AbstractFeedDataFlowController implements IDataFlowController {
-    protected FeedTupleForwarder tupleForwarder;
-    protected IHyracksTaskContext ctx;
-    protected Map<String, String> configuration;
-    protected static final int NUMBER_OF_TUPLE_FIELDS = 1;
-    protected ArrayTupleBuilder tb = new ArrayTupleBuilder(NUMBER_OF_TUPLE_FIELDS);
-    protected FeedLogManager feedLogManager;
+    protected final FeedTupleForwarder tupleForwarder;
+    protected final IHyracksTaskContext ctx;
+    protected final int numOfFields;
+    protected final ArrayTupleBuilder tb;
+    protected final FeedLogManager feedLogManager;
 
-    public AbstractFeedDataFlowController(@Nonnull FeedLogManager feedLogManager) {
+    public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
+            @Nonnull FeedLogManager feedLogManager, int numOfFields) {
         this.feedLogManager = feedLogManager;
-    }
-
-    @Override
-    public ITupleForwarder getTupleForwarder() {
-        return tupleForwarder;
-    }
-
-    @Override
-    public void setTupleForwarder(ITupleForwarder tupleForwarder) {
-        this.tupleForwarder = (FeedTupleForwarder) tupleForwarder;
-    }
-
-    protected void initializeTupleForwarder(IFrameWriter writer) throws HyracksDataException {
-        tupleForwarder.configure(configuration);
-        tupleForwarder.initialize(ctx, writer);
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) {
-        this.configuration = configuration;
+        this.numOfFields = numOfFields;
         this.ctx = ctx;
+        this.tupleForwarder = tupleForwarder;
+        this.tb = new ArrayTupleBuilder(numOfFields);
     }
 
     @Override
@@ -76,7 +54,13 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
         return true;
     }
 
+    @Override
     public void flush() throws HyracksDataException {
         tupleForwarder.flush();
     }
+
+    @Override
+    public abstract boolean stop() throws HyracksDataException;
+
+    public abstract boolean handleException(Throwable th);
 }

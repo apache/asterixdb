@@ -29,7 +29,8 @@ import org.apache.asterix.external.util.HDFSUtils;
 public class LookupReaderFactoryProvider {
 
     @SuppressWarnings("rawtypes")
-    public static ILookupReaderFactory getLookupReaderFactory(Map<String, String> configuration) throws Exception {
+    public static ILookupReaderFactory getLookupReaderFactory(Map<String, String> configuration)
+            throws AsterixException {
         String inputFormat = HDFSUtils.getInputFormatClassName(configuration);
         if (inputFormat.equals(ExternalDataConstants.CLASS_NAME_TEXT_INPUT_FORMAT)
                 || inputFormat.equals(ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT)

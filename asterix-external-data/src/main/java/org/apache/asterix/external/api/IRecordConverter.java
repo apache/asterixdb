@@ -18,33 +18,9 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.io.IOException;
 
-public interface IFeedAdapter extends IDataSourceAdapter {
-    /**
-     * Pause the ingestion of data.
-     * @throws HyracksDataException
-     * @throws Exception
-     */
-    public boolean pause() throws HyracksDataException;
+public interface IRecordConverter<I, O> {
 
-    /**
-     * Resume the ingestion of data.
-     * @throws HyracksDataException
-     * @throws Exception
-     */
-    public boolean resume() throws HyracksDataException;
-
-    /**
-     * Discontinue the ingestion of data.
-     * @throws Exception
-     */
-    public boolean stop() throws Exception;
-
-    /**
-     * @param e
-     * @return true if the ingestion should continue post the exception else false
-     * @throws Exception
-     */
-    public boolean handleException(Throwable e);
+    public O convert(IRawRecord<? extends I> input) throws IOException;
 }

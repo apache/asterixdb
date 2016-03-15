@@ -142,7 +142,7 @@ public class ExternalIndexingOperations {
 
     public static IBinaryComparatorFactory[] getComparatorFactories(Dataset dataset) {
         ExternalDatasetDetails dsd = ((ExternalDatasetDetails) dataset.getDatasetDetails());
-        return IndexingConstants.getComparatorFactories((dsd.getProperties().get(IndexingConstants.KEY_INPUT_FORMAT)));
+        return IndexingConstants.getComparatorFactories(dsd.getProperties().get(IndexingConstants.KEY_INPUT_FORMAT));
     }
 
     public static IBinaryComparatorFactory[] getBuddyBtreeComparatorFactories() {
@@ -266,8 +266,8 @@ public class ExternalIndexingOperations {
             RecordDescriptor indexerDesc, AqlMetadataProvider metadataProvider) throws Exception {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         Map<String, String> configuration = externalDatasetDetails.getProperties();
-        IAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(externalDatasetDetails.getAdapter(),
-                configuration, (ARecordType) itemType, files, true);
+        IAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
+                externalDatasetDetails.getAdapter(), configuration, (ARecordType) itemType, files, true, null);
         return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
                 new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());

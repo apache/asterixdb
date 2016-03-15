@@ -18,37 +18,17 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.util.Map;
-
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractDataFlowController implements IDataFlowController {
 
-    protected ITupleForwarder tupleForwarder;
-    protected IHyracksTaskContext ctx;
-    protected Map<String, String> configuration;
+    protected final ITupleForwarder tupleForwarder;
+    protected final IHyracksTaskContext ctx;
 
-    @Override
-    public ITupleForwarder getTupleForwarder() {
-        return tupleForwarder;
-    }
-
-    @Override
-    public void setTupleForwarder(ITupleForwarder tupleForwarder) {
-        this.tupleForwarder = tupleForwarder;
-    }
-
-    protected void initializeTupleForwarder(IFrameWriter writer) throws HyracksDataException {
-        tupleForwarder.initialize(ctx, writer);
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) {
-        this.configuration = configuration;
+    public AbstractDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder) {
         this.ctx = ctx;
+        this.tupleForwarder = tupleForwarder;
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.rss;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,14 +29,14 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 
 public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImpl> {
 
     private static final long serialVersionUID = 1L;
-    private Map<String, String> configuration;
-    private List<String> urls = new ArrayList<String>();
+    private final List<String> urls = new ArrayList<String>();
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
@@ -44,15 +45,14 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         int count = urls.size();
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, count);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        this.configuration = configuration;
+    public void configure(Map<String, String> configuration) {
         String url = configuration.get(ExternalDataConstants.KEY_RSS_URL);
         if (url == null) {
             throw new IllegalArgumentException("no RSS URL provided");
@@ -75,10 +75,12 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
 
     @Override
     public IRecordReader<? extends SyndEntryImpl> createRecordReader(IHyracksTaskContext ctx, int partition)
-            throws Exception {
-        RSSRecordReader reader = new RSSRecordReader(urls.get(partition));
-        reader.configure(configuration);
-        return reader;
+            throws HyracksDataException {
+        try {
+            return new RSSRecordReader(urls.get(partition));
+        } catch (MalformedURLException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

@@ -33,7 +33,9 @@ import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import twitter4j.FilterQuery;
 import twitter4j.Status;
 
 public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> {
@@ -54,13 +56,13 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, INTAKE_CARDINALITY);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         TwitterUtil.initializeConfigurationWithAuthInfo(configuration);
         if (!validateConfiguration(configuration)) {
@@ -70,7 +72,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
             builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
             builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
             builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
-            throw new Exception(builder.toString());
+            throw new AsterixException(builder.toString());
         }
         if (ExternalDataUtils.isPull(configuration)) {
             pull = true;
@@ -107,15 +109,22 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
     }
 
     @Override
-    public IRecordReader<? extends Status> createRecordReader(IHyracksTaskContext ctx, int partition) throws Exception {
-        IRecordReader<Status> reader;
+    public IRecordReader<? extends Status> createRecordReader(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         if (pull) {
-            reader = new TwitterPullRecordReader();
+            return new TwitterPullRecordReader(TwitterUtil.getTwitterService(configuration),
+                    configuration.get(SearchAPIConstants.QUERY),
+                    Integer.parseInt(configuration.get(SearchAPIConstants.INTERVAL)));
         } else {
-            reader = new TwitterPushRecordReader();
+            FilterQuery query;
+            try {
+                query = TwitterUtil.getFilterQuery(configuration);
+                return (query == null) ? new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration))
+                        : new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration), query);
+            } catch (AsterixException e) {
+                throw new HyracksDataException(e);
+            }
         }
-        reader.configure(configuration);
-        return reader;
     }
 
     @Override
@@ -128,7 +137,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
         String consumerSecret = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_SECRET);
         String accessToken = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN);
         String tokenSecret = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET);
-        if (consumerKey == null || consumerSecret == null || accessToken == null || tokenSecret == null) {
+        if ((consumerKey == null) || (consumerSecret == null) || (accessToken == null) || (tokenSecret == null)) {
             return false;
         }
         return true;

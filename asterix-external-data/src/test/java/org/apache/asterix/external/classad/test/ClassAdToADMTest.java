@@ -19,7 +19,6 @@
 package org.apache.asterix.external.classad.test;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -32,7 +31,6 @@ import org.apache.asterix.external.classad.Value;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReader;
 import org.apache.asterix.external.input.stream.LocalFileSystemInputStream;
 import org.apache.asterix.external.library.ClassAdParser;
-import org.apache.asterix.external.util.ExternalDataConstants;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -59,27 +57,19 @@ public class ClassAdToADMTest extends TestCase {
     /**
      *
      */
-    public void testApp() {
+    public void test() {
         try {
             // test here
             ClassAd pAd = new ClassAd();
             String[] files = new String[] { "/jobads.txt" };
-            ClassAdParser parser = new ClassAdParser();
+            ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {
-                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader();
-                HashMap<String, String> configuration = new HashMap<String, String>();
-                configuration.put(ExternalDataConstants.KEY_RECORD_START, "[");
-                configuration.put(ExternalDataConstants.KEY_RECORD_END, "]");
-                recordReader.configure(configuration);
                 LocalFileSystemInputStream in = new LocalFileSystemInputStream(
                         Paths.get(getClass().getResource(path).toURI()), null, false);
-                in.configure(configuration);
-                recordReader.setInputStream(in);
+                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, null, "[", "]");
                 Value val = new Value();
-                int i = 0;
                 while (recordReader.hasNext()) {
-                    i++;
                     val.clear();
                     IRawRecord<char[]> record = recordReader.next();
                     lexerSource.setNewSource(record.get());

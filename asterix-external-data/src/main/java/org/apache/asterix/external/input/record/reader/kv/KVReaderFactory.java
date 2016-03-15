@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.couchbase;
+package org.apache.asterix.external.input.record.reader.kv;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -25,12 +25,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.external.input.record.RecordWithMetadata;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
@@ -41,10 +41,11 @@ import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
+import com.couchbase.client.core.message.dcp.DCPRequest;
 
 import rx.functions.Func1;
 
-public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMetadata<char[]>> {
+public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
 
     private static final long serialVersionUID = 1L;
     // Constant fields
@@ -66,17 +67,12 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
     private transient DefaultCoreEnvironment env;
 
     @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         return AsterixClusterProperties.INSTANCE.getClusterLocations();
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws AsterixException {
         // validate first
         if (!configuration.containsKey(ExternalDataConstants.KEY_BUCKET)) {
             throw new AsterixException("Unspecified bucket");
@@ -88,6 +84,9 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
             password = configuration.get(ExternalDataConstants.KEY_PASSWORD);
         }
         this.configuration = configuration;
+        ExternalDataUtils.setNumberOfKeys(configuration, 1);
+        ExternalDataUtils.setChangeFeed(configuration, ExternalDataConstants.TRUE);
+        ExternalDataUtils.setRecordWithMeta(configuration, ExternalDataConstants.TRUE);
         bucket = configuration.get(ExternalDataConstants.KEY_BUCKET);
         couchbaseNodes = configuration.get(ExternalDataConstants.KEY_NODES).split(",");
         feedName = configuration.get(ExternalDataConstants.KEY_FEED_NAME);
@@ -126,8 +125,8 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
     }
 
     @Override
-    public IRecordReader<? extends RecordWithMetadata<char[]>> createRecordReader(IHyracksTaskContext ctx,
-            int partition) throws Exception {
+    public IRecordReader<? extends DCPRequest> createRecordReader(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
         ArrayList<Short> listOfAssignedVBuckets = new ArrayList<Short>();
         for (int i = 0; i < schedule.length; i++) {
@@ -139,16 +138,12 @@ public class CouchbaseReaderFactory implements IRecordReaderFactory<RecordWithMe
         for (int i = 0; i < vbuckets.length; i++) {
             vbuckets[i] = listOfAssignedVBuckets.get(i);
         }
-        CouchbaseReader reader = new CouchbaseReader(feedName + ":" + nodeName + ":" + partition, bucket, password,
-                couchbaseNodes, vbuckets, ExternalDataUtils.getQueueSize(configuration));
-        reader.configure(configuration);
-        return reader;
+        return new KVReader(feedName + ":" + nodeName + ":" + partition, bucket, password, couchbaseNodes,
+                vbuckets, ExternalDataUtils.getQueueSize(configuration));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Class<? extends RecordWithMetadata<char[]>> getRecordClass() {
-        RecordWithMetadata<char[]> record = new RecordWithMetadata<char[]>(char[].class);
-        return (Class<? extends RecordWithMetadata<char[]>>) record.getClass();
+    public Class<?> getRecordClass() {
+        return DCPRequest.class;
     }
 }

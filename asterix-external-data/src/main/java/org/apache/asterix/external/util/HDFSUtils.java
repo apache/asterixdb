@@ -178,7 +178,7 @@ public class HDFSUtils {
         }
     }
 
-    public static JobConf configureHDFSJobConf(Map<String, String> configuration) throws Exception {
+    public static JobConf configureHDFSJobConf(Map<String, String> configuration) {
         JobConf conf = new JobConf();
 
         String localShortCircuitSocketPath = configuration.get(ExternalDataConstants.KEY_LOCAL_SOCKET_PATH);

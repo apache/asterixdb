@@ -19,9 +19,10 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalIndexer;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 
@@ -34,15 +35,10 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
     private char recordEnd;
     private int recordNumber = 0;
 
-    public int getRecordNumber() {
-        return recordNumber;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        super.configure(configuration);
-        String recStartString = configuration.get(ExternalDataConstants.KEY_RECORD_START);
-        String recEndString = configuration.get(ExternalDataConstants.KEY_RECORD_END);
+    public SemiStructuredRecordReader(AInputStream stream, IExternalIndexer indexer, String recStartString,
+            String recEndString) throws AsterixException {
+        super(stream, indexer);
+        // set record opening char
         if (recStartString != null) {
             if (recStartString.length() != 1) {
                 throw new AsterixException(
@@ -53,6 +49,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
         } else {
             recordStart = ExternalDataConstants.DEFAULT_RECORD_START;
         }
+        // set record ending char
         if (recEndString != null) {
             if (recEndString.length() != 1) {
                 throw new AsterixException(
@@ -63,6 +60,10 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
         } else {
             recordEnd = ExternalDataConstants.DEFAULT_RECORD_END;
         }
+    }
+
+    public int getRecordNumber() {
+        return recordNumber;
     }
 
     @Override

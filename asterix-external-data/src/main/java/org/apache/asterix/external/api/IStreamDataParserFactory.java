@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IStreamDataParserFactory extends IDataParserFactory {
 
     public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException, AsterixException;
+            throws HyracksDataException;
 }

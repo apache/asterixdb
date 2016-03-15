@@ -20,7 +20,6 @@ package org.apache.asterix.external.dataflow;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -41,12 +40,12 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class FeedTupleForwarder implements ITupleForwarder {
 
+    private final FeedLogManager feedLogManager;
     private int maxRecordSize; // temporary until the big object in storage is solved
     private FrameTupleAppender appender;
     private IFrame frame;
     private IFrameWriter writer;
     private boolean paused = false;
-    private final FeedLogManager feedLogManager;
     private boolean initialized;
 
     public FeedTupleForwarder(@Nonnull FeedLogManager feedLogManager) {
@@ -55,10 +54,6 @@ public class FeedTupleForwarder implements ITupleForwarder {
 
     public FeedLogManager getFeedLogManager() {
         return feedLogManager;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) {
     }
 
     @Override

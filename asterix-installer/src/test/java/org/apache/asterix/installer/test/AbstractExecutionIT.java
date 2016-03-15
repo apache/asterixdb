@@ -17,6 +17,7 @@ package org.apache.asterix.installer.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +26,8 @@ import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
@@ -49,6 +52,8 @@ public abstract class AbstractExecutionIT {
     protected static final String HDFS_BASE = "../asterix-app/";
 
     protected final static TestExecutor testExecutor = new TestExecutor();
+
+    private static final String EXTERNAL_LIBRARY_TEST_GROUP = "lib";
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -85,7 +90,7 @@ public abstract class AbstractExecutionIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
-        if (files == null || files.length == 0) {
+        if ((files == null) || (files.length == 0)) {
             outdir.delete();
         }
         AsterixLifecycleIT.tearDown();
@@ -111,6 +116,23 @@ public abstract class AbstractExecutionIT {
 
     @Test
     public void test() throws Exception {
+        if (skip()) {
+            return;
+        }
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
+    }
+
+    protected boolean skip() {
+        // If the test case contains library commands, we skip them
+        List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
+        for (CompilationUnit cUnit : cUnits) {
+            List<TestFileContext> testFileCtxs = tcCtx.getTestFiles(cUnit);
+            for (TestFileContext ctx : testFileCtxs) {
+                if (ctx.getType().equals(EXTERNAL_LIBRARY_TEST_GROUP)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

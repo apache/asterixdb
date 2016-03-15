@@ -48,13 +48,13 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private static final Logger LOGGER = Logger.getLogger(FeedMetaStoreNodePushable.class.getName());
 
     /** Runtime node pushable corresponding to the core feed operator **/
-    private AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
+    private final AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
 
     /**
      * A policy enforcer that ensures dyanmic decisions for a feed are taken
      * in accordance with the associated ingestion policy
      **/
-    private FeedPolicyEnforcer policyEnforcer;
+    private final FeedPolicyEnforcer policyEnforcer;
 
     /**
      * The Feed Runtime instance associated with the operator. Feed Runtime
@@ -66,21 +66,21 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
      * A unique identifier for the feed instance. A feed instance represents
      * the flow of data from a feed to a dataset.
      **/
-    private FeedConnectionId connectionId;
+    private final FeedConnectionId connectionId;
 
     /**
      * Denotes the i'th operator instance in a setting where K operator
      * instances are scheduled to run in parallel
      **/
-    private int partition;
+    private final int partition;
 
-    private int nPartitions;
+    private final int nPartitions;
 
     /** Type associated with the core feed operator **/
     private final FeedRuntimeType runtimeType = FeedRuntimeType.STORE;
 
     /** The (singleton) instance of IFeedManager **/
-    private IFeedManager feedManager;
+    private final IFeedManager feedManager;
 
     private FrameTupleAccessor fta;
 
@@ -90,11 +90,16 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private FeedRuntimeInputHandler inputSideHandler;
 
-    private ByteBuffer message = ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE);
+    private final ByteBuffer message = ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE);
+
+    private final IRecordDescriptorProvider recordDescProvider;
+
+    private final FeedMetaOperatorDescriptor opDesc;
 
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
+            Map<String, String> feedPolicyProperties, String operationId,
+            FeedMetaOperatorDescriptor feedMetaOperatorDescriptor) throws HyracksDataException {
         this.ctx = ctx;
         this.coreOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
@@ -106,6 +111,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
                 .getApplicationObject()).getFeedManager();
         this.operandId = operationId;
         ctx.setSharedObject(message);
+        this.recordDescProvider = recordDescProvider;
+        this.opDesc = feedMetaOperatorDescriptor;
     }
 
     @Override
@@ -129,7 +136,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         if (LOGGER.isLoggable(Level.WARNING)) {
             LOGGER.warning("Runtime not found for  " + runtimeId + " connection id " + connectionId);
         }
-        this.fta = new FrameTupleAccessor(recordDesc);
+        this.fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
         this.inputSideHandler = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
                 policyEnforcer.getFeedPolicyAccessor(), policyEnforcer.getFeedPolicyAccessor().bufferingEnabled(), fta,
                 recordDesc, feedManager, nPartitions);

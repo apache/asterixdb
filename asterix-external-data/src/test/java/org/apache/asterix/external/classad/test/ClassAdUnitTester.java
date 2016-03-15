@@ -273,7 +273,7 @@ public class ClassAdUnitTester {
      * @throws IOException
      *********************************************************************/
     public static void testParsing(Parameters parameters, Results results) throws IOException {
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
         ExprTree tree;
 
         // My goal is to ensure that these expressions don't crash
@@ -316,7 +316,7 @@ public class ClassAdUnitTester {
      * @throws IOException
      *********************************************************************/
     public static void testClassad(Parameters parameters, Results results) throws IOException {
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
         boolean haveAttribute;
         boolean success;
 
@@ -574,7 +574,7 @@ public class ClassAdUnitTester {
 
         /* ----- Test an ExprList bug that Nate Mueller found ----- */
         ClassAd classad;
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
         MutableBoolean b = new MutableBoolean();
         boolean haveAttribute;
         boolean canEvaluate;

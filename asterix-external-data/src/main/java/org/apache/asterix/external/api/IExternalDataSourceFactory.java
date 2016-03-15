@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -31,7 +32,6 @@ public interface IExternalDataSourceFactory extends Serializable {
     /**
      * The data source type indicates whether the data source produces a continuous stream or
      * a set of records
-     * @author amoudi
      */
     public enum DataSourceType {
         STREAM,
@@ -45,21 +45,24 @@ public interface IExternalDataSourceFactory extends Serializable {
 
     /**
      * Specifies on which locations this data source is expected to run.
+     *
      * @return
-     * @throws Exception
+     * @throws AsterixException
      */
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception;
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException;
 
     /**
      * Configure the data parser factory. The passed map contains key value pairs from the
      * submitted AQL statement and any additional pairs added by the compiler
+     *
      * @param configuration
-     * @throws Exception
+     * @throws AsterixException
      */
-    public void configure(Map<String, String> configuration) throws Exception;
+    public void configure(Map<String, String> configuration) throws AsterixException;
 
     /**
      * Specify whether the external data source can be indexed
+     *
      * @return
      */
     public default boolean isIndexible() {
@@ -93,5 +96,4 @@ public interface IExternalDataSourceFactory extends Serializable {
         }
         return constraints;
     }
-
 }

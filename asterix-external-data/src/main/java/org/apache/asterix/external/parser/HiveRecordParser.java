@@ -21,18 +21,14 @@ package org.apache.asterix.external.parser;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -66,7 +62,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 @SuppressWarnings("deprecation")
 public class HiveRecordParser implements IRecordDataParser<Writable> {
 
-    private ARecordType aRecord;
+    private ARecordType recordType;
     private SerDe hiveSerde;
     private StructObjectInspector oi;
     private IARecordBuilder recBuilder;
@@ -79,43 +75,37 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
     private List<? extends StructField> fieldRefs;
     private UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
-    @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType) throws HyracksDataException {
+    public HiveRecordParser(ARecordType recordType, JobConf hadoopConfiguration, String hiveSerdeClassName)
+            throws HyracksDataException {
         try {
-            this.aRecord = recordType;
-            int n = aRecord.getFieldNames().length;
-            fieldTypes = aRecord.getFieldTypes();
-            JobConf hadoopConfiguration = HDFSUtils.configureHDFSJobConf(configuration);
+            this.recordType = recordType;
+            int n = recordType.getFieldNames().length;
+            fieldTypes = recordType.getFieldTypes();
             //create the hive table schema.
             Properties tbl = new Properties();
-            tbl.put(Constants.LIST_COLUMNS, getCommaDelimitedColNames(aRecord));
-            tbl.put(Constants.LIST_COLUMN_TYPES, getColTypes(aRecord));
-            String hiveSerdeClassName = configuration.get(ExternalDataConstants.KEY_HIVE_SERDE);
-            if (hiveSerdeClassName == null) {
-                throw new IllegalArgumentException("no hive serde provided for hive deserialized records");
-            }
+            tbl.put(Constants.LIST_COLUMNS, getCommaDelimitedColNames(this.recordType));
+            tbl.put(Constants.LIST_COLUMN_TYPES, getColTypes(this.recordType));
             hiveSerde = (SerDe) Class.forName(hiveSerdeClassName).newInstance();
             hiveSerde.initialize(hadoopConfiguration, tbl);
             oi = (StructObjectInspector) hiveSerde.getObjectInspector();
-
             fieldValueBuffer = new ArrayBackedValueStorage();
             recBuilder = new RecordBuilder();
-            recBuilder.reset(aRecord);
+            recBuilder.reset(recordType);
             recBuilder.init();
             fieldTypeTags = new byte[n];
             for (int i = 0; i < n; i++) {
-                ATypeTag tag = aRecord.getFieldTypes()[i].getTypeTag();
+                ATypeTag tag = recordType.getFieldTypes()[i].getTypeTag();
                 fieldTypeTags[i] = tag.serialize();
             }
             fieldRefs = oi.getAllStructFieldRefs();
-        } catch (Exception e) {
+        } catch (
+
+        Exception e)
+
+        {
             throw new HyracksDataException(e);
         }
+
     }
 
     @Override
@@ -123,9 +113,9 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
         try {
             Writable hiveRawRecord = record.get();
             Object hiveObject = hiveSerde.deserialize(hiveRawRecord);
-            int n = aRecord.getFieldNames().length;
+            int n = recordType.getFieldNames().length;
             List<Object> attributesValues = oi.getStructFieldsDataAsList(hiveObject);
-            recBuilder.reset(aRecord);
+            recBuilder.reset(recordType);
             recBuilder.init();
             for (int i = 0; i < n; i++) {
                 final Object value = attributesValues.get(i);
@@ -194,11 +184,6 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
             default:
                 throw new HyracksDataException("Can't get hive type for field of type " + itemType.getTypeTag());
         }
-    }
-
-    @Override
-    public Class<? extends Writable> getRecordClass() {
-        return Writable.class;
     }
 
     private Object getColTypes(ARecordType record) throws Exception {

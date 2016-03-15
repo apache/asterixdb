@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
@@ -32,6 +34,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.AString;
@@ -41,6 +44,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
+import org.apache.asterix.translator.util.PlanTranslationUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -53,6 +57,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -147,7 +152,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
             if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
                 if (unnest.getPositionalVariable() != null) {
-                    throw new AlgebricksException("No positional variables are allowed over datasets.");
+                    throw new AlgebricksException("No positional variables are allowed over feeds.");
                 }
 
                 String dataverse = getStringArgument(f, 0);
@@ -169,21 +174,31 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                     }
                 }
 
-                ArrayList<LogicalVariable> v = new ArrayList<LogicalVariable>();
-                v.add(unnest.getVariable());
+                ArrayList<LogicalVariable> feedDataScanOutputVariables = new ArrayList<LogicalVariable>();
 
                 String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
-                AqlDataSource dataSource = createFeedDataSource(asid, targetDataset, sourceFeedName,
-                        subscriptionLocation, metadataProvider, policy, outputType,
-                        null /* TODO(Abdullah): to figure out the meta type name*/, csLocations);
-                DataSourceScanOperator scan = new DataSourceScanOperator(v, dataSource);
+                List<LogicalVariable> pkVars = new ArrayList<>();
+                FeedDataSource ds = createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
+                        metadataProvider, policy, outputType, csLocations, unnest.getVariable(), context, pkVars);
+                // The order for feeds is <Record-Meta-PK>
+                feedDataScanOutputVariables.add(unnest.getVariable());
+                // Does it produce meta?
+                if (ds.hasMeta()) {
+                    feedDataScanOutputVariables.add(context.newVar());
+                }
+                // Does it produce pk?
+                if (ds.isChange()) {
+                    int numOfPKs = ds.getPkTypes().size();
+                    for (int i = 0; i < numOfPKs; i++) {
+                        feedDataScanOutputVariables.addAll(pkVars);
+                    }
+                }
 
+                DataSourceScanOperator scan = new DataSourceScanOperator(feedDataScanOutputVariables, ds);
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
                 opRef.setValue(scan);
-                addPrimaryKey(v, dataSource, context);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
-
                 return true;
             }
 
@@ -201,20 +216,59 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         context.addPrimaryKey(pk);
     }
 
-    private AqlDataSource createFeedDataSource(AqlSourceId aqlId, String targetDataset, String sourceFeedName,
+    private FeedDataSource createFeedDataSource(AqlSourceId aqlId, String targetDataset, String sourceFeedName,
             String subscriptionLocation, AqlMetadataProvider metadataProvider, FeedPolicyEntity feedPolicy,
-            String outputType, String outputMetaType, String locations) throws AlgebricksException {
+            String outputType, String locations, LogicalVariable recordVar, IOptimizationContext context,
+            List<LogicalVariable> pkVars) throws AlgebricksException {
         if (!aqlId.getDataverseName().equals(metadataProvider.getDefaultDataverse() == null ? null
                 : metadataProvider.getDefaultDataverse().getDataverseName())) {
             return null;
         }
-        IAType feedOutputType = metadataProvider.findType(aqlId.getDataverseName(), outputType);
-        IAType feedOutputMetaType = metadataProvider.findType(aqlId.getDataverseName(), outputMetaType);
+        Dataset dataset = metadataProvider.findDataset(aqlId.getDataverseName(), targetDataset);
+        ARecordType feedOutputType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), outputType);
         Feed sourceFeed = metadataProvider.findFeed(aqlId.getDataverseName(), sourceFeedName);
-
-        FeedDataSource feedDataSource = new FeedDataSource(aqlId, targetDataset, feedOutputType, feedOutputMetaType,
-                AqlDataSource.AqlDataSourceType.FEED, sourceFeed.getFeedId(), sourceFeed.getFeedType(),
-                ConnectionLocation.valueOf(subscriptionLocation), locations.split(","));
+        ARecordType metaType = null;
+        // Does dataset have meta?
+        if (dataset.hasMetaPart()) {
+            String metaTypeName = FeedUtils.getFeedMetaTypeName(sourceFeed.getAdapterConfiguration());
+            if (metaTypeName == null) {
+                throw new AlgebricksException("Feed to a dataset with metadata doesn't have meta type specified");
+            }
+            metaType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), metaTypeName);
+        }
+        // Is a change feed?
+        List<IAType> pkTypes = null;
+        List<List<String>> partitioningKeys = null;
+        List<Integer> keySourceIndicator = null;
+        List<Mutable<ILogicalExpression>> keyAccessExpression = null;
+        List<ScalarFunctionCallExpression> keyAccessScalarFunctionCallExpression;
+        if (ExternalDataUtils.isChangeFeed(sourceFeed.getAdapterConfiguration())) {
+            keyAccessExpression = new ArrayList<>();
+            keyAccessScalarFunctionCallExpression = new ArrayList<>();
+            pkTypes = ((InternalDatasetDetails) dataset.getDatasetDetails()).getPrimaryKeyType();
+            partitioningKeys = ((InternalDatasetDetails) dataset.getDatasetDetails()).getPartitioningKey();
+            if (dataset.hasMetaPart()) {
+                keySourceIndicator = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
+            }
+            for (int i = 0; i < partitioningKeys.size(); i++) {
+                List<String> key = partitioningKeys.get(i);
+                if (keySourceIndicator == null || keySourceIndicator.get(i).intValue() == 0) {
+                    PlanTranslationUtil.prepareVarAndExpression(key, recordVar, pkVars, keyAccessExpression, null,
+                            context);
+                } else {
+                    PlanTranslationUtil.prepareMetaKeyAccessExpression(key, recordVar, keyAccessExpression, pkVars,
+                            null, context);
+                }
+            }
+            keyAccessExpression.forEach(
+                    expr -> keyAccessScalarFunctionCallExpression.add((ScalarFunctionCallExpression) expr.getValue()));
+        } else {
+            keyAccessExpression = null;
+            keyAccessScalarFunctionCallExpression = null;
+        }
+        FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, aqlId, targetDataset, feedOutputType, metaType,
+                pkTypes, partitioningKeys, keyAccessScalarFunctionCallExpression, sourceFeed.getFeedId(),
+                sourceFeed.getFeedType(), ConnectionLocation.valueOf(subscriptionLocation), locations.split(","));
         feedDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
         return feedDataSource;
     }
@@ -256,5 +310,4 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         String argument = ((AString) acv2.getObject()).getStringValue();
         return argument;
     }
-
 }

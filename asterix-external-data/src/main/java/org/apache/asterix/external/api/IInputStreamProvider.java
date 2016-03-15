@@ -18,15 +18,12 @@
  */
 package org.apache.asterix.external.api;
 
-import java.util.Map;
-
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IInputStreamProvider {
-    public AInputStream getInputStream() throws Exception;
-
-    public void configure(Map<String, String> configuration);
+    public AInputStream getInputStream() throws HyracksDataException;
 
     public void setFeedLogManager(FeedLogManager feedLogManager);
 }

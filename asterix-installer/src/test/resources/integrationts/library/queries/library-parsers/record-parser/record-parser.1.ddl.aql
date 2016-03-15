@@ -29,6 +29,5 @@ create type Classad as open {
 
 create external dataset Condor(Classad) using localfs(
 ("path"="asterix_nc1://data/external-parser/jobads.new"),
-("reader"="adm"),
-("parser"="testlib#org.apache.asterix.external.library.ClassAdParserFactory"),
-("reader-stream"="localfs"));
+("format"="adm"),
+("parser"="testlib#org.apache.asterix.external.library.ClassAdParserFactory"));

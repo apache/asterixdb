@@ -100,15 +100,22 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                     if (insertDeleteUpsertOperator.getOperation() == Kind.UPSERT) {
                         //we need to add a function that checks if previous record was found
                         upsertVar = context.newVar();
-                        //introduce casting to enforced type
-                        AbstractFunctionCallExpression isNullFunc = new ScalarFunctionCallExpression(
+                        AbstractFunctionCallExpression orFunc = new ScalarFunctionCallExpression(
+                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OR));
+                        // is new value null? -> this means that the expected operation is delete
+                        AbstractFunctionCallExpression isNewNullFunc = new ScalarFunctionCallExpression(
                                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL));
-                        // The first argument is the record
-                        isNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(
+                        isNewNullFunc.getArguments().add(insertDeleteUpsertOperator.getPayloadExpression());
+                        AbstractFunctionCallExpression isPrevNullFunc = new ScalarFunctionCallExpression(
+                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL));
+                        // argument is the previous record
+                        isPrevNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(
                                 new VariableReferenceExpression(insertDeleteUpsertOperator.getPrevRecordVar())));
+                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isPrevNullFunc));
+                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewNullFunc));
+
                         // AssignOperator puts in the cast var the casted record
-                        upsertFlagAssign = new AssignOperator(upsertVar,
-                                new MutableObject<ILogicalExpression>(isNullFunc));
+                        upsertFlagAssign = new AssignOperator(upsertVar, new MutableObject<ILogicalExpression>(orFunc));
                         // Connect the current top of the plan to the cast operator
                         upsertFlagAssign.getInputs()
                                 .add(new MutableObject<ILogicalOperator>(sinkOperator.getInputs().get(0).getValue()));
@@ -156,5 +163,4 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
         opRef.setValue(extensionOperator);
         return true;
     }
-
 }

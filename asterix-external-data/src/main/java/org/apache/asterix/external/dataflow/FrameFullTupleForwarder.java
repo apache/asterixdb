@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.util.Map;
-
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -35,11 +33,6 @@ public class FrameFullTupleForwarder implements ITupleForwarder {
     private FrameTupleAppender appender;
     private IFrame frame;
     private IFrameWriter writer;
-
-    @Override
-    public void configure(Map<String, String> configuration) {
-        // no-op
-    }
 
     @Override
     public void initialize(IHyracksTaskContext ctx, IFrameWriter writer) throws HyracksDataException {

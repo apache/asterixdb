@@ -18,28 +18,26 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
-import java.util.Map;
-
+import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.input.stream.AInputStream;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class EmptyLineSeparatedRecordReaderFactory extends AbstractStreamRecordReaderFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition) throws Exception {
-        EmptyLineSeparatedRecordReader recordReader = new EmptyLineSeparatedRecordReader();
-        return configureReader(recordReader, ctx, partition);
+    public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
+        final Pair<AInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
+        return new EmptyLineSeparatedRecordReader(streamAndIndexer.first, streamAndIndexer.second);
     }
 
     @Override
     public Class<? extends char[]> getRecordClass() {
         return char[].class;
     }
-
-    @Override
-    protected void configureStreamReaderFactory(Map<String, String> configuration) throws Exception {
-    }
-
 }

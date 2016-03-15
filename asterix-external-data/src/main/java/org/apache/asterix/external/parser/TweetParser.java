@@ -19,13 +19,11 @@
 package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.external.api.IDataParser;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.library.java.JObjectUtil;
@@ -53,14 +51,7 @@ public class TweetParser implements IRecordDataParser<Status> {
     private final Map<String, Integer> tweetFieldNameMap = new HashMap<>();
     private RecordBuilder recordBuilder = new RecordBuilder();
 
-    @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType)
-            throws HyracksDataException, IOException {
+    public TweetParser(ARecordType recordType) {
         initFieldNames(recordType);
         mutableUserFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableInt32(0),
                 new AMutableInt32(0), new AMutableString(null), new AMutableInt32(0) };
@@ -70,7 +61,6 @@ public class TweetParser implements IRecordDataParser<Status> {
         mutableTweetFields = new IAObject[] { new AMutableString(null), mutableUser, new AMutableDouble(0),
                 new AMutableDouble(0), new AMutableString(null), new AMutableString(null) };
         mutableRecord = new AMutableRecord(recordType, mutableTweetFields);
-
     }
 
     // Initialize the hashmap values for the field names and positions
@@ -135,10 +125,4 @@ public class TweetParser implements IRecordDataParser<Status> {
         recordBuilder.init();
         IDataParser.writeRecord(mutableRecord, out, recordBuilder);
     }
-
-    @Override
-    public Class<? extends Status> getRecordClass() {
-        return Status.class;
-    }
-
 }

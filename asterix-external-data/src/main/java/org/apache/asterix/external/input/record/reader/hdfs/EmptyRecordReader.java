@@ -16,33 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream.provider;
+package org.apache.asterix.external.input.record.reader.hdfs;
 
-import java.net.ServerSocket;
-import java.util.Map;
+import java.io.IOException;
 
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.input.stream.AInputStream;
-import org.apache.asterix.external.input.stream.SocketInputStream;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hadoop.mapred.RecordReader;
 
-public class SocketInputStreamProvider implements IInputStreamProvider {
-    private ServerSocket server;
+public class EmptyRecordReader<K, V> implements RecordReader<K, V> {
 
-    public SocketInputStreamProvider(ServerSocket server) {
-        this.server = server;
+    @Override
+    public boolean next(K key, V value) throws IOException {
+        return false;
     }
 
     @Override
-    public AInputStream getInputStream() throws Exception {
-        return new SocketInputStream(server);
+    public K createKey() {
+        return null;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) {
+    public V createValue() {
+        return null;
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public long getPos() throws IOException {
+        return 0;
     }
+
+    @Override
+    public void close() throws IOException {
+    }
+
+    @Override
+    public float getProgress() throws IOException {
+        return 0;
+    }
+
 }

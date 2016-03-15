@@ -20,7 +20,6 @@ package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -86,10 +85,6 @@ public class BasicInputStream extends AInputStream {
     @Override
     public boolean stop() throws Exception {
         return false;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) {
     }
 
     @Override

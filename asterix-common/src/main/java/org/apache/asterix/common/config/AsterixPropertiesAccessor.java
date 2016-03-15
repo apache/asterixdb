@@ -45,7 +45,7 @@ import org.apache.asterix.common.configuration.TransactionLogDir;
 import org.apache.asterix.common.exceptions.AsterixException;
 
 public class AsterixPropertiesAccessor {
-    private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
+    private static Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
     private final String instanceName;
     private final String metadataNodeName;
@@ -56,7 +56,7 @@ public class AsterixPropertiesAccessor {
     private final Map<String, String> transactionLogDirs;
     private final Map<String, String> asterixBuildProperties;
     private final Map<String, ClusterPartition[]> nodePartitionsMap;
-    private SortedMap<Integer, ClusterPartition> clusterPartitions;
+    private final SortedMap<Integer, ClusterPartition> clusterPartitions;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);

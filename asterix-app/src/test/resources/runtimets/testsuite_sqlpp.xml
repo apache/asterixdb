@@ -5989,13 +5989,13 @@
         <test-case FilePath="load">
             <compilation-unit name="issue14_query">
                 <output-dir compare="Text">issue14_query</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified ("reader" or "format") parameter for local filesystem adapter</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="issue315_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: Unspecified ("reader" or "format") parameter for local filesystem adapter</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">

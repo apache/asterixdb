@@ -18,36 +18,39 @@
  */
 package org.apache.asterix.external.api;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 /**
- * @author amoudi
- *         This Interface represents the component responsible for adding record ids to tuples when indexing external data
+ * This Interface represents the component responsible for adding record IDs to tuples when indexing external data
  */
 public interface IExternalIndexer extends Serializable {
 
     /**
      * This method is called by an indexible datasource when the external source reader have been updated.
      * this gives a chance for the indexer to update its reader specific values (i,e. file name)
+     *
      * @param reader
-     *        the new reader
+     *            the new reader
      * @throws Exception
      */
-    public void reset(IRecordReader<?> reader) throws Exception;
+    public void reset(IRecordReader<?> reader) throws IOException;
 
     /**
      * This method is called by the dataflow controller with each tuple. the indexer is expected to append record ids to the tuple.
+     *
      * @param tb
      * @throws Exception
      */
-    public void index(ArrayTupleBuilder tb) throws Exception;
+    public void index(ArrayTupleBuilder tb) throws IOException;
 
     /**
      * This method returns the number of fields in the record id. It is used by tuple appender at the initialization step.
+     *
      * @return
      * @throws Exception
      */
-    public int getNumberOfFields() throws Exception;
+    public int getNumberOfFields() throws IOException;
 }

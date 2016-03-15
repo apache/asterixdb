@@ -19,8 +19,15 @@
 package org.apache.asterix.external.api;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IInputStreamProviderFactory extends IExternalDataSourceFactory {
 
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception;
+    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException;
+
+    @Override
+    public default DataSourceType getDataSourceType() {
+        return DataSourceType.STREAM;
+    }
 }

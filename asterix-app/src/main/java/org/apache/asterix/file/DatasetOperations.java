@@ -151,10 +151,16 @@ public class DatasetOperations {
         boolean temp = dataset.getDatasetDetails().isTemp();
         ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeDataverseName(),
                 dataset.getItemTypeName());
+        // get meta item type
+        ARecordType metaItemType = null;
+        if (dataset.hasMetaPart()) {
+            metaItemType = (ARecordType) metadata.findType(dataset.getMetaItemTypeDataverseName(),
+                    dataset.getMetaItemTypeName());
+        }
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());
-        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
         int[] bloomFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
 
         ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);

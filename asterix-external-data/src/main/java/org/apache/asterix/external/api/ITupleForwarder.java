@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.api;
 
-import java.util.Map;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -35,8 +33,6 @@ public interface ITupleForwarder {
         RATE_CONTROLLED,
         FEED
     }
-
-    public void configure(Map<String, String> configuration) throws HyracksDataException;
 
     public void initialize(IHyracksTaskContext ctx, IFrameWriter frameWriter) throws HyracksDataException;
 

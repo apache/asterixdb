@@ -21,16 +21,19 @@ package org.apache.asterix.external.input.record.reader.stream;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
-import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractStreamRecordReaderFactory<T>
         implements IRecordReaderFactory<T>, IIndexibleExternalDataSource {
@@ -51,18 +54,15 @@ public abstract class AbstractStreamRecordReaderFactory<T>
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
         return inputStreamFactory.getPartitionConstraint();
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         inputStreamFactory.configure(configuration);
-        configureStreamReaderFactory(configuration);
     }
-
-    protected abstract void configureStreamReaderFactory(Map<String, String> configuration) throws Exception;
 
     @Override
     public boolean isIndexible() {
@@ -70,7 +70,7 @@ public abstract class AbstractStreamRecordReaderFactory<T>
     }
 
     @Override
-    public void setSnapshot(List<ExternalFile> files, boolean indexingOp) throws Exception {
+    public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
         ((IIndexibleExternalDataSource) inputStreamFactory).setSnapshot(files, indexingOp);
     }
 
@@ -82,8 +82,8 @@ public abstract class AbstractStreamRecordReaderFactory<T>
         return false;
     }
 
-    protected IRecordReader<char[]> configureReader(AbstractStreamRecordReader recordReader, IHyracksTaskContext ctx,
-            int partition) throws Exception {
+    protected Pair<AInputStream, IExternalIndexer> getStreamAndIndexer(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         IInputStreamProvider inputStreamProvider = inputStreamFactory.createInputStreamProvider(ctx, partition);
         IExternalIndexer indexer = null;
         if (inputStreamFactory.isIndexible()) {
@@ -91,9 +91,6 @@ public abstract class AbstractStreamRecordReaderFactory<T>
                 indexer = ((IIndexingDatasource) inputStreamProvider).getIndexer();
             }
         }
-        recordReader.setInputStream(inputStreamProvider.getInputStream());
-        recordReader.setIndexer(indexer);
-        recordReader.configure(configuration);
-        return recordReader;
+        return new Pair<AInputStream, IExternalIndexer>(inputStreamProvider.getInputStream(), indexer);
     }
 }

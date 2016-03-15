@@ -33,7 +33,6 @@ import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableString;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -117,17 +116,13 @@ public class ClassAd extends ExprTree {
     private ClassAd newAd = null;
 
     /*
-     *  Constructors
+     * Constructors
      */
     public ClassAd() {
         chainedParentAd = null;
         alternateScope = null;
         newAd = new ClassAd(false, false);
-        parser = new ClassAdParser();
-    }
-
-    public void configure(Map<String, String> configuration, ARecordType recordType) throws IOException {
-        parser.configure(configuration, recordType);
+        parser = new ClassAdParser(null, false, true, false, null, null, null);
     }
 
     public ClassAd(boolean initializeParser, boolean initializeNewAd) {
@@ -137,7 +132,7 @@ public class ClassAd extends ExprTree {
             newAd = new ClassAd(false, false);
         }
         if (initializeParser) {
-            parser = new ClassAdParser();
+            parser = new ClassAdParser(null, false, true, false, null, null, null);
         }
     }
 
@@ -194,15 +189,18 @@ public class ClassAd extends ExprTree {
 
     //public TreeSet<CaseInsensitiveString> dirtyAttrList = new TreeSet<CaseInsensitiveString>();
 
-    /* Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example below
-     *  TreeSet<String> references = new TreeSet<String>(
-     *        new Comparator<String>(){
-     *            public int compare(String o1, String o2) {
-     *    return o1.compareToIgnoreCase(o2);
-     *    }
-     *            });
+    /*
+     * Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example
+     * below
+     * TreeSet<String> references = new TreeSet<String>(
+     * new Comparator<String>(){
+     * public int compare(String o1, String o2) {
+     * return o1.compareToIgnoreCase(o2);
+     * }
+     * });
      *
-     // PortReferences is a Map<ClassAd,OrderedSet<Strings>> */
+     * // PortReferences is a Map<ClassAd,OrderedSet<Strings>>
+     */
 
     public boolean copyFrom(ClassAd ad) throws HyracksDataException {
 
@@ -555,10 +553,12 @@ public class ClassAd extends ExprTree {
     }
 
     public ExprTree lookup(CaseInsensitiveString name) {
-        /*System.out.println("Lookup Printing all attributes with their values:");
-        for (Entry<String, ExprTree> entry : attrList.entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue().getKind());
-        }*/
+        /*
+         * System.out.println("Lookup Printing all attributes with their values:");
+         * for (Entry<String, ExprTree> entry : attrList.entrySet()) {
+         * System.out.println(entry.getKey() + ":" + entry.getValue().getKind());
+         * }
+         */
         ExprTree attr = attrList.get(name);
         if (attr != null) {
             return attr;
@@ -861,7 +861,7 @@ public class ClassAd extends ExprTree {
     public boolean evaluateExpr(String buf, Value result) throws HyracksDataException {
         boolean successfully_evaluated;
         ExprTreeHolder tree = new ExprTreeHolder();
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
 
         try {
             if (parser.parseExpression(buf, tree)) {
@@ -927,15 +927,18 @@ public class ClassAd extends ExprTree {
         return (evaluateAttr(attr, val) && val.isBooleanValueEquiv(b));
     }
 
-    /* Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example below
-     *  TreeSet<String> references = new TreeSet<String>(
-     *        new Comparator<String>(){
-     *            public int compare(String o1, String o2) {
-     *    return o1.compareToIgnoreCase(o2);
-     *    }
-     *            });
+    /*
+     * Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example
+     * below
+     * TreeSet<String> references = new TreeSet<String>(
+     * new Comparator<String>(){
+     * public int compare(String o1, String o2) {
+     * return o1.compareToIgnoreCase(o2);
+     * }
+     * });
      *
-     // PortReferences is a Map<ClassAd,OrderedSet<Strings>> */
+     * // PortReferences is a Map<ClassAd,OrderedSet<Strings>>
+     */
 
     public boolean getExternalReferences(ExprTree tree, TreeSet<String> refs, boolean fullNames)
             throws HyracksDataException {
@@ -1256,15 +1259,18 @@ public class ClassAd extends ExprTree {
         }
     }
 
-    /* Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example below
-     *  TreeSet<String> references = new TreeSet<String>(
-     *        new Comparator<String>(){
-     *            public int compare(String o1, String o2) {
-     *    return o1.compareToIgnoreCase(o2);
-     *    }
-     *            });
+    /*
+     * Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example
+     * below
+     * TreeSet<String> references = new TreeSet<String>(
+     * new Comparator<String>(){
+     * public int compare(String o1, String o2) {
+     * return o1.compareToIgnoreCase(o2);
+     * }
+     * });
      *
-     // PortReferences is a Map<ClassAd,OrderedSet<Strings>> */
+     * // PortReferences is a Map<ClassAd,OrderedSet<Strings>>
+     */
     public boolean getInternalReferences(ExprTree tree, TreeSet<String> refs, boolean fullNames)
             throws HyracksDataException {
         EvalState state = new EvalState();
@@ -1560,6 +1566,6 @@ public class ClassAd extends ExprTree {
     }
 
     public void createParser() {
-        parser = new ClassAdParser();
+        parser = new ClassAdParser(null, false, true, false, null, null, null);
     }
 }

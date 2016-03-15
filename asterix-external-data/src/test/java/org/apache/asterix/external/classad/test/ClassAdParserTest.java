@@ -50,7 +50,7 @@ public class ClassAdParserTest extends TestCase {
     /**
      *
      */
-    public void testApp() {
+    public void test() {
         try {
             // test here
             ClassAd pAd = new ClassAd();

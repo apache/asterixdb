@@ -21,7 +21,6 @@ package org.apache.asterix.external.input.stream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -34,8 +33,10 @@ public class LocalFileSystemInputStream extends AInputStream {
     private FileInputStream in;
     private byte lastByte;
 
-    public LocalFileSystemInputStream(Path inputResource, String expression, boolean isFeed) throws IOException {
+    public LocalFileSystemInputStream(Path inputResource, String expression, boolean isFeed)
+            throws HyracksDataException {
         this.watcher = new FileSystemWatcher(inputResource, expression, isFeed);
+        watcher.init();
     }
 
     @Override
@@ -105,10 +106,10 @@ public class LocalFileSystemInputStream extends AInputStream {
             }
         }
         int result = in.read(b, off, len);
-        while (result < 0 && advance()) {
+        while ((result < 0) && advance()) {
             // return a new line at the end of every file <--Might create problems for some cases
             // depending on the parser implementation-->
-            if (lastByte != ExternalDataConstants.BYTE_LF && lastByte != ExternalDataConstants.BYTE_LF) {
+            if ((lastByte != ExternalDataConstants.BYTE_LF) && (lastByte != ExternalDataConstants.BYTE_LF)) {
                 lastByte = ExternalDataConstants.BYTE_LF;
                 b[off] = ExternalDataConstants.BYTE_LF;
                 return 1;
@@ -117,7 +118,7 @@ public class LocalFileSystemInputStream extends AInputStream {
             result = in.read(b, off, len);
         }
         if (result > 0) {
-            lastByte = b[off + result - 1];
+            lastByte = b[(off + result) - 1];
         }
         return result;
     }
@@ -132,10 +133,5 @@ public class LocalFileSystemInputStream extends AInputStream {
     public boolean stop() throws Exception {
         watcher.close();
         return true;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws IOException {
-        watcher.init();
     }
 }

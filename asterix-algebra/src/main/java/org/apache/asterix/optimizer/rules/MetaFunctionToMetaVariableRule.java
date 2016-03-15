@@ -21,9 +21,15 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
+import org.apache.asterix.metadata.declared.FeedDataSource;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -32,7 +38,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -65,28 +75,48 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
         if (op.getInputs().size() == 0) {
             return NoOpExpressionReferenceTransform.INSTANCE;
         }
-
         // Datascan returns an useful transform if the meta part presents in the dataset.
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scanOp = (DataSourceScanOperator) op;
             ILogicalExpressionReferenceTransformWithCondition inputTransfomer = visit(op.getInputs().get(0));
             AqlDataSource dataSource = (AqlDataSource) scanOp.getDataSource();
-            if (!dataSource.hasMeta()) {
-                return inputTransfomer;
-            };
+            List<ILogicalExpressionReferenceTransformWithCondition> transformers = null;
             List<LogicalVariable> allVars = scanOp.getVariables();
             LogicalVariable dataVar = dataSource.getDataRecordVariable(allVars);
             LogicalVariable metaVar = dataSource.getMetaVariable(allVars);
-            LogicalExpressionReferenceTransform currentTransformer = new LogicalExpressionReferenceTransform(dataVar,
-                    metaVar);
-            if (inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
+            LogicalExpressionReferenceTransform currentTransformer = null;
+            if (dataSource.getDatasourceType() == AqlDataSourceType.FEED) {
+                FeedDataSource fds = (FeedDataSource) dataSource;
+                if (fds.isChange()) {
+                    transformers = new ArrayList<>();
+                    transformers.add(new MetaKeyExpressionReferenceTransform(fds.getPkVars(allVars),
+                            fds.getKeyAccessExpression()));
+                } else if (metaVar != null) {
+                    transformers = new ArrayList<>();
+                    transformers.add(new MetaKeyToFieldAccessTransform(metaVar));
+                }
+            }
+            if (!dataSource.hasMeta() && transformers == null) {
+                return inputTransfomer;
+            };
+            if (metaVar != null) {
+                currentTransformer = new LogicalExpressionReferenceTransform(dataVar, metaVar);
+            }
+            if (inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE) && transformers == null) {
                 return currentTransformer;
+            } else if (inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE)
+                    && currentTransformer == null) {
+                return transformers.get(0);
             } else {
                 // Requires an argument variable to resolve ambiguity.
-                List<ILogicalExpressionReferenceTransformWithCondition> transformers = new ArrayList<>();
-                inputTransfomer.setVariableRequired();
+                if (transformers == null) {
+                    transformers = new ArrayList<>();
+                }
+                if (!inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
+                    inputTransfomer.setVariableRequired();
+                    transformers.add(inputTransfomer);
+                }
                 currentTransformer.setVariableRequired();
-                transformers.add(inputTransfomer);
                 transformers.add(currentTransformer);
                 return new CompositeExpressionReferenceTransform(transformers);
             }
@@ -124,7 +154,7 @@ interface ILogicalExpressionReferenceTransformWithCondition extends ILogicalExpr
 }
 
 class NoOpExpressionReferenceTransform implements ILogicalExpressionReferenceTransformWithCondition {
-    static NoOpExpressionReferenceTransform INSTANCE = new NoOpExpressionReferenceTransform();
+    static final NoOpExpressionReferenceTransform INSTANCE = new NoOpExpressionReferenceTransform();
 
     private NoOpExpressionReferenceTransform() {
 
@@ -216,5 +246,82 @@ class CompositeExpressionReferenceTransform implements ILogicalExpressionReferen
         }
         return false;
     }
+}
 
+class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransformWithCondition {
+    private final LogicalVariable metaVar;
+
+    MetaKeyToFieldAccessTransform(LogicalVariable recordVar) {
+        this.metaVar = recordVar;
+    }
+
+    @Override
+    public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
+        ILogicalExpression expr = exprRef.getValue();
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        if (!funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.META_KEY)) {
+            return false;
+        }
+        // Get arguments
+        // first argument : Resource key
+        // second argument: field
+        List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
+        ConstantExpression fieldNameExpression = (ConstantExpression) args.get(1).getValue();
+        AsterixConstantValue fieldNameValue = (AsterixConstantValue) fieldNameExpression.getValue();
+        IAType fieldNameType = fieldNameValue.getObject().getType();
+        FunctionIdentifier functionIdentifier;
+        switch (fieldNameType.getTypeTag()) {
+            case ORDEREDLIST:
+                // Field access nested
+                functionIdentifier = AsterixBuiltinFunctions.FIELD_ACCESS_NESTED;
+                break;
+            case STRING:
+                // field access by name
+                functionIdentifier = AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME;
+                break;
+            default:
+                throw new AlgebricksException("Unsupported field name type " + fieldNameType.getTypeTag());
+        }
+        IFunctionInfo finfoAccess = FunctionUtil.getFunctionInfo(functionIdentifier);
+        ArrayList<Mutable<ILogicalExpression>> argExprs = new ArrayList<Mutable<ILogicalExpression>>(2);
+        argExprs.add(new MutableObject<>(new VariableReferenceExpression(metaVar)));
+        argExprs.add(new MutableObject<>(fieldNameExpression));
+        exprRef.setValue(new ScalarFunctionCallExpression(finfoAccess, argExprs));
+        return true;
+    }
+}
+
+class MetaKeyExpressionReferenceTransform implements ILogicalExpressionReferenceTransformWithCondition {
+    private final List<LogicalVariable> keyVars;
+    private final List<ScalarFunctionCallExpression> metaKeyAccessExpressions;
+
+    MetaKeyExpressionReferenceTransform(List<LogicalVariable> keyVars,
+            List<ScalarFunctionCallExpression> metaKeyAccessExpressions) {
+        this.keyVars = keyVars;
+        this.metaKeyAccessExpressions = metaKeyAccessExpressions;
+    }
+
+    @Override
+    public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
+        ILogicalExpression expr = exprRef.getValue();
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        if (!funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.META_KEY)) {
+            return false;
+        }
+
+        // Function is meta key access
+        for (int i = 0; i < metaKeyAccessExpressions.size(); i++) {
+            if (metaKeyAccessExpressions.get(i).equals(funcExpr)) {
+                exprRef.setValue(new VariableReferenceExpression(keyVars.get(i)));
+                return true;
+            }
+        }
+        return false;
+    }
 }

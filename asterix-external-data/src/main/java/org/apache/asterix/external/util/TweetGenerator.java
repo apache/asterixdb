@@ -32,8 +32,7 @@ import org.apache.asterix.external.util.DataGenerator.TweetMessage;
 import org.apache.asterix.external.util.DataGenerator.TweetMessageIterator;
 
 public class TweetGenerator {
-
-    private static Logger LOGGER = Logger.getLogger(TweetGenerator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TweetGenerator.class.getName());
 
     public static final String KEY_DURATION = "duration";
     public static final String KEY_TPS = "tps";
@@ -43,20 +42,20 @@ public class TweetGenerator {
 
     private static final int DEFAULT_DURATION = INFINITY;
 
-    private int duration;
+    private final int duration;
     private TweetMessageIterator tweetIterator = null;
-    private int partition;
+    private final int partition;
     private long tweetCount = 0;
     private int frameTweetCount = 0;
     private int numFlushedTweets = 0;
     private DataGenerator dataGenerator = null;
-    private ByteBuffer outputBuffer = ByteBuffer.allocate(32 * 1024);
-    private String[] fields;
+    private final ByteBuffer outputBuffer = ByteBuffer.allocate(32 * 1024);
+    private final String[] fields;
     private final List<OutputStream> subscribers;
     private final Object lock = new Object();
     private final List<OutputStream> subscribersForRemoval = new ArrayList<OutputStream>();
 
-    public TweetGenerator(Map<String, String> configuration, int partition) throws Exception {
+    public TweetGenerator(Map<String, String> configuration, int partition) {
         this.partition = partition;
         String value = configuration.get(KEY_DURATION);
         this.duration = value != null ? Integer.parseInt(value) : DEFAULT_DURATION;
@@ -70,7 +69,7 @@ public class TweetGenerator {
         String tweet = tweetMessage.getAdmEquivalent(fields) + "\n";
         tweetCount++;
         byte[] b = tweet.getBytes();
-        if (outputBuffer.position() + b.length > outputBuffer.limit()) {
+        if ((outputBuffer.position() + b.length) > outputBuffer.limit()) {
             flush();
             numFlushedTweets += frameTweetCount;
             frameTweetCount = 0;

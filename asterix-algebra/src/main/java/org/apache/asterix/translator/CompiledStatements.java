@@ -66,8 +66,8 @@ public class CompiledStatements {
 
     // added by yasser
     public static class CompiledCreateDataverseStatement implements ICompiledStatement {
-        private String dataverseName;
-        private String format;
+        private final String dataverseName;
+        private final String format;
 
         public CompiledCreateDataverseStatement(String dataverseName, String format) {
             this.dataverseName = dataverseName;
@@ -89,7 +89,7 @@ public class CompiledStatements {
     }
 
     public static class CompiledNodeGroupDropStatement implements ICompiledStatement {
-        private String nodeGroupName;
+        private final String nodeGroupName;
 
         public CompiledNodeGroupDropStatement(String nodeGroupName) {
             this.nodeGroupName = nodeGroupName;
@@ -106,9 +106,9 @@ public class CompiledStatements {
     }
 
     public static class CompiledIndexDropStatement implements ICompiledStatement {
-        private String dataverseName;
-        private String datasetName;
-        private String indexName;
+        private final String dataverseName;
+        private final String datasetName;
+        private final String indexName;
 
         public CompiledIndexDropStatement(String dataverseName, String datasetName, String indexName) {
             this.dataverseName = dataverseName;
@@ -135,8 +135,8 @@ public class CompiledStatements {
     }
 
     public static class CompiledDataverseDropStatement implements ICompiledStatement {
-        private String dataverseName;
-        private boolean ifExists;
+        private final String dataverseName;
+        private final boolean ifExists;
 
         public CompiledDataverseDropStatement(String dataverseName, boolean ifExists) {
             this.dataverseName = dataverseName;
@@ -158,7 +158,7 @@ public class CompiledStatements {
     }
 
     public static class CompiledTypeDropStatement implements ICompiledStatement {
-        private String typeName;
+        private final String typeName;
 
         public CompiledTypeDropStatement(String nodeGroupName) {
             this.typeName = nodeGroupName;
@@ -247,11 +247,11 @@ public class CompiledStatements {
     }
 
     public static class CompiledLoadFromFileStatement implements ICompiledDmlStatement {
-        private String dataverseName;
-        private String datasetName;
-        private boolean alreadySorted;
-        private String adapter;
-        private Map<String, String> properties;
+        private final String dataverseName;
+        private final String datasetName;
+        private final boolean alreadySorted;
+        private final String adapter;
+        private final Map<String, String> properties;
 
         public CompiledLoadFromFileStatement(String dataverseName, String datasetName, String adapter,
                 Map<String, String> properties, boolean alreadySorted) {
@@ -340,12 +340,12 @@ public class CompiledStatements {
     }
 
     public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
-        private String dataverseName;
-        private String feedName;
-        private String datasetName;
-        private String policyName;
-        private Query query;
-        private int varCounter;
+        private final String dataverseName;
+        private final String feedName;
+        private final String datasetName;
+        private final String policyName;
+        private final Query query;
+        private final int varCounter;
 
         public CompiledConnectFeedStatement(String dataverseName, String feedName, String datasetName,
                 String policyName, Query query, int varCounter) {
@@ -379,10 +379,6 @@ public class CompiledStatements {
             return query;
         }
 
-        public void setQuery(Query query) {
-            this.query = query;
-        }
-
         @Override
         public Kind getKind() {
             return Kind.CONNECT_FEED;
@@ -395,19 +391,21 @@ public class CompiledStatements {
 
     public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
 
-        private final FeedConnectionRequest request;
-        private Query query;
+        private FeedConnectionRequest request;
         private final int varCounter;
 
-        public CompiledSubscribeFeedStatement(FeedConnectionRequest request, Query query, int varCounter) {
+        public CompiledSubscribeFeedStatement(FeedConnectionRequest request, int varCounter) {
             this.request = request;
-            this.query = query;
             this.varCounter = varCounter;
         }
 
         @Override
         public String getDataverseName() {
             return request.getReceivingFeedId().getDataverse();
+        }
+
+        public String getFeedName() {
+            return request.getReceivingFeedId().getFeedName();
         }
 
         @Override
@@ -419,27 +417,16 @@ public class CompiledStatements {
             return varCounter;
         }
 
-        public Query getQuery() {
-            return query;
-        }
-
-        public void setQuery(Query query) {
-            this.query = query;
-        }
-
         @Override
         public Kind getKind() {
             return Kind.SUBSCRIBE_FEED;
         }
-
     }
 
     public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
-        private String dataverseName;
-        private String datasetName;
-        private String feedName;
-        private Query query;
-        private int varCounter;
+        private final String dataverseName;
+        private final String datasetName;
+        private final String feedName;
 
         public CompiledDisconnectFeedStatement(String dataverseName, String feedName, String datasetName) {
             this.dataverseName = dataverseName;
@@ -461,14 +448,6 @@ public class CompiledStatements {
             return feedName;
         }
 
-        public int getVarCounter() {
-            return varCounter;
-        }
-
-        public Query getQuery() {
-            return query;
-        }
-
         @Override
         public Kind getKind() {
             return Kind.DISCONNECT_FEED;
@@ -477,11 +456,11 @@ public class CompiledStatements {
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {
-        private String dataverseName;
-        private String datasetName;
-        private Expression condition;
-        private int varCounter;
-        private Query query;
+        private final String dataverseName;
+        private final String datasetName;
+        private final Expression condition;
+        private final int varCounter;
+        private final Query query;
 
         public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName, Expression condition,
                 int varCounter, Query query) {

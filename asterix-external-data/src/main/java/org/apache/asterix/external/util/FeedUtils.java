@@ -19,20 +19,21 @@
 package org.apache.asterix.external.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -57,9 +58,9 @@ public class FeedUtils {
     }
 
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
-            AlgebricksPartitionConstraint partitionConstraints) throws Exception {
+            AlgebricksPartitionConstraint partitionConstraints) throws AsterixException {
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
-            throw new AlgebricksException("Can't create file splits for adapter with count partitioning constraints");
+            throw new AsterixException("Can't create file splits for adapter with count partitioning constraints");
         }
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
         String[] locations = null;
@@ -86,7 +87,7 @@ public class FeedUtils {
     }
 
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, int partition,
-            FileSplit[] feedLogFileSplits) throws IOException {
+            FileSplit[] feedLogFileSplits) throws HyracksDataException {
         return new FeedLogManager(
                 FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
                         feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager()).getFile());
@@ -102,5 +103,14 @@ public class FeedUtils {
         message.put(input.array(), offset, len);
         message.flip();
         IntSerDeUtils.putInt(input.array(), FrameHelper.getTupleCountOffset(input.capacity()), tc);
+    }
+
+    public static int getNumOfFields(Map<String, String> configuration) {
+        return 1;
+    }
+
+    public static String getFeedMetaTypeName(Map<String, String> configuration) {
+        return configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME);
+
     }
 }

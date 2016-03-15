@@ -20,7 +20,6 @@ package org.apache.asterix.external.util;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.api.ITupleForwarder.TupleForwardPolicy;
 import org.apache.asterix.external.dataflow.CounterTimerTupleForwarder;
@@ -44,8 +43,7 @@ public class DataflowUtils {
     }
 
     public static ITupleForwarder getTupleForwarder(Map<String, String> configuration, FeedLogManager feedLogManager)
-            throws AsterixException {
-        ITupleForwarder policy = null;
+            throws HyracksDataException {
         ITupleForwarder.TupleForwardPolicy policyType = null;
         String propValue = configuration.get(ITupleForwarder.FORWARD_POLICY);
         if (ExternalDataUtils.isFeed(configuration)) {
@@ -58,20 +56,15 @@ public class DataflowUtils {
         }
         switch (policyType) {
             case FEED:
-                policy = new FeedTupleForwarder(feedLogManager);
-                break;
+                return new FeedTupleForwarder(feedLogManager);
             case FRAME_FULL:
-                policy = new FrameFullTupleForwarder();
-                break;
+                return new FrameFullTupleForwarder();
             case COUNTER_TIMER_EXPIRED:
-                policy = new CounterTimerTupleForwarder();
-                break;
+                return CounterTimerTupleForwarder.create(configuration);
             case RATE_CONTROLLED:
-                policy = new RateControlledTupleForwarder();
-                break;
+                return RateControlledTupleForwarder.create(configuration);
             default:
-                throw new AsterixException("Unknown tuple forward policy");
+                throw new HyracksDataException("Unknown tuple forward policy");
         }
-        return policy;
     }
 }

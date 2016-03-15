@@ -35,40 +35,45 @@ import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.TweetGenerator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider {
 
     private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseInputStreamProvider.class.getName());
 
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
-    private PipedOutputStream outputStream;
+    private final PipedOutputStream outputStream;
 
-    private PipedInputStream inputStream;
+    private final PipedInputStream inputStream;
 
-    private TwitterServer twitterServer;
+    private final TwitterServer twitterServer;
 
     public TwitterFirehoseInputStreamProvider(Map<String, String> configuration, IHyracksTaskContext ctx, int partition)
-            throws Exception {
-        executorService = Executors.newCachedThreadPool();
-        outputStream = new PipedOutputStream();
-        inputStream = new PipedInputStream(outputStream);
-        twitterServer = new TwitterServer(configuration, partition, outputStream, executorService, inputStream);
+            throws HyracksDataException {
+        try {
+            executorService = Executors.newCachedThreadPool();
+            outputStream = new PipedOutputStream();
+            inputStream = new PipedInputStream(outputStream);
+            twitterServer = new TwitterServer(configuration, partition, outputStream, executorService, inputStream);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
-    public AInputStream getInputStream() throws Exception {
+    public AInputStream getInputStream() {
         return twitterServer;
     }
 
     private static class TwitterServer extends AInputStream {
         private final DataProvider dataProvider;
         private final ExecutorService executorService;
-        private InputStream in;
+        private final InputStream in;
         private boolean started;
 
         public TwitterServer(Map<String, String> configuration, int partition, OutputStream os,
-                ExecutorService executorService, InputStream in) throws Exception {
+                ExecutorService executorService, InputStream in) {
             dataProvider = new DataProvider(configuration, partition, os);
             this.executorService = executorService;
             this.in = in;
@@ -111,10 +116,6 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
         }
 
         @Override
-        public void configure(Map<String, String> configuration) {
-        }
-
-        @Override
         public void setFeedLogManager(FeedLogManager logManager) {
         }
 
@@ -127,7 +128,7 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
 
         public static final String KEY_MODE = "mode";
 
-        private TweetGenerator tweetGenerator;
+        private final TweetGenerator tweetGenerator;
         private boolean continuePush = true;
         private int batchSize;
         private final Mode mode;
@@ -138,7 +139,7 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
             CONTROLLED
         }
 
-        public DataProvider(Map<String, String> configuration, int partition, OutputStream os) throws Exception {
+        public DataProvider(Map<String, String> configuration, int partition, OutputStream os) {
             this.tweetGenerator = new TweetGenerator(configuration, partition);
             this.tweetGenerator.registerSubscriber(os);
             this.os = os;
@@ -163,7 +164,6 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
             boolean moreData = true;
             long startBatch;
             long endBatch;
-
             while (true) {
                 try {
                     while (moreData && continuePush) {
@@ -175,7 +175,7 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
                                 startBatch = System.currentTimeMillis();
                                 moreData = tweetGenerator.generateNextBatch(batchSize);
                                 endBatch = System.currentTimeMillis();
-                                if (endBatch - startBatch < 1000) {
+                                if ((endBatch - startBatch) < 1000) {
                                     Thread.sleep(1000 - (endBatch - startBatch));
                                 }
                                 break;
@@ -194,11 +194,6 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
         public void stop() {
             continuePush = false;
         }
-
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) {
     }
 
     @Override

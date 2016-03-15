@@ -35,7 +35,6 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.classad.AMutableCharArrayString;
@@ -70,8 +69,6 @@ import org.apache.asterix.external.classad.object.pool.OperationPool;
 import org.apache.asterix.external.classad.object.pool.TokenValuePool;
 import org.apache.asterix.external.classad.object.pool.ValuePool;
 import org.apache.asterix.external.parser.AbstractDataParser;
-import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -124,14 +121,20 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     private boolean oldFormat = false;
     private StringLexerSource stringLexerSource = new StringLexerSource("");
 
-    public ClassAdParser(ARecordType recordType) {
+    public ClassAdParser(ARecordType recordType, boolean oldFormat, boolean evaluateExpr, boolean keepBoth,
+            String exprPrefix, String exprSuffix, String exprFieldNameSuffix) {
         this.recordType = recordType;
         this.currentSource = new CharArrayLexerSource();
-    }
-
-    public ClassAdParser() {
-        this.recordType = null;
-        this.currentSource = new CharArrayLexerSource();
+        this.recordType = recordType;
+        this.oldFormat = oldFormat;
+        if (oldFormat) {
+            rootAd.createParser();
+        }
+        this.keepBoth = keepBoth;
+        this.evaluateExpr = evaluateExpr;
+        this.exprPrefix = exprPrefix;
+        this.exprSuffix = exprSuffix;
+        this.exprFieldNameSuffix = exprFieldNameSuffix;
     }
 
     /***********************************
@@ -565,7 +568,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
-    private Map<String, String> configuration;
 
     private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
@@ -1695,55 +1697,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     @Override
-    public DataSourceType getDataSourceType() {
-        return ExternalDataUtils.isDataSourceStreamProvider(configuration) ? DataSourceType.STREAM
-                : DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType) throws IOException {
-        this.recordType = recordType;
-        this.configuration = configuration;
-        String parserConfig = configuration.get(ClassAdParserFactory.KEY_OLD_FORMAT);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase(ExternalDataConstants.TRUE)) {
-            oldFormat = true;
-            rootAd.createParser();
-        }
-        parserConfig = configuration.get(ExternalDataConstants.KEY_READER);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase(ExternalDataConstants.READER_LINE_SEPARATED)) {
-            oldFormat = true;
-            rootAd.createParser();
-        }
-
-        parserConfig = configuration.get(ClassAdParserFactory.KEY_EVALUATE);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase("false")) {
-            evaluateExpr = false;
-            keepBoth = false;
-        }
-        parserConfig = configuration.get(ClassAdParserFactory.KEY_KEEP_EXPR);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase("false")) {
-            keepBoth = false;
-            evaluateExpr = true;
-        }
-        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_PREFIX);
-        if (parserConfig != null && parserConfig.trim().length() > 0) {
-            exprPrefix = parserConfig;
-        }
-        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_SUFFIX);
-        if (parserConfig != null && parserConfig.trim().length() > 0) {
-            exprSuffix = parserConfig;
-        }
-        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_NAME_SUFFIX);
-        if (parserConfig != null && parserConfig.trim().length() > 0) {
-            exprFieldNameSuffix = parserConfig;
-        }
-        if (!oldFormat) {
-            configuration.put(ExternalDataConstants.KEY_RECORD_START, "[");
-            configuration.put(ExternalDataConstants.KEY_RECORD_END, "]");
-        }
-    }
-
-    @Override
     public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
         try {
             if (oldFormat) {
@@ -1774,10 +1727,5 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
-    }
-
-    @Override
-    public Class<? extends char[]> getRecordClass() {
-        return char[].class;
     }
 }

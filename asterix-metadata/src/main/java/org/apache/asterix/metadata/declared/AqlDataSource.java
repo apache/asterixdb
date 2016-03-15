@@ -46,13 +46,13 @@ import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitione
 
 public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
-    private final AqlSourceId id;
-    private final IAType itemType;
-    private final IAType metaItemType;
-    private final AqlDataSourceType datasourceType;
+    protected final AqlSourceId id;
+    protected final IAType itemType;
+    protected final IAType metaItemType;
+    protected final AqlDataSourceType datasourceType;
     protected IAType[] schemaTypes;
     protected INodeDomain domain;
-    private Map<String, Serializable> properties = new HashMap<>();
+    protected Map<String, Serializable> properties = new HashMap<>();
 
     public enum AqlDataSourceType {
         INTERNAL_DATASET,
@@ -142,7 +142,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);
                             ++i;
-                            if (i >= n - 1) {
+                            if (i >= (n - 1)) {
                                 break;
                             }
                         }
@@ -162,7 +162,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);
                             ++i;
-                            if (i >= n - 1) {
+                            if (i >= (n - 1)) {
                                 break;
                             }
                         }
@@ -170,7 +170,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                     }
                     propsLocal = new ArrayList<ILocalStructuralProperty>();
                     List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-                    for (int i = 0; i < n - 1; i++) {
+                    for (int i = 0; i < (n - 1); i++) {
                         orderColumns.add(new OrderColumn(scanVariables.get(i), OrderKind.ASC));
                     }
                     propsLocal.add(new LocalOrderProperty(orderColumns));

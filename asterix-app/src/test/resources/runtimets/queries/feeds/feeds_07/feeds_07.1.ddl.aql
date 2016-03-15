@@ -54,5 +54,12 @@ create dataset SyntheticTweets(TweetMessageType)
 primary key id;
 
 create feed  SyntheticTweetFeed
-using twitter_firehose
-(("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("reader"="adm"),("format"="adm"),("reader-stream"="twitter_firehose"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+using twitter_firehose(
+("duration"="5"),
+("tps"="50"),
+("type-name"="TweetMessageType"),
+("format"="adm"),
+("reader-stream"="twitter_firehose"),
+("tput-duration"="5"),
+("dataverse-dataset"="feeds:SyntheticTweets"),
+("mode"="controlled"));

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.api;
 
+import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.feed.api.IIntakeProgressTracker;
 import org.apache.asterix.external.feed.management.FeedId;
 
@@ -57,14 +58,14 @@ public interface IAdapterRuntimeManager {
     public void stop() throws Exception;
 
     /**
-     * @return feedId associated with the feed that is being ingested
+     * @return feedId associated with the feed that is being ingested.
      */
     public FeedId getFeedId();
 
     /**
-     * @return the instance of the feed adapter (an implementation of {@code IFeedAdapter}) in use.
+     * @return an instance of the {@code FeedAdapter} in use.
      */
-    public IFeedAdapter getFeedAdapter();
+    public FeedAdapter getFeedAdapter();
 
     /**
      * @return state associated with the AdapterRuntimeManager. See {@code State}.

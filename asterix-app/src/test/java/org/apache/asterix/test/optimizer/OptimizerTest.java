@@ -71,11 +71,8 @@ public class OptimizerTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        // File outdir = new File(PATH_ACTUAL);
-        // outdir.mkdirs();
-
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
-        File outdir = new File(PATH_ACTUAL);
+        final File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
         HDFSCluster.getInstance().setup();
@@ -89,7 +86,6 @@ public class OptimizerTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        // _bootstrap.stop();
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
@@ -108,9 +104,7 @@ public class OptimizerTest {
                 suiteBuildPerFile(innerfile, testArgs, subdir);
             }
         }
-        if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)
-        // && !ignore.contains(path + file.getName())
-        ) {
+        if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
             File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
             File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
@@ -132,11 +126,11 @@ public class OptimizerTest {
         return testArgs;
     }
 
-    private File actualFile;
-    private File expectedFile;
-    private File queryFile;
+    private final File actualFile;
+    private final File expectedFile;
+    private final File queryFile;
 
-    public OptimizerTest(File queryFile, File expectedFile, File actualFile) {
+    public OptimizerTest(final File queryFile, final File expectedFile, final File actualFile) {
         this.queryFile = queryFile;
         this.expectedFile = expectedFile;
         this.actualFile = actualFile;
@@ -186,7 +180,6 @@ public class OptimizerTest {
             try {
                 while ((lineExpected = readerExpected.readLine()) != null) {
                     lineActual = readerActual.readLine();
-                    // Assert.assertEquals(lineExpected, lineActual);
                     if (lineActual == null) {
                         throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< "
                                 + lineExpected + "\n> ");
@@ -198,7 +191,6 @@ public class OptimizerTest {
                     ++num;
                 }
                 lineActual = readerActual.readLine();
-                // Assert.assertEquals(null, lineActual);
                 if (lineActual != null) {
                     throw new Exception(
                             "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + lineActual);

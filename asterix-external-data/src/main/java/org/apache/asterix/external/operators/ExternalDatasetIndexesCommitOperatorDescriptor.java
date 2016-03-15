@@ -21,18 +21,23 @@ package org.apache.asterix.external.operators;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelperFactory;
+import org.apache.log4j.Logger;
 
 public class ExternalDatasetIndexesCommitOperatorDescriptor extends AbstractExternalDatasetIndexesOperatorDescriptor {
+    private static final Logger LOGGER = Logger
+            .getLogger(ExternalDatasetIndexesCommitOperatorDescriptor.class.getName());
 
     public ExternalDatasetIndexesCommitOperatorDescriptor(IOperatorDescriptorRegistry spec,
             ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory,
@@ -49,17 +54,22 @@ public class ExternalDatasetIndexesCommitOperatorDescriptor extends AbstractExte
 
     @Override
     protected void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory, IHyracksTaskContext ctx,
-            IndexInfoOperatorDescriptor fileIndexInfo, int partition) throws Exception {
-        FileReference resourecePath = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition, ctx.getIOManager());
-        System.err.println("performing the operation on "+ resourecePath.getFile().getAbsolutePath());
-        // Get DataflowHelper
-        IIndexDataflowHelper indexHelper = indexDataflowHelperFactory.createIndexDataflowHelper(fileIndexInfo, ctx, partition);
-        // Get index
-        IIndex index = indexHelper.getIndexInstance();
-        // commit transaction
-        ((ITwoPCIndex) index).commitTransaction();
-        System.err.println("operation on "+ resourecePath.getFile().getAbsolutePath() + " Succeded");
-
+            IndexInfoOperatorDescriptor fileIndexInfo, int partition) {
+        try {
+            FileReference resourecePath = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition,
+                    ctx.getIOManager());
+            LOGGER.warn("performing the operation on " + resourecePath.getFile().getAbsolutePath());
+            // Get DataflowHelper
+            IIndexDataflowHelper indexHelper = indexDataflowHelperFactory.createIndexDataflowHelper(fileIndexInfo, ctx,
+                    partition);
+            // Get index
+            IIndex index = indexHelper.getIndexInstance();
+            // commit transaction
+            ((ITwoPCIndex) index).commitTransaction();
+            LOGGER.warn("operation on " + resourecePath.getFile().getAbsolutePath() + " Succeded");
+        } catch (HyracksDataException | IndexException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

@@ -19,25 +19,28 @@
 package org.apache.asterix.external.dataflow;
 
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.api.IStreamFlowController;
 import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FeedStreamDataFlowController extends AbstractFeedDataFlowController implements IStreamFlowController {
+public class FeedStreamDataFlowController extends AbstractFeedDataFlowController {
 
-    private IStreamDataParser dataParser;
-    private AInputStream stream;
+    private final IStreamDataParser dataParser;
+    private final AInputStream stream;
 
-    public FeedStreamDataFlowController(FeedLogManager feedLogManager) {
-        super(feedLogManager);
+    public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
+            FeedLogManager feedLogManager, int numOfFields, IStreamDataParser streamParser, AInputStream inputStream) {
+        super(ctx, tupleForwarder, feedLogManager, numOfFields);
+        this.dataParser = streamParser;
+        this.stream = inputStream;
     }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
-            initializeTupleForwarder(writer);
+            tupleForwarder.initialize(ctx, writer);
             while (true) {
                 tb.reset();
                 if (!dataParser.parse(tb.getDataOutput())) {
@@ -79,14 +82,5 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
             return false;
         }
         return handled;
-    }
-
-    @Override
-    public void setStreamParser(IStreamDataParser dataParser) {
-        this.dataParser = dataParser;
-    }
-
-    public void setStream(AInputStream stream) {
-        this.stream = stream;
     }
 }

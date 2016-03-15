@@ -18,15 +18,17 @@
  */
 package org.apache.asterix.external.api;
 
-import java.io.IOException;
-
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordDataParserFactory<T> extends IDataParserFactory {
-    public IRecordDataParser<T> createRecordParser(IHyracksTaskContext ctx)
-            throws HyracksDataException, AsterixException, IOException;
+    public IRecordDataParser<T> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException;
 
-    public Class<? extends T> getRecordClass();
+    public Class<?> getRecordClass();
+
+    @Override
+    public default DataSourceType getDataSourceType() {
+        return DataSourceType.RECORDS;
+    }
 }

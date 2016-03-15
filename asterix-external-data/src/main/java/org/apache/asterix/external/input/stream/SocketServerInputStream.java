@@ -22,20 +22,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class SocketInputStream extends AInputStream {
+public class SocketServerInputStream extends AInputStream {
     private ServerSocket server;
     private Socket socket;
     private InputStream connectionStream;
     private AbstractFeedDataFlowController controller;
 
-    public SocketInputStream(ServerSocket server) throws IOException {
+    public SocketServerInputStream(ServerSocket server) {
         this.server = server;
         socket = new Socket();
         connectionStream = new InputStream() {
@@ -158,10 +157,6 @@ public class SocketInputStream extends AInputStream {
     public boolean stop() throws Exception {
         close();
         return true;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) {
     }
 
     @Override

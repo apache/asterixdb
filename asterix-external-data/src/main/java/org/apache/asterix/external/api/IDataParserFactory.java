@@ -35,18 +35,27 @@ public interface IDataParserFactory extends Serializable {
      *         an instance of IDataParserFactory with STREAM data source type must implement IStreamDataParserFactory
      * @throws AsterixException
      */
-    public DataSourceType getDataSourceType() throws AsterixException;
+    public DataSourceType getDataSourceType();
 
     /**
      * Configure the data parser factory. The passed map contains key value pairs from the
      * submitted AQL statement and any additional pairs added by the compiler
+     *
      * @param configuration
      */
-    public void configure(Map<String, String> configuration) throws Exception;
+    public void configure(Map<String, String> configuration) throws AsterixException;
 
     /**
      * Set the record type expected to be produced by parsers created by this factory
+     *
      * @param recordType
      */
     public void setRecordType(ARecordType recordType);
+
+    /**
+     * Set the meta record type expected to be produced by parsers created by this factory
+     *
+     * @param metaType
+     */
+    public void setMetaType(ARecordType metaType);
 }

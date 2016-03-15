@@ -30,15 +30,16 @@ import java.nio.file.StandardOpenOption;
 import java.util.TreeSet;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FeedLogManager {
 
     public enum LogEntryType {
-        START,      // partition start
-        END,        // partition end
-        COMMIT,     // a record commit within a partition
-        SNAPSHOT    // an identifier that partitions with identifiers before this one should be
-                    // ignored
+        START, // partition start
+        END, // partition end
+        COMMIT, // a record commit within a partition
+        SNAPSHOT // an identifier that partitions with identifiers before this one should be
+                 // ignored
     }
 
     public static final String PROGRESS_LOG_FILE_NAME = "progress.log";
@@ -48,20 +49,24 @@ public class FeedLogManager {
     public static final String END_PREFIX = "e:";
     public static final int PREFIX_SIZE = 2;
     private String currentPartition;
-    private TreeSet<String> completed;
-    private Path dir;
+    private final TreeSet<String> completed;
+    private final Path dir;
     private BufferedWriter progressLogger;
     private BufferedWriter errorLogger;
     private BufferedWriter recordLogger;
-    private StringBuilder stringBuilder = new StringBuilder();
+    private final StringBuilder stringBuilder = new StringBuilder();
 
-    public FeedLogManager(File file) throws IOException {
-        this.dir = file.toPath();
-        this.completed = new TreeSet<String>();
-        if (!exists()) {
-            create();
+    public FeedLogManager(File file) throws HyracksDataException {
+        try {
+            this.dir = file.toPath();
+            this.completed = new TreeSet<String>();
+            if (!exists()) {
+                create();
+            }
+            open();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        open();
     }
 
     public void endPartition() throws IOException {

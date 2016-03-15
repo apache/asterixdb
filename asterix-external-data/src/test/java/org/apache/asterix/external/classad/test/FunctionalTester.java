@@ -909,7 +909,7 @@ public class FunctionalTester {
     public static ExprTree get_expr(AMutableString line, State state, Parameters parameters) throws IOException {
         int offset;
         ExprTree tree;
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
         StringLexerSource lexer_source = new StringLexerSource(line.getStringValue());
 
         tree = parser.parseExpression(lexer_source, false);
@@ -932,7 +932,7 @@ public class FunctionalTester {
     public static void get_two_exprs(AMutableString line, ExprTreeHolder tree1, ExprTreeHolder tree2, State state,
             Parameters parameters) throws IOException {
         int offset;
-        ClassAdParser parser = new ClassAdParser();
+        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
         StringLexerSource lexer_source = new StringLexerSource(line.getStringValue());
 
         tree1.setInnerTree(parser.parseExpression(lexer_source, false));

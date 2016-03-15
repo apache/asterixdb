@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.external.input.stream;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -29,8 +27,6 @@ public abstract class AInputStream extends InputStream {
     public abstract boolean skipError() throws Exception;
 
     public abstract boolean stop() throws Exception;
-
-    public abstract void configure(Map<String, String> configuration) throws IOException;
 
     // TODO: Find a better way to send notifications
     public abstract void setController(AbstractFeedDataFlowController controller);

@@ -19,24 +19,24 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalIndexer;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class QuotedLineRecordReader extends LineRecordReader {
 
-    private char quote;
+    private final char quote;
     private boolean prevCharEscape;
     private boolean inQuote;
 
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        super.configure(configuration);
-        String quoteString = configuration.get(ExternalDataConstants.KEY_QUOTE);
-        if (quoteString == null || quoteString.length() != 1) {
-            throw new AsterixException(ExternalDataExceptionUtils.incorrectParameterMessage(
+    public QuotedLineRecordReader(final boolean hasHeader, final AInputStream stream, final IExternalIndexer indexer,
+            final String quoteString) throws HyracksDataException {
+        super(hasHeader, stream, indexer);
+        if ((quoteString == null) || (quoteString.length() != 1)) {
+            throw new HyracksDataException(ExternalDataExceptionUtils.incorrectParameterMessage(
                     ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
         }
         this.quote = quoteString.charAt(0);

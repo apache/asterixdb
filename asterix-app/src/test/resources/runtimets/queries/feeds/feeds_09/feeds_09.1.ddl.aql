@@ -57,4 +57,11 @@ create index message_text on SyntheticTweets(message_text) type btree;
 
 create feed  SyntheticTweetFeed
 using twitter_firehose
-(("duration"="5"),("tps"="50"),("tput-duration"="5"),("type-name"="TweetMessageType"),("dataverse-dataset"="feeds:SyntheticTweets"),("reader"="adm"),("format"="adm"),("reader-stream"="twitter_firehose"),("mode"="controlled"));
+(("duration"="5"),
+("tps"="50"),
+("tput-duration"="5"),
+("type-name"="TweetMessageType"),
+("dataverse-dataset"="feeds:SyntheticTweets"),
+("format"="adm"),
+("reader-stream"="twitter_firehose"),
+("mode"="controlled"));

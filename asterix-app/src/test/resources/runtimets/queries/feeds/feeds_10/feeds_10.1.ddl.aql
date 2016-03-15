@@ -36,7 +36,7 @@ create type TweetType as closed {
   location : string,
   text : string,
   timestamp : string
-}      
+}
 
 create dataset Tweets(TweetType)
 primary key id;
@@ -44,5 +44,8 @@ primary key id;
 create index usernameIdx on Tweets(username) type btree;
 
 create feed TweetFeed
-using file_feed
-(("fs"="localfs"),("path"="asterix_nc1://data/twitter/obamatweets.adm"),("format"="adm"),("type-name"="TweetType"),("tuple-interval"="10"));
+using localfs
+(("path"="asterix_nc1://data/twitter/obamatweets.adm"),
+("format"="adm"),
+("type-name"="TweetType"),
+("tuple-interval"="10"));

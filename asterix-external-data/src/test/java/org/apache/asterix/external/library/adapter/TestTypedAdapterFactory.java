@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.external.library.adapter;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -56,29 +58,28 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
         return clusterLocations;
     }
 
     @Override
-    public IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+    public IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         final String nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
-        ITupleParserFactory tupleParserFactory = new ITupleParserFactory() {
+        final ITupleParserFactory tupleParserFactory = new ITupleParserFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ITupleParser createTupleParser(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
                 try {
-                    parser = new ADMDataParser();
+                    parser = new ADMDataParser(outputType, true);
                     forwarder = DataflowUtils.getTupleForwarder(configuration,
                             FeedUtils.getFeedLogManager(ctx, partition,
                                     FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
                                             ExternalDataUtils.getFeedName(configuration), nodeId, partition)));
-                    forwarder.configure(configuration);
                     tb = new ArrayTupleBuilder(1);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
@@ -88,7 +89,6 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                     @Override
                     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
                         try {
-                            parser.configure(configuration, outputType);
                             parser.setInputStream(in);
                             forwarder.initialize(ctx, writer);
                             while (true) {
@@ -107,7 +107,11 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 };
             }
         };
-        return new TestTypedAdapter(tupleParserFactory, outputType, ctx, configuration, partition);
+        try {
+            return new TestTypedAdapter(tupleParserFactory, outputType, ctx, configuration, partition);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
@@ -116,9 +120,8 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType, ARecordType metaType) {
         this.configuration = configuration;
         this.outputType = outputType;
     }
-
 }

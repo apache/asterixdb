@@ -19,7 +19,6 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IExternalIndexer;
@@ -34,14 +33,21 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 
 public abstract class AbstractStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
-    protected AInputStreamReader reader;
+    protected final AInputStreamReader reader;
     protected CharArrayRecord record;
     protected char[] inputBuffer;
     protected int bufferLength = 0;
     protected int bufferPosn = 0;
-    protected IExternalIndexer indexer;
+    protected final IExternalIndexer indexer;
     protected boolean done = false;
     protected FeedLogManager feedLogManager;
+
+    public AbstractStreamRecordReader(AInputStream inputStream, IExternalIndexer indexer) {
+        this.reader = new AInputStreamReader(inputStream);
+        this.indexer = indexer;
+        record = new CharArrayRecord();
+        inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+    }
 
     @Override
     public IRawRecord<char[]> next() throws IOException {
@@ -56,24 +62,9 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
         done = true;
     }
 
-    public void setInputStream(AInputStream inputStream) throws IOException {
-        this.reader = new AInputStreamReader(inputStream);
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        record = new CharArrayRecord();
-        inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-    }
-
     @Override
     public IExternalIndexer getIndexer() {
         return indexer;
-    }
-
-    @Override
-    public void setIndexer(IExternalIndexer indexer) {
-        this.indexer = indexer;
     }
 
     @Override

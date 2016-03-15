@@ -20,15 +20,12 @@ package org.apache.asterix.external.input.record.reader.twitter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.asterix.external.util.TwitterUtil;
-import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import twitter4j.Query;
@@ -39,7 +36,6 @@ import twitter4j.TwitterException;
 
 public class TwitterPullRecordReader implements IRecordReader<Status> {
 
-    private String keywords;
     private Query query;
     private Twitter twitter;
     private int requestInterval = 5; // seconds
@@ -48,21 +44,16 @@ public class TwitterPullRecordReader implements IRecordReader<Status> {
     private long lastTweetIdReceived = 0;
     private GenericRecord<Status> record;
 
-    public TwitterPullRecordReader() {
+    public TwitterPullRecordReader(Twitter twitter, String keywords, int requestInterval) {
+        this.twitter = twitter;
+        this.requestInterval = requestInterval;
+        this.query = new Query(keywords);
+        this.query.setCount(100);
+        this.record = new GenericRecord<Status>();
     }
 
     @Override
     public void close() throws IOException {
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        twitter = TwitterUtil.getTwitterService(configuration);
-        keywords = configuration.get(SearchAPIConstants.QUERY);
-        requestInterval = Integer.parseInt(configuration.get(SearchAPIConstants.INTERVAL));
-        query = new Query(keywords);
-        query.setCount(100);
-        record = new GenericRecord<Status>();
     }
 
     @Override

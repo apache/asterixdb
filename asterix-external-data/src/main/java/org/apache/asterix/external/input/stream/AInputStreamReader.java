@@ -19,7 +19,7 @@
 package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
@@ -29,7 +29,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 
-public class AInputStreamReader extends InputStreamReader {
+public class AInputStreamReader extends Reader {
     private AInputStream in;
     private byte[] bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
     private ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
@@ -38,7 +38,6 @@ public class AInputStreamReader extends InputStreamReader {
     private boolean done = false;
 
     public AInputStreamReader(AInputStream in) {
-        super(in);
         this.in = in;
         this.decoder = StandardCharsets.UTF_8.newDecoder();
         this.byteBuffer.flip();
@@ -74,22 +73,42 @@ public class AInputStreamReader extends InputStreamReader {
         if (done) {
             return -1;
         }
+        int len = 0;
         charBuffer.clear();
-        if (byteBuffer.hasRemaining()) {
+        while (charBuffer.position() == 0) {
+            if (byteBuffer.hasRemaining()) {
+                decoder.decode(byteBuffer, charBuffer, false);
+                System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
+                if (charBuffer.position() > 0) {
+                    return charBuffer.position();
+                } else {
+                    // need to read more data
+                    System.arraycopy(bytes, byteBuffer.position(), bytes, 0, byteBuffer.remaining());
+                    byteBuffer.position(byteBuffer.remaining());
+                    while (len == 0) {
+                        len = in.read(bytes, byteBuffer.position(), bytes.length - byteBuffer.position());
+                    }
+                }
+            } else {
+                byteBuffer.clear();
+                while (len == 0) {
+                    len = in.read(bytes, 0, bytes.length);
+                }
+            }
+            if (len == -1) {
+                done = true;
+                return len;
+            }
+            byteBuffer.position(len);
+            byteBuffer.flip();
             decoder.decode(byteBuffer, charBuffer, false);
             System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
-            return charBuffer.position();
         }
-        int len = in.read(bytes, 0, bytes.length);
-        if (len == -1) {
-            done = true;
-            return len;
-        }
-        byteBuffer.clear();
-        byteBuffer.position(len);
-        byteBuffer.flip();
-        decoder.decode(byteBuffer, charBuffer, false);
-        System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
         return charBuffer.position();
+    }
+
+    @Override
+    public void close() throws IOException {
+        in.close();
     }
 }

@@ -26,7 +26,7 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.external.input.record.converter.IRecordConverterFactory;
 
 public class ExternalDataCompatibilityUtils {
 
@@ -48,78 +48,25 @@ public class ExternalDataCompatibilityUtils {
         }
     }
 
-    // TODO:Add remaining aliases
-    public static void addCompatabilityParameters(String adapterName, ARecordType itemType,
-            Map<String, String> configuration) throws AsterixException {
-        // HDFS
-        if (adapterName.equals(ExternalDataConstants.ALIAS_HDFS_ADAPTER)
-                || adapterName.equalsIgnoreCase(ExternalDataConstants.ADAPTER_HDFS_CLASSNAME)) {
-            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
-                throw new AsterixException("Unspecified format parameter for HDFS adapter");
-            }
-            if (configuration.get(ExternalDataConstants.KEY_FORMAT).equals(ExternalDataConstants.FORMAT_BINARY)
-                    || configuration.get(ExternalDataConstants.KEY_FORMAT).equals(ExternalDataConstants.FORMAT_HIVE)) {
-                configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_HDFS);
-            } else {
-                configuration.put(ExternalDataConstants.KEY_READER,
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static void validateCompatibility(IRecordDataParserFactory recordParserFactory,
+            IRecordConverterFactory converterFactory) throws AsterixException {
+        if (!recordParserFactory.getRecordClass().isAssignableFrom(converterFactory.getOutputClass())) {
+            throw new AsterixException(
+                    "datasource converter-record parser mismatch. converter produces records of type "
+                            + converterFactory.getOutputClass() + " and parser expects records of type "
+                            + recordParserFactory.getRecordClass());
+        }
+    }
+
+    public static void prepare(String adapterName, Map<String, String> configuration) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
+            configuration.put(ExternalDataConstants.KEY_READER, adapterName);
+        }
+        if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)) {
+            if (configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
+                configuration.put(ExternalDataConstants.KEY_PARSER,
                         configuration.get(ExternalDataConstants.KEY_FORMAT));
-                configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.ALIAS_HDFS_ADAPTER);
-            }
-        }
-
-        // Local Filesystem
-        if (adapterName.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)
-                || adapterName.contains(ExternalDataConstants.ADAPTER_LOCALFS_CLASSNAME)
-                || adapterName.contains(ExternalDataConstants.ALIAS_LOCALFS_PUSH_ADAPTER)) {
-            if (configuration.get(ExternalDataConstants.KEY_READER) == null) {
-                if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
-                    // If reader is specified, we will use the selected reader. If format is
-                    // specified, we will assign a suitable reader for the format.
-                    // TODO: better error message
-                    throw new AsterixException(
-                            "Unspecified (\"reader\" or \"format\") parameter for local filesystem adapter");
-                }
-                configuration.put(ExternalDataConstants.KEY_READER,
-                        configuration.get(ExternalDataConstants.KEY_FORMAT));
-                configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.ALIAS_LOCALFS_ADAPTER);
-            }
-        }
-
-        // Socket
-        if (adapterName.equalsIgnoreCase(ExternalDataConstants.ALIAS_SOCKET_ADAPTER)
-                || adapterName.equalsIgnoreCase(ExternalDataConstants.ALIAS_SOCKET_CLIENT_ADAPTER)) {
-            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
-                throw new AsterixException("Unspecified format parameter for socket adapter");
-            }
-            configuration.put(ExternalDataConstants.KEY_READER, configuration.get(ExternalDataConstants.KEY_FORMAT));
-            configuration.put(ExternalDataConstants.KEY_READER_STREAM, ExternalDataConstants.STREAM_SOCKET);
-        }
-        // Twitter (Pull)
-        if (adapterName.equals(ExternalDataConstants.ALIAS_TWITTER_PULL_ADAPTER)) {
-            configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_TWITTER_PULL);
-            configuration.put(ExternalDataConstants.KEY_PULL, ExternalDataConstants.TRUE);
-            ExternalDataUtils.setRecordFormat(configuration, ExternalDataConstants.FORMAT_TWEET);
-        }
-
-        // Twitter (Push)
-        if (adapterName.equals(ExternalDataConstants.ALIAS_TWITTER_PUSH_ADAPTER)) {
-            configuration.put(ExternalDataConstants.KEY_READER, ExternalDataConstants.READER_TWITTER_PUSH);
-            configuration.put(ExternalDataConstants.KEY_PUSH, ExternalDataConstants.TRUE);
-            ExternalDataUtils.setRecordFormat(configuration, ExternalDataConstants.FORMAT_TWEET);
-        }
-
-        // Hive Parser
-        if (configuration.get(ExternalDataConstants.KEY_PARSER) != null
-                && configuration.get(ExternalDataConstants.KEY_PARSER).equals(ExternalDataConstants.PARSER_HIVE)) {
-            configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_HIVE);
-        }
-
-        // FileSystem for Feed adapter
-        if (configuration.get(ExternalDataConstants.KEY_FILESYSTEM) != null) {
-            configuration.put(ExternalDataConstants.KEY_STREAM,
-                    configuration.get(ExternalDataConstants.KEY_FILESYSTEM));
-            if (adapterName.equalsIgnoreCase(ExternalDataConstants.ALIAS_FILE_FEED_ADAPTER)) {
-                configuration.put(ExternalDataConstants.KEY_WAIT_FOR_DATA, ExternalDataConstants.FALSE);
             }
         }
     }

@@ -107,15 +107,37 @@ public class DatasetUtils {
 
     public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType)
             throws AlgebricksException {
+        return computeTupleTypeTraits(dataset, itemType, null);
+    }
+
+    public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType, ARecordType metaItemType)
+            throws AlgebricksException {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
-        ITypeTraits[] typeTraits = new ITypeTraits[numKeys + 1];
-        for (int i = 0; i < numKeys; i++) {
-            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+        ITypeTraits[] typeTraits;
+        if (metaItemType != null) {
+            typeTraits = new ITypeTraits[numKeys + 2];
+            List<Integer> indicator = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
+            typeTraits[numKeys + 1] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(metaItemType);
+            for (int i = 0; i < numKeys; i++) {
+                IAType keyType;
+                if (indicator.get(i) == 0) {
+                    keyType = itemType.getSubFieldType(partitioningKeys.get(i));
+                } else {
+                    keyType = metaItemType.getSubFieldType(partitioningKeys.get(i));
+                }
+                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            }
+        } else {
+            typeTraits = new ITypeTraits[numKeys + 1];
+            for (int i = 0; i < numKeys; i++) {
+                IAType keyType;
+                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
+                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            }
         }
         typeTraits[numKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         return typeTraits;
@@ -202,7 +224,7 @@ public class DatasetUtils {
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            if (partitioningKeys.get(i).size() == 1 && partitioningKeys.get(i).get(0).equals(fieldExpr)) {
+            if ((partitioningKeys.get(i).size() == 1) && partitioningKeys.get(i).get(0).equals(fieldExpr)) {
                 return i;
             }
         }

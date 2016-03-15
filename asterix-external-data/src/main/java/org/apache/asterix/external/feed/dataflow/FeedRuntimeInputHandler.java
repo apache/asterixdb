@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IExceptionHandler;
 import org.apache.asterix.external.feed.api.IFeedManager;
 import org.apache.asterix.external.feed.api.IFeedMemoryComponent;
 import org.apache.asterix.external.feed.api.IFeedMessage;
@@ -49,37 +48,36 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
  * 2. FeedMetaStoreNodePushable.initializeNewFeedRuntime();
  *              ______
  *             |      |
- * ============|core  |============
- * ============| op   |============
+ * ============| core |============
+ * ============|  op  |============
  * ^^^^^^^^^^^^|______|
- *  Input Side
- *  Handler
- *
+ * Input Side
+ * Handler
  **/
 public class FeedRuntimeInputHandler implements IFrameWriter {
 
-    private static Logger LOGGER = Logger.getLogger(FeedRuntimeInputHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FeedRuntimeInputHandler.class.getName());
 
     private final FeedConnectionId connectionId;
     private final FeedRuntimeId runtimeId;
     private final FeedPolicyAccessor feedPolicyAccessor;
-    private final IExceptionHandler exceptionHandler;
+    private final FeedExceptionHandler exceptionHandler;
     private final FeedFrameDiscarder discarder;
     private final FeedFrameSpiller spiller;
     private final FeedPolicyAccessor fpa;
     private final IFeedManager feedManager;
+    private final MonitoredBuffer mBuffer;
+    private final DataBucketPool pool;
+    private final FrameEventCallback frameEventCallback;
+
     private boolean bufferingEnabled;
     private IFrameWriter coreOperator;
-    private final MonitoredBuffer mBuffer;
-    private DataBucketPool pool;
     private FrameCollection frameCollection;
     private Mode mode;
     private Mode lastMode;
     private boolean finished;
     private long nProcessed;
     private boolean throttlingEnabled;
-
-    private FrameEventCallback frameEventCallback;
 
     public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
             IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,

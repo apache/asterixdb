@@ -52,7 +52,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      * The actual (Hyracks) operator that is wrapped around by the MetaFeed
      * operator.
      **/
-    private IOperatorDescriptor coreOperator;
+    private final IOperatorDescriptor coreOperator;
 
     /**
      * A unique identifier for the feed instance. A feed instance represents the
@@ -73,9 +73,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     private final String operandId;
 
-    public FeedMetaOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
-            IOperatorDescriptor coreOperatorDescriptor, Map<String, String> feedPolicyProperties,
-            FeedRuntimeType runtimeType, boolean enableSubscriptionMode, String operandId) {
+    public FeedMetaOperatorDescriptor(final JobSpecification spec, final FeedConnectionId feedConnectionId,
+            final IOperatorDescriptor coreOperatorDescriptor, final Map<String, String> feedPolicyProperties,
+            final FeedRuntimeType runtimeType, final boolean enableSubscriptionMode, final String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
@@ -88,8 +88,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+            final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
+                    throws HyracksDataException {
         IOperatorNodePushable nodePushable = null;
         switch (runtimeType) {
             case COMPUTE:
@@ -98,7 +99,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 break;
             case STORE:
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId);
+                        coreOperator, feedConnectionId, feedPolicyProperties, operandId, this);
                 break;
             case OTHER:
                 nodePushable = new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator,

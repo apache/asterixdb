@@ -40,13 +40,19 @@ public class RateControlledTupleForwarder implements ITupleForwarder {
 
     public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
 
-    @Override
-    public void configure(Map<String, String> configuration) {
+    private RateControlledTupleForwarder(long interTupleInterval) {
+        this.interTupleInterval = interTupleInterval;
+        delayConfigured = interTupleInterval != 0L;
+    }
+
+    // Factory method
+    public static RateControlledTupleForwarder create(Map<String, String> configuration) {
+        long interTupleInterval = 0L;
         String propValue = configuration.get(INTER_TUPLE_INTERVAL);
         if (propValue != null) {
             interTupleInterval = Long.parseLong(propValue);
         }
-        delayConfigured = interTupleInterval != 0;
+        return new RateControlledTupleForwarder(interTupleInterval);
     }
 
     @Override
@@ -82,6 +88,5 @@ public class RateControlledTupleForwarder implements ITupleForwarder {
         if (appender.getTupleCount() > 0) {
             FrameUtils.flushFrame(frame.getBuffer(), writer);
         }
-
     }
 }

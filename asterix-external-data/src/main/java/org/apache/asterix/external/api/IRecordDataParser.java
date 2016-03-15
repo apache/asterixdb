@@ -29,9 +29,4 @@ public interface IRecordDataParser<T> extends IDataParser {
      * @throws Exception
      */
     public void parse(IRawRecord<? extends T> record, DataOutput out) throws IOException;
-
-    /**
-     * @return the record class
-     */
-    public Class<? extends T> getRecordClass();
 }

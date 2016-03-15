@@ -18,11 +18,8 @@
  */
 package org.apache.asterix.external.parser.factory;
 
-import java.io.IOException;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.TweetParser;
@@ -35,16 +32,9 @@ public class TweetParserFactory implements IRecordDataParserFactory<Status> {
 
     private static final long serialVersionUID = 1L;
     private ARecordType recordType;
-    private Map<String, String> configuration;
 
     @Override
-    public DataSourceType getDataSourceType() throws AsterixException {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        this.configuration = configuration;
+    public void configure(Map<String, String> configuration) {
     }
 
     @Override
@@ -53,15 +43,18 @@ public class TweetParserFactory implements IRecordDataParserFactory<Status> {
     }
 
     @Override
-    public IRecordDataParser<Status> createRecordParser(IHyracksTaskContext ctx) throws AsterixException, IOException {
-        TweetParser dataParser = new TweetParser();
-        dataParser.configure(configuration, recordType);
+    public IRecordDataParser<Status> createRecordParser(IHyracksTaskContext ctx) {
+        TweetParser dataParser = new TweetParser(recordType);
         return dataParser;
     }
 
     @Override
     public Class<? extends Status> getRecordClass() {
         return Status.class;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
     }
 
 }

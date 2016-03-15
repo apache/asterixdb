@@ -27,7 +27,7 @@ create dataset Condor(Classad) primary key GlobalJobId;
 
 create feed CondorFeed using push_localfs(
 ("path"="asterix_nc1://data/external-parser/dropbox/jobads1.txt,asterix_nc1://data/external-parser/dropbox/jobads2.txt"),
-("reader"="semi-structured"),
+("reader"="localfs"),
+("format"="semi-structured"),
 ("parser"="testlib#org.apache.asterix.external.library.ClassAdParserFactory"),
-("reader-stream"="localfs"),
 ("type-name"="Classad"));

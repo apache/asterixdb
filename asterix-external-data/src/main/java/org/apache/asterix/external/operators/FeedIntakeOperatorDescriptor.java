@@ -36,6 +36,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -70,19 +71,21 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     /** The configuration parameters associated with the adapter. **/
     private Map<String, String> adaptorConfiguration;
 
-    private ARecordType adapterOutputType;
+    private final ARecordType adapterOutputType;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, IAdapterFactory adapterFactory,
-            ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
+            ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor, RecordDescriptor rDesc) {
         super(spec, 0, 1);
         this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
         this.adaptorFactory = adapterFactory;
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
+        this.recordDescriptors[0] = rDesc;
     }
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, String adapterLibraryName,
-            String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor) {
+            String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor,
+            RecordDescriptor rDesc) {
         super(spec, 0, 1);
         this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
         this.adaptorFactoryClassName = adapterFactoryClassName;
@@ -90,6 +93,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         this.adaptorConfiguration = primaryFeed.getAdapterConfiguration();
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
+        this.recordDescriptors[0] = rDesc;
     }
 
     @Override
@@ -112,7 +116,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
         }
         return new FeedIntakeOperatorNodePushable(ctx, feedId, adaptorFactory, partition, ingestionRuntime,
-                policyAccessor);
+                policyAccessor, recordDescProvider, this);
     }
 
     private IAdapterFactory createExtenralAdapterFactory(IHyracksTaskContext ctx, int partition) throws Exception {

@@ -19,15 +19,11 @@
 package org.apache.asterix.external.api;
 
 import java.io.DataOutput;
-import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableOrderedList;
 import org.apache.asterix.om.base.AMutableRecord;
@@ -43,24 +39,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public interface IDataParser {
 
-    /**
-     * @return The supported data sources
-     */
-    public DataSourceType getDataSourceType();
-
-    /**
-     * @param configuration
-     *            a set of configurations that comes from two sources.
-     *            1. The create adapter statement.
-     *            2. The query compiler.
-     * @param recordType
-     *            The expected record type
-     * @throws IOException
-     */
-    public void configure(Map<String, String> configuration, ARecordType recordType) throws IOException;
-
     /*
-     * The following two static methods are expensive. right now, they are used by RSSFeeds and Twitter feed
+     * The following two static methods are expensive. right now, they are used by RSSFeeds and
+     * Twitter feed
      * TODO: Get rid of them
      */
     public static void writeRecord(AMutableRecord record, DataOutput dataOutput, IARecordBuilder recordBuilder)

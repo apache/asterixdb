@@ -21,6 +21,7 @@ package org.apache.asterix.external.parser.test;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.external.parser.ADMDataParser;
@@ -35,7 +36,7 @@ import junit.extensions.PA;
 public class ADMDataParserTest {
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         String[] dates = { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" };
         AMutableDate[] parsedDates = new AMutableDate[] { new AMutableDate(-4202630), new AMutableDate(2807408),
                 new AMutableDate(-4202752), new AMutableDate(2807409), new AMutableDate(-4202569),
@@ -58,7 +59,7 @@ public class ADMDataParserTest {
         AtomicInteger errorCount = new AtomicInteger(0);
         for (int i = 0; i < threads.length; ++i) {
             threads[i] = new Thread(new Runnable() {
-                ADMDataParser parser = new ADMDataParser();
+                ADMDataParser parser = new ADMDataParser(null, true);
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutput dos = new DataOutputStream(bos);
 
@@ -69,16 +70,16 @@ public class ADMDataParserTest {
                         while (round++ < 10000) {
                             // Test parseDate.
                             for (int index = 0; index < dates.length; ++index) {
-                                PA.invokeMethod(parser, "parseDate(java.lang.String, java.io.DataOutput)",
-                                        dates[index], dos);
+                                PA.invokeMethod(parser, "parseDate(java.lang.String, java.io.DataOutput)", dates[index],
+                                        dos);
                                 AMutableDate aDate = (AMutableDate) PA.getValue(parser, "aDate");
                                 Assert.assertTrue(aDate.equals(parsedDates[index]));
                             }
 
                             // Tests parseTime.
                             for (int index = 0; index < times.length; ++index) {
-                                PA.invokeMethod(parser, "parseTime(java.lang.String, java.io.DataOutput)",
-                                        times[index], dos);
+                                PA.invokeMethod(parser, "parseTime(java.lang.String, java.io.DataOutput)", times[index],
+                                        dos);
                                 AMutableTime aTime = (AMutableTime) PA.getValue(parser, "aTime");
                                 Assert.assertTrue(aTime.equals(parsedTimes[index]));
                             }
@@ -112,5 +113,4 @@ public class ADMDataParserTest {
         // Asserts no failure.
         Assert.assertTrue(errorCount.get() == 0);
     }
-
 }

@@ -20,7 +20,6 @@ package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IExternalIndexer;
@@ -29,7 +28,6 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.GenericRecord;
-import org.apache.asterix.external.input.record.reader.EmptyRecordReader;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -57,12 +55,12 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
     protected JobConf conf;
     protected GenericRecord<Writable> record;
     // Indexing variables
-    protected IExternalIndexer indexer;
-    protected List<ExternalFile> snapshot;
-    protected FileSystem hdfs;
+    protected final IExternalIndexer indexer;
+    protected final List<ExternalFile> snapshot;
+    protected final FileSystem hdfs;
 
     public HDFSRecordReader(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf) {
+            JobConf conf, List<ExternalFile> snapshot, IExternalIndexer indexer) throws IOException {
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
@@ -70,17 +68,16 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
         this.conf = conf;
         this.inputFormat = conf.getInputFormat();
         this.reader = new EmptyRecordReader<K, Writable>();
+        this.record = new GenericRecord<Writable>();
+        this.indexer = indexer;
+        this.snapshot = snapshot;
+        this.hdfs = FileSystem.get(conf);
+        nextInputSplit();
     }
 
     @Override
     public void close() throws IOException {
         reader.close();
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        record = new GenericRecord<Writable>();
-        nextInputSplit();
     }
 
     @Override
@@ -163,18 +160,8 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
         return indexer;
     }
 
-    @Override
-    public void setIndexer(IExternalIndexer indexer) {
-        this.indexer = indexer;
-    }
-
     public List<ExternalFile> getSnapshot() {
         return snapshot;
-    }
-
-    public void setSnapshot(List<ExternalFile> snapshot) throws IOException {
-        this.snapshot = snapshot;
-        hdfs = FileSystem.get(conf);
     }
 
     public int getCurrentSplitIndex() {

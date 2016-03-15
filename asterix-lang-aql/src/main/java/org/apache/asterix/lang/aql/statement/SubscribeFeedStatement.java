@@ -19,18 +19,19 @@
 package org.apache.asterix.lang.aql.statement;
 
 import java.io.StringReader;
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.watch.FeedActivity;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -45,9 +46,7 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 
 /**
  * Represents the AQL statement for subscribing to a feed.
@@ -58,7 +57,7 @@ public class SubscribeFeedStatement implements Statement {
     private static final Logger LOGGER = Logger.getLogger(SubscribeFeedStatement.class.getName());
     private final FeedConnectionRequest connectionRequest;
     private Query query;
-    private int varCounter;
+    private final int varCounter;
     private final String[] locations;
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
@@ -106,7 +105,7 @@ public class SubscribeFeedStatement implements Statement {
                 + connectionRequest.getTargetDataset() + "'" + "," + "'" + feedOutputType + "'" + ")");
 
         List<String> functionsToApply = connectionRequest.getFunctionsToApply();
-        if (functionsToApply != null && functionsToApply.isEmpty()) {
+        if ((functionsToApply != null) && functionsToApply.isEmpty()) {
             builder.append(" return $x");
         } else {
             String rValueName = "x";
@@ -186,10 +185,9 @@ public class SubscribeFeedStatement implements Statement {
         try {
             switch (feed.getFeedType()) {
                 case PRIMARY:
-                    Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType> factoryOutput = null;
-
-                    factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(feed, policyAccessor, mdTxnCtx);
-                    outputType = factoryOutput.second.getTypeName();
+                    outputType = FeedMetadataUtil
+                            .getOutputType(feed, feed.getAdapterConfiguration(), ExternalDataConstants.KEY_TYPE_NAME)
+                            .getTypeName();
                     break;
                 case SECONDARY:
                     outputType = FeedMetadataUtil.getSecondaryFeedOutput(feed, policyAccessor, mdTxnCtx);
@@ -197,7 +195,7 @@ public class SubscribeFeedStatement implements Statement {
             }
             return outputType;
 
-        } catch (AlgebricksException ae) {
+        } catch (AlgebricksException | RemoteException | ACIDException ae) {
             throw new MetadataException(ae);
         }
     }

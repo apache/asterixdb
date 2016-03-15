@@ -535,7 +535,8 @@ public class BuiltinClassAdFunctions {
                 } else if (time_arg.isRelativeTimeValue()) {
                     result.setErrorValue();
                 } else if (time_arg.isAbsoluteTimeValue(time_components)) {
-                } else if (!time_arg.isClassAdValue(splitClassAd) /*doSplitTime(time_arg, splitClassAd)*/) {
+                } else if (!time_arg
+                        .isClassAdValue(splitClassAd) /* doSplitTime(time_arg, splitClassAd) */) {
                     result.setErrorValue();
                 } else {
                     if (!splitClassAd.evaluateAttrInt("Seconds", int64)) {
@@ -1863,7 +1864,7 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return false;
             }
-            ClassAdParser parser = new ClassAdParser();
+            ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
             ExprTreeHolder expr = new ExprTreeHolder();
             try {
                 if (!parser.parseExpression(s.toString(), expr, true) || (expr.getInnerTree() == null)) {

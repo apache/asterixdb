@@ -2401,7 +2401,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         bfs.initialize(metadataProvider.getMetadataTxnContext());
 
         CompiledSubscribeFeedStatement csfs = new CompiledSubscribeFeedStatement(bfs.getSubscriptionRequest(),
-                bfs.getQuery(), bfs.getVarCounter());
+                bfs.getVarCounter());
         metadataProvider.getConfig().put(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS, "" + Boolean.TRUE);
         metadataProvider.getConfig().put(FeedActivityDetails.FEED_POLICY_NAME, "" + bfs.getPolicy());
         metadataProvider.getConfig().put(FeedActivityDetails.COLLECT_LOCATIONS,

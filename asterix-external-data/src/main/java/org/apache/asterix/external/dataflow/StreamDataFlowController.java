@@ -19,20 +19,26 @@
 package org.apache.asterix.external.dataflow;
 
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.api.IStreamFlowController;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class StreamDataFlowController extends AbstractDataFlowController implements IStreamFlowController {
-    private IStreamDataParser dataParser;
-    private static final int NUMBER_OF_TUPLE_FIELDS = 1;
+public class StreamDataFlowController extends AbstractDataFlowController {
+    private final IStreamDataParser dataParser;
+
+    public StreamDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
+            IStreamDataParser dataParser) {
+        super(ctx, tupleForwarder);
+        this.dataParser = dataParser;
+    }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
-            ArrayTupleBuilder tb = new ArrayTupleBuilder(NUMBER_OF_TUPLE_FIELDS);
-            initializeTupleForwarder(writer);
+            ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
+            tupleForwarder.initialize(ctx, writer);
             while (true) {
                 tb.reset();
                 if (!dataParser.parse(tb.getDataOutput())) {
@@ -45,30 +51,5 @@ public class StreamDataFlowController extends AbstractDataFlowController impleme
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
-    }
-
-    @Override
-    public boolean stop() {
-        return false;
-    }
-
-    @Override
-    public boolean handleException(Throwable th) {
-        return false;
-    }
-
-    @Override
-    public void setStreamParser(IStreamDataParser dataParser) {
-        this.dataParser = dataParser;
-    }
-
-    @Override
-    public boolean pause() throws HyracksDataException {
-        return false;
-    }
-
-    @Override
-    public boolean resume() throws HyracksDataException {
-        return false;
     }
 }

@@ -28,6 +28,7 @@ import org.apache.asterix.external.input.stream.provider.TwitterFirehoseInputStr
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Factory class for creating @see{TwitterFirehoseFeedAdapter}. The adapter
@@ -53,7 +54,7 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
     private Map<String, String> configuration;
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         String ingestionCardinalityParam = configuration.get(KEY_INGESTION_CARDINALITY);
         String ingestionLocationParam = configuration.get(KEY_INGESTION_LOCATIONS);
         String[] locations = null;
@@ -80,7 +81,7 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) {
         this.configuration = configuration;
     }
 
@@ -90,7 +91,8 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
     }
 
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception {
+    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         return new TwitterFirehoseInputStreamProvider(configuration, ctx, partition);
     }
 }

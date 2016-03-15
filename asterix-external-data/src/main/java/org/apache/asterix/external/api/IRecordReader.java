@@ -20,7 +20,6 @@ package org.apache.asterix.external.api;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.external.util.FeedLogManager;
 
@@ -29,15 +28,6 @@ import org.apache.asterix.external.util.FeedLogManager;
  * @param <T>
  */
 public interface IRecordReader<T> extends Closeable {
-
-    /**
-     * Configure the reader with the set of key/value pairs passed by the compiler
-     * @param configuration
-     *        the set of key/value pairs
-     * @throws Exception
-     *         when the reader can't be configured (i,e. due to incorrect configuration, unreachable source, etc.)
-     */
-    public void configure(Map<String, String> configuration) throws Exception;
 
     /**
      * @return true if the reader has more records remaining, false, otherwise.

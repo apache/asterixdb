@@ -20,49 +20,57 @@ package org.apache.asterix.external.provider;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
-import org.apache.asterix.external.input.record.RecordWithMetadata;
 import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.parser.factory.DelimitedDataParserFactory;
 import org.apache.asterix.external.parser.factory.HiveDataParserFactory;
 import org.apache.asterix.external.parser.factory.RSSParserFactory;
 import org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory;
+import org.apache.asterix.external.parser.factory.TestRecordWithPKParserFactory;
 import org.apache.asterix.external.parser.factory.TweetParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
 public class ParserFactoryProvider {
-    public static IDataParserFactory getDataParserFactory(Map<String, String> configuration)
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException, AsterixException {
+    public static IDataParserFactory getDataParserFactory(Map<String, String> configuration) throws AsterixException {
         IDataParserFactory parserFactory = null;
         String parserFactoryName = configuration.get(ExternalDataConstants.KEY_DATA_PARSER);
-        if (parserFactoryName != null && ExternalDataUtils.isExternal(parserFactoryName)) {
+        if ((parserFactoryName != null) && ExternalDataUtils.isExternal(parserFactoryName)) {
             return ExternalDataUtils.createExternalParserFactory(ExternalDataUtils.getDataverse(configuration),
                     parserFactoryName);
         } else {
-            parserFactory = ParserFactoryProvider.getParserFactory(ExternalDataUtils.getRecordFormat(configuration));
+            parserFactory = ParserFactoryProvider
+                    .getDataParserFactory(ExternalDataUtils.getRecordFormat(configuration));
         }
         return parserFactory;
     }
 
-    private static IDataParserFactory getParserFactory(String recordFormat) throws AsterixException {
-        switch (recordFormat) {
+    @SuppressWarnings("rawtypes")
+    public static IDataParserFactory getDataParserFactory(@Nonnull String parser) throws AsterixException {
+        switch (parser) {
             case ExternalDataConstants.FORMAT_ADM:
             case ExternalDataConstants.FORMAT_JSON:
+            case ExternalDataConstants.FORMAT_SEMISTRUCTURED:
                 return new ADMDataParserFactory();
             case ExternalDataConstants.FORMAT_DELIMITED_TEXT:
+            case ExternalDataConstants.FORMAT_CSV:
                 return new DelimitedDataParserFactory();
             case ExternalDataConstants.FORMAT_HIVE:
+            case ExternalDataConstants.PARSER_HIVE:
                 return new HiveDataParserFactory();
             case ExternalDataConstants.FORMAT_TWEET:
                 return new TweetParserFactory();
             case ExternalDataConstants.FORMAT_RSS:
                 return new RSSParserFactory();
-            case ExternalDataConstants.FORMAT_RECORD_WITH_META:
-                return new RecordWithMetadataParserFactory<RecordWithMetadata<?>>();
+            case ExternalDataConstants.FORMAT_RECORD_WITH_METADATA:
+                return new RecordWithMetadataParserFactory();
+            case ExternalDataConstants.TEST_RECORD_WITH_PK:
+                return new TestRecordWithPKParserFactory();
             default:
-                throw new AsterixException("Unknown data format");
+                throw new AsterixException("Unknown parser " + parser);
         }
     }
 }

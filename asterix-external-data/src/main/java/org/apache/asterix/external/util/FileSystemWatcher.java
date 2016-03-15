@@ -41,7 +41,7 @@ import org.apache.log4j.Logger;
 
 public class FileSystemWatcher {
 
-    private static Logger LOGGER = Logger.getLogger(FileSystemWatcher.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FileSystemWatcher.class.getName());
     private final WatchService watcher;
     private final HashMap<WatchKey, Path> keys;
     private final LinkedList<File> files = new LinkedList<File>();
@@ -54,28 +54,36 @@ public class FileSystemWatcher {
     private File current;
     private AbstractFeedDataFlowController controller;
 
-    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) throws IOException {
-        this.watcher = isFeed ? FileSystems.getDefault().newWatchService() : null;
-        this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
-        this.expression = expression;
-        this.path = inputResource;
-        this.isFeed = isFeed;
+    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) throws HyracksDataException {
+        try {
+            this.watcher = isFeed ? FileSystems.getDefault().newWatchService() : null;
+            this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
+            this.expression = expression;
+            this.path = inputResource;
+            this.isFeed = isFeed;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     public void setFeedLogManager(FeedLogManager feedLogManager) {
         this.logManager = feedLogManager;
     }
 
-    public void init() throws IOException {
-        LinkedList<Path> dirs = null;
-        dirs = new LinkedList<Path>();
-        LocalFileSystemUtils.traverse(files, path.toFile(), expression, dirs);
-        it = files.iterator();
-        if (isFeed) {
-            for (Path path : dirs) {
-                register(path);
+    public void init() throws HyracksDataException {
+        try {
+            LinkedList<Path> dirs = null;
+            dirs = new LinkedList<Path>();
+            LocalFileSystemUtils.traverse(files, path.toFile(), expression, dirs);
+            it = files.iterator();
+            if (isFeed) {
+                for (Path path : dirs) {
+                    register(path);
+                }
+                resume();
             }
-            resume();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
     }
 
@@ -178,7 +186,7 @@ public class FileSystemWatcher {
     }
 
     public File next() throws IOException {
-        if (current != null && logManager != null) {
+        if ((current != null) && (logManager != null)) {
             logManager.startPartition(current.getAbsolutePath());
             logManager.endPartition();
         }

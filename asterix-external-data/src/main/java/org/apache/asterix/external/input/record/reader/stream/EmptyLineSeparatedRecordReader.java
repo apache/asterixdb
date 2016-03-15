@@ -20,14 +20,19 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 
+import org.apache.asterix.external.api.IExternalIndexer;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 
 public class EmptyLineSeparatedRecordReader extends AbstractStreamRecordReader {
 
+    public EmptyLineSeparatedRecordReader(AInputStream inputStream, IExternalIndexer indexer) {
+        super(inputStream, indexer);
+    }
+
     private boolean prevCharCR;
     private boolean prevCharLF;
     private int newlineLength;
-    private int recordNumber = 0;
     private int readLength;
 
     @Override
@@ -53,7 +58,6 @@ public class EmptyLineSeparatedRecordReader extends AbstractStreamRecordReader {
                 if (bufferLength <= 0) {
                     if (readLength > 0) {
                         record.endRecord();
-                        recordNumber++;
                         return true;
                     }
                     close();
@@ -93,7 +97,6 @@ public class EmptyLineSeparatedRecordReader extends AbstractStreamRecordReader {
                 record.append(inputBuffer, startPosn, readLength);
             }
         } while (newlineLength < 2);
-        recordNumber++;
         record.endRecord();
         return true;
     }

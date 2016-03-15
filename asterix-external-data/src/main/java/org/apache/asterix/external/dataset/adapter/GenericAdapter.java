@@ -19,11 +19,11 @@
 package org.apache.asterix.external.dataset.adapter;
 
 import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.asterix.external.api.IFeedAdapter;
+import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class GenericAdapter implements IFeedAdapter {
+public class GenericAdapter implements IDataSourceAdapter {
 
     private static final long serialVersionUID = 1L;
     private final IDataFlowController controller;
@@ -35,25 +35,5 @@ public class GenericAdapter implements IFeedAdapter {
     @Override
     public void start(int partition, IFrameWriter writer) throws HyracksDataException {
         controller.start(writer);
-    }
-
-    @Override
-    public boolean stop() throws HyracksDataException {
-        return controller.stop();
-    }
-
-    @Override
-    public boolean handleException(Throwable e) {
-        return controller.handleException(e);
-    }
-
-    @Override
-    public boolean pause() throws HyracksDataException {
-        return controller.pause();
-    }
-
-    @Override
-    public boolean resume() throws HyracksDataException {
-        return controller.resume();
     }
 }

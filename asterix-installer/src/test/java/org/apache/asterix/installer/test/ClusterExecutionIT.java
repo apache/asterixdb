@@ -73,7 +73,7 @@ public class ClusterExecutionIT extends AbstractExecutionIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
-        if (files == null || files.length == 0) {
+        if ((files == null) || (files.length == 0)) {
             outdir.delete();
         }
 
@@ -102,6 +102,9 @@ public class ClusterExecutionIT extends AbstractExecutionIT {
     @Override
     @Test
     public void test() throws Exception {
+        if (skip()) {
+            return;
+        }
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 }

@@ -41,6 +41,6 @@ create type MyRecord as open {
 
 create external dataset MyData(MyRecord)
 using hdfs
-(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialData.json"),("input-format"="text-input-format"),("input-format"="text-input-format"),("format"="adm"));
+(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialData.json"),("input-format"="text-input-format"),("format"="adm"));
 
 create index idx on MyData(id:int64) enforced;

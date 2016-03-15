@@ -19,34 +19,50 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
-import java.util.Map;
 
+import org.apache.asterix.external.api.IExternalIndexer;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReader extends AbstractStreamRecordReader {
 
     protected boolean prevCharCR;
     protected int newlineLength;
     protected int recordNumber = 0;
-    private boolean configured = false;
+
+    public LineRecordReader(final boolean hasHeader, final AInputStream stream, final IExternalIndexer indexer)
+            throws HyracksDataException {
+        super(stream, indexer);
+        try {
+            if (hasHeader) {
+                if (hasNext()) {
+                    next();
+                }
+            }
+        } catch (final IOException e) {
+            throw new HyracksDataException(e);
+        }
+
+    }
 
     @Override
     public boolean hasNext() throws IOException {
         if (done) {
             return false;
         }
-        /* We're reading data from in, but the head of the stream may be
+        /*
+         * We're reading data from in, but the head of the stream may be
          * already buffered in buffer, so we have several cases:
          * 1. No newline characters are in the buffer, so we need to copy
-         *    everything and read another buffer from the stream.
+         *   everything and read another buffer from the stream.
          * 2. An unambiguously terminated line is in buffer, so we just
          *    copy to record.
          * 3. Ambiguously terminated line is in buffer, i.e. buffer ends
-         *    in CR.  In this case we copy everything up to CR to record, but
-         *    we also need to see what follows CR: if it's LF, then we
-         *    need consume LF as well, so next call to readLine will read
-         *    from after that.
+         *    in CR. In this case we copy everything up to CR to record, but
+         * we also need to see what follows CR: if it's LF, then we
+         * need consume LF as well, so next call to readLine will read
+         * from after that.
          * We use a flag prevCharCR to signal if previous character was CR
          * and, if it happens to be at the end of the buffer, delay
          * consuming it until we have a chance to look at the char that
@@ -94,18 +110,5 @@ public class LineRecordReader extends AbstractStreamRecordReader {
         } while (newlineLength == 0);
         recordNumber++;
         return true;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        if (!configured) {
-            super.configure(configuration);
-            if (ExternalDataUtils.hasHeader(configuration)) {
-                if (hasNext()) {
-                    next();
-                }
-            }
-        }
-        configured = true;
     }
 }

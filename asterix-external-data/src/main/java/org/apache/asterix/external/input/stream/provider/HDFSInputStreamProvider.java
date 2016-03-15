@@ -38,12 +38,10 @@ public class HDFSInputStreamProvider<K> extends HDFSRecordReader<K, Text> implem
 
     public HDFSInputStreamProvider(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
             JobConf conf, Map<String, String> configuration, List<ExternalFile> snapshot) throws Exception {
-        super(read, inputSplits, readSchedule, nodeName, conf);
+        super(read, inputSplits, readSchedule, nodeName, conf, snapshot,
+                snapshot == null ? null : ExternalIndexerProvider.getIndexer(configuration));
         value = new Text();
-        configure(configuration);
         if (snapshot != null) {
-            setSnapshot(snapshot);
-            setIndexer(ExternalIndexerProvider.getIndexer(configuration));
             if (currentSplitIndex < snapshot.size()) {
                 indexer.reset(this);
             }
@@ -51,7 +49,7 @@ public class HDFSInputStreamProvider<K> extends HDFSRecordReader<K, Text> implem
     }
 
     @Override
-    public AInputStream getInputStream() throws Exception {
+    public AInputStream getInputStream() {
         return new HDFSInputStream();
     }
 
@@ -119,19 +117,11 @@ public class HDFSInputStreamProvider<K> extends HDFSRecordReader<K, Text> implem
         }
 
         @Override
-        public void configure(Map<String, String> configuration) {
-        }
-
-        @Override
         public void setFeedLogManager(FeedLogManager logManager) {
         }
 
         @Override
         public void setController(AbstractFeedDataFlowController controller) {
         }
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) {
     }
 }

@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.ADMDataParser;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -35,8 +38,8 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
 
     private ADMDataParser createParser() throws HyracksDataException {
         try {
-            ADMDataParser parser = new ADMDataParser();
-            parser.configure(configuration, recordType);
+            ADMDataParser parser = new ADMDataParser(recordType,
+                    ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM));
             return parser;
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -53,4 +56,9 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
             throws HyracksDataException {
         return createParser();
     }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
+    }
+
 }

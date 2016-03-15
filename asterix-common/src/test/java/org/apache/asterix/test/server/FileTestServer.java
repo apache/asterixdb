@@ -65,6 +65,7 @@ public class FileTestServer implements ITestServer {
                         // This also could be due to the close() call
                     }
                 }
+
             }
         });
         listenerThread.start();
@@ -72,9 +73,11 @@ public class FileTestServer implements ITestServer {
 
     @Override
     public void stop() throws IOException, InterruptedException {
-        serverSocket.close();
-        if (listenerThread.isAlive()) {
-            listenerThread.join();
+        if (serverSocket.isBound()) {
+            serverSocket.close();
+            if (listenerThread.isAlive()) {
+                listenerThread.join();
+            }
         }
     }
 }

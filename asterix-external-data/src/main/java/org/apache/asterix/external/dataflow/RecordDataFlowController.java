@@ -23,7 +23,9 @@ import javax.annotation.Nonnull;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
@@ -31,19 +33,22 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
 
     protected final IRecordDataParser<T> dataParser;
     protected final IRecordReader<? extends T> recordReader;
-    protected int numOfTupleFields = 1;
+    protected final int numOfTupleFields;
 
-    public RecordDataFlowController(@Nonnull IRecordDataParser<T> dataParser,
-            @Nonnull IRecordReader<? extends T> recordReader) {
+    public RecordDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
+            @Nonnull IRecordDataParser<T> dataParser, @Nonnull IRecordReader<? extends T> recordReader,
+            int numOfTupleFields) {
+        super(ctx, tupleForwarder);
         this.dataParser = dataParser;
         this.recordReader = recordReader;
+        this.numOfTupleFields = numOfTupleFields;
     }
 
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
             ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);
-            initializeTupleForwarder(writer);
+            tupleForwarder.initialize(ctx, writer);
             while (recordReader.hasNext()) {
                 IRawRecord<? extends T> record = recordReader.next();
                 tb.reset();
@@ -60,25 +65,5 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     }
 
     protected void appendOtherTupleFields(ArrayTupleBuilder tb) throws Exception {
-    }
-
-    @Override
-    public boolean stop() {
-        return recordReader.stop();
-    }
-
-    @Override
-    public boolean handleException(Throwable th) {
-        return false;
-    }
-
-    @Override
-    public boolean pause() throws HyracksDataException {
-        return false;
-    }
-
-    @Override
-    public boolean resume() throws HyracksDataException {
-        return false;
     }
 }

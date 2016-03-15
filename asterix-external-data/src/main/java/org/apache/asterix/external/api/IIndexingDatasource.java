@@ -20,6 +20,4 @@ package org.apache.asterix.external.api;
 
 public interface IIndexingDatasource {
     public IExternalIndexer getIndexer();
-
-    public void setIndexer(IExternalIndexer indexer);
 }

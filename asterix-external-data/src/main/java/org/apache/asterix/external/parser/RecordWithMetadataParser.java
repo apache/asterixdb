@@ -20,92 +20,93 @@ package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.external.api.IDataParser;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRawRecord;
+import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.external.input.record.RecordWithMetadata;
+import org.apache.asterix.external.api.IRecordWithMetaDataParser;
+import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class RecordWithMetadataParser<T> implements IRecordDataParser<RecordWithMetadata<T>> {
+public class RecordWithMetadataParser<T, O> implements IRecordWithMetaDataParser<T> {
 
-    private final Class<? extends RecordWithMetadata<T>> clazz;
-    private final int[] metaIndexes;
-    private final int valueIndex;
-    private ARecordType recordType;
-    private IRecordDataParser<T> valueParser;
-    private RecordBuilder recBuilder;
-    private ArrayBackedValueStorage[] nameBuffers;
-    private int numberOfFields;
-    private ArrayBackedValueStorage valueBuffer = new ArrayBackedValueStorage();
+    private final IRecordConverter<T, RecordWithMetadataAndPK<O>> converter;
+    private RecordWithMetadataAndPK<O> rwm;
+    private final IRecordDataParser<O> recordParser;
+    private final ARecordType metaType;
+    private final RecordBuilder metaBuilder;
+    private final ArrayBackedValueStorage[] metaFieldsNamesBuffers;
+    private final int numberOfMetaFields;
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
 
-    public RecordWithMetadataParser(Class<? extends RecordWithMetadata<T>> clazz, int[] metaIndexes,
-            IRecordDataParser<T> valueParser, int valueIndex) {
-        this.clazz = clazz;
-        this.metaIndexes = metaIndexes;
-        this.valueParser = valueParser;
-        this.valueIndex = valueIndex;
-    }
-
-    @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType)
-            throws HyracksDataException, IOException {
-        this.recordType = recordType;
-        this.numberOfFields = recordType.getFieldNames().length;
-        recBuilder = new RecordBuilder();
-        recBuilder.reset(recordType);
-        recBuilder.init();
-        nameBuffers = new ArrayBackedValueStorage[numberOfFields];
+    public RecordWithMetadataParser(ARecordType metaType, IRecordDataParser<O> valueParser,
+            IRecordConverter<T, RecordWithMetadataAndPK<O>> converter) throws HyracksDataException {
+        this.recordParser = valueParser;
+        this.converter = converter;
+        this.metaType = metaType;
+        this.numberOfMetaFields = metaType.getFieldNames().length;
+        metaBuilder = new RecordBuilder();
+        metaBuilder.reset(metaType);
+        metaBuilder.init();
+        metaFieldsNamesBuffers = new ArrayBackedValueStorage[numberOfMetaFields];
         AMutableString str = new AMutableString(null);
-        for (int i = 0; i < numberOfFields; i++) {
-            String name = recordType.getFieldNames()[i];
-            nameBuffers[i] = new ArrayBackedValueStorage();
+        for (int i = 0; i < numberOfMetaFields; i++) {
+            String name = metaType.getFieldNames()[i];
+            metaFieldsNamesBuffers[i] = new ArrayBackedValueStorage();
             str.setValue(name);
-            IDataParser.toBytes(str, nameBuffers[i], stringSerde);
+            IDataParser.toBytes(str, metaFieldsNamesBuffers[i], stringSerde);
         }
     }
 
     @Override
-    public Class<? extends RecordWithMetadata<T>> getRecordClass() {
-        return clazz;
-    }
-
-    @Override
-    public void parse(IRawRecord<? extends RecordWithMetadata<T>> record, DataOutput out) throws HyracksDataException {
+    public void parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
         try {
-            recBuilder.reset(recordType);
-            valueBuffer.reset();
-            recBuilder.init();
-            RecordWithMetadata<T> rwm = record.get();
-            for (int i = 0; i < numberOfFields; i++) {
-                if (i == valueIndex) {
-                    valueParser.parse(rwm.getRecord(), valueBuffer.getDataOutput());
-                    recBuilder.addField(i, valueBuffer);
-                } else {
-                    recBuilder.addField(i, rwm.getMetadata(metaIndexes[i]));
-                }
+            rwm = converter.convert(record);
+            if (rwm.getRecord().size() == 0) {
+                // null record
+                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+            } else {
+                recordParser.parse(rwm.getRecord(), out);
             }
-            recBuilder.write(out, true);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void parseMeta(DataOutput out) throws HyracksDataException {
+        try {
+            if (rwm.getRecord().size() == 0) {
+                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+            } else {
+                metaBuilder.reset(metaType);
+                metaBuilder.init();
+                // parse meta-Fields
+                for (int i = 0; i < numberOfMetaFields; i++) {
+                    metaBuilder.addField(i, rwm.getMetadata(i));
+                }
+                // write the meta record
+                metaBuilder.write(out, true);
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public void appendPK(ArrayTupleBuilder tb) throws IOException {
+        rwm.appendPk(tb);
     }
 }

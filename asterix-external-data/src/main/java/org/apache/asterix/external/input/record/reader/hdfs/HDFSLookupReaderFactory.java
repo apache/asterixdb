@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -30,14 +31,15 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 
 public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
 
-    protected static final long serialVersionUID = 1L;
-    protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private static final long serialVersionUID = 1L;
     protected ConfFactory confFactory;
     protected Map<String, String> configuration;
+    protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     public HDFSLookupReaderFactory() {
     }
@@ -48,16 +50,20 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
         clusterLocations = HDFSUtils.getPartitionConstraints(clusterLocations);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
-        confFactory = new ConfFactory(conf);
+        try {
+            confFactory = new ConfFactory(conf);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(e);
+        }
 
     }
 
@@ -69,10 +75,15 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
     @SuppressWarnings("unchecked")
     @Override
     public ILookupRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition,
-            ExternalFileIndexAccessor snapshotAccessor) throws Exception {
+            ExternalFileIndexAccessor snapshotAccessor) throws HyracksDataException {
         String inputFormatParameter = configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim();
         JobConf conf = confFactory.getConf();
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem fs;
+        try {
+            fs = FileSystem.get(conf);
+        } catch (IOException e) {
+            throw new HyracksDataException("Unable to get filesystem object", e);
+        }
         switch (inputFormatParameter) {
             case ExternalDataConstants.INPUT_FORMAT_TEXT:
                 return (ILookupRecordReader<? extends T>) new TextLookupReader(snapshotAccessor, fs, conf);
@@ -81,7 +92,7 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
             case ExternalDataConstants.INPUT_FORMAT_RC:
                 return (ILookupRecordReader<? extends T>) new RCLookupReader(snapshotAccessor, fs, conf);
             default:
-                throw new AsterixException("Unrecognised input format: " + inputFormatParameter);
+                throw new HyracksDataException("Unrecognised input format: " + inputFormatParameter);
         }
     }
 }

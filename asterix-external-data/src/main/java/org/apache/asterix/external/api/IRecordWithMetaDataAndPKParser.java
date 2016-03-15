@@ -18,6 +18,15 @@
  */
 package org.apache.asterix.external.api;
 
-public interface IStreamFlowController extends IDataFlowController {
-    public void setStreamParser(IStreamDataParser dataParser);
+import java.io.DataOutput;
+import java.io.IOException;
+
+import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+
+public interface IRecordWithMetaDataAndPKParser<T> extends IRecordDataParser<RecordWithMetadataAndPK<T>> {
+
+    public void parseMeta(RecordWithMetadataAndPK<? extends T> record, DataOutput out) throws IOException;
+
+    public void appendKeys(RecordWithMetadataAndPK<T> record, ArrayTupleBuilder tb) throws IOException;
 }

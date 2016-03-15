@@ -18,35 +18,35 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
-import java.util.Map;
-
+import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReaderFactory extends AbstractStreamRecordReaderFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition) throws Exception {
+    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         String quoteString = configuration.get(ExternalDataConstants.KEY_QUOTE);
-        LineRecordReader recordReader;
+        boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
+        Pair<AInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
         if (quoteString != null) {
-            recordReader = new QuotedLineRecordReader();
+            return new QuotedLineRecordReader(hasHeader, streamAndIndexer.first, streamAndIndexer.second, quoteString);
         } else {
-            recordReader = new LineRecordReader();
+            return new LineRecordReader(hasHeader, streamAndIndexer.first, streamAndIndexer.second);
         }
-        return configureReader(recordReader, ctx, partition);
     }
 
     @Override
     public Class<? extends char[]> getRecordClass() {
         return char[].class;
-    }
-
-    @Override
-    protected void configureStreamReaderFactory(Map<String, String> configuration) throws Exception {
     }
 
 }

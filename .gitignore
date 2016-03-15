@@ -24,6 +24,7 @@ bin/
 *-coredump
 *.pyc
 *.iml
+asterix-app/data/csv/beer.csv
 .idea/
 asterix.ipr
 asterix.iws

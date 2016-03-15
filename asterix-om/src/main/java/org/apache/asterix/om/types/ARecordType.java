@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,6 +42,9 @@ import org.json.JSONObject;
  * from ARecordType and has to be one-per-partition.
  */
 public class ARecordType extends AbstractComplexType {
+
+    public static final ARecordType FULLY_OPEN_RECORD_TYPE = new ARecordType("OpenRecord", new String[0], new IAType[0],
+            true);
 
     private static final long serialVersionUID = 1L;
     private final String[] fieldNames;
@@ -71,11 +75,11 @@ public class ARecordType extends AbstractComplexType {
         }
     }
 
-    public final String[] getFieldNames() {
+    public String[] getFieldNames() {
         return fieldNames;
     }
 
-    public final IAType[] getFieldTypes() {
+    public IAType[] getFieldTypes() {
         return fieldTypes;
     }
 
@@ -96,7 +100,7 @@ public class ARecordType extends AbstractComplexType {
         int n = fieldNames.length;
         for (int i = 0; i < n; i++) {
             sb.append("  " + fieldNames[i] + ": " + fieldTypes[i].toString());
-            if (i < n - 1) {
+            if (i < (n - 1)) {
                 sb.append(",\n");
             } else {
                 sb.append("\n");
@@ -144,7 +148,7 @@ public class ARecordType extends AbstractComplexType {
 
     public IAType getSubFieldType(List<String> subFieldName, IAType parent) {
         ARecordType subRecordType = (ARecordType) parent;
-        for (int i = 0; i < subFieldName.size() - 1; i++) {
+        for (int i = 0; i < (subFieldName.size() - 1); i++) {
             subRecordType = (ARecordType) subRecordType.getFieldType(subFieldName.get(i));
         }
         return subRecordType.getFieldType(subFieldName.get(subFieldName.size() - 1));
@@ -182,10 +186,11 @@ public class ARecordType extends AbstractComplexType {
      * @param fieldName
      *            the fieldName whose type is sought
      * @return the field type of the field name if it exists, otherwise null
+     *         NOTE: this method doesn't work for nested fields
      */
     public IAType getFieldType(String fieldName) {
         int fieldPos = getFieldIndex(fieldName);
-        if (fieldPos < 0 || fieldPos >= fieldTypes.length) {
+        if ((fieldPos < 0) || (fieldPos >= fieldTypes.length)) {
             return null;
         }
         return fieldTypes[fieldPos];
@@ -242,7 +247,7 @@ public class ARecordType extends AbstractComplexType {
     public void generateNestedDerivedTypeNames() {
         for (int i = 0; i < fieldTypes.length; i++) {
             IAType fieldType = fieldTypes[i];
-            if (fieldType.getTypeTag().isDerivedType() && fieldType.getTypeName() == null) {
+            if (fieldType.getTypeTag().isDerivedType() && (fieldType.getTypeName() == null)) {
                 AbstractComplexType nestedType = ((AbstractComplexType) fieldType);
                 nestedType.setTypeName(getTypeName() + "_" + fieldNames[i]);
                 nestedType.generateNestedDerivedTypeNames();
@@ -256,7 +261,7 @@ public class ARecordType extends AbstractComplexType {
             return false;
         }
         ARecordType rt = (ARecordType) obj;
-        return isOpen == rt.isOpen && Arrays.deepEquals(fieldNames, rt.fieldNames)
+        return (isOpen == rt.isOpen) && Arrays.deepEquals(fieldNames, rt.fieldNames)
                 && Arrays.deepEquals(fieldTypes, rt.fieldTypes);
     }
 
@@ -264,10 +269,10 @@ public class ARecordType extends AbstractComplexType {
     public int hash() {
         int h = 0;
         for (int i = 0; i < fieldNames.length; i++) {
-            h += 31 * h + fieldNames[i].hashCode();
+            h += (31 * h) + fieldNames[i].hashCode();
         }
         for (int i = 0; i < fieldTypes.length; i++) {
-            h += 31 * h + fieldTypes[i].hashCode();
+            h += (31 * h) + fieldTypes[i].hashCode();
         }
         return h;
     }
@@ -298,4 +303,11 @@ public class ARecordType extends AbstractComplexType {
         return NonTaggedFormatUtil.hasNullableField(rt) ? (int) Math.ceil(rt.getFieldNames().length / 8.0) : 0;
     }
 
+    public List<IAType> getFieldTypes(List<List<String>> fields) throws AlgebricksException {
+        List<IAType> typeList = new ArrayList<>();
+        for (List<String> field : fields) {
+            typeList.add(getSubFieldType(field));
+        }
+        return typeList;
+    }
 }

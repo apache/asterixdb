@@ -35,7 +35,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class FeedExceptionHandler implements IExceptionHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedExceptionHandler.class.getName());
+    private static Logger LOGGER = Logger.getLogger(FeedExceptionHandler.class.getName());
 
     //TODO: Enable logging
     private final IHyracksTaskContext ctx;
@@ -45,6 +45,11 @@ public class FeedExceptionHandler implements IExceptionHandler {
             IFeedManager feedManager, FeedConnectionId connectionId) {
         this.ctx = ctx;
         this.fta = fta;
+    }
+
+    public void prettyPrint(ByteBuffer frame) {
+        fta.reset(frame);
+        fta.prettyPrint();
     }
 
     @Override

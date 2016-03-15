@@ -47,15 +47,14 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
     protected FileSplit[] inputFileSplits;
-    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log
-                                             // storage
+    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log storage
     protected boolean isFeed;
     protected String expression;
     // transient fields (They don't need to be serialized and transferred)
     private transient AlgebricksAbsolutePartitionConstraint constraints;
 
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) throws Exception {
+    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) {
         return new LocalFSInputStreamProvider(inputFileSplits, ctx, configuration, partition, expression, isFeed);
     }
 
@@ -70,7 +69,7 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         String[] splits = configuration.get(ExternalDataConstants.KEY_PATH).split(",");
         configureFileSplits(splits);
@@ -84,7 +83,7 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws Exception {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         return constraints;
     }
 

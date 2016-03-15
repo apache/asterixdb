@@ -18,46 +18,27 @@
  */
 package org.apache.asterix.external.api;
 
-import java.util.Map;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IDataFlowController {
 
-    /**
-     * Order of calls:
-     * 1. Constructor()
-     * 2. if record flow controller
-     * |-a. Set record reader
-     * |-b. Set record parser
-     * else
-     * |-a. Set stream parser
-     * 3. setTupleForwarder(forwarder)
-     * 4. configure(configuration,ctx)
-     * 5. start(writer)
-     *
-     * pause(), resume(), and stop() are only used with feeds
-     * pause is called after start when a feed is running and the system is overwhelmed with data.
-     * resume is called after the load goes down and we are ready to receive more data.
-     * stop is called to disconnect the feed. once stop is called, no other method is called.
-     *
-     */
-
+    //TODO: Refactor this interface. Remove writer from start() signature
     public void start(IFrameWriter writer) throws HyracksDataException;
 
-    public boolean stop() throws HyracksDataException;
+    public default boolean pause() throws HyracksDataException {
+        throw new HyracksDataException("Method not implemented");
+    }
 
-    public boolean pause() throws HyracksDataException;
+    public default boolean resume() throws HyracksDataException {
+        throw new HyracksDataException("Method not implemented");
+    }
 
-    public boolean resume() throws HyracksDataException;
+    public default void flush() throws HyracksDataException {
+        throw new HyracksDataException("Method not implemented");
+    }
 
-    public boolean handleException(Throwable th);
-
-    public ITupleForwarder getTupleForwarder();
-
-    public void setTupleForwarder(ITupleForwarder forwarder);
-
-    public void configure(Map<String, String> configuration, IHyracksTaskContext ctx) throws HyracksDataException;
+    public default boolean stop() throws HyracksDataException {
+        throw new HyracksDataException("Method not implemented");
+    }
 }

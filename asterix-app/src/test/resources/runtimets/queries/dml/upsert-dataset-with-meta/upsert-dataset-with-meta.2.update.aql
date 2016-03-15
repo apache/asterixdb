@@ -16,41 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader;
+/*
+ * Description  : Upsert into a dataset with meta type
+ * Expected Res : Failure
+ * Date         : 15th Mar 2016
+ */
 
-import java.io.IOException;
+use dataverse test;
 
-import org.apache.hadoop.mapred.RecordReader;
-
-public class EmptyRecordReader<K, V> implements RecordReader<K, V> {
-
-    @Override
-    public boolean next(K key, V value) throws IOException {
-        return false;
-    }
-
-    @Override
-    public K createKey() {
-        return null;
-    }
-
-    @Override
-    public V createValue() {
-        return null;
-    }
-
-    @Override
-    public long getPos() throws IOException {
-        return 0;
-    }
-
-    @Override
-    public void close() throws IOException {
-    }
-
-    @Override
-    public float getProgress() throws IOException {
-        return 0;
-    }
-
-}
+upsert into dataset DatasetWithMeta (
+{"id": 2, "name": "Person Two", "hobbies": {{"Rock", "Jazz"}}}
+);

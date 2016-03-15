@@ -19,10 +19,10 @@
 package org.apache.asterix.external.library;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -39,37 +39,36 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
     public static final String KEY_EXPR_PREFIX = "expr-prefix";
     public static final String KEY_EXPR_SUFFIX = "expr-suffix";
     public static final String KEY_EXPR_NAME_SUFFIX = "expr-name-suffix";
-
     private ARecordType recordType;
     private Map<String, String> configuration;
     private boolean oldFormat = false;
+    private boolean evaluateExpr = true;
+    private boolean keepBoth;
+    private String exprPrefix;
+    private String exprSuffix;
+    private String exprFieldNameSuffix;
 
-    private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
+    private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.writeObject(recordType);
         stream.writeObject(configuration);
     }
 
     @SuppressWarnings("unchecked")
-    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         recordType = (ARecordType) stream.readObject();
         configuration = (Map<String, String>) stream.readObject();
     }
 
     @Override
-    public DataSourceType getDataSourceType() throws AsterixException {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) {
         this.configuration = configuration;
         // is old format?
         String parserConfig = configuration.get(KEY_OLD_FORMAT);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase(ExternalDataConstants.TRUE)) {
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase(ExternalDataConstants.TRUE)) {
             oldFormat = true;
         }
-        parserConfig = configuration.get(ExternalDataConstants.KEY_READER);
-        if (parserConfig != null && parserConfig.equalsIgnoreCase(ExternalDataConstants.READER_LINE_SEPARATED)) {
+        parserConfig = configuration.get(ExternalDataConstants.KEY_FORMAT);
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase(ExternalDataConstants.FORMAT_LINE_SEPARATED)) {
             oldFormat = true;
         }
         if (!oldFormat) {
@@ -77,6 +76,30 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
             configuration.put(ExternalDataConstants.KEY_RECORD_END, "]");
         }
 
+        parserConfig = configuration.get(ClassAdParserFactory.KEY_EVALUATE);
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase("false")) {
+            evaluateExpr = false;
+            keepBoth = false;
+        }
+        parserConfig = configuration.get(ClassAdParserFactory.KEY_KEEP_EXPR);
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase("false")) {
+            keepBoth = false;
+            evaluateExpr = true;
+        }
+
+        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_PREFIX);
+        if ((parserConfig != null) && (parserConfig.trim().length() > 0)) {
+            exprPrefix = parserConfig;
+        }
+        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_SUFFIX);
+        if ((parserConfig != null) && (parserConfig.trim().length() > 0)) {
+            exprSuffix = parserConfig;
+        }
+
+        parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_NAME_SUFFIX);
+        if ((parserConfig != null) && (parserConfig.trim().length() > 0)) {
+            exprFieldNameSuffix = parserConfig;
+        }
     }
 
     @Override
@@ -85,16 +108,18 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
     }
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx)
-            throws HyracksDataException, AsterixException, IOException {
-        ClassAdParser parser = new ClassAdParser(recordType);
-        parser.configure(configuration, recordType);
-        return parser;
+    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
+        return new ClassAdParser(recordType, oldFormat, evaluateExpr, keepBoth, exprPrefix, exprSuffix,
+                exprFieldNameSuffix);
     }
 
     @Override
     public Class<? extends char[]> getRecordClass() {
         return char[].class;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
     }
 
 }

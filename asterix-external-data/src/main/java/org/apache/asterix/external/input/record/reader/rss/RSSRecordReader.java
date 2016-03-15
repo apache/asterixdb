@@ -23,7 +23,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 import org.apache.asterix.external.api.IDataFlowController;
@@ -71,10 +70,6 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
     @Override
     public void close() throws IOException {
         fetcher.removeFetcherEventListener(listener);
-    }
-
-    @Override
-    public void configure(Map<String, String> configurations) throws Exception {
     }
 
     @Override

@@ -18,11 +18,8 @@
  */
 package org.apache.asterix.external.parser.factory;
 
-import java.io.IOException;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.RSSParser;
@@ -35,16 +32,9 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
 
     private static final long serialVersionUID = 1L;
     private ARecordType recordType;
-    private Map<String, String> configuration;
 
     @Override
-    public DataSourceType getDataSourceType() throws AsterixException {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        this.configuration = configuration;
+    public void configure(Map<String, String> configuration) {
     }
 
     @Override
@@ -53,16 +43,18 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
     }
 
     @Override
-    public IRecordDataParser<SyndEntryImpl> createRecordParser(IHyracksTaskContext ctx)
-            throws AsterixException, IOException {
-        RSSParser dataParser = new RSSParser();
-        dataParser.configure(configuration, recordType);
+    public IRecordDataParser<SyndEntryImpl> createRecordParser(IHyracksTaskContext ctx) {
+        RSSParser dataParser = new RSSParser(recordType);
         return dataParser;
     }
 
     @Override
     public Class<? extends SyndEntryImpl> getRecordClass() {
         return SyndEntryImpl.class;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
     }
 
 }

@@ -18,10 +18,12 @@
  */
 package org.apache.asterix.external.input;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IInputStreamProvider;
 import org.apache.asterix.external.api.IInputStreamProviderFactory;
@@ -59,7 +61,7 @@ public class HDFSDataSourceFactory
     protected static Scheduler hdfsScheduler;
     protected static IndexingScheduler indexingScheduler;
     protected static Boolean initialized = false;
-    protected static final Object initLock = new Object();
+    protected static Object initLock = new Object();
     protected List<ExternalFile> files;
     protected Map<String, String> configuration;
     protected Class<?> recordClass;
@@ -69,37 +71,41 @@ public class HDFSDataSourceFactory
     private String nodeName;
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        initialize();
-        this.configuration = configuration;
-        JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
-        confFactory = new ConfFactory(conf);
-        clusterLocations = getPartitionConstraint();
-        int numPartitions = clusterLocations.getLocations().length;
-        // if files list was set, we restrict the splits to the list
-        InputSplit[] inputSplits;
-        if (files == null) {
-            inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
-        } else {
-            inputSplits = HDFSUtils.getSplits(conf, files);
-        }
-        if (indexingOp) {
-            readSchedule = indexingScheduler.getLocationConstraints(inputSplits);
-        } else {
-            readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
-        }
-        inputSplitsFactory = new InputSplitsFactory(inputSplits);
-        read = new boolean[readSchedule.length];
-        Arrays.fill(read, false);
-        if (!ExternalDataUtils.isDataSourceStreamProvider(configuration)) {
-            RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
-            this.recordClass = reader.createValue().getClass();
-            reader.close();
+    public void configure(Map<String, String> configuration) throws AsterixException {
+        try {
+            init();
+            this.configuration = configuration;
+            JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
+            confFactory = new ConfFactory(conf);
+            clusterLocations = getPartitionConstraint();
+            int numPartitions = clusterLocations.getLocations().length;
+            // if files list was set, we restrict the splits to the list
+            InputSplit[] inputSplits;
+            if (files == null) {
+                inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
+            } else {
+                inputSplits = HDFSUtils.getSplits(conf, files);
+            }
+            if (indexingOp) {
+                readSchedule = indexingScheduler.getLocationConstraints(inputSplits);
+            } else {
+                readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
+            }
+            inputSplitsFactory = new InputSplitsFactory(inputSplits);
+            read = new boolean[readSchedule.length];
+            Arrays.fill(read, false);
+            if (!ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM)) {
+                RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
+                this.recordClass = reader.createValue().getClass();
+                reader.close();
+            }
+        } catch (IOException e) {
+            throw new AsterixException(e);
         }
     }
 
-    // Used to tell the factory to restrict the splits to the intersection between this list and the
-    // actual files on hdfs side
+    // Used to tell the factory to restrict the splits to the intersection between this list a
+    // actual files on hde
     @Override
     public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
         this.files = files;
@@ -110,8 +116,7 @@ public class HDFSDataSourceFactory
      * The method below was modified to take care of the following
      * 1. when target files are not null, it generates a file aware input stream that validate
      * against the files
-     * 2. if the data is binary, it returns a generic reader
-     */
+     * 2. if the data is binary, it returns a generic reade */
     @Override
     public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
@@ -133,6 +138,7 @@ public class HDFSDataSourceFactory
      * Get the cluster locations for this input stream factory. This method specifies on which asterix nodes the
      * external
      * adapter will run and how many threads per node.
+     *
      * @return
      */
     @Override
@@ -145,7 +151,7 @@ public class HDFSDataSourceFactory
      * This method initialize the scheduler which assigns responsibility of reading different logical input splits from
      * HDFS
      */
-    private static void initialize() {
+    private static void init() {
         if (!initialized) {
             synchronized (initLock) {
                 if (!initialized) {
@@ -163,24 +169,21 @@ public class HDFSDataSourceFactory
 
     @Override
     public DataSourceType getDataSourceType() {
-        return (ExternalDataUtils.isDataSourceStreamProvider(configuration)) ? DataSourceType.STREAM
-                : DataSourceType.RECORDS;
+        return ExternalDataUtils.getDataSourceType(configuration);
     }
 
     @Override
     public IRecordReader<? extends Writable> createRecordReader(IHyracksTaskContext ctx, int partition)
-            throws Exception {
-        JobConf conf = confFactory.getConf();
-        InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-        String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
-        HDFSRecordReader<Object, Writable> recordReader = new HDFSRecordReader<Object, Writable>(read, inputSplits,
-                readSchedule, nodeName, conf);
-        if (files != null) {
-            recordReader.setSnapshot(files);
-            recordReader.setIndexer(ExternalIndexerProvider.getIndexer(configuration));
+            throws HyracksDataException {
+        try {
+            JobConf conf = confFactory.getConf();
+            InputSplit[] inputSplits = inputSplitsFactory.getSplits();
+            String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            return new HDFSRecordReader<Object, Writable>(read, inputSplits, readSchedule, nodeName, conf, files,
+                    files == null ? null : ExternalIndexerProvider.getIndexer(configuration));
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
-        recordReader.configure(configuration);
-        return recordReader;
     }
 
     @Override
@@ -195,6 +198,6 @@ public class HDFSDataSourceFactory
 
     @Override
     public boolean isIndexingOp() {
-        return (files != null && indexingOp);
+        return ((files != null) && indexingOp);
     }
 }

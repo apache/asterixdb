@@ -20,7 +20,6 @@ package org.apache.asterix.external.parser.factory;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.api.IStreamDataParserFactory;
@@ -35,7 +34,7 @@ public abstract class AbstractRecordStreamParserFactory<T>
     protected Map<String, String> configuration;
 
     @Override
-    public DataSourceType getDataSourceType() throws AsterixException {
+    public DataSourceType getDataSourceType() {
         return ExternalDataUtils.getDataSourceType(configuration);
     }
 

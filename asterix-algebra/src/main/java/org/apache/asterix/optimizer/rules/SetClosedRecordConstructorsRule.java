@@ -50,7 +50,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
 
-    private SettingClosedRecordVisitor recordVisitor;
+    final private SettingClosedRecordVisitor recordVisitor;
 
     public SetClosedRecordConstructorsRule() {
         this.recordVisitor = new SettingClosedRecordVisitor();

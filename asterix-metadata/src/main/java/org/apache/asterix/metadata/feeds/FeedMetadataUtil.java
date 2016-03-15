@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.feeds;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +33,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -45,12 +47,13 @@ import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
-import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -79,7 +82,9 @@ import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.RandomPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -92,7 +97,7 @@ import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningWithMessageCon
  */
 public class FeedMetadataUtil {
 
-    private static Logger LOGGER = Logger.getLogger(FeedMetadataUtil.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FeedMetadataUtil.class.getName());
 
     private static class LocationConstraint {
         int partition;
@@ -158,7 +163,7 @@ public class FeedMetadataUtil {
                         orig.getFeedConnectionId(), orig.getSourceFeedId(), (ARecordType) orig.getOutputType(),
                         orig.getRecordDescriptor(), orig.getFeedPolicyProperties(), orig.getSubscriptionLocation());
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
-            } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor
+            } else if ((opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor)
                     && ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
                 // only introduce store before primary index
                 operandId = ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
@@ -343,7 +348,7 @@ public class FeedMetadataUtil {
             sourceOp = entry.getValue().getKey().getKey();
             if (sourceOp instanceof FeedCollectOperatorDescriptor) {
                 targetOp = entry.getValue().getValue().getKey();
-                if (targetOp instanceof FeedMetaOperatorDescriptor
+                if ((targetOp instanceof FeedMetaOperatorDescriptor)
                         && (((FeedMetaOperatorDescriptor) targetOp).getRuntimeType().equals(FeedRuntimeType.COMPUTE))) {
                     connDesc = connectors.get(cid);
                     break;
@@ -458,7 +463,8 @@ public class FeedMetadataUtil {
         return preProcessingRequired;
     }
 
-    public static Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType> getPrimaryFeedFactoryAndOutput(
+    @SuppressWarnings("rawtypes")
+    public static Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> getPrimaryFeedFactoryAndOutput(
             Feed feed, FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx)
                     throws AlgebricksException {
         // This method needs to be re-visited
@@ -467,13 +473,15 @@ public class FeedMetadataUtil {
         String adapterFactoryClassname = null;
         IAdapterFactory adapterFactory = null;
         ARecordType adapterOutputType = null;
-        Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType> feedProps = null;
+        ARecordType metaType = null;
+        Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> feedProps = null;
         IDataSourceAdapter.AdapterType adapterType = null;
         try {
             adapterName = feed.getAdapterName();
             Map<String, String> configuration = feed.getAdapterConfiguration();
             configuration.putAll(policyAccessor.getFeedPolicy());
-            adapterOutputType = getOutputType(feed, configuration);
+            adapterOutputType = getOutputType(feed, configuration, ExternalDataConstants.KEY_TYPE_NAME);
+            metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
             ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -482,8 +490,6 @@ public class FeedMetadataUtil {
             if (adapterEntity == null) {
                 adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
             }
-
-            ExternalDataCompatibilityUtils.addCompatabilityParameters(adapterName, adapterOutputType, configuration);
             if (adapterEntity != null) {
                 adapterType = adapterEntity.getType();
                 adapterFactoryClassname = adapterEntity.getClassname();
@@ -499,26 +505,64 @@ public class FeedMetadataUtil {
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                 }
-                adapterFactory.configure(configuration, adapterOutputType);
+                adapterFactory.configure(configuration, adapterOutputType, metaType);
             } else {
-                adapterFactory = AdapterFactoryProvider.getAdapterFactory(adapterName, configuration,
-                        adapterOutputType);
+                adapterFactory = AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, adapterOutputType,
+                        metaType);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
-            feedProps = new Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType>(adapterFactory,
-                    adapterOutputType, adapterType);
+            int numOfOutputs = 1;
+            if (metaType != null) {
+                numOfOutputs++;
+            }
+            if (ExternalDataUtils.isChangeFeed(configuration)) {
+                // get number of PKs
+                numOfOutputs += ExternalDataUtils.getNumberOfKeys(configuration);
+            }
+            ISerializerDeserializer[] serdes = new ISerializerDeserializer[numOfOutputs];
+            int i = 0;
+            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(adapterOutputType);
+            if (metaType != null) {
+                serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
+            }
+            if (ExternalDataUtils.isChangeFeed(configuration)) {
+                int[] pkIndexes = ExternalDataUtils.getPKIndexes(configuration);
+                if (metaType != null) {
+                    int[] pkIndicators = ExternalDataUtils.getPKSourceIndicators(configuration);
+                    for (int j = 0; j < pkIndexes.length; j++) {
+                        int aInt = pkIndexes[j];
+                        if (pkIndicators[j] == 0) {
+                            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
+                        } else if (pkIndicators[j] == 1) {
+                            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(metaType.getFieldTypes()[aInt]);
+                        } else {
+                            throw new AlgebricksException("a key source indicator can only be 0 or 1");
+                        }
+                    }
+                } else {
+                    for (int aInt : pkIndexes) {
+                        serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
+                                .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
+                    }
+                }
+            }
+            feedProps = new Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType>(adapterFactory,
+                    new RecordDescriptor(serdes), adapterType);
         } catch (Exception e) {
             throw new AlgebricksException("unable to create adapter", e);
         }
         return feedProps;
     }
 
-    public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration) throws Exception {
+    public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration, String key)
+            throws RemoteException, ACIDException, MetadataException {
         ARecordType outputType = null;
-        String fqOutputType = configuration.get(ExternalDataConstants.KEY_TYPE_NAME);
+        String fqOutputType = configuration.get(key);
 
         if (fqOutputType == null) {
-            throw new IllegalArgumentException("No output type specified");
+            return null;
         }
         String[] dataverseAndType = fqOutputType.split("[.]");
         String dataverseName;
@@ -530,9 +574,9 @@ public class FeedMetadataUtil {
         } else if (dataverseAndType.length == 2) {
             dataverseName = dataverseAndType[0];
             datatypeName = dataverseAndType[1];
-        } else
-            throw new IllegalArgumentException(
-                    "Invalid value for the parameter " + ExternalDataConstants.KEY_TYPE_NAME);
+        } else {
+            throw new IllegalArgumentException("Invalid value for the parameter " + key);
+        }
 
         MetadataTransactionContext ctx = null;
         MetadataManager.INSTANCE.acquireReadLatch();
@@ -545,11 +589,15 @@ public class FeedMetadataUtil {
             }
             outputType = (ARecordType) t.getDatatype();
             MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
+        } catch (ACIDException | RemoteException | MetadataException e) {
             if (ctx != null) {
-                MetadataManager.INSTANCE.abortTransaction(ctx);
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                } catch (ACIDException | RemoteException e2) {
+                    e.addSuppressed(e2);
+                }
+                throw e;
             }
-            throw e;
         } finally {
             MetadataManager.INSTANCE.releaseReadLatch();
         }
@@ -557,15 +605,15 @@ public class FeedMetadataUtil {
     }
 
     public static String getSecondaryFeedOutput(Feed feed, FeedPolicyAccessor policyAccessor,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException, MetadataException {
+            MetadataTransactionContext mdTxnCtx)
+                    throws AlgebricksException, MetadataException, RemoteException, ACIDException {
         String outputType = null;
         String primaryFeedName = feed.getSourceFeedName();
         Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feed.getDataverseName(), primaryFeedName);
         FunctionSignature appliedFunction = primaryFeed.getAppliedFunction();
         if (appliedFunction == null) {
-            Triple<IAdapterFactory, ARecordType, IDataSourceAdapter.AdapterType> result = getPrimaryFeedFactoryAndOutput(
-                    primaryFeed, policyAccessor, mdTxnCtx);
-            outputType = result.second.getTypeName();
+            outputType = getOutputType(feed, feed.getAdapterConfiguration(), ExternalDataConstants.KEY_TYPE_NAME)
+                    .getDisplayName();
         } else {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
             if (function != null) {
@@ -581,6 +629,12 @@ public class FeedMetadataUtil {
             }
         }
         return outputType;
+    }
+
+    public static boolean isChangeFeed(AqlMetadataProvider mdProvider, String dataverse, String feedName)
+            throws AlgebricksException {
+        Feed feed = mdProvider.findFeed(dataverse, feedName);
+        return ExternalDataUtils.isChangeFeed(feed.getAdapterConfiguration());
     }
 
 }

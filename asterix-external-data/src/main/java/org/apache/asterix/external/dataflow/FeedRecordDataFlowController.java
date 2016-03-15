@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
@@ -29,7 +30,9 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.log4j.Logger;
 
 public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
@@ -37,12 +40,13 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected final IRecordDataParser<T> dataParser;
     protected final IRecordReader<? extends T> recordReader;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
-    protected long interval;
+    protected final long interval = 1000;
     protected boolean failed = false;
 
-    public FeedRecordDataFlowController(@Nonnull FeedLogManager feedLogManager,
-            @Nonnull IRecordDataParser<T> dataParser, @Nonnull IRecordReader<T> recordReader) {
-        super(feedLogManager);
+    public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
+            @Nonnull FeedLogManager feedLogManager, int numOfOutputFields, @Nonnull IRecordDataParser<T> dataParser,
+            @Nonnull IRecordReader<T> recordReader) {
+        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields);
         this.dataParser = dataParser;
         this.recordReader = recordReader;
         recordReader.setFeedLogManager(feedLogManager);
@@ -54,7 +58,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         HyracksDataException hde = null;
         try {
             failed = false;
-            initializeTupleForwarder(writer);
+            tupleForwarder.initialize(ctx, writer);
             while (recordReader.hasNext()) {
                 IRawRecord<? extends T> record = recordReader.next();
                 if (record == null) {
@@ -65,6 +69,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 tb.reset();
                 dataParser.parse(record, tb.getDataOutput());
                 tb.addFieldEndOffset();
+                addMetaPart(tb, record);
+                addPrimaryKeys(tb, record);
                 if (tb.getSize() > tupleForwarder.getMaxRecordSize()) {
                     // log
                     feedLogManager.logRecord(record.toString(), ExternalDataConstants.LARGE_RECORD_ERROR_MESSAGE);
@@ -94,6 +100,12 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 throw hde;
             }
         }
+    }
+
+    protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException {
+    }
+
+    protected void addPrimaryKeys(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException {
     }
 
     private void closeSignal() {
