@@ -26,13 +26,15 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.GrowableArray;
 
 /**
  * Array backed tuple builder.
  *
- * @author vinayakb
+ * @deprecated Use IFrameFieldAppender.appendField to append fields directly.
  */
+@Deprecated
 public class ArrayTupleBuilder implements IDataOutputProvider {
     private final GrowableArray fieldData = new GrowableArray();
     private final int[] fEndOffsets;
@@ -165,5 +167,12 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      */
     public void addFieldEndOffset() {
         fEndOffsets[nextField++] = fieldData.getLength();
+    }
+
+    /**
+     * Adds a new field and fills it with the content of the passed value
+     */
+    public void addField(IValueReference data) throws HyracksDataException {
+        addField(data.getByteArray(), data.getStartOffset(), data.getLength());
     }
 }

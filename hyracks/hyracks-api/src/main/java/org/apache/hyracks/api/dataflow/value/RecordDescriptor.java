@@ -20,7 +20,7 @@ package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public final class RecordDescriptor implements Serializable {
     private static final long serialVersionUID = 1L;
 

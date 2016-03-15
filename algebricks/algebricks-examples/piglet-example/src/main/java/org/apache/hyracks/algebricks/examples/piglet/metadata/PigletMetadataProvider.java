@@ -78,7 +78,6 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<String> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
@@ -216,8 +215,9 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(IDataSource<String> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
-            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification jobSpec, boolean bulkload) throws AlgebricksException {
+            LogicalVariable payLoadVar, List<LogicalVariable> additionalFilterKeyFields,
+            List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor recordDesc, JobGenContext context,
+            JobSpecification jobSpec, boolean bulkload) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -234,8 +234,9 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getUpsertRuntime(IDataSource<String> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
-            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields, LogicalVariable prevPayload,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec) throws AlgebricksException {
+            LogicalVariable payLoadVar, List<LogicalVariable> additionalFilterFields,
+            List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor recordDesc, JobGenContext context,
+            JobSpecification jobSpec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -246,7 +247,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalFilteringKeys,
             ILogicalExpression filterExpr, List<LogicalVariable> prevSecondaryKeys,
-            LogicalVariable prevAdditionalFilteringKeys, RecordDescriptor inputDesc, JobGenContext context,
+            LogicalVariable prevAdditionalFilteringFields, RecordDescriptor inputDesc, JobGenContext context,
             JobSpecification spec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;

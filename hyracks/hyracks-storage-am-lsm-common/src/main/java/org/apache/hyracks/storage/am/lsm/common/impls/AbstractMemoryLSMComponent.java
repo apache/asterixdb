@@ -27,9 +27,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
 
-    private int writerCount;
     private final IVirtualBufferCache vbc;
     private final AtomicBoolean isModified;
+    private int writerCount;
     private boolean requestedToBeActive;
 
     public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
@@ -90,7 +90,7 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             case REPLICATE:
             case SEARCH:
                 if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE
-                || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                        || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
                     readerCount++;
                 } else {
                     return false;

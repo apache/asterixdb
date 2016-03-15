@@ -43,8 +43,8 @@ public class TreeIndexCreateOperatorDescriptor extends AbstractTreeIndexOperator
             ILocalResourceFactoryProvider localResourceFactoryProvider,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
-                false, null, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false, false, null,
+                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
     }
 
     @Override

@@ -64,7 +64,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
-        tuple.setFieldPermutation(fieldPermutation);
+        this.tuple.setFieldPermutation(fieldPermutation);
     }
 
     @Override

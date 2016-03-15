@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -110,6 +109,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         return arguments;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("function-call: " + finfo.getFunctionIdentifier() + ", Args:[");
@@ -172,7 +172,8 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     }
 
     @Override
-    public void getConstraintsForOuterJoin(Collection<FunctionalDependency> fds, Collection<LogicalVariable> outerVars) {
+    public void getConstraintsForOuterJoin(Collection<FunctionalDependency> fds,
+            Collection<LogicalVariable> outerVars) {
         FunctionIdentifier funId = getFunctionIdentifier();
         if (funId.equals(AlgebricksBuiltinFunctions.AND)) {
             for (Mutable<ILogicalExpression> a : arguments) {
@@ -202,22 +203,26 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         } else {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) obj;
             boolean equal = getFunctionIdentifier().equals(fce.getFunctionIdentifier());
-            if (!equal)
+            if (!equal) {
                 return false;
+            }
             for (int i = 0; i < arguments.size(); i++) {
                 ILogicalExpression argument = arguments.get(i).getValue();
                 ILogicalExpression fceArgument = fce.getArguments().get(i).getValue();
-                if (!argument.equals(fceArgument))
+                if (!argument.equals(fceArgument)) {
                     return false;
+                }
             }
             if (opaqueParameters != null) {
-                if (opaqueParameters.length != fce.opaqueParameters.length)
+                if (opaqueParameters.length != fce.opaqueParameters.length) {
                     return false;
+                }
                 for (int i = 0; i < opaqueParameters.length; i++) {
                     Object opaqueParameter = opaqueParameters[i];
                     Object fceOpaqueParameter = fce.opaqueParameters[i];
-                    if (!opaqueParameter.equals(fceOpaqueParameter))
+                    if (!opaqueParameter.equals(fceOpaqueParameter)) {
                         return false;
+                    }
                 }
             }
             return true;

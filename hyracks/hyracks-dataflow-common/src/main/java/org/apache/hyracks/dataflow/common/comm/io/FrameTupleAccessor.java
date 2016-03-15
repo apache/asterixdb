@@ -19,6 +19,7 @@
 package org.apache.hyracks.dataflow.common.comm.io;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -28,6 +29,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 
 /**
@@ -41,8 +43,8 @@ import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
  * field slots.
  */
 public class FrameTupleAccessor implements IFrameTupleAccessor {
-    private int tupleCountOffset;
     private final RecordDescriptor recordDescriptor;
+    private int tupleCountOffset;
     private ByteBuffer buffer;
     private int start;
 
@@ -172,7 +174,7 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
      * using IserializerDeserializer can print incorrect results or throw exceptions.
      * A better way yet would be to use record pointable.
      */
-    public void prettyPrint(String prefix, int[] recordFields) {
+    public void prettyPrint(String prefix, int[] recordFields) throws IOException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
         DataInputStream dis = new DataInputStream(bbis);
         int tc = getTupleCount();
@@ -184,22 +186,61 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
         System.err.println(sb.toString());
     }
 
+    public void prettyPrint(int tIdx, int[] recordFields) throws IOException {
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
+        DataInputStream dis = new DataInputStream(bbis);
+        StringBuilder sb = new StringBuilder();
+        prettyPrint(tIdx, bbis, dis, sb, recordFields);
+        System.err.println(sb.toString());
+    }
+
+    public void prettyPrint(ITupleReference tuple, int fieldsIdx, int descIdx) throws HyracksDataException {
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
+        DataInputStream dis = new DataInputStream(bbis);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        sb.append("f" + fieldsIdx + ":(" + tuple.getFieldStart(fieldsIdx) + ", "
+                + (tuple.getFieldLength(fieldsIdx) + tuple.getFieldStart(fieldsIdx)) + ") ");
+        sb.append("{");
+        ByteBuffer bytebuff = ByteBuffer.wrap(tuple.getFieldData(fieldsIdx));
+        bbis.setByteBuffer(bytebuff, tuple.getFieldStart(fieldsIdx));
+        sb.append(recordDescriptor.getFields()[descIdx].deserialize(dis));
+        sb.append("}");
+        sb.append("\n");
+        System.err.println(sb.toString());
+    }
+
+    public void prettyPrint(ITupleReference tuple, int[] descF) throws HyracksDataException {
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
+        DataInputStream dis = new DataInputStream(bbis);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int j = 0; j < descF.length; ++j) {
+            sb.append("f" + j + ":(" + tuple.getFieldStart(j) + ", "
+                    + (tuple.getFieldLength(j) + tuple.getFieldStart(j)) + ") ");
+            sb.append("{");
+            ByteBuffer bytebuff = ByteBuffer.wrap(tuple.getFieldData(j));
+            bbis.setByteBuffer(bytebuff, tuple.getFieldStart(j));
+            sb.append(recordDescriptor.getFields()[descF[j]].deserialize(dis));
+            sb.append("}");
+        }
+        sb.append("\n");
+        System.err.println(sb.toString());
+    }
+
     protected void prettyPrint(int tid, ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb,
-            int[] recordFields) {
+            int[] recordFields) throws IOException {
         Arrays.sort(recordFields);
         sb.append(" tid" + tid + ":(" + getTupleStartOffset(tid) + ", " + getTupleEndOffset(tid) + ")[");
         for (int j = 0; j < getFieldCount(); ++j) {
             sb.append("f" + j + ":(" + getFieldStartOffset(tid, j) + ", " + getFieldEndOffset(tid, j) + ") ");
             sb.append("{");
             bbis.setByteBuffer(buffer, getTupleStartOffset(tid) + getFieldSlotsLength() + getFieldStartOffset(tid, j));
-            try {
-                if (Arrays.binarySearch(recordFields, j) >= 0) {
-                    sb.append("a record field: only print using pointable");
-                } else {
-                    sb.append(recordDescriptor.getFields()[j].deserialize(dis));
-                }
-            } catch (HyracksDataException e) {
-                e.printStackTrace();
+            if (Arrays.binarySearch(recordFields, j) >= 0) {
+                sb.append("{a record field: only print using pointable:");
+                sb.append("tag->" + dis.readByte() + "}");
+            } else {
+                sb.append(recordDescriptor.getFields()[j].deserialize(dis));
             }
             sb.append("}");
         }

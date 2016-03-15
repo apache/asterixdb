@@ -382,6 +382,12 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
                 e.getValue().getUsedVariables(usedVariables);
             }
         }
+        // 4. The Other variables (Not key, Not payload, and Not Filter)
+        if (op.getAdditionalNonFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalNonFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
+        }
         return null;
     }
 

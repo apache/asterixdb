@@ -41,12 +41,12 @@ public class ProjectOperator extends AbstractLogicalOperator {
 
     public ProjectOperator(LogicalVariable v) {
         this.variables = new ArrayList<LogicalVariable>(1);
-        this.getVariables().add(v);
+        variables.add(v);
     }
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) {
-        // do nothing
+        // Do nothing
         return false;
     }
 
@@ -83,5 +83,4 @@ public class ProjectOperator extends AbstractLogicalOperator {
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
-
 }

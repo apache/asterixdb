@@ -19,8 +19,8 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.List;
-import org.apache.commons.lang3.mutable.Mutable;
 
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -42,14 +42,13 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class AssignOperator extends AbstractAssignOperator {
 
-	private LocalOrderProperty explicitOrderingProperty;
+    private LocalOrderProperty explicitOrderingProperty;
 
     public AssignOperator(List<LogicalVariable> vars, List<Mutable<ILogicalExpression>> exprs) {
         super(vars, exprs);
     }
 
     public AssignOperator(LogicalVariable var, Mutable<ILogicalExpression> expr) {
-        super();
         this.variables.add(var);
         this.expressions.add(expr);
     }
@@ -90,10 +89,8 @@ public class AssignOperator extends AbstractAssignOperator {
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         int n = variables.size();
         for (int i = 0; i < n; i++) {
-            env.setVarType(
-                    variables.get(i),
-                    ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(), ctx.getMetadataProvider(),
-                            env));
+            env.setVarType(variables.get(i), ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(),
+                    ctx.getMetadataProvider(), env));
             if (expressions.get(i).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable var = ((VariableReferenceExpression) expressions.get(i).getValue())
                         .getVariableReference();
@@ -113,11 +110,10 @@ public class AssignOperator extends AbstractAssignOperator {
     }
 
     public LocalOrderProperty getExplicitOrderingProperty() {
-		return explicitOrderingProperty;
-	}
+        return explicitOrderingProperty;
+    }
 
-	public void setExplicitOrderingProperty(
-			LocalOrderProperty explicitOrderingProperty) {
-		this.explicitOrderingProperty = explicitOrderingProperty;
-	}
+    public void setExplicitOrderingProperty(LocalOrderProperty explicitOrderingProperty) {
+        this.explicitOrderingProperty = explicitOrderingProperty;
+    }
 }

@@ -168,7 +168,8 @@ public class LSMBTreeUtils {
             buddyBtreeCmpFactories[i] = cmpFactories[buddyBTreeFields[i]];
         }
 
-        TypeAwareTupleWriterFactory buddyBtreeTupleWriterFactory = new TypeAwareTupleWriterFactory(buddyBtreeTypeTraits);
+        TypeAwareTupleWriterFactory buddyBtreeTupleWriterFactory = new TypeAwareTupleWriterFactory(
+                buddyBtreeTypeTraits);
         ITreeIndexFrameFactory buddyBtreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
                 buddyBtreeTupleWriterFactory);
         ITreeIndexFrameFactory buddyBtreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(buddyBtreeTupleWriterFactory);

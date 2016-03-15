@@ -22,14 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 
-/*
- * Author: Guangqiang Li
- * Created on Jul 9, 2009
- */
 public class ALogicalPlanImpl implements ILogicalPlan {
     private List<Mutable<ILogicalOperator>> roots;
 
@@ -46,11 +44,28 @@ public class ALogicalPlanImpl implements ILogicalPlan {
         roots.add(root);
     }
 
+    @Override
     public List<Mutable<ILogicalOperator>> getRoots() {
         return roots;
     }
 
     public void setRoots(List<Mutable<ILogicalOperator>> roots) {
         this.roots = roots;
+    }
+
+    public static String prettyPrintPlan(ILogicalPlan plan) throws AlgebricksException {
+        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
+        StringBuilder buffer = new StringBuilder();
+        PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
+        return buffer.toString();
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return ALogicalPlanImpl.prettyPrintPlan(this);
+        } catch (AlgebricksException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

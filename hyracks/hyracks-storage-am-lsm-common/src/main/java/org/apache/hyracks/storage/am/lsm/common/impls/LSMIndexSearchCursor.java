@@ -37,6 +37,8 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
+    protected final ILSMIndexOperationContext opCtx;
+    protected final boolean returnDeletedTuples;
     protected PriorityQueueElement outputElement;
     protected IIndexCursor[] rangeCursors;
     protected PriorityQueueElement[] pqes;
@@ -46,8 +48,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected boolean needPush;
     protected boolean includeMutableComponent;
     protected ILSMHarness lsmHarness;
-    protected final ILSMIndexOperationContext opCtx;
-    protected final boolean returnDeletedTuples;
 
     protected List<ILSMComponent> operationalComponents;
 
@@ -67,8 +67,10 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         if (outputPriorityQueue == null) {
             outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
             pqes = new PriorityQueueElement[pqInitSize];
-            for (int i = 0; i < rangeCursors.length; i++) {
+            for (int i = 0; i < pqInitSize; i++) {
                 pqes[i] = new PriorityQueueElement(i);
+            }
+            for (int i = 0; i < rangeCursors.length; i++) {
                 pushIntoPriorityQueue(pqes[i]);
             }
         } else {
@@ -183,7 +185,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     }
 
     protected void checkPriorityQueue() throws HyracksDataException, IndexException {
-        while (!outputPriorityQueue.isEmpty() || needPush == true) {
+        while (!outputPriorityQueue.isEmpty() || (needPush == true)) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
                 // If there is no previous tuple or the previous tuple can be ignored
@@ -234,7 +236,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
 
     public class PriorityQueueElement {
         private ITupleReference tuple;
-        private final int cursorIndex;
+        private int cursorIndex;
 
         public PriorityQueueElement(int cursorIndex) {
             tuple = null;
@@ -256,7 +258,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
 
     public class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
 
-        protected final MultiComparator cmp;
+        protected MultiComparator cmp;
 
         public PriorityQueueComparator(MultiComparator cmp) {
             this.cmp = cmp;
@@ -287,7 +289,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     }
 
     protected void setPriorityQueueComparator() {
-        // is there a case where cmp != pqCmp ??
         if (pqCmp == null || cmp != pqCmp.getMultiComparator()) {
             pqCmp = new PriorityQueueComparator(cmp);
         }

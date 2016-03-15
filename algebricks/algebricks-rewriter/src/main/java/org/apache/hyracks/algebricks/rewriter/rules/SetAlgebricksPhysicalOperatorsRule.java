@@ -154,8 +154,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     if (gby.getNestedPlans().size() == 1) {
                         ILogicalPlan p0 = gby.getNestedPlans().get(0);
                         if (p0.getRoots().size() == 1) {
-                            if (gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE || gby
-                                    .getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE) {
+                            if ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE)
+                                    || (gby.getAnnotations()
+                                            .get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE)) {
                                 if (!topLevelOp) {
                                     throw new NotImplementedException(
                                             "External hash group-by for nested grouping is not implemented.");
@@ -299,17 +300,22 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     LogicalVariable payload;
                     List<LogicalVariable> keys = new ArrayList<LogicalVariable>();
                     List<LogicalVariable> additionalFilteringKeys = null;
+                    List<LogicalVariable> additionalNonFilterVariables = null;
+                    if (opLoad.getAdditionalNonFilteringExpressions() != null) {
+                        additionalNonFilterVariables = new ArrayList<LogicalVariable>();
+                        getKeys(opLoad.getAdditionalNonFilteringExpressions(), additionalNonFilterVariables);
+                    }
                     payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getPrimaryKeyExpressions(), keys);
                     if (opLoad.getAdditionalFilteringExpressions() != null) {
                         additionalFilteringKeys = new ArrayList<LogicalVariable>();
                         getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
                     }
                     if (opLoad.isBulkload()) {
-                        op.setPhysicalOperator(
-                                new BulkloadPOperator(payload, keys, additionalFilteringKeys, opLoad.getDataSource()));
+                        op.setPhysicalOperator(new BulkloadPOperator(payload, keys, additionalFilteringKeys,
+                                additionalNonFilterVariables, opLoad.getDataSource()));
                     } else {
                         op.setPhysicalOperator(new InsertDeleteUpsertPOperator(payload, keys, additionalFilteringKeys,
-                                opLoad.getDataSource(), opLoad.getOperation(), opLoad.getPrevRecordVar()));
+                                opLoad.getDataSource(), opLoad.getOperation(), additionalNonFilterVariables));
                     }
                     break;
                 }

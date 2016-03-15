@@ -379,10 +379,14 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         StringBuilder buffer = new StringBuilder();
         String header = getIndexOpString(op.getOperation());
         addIndent(buffer, indent).append(header).append(op.getDataSource()).append(" from ")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" partitioned by ");
+                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent));
+        if (op.getAdditionalNonFilteringExpressions() != null) {
+            pprintExprList(op.getAdditionalNonFilteringExpressions(), buffer, indent);
+        }
+        buffer.append(" partitioned by ");
         pprintExprList(op.getPrimaryKeyExpressions(), buffer, indent);
         if (op.getOperation() == Kind.UPSERT) {
-            buffer.append(" out: ([" + op.getPrevRecordVar() + "] <-{record-before-upsert}) ");
+            buffer.append(" out: ([record-before-upsert:" + op.getPrevRecordVar() + "]) ");
         }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
@@ -445,7 +449,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         return buffer.toString();
     }
 
-    protected static final StringBuilder addIndent(StringBuilder buffer, int level) {
+    protected static StringBuilder addIndent(StringBuilder buffer, int level) {
         for (int i = 0; i < level; ++i) {
             buffer.append(' ');
         }

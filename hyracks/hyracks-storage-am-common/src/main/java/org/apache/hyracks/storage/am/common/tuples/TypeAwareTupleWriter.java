@@ -29,7 +29,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
-    protected ITypeTraits[] typeTraits;
+    protected final ITypeTraits[] typeTraits;
     protected VarLenIntEncoderDecoder.VarLenIntDecoder decoder = VarLenIntEncoderDecoder.createDecoder();
 
     public TypeAwareTupleWriter(ITypeTraits[] typeTraits) {
@@ -114,7 +114,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        return (int) Math.ceil((double) tuple.getFieldCount() / 8.0);
+        return (int) Math.ceil(tuple.getFieldCount() / 8.0);
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple) {
@@ -128,7 +128,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(int numFields) {
-        return (int) Math.ceil((double) numFields / 8.0);
+        return (int) Math.ceil(numFields / 8.0);
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {
@@ -143,10 +143,6 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
     public ITypeTraits[] getTypeTraits() {
         return typeTraits;
-    }
-
-    public void setTypeTraits(ITypeTraits[] typeTraits) {
-        this.typeTraits = typeTraits;
     }
 
     @Override

@@ -156,7 +156,6 @@
            <exclude>**/src/test/resources/results/**</exclude>
            <exclude>**/src/test/resources/expected/**</exclude>
            <exclude>**/testcases/*.piglet</exclude>
-           <exclude>**/data/**/*.txt</exclude>
            <exclude>**/data/**/*.tbl</exclude>
            <exclude>**/data/**/*.ddl</exclude>
            <exclude>**/data/**/*.tsv</exclude>
@@ -174,6 +173,8 @@
            <exclude>**/target/**</exclude>
            <exclude>**/*.iml</exclude>
            <exclude>**/*.prefs</exclude>
+           <exclude>**/data/*.txt</exclude>
+           <exclude>**/data/**/*.txt</exclude>
            <exclude>**/.classpath</exclude>
            <exclude>**/.project</exclude>
       </excludes>

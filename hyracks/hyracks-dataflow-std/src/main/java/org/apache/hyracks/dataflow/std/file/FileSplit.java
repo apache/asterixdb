@@ -25,11 +25,10 @@ import org.apache.hyracks.api.io.FileReference;
 
 public class FileSplit implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    private final String nodeName;
     private final FileReference file;
     private final int ioDeviceId;
     private final int partition;
+    private final String nodeName;
 
     public FileSplit(String nodeName, FileReference file) {
         this.nodeName = nodeName;

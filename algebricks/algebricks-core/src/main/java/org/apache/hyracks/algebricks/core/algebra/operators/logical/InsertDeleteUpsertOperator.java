@@ -49,10 +49,24 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     private final Kind operation;
     private final boolean bulkload;
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
+    private final List<Mutable<ILogicalExpression>> additionalNonFilteringExpressions;
+    // previous record (for UPSERT)
     private LogicalVariable prevRecordVar;
     private Object prevRecordType;
+    // previous filter (for UPSERT)
     private LogicalVariable prevFilterVar;
     private Object prevFilterType;
+
+    public InsertDeleteUpsertOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
+            List<Mutable<ILogicalExpression>> primaryKeyExprs,
+            List<Mutable<ILogicalExpression>> additionalNonFilteringExpressions, Kind operation, boolean bulkload) {
+        this.dataSource = dataSource;
+        this.payloadExpr = payloadExpr;
+        this.primaryKeyExprs = primaryKeyExprs;
+        this.operation = operation;
+        this.bulkload = bulkload;
+        this.additionalNonFilteringExpressions = additionalNonFilteringExpressions;
+    }
 
     public InsertDeleteUpsertOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, Kind operation, boolean bulkload) {
@@ -61,6 +75,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         this.primaryKeyExprs = primaryKeyExprs;
         this.operation = operation;
         this.bulkload = bulkload;
+        this.additionalNonFilteringExpressions = null;
     }
 
     @Override
@@ -98,6 +113,11 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 changed |= transform.transform(e);
             }
         }
+        if (additionalNonFilteringExpressions != null) {
+            for (Mutable<ILogicalExpression> e : additionalNonFilteringExpressions) {
+                changed |= transform.transform(e);
+            }
+        }
         return changed;
     }
 
@@ -108,7 +128,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     @Override
     public boolean isMap() {
-        return false;
+        return true;
     }
 
     @Override
@@ -163,6 +183,10 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public boolean isBulkload() {
         return bulkload;
+    }
+
+    public List<Mutable<ILogicalExpression>> getAdditionalNonFilteringExpressions() {
+        return additionalNonFilteringExpressions;
     }
 
     public void setAdditionalFilteringExpressions(List<Mutable<ILogicalExpression>> additionalFilteringExpressions) {

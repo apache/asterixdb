@@ -19,7 +19,6 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -36,7 +35,8 @@ public class UnnestOperator extends AbstractUnnestNonMapOperator {
     }
 
     public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType, IUnnestingPositionWriter positionWriter) {
+            LogicalVariable positionalVariable, Object positionalVariableType,
+            IUnnestingPositionWriter positionWriter) {
         super(variable, expression, positionalVariable, positionalVariableType, positionWriter);
     }
 

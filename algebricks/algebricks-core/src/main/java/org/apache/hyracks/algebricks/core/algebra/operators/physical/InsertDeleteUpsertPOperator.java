@@ -48,22 +48,22 @@ import org.apache.hyracks.api.job.JobSpecification;
 @SuppressWarnings("rawtypes")
 public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
 
-    private LogicalVariable payload;
-    private List<LogicalVariable> keys;
-    private IDataSource<?> dataSource;
+    private final LogicalVariable payload;
+    private final List<LogicalVariable> keys;
+    private final IDataSource<?> dataSource;
     private final List<LogicalVariable> additionalFilteringKeys;
+    private final List<LogicalVariable> additionalNonFilteringFields;
     private final Kind operation;
-    private final LogicalVariable prevPayload;
 
     public InsertDeleteUpsertPOperator(LogicalVariable payload, List<LogicalVariable> keys,
             List<LogicalVariable> additionalFilteringKeys, IDataSource dataSource, Kind operation,
-            LogicalVariable prevPayload) {
+            List<LogicalVariable> additionalNonFilteringFields) {
         this.payload = payload;
         this.keys = keys;
         this.dataSource = dataSource;
         this.additionalFilteringKeys = additionalFilteringKeys;
         this.operation = operation;
-        this.prevPayload = prevPayload;
+        this.additionalNonFilteringFields = additionalNonFilteringFields;
     }
 
     @Override
@@ -106,13 +106,13 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = null;
         if (operation == Kind.INSERT) {
             runtimeAndConstraints = mp.getInsertRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
-                    additionalFilteringKeys, inputDesc, context, spec, false);
+                    additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec, false);
         } else if (operation == Kind.DELETE) {
             runtimeAndConstraints = mp.getDeleteRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
                     additionalFilteringKeys, inputDesc, context, spec);
         } else if (operation == Kind.UPSERT) {
             runtimeAndConstraints = mp.getUpsertRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
-                    additionalFilteringKeys, prevPayload, inputDesc, context, spec);
+                    additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec);
         } else {
             throw new AlgebricksException("Unsupported Operation " + operation);
         }
