@@ -73,7 +73,7 @@ public class PushSelectDownRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         if (op2.getInputs().size() != 1 || op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
-                || OperatorPropertiesUtil.isStatefulAssign(op2)) {
+                || !OperatorPropertiesUtil.isMovable(op2)) {
             return false;
         }
 

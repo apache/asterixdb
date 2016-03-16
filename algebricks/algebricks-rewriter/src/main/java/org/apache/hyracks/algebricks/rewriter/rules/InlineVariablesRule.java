@@ -29,6 +29,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -41,7 +42,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -168,10 +168,18 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
         // Descend into subplan
         if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-            ALogicalPlanImpl subPlan = (ALogicalPlanImpl) ((SubplanOperator) op).getNestedPlans().get(0);
-            Mutable<ILogicalOperator> subPlanRootOpRef = subPlan.getRoots().get(0);
-            if (inlineVariables(subPlanRootOpRef, context)) {
-                modified = true;
+            SubplanOperator subplanOp = (SubplanOperator) op;
+            for (ILogicalPlan nestedPlan : subplanOp.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> root : nestedPlan.getRoots()) {
+                    if (inlineVariables(root, context)) {
+                        modified = true;
+                    }
+                    // Variables produced by a nested subplan cannot be inlined
+                    // in operators above the subplan.
+                    Set<LogicalVariable> producedVars = new HashSet<LogicalVariable>();
+                    VariableUtilities.getProducedVariables(root.getValue(), producedVars);
+                    varAssignRhs.keySet().removeAll(producedVars);
+                }
             }
         }
 

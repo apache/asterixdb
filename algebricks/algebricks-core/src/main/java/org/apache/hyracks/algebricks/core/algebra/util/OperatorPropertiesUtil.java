@@ -37,13 +37,13 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsExpressionStatefulVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
 public class OperatorPropertiesUtil {
+
+    private static final String MOVABLE = "isMovable";
 
     public static <T> boolean disjoint(Collection<T> c1, Collection<T> c2) {
         for (T m : c1) {
@@ -269,25 +269,32 @@ public class OperatorPropertiesUtil {
     }
 
     /**
-     * Whether the operator is an assign operator that calls a stateful function.
+     * Whether an operator can be moved around in the query plan.
      *
      * @param op
      *            the operator to consider.
-     * @return true if the operator is an assign operator and it calls a stateful function.
+     * @return true if the operator can be moved, false if the operator cannot be moved.
      * @throws AlgebricksException
      */
-    public static boolean isStatefulAssign(ILogicalOperator op) throws AlgebricksException {
-        if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return false;
+    public static boolean isMovable(ILogicalOperator op) {
+        Object annotation = op.getAnnotations().get(MOVABLE);
+        if (annotation == null) {
+            // By default, it is movable.
+            return true;
         }
-        AssignOperator assignOp = (AssignOperator) op;
-        IsExpressionStatefulVisitor visitor = new IsExpressionStatefulVisitor();
-        for (Mutable<ILogicalExpression> exprRef : assignOp.getExpressions()) {
-            ILogicalExpression expr = exprRef.getValue();
-            if (expr.accept(visitor, null)) {
-                return true;
-            }
-        }
-        return false;
+        Boolean movable = (Boolean) annotation;
+        return movable;
+    }
+
+    /**
+     * Mark an operator to be either movable or not.
+     *
+     * @param op
+     *            the operator to consider.
+     * @param movable
+     *            true means it is movable, false means it is not movable.
+     */
+    public static void markMovable(ILogicalOperator op, boolean movable) {
+        op.getAnnotations().put(MOVABLE, movable);
     }
 }

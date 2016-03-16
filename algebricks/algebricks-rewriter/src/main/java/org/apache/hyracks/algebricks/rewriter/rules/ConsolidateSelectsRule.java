@@ -67,8 +67,8 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
             do {
                 selectParent = nextSelect;
                 nextSelect = (AbstractLogicalOperator) selectParent.getInputs().get(0).getValue();
-            } while (nextSelect.getOperatorTag() == LogicalOperatorTag.ASSIGN && !OperatorPropertiesUtil
-                    .isStatefulAssign(nextSelect) /* Select cannot be pushed through stateful assigns.*/);
+            } while (nextSelect.getOperatorTag() == LogicalOperatorTag.ASSIGN && OperatorPropertiesUtil
+                    .isMovable(nextSelect) /* Select cannot be pushed through un-movable operators.*/);
             // Stop if the child op is not a select.
             if (nextSelect.getOperatorTag() != LogicalOperatorTag.SELECT) {
                 break;

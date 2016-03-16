@@ -110,8 +110,8 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
                     && boundaryOpRef.getValue().getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
                 List<LogicalVariable> opUsedVars = new ArrayList<LogicalVariable>();
                 VariableUtilities.getUsedVariables(boundaryOpRef.getValue(), opUsedVars);
-                if (opUsedVars.size() == 0 && !OperatorPropertiesUtil.isStatefulAssign(boundaryOpRef.getValue())
-                /* We cannot freely move the location of stateful assigns. */) {
+                if (opUsedVars.size() == 0 && OperatorPropertiesUtil.isMovable(boundaryOpRef.getValue())
+                /* We cannot freely move the location of operators tagged as un-movable. */) {
                     // move down the boundary if the operator is a const assigns.
                     boundaryOpRef = boundaryOpRef.getValue().getInputs().get(0);
                 } else {
