@@ -45,6 +45,7 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
     private final ArrayList<Short> assigned;
     private final int numberOfMutations;
     private int counter = 0;
+    private int upsertCounter = 0;
     private boolean stopped = false;
     // for deterministic data generation
     private int expiration = 7999;
@@ -59,14 +60,13 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
     private short nextUpsertPartition;
     private final ByteBuf byteBuff;
     private final StringBuilder strBuilder = new StringBuilder();
-    private int upsertCounter = 0;
     private final String[] names = { "Michael Carey", "Till Westmann", "Michael Blow", "Chris Hillary", "Yingyi Bu",
             "Ian Maxon", "Abdullah Alamoudi" };
 
-    public KVTestReader(final int partition, final String bucket, final int[] schedule,
-            final int numberOfMutations, final int deleteCycle, final int upsertCycle) {
+    public KVTestReader(final int partition, final String bucket, final int[] schedule, final int numberOfMutations,
+            final int deleteCycle, final int upsertCycle, int counterStart) {
         this.bucket = bucket;
-        this.numberOfMutations = numberOfMutations;
+        this.numberOfMutations = numberOfMutations + counterStart;
         this.assigned = new ArrayList<>();
         this.deleteCycle = deleteCycle;
         this.upsertCycle = upsertCycle;
@@ -82,6 +82,7 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
         this.byteBuff = ByteBufAllocator.DEFAULT.buffer(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         byteBuff.retain();
         this.record = new GenericRecord<DCPRequest>();
+        this.counter = counterStart;
     }
 
     private String generateKey() {

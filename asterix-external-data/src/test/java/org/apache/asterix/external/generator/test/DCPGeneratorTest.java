@@ -32,7 +32,7 @@ public class DCPGeneratorTest {
     @Test
     public void runTest() throws Exception {
         try (KVTestReader cbreader = new KVTestReader(0, "TestBucket",
-                new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 150, 0, 0)) {
+                new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 150, 0, 0, 0)) {
             final UTF8StringPointable pointable = new UTF8StringPointable();
             final DCPRequestToRecordWithMetadataAndPKConverter converter = new DCPRequestToRecordWithMetadataAndPKConverter();
             while (cbreader.hasNext()) {

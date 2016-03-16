@@ -37,11 +37,13 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     private int numOfRecords = 1000; // default = 1 Million
     private int deleteCycle = 0;
     private int upsertCycle = 0;
+    private int numOfReaders;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
         clusterLocations = AsterixClusterProperties.INSTANCE.getClusterLocations();
+        numOfReaders = clusterLocations.getLocations().length;
         return clusterLocations;
     }
 
@@ -68,7 +70,7 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     public IRecordReader<? extends DCPRequest> createRecordReader(final IHyracksTaskContext ctx, final int partition) {
         return new KVTestReader(partition, bucket, schedule,
                 (int) Math.ceil((double) numOfRecords / (double) getPartitionConstraint().getLocations().length),
-                deleteCycle, upsertCycle);
+                deleteCycle, upsertCycle, (numOfRecords / numOfReaders) * partition);
     }
 
     @Override
