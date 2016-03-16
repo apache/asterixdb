@@ -28,6 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
@@ -35,52 +36,54 @@ import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConf
 public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     @Override
-    public abstract IMetadataProvider<?, ?> getMetadataProvider();
+    public IMetadataProvider<?, ?> getMetadataProvider();
 
-    public abstract void setMetadataDeclarations(IMetadataProvider<?, ?> metadataProvider);
+    public void setMetadataDeclarations(IMetadataProvider<?, ?> metadataProvider);
 
-    public abstract boolean checkIfInDontApplySet(IAlgebraicRewriteRule rule, ILogicalOperator op);
+    public boolean checkIfInDontApplySet(IAlgebraicRewriteRule rule, ILogicalOperator op);
 
-    public abstract void addToDontApplySet(IAlgebraicRewriteRule rule, ILogicalOperator op);
+    public void addToDontApplySet(IAlgebraicRewriteRule rule, ILogicalOperator op);
 
     /*
      * returns true if op1 and op2 have already been compared
      */
-    public abstract boolean checkAndAddToAlreadyCompared(ILogicalOperator op1, ILogicalOperator op2);
+    public boolean checkAndAddToAlreadyCompared(ILogicalOperator op1, ILogicalOperator op2);
 
-    public abstract void removeFromAlreadyCompared(ILogicalOperator op1);
+    public void removeFromAlreadyCompared(ILogicalOperator op1);
 
-    public abstract void addNotToBeInlinedVar(LogicalVariable var);
+    public void addNotToBeInlinedVar(LogicalVariable var);
 
-    public abstract boolean shouldNotBeInlined(LogicalVariable var);
+    public boolean shouldNotBeInlined(LogicalVariable var);
 
-    public abstract void addPrimaryKey(FunctionalDependency pk);
+    public void addPrimaryKey(FunctionalDependency pk);
 
-    public abstract List<LogicalVariable> findPrimaryKey(LogicalVariable var);
+    public List<LogicalVariable> findPrimaryKey(LogicalVariable var);
 
-    public abstract void putEquivalenceClassMap(ILogicalOperator op, Map<LogicalVariable, EquivalenceClass> eqClassMap);
+    public void putEquivalenceClassMap(ILogicalOperator op, Map<LogicalVariable, EquivalenceClass> eqClassMap);
 
-    public abstract Map<LogicalVariable, EquivalenceClass> getEquivalenceClassMap(ILogicalOperator op);
+    public Map<LogicalVariable, EquivalenceClass> getEquivalenceClassMap(ILogicalOperator op);
 
-    public abstract void putFDList(ILogicalOperator op, List<FunctionalDependency> fdList);
+    public void putFDList(ILogicalOperator op, List<FunctionalDependency> fdList);
 
-    public abstract List<FunctionalDependency> getFDList(ILogicalOperator op);
+    public List<FunctionalDependency> getFDList(ILogicalOperator op);
 
     public void clearAllFDAndEquivalenceClasses();
 
-    public abstract void putLogicalPropertiesVector(ILogicalOperator op, ILogicalPropertiesVector v);
+    public void putLogicalPropertiesVector(ILogicalOperator op, ILogicalPropertiesVector v);
 
-    public abstract ILogicalPropertiesVector getLogicalPropertiesVector(ILogicalOperator op);
+    public ILogicalPropertiesVector getLogicalPropertiesVector(ILogicalOperator op);
 
-    public abstract IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
+    public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
 
-    public abstract IVariableEvalSizeEnvironment getVariableEvalSizeEnvironment();
+    public IVariableEvalSizeEnvironment getVariableEvalSizeEnvironment();
 
-    public abstract IMergeAggregationExpressionFactory getMergeAggregationExpressionFactory();
+    public IMergeAggregationExpressionFactory getMergeAggregationExpressionFactory();
 
-    public abstract PhysicalOptimizationConfig getPhysicalOptimizationConfig();
+    public PhysicalOptimizationConfig getPhysicalOptimizationConfig();
 
-    public abstract void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
+    public void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
 
-    public abstract LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
+    public LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
+
+    public INodeDomain getComputationNodeDomain();
 }

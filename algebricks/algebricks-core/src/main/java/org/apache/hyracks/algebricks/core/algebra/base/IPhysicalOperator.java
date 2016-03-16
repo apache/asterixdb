@@ -35,10 +35,12 @@ public interface IPhysicalOperator {
      * @param reqdByParent
      *            parent's requirements, which are not enforced for now, as we
      *            only explore one plan
+     * @param context
+     *            the optimization context
      * @return for each child, one vector of required physical properties
      */
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent);
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context);
 
     /**
      * @return the physical properties that this operator delivers, based on
@@ -51,7 +53,7 @@ public interface IPhysicalOperator {
 
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException;
+                    throws AlgebricksException;
 
     public void disableJobGenBelowMe();
 

@@ -55,9 +55,8 @@ public class PropertiesUtil {
         return k;
     }
 
-    public static boolean matchLocalProperties(List<ILocalStructuralProperty> reqd,
-            List<ILocalStructuralProperty> dlvd, Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
-            List<FunctionalDependency> fds) {
+    public static boolean matchLocalProperties(List<ILocalStructuralProperty> reqd, List<ILocalStructuralProperty> dlvd,
+            Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
         if (reqd == null) {
             return true;
         }
@@ -118,7 +117,7 @@ public class PropertiesUtil {
             boolean mayExpandProperties) {
         INodeDomain dom1 = reqd.getNodeDomain();
         INodeDomain dom2 = dlvd.getNodeDomain();
-        if (dom1 != null && dom2 != null && !dom1.sameAs(dom2)) {
+        if (!dom1.sameAs(dom2)) {
             return false;
         }
 
@@ -132,10 +131,11 @@ public class PropertiesUtil {
                     case UNORDERED_PARTITIONED: {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
-                        if (mayExpandProperties)
+                        if (mayExpandProperties) {
                             return (!ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet()));
-                        else
+                        } else {
                             return (ud.getColumnSet().equals(ur.getColumnSet()));
+                        }
                     }
                     case ORDERED_PARTITIONED: {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;

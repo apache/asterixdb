@@ -67,8 +67,8 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
 
     @Override
     public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
-        for (Map.Entry<LogicalVariable, LogicalVariable> var : varMap.entrySet()){
-            if (columnSet.remove(var.getKey())){
+        for (Map.Entry<LogicalVariable, LogicalVariable> var : varMap.entrySet()) {
+            if (columnSet.remove(var.getKey())) {
                 columnSet.add(var.getValue());
             }
         }

@@ -105,7 +105,7 @@ public class RangePartitionMergePOperator extends AbstractExchangePOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         List<ILocalStructuralProperty> orderProps = new LinkedList<ILocalStructuralProperty>();
         List<OrderColumn> columns = new ArrayList<OrderColumn>();
         for (OrderColumn oc : partitioningFields) {

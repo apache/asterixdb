@@ -113,13 +113,14 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         if (partitioningType != JoinPartitioningType.BROADCAST) {
             throw new NotImplementedException(partitioningType + " nested loop joins are not implemented.");
         }
 
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
-        pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
+        pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(context.getComputationNodeDomain()),
+                null);
         pv[1] = new StructuralPropertiesVector(null, null);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
@@ -225,10 +226,11 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             }
             boolean result = binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(),
                     p.getLength());
-            if (result)
+            if (result) {
                 return 0;
-            else
+            } else {
                 return 1;
+            }
         }
     }
 
@@ -256,28 +258,31 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         @Override
         public byte[] getFieldData(int fIdx) {
             int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount)
+            if (fIdx < leftFieldCount) {
                 return refLeft.getFieldData(fIdx);
-            else
+            } else {
                 return refRight.getFieldData(fIdx - leftFieldCount);
+            }
         }
 
         @Override
         public int getFieldStart(int fIdx) {
             int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount)
+            if (fIdx < leftFieldCount) {
                 return refLeft.getFieldStart(fIdx);
-            else
+            } else {
                 return refRight.getFieldStart(fIdx - leftFieldCount);
+            }
         }
 
         @Override
         public int getFieldLength(int fIdx) {
             int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount)
+            if (fIdx < leftFieldCount) {
                 return refLeft.getFieldLength(fIdx);
-            else
+            } else {
                 return refRight.getFieldLength(fIdx - leftFieldCount);
+            }
         }
 
         @Override

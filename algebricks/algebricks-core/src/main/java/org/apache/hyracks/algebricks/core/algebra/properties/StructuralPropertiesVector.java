@@ -33,7 +33,8 @@ public class StructuralPropertiesVector implements IPhysicalPropertiesVector {
     public static final StructuralPropertiesVector EMPTY_PROPERTIES_VECTOR = new StructuralPropertiesVector(null,
             new ArrayList<ILocalStructuralProperty>());
 
-    public StructuralPropertiesVector(IPartitioningProperty propPartitioning, List<ILocalStructuralProperty> propsLocal) {
+    public StructuralPropertiesVector(IPartitioningProperty propPartitioning,
+            List<ILocalStructuralProperty> propsLocal) {
         this.propPartitioning = propPartitioning;
         this.propsLocal = propsLocal;
     }
@@ -63,7 +64,6 @@ public class StructuralPropertiesVector implements IPhysicalPropertiesVector {
     }
 
     /**
-     *
      * @param reqd
      *            vector of required properties
      * @return a vector of properties from pvector that are not delivered by the

@@ -102,8 +102,8 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     @Override
     public final PhysicalRequirements getRequiredPhysicalPropertiesForChildren(
-            IPhysicalPropertiesVector requiredProperties) {
-        return physicalOperator.getRequiredPropertiesForChildren(this, requiredProperties);
+            IPhysicalPropertiesVector requiredProperties, IOptimizationContext context) {
+        return physicalOperator.getRequiredPropertiesForChildren(this, requiredProperties, context);
     }
 
     /**

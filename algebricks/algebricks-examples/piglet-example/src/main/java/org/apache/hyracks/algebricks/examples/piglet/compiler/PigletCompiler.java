@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
@@ -145,13 +145,14 @@ public class PigletCompiler {
             }
         });
         builder.setTypeTraitProvider(new ITypeTraitProvider() {
+            @Override
             public ITypeTraits getTypeTrait(Object type) {
                 return null;
             }
         });
         builder.setPrinterProvider(PigletPrinterFactoryProvider.INSTANCE);
-        builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
-                new PigletExpressionJobGen()));
+        builder.setExpressionRuntimeProvider(
+                new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(new PigletExpressionJobGen()));
         builder.setExpressionTypeComputer(new IExpressionTypeComputer() {
             @Override
             public Object getType(ILogicalExpression expr, IMetadataProvider<?, ?> metadataProvider,
@@ -159,6 +160,7 @@ public class PigletCompiler {
                 return null;
             }
         });
+        builder.setClusterLocations(new AlgebricksAbsolutePartitionConstraint(new String[] { "nc1", "nc2" }));
         cFactory = builder.create();
         metadataProvider = new PigletMetadataProvider();
     }
@@ -237,9 +239,8 @@ public class PigletCompiler {
                 }
                 PigletFileDataSource ds = new PigletFileDataSource(file, types.toArray());
                 rel.op = new DataSourceScanOperator(variables, ds);
-                rel.op.getInputs().add(
-                        new MutableObject<ILogicalOperator>(previousOp == null ? new EmptyTupleSourceOperator()
-                                : previousOp));
+                rel.op.getInputs().add(new MutableObject<ILogicalOperator>(
+                        previousOp == null ? new EmptyTupleSourceOperator() : previousOp));
                 return rel;
             }
 
@@ -250,8 +251,9 @@ public class PigletCompiler {
                 Relation inputRel = findInputRelation(alias, symMap);
                 Pair<Relation, LogicalVariable> tempInput = translateScalarExpression(inputRel, conditionNode);
                 Relation rel = new Relation();
-                rel.op = new SelectOperator(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                        tempInput.second)), false, null);
+                rel.op = new SelectOperator(
+                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(tempInput.second)), false,
+                        null);
                 rel.op.getInputs().add(new MutableObject<ILogicalOperator>(tempInput.first.op));
                 rel.schema.putAll(tempInput.first.schema);
                 return rel;
@@ -298,7 +300,8 @@ public class PigletCompiler {
                 for (ASTNode a : arguments) {
                     Pair<Relation, LogicalVariable> argPair = translateScalarExpression(rel, (ExpressionNode) a);
                     rel = argPair.first;
-                    argExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(argPair.second)));
+                    argExprs.add(
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(argPair.second)));
                 }
                 Relation outRel = new Relation();
                 outRel.schema.putAll(rel.schema);

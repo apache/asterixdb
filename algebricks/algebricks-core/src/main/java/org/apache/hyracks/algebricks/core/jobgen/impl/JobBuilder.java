@@ -228,19 +228,13 @@ public class JobBuilder implements IHyracksJobBuilder {
             }
         }
         if (partitionConstraintMap.get(opDesc) == null) {
-            if (opConstraint == null) {
-                if (parentOp != null) {
-                    AlgebricksPartitionConstraint pc = partitionConstraintMap.get(parentOp);
-                    if (pc != null) {
-                        opConstraint = pc;
-                    } else if ((opInputs == null || opInputs.size() == 0) && finalPass) {
-                        opConstraint = new AlgebricksCountPartitionConstraint(1);
-                    }
-                }
-                if (opConstraint == null && finalPass) {
-                    opConstraint = clusterLocations;
-                }
+            if (finalPass && opConstraint == null && (opInputs == null || opInputs.size() == 0)) {
+                opConstraint = new AlgebricksCountPartitionConstraint(1);
             }
+            if (finalPass && opConstraint == null) {
+                opConstraint = clusterLocations;
+            }
+            // Sets up the location constraint.
             if (opConstraint != null) {
                 partitionConstraintMap.put(opDesc, opConstraint);
                 AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc, opConstraint);

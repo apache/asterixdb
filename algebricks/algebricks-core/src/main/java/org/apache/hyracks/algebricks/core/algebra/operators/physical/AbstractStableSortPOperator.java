@@ -69,7 +69,7 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator iop,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
             if (orderProp == null) {

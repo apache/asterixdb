@@ -18,26 +18,53 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
+
 public class DefaultNodeGroupDomain implements INodeDomain {
 
-    private String groupName;
+    private List<String> nodes = new ArrayList<>();
 
-    public DefaultNodeGroupDomain(String groupName) {
-        this.groupName = groupName;
+    public DefaultNodeGroupDomain(List<String> nodes) {
+        this.nodes.addAll(nodes);
+    }
+
+    public DefaultNodeGroupDomain(DefaultNodeGroupDomain domain) {
+        this.nodes.addAll(domain.nodes);
+    }
+
+    public DefaultNodeGroupDomain(AlgebricksPartitionConstraint clusterLocations) {
+        if (clusterLocations.getPartitionConstraintType() == PartitionConstraintType.ABSOLUTE) {
+            AlgebricksAbsolutePartitionConstraint absPc = (AlgebricksAbsolutePartitionConstraint) clusterLocations;
+            String[] locations = absPc.getLocations();
+            for (String location : locations) {
+                nodes.add(location);
+            }
+        } else {
+            throw new IllegalStateException("A node domain can only take absolute location constraints.");
+        }
     }
 
     @Override
     public boolean sameAs(INodeDomain domain) {
-        return true;
+        if (!(domain instanceof DefaultNodeGroupDomain)) {
+            return false;
+        }
+        DefaultNodeGroupDomain nodeDomain = (DefaultNodeGroupDomain) domain;
+        return nodes.equals(nodeDomain.nodes);
     }
 
     @Override
     public String toString() {
-        return "AsterixDomain(" + groupName + ")";
+        return nodes.toString();
     }
 
     @Override
     public Integer cardinality() {
-        return null;
+        return nodes.size();
     }
 }

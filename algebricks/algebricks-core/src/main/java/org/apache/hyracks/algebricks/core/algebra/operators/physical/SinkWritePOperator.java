@@ -67,7 +67,7 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         WriteOperator write = (WriteOperator) op;
         IDataSink sink = write.getDataSink();
         IPartitioningProperty pp = sink.getPartitioningProperty();

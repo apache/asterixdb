@@ -31,7 +31,6 @@ public interface IPhysicalPropertiesVector {
     public List<ILocalStructuralProperty> getLocalProperties();
 
     /**
-     *
      * @param reqd
      *            vector of required properties
      * @param equivalenceClasses

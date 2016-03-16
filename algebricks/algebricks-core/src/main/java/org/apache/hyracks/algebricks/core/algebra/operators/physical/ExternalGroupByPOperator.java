@@ -135,12 +135,12 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            pv[0] = new StructuralPropertiesVector(
-                    new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(columnSet), null), null);
+            pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(
+                    new ListSet<LogicalVariable>(columnSet), context.getComputationNodeDomain()), null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();
@@ -206,13 +206,16 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         }
 
         List<LogicalVariable> keyAndDecVariables = new ArrayList<LogicalVariable>();
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList())
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList()) {
             keyAndDecVariables.add(p.first);
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList())
+        }
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
             keyAndDecVariables.add(GroupByOperator.getDecorVariable(p));
+        }
 
-        for (LogicalVariable var : keyAndDecVariables)
+        for (LogicalVariable var : keyAndDecVariables) {
             aggOpInputEnv.setVarType(var, outputEnv.getVarType(var));
+        }
 
         compileSubplans(inputSchemas[0], gby, opSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
@@ -236,10 +239,12 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         for (Object type : intermediateTypes) {
             aggOpInputEnv.setVarType(usedVars.get(i++), type);
         }
-        for (LogicalVariable keyVar : keyAndDecVariables)
+        for (LogicalVariable keyVar : keyAndDecVariables) {
             localInputSchemas[0].addVariable(keyVar);
-        for (LogicalVariable usedVar : usedVars)
+        }
+        for (LogicalVariable usedVar : usedVars) {
             localInputSchemas[0].addVariable(usedVar);
+        }
         for (i = 0; i < n; i++) {
             AggregateFunctionCallExpression mergeFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
                     .get(i).getValue();

@@ -66,7 +66,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeEx
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
-import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
@@ -92,8 +91,6 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
-
-    private static final INodeDomain DEFAULT_DOMAIN = new DefaultNodeGroupDomain("__DEFAULT");
 
     private PhysicalOptimizationConfig physicalOptimizationConfig;
 
@@ -127,7 +124,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
         PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(op, context);
 
-        StructuralPropertiesVector pvector = new StructuralPropertiesVector(new RandomPartitioningProperty(null),
+        StructuralPropertiesVector pvector = new StructuralPropertiesVector(
+                new RandomPartitioningProperty(context.getComputationNodeDomain()),
                 new LinkedList<ILocalStructuralProperty>());
         boolean changed = physOptimizeOp(opRef, pvector, false, context);
         op.computeDeliveredPhysicalProperties(context);
@@ -196,7 +194,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         boolean changed = false;
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         optimizeUsingConstraintsAndEquivClasses(op);
-        PhysicalRequirements pr = op.getRequiredPhysicalPropertiesForChildren(required);
+        PhysicalRequirements pr = op.getRequiredPhysicalPropertiesForChildren(required, context);
         IPhysicalPropertiesVector[] reqdProperties = null;
         if (pr != null) {
             reqdProperties = pr.getRequiredProperties();
@@ -220,7 +218,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 } else {
                     INodeDomain dom2 = delivered.getPartitioningProperty().getNodeDomain();
                     if (!childrenDomain.sameAs(dom2)) {
-                        childrenDomain = DEFAULT_DOMAIN;
+                        childrenDomain = context.getComputationNodeDomain();
                     }
                 }
                 j++;
@@ -443,7 +441,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     .getDeliveredPhysicalProperties();
             addPartitioningEnforcers(op, childIndex, pp, required, deliveredByNewChild, domain, context);
         } else {
-            addPartitioningEnforcers(op, childIndex, pp, required, deliveredByChild, domain, context);
+            addPartitioningEnforcers(op, childIndex, pp, required, deliveredByChild, pp.getNodeDomain(), context);
             AbstractLogicalOperator newChild = (AbstractLogicalOperator) op.getInputs().get(childIndex).getValue();
             IPhysicalPropertiesVector newDiff = newPropertiesDiff(newChild, required, true, context);
             AlgebricksConfig.ALGEBRICKS_LOGGER.finest(">>>> New properties diff: " + newDiff + "\n");
