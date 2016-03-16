@@ -99,7 +99,7 @@ public class OptimizableOperatorSubTree {
             // Match (assign | unnest)+.
             while ((subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
                     || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST)) {
-                if (OperatorPropertiesUtil.isStatefulAssign(subTreeOp)) {
+                if (!OperatorPropertiesUtil.isMovable(subTreeOp)) {
                     return false;
                 } else {
                     assignsAndUnnestsRefs.add(subTreeOpRef);

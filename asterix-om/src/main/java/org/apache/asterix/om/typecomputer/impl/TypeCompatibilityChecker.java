@@ -47,8 +47,9 @@ class TypeCompatibilityChecker {
             for (IAType t : typeList) {
                 if (t.getTypeTag() != ATypeTag.NULL) {
                     //CONCAT_NON_NULL cannot return null because it's only used for if-else construct
-                    if (!possibleTypes.contains(t))
+                    if (!possibleTypes.contains(t)) {
                         possibleTypes.add(t);
+                    }
                 } else {
                     nullEncountered = true;
                 }
@@ -75,6 +76,6 @@ class TypeCompatibilityChecker {
                     return possibleTypes.get(0);
                 }
         }
-        return null;
+        return BuiltinType.ANY;
     }
 }

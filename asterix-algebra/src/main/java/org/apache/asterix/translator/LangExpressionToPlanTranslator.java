@@ -21,6 +21,7 @@ package org.apache.asterix.translator;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -144,6 +145,7 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 
@@ -783,50 +785,49 @@ class LangExpressionToPlanTranslator
         // on top of which there is a selection whose condition is varCond.
         // Similarly, we create one subplan for the "else" branch, in which the
         // selection is not(varCond).
-        // Finally, we concatenate the results. (??)
-
+        // Finally, we select the desired result.
         Pair<ILogicalOperator, LogicalVariable> pCond = ifexpr.getCondExpr().accept(this, tupSource);
-        ILogicalOperator opCond = pCond.first;
         LogicalVariable varCond = pCond.second;
 
-        SubplanOperator sp = new SubplanOperator();
+        //Creates a subplan for the "then" branch.
+        Pair<ILogicalOperator, LogicalVariable> opAndVarForThen = constructSubplanOperatorForBranch(pCond.first,
+                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)), ifexpr.getThenExpr());
 
-        Mutable<ILogicalOperator> nestedSource = new MutableObject<ILogicalOperator>(
-                new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(sp)));
-
-        // Enters/exists subplan for the then-expr and the else-expr respectively.
-        context.enterSubplan();
-        Pair<ILogicalOperator, LogicalVariable> pThen = ifexpr.getThenExpr().accept(this, nestedSource);
-        SelectOperator sel1 = new SelectOperator(
-                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)), false, null);
-        sel1.getInputs().add(new MutableObject<ILogicalOperator>(pThen.first));
-        context.exitSubplan();
-
-        context.enterSubplan();
-        Pair<ILogicalOperator, LogicalVariable> pElse = ifexpr.getElseExpr().accept(this, nestedSource);
+        // Creates a subplan for the "else" branch.
         AbstractFunctionCallExpression notVarCond = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT),
-                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)));
-        SelectOperator sel2 = new SelectOperator(new MutableObject<ILogicalExpression>(notVarCond), false, null);
-        sel2.getInputs().add(new MutableObject<ILogicalOperator>(pElse.first));
-        context.exitSubplan();
+                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), Collections.singletonList(
+                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond))));
+        Pair<ILogicalOperator, LogicalVariable> opAndVarForElse = constructSubplanOperatorForBranch(
+                opAndVarForThen.first, new MutableObject<ILogicalExpression>(notVarCond), ifexpr.getElseExpr());
 
-        ILogicalPlan p1 = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(sel1));
-        sp.getNestedPlans().add(p1);
-        ILogicalPlan p2 = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(sel2));
-        sp.getNestedPlans().add(p2);
+        // Uses switch-case function to select the results of two branches.
+        LogicalVariable selectVar = context.newVar();
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        arguments.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varCond)));
+        arguments.add(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        arguments.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(opAndVarForThen.second)));
+        arguments.add(new MutableObject<ILogicalExpression>(ConstantExpression.FALSE));
+        arguments.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(opAndVarForElse.second)));
+        AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SWITCH_CASE), arguments);
+        AssignOperator assignOp = new AssignOperator(selectVar, new MutableObject<ILogicalExpression>(swithCaseExpr));
+        assignOp.getInputs().add(new MutableObject<ILogicalOperator>(opAndVarForElse.first));
 
-        Mutable<ILogicalOperator> opCondRef = new MutableObject<ILogicalOperator>(opCond);
-        sp.getInputs().add(opCondRef);
+        // Unnests the selected ("if" or "else") result.
+        LogicalVariable unnestVar = context.newVar();
+        UnnestOperator unnestOp = new UnnestOperator(unnestVar,
+                new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+                        Collections.singletonList(
+                                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(selectVar))))));
+        unnestOp.getInputs().add(new MutableObject<ILogicalOperator>(assignOp));
 
-        LogicalVariable resV = context.newVar();
-        AbstractFunctionCallExpression concatNonNull = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CONCAT_NON_NULL),
-                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(pThen.second)),
-                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(pElse.second)));
-        AssignOperator a = new AssignOperator(resV, new MutableObject<ILogicalExpression>(concatNonNull));
-        a.getInputs().add(new MutableObject<ILogicalOperator>(sp));
-        return new Pair<ILogicalOperator, LogicalVariable>(a, resV);
+        // Produces the final result.
+        LogicalVariable resultVar = context.newVar();
+        AssignOperator finalAssignOp = new AssignOperator(resultVar,
+                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(unnestVar)));
+        finalAssignOp.getInputs().add(new MutableObject<ILogicalOperator>(unnestOp));
+        return new Pair<ILogicalOperator, LogicalVariable>(finalAssignOp, resultVar);
     }
 
     @Override
@@ -1307,7 +1308,7 @@ class LangExpressionToPlanTranslator
         return (k == Kind.LITERAL_EXPRESSION) || (k == Kind.LIST_CONSTRUCTOR_EXPRESSION)
                 || (k == Kind.RECORD_CONSTRUCTOR_EXPRESSION) || (k == Kind.VARIABLE_EXPRESSION)
                 || (k == Kind.CALL_EXPRESSION) || (k == Kind.OP_EXPRESSION) || (k == Kind.FIELD_ACCESSOR_EXPRESSION)
-                || (k == Kind.INDEX_ACCESSOR_EXPRESSION) || (k == Kind.UNARY_EXPRESSION);
+                || (k == Kind.INDEX_ACCESSOR_EXPRESSION) || (k == Kind.UNARY_EXPRESSION) || (k == Kind.IF_EXPRESSION);
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {
@@ -1450,5 +1451,43 @@ class LangExpressionToPlanTranslator
         } catch (AlgebricksException e) {
             throw new AsterixException(e);
         }
+    }
+
+    /**
+     * Constructs a subplan operator for a branch in a if-else (or case) expression.
+     *
+     * @param inputOp,
+     *            the input operator.
+     * @param selectExpr,
+     *            the expression to select tuples that are processed by this branch.
+     * @param branchExpression,
+     *            the expression to be evaluated in this branch.
+     * @return a pair of the constructed subplan operator and the output variable for the branch.
+     * @throws AsterixException
+     */
+    private Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,
+            Mutable<ILogicalExpression> selectExpr, Expression branchExpression) throws AsterixException {
+        context.enterSubplan();
+        SubplanOperator subplanOp = new SubplanOperator();
+        subplanOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+        Mutable<ILogicalOperator> nestedSource = new MutableObject<ILogicalOperator>(
+                new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplanOp)));
+        SelectOperator select = new SelectOperator(selectExpr, false, null);
+        // The select operator cannot be moved up and down, otherwise it will cause typing issues (ASTERIXDB-1203).
+        OperatorPropertiesUtil.markMovable(select, false);
+        select.getInputs().add(nestedSource);
+        Pair<ILogicalOperator, LogicalVariable> pBranch = branchExpression.accept(this,
+                new MutableObject<ILogicalOperator>(select));
+        LogicalVariable branchVar = context.newVar();
+        AggregateOperator aggOp = new AggregateOperator(Collections.singletonList(branchVar),
+                Collections.singletonList(new MutableObject<ILogicalExpression>(new AggregateFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.LISTIFY), false,
+                        Collections.singletonList(new MutableObject<ILogicalExpression>(
+                                new VariableReferenceExpression(pBranch.second)))))));
+        aggOp.getInputs().add(new MutableObject<ILogicalOperator>(pBranch.first));
+        ILogicalPlan planForBranch = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(aggOp));
+        subplanOp.getNestedPlans().add(planForBranch);
+        context.exitSubplan();
+        return new Pair<ILogicalOperator, LogicalVariable>(subplanOp, branchVar);
     }
 }

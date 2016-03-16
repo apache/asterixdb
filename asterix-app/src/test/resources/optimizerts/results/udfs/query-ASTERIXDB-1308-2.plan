@@ -9,22 +9,23 @@
                             {
                               -- SUBPLAN  |LOCAL|
                                       {
-                                        -- SUBPLAN  |LOCAL|
-                                                {
-                                                  -- AGGREGATE  |LOCAL|
-                                                    -- STREAM_SELECT  |LOCAL|
-                                                      -- ASSIGN  |LOCAL|
-                                                        -- UNNEST  |LOCAL|
-                                                          -- SUBPLAN  |LOCAL|
-                                                                  {
-                                                                    -- AGGREGATE  |LOCAL|
-                                                                      -- IN_MEMORY_STABLE_SORT [$$38(ASC)]  |LOCAL|
-                                                                        -- UNNEST  |LOCAL|
-                                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                  }
-                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                }
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                        -- ASSIGN  |LOCAL|
+                                          -- SUBPLAN  |LOCAL|
+                                                  {
+                                                    -- AGGREGATE  |LOCAL|
+                                                      -- STREAM_SELECT  |LOCAL|
+                                                        -- ASSIGN  |LOCAL|
+                                                          -- UNNEST  |LOCAL|
+                                                            -- SUBPLAN  |LOCAL|
+                                                                    {
+                                                                      -- AGGREGATE  |LOCAL|
+                                                                        -- IN_MEMORY_STABLE_SORT [$$38(ASC)]  |LOCAL|
+                                                                          -- UNNEST  |LOCAL|
+                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                    }
+                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                  }
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
                                 -- SUBPLAN  |LOCAL|
                                         {
@@ -38,22 +39,23 @@
                             }
                       -- SUBPLAN  |LOCAL|
                               {
-                                -- SUBPLAN  |LOCAL|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- STREAM_SELECT  |LOCAL|
-                                              -- ASSIGN  |LOCAL|
-                                                -- UNNEST  |LOCAL|
-                                                  -- SUBPLAN  |LOCAL|
-                                                          {
-                                                            -- AGGREGATE  |LOCAL|
-                                                              -- IN_MEMORY_STABLE_SORT [$$31(ASC)]  |LOCAL|
-                                                                -- UNNEST  |LOCAL|
-                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                          }
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                -- ASSIGN  |LOCAL|
+                                  -- SUBPLAN  |LOCAL|
+                                          {
+                                            -- AGGREGATE  |LOCAL|
+                                              -- STREAM_SELECT  |LOCAL|
+                                                -- ASSIGN  |LOCAL|
+                                                  -- UNNEST  |LOCAL|
+                                                    -- SUBPLAN  |LOCAL|
+                                                            {
+                                                              -- AGGREGATE  |LOCAL|
+                                                                -- IN_MEMORY_STABLE_SORT [$$31(ASC)]  |LOCAL|
+                                                                  -- UNNEST  |LOCAL|
+                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                            }
+                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          }
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }

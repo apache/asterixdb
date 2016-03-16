@@ -51,6 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.PrimaryKeyVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.mortbay.util.SingletonList;
 
@@ -173,11 +174,9 @@ public class EquivalenceClassUtils {
         } else {
             LogicalVariable assignVar = context.newVar();
             ILogicalOperator assignOp = new AssignOperator(assignVar,
-                    new MutableObject<ILogicalExpression>(usedForCorrelationJoin
-                            ? new StatefulFunctionCallExpression(
-                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_QUERY_UID), null)
-                            : new ScalarFunctionCallExpression(
-                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_QUERY_UID))));
+                    new MutableObject<ILogicalExpression>(new StatefulFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_QUERY_UID), null)));
+            OperatorPropertiesUtil.markMovable(assignOp, !usedForCorrelationJoin);
             assignOp.getInputs().add(new MutableObject<ILogicalOperator>(operator));
             context.addPrimaryKey(new FunctionalDependency(Collections.singletonList(assignVar),
                     new ArrayList<LogicalVariable>(liveVars)));

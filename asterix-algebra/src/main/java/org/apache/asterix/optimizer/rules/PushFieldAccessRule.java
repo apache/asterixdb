@@ -63,6 +63,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PushFieldAccessRule implements IAlgebraicRewriteRule {
@@ -188,6 +189,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         // rewritten into index search.
         if (op2.getOperatorTag() == LogicalOperatorTag.PROJECT || context.checkAndAddToAlreadyCompared(access, op2)
                 && !(op2.getOperatorTag() == LogicalOperatorTag.SELECT && isAccessToIndexedField(access, context))) {
+            return false;
+        }
+        if (!OperatorPropertiesUtil.isMovable(op2)) {
             return false;
         }
         if (tryingToPushThroughSelectionWithSameDataSource(access, op2)) {

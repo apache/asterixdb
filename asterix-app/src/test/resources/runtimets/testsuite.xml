@@ -3058,6 +3058,16 @@
                 <output-dir compare="Text">prefix-search</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="misc">
+            <compilation-unit name="query-ASTERIXDB-865">
+                <output-dir compare="Text">query-ASTERIXDB-865</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="misc">
+            <compilation-unit name="query-ASTERIXDB-1203">
+                <output-dir compare="Text">query-ASTERIXDB-1203</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="open-index-enforced">
         <test-group FilePath="open-index-enforced/error-checking">

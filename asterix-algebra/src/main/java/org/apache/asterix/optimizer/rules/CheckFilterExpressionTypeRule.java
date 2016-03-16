@@ -19,12 +19,11 @@
 
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -45,7 +44,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -62,8 +62,8 @@ public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
         IAType condType = (IAType) env.getType(condition);
         if (condType.getTypeTag() != ATypeTag.BOOLEAN && condType.getTypeTag() != ATypeTag.ANY
                 && !isPossibleBoolean(condType)) {
-            throw new AlgebricksException("The select condition " + condition.toString()
-                    + " should be of the boolean type.");
+            throw new AlgebricksException(
+                    "The select condition " + condition.toString() + " should be of the boolean type.");
         }
         return false;
     }

@@ -1,0 +1,9 @@
+{"user":"John", "action": 1, "timespent": 2, "query_term":"qt", "ip_addr": 3, "timestamp": 4, "estimated_revenue": 5.0,
+"page_info" : { "a":"aaa","b":"bbb" },
+"page_links": {{  {"b":"ccc","d":"ddd","e":"eee"},{"b":"fff","g":"ggg","h":"hhh"} }}
+}
+{"user":"Bill", "action": 2, "timespent": 2, "query_term":"qt", "ip_addr": 3, "timestamp": 4, "estimated_revenue": 5.0,
+"page_info" : { "a":"aaa","b":"bbb" },
+"page_links": {{  {"c":"ccc","d":"ddd","a":"eee"},{"f":"fff","g":"ggg","b":"bbb"} }}
+}
+
