@@ -16,10 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create a change feed and test ingestion of records
+ * Expected Res : Success
+ * Date         : 24th Feb 2016
+ */
+use dataverse KeyVerse;
 
-use dataverse test;
-
-for $x in dataset Book
-where meta($x)."key" >10
-return $x;
-
+count(
+for $d in dataset KVStore
+distinct by meta()."key"
+return 1
+);

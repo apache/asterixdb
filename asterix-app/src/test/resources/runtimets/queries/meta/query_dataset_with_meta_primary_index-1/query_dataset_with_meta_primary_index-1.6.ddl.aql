@@ -17,9 +17,4 @@
  * under the License.
  */
 
-use dataverse test;
-
-for $x in dataset Book
-where meta()."key" >10
-return $x;
-
+drop dataverse KeyVerse if exists;

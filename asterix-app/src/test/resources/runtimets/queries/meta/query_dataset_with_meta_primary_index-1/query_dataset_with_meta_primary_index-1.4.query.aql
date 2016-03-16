@@ -17,3 +17,8 @@
  * under the License.
  */
 
+use dataverse KeyVerse;
+
+for $x in dataset KVStore
+where meta($x).id="zea_rotisserie_and_brewery-lager"
+return $x;

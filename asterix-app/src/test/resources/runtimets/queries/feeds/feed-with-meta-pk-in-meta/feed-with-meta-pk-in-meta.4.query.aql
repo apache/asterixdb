@@ -16,5 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create a change feed and test ingestion of records
+ * Expected Res : Success
+ * Date         : 24th Feb 2016
+ */
+use dataverse KeyVerse;
 
-drop dataverse test if exists;
+count(
+    for $d in dataset KVStore
+    return $d
+);

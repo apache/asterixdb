@@ -17,34 +17,13 @@
  * under the License.
  */
 /*
- * Description  : Create a change feed with meta-data and test ingestion of records
+ * Description  : Create a change feed and test ingestion of records
  * Expected Res : Success
  * Date         : 24th Feb 2016
  */
+use dataverse KeyVerse;
 
-drop dataverse Couchbase if exists;
-create dataverse Couchbase;
-use dataverse Couchbase;
-
-create type DocumentType as open{
-};
-
-create type CouchbaseMetaType as open{
-id:string,
-flags:int32,
-expiration:int32,
-cas:int64,
-rev:int64,
-vbid:int32,
-dtype:int32,
-};
-
-create dataset CouchFeedDataset(DocumentType) with meta(CouchbaseMetaType)primary key meta()."key";
-
-create feed CouchFeedWithMeta using FeedAdapter(
-    ("type-name"="DocumentType"),
-    ("meta-type-name"="CouchbaseMetaType"),
-    ("reader"="csv-with-record"),
-    ("path"="..."),
-    ("format"="record-with-meta")
-);
+for $d in dataset KVStore
+order by meta().id
+limit 5
+return meta().id;

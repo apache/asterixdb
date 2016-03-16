@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create a change feed and test ingestion of records
+ * Expected Res : Success
+ * Date         : 24th Feb 2016
+ */
+use dataverse KeyVerse;
 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
 
-create type AuxiliaryType as open {
-  "key":int32
-}
-
-create type LineType as open {
-  id:int32,
-  text: string
-}
-
-create dataset Book(LineType) with meta(AuxiliaryType)
-primary key meta()."key";
+for $d in dataset KVStore
+group by $vb := meta().vbucket with $d
+order by $vb
+limit 5
+return {
+   "vbucket": $vb,
+   "tuple_count": count($d)
+};

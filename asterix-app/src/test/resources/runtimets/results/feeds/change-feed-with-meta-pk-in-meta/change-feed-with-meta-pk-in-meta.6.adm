@@ -1,0 +1,5 @@
+{ "vbucket": 0i32, "tuple_count": 1 }
+{ "vbucket": 1i32, "tuple_count": 1 }
+{ "vbucket": 2i32, "tuple_count": 1 }
+{ "vbucket": 3i32, "tuple_count": 1 }
+{ "vbucket": 4i32, "tuple_count": 1 }

@@ -17,3 +17,7 @@
  * under the License.
  */
 
+use dataverse KeyVerse;
+
+set wait-for-completion-feed "true";
+connect feed KVStream to dataset KVStore;
