@@ -141,6 +141,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.api.io.FileReference;
@@ -522,9 +523,9 @@ class LangExpressionToPlanTranslator
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
                 dataset.getMetaItemTypeName());
-        DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset.getDataverseName(),
-                dataset.getDatasetName(), itemType, metaItemType, AqlDataSourceType.INTERNAL_DATASET,
-                dataset.getDatasetDetails());
+        INodeDomain domain = metadataProvider.findNodeDomain(dataset.getNodeGroupName());
+        DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset, itemType, metaItemType,
+                AqlDataSourceType.INTERNAL_DATASET, dataset.getDatasetDetails(), domain);
         return dataSource;
     }
 

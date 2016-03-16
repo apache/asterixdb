@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int64,
+        statuses_count: int64,
+        name: string,
+        followers_count: int64,
+        sender-location: point
+}
+
+create type TweetMessageType as closed {
+        tweetid: int64,
+        user: TwitterUserType,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+drop nodegroup group_test if exists;
+create  nodegroup group_test  on
+    asterix_nc1;
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid on group_test
+hints(cardinality=100);
+
+create index twTimeIdx on TweetMessages(send-time) type btree;
+create index twLocationIdx on TweetMessages(user.sender-location) type rtree;
+create index twMessage on TweetMessages(message-text) type ngram(2);

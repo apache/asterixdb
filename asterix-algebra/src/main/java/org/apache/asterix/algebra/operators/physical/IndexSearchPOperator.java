@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScan
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractScanPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -43,10 +44,13 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
 
     protected final IDataSourceIndex<String, AqlSourceId> idx;
     protected final boolean requiresBroadcast;
+    protected final INodeDomain domain;
 
-    public IndexSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast) {
+    public IndexSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+            boolean requiresBroadcast) {
         this.idx = idx;
         this.requiresBroadcast = requiresBroadcast;
+        this.domain = domain;
     }
 
     @Override
@@ -73,14 +77,15 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
         return keyIndexes;
     }
 
+    @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         if (requiresBroadcast) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
+            pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
-            return super.getRequiredPropertiesForChildren(op, reqdByParent);
+            return super.getRequiredPropertiesForChildren(op, reqdByParent, context);
         }
     }
 

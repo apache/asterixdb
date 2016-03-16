@@ -87,6 +87,7 @@ import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -133,6 +134,8 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.core.jobgen.impl.OperatorSchemaImpl;
@@ -994,10 +997,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         IAType itemType = findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        INodeDomain domain = findNodeDomain(dataset.getNodeGroupName());
         AqlDataSourceType datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL)
                 ? AqlDataSourceType.EXTERNAL_DATASET : AqlDataSourceType.INTERNAL_DATASET;
-        return new DatasetDataSource(aqlId, aqlId.getDataverseName(), aqlId.getDatasourceName(), itemType, metaItemType,
-                datasourceType, dataset.getDatasetDetails());
+        return new DatasetDataSource(aqlId, dataset, itemType, metaItemType, datasourceType,
+                dataset.getDatasetDetails(), domain);
     }
 
     @Override
@@ -2130,6 +2134,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
+    }
+
+    public INodeDomain findNodeDomain(String nodeGroupName) throws AlgebricksException {
+        NodeGroup nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName);
+        List<String> partitions = new ArrayList<>();
+        for (String location : nodeGroup.getNodeNames()) {
+            int numPartitions = AsterixClusterProperties.INSTANCE.getNodePartitionsCount(location);
+            for (int i = 0; i < numPartitions; i++) {
+                partitions.add(location);
+            }
+        }
+        return new DefaultNodeGroupDomain(partitions);
     }
 
     public IAType findType(String dataverse, String typeName) throws AlgebricksException {

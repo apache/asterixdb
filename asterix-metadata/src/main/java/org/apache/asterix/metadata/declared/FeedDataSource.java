@@ -46,8 +46,8 @@ public class FeedDataSource extends AqlDataSource {
     public FeedDataSource(Feed feed, AqlSourceId id, String targetDataset, IAType itemType, IAType metaType,
             List<IAType> pkTypes, List<List<String>> partitioningKeys,
             List<ScalarFunctionCallExpression> keyAccessExpression, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
-            ConnectionLocation location, String[] locations) throws AlgebricksException {
-        super(id, itemType, metaType, AqlDataSourceType.FEED);
+            ConnectionLocation location, String[] locations, INodeDomain domain) throws AlgebricksException {
+        super(id, itemType, metaType, AqlDataSourceType.FEED, domain);
         this.feed = feed;
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
@@ -98,18 +98,6 @@ public class FeedDataSource extends AqlDataSource {
                 schemaTypes[i++] = type;
             }
         }
-        INodeDomain domainForExternalData = new INodeDomain() {
-            @Override
-            public Integer cardinality() {
-                return null;
-            }
-
-            @Override
-            public boolean sameAs(INodeDomain domain) {
-                return domain == this;
-            }
-        };
-        domain = domainForExternalData;
     }
 
     public IFeed.FeedType getSourceFeedType() {

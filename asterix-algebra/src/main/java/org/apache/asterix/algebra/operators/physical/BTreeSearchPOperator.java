@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -47,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
@@ -68,10 +70,10 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     private final boolean isEqCondition;
     private Object implConfig;
 
-    public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
-            boolean isPrimaryIndex, boolean isEqCondition, List<LogicalVariable> lowKeyVarList,
-            List<LogicalVariable> highKeyVarList) {
-        super(idx, requiresBroadcast);
+    public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+            boolean requiresBroadcast, boolean isPrimaryIndex, boolean isEqCondition,
+            List<LogicalVariable> lowKeyVarList, List<LogicalVariable> highKeyVarList) {
+        super(idx, domain, requiresBroadcast);
         this.isPrimaryIndex = isPrimaryIndex;
         this.isEqCondition = isEqCondition;
         this.lowKeyVarList = lowKeyVarList;
@@ -94,7 +96,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AbstractUnnestMapOperator unnestMap = (AbstractUnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -140,7 +142,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         if (requiresBroadcast) {
             // For primary indexes optimizing an equality condition we can reduce the broadcast requirement to hash partitioning.
             if (isPrimaryIndex && isEqCondition) {
@@ -155,16 +157,16 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                     orderColumns.add(new OrderColumn(orderVar, OrderKind.ASC));
                 }
                 propsLocal.add(new LocalOrderProperty(orderColumns));
-                pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, null),
+                pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, domain),
                         propsLocal);
                 return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
             } else {
                 StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-                pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
+                pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null);
                 return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
             }
         } else {
-            return super.getRequiredPropertiesForChildren(op, reqdByParent);
+            return super.getRequiredPropertiesForChildren(op, reqdByParent, context);
         }
     }
 }

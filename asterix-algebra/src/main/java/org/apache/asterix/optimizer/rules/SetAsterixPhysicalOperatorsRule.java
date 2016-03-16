@@ -27,6 +27,7 @@ import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
@@ -58,6 +59,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
@@ -216,8 +218,11 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
                         AqlSourceId dataSourceId = new AqlSourceId(jobGenParams.getDataverseName(),
                                 jobGenParams.getDatasetName());
+                        Dataset dataset = mp.findDataset(jobGenParams.getDataverseName(),
+                                jobGenParams.getDatasetName());
                         IDataSourceIndex<String, AqlSourceId> dsi = mp.findDataSourceIndex(jobGenParams.getIndexName(),
                                 dataSourceId);
+                        INodeDomain storageDomain = mp.findNodeDomain(dataset.getNodeGroupName());
                         if (dsi == null) {
                             throw new AlgebricksException("Could not find index " + jobGenParams.getIndexName()
                                     + " for dataset " + dataSourceId);
@@ -228,23 +233,25 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                             case BTREE: {
                                 BTreeJobGenParams btreeJobGenParams = new BTreeJobGenParams();
                                 btreeJobGenParams.readFromFuncArgs(f.getArguments());
-                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast,
+                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi, storageDomain, requiresBroadcast,
                                         btreeJobGenParams.isPrimaryIndex(), btreeJobGenParams.isEqCondition(),
                                         btreeJobGenParams.getLowKeyVarList(), btreeJobGenParams.getHighKeyVarList()));
                                 break;
                             }
                             case RTREE: {
-                                op.setPhysicalOperator(new RTreeSearchPOperator(dsi, requiresBroadcast));
+                                op.setPhysicalOperator(new RTreeSearchPOperator(dsi, storageDomain, requiresBroadcast));
                                 break;
                             }
                             case SINGLE_PARTITION_WORD_INVIX:
                             case SINGLE_PARTITION_NGRAM_INVIX: {
-                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, false));
+                                op.setPhysicalOperator(
+                                        new InvertedIndexPOperator(dsi, storageDomain, requiresBroadcast, false));
                                 break;
                             }
                             case LENGTH_PARTITIONED_WORD_INVIX:
                             case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, true));
+                                op.setPhysicalOperator(
+                                        new InvertedIndexPOperator(dsi, storageDomain, requiresBroadcast, true));
                                 break;
                             }
                             default: {

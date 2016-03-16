@@ -161,10 +161,10 @@ public class APIFramework {
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
-                PhysicalOptimizationConfig physicalOptimizationConfig) {
+                PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
-                    physicalOptimizationConfig);
+                    physicalOptimizationConfig, clusterLocations);
         }
 
     }
@@ -283,13 +283,15 @@ public class APIFramework {
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
         builder.setNullableTypeComputer(AqlNullableTypeComputer.INSTANCE);
+        builder.setClusterLocations(queryMetadataProvider.getClusterLocations());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (conf.isOptimize()) {
             compiler.optimize();
             //plot optimized logical plan
-            if (plot)
+            if (plot) {
                 PlanPlotter.printOptimizedLogicalPlan(plan);
+            }
             if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
@@ -321,10 +323,8 @@ public class APIFramework {
             return null;
         }
 
-        AlgebricksPartitionConstraint clusterLocs = queryMetadataProvider.getClusterLocations();
         builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
-        builder.setClusterLocations(clusterLocs);
         builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
         builder.setExpressionRuntimeProvider(
                 new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE));

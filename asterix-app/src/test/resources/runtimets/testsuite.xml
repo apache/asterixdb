@@ -2719,6 +2719,11 @@
                 <output-dir compare="Text">intersection</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="index-selection">
+            <compilation-unit name="intersection_with_nodegroup">
+                <output-dir compare="Text">intersection</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="inverted-index-join">
         <test-case FilePath="inverted-index-join">
@@ -5529,7 +5534,7 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
-            <compilation-unit name="q17_squantity_order_revenue">
+            <compilation-unit name="q17_small_quantity_order_revenue">
                 <output-dir compare="Text">q17_small_quantity_order_revenue</output-dir>
             </compilation-unit>
         </test-case>
@@ -5580,6 +5585,11 @@
         </test-case>
         <test-case FilePath="tpch">
             <compilation-unit name="q04_order_priority">
+                <output-dir compare="Text">q04_order_priority</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="q04_order_priority_with_nodegroup">
                 <output-dir compare="Text">q04_order_priority</output-dir>
             </compilation-unit>
         </test-case>

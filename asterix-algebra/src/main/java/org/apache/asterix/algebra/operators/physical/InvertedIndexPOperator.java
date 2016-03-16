@@ -63,6 +63,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -89,9 +90,9 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 public class InvertedIndexPOperator extends IndexSearchPOperator {
     private final boolean isPartitioned;
 
-    public InvertedIndexPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
-            boolean isPartitioned) {
-        super(idx, requiresBroadcast);
+    public InvertedIndexPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+            boolean requiresBroadcast, boolean isPartitioned) {
+        super(idx, domain, requiresBroadcast);
         this.isPartitioned = isPartitioned;
     }
 
@@ -107,7 +108,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         AbstractUnnestMapOperator unnestMapOp = (AbstractUnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {

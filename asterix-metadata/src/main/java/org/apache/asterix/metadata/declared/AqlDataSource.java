@@ -61,17 +61,22 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         LOADABLE
     }
 
-    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, AqlDataSourceType datasourceType)
-            throws AlgebricksException {
+    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, AqlDataSourceType datasourceType,
+            INodeDomain domain) throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
         this.metaItemType = metaItemType;
         this.datasourceType = datasourceType;
+        this.domain = domain;
     }
 
     @Override
     public IAType[] getSchemaTypes() {
         return schemaTypes;
+    }
+
+    public INodeDomain getDomain() {
+        return domain;
     }
 
     public void computeLocalStructuralProperties(List<ILocalStructuralProperty> localProps,
@@ -138,14 +143,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
                         Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
-                        int i = 0;
-                        for (LogicalVariable v : scanVariables) {
-                            pvars.add(v);
-                            ++i;
-                            if (i >= (n - 1)) {
-                                break;
-                            }
-                        }
+                        pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
                         pp = new UnorderedPartitionedProperty(pvars, domain);
                     }
                     propsLocal = new ArrayList<ILocalStructuralProperty>();
@@ -154,24 +152,17 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
                 case INTERNAL_DATASET:
                     n = scanVariables.size();
+                    Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
                     if (n < 2) {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
-                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
-                        int i = 0;
-                        for (LogicalVariable v : scanVariables) {
-                            pvars.add(v);
-                            ++i;
-                            if (i >= (n - 1)) {
-                                break;
-                            }
-                        }
+                        pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
                         pp = new UnorderedPartitionedProperty(pvars, domain);
                     }
                     propsLocal = new ArrayList<ILocalStructuralProperty>();
                     List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-                    for (int i = 0; i < (n - 1); i++) {
-                        orderColumns.add(new OrderColumn(scanVariables.get(i), OrderKind.ASC));
+                    for (LogicalVariable pkVar : pvars) {
+                        orderColumns.add(new OrderColumn(pkVar, OrderKind.ASC));
                     }
                     propsLocal.add(new LocalOrderProperty(orderColumns));
                     propsVector = new StructuralPropertiesVector(pp, propsLocal);

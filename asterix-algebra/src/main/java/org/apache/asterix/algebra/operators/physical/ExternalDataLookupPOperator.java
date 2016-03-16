@@ -113,9 +113,9 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        AqlDataSource ds = new DatasetDataSource(datasetId, datasetId.getDataverseName(), datasetId.getDatasourceName(),
-                recordType, null /*external dataset doesn't have meta records.*/, AqlDataSourceType.EXTERNAL_DATASET,
-                dataset.getDatasetDetails());
+        AqlDataSource ds = new DatasetDataSource(datasetId, dataset, recordType,
+                null /*external dataset doesn't have meta records.*/, AqlDataSourceType.EXTERNAL_DATASET,
+                dataset.getDatasetDetails(), context.getComputationNodeDomain());
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
         deliveredProperties = dspp.computePropertiesVector(as.getVariables());
@@ -167,14 +167,14 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         if (requiresBroadcast) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
             pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
 
         } else {
-            return super.getRequiredPropertiesForChildren(op, reqdByParent);
+            return super.getRequiredPropertiesForChildren(op, reqdByParent, context);
         }
     }
 
