@@ -30,6 +30,7 @@
         <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
 		<cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
         <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
+		<jacocoArgLine/>
 	</properties>
 
   <licenses>
