@@ -19,31 +19,45 @@
 
 package org.apache.hyracks.dataflow.std.buffermanager;
 
+import java.nio.ByteBuffer;
+
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
-/**
- * Manage the buffer space. Different from the {@link IFrameBufferManager}, this one allows the record level manipulation.
- */
-public interface ITupleBufferManager {
-    /**
-     * Reset the counters and flags to initial status. This method should not release the pre-allocated resources
-     *
-     * @throws org.apache.hyracks.api.exceptions.HyracksDataException
-     */
-    void reset() throws HyracksDataException;
+// TODO determine correct interface.
+public interface ITupleAccessor extends IFrameTupleAccessor {
+    int getTupleStartOffset();
+
+    int getTupleEndOffset();
+
+    int getTupleLength();
+
+    int getAbsFieldStartOffset(int fieldId);
+
+    int getFieldLength(int fieldId);
+
+    int getFieldCount();
+
+    int getFieldSlotsLength();
+
+    int getFieldEndOffset(int fieldId);
+
+    int getFieldStartOffset(int fieldId);
+
+    void reset(ByteBuffer buffer);
+
+    int getTupleId();
+
+    void getTuplePointer(TuplePointer tp);
 
     /**
-     * @return the number of tuples in this buffer
+     * Only reset the iterator.
      */
-    int getNumTuples();
+    void reset();
 
-    boolean insertTuple(IFrameTupleAccessor accessor, int idx, TuplePointer tuplePointer) throws HyracksDataException;
+    boolean hasNext();
 
-    void close() throws HyracksDataException;
+    void next();
 
-    ITuplePointerAccessor createTuplePointerAccessor();
-
-    ITupleAccessor createTupleAccessor();
+    boolean exists();
 }

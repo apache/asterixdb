@@ -106,19 +106,17 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private class LeftJoinerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        private final ActivityId joinAid;
         private final MergeJoinLocks locks;
 
         public LeftJoinerActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
-            this.joinAid = joinAid;
             this.locks = locks;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             locks.setPartitions(nPartitions);
             final RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             IMergeJoinChecker mjc = mergeJoinCheckerFactory.createMergeJoinChecker(keys0, keys1, partition);
@@ -223,7 +221,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             locks.setPartitions(nPartitions);
             RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             return new RightDataOperator(ctx, partition, inRecordDesc);
@@ -277,7 +275,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     while (state.status.loadRightFrame == false && state.status.leftHasMore == true) {
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
-                    };
+                    }
                     state.joiner.setRightFrame(buffer);
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {

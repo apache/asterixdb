@@ -20,6 +20,7 @@ package org.apache.hyracks.dataflow.std.join;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class NaturalMergeJoinChecker implements IMergeJoinChecker {
@@ -30,25 +31,30 @@ public class NaturalMergeJoinChecker implements IMergeJoinChecker {
         this.comparator = comparator;
     }
 
-    public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
+    public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
         return (c == 0);
     }
 
-    public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
+    public boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
         return (c < 0);
     }
 
-    public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
+    public boolean checkToLoadNextRightTuple(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
         return (c <= 0);
     }
 
-    @Override
+    public boolean checkToSaveInResult(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
+        return (c == 0);
+    }
+
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);

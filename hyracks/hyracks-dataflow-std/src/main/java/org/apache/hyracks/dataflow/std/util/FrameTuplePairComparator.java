@@ -53,8 +53,8 @@ public class FrameTuplePairComparator {
             int fEnd1 = accessor1.getFieldEndOffset(tIndex1, fIdx1);
             int fLen1 = fEnd1 - fStart1;
 
-            int c = comparators[i].compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0, accessor1
-                    .getBuffer().array(), fStart1 + fStartOffset1, fLen1);
+            int c = comparators[i].compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0,
+                    accessor1.getBuffer().array(), fStart1 + fStartOffset1, fLen1);
             if (c != 0) {
                 return c;
             }
@@ -76,8 +76,8 @@ public class FrameTuplePairComparator {
             int fStart1 = bufferAccessor.getAbsFieldStartOffset(keys1[i]);
             int fLen1 = bufferAccessor.getFieldLength(keys1[i]);
 
-            int c = comparators[i].compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0, bufferAccessor
-                    .getBuffer().array(), fStart1, fLen1);
+            int c = comparators[i].compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0,
+                    bufferAccessor.getBuffer().array(), fStart1, fLen1);
             if (c != 0) {
                 return c;
             }

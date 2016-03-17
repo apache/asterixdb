@@ -108,7 +108,12 @@ public class VariableTupleMemoryManagerTest extends AbstractTupleMemoryManagerTe
     }
 
     @Override
-    ITuplePointerAccessor getTupleAccessor() {
+    ITuplePointerAccessor getTuplePointerAccessor() {
+        return tupleMemoryManager.createTuplePointerAccessor();
+    }
+
+    @Override
+    ITupleAccessor getTupleAccessor() {
         return tupleMemoryManager.createTupleAccessor();
     }
 
@@ -165,7 +170,7 @@ public class VariableTupleMemoryManagerTest extends AbstractTupleMemoryManagerTe
         assert (minNumOfRecordTobeDeleted < mapInserted.size());
         int countDeleted = minNumOfRecordTobeDeleted + random.nextInt(mapInserted.size() - minNumOfRecordTobeDeleted);
 
-        ITuplePointerAccessor accessor = tupleMemoryManager.createTupleAccessor();
+        ITuplePointerAccessor accessor = tupleMemoryManager.createTuplePointerAccessor();
         for (int i = 0; i < countDeleted; i++) {
             Iterator<Map.Entry<TuplePointer, Integer>> iter = mapInserted.entrySet().iterator();
             assert (iter.hasNext());

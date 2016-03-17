@@ -153,7 +153,12 @@ public class VPartitionTupleBufferManagerTest extends AbstractTupleMemoryManager
     }
 
     @Override
-    ITuplePointerAccessor getTupleAccessor() {
+    ITuplePointerAccessor getTuplePointerAccessor() {
+        return bufferManager.getTuplePointerAccessor(recordDescriptor);
+    }
+
+    @Override
+    ITupleAccessor getTupleAccessor() {
         return bufferManager.getTupleAccessor(recordDescriptor);
     }
 }
