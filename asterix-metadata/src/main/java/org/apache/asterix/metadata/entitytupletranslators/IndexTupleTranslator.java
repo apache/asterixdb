@@ -292,7 +292,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (instance.isEnforcingKeyFileds()) {
             // write optional field 9
             OrderedListBuilder typeListBuilder = new OrderedListBuilder();
-            typeListBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
+            typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));
             ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(INDEX_SEARCHKEY_TYPE_FIELD_NAME);

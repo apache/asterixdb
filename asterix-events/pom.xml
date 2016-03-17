@@ -20,13 +20,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>asterix</artifactId>
+		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 	<groupId>org.apache.asterix</groupId>
 	<artifactId>asterix-events</artifactId>
-	<version>0.8.8-SNAPSHOT</version>
+	<version>0.8.9-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -37,9 +37,9 @@
     </license>
   </licenses>
 
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
 	</properties>
 
 	<build>
@@ -141,21 +141,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-2</version>
-				<executions>
-					<execution>
-						<configuration>
-							<descriptor>src/main/assembly/binary-assembly.xml</descriptor>
-						</configuration>
-						<phase>package</phase>
-						<goals>
-							<goal>attached</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -197,7 +182,7 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

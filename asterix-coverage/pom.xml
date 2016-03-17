@@ -25,8 +25,8 @@
 
   <parent>
     <groupId>org.apache.asterix</groupId>
-    <artifactId>asterix</artifactId>
-    <version>0.8.8-SNAPSHOT</version>
+    <artifactId>apache-asterixdb</artifactId>
+    <version>0.8.9-SNAPSHOT</version>
   </parent>
 
   <build>

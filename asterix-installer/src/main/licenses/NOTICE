@@ -1,0 +1,722 @@
+Apache AsterixDB Managix Installer
+Copyright 2016 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
+
+ - repo/avro-1.7.4.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Apache Avro
+    Copyright 2009-2013 The Apache Software Foundation
+
+ - repo/commons-logging-1.1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Commons Logging
+    Copyright 2001-2007 The Apache Software Foundation
+
+ - repo/derby-10.10.1.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Apache Derby
+    Copyright 2004-2013 The Apache Software Foundation
+
+    =========================================================================
+
+    Portions of Derby were originally developed by
+    International Business Machines Corporation and are
+    licensed to the Apache Software Foundation under the
+    "Software Grant and Corporate Contribution License Agreement",
+    informally known as the "Derby CLA".
+    The following copyright notice(s) were affixed to portions of the code
+    with which this file is now or was at one time distributed
+    and are placed here unaltered.
+
+    (C) Copyright 1997,2004 International Business Machines Corporation.  All rights reserved.
+
+    (C) Copyright IBM Corp. 2003. 
+
+
+    =========================================================================
+
+
+    The JDBC apis for small devices and JDBC3 (under java/stubs/jsr169 and
+    java/stubs/jdbc3) were produced by trimming sources supplied by the
+    Apache Harmony project. In addition, the Harmony SerialBlob and
+    SerialClob implementations are used. The following notice covers the Harmony sources:
+
+    Portions of Harmony were originally developed by
+    Intel Corporation and are licensed to the Apache Software
+    Foundation under the "Software Grant and Corporate Contribution
+    License Agreement", informally known as the "Intel Harmony CLA".
+
+
+ - repo/guice-3.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Google Guice - Core Library
+    Copyright 2006-2011 Google, Inc.
+
+ - repo/guice-servlet-3.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Google Guice - Extensions - Servlet
+    Copyright 2006-2011 Google, Inc.
+
+ - repo/hive-ant-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Ant Utilities
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-common-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Common
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-exec-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Query Language
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-metastore-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Metastore
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-serde-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Serde
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-0.20-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims 0.20
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-0.20S-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims 0.20S
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-0.23-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims 0.23
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-common-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims Common
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/hive-shims-common-secure-0.13.0.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Hive Shims Secure Common
+    Copyright 2014 The Apache Software Foundation
+
+ - repo/plexus-utils-3.0.7.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    This product includes software developed by the Indiana University 
+      Extreme! Lab (http://www.extreme.indiana.edu/)
+
+    This product includes software developed by
+    ThoughtWorks (http://www.thoughtworks.com).
+
+    This product includes software developed by
+    javolution (http://javolution.org/).
+
+    This product includes software developed by
+    Rome (https://rome.dev.java.net/).
+
+- repo/velocity-1.5.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Apache Velocity
+
+    Copyright (C) 2000-2007 The Apache Software Foundation
+
+ - repo/wicket-core-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+   Apache Wicket
+   Copyright 2006-2011 Apache Software Foundation
+
+   This product includes software from QOS.ch (http://slf4j.org) licensed under the X11 license
+   Copyright (c) 2004-2008 QOS.ch
+
+   Contains Diff library from Mavens JRCS, released under
+   The Apache Software License, Version 1.1.
+   (c) 1999-2003
+
+   org.apache.wicket.markup.html.form.upload.MultiFileUploadField.js is taken from [1]
+   and has the following notice:
+      "Licence:
+       Use this however/wherever you like, just don't blame me if it breaks
+       anything.
+
+       Credit:
+       If you're nice, you'll leave this bit:
+
+       Class by Stickman -- http://www.the-stickman.com
+       with thanks to:
+       [for Safari fixes]
+          Luis Torrefranca -- http://www.law.pitt.edu
+          and
+          Shawn Parker & John Pennypacker -- http://www.fuzzycoconut.com
+       [for duplicate name bug]
+          'neal'"
+   [1]: http://the-stickman.com/web-development/javascript/upload-multiple-files-with-a-single-file-element/
+ - repo/wicket-request-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Wicket Request
+    Copyright 2006-2011 Apache Software Foundation
+
+ - repo/wicket-util-1.5.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Wicket Util
+    Copyright 2006-2011 Apache Software Foundation
+
+ - repo/xercesImpl-2.9.1.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+   Apache Xerces Java
+   Copyright 1999-2007 The Apache Software Foundation
+
+   Portions of this software were originally based on the following:
+     - software copyright (c) 1999, IBM Corporation., http://www.ibm.com.
+     - software copyright (c) 1999, Sun Microsystems., http://www.sun.com.
+     - voluntary contributions made by Paul Eng on behalf of the 
+       Apache Software Foundation that were originally developed at iClick, Inc.,
+       software copyright (c) 1999.
+
+ - repo/xml-apis-1.3.04.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+   Apache XML Commons XML APIs
+   Copyright 2006 The Apache Software Foundation.
+
+
+   Portions of this software were originally based on the following:
+     - software copyright (c) 1999, IBM Corporation., http://www.ibm.com.
+     - software copyright (c) 1999, Sun Microsystems., http://www.sun.com.
+     - software copyright (c) 2000 World Wide Web Consortium, http://www.w3.org
+
+ - repo/httpclient-4.2.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Apache HttpComponents HttpClient
+    Copyright 1999-2012 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/httpcore-4.2.2.jar in asterix/asterix-server-0.8.8-binary-assembly.zip
+
+    Apache HttpComponents HttpCore
+    Copyright 2005-2012 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+    This project contains annotations derived from JCIP-ANNOTATIONS
+    Copyright (c) 2005 Brian Goetz and Tim Peierls. See http://www.jcip.net
+
+- repo/ant-1.9.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+   Apache Ant
+   Copyright 1999-2013 The Apache Software Foundation
+
+   The <sync> task is based on code Copyright (c) 2002, Landmark
+   Graphics Corp that has been kindly donated to the Apache Software
+   Foundation.
+ - repo/ant-launcher-1.9.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+   Apache Ant
+   Copyright 1999-2013 The Apache Software Foundation
+
+   The <sync> task is based on code Copyright (c) 2002, Landmark
+   Graphics Corp that has been kindly donated to the Apache Software
+   Foundation.
+ - repo/commons-beanutils-1.7.0.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-beanutils-core-1.8.0.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+    Apache Commons BeanUtils
+
+    Copyright 2000-2008 The Apache Software Foundation
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-cli-1.2.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+   and .installer/hadoop-0.20.2/lib/commons-cli-1.2.jar
+
+    Apache Commons CLI
+    Copyright 2001-2009 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-codec-1.4.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Codec
+
+    Copyright 2002-2009 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+ - repo/commons-collections-3.2.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Collections
+
+    Copyright 2001-2008 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-compress-1.4.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Compress
+    Copyright 2002-2012 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+     - repo/commons-configuration-1.6.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+    Apache Commons Configuration
+
+    Copyright 2001-2008 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-daemon-1.0.13.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Daemon
+    Copyright 1999-2013 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+     - repo/commons-digester-1.8.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+    Apache Jakarta Commons Digester
+
+    Copyright 2001-2006 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-io-2.4.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+   and lib/commons-io-2.4.jar
+
+    Apache Commons IO
+
+    Copyright 2002-2012 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+
+ - repo/commons-lang-2.5.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Lang
+
+    Copyright 2001-2010 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-lang3-3.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Lang
+    Copyright 2001-2011 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+    This product includes software from the Spring Framework,
+    under the Apache License 2.0 (see: StringUtils.containsWhitespace())
+
+ - repo/commons-logging-api-1.0.4.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - .installer/hadoop-0.20.2/lib/commons-logging--1.0.4.jar
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/commons-math-2.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Math
+    Copyright 2001-2010 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+    ===============================================================================
+    The LinearConstraint, LinearObjectiveFunction, LinearOptimizer,
+    RelationShip, SimplexSolver and SimplexTableau classes in package
+    org.apache.commons.math.optimization.linear include software developed by
+    Benjamin McCann (http://www.benmccann.com) and distributed with
+    the following copyright: Copyright 2009 Google Inc.
+    ===============================================================================
+
+    This product includes software developed by the
+    University of Chicago, as Operator of Argonne National
+    Laboratory.
+    The LevenbergMarquardtOptimizer class in package
+    org.apache.commons.math.optimization.general includes software
+    translated from the lmder, lmpar and qrsolv Fortran routines
+    from the Minpack package
+    Minpack Copyright Notice (1999) University of Chicago.  All rights reserved
+    ===============================================================================
+
+    The GraggBulirschStoerIntegrator class in package
+    org.apache.commons.math.ode.nonstiff includes software translated
+    from the odex Fortran routine developed by E. Hairer and G. Wanner.
+    Original source copyright:
+    Copyright (c) 2004, Ernst Hairer
+    ===============================================================================
+
+    The EigenDecompositionImpl class in package
+    org.apache.commons.math.linear includes software translated
+    from some LAPACK Fortran routines.  Original source copyright:
+    Copyright (c) 1992-2008 The University of Tennessee.  All rights reserved.
+    ===============================================================================
+
+    The MersenneTwister class in package org.apache.commons.math.random
+    includes software translated from the 2002-01-26 version of
+    the Mersenne-Twister generator written in C by Makoto Matsumoto and Takuji
+    Nishimura. Original source copyright:
+    Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+    All rights reserved
+    ===============================================================================
+
+    The complete text of licenses and disclaimers associated with the the original
+    sources enumerated above at the time of code translation are in the LICENSE.txt
+    file.
+
+ - repo/commons-net-3.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons Net
+
+    Copyright 2001-2012 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+
+ - repo/datanucleus-api-jdo-3.2.6.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    =========================================================================
+    ==  NOTICE file corresponding to section 4(d) of the Apache License,   ==
+    ==  Version 2.0, in this case for the DataNucleus distribution.        ==
+    =========================================================================
+
+    ===================================================================
+    This product includes software developed by many individuals,
+    including the following:
+    ===================================================================
+    Erik Bengtson
+    Andy Jefferson
+
+
+    ===================================================================
+    This product has included contributions from some individuals,
+    including the following:
+    ===================================================================
+
+ - repo/datanucleus-core-3.2.10.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    =========================================================================
+    ==  NOTICE file corresponding to section 4(d) of the Apache License,   ==
+    ==  Version 2.0, in this case for the DataNucleus distribution.        ==
+    =========================================================================
+
+    ===================================================================
+    This product includes software developed by many individuals,
+    including the following:
+    ===================================================================
+    Erik Bengtson
+    Andy Jefferson
+
+
+    ===================================================================
+    This product has included contributions from some individuals,
+    including the following:
+    ===================================================================
+    Joerg von Frantzius
+    Thomas Marti
+    Barry Haddow
+    Marco Schulze
+    Ralph Ullrich
+    David Ezzio
+    Brendan de Beer
+    David Eaves
+    Martin Taal
+    Tony Lai
+    Roland Szabo
+    Marcus Mennemeier
+    Xuan Baldauf
+    Eric Sultan
+
+
+    ===================================================================
+    This product also includes software developed by the TJDO project
+    (http://tjdo.sourceforge.net/).
+    ===================================================================
+
+ - repo/datanucleus-rdbms-3.2.9.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+    =========================================================================
+    ==  NOTICE file corresponding to section 4(d) of the Apache License,   ==
+    ==  Version 2.0, in this case for the DataNucleus distribution.        ==
+    =========================================================================
+
+    ===================================================================
+    This product includes software developed by many individuals,
+    including the following:
+    ===================================================================
+    Andy Jefferson
+    Erik Bengtson
+    Joerg von Frantzius
+    Marco Schulze
+
+
+    ===================================================================
+    This product has included contributions from some individuals,
+    including the following:
+    ===================================================================
+    Barry Haddow
+    Ralph Ullrich
+    David Ezzio
+    Brendan de Beer
+    David Eaves
+    Martin Taal
+    Tony Lai
+    Roland Szabo
+    Anton Troshin (Timesten)
+
+
+    ===================================================================
+    This product also includes software developed by the TJDO project
+    (http://tjdo.sourceforge.net/).
+    ===================================================================
+
+    ===================================================================
+    This product also includes software developed by the Apache Commons project
+    (http://commons.apache.org/).
+    ===================================================================
+
+ - repo/groovy-all-2.1.6.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Commons CLI
+    Copyright 2001-2009 The Apache Software Foundation
+
+    This product includes software developed by
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/hive-exec-0.13.0.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Thrift
+    Copyright 2006-2010 The Apache Software Foundation.
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/). 
+
+ - repo/httpclient-4.2.2.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache HttpComponents HttpClient
+
+    Copyright 1999-2012 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+ - repo/httpcore-4.2.2.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache HttpComponents HttpCore
+
+    Copyright 2005-2012 The Apache Software Foundation
+
+
+
+    This product includes software developed by
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+
+    This project contains annotations derived from JCIP-ANNOTATIONS
+
+    Copyright (c) 2005 Brian Goetz and Tim Peierls. See http://www.jcip.net
+
+ - repo/jdo2-api-2.3-20090302111651.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Java Data Objects (JDO)
+    Copyright 2005-2006 The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/jdo-api-3.0.1.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Java Data Objects (JDO)
+
+    Copyright 2005-2006 The Apache Software Foundation
+
+
+
+    This product includes software developed at
+
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/libthrift-0.9.0.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+    Apache Thrift
+    Copyright 2006-2010 The Apache Software Foundation.
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/).
+
+ - repo/netty-3.2.2.Final.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+                                The Netty Project
+                                =================
+
+    Please visit the Netty web site for more information:
+
+      * http://www.jboss.org/netty/
+
+    Copyright 2009 Red Hat, Inc.
+
+    Red Hat licenses this product to you under the Apache License, version 2.0 (the
+    "License"); you may not use this product except in compliance with the License.
+    You may obtain a copy of the License at:
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+    CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations under the License.
+
+    Also, please refer to each LICENSE.<component>.txt file, which is located in
+    the 'license' directory of the distribution file, for the license terms of the
+    components that this product depends on.
+
+    -------------------------------------------------------------------------------
+    This product contains the extensions to Java Collections Framework which has
+    been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene:
+
+      * LICENSE:
+        * license/LICENSE.jsr177y.txt (Public Domain)
+      * HOMEPAGE:
+        * http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/
+        * http://viewvc.jboss.org/cgi-bin/viewvc.cgi/jbosscache/experimental/jsr166/
+
+    This product contains a modified version of Robert Harder's Public Domain
+    Base64 Encoder and Decoder, which can be obtained at:
+
+      * LICENSE:
+        * license/LICENSE.base64.txt (Public Domain)
+      * HOMEPAGE:
+        * http://iharder.sourceforge.net/current/java/base64/
+
+    This product contains a modified version of 'JZlib', a re-implementation of
+    zlib in pure Java, which can be obtained at:
+
+      * LICENSE:
+        * license/LICENSE.jzlib.txt (BSD Style License)
+      * HOMEPAGE:
+        * http://www.jcraft.com/jzlib/
+
+ - repo/netty-3.6.2.Final.jar in asterix/asterix-server-0.8.8-incubating-binary-assembly.zip
+
+                                The Netty Project
+                                =================
+
+    Please visit the Netty web site for more information:
+
+      * http://netty.io/
+
+    Copyright 2011 The Netty Project
+
+    The Netty Project licenses this file to you under the Apache License,
+    version 2.0 (the "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+    License for the specific language governing permissions and limitations
+    under the License.
+
+    Also, please refer to each LICENSE.<component>.txt file, which is located in
+    the 'license' directory of the distribution file, for the license terms of the
+    components that this product depends on.
+
+    -------------------------------------------------------------------------------
+    This product contains the extensions to Java Collections Framework which has
+    been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene:
+
+      * LICENSE:
+        * license/LICENSE.jsr166y.txt (Public Domain)
+      * HOMEPAGE:
+        * http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/
+        * http://viewvc.jboss.org/cgi-bin/viewvc.cgi/jbosscache/experimental/jsr166/
+
+    This product contains a modified version of Robert Harder's Public Domain
+    Base64 Encoder and Decoder, which can be obtained at:
+
+      * LICENSE:
+        * license/LICENSE.base64.txt (Public Domain)
+      * HOMEPAGE:
+        * http://iharder.sourceforge.net/current/java/base64/
+
+    This product contains a modified version of 'JZlib', a re-implementation of
+    zlib in pure Java, which can be obtained at:
+
+      * LICENSE:
+        * license/LICENSE.jzlib.txt (BSD Style License)
+      * HOMEPAGE:
+        * http://www.jcraft.com/jzlib/
+
+- lib/log4j-1.2.15.jar
+
+    Apache log4j
+    Copyright 2007 The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/).
+

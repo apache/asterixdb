@@ -22,8 +22,8 @@
   <name>asterix-server</name>
   <parent>
     <groupId>org.apache.asterix</groupId>
-    <artifactId>asterix</artifactId>
-    <version>0.8.8-SNAPSHOT</version>
+    <artifactId>apache-asterixdb</artifactId>
+    <version>0.8.9-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -34,6 +34,10 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
 
   <build>
     <plugins>
@@ -140,7 +144,7 @@
   	<dependency>
   		<groupId>org.apache.asterix</groupId>
   		<artifactId>asterix-app</artifactId>
-  		<version>0.8.8-SNAPSHOT</version>
+  		<version>0.8.9-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>org.codehaus.mojo.appassembler</groupId>

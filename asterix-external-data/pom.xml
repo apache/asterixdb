@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>asterix</artifactId>
+        <artifactId>apache-asterixdb</artifactId>
         <groupId>org.apache.asterix</groupId>
-        <version>0.8.8-SNAPSHOT</version>
+        <version>0.8.9-SNAPSHOT</version>
     </parent>
     <licenses>
         <license>
@@ -32,12 +32,15 @@
         </license>
     </licenses>
     <artifactId>asterix-external-data</artifactId>
+    <properties>
+        <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    </properties>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.asterix</groupId>
                 <artifactId>lexer-generator-maven-plugin</artifactId>
-                <version>0.8.8-SNAPSHOT</version>
+                <version>0.8.9-SNAPSHOT</version>
                 <configuration>
                     <grammarFile>src/main/resources/adm.grammar</grammarFile>
                     <outputDir>${project.build.directory}/generated-sources/org/apache/asterix/runtime/operators/file/adm</outputDir>
@@ -92,41 +95,45 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <includes>
-                        <include>**/*.class</include>
-                        <include>**/*.txt</include>
-                    </includes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-5</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <descriptor>src/main/assembly/binary-assembly-libzip.xml</descriptor>
-                            <finalName>testlib-zip</finalName>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attached</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <includes>
+                  <include>**/*.class</include>
+                  <include>**/*.txt</include>
+                  <include>**/DISCLAIMER</include>
+                  <include>**/NOTICE</include>
+                  <include>**/LICENSE</include>
+                  <include>**/DEPENDENCIES</include>
+               </includes>
+            </configuration>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>test-jar</goal>
+                  </goals>
+                  <phase>package</phase>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.2-beta-5</version>
+            <executions>
+               <execution>
+                  <configuration>
+                     <descriptor>src/main/assembly/binary-assembly-libzip.xml</descriptor>
+                     <finalName>testlib-zip</finalName>
+                  </configuration>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>attached</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -182,14 +189,14 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.9-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-runtime</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.9-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
@@ -254,7 +261,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.windowsazure</groupId>

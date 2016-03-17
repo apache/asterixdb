@@ -21,11 +21,13 @@ package org.apache.asterix.test.runtime;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -107,6 +109,27 @@ public class HDFSCluster {
             dfsCluster.shutdown();
             cleanupLocal();
         }
+    }
+    public static void main(String[] args) throws Exception {
+        HDFSCluster cluster = new HDFSCluster();
+        cluster.setup();
+        JobConf conf = configureJobConf();
+        InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
+        for (InputSplit split : inputSplits) {
+            System.out.println("split :" + split);
+        }
+    }
+
+    private static JobConf configureJobConf() throws Exception {
+        JobConf conf = new JobConf();
+        String hdfsUrl = "hdfs://127.0.0.1:31888";
+        String hdfsPath = "/asterix/extrasmalltweets.txt";
+        conf.set("fs.default.name", hdfsUrl);
+        conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.setClassLoader(GenericAdapter.class.getClassLoader());
+        conf.set("mapred.input.dir", hdfsPath);
+        conf.set("mapred.input.format.class", "org.apache.hadoop.mapred.TextInputFormat");
+        return conf;
     }
 
 }

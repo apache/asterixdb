@@ -3,8 +3,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.apache.asterix</groupId>
-		<artifactId>asterix</artifactId>
-		<version>0.8.8-SNAPSHOT</version>
+		<artifactId>apache-asterixdb</artifactId>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-replication</artifactId>
 	<licenses>
@@ -17,15 +17,6 @@
 	</licenses>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<fork>true</fork>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -50,12 +41,12 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>

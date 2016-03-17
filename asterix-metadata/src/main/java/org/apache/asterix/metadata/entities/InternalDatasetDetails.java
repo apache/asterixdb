@@ -149,6 +149,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
         AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
         AOrderedListType int8List = new AOrderedListType(BuiltinType.AINT8, null);
+        AOrderedListType heterogeneousList = new AOrderedListType(BuiltinType.ANY, null);
         internalRecordBuilder.reset(MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
@@ -225,7 +226,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         // write filter fields if any
         List<String> filterField = getFilterField();
         if (filterField != null) {
-            listBuilder.reset(stringList);
+            listBuilder.reset(heterogeneousList);
             ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(FILTER_FIELD_NAME);

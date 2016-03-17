@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>asterix</artifactId>
+        <artifactId>apache-asterixdb</artifactId>
         <groupId>org.apache.asterix</groupId>
-        <version>0.8.8-SNAPSHOT</version>
+        <version>0.8.9-SNAPSHOT</version>
     </parent>
     <artifactId>asterix-app</artifactId>
     <licenses>
@@ -32,52 +32,21 @@
             <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
+
+    <properties>
+        <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <configuration>
-                            <programs>
-                                <program>
-                                    <mainClass>org.apache.asterix.drivers.AsterixWebServer</mainClass>
-                                    <name>asterix-web</name>
-                                </program>
-                                <program>
-                                    <mainClass>org.apache.asterix.drivers.AsterixClientDriver</mainClass>
-                                    <name>asterix-cmd</name>
-                                </program>
-                                <program>
-                                    <mainClass>org.apache.asterix.drivers.AsterixCLI</mainClass>
-                                    <name>asterix-cli</name>
-                                </program>
-                            </programs>
-                            <repositoryLayout>flat</repositoryLayout>
-                            <repositoryName>lib</repositoryName>
-                        </configuration>
-                        <phase>package</phase>
                         <goals>
-                            <goal>assemble</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-5</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attached</goal>
+                            <goal>jar</goal>
+                            <goal>test-jar</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -95,48 +64,48 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-external-library</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>src/test/resources/externallib</outputDirectory>
-                            <overwrite>true</overwrite>
-                            <resources>
-                                <resource>
-                                    <directory>../asterix-external-data/target</directory>
-                                    <includes>
-                                        <include>testlib-zip-binary-assembly.zip</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-beer-csv</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>data/csv</outputDirectory>
-                            <overwrite>true</overwrite>
-                            <resources>
-                                <resource>
-                                    <directory>../asterix-external-data/src/test/resources</directory>
-                                    <includes>
-                                        <include>beer.csv</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+    <artifactId>maven-resources-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>copy-external-library</id>
+            <phase>generate-resources</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>src/test/resources/externallib</outputDirectory>
+                <overwrite>true</overwrite>
+                <resources>
+                    <resource>
+                        <directory>../asterix-external-data/target</directory>
+                        <includes>
+                            <include>testlib-zip-binary-assembly.zip</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+        <execution>
+            <id>copy-beer-csv</id>
+            <phase>generate-resources</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>data/csv</outputDirectory>
+                <overwrite>true</overwrite>
+                <resources>
+                    <resource>
+                        <directory>../asterix-external-data/src/test/resources</directory>
+                        <includes>
+                            <include>beer.csv</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </configuration>
+       </execution>
+    </executions>
+</plugin>
         </plugins>
     </build>
     <dependencies>

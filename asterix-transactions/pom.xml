@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>asterix</artifactId>
+		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-transactions</artifactId>
 
@@ -34,12 +34,16 @@
     </license>
   </licenses>
 
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
+
 	<build>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.asterix</groupId>
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
-                <version>0.8.8-SNAPSHOT</version>
+                <version>0.8.9-SNAPSHOT</version>
                 <configuration>
                     <debug>false</debug>
                     <inputFiles>
@@ -86,23 +90,27 @@
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-common</artifactId>
+            <version>${hyracks.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
+            <version>${hyracks.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
+            <version>${hyracks.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+            <version>${hyracks.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
+            <version>0.8.9-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>

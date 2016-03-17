@@ -25,6 +25,28 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
+        <directory>target/classes/META-INF</directory>
+        <outputDirectory>.</outputDirectory>
+        <includes>
+            <include>DISCLAIMER*</include>
+        </includes>
+    </fileSet>
+    <fileSet>
+        <directory>src/main/licenses</directory>
+        <outputDirectory>.</outputDirectory>
+        <includes>
+            <include>LICENSE*</include>
+            <include>NOTICE*</include>
+        </includes>
+    </fileSet>
+    <fileSet>
+        <directory>src/main/resources</directory>
+        <outputDirectory>.</outputDirectory>
+        <includes>
+            <include>LICENSE*</include>
+        </includes>
+    </fileSet>
+    <fileSet>
       <directory>target/appassembler/repo</directory>
       <outputDirectory>repo</outputDirectory>
     </fileSet>
@@ -37,8 +59,8 @@
       <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
-      	<include>asterixcc.xml</include>
-      	<include>asterixnc.xml</include>
+        <include>asterixcc.xml</include>
+        <include>asterixnc.xml</include>
       </includes>
     </fileSet>
 

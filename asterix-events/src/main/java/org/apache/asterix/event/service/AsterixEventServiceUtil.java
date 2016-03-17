@@ -322,6 +322,7 @@ public class AsterixEventServiceUtil {
         ZipEntry entry = null;
 
         int BUFFER_SIZE = 4096;
+        createDir(destDir);
         while ((entry = zis.getNextEntry()) != null) {
             String dst = destDir + File.separator + entry.getName();
             if (entry.isDirectory()) {
@@ -428,6 +429,11 @@ public class AsterixEventServiceUtil {
         int index = name.lastIndexOf(File.separator);
         String dirSequence = name.substring(0, index);
         File newDirs = new File(destDirectory + File.separator + dirSequence);
+        newDirs.mkdirs();
+    }
+
+    private static void createDir(String destDirectory) {
+        File newDirs = new File(destDirectory + File.separator);
         newDirs.mkdirs();
     }
 

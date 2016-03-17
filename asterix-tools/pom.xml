@@ -1,108 +1,59 @@
 <!--
  ! Licensed to the Apache Software Foundation (ASF) under one
- ! or more contributor license agreements.  See the NOTICE file
+ ! or more contributor license agreements.See the NOTICE file
  ! distributed with this work for additional information
- ! regarding copyright ownership.  The ASF licenses this file
+ ! regarding copyright ownership.The ASF licenses this file
  ! to you under the Apache License, Version 2.0 (the
  ! "License"); you may not use this file except in compliance
- ! with the License.  You may obtain a copy of the License at
+ ! with the License.You may obtain a copy of the License at
  !
- !   http://www.apache.org/licenses/LICENSE-2.0
+ ! http://www.apache.org/licenses/LICENSE-2.0
  !
  ! Unless required by applicable law or agreed to in writing,
  ! software distributed under the License is distributed on an
  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- ! KIND, either express or implied.  See the License for the
+ ! KIND, either express or implied.See the License for the
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>asterix</artifactId>
+		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-tools</artifactId>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+
+	<properties>
+			<appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+	</properties>
 
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.4</version>
-				<executions>
-					<execution>
-						<id>aqlclient</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<phase>package</phase>
-						<configuration>
-							<classifier>aqlclient</classifier>
-							<archive>
-								<manifest>
-									<MainClass>org.apache.asterix.tools.aqlclient.AqlClient</MainClass>
-								</manifest>
-							</archive>
-							<includes>
-								<include>**/uci/ics/asterix/tools/aqlclient/*</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>appassembler-maven-plugin</artifactId>
-				<version>1.0</version>
-				<executions>
-					<execution>
-						<configuration>
-							<programs>
-								<program>
-									<mainClass>org.apache.asterix.tools.TblToAdm</mainClass>
-									<name>tbl2adm</name>
-								</program>
-								<program>
-									<mainClass>org.apache.asterix.tools.datagen.AdgClientDriver</mainClass>
-									<name>adg</name>
-								</program>
-							</programs>
-							<repositoryLayout>flat</repositoryLayout>
-							<repositoryName>lib</repositoryName>
-						</configuration>
-						<phase>package</phase>
-						<goals>
-							<goal>assemble</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-5</version>
-				<executions>
-					<execution>
-						<configuration>
-							<descriptors>
-								<descriptor>src/main/assembly/binary-assembly.xml</descriptor>
-							</descriptors>
-						</configuration>
-						<phase>package</phase>
-						<goals>
-							<goal>attached</goal>
-						</goals>
-					</execution>
-				</executions>
+				<configuration>
+					<includes>
+						<include>**/*.class</include>
+						<include>**/README*</include>
+						<include>**/DISCLAIMER*</include>
+						<include>**/NOTICE*</include>
+						<include>**/LICENSE*</include>
+						<include>**/DEPENDENCIES*</include>
+					</includes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -140,37 +91,37 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-lang-aql</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-algebra</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<!--<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>-->
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

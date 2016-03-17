@@ -35,12 +35,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import org.apache.asterix.test.runtime.HDFSCluster;
+import org.apache.asterix.testframework.context.TestCaseContext;
 @RunWith(Parameterized.class)
 public class RecoveryIT {
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
     private static final String PATH_ACTUAL = "rttest/";
     private static final String PATH_BASE = "src/test/resources/transactionts/";
+    private static final String HDFS_BASE = "../asterix-app/";
     private TestCaseContext tcCtx;
     private static File asterixInstallerPath;
     private static File installerTargetPath;
@@ -75,10 +78,11 @@ public class RecoveryIT {
                 + "resources" + File.separator + "transactionts" + File.separator + "scripts";
         env.put("SCRIPT_HOME", scriptHomePath);
 
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "configure_and_validate.sh");
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
+                + "configure_and_validate.sh");
+        TestExecutor.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
+                + "stop_and_delete.sh");
+        HDFSCluster.getInstance().setup(HDFS_BASE);
     }
 
     @AfterClass
@@ -88,10 +92,11 @@ public class RecoveryIT {
         File dataCopyDir = new File(
                 managixHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
         FileUtils.deleteDirectory(dataCopyDir);
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "shutdown.sh");
+        TestExecutor.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
+                + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
+                + "shutdown.sh");
+        HDFSCluster.getInstance().cleanup();
     }
 
     @Parameters

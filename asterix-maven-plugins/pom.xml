@@ -31,11 +31,15 @@
     </license>
   </licenses>
 
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
+
 
 	<parent>
-		<artifactId>asterix</artifactId>
+		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 
   <dependencies>

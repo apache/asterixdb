@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>asterix</artifactId>
+		<artifactId>apache-asterixdb</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.8-SNAPSHOT</version>
+		<version>0.8.9-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-installer</artifactId>
 	<properties>
@@ -31,6 +31,7 @@
 		<cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
         <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
 		<jacocoArgLine/>
+        <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
 	</properties>
 
   <licenses>
@@ -249,42 +250,49 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.asterix</groupId>
+            <artifactId>asterix-app</artifactId>
+            <version>0.8.9-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-app</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
-			<version>0.8.8-SNAPSHOT</version>
+			<version>0.8.9-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

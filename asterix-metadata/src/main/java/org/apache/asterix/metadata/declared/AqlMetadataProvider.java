@@ -676,7 +676,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 Pair<IBinaryComparatorFactory[], ITypeTraits[]> comparatorFactoriesAndTypeTraits = getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
                         secondaryIndex.getIndexType(), secondaryIndex.getKeyFieldNames(),
-                        secondaryIndex.getKeyFieldTypes(), DatasetUtils.getPartitioningKeys(dataset), itemType);
+                        secondaryIndex.getKeyFieldTypes(), DatasetUtils.getPartitioningKeys(dataset), itemType, dataset.getDatasetType());
                 comparatorFactories = comparatorFactoriesAndTypeTraits.first;
                 typeTraits = comparatorFactoriesAndTypeTraits.second;
                 if (filterTypeTraits != null) {
@@ -779,7 +779,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private Pair<IBinaryComparatorFactory[], ITypeTraits[]> getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
             IndexType indexType, List<List<String>> sidxKeyFieldNames, List<IAType> sidxKeyFieldTypes,
-            List<List<String>> pidxKeyFieldNames, ARecordType recType) throws AlgebricksException {
+            List<List<String>> pidxKeyFieldNames, ARecordType recType, DatasetType dsType) throws AlgebricksException {
 
         IBinaryComparatorFactory[] comparatorFactories;
         ITypeTraits[] typeTraits;
@@ -799,7 +799,21 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
-            IAType keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
+           IAType keyType = null;
+           try {
+               switch (dsType) {
+                   case INTERNAL:
+                   keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
+                   break;
+               case EXTERNAL:
+                   keyType = IndexingConstants.getFieldType(j);
+                   break;
+               default:
+                   throw new AlgebricksException("Unknown Dataset Type");
+               }
+           } catch (AsterixException e) {
+               throw new AlgebricksException(e);
+           }
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);

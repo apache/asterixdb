@@ -19,13 +19,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-          <artifactId>asterix</artifactId>
+          <artifactId>apache-asterixdb</artifactId>
           <groupId>org.apache.asterix</groupId>
-          <version>0.8.8-SNAPSHOT</version>
+          <version>0.8.9-SNAPSHOT</version>
   </parent>
   <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-fuzzyjoin</artifactId>
-  <version>0.8.8-SNAPSHOT</version>
+  <version>0.8.9-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -35,6 +35,10 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+
+  <properties>
+      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+  </properties>
 
   <build>
     <plugins>
@@ -52,6 +56,15 @@
         </executions>
         <configuration>
           <outputDirectory>${basedir}/target</outputDirectory>
+          <includes>
+              <include>**/*.class</include>
+              <include>**/*.txt</include>
+              <include>**/README*</include>
+              <include>**/DISCLAIMER*</include>
+              <include>**/NOTICE*</include>
+              <include>**/LICENSE*</include>
+              <include>**/DEPENDENCIES*</include>
+          </includes>
         </configuration>
       </plugin>
     </plugins>
