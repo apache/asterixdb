@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.context;
 
+import java.io.Serializable;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
@@ -45,4 +46,6 @@ public interface IHyracksTaskContext
     public void setSharedObject(Object sharedObject);
 
     public Object getSharedObject();
+
+    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception;
 }

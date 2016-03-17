@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.test.support;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +136,10 @@ public class TestTaskContext implements IHyracksTaskContext {
     @Override
     public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
 
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception {
     }
 
     @Override

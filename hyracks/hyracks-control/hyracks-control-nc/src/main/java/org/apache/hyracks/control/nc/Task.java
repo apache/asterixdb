@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.nc;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 import org.apache.hyracks.control.common.job.profiling.om.PartitionProfile;
@@ -384,6 +386,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
         this.ncs.sendApplicationMessageToCC(message, deploymentId);
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), deploymentId);
     }
 
     @Override
