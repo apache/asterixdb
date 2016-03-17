@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.classad.test;
 
+import java.net.URLDecoder;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -45,8 +47,8 @@ public class ClassAdFunctionalTest extends TestCase {
      */
     public void testApp() {
 
-        String[] args = { "", "-d", "-v", getClass().getResource("/functional_tests.txt").getPath() };
         try {
+            String[] args = { "", "-d", "-v", URLDecoder.decode(getClass().getResource("/functional_tests.txt").getPath(), "UTF-8") };
             FunctionalTester.test(args.length, args);
         } catch (Exception e) {
             e.printStackTrace();
