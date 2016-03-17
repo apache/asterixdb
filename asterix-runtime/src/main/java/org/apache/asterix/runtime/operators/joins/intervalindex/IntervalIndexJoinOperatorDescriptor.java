@@ -253,8 +253,8 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                     }
                     IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(rightKeys, leftKeys, partition);
 
-                    ITuplePointerAccessor leftAccessor = leftState.bufferManager.createTupleAccessor();
-                    ITuplePointerAccessor rightAccessor = rightState.bufferManager.createTupleAccessor();
+                    ITuplePointerAccessor leftAccessor = leftState.bufferManager.createTuplePointerAccessor();
+                    ITuplePointerAccessor rightAccessor = rightState.bufferManager.createTuplePointerAccessor();
 
                     EndPointIndexItem leftItem;
                     EndPointIndexItem rightItem;

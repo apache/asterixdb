@@ -20,8 +20,8 @@ package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
 public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
     private static final long serialVersionUID = 1L;
@@ -36,27 +36,17 @@ public class BeforeIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChe
     }
 
     @Override
-    public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
+    public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, idRight);
         return (start0 < start1);
     }
 
     @Override
-    public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        return (start1 < end0);
-    }
-
-    @Override
-    public boolean checkToLoadNextRightTuple(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        return (start0 < start1);
+    public boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        return !checkToSaveInMemory(accessorLeft, accessorRight);
     }
 
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {

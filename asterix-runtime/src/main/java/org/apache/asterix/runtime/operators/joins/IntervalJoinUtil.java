@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.operators.joins;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
 public class IntervalJoinUtil {
 
@@ -36,6 +37,20 @@ public class IntervalJoinUtil {
             throws HyracksDataException {
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
+        long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
+        return intervalEnd;
+    }
+
+    public static long getIntervalStart(ITupleAccessor accessor, int fieldId) throws HyracksDataException {
+        int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(fieldId) + 1;
+        long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
+        return intervalStart;
+    }
+
+    public static long getIntervalEnd(ITupleAccessor accessor, int fieldId) throws HyracksDataException {
+        int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(fieldId) + 1;
         long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
         return intervalEnd;
     }
