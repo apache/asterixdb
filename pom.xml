@@ -18,14 +18,13 @@
  !-->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.apache.hyracks</groupId>
-    <artifactId>fullstack</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <name>hyracks-ecosystem-full-stack</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.hyracks</groupId>
+  <artifactId>apache-asterixdb-hyracks</artifactId>
+  <version>0.2.18-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>hyracks-ecosystem-full-stack</name>
 
     <parent>
         <groupId>org.apache</groupId>
@@ -115,7 +114,7 @@
         <version>0.11</version>
         <executions>
             <execution>
-                <phase>verify</phase>
+                <phase>validate</phase>
                 <goals>
                     <goal>check</goal>
                 </goals>
@@ -144,6 +143,7 @@
               <familyName>Apache License Version 2.0</familyName>
             </licenseFamily>
           </licenseFamilies>
+          <excludeSubProjects>false</excludeSubProjects>
           <excludes>
            <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
            <exclude>**/javascript/flot/*.js</exclude>
@@ -177,6 +177,36 @@
            <exclude>**/data/**/*.txt</exclude>
            <exclude>**/.classpath</exclude>
            <exclude>**/.project</exclude>
+           <exclude>**/target/**</exclude>
+           <exclude>**/*.iml</exclude>
+           <exclude>**/.classpath</exclude>
+           <exclude>**/.project</exclude>
+           <exclude>**/.settings/**</exclude>
+           <exclude>algebricks/algebricks-examples/piglet-example/testcases/*.piglet</exclude>
+           <exclude>algebricks/algebricks-tests/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>algebricks/algebricks-tests/data/simple/*.tbl</exclude>
+           <exclude>algebricks/algebricks-tests/data/tpch0.001/*.tbl</exclude>
+           <exclude>algebricks/algebricks-tests/data/tpch0.001/tpch.ddl</exclude>
+           <exclude>algebricks/algebricks-tests/src/test/resources/results/scanMicroSortWrite.out</exclude>
+           <exclude>ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-client/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/flot/*.js</exclude>
+           <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jsplumb/jquery.jsPlumb-1.3.5-all-min.js</exclude>
+           <exclude>hyracks/hyracks-dist/src/main/resources/conf/master</exclude>
+           <exclude>hyracks/hyracks-dist/src/main/resources/conf/slaves</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/*.txt</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/*.tbl</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/tpch.ddl</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/wordcount.tsv</exclude>
+           <exclude>hyracks/hyracks-examples/text-example/textserver/data/*.txt</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/conf.xml</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/customer_result/part-0</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/build/test/data/dfs/**</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/data/customer.tbl</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/expected/part-0</exclude>
+           <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.first.cleaned</exclude>
+           <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.last.cleaned</exclude>
       </excludes>
         </configuration>
       </plugin>
@@ -235,6 +265,45 @@
                <target>${jdk.version}</target>
                <compilerArgument>-Xlint:all</compilerArgument>
             </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${root.dir}/src/main/appended-resources</directory>
+                  <!-- <filtering>true</filtering> -->
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-remote-resources-plugin</artifactId>
+          <executions>
+              <execution>
+                  <goals>
+                      <goal>process</goal>
+                  </goals>
+                  <configuration>
+                      <resourceBundles combine.children="append">
+                          <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                          <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
+                      </resourceBundles>
+                  </configuration>
+              </execution>
+          </executions>
       </plugin>
     </plugins>
   </build>

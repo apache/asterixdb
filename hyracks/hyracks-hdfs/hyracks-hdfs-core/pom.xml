@@ -25,9 +25,11 @@
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>org.apache.hyracks</groupId>
-		<version>0.2.17-SNAPSHOT</version>
+		<version>0.2.18-SNAPSHOT</version>
 	</parent>
-
+	<properties>
+			<root.dir>${basedir}/../../..</root.dir>
+	</properties>
 	<build>
 		<plugins>
 			<plugin>
@@ -201,31 +203,31 @@
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

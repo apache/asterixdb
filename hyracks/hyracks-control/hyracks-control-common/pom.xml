@@ -24,15 +24,17 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-control</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.18-SNAPSHOT</version>
   </parent>
 
-
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
   <dependencies>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-api</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.18-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

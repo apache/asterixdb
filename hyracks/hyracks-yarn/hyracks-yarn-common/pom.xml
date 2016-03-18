@@ -26,6 +26,9 @@
     <version>0.2.1-SNAPSHOT</version>
   </parent>
 
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
 
   <dependencies>
   <dependency>

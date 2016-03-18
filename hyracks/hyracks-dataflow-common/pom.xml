@@ -17,16 +17,15 @@
  ! under the License.
  !-->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>hyracks-dataflow-common</artifactId>
-    <name>hyracks-dataflow-common</name>
-    <parent>
-        <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks</artifactId>
-        <version>0.2.17-SNAPSHOT</version>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>hyracks-dataflow-common</artifactId>
+  <name>hyracks-dataflow-common</name>
+  <parent>
+    <groupId>org.apache.hyracks</groupId>
+    <artifactId>hyracks</artifactId>
+    <version>0.2.18-SNAPSHOT</version>
+  </parent>
 
     <licenses>
         <license>
@@ -37,36 +36,39 @@
         </license>
     </licenses>
 
+    <properties>
+        <root.dir>${basedir}/../..</root.dir>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-util</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-util</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-api</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-data-std</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-control-nc</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -74,4 +76,5 @@
             <artifactId>commons-io</artifactId>
         </dependency>
     </dependencies>
+
 </project>

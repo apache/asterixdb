@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.18-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -36,6 +36,9 @@
     </license>
   </licenses>
 
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
 
   <build>
     <plugins>
@@ -71,21 +74,11 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-5</version>
-        <executions>
-          <execution>
-            <configuration>
-              <descriptors>
-                <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
-              </descriptors>
-            </configuration>
-            <phase>package</phase>
-            <goals>
-              <goal>attached</goal>
-            </goals>
-          </execution>
-        </executions>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <configuration>
+              <skip>true</skip>
+          </configuration>
       </plugin>
     </plugins>
   </build>
@@ -93,14 +86,14 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.18-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.18-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

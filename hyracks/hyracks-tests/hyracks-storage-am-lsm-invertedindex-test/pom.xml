@@ -25,36 +25,51 @@
     <parent>
         <artifactId>hyracks-tests</artifactId>
         <groupId>org.apache.hyracks</groupId>
-        <version>0.2.17-SNAPSHOT</version>
+        <version>0.2.18-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
+
+   <build>
+      <plugins>
+         <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-deploy-plugin</artifactId>
+             <configuration>
+               <skip>true</skip>
+             </configuration>
+         </plugin>
+      </plugins>
+   </build>
+   <properties>
+         <root.dir>${basedir}/../../..</root.dir>
+   </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-test-support</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-data-std</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-util</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

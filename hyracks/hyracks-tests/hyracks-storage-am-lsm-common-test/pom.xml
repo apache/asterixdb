@@ -24,22 +24,37 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.18-SNAPSHOT</version>
   </parent>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+            <skip>true</skip>
+        </configuration>
+      </plugin>
+  </plugins>
+ </build>
+
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
 
   <dependencies>  	
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-am-lsm-common</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.18-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.18-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

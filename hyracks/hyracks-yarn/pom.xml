@@ -38,6 +38,10 @@
     </license>
   </licenses>
 
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
+
   <modules>
     <module>hyracks-yarn-common</module>
     <module>hyracks-yarn-client</module>

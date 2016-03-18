@@ -38,5 +38,21 @@
       <directory>docs</directory>
       <outputDirectory>docs</outputDirectory>
     </fileSet>
-  </fileSets>
+     <fileSet>
+      <directory>target/classes/META-INF</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>DISCLAIMER*</include>
+        <include>DEPENDENCIES*</include>
+      </includes>
+    </fileSet>
+     <fileSet>
+      <directory>src/main/licenses</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+      </includes>
+    </fileSet>
+ </fileSets>
 </assembly>

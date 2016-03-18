@@ -26,8 +26,12 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.18-SNAPSHOT</version>
   </parent>
+
+  <properties>
+      <root.dir>${basedir}/../../..</root.dir>
+  </properties>
 
   <build>
     <plugins>
@@ -79,7 +83,7 @@
       <plugin>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.18-SNAPSHOT</version>
         <configuration>
           <hyracksServerHome>${basedir}/target/hyracks-shutdown-test-${project.version}-binary-assembly</hyracksServerHome>
           <jvmOptions>${jvm.extraargs}</jvmOptions>
@@ -139,6 +143,13 @@
         </execution>
       </executions>
       </plugin>
+      <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-deploy-plugin</artifactId>
+      <configuration>
+          <skip>true</skip>
+      </configuration>
+    </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -149,27 +160,27 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>texthelper</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.18-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.18-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.18-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>textclient</artifactId>
-      <version>0.2.17-SNAPSHOT</version>
+      <version>0.2.18-SNAPSHOT</version>
       <type>jar</type>
       <scope>test</scope>
     </dependency>

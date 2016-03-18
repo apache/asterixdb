@@ -49,7 +49,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     final private List<Mutable<ILogicalExpression>> arguments;
     private Object[] opaqueParameters;
     private final FunctionKind kind;
-    private Map<Object, IExpressionAnnotation> annotationMap = new HashMap<Object, IExpressionAnnotation>();
+    private final Map<Object, IExpressionAnnotation> annotationMap = new HashMap<Object, IExpressionAnnotation>();
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
             List<Mutable<ILogicalExpression>> arguments) {
@@ -124,6 +124,18 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             sb.append(ref.getValue());
         }
         sb.append("]");
+        if (opaqueParameters != null) {
+            sb.append(", OpaqueArgs:[");
+            first = true;
+            for (Object param : opaqueParameters) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(", ");
+                }
+                sb.append(param);
+            }
+        }
         return sb.toString();
     }
 

@@ -21,14 +21,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>algebricks</artifactId>
-  <version>0.2.17-SNAPSHOT</version>
+  <version>0.2.18-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>algebricks</name>
 
   <parent>
     <groupId>org.apache.hyracks</groupId>
-    <artifactId>fullstack</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <artifactId>apache-asterixdb-hyracks</artifactId>
+    <version>0.2.18-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -39,6 +39,23 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.11</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <properties>
+      <root.dir>${basedir}/..</root.dir>
+  </properties>
 
   <modules>
     <module>algebricks-compiler</module>

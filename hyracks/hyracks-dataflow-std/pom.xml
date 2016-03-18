@@ -23,11 +23,11 @@
     <artifactId>hyracks-dataflow-std</artifactId>
     <name>hyracks-dataflow-std</name>
 
-    <parent>
-        <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks</artifactId>
-        <version>0.2.17-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.apache.hyracks</groupId>
+    <artifactId>hyracks</artifactId>
+    <version>0.2.18-SNAPSHOT</version>
+  </parent>
 
     <licenses>
         <license>
@@ -38,19 +38,22 @@
         </license>
     </licenses>
 
+  <properties>
+      <root.dir>${basedir}/../..</root.dir>
+  </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-api</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-dataflow-common</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
@@ -61,7 +64,7 @@
         <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-control-nc</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -7,7 +7,7 @@
  ! "License"); you may not use this file except in compliance
  ! with the License.  You may obtain a copy of the License at
  !
- !   http://www.apache.org/licenses/LICENSE-2.0
+ !	http://www.apache.org/licenses/LICENSE-2.0
  !
  ! Unless required by applicable law or agreed to in writing,
  ! software distributed under the License is distributed on an
@@ -25,82 +25,96 @@
 	<parent>
 		<groupId>org.apache.hyracks</groupId>
 		<artifactId>hyracks-examples</artifactId>
-		<version>0.2.17-SNAPSHOT</version>
+		<version>0.2.18-SNAPSHOT</version>
 	</parent>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				 <configuration>
+					<skip>true</skip>
+				 </configuration>
+				</plugin>
+		</plugins>
+	</build>
+	<properties>
+			<root.dir>${basedir}/../../..</root.dir>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-btree</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-rtree</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-test-support</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
-			<version>0.2.17-SNAPSHOT</version>
+			<version>0.2.18-SNAPSHOT</version>
 		</dependency>
   	    <dependency>
             <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-client</artifactId>
-            <version>0.2.17-SNAPSHOT</version>
+            <version>0.2.18-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
