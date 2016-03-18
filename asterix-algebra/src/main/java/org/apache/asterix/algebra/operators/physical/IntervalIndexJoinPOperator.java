@@ -113,7 +113,7 @@ public class IntervalIndexJoinPOperator extends AbstractJoinPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator iop,
-            IPhysicalPropertiesVector reqdByParent) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
