@@ -209,6 +209,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
+      <compilation-unit name="meta24">
+        <output-dir compare="Text">meta24</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
       <compilation-unit name="metadata_compaction_policy">
         <output-dir compare="Text">metadata_compaction_policy</output-dir>
       </compilation-unit>
