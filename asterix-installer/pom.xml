@@ -30,7 +30,6 @@
         <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
 		<cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
         <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
-		<jacocoArgLine/>
         <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
 	</properties>
 
@@ -122,6 +121,7 @@
 				<configuration>
 					<runOrder>alphabetical</runOrder>
 					<forkMode>pertest</forkMode>
+					<argLine>${coverageArgLine}</argLine>
 					<excludes>
 						<exclude>${failsafe.test.excludes}</exclude>
                         <exclude>${cluster.test.excludes}</exclude>

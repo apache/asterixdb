@@ -408,6 +408,15 @@
                                     <propertyName>coverageArgLine</propertyName>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>default-prepare-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>coverageArgLine</propertyName>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
