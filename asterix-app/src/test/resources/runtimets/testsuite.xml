@@ -1764,6 +1764,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
+            <compilation-unit name="load-with-index-open_02">
+                <output-dir compare="Text">load-with-index-open_02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="dml">
             <compilation-unit name="load-with-ngram-index-open">
                 <output-dir compare="Text">load-with-ngram-index-open</output-dir>
             </compilation-unit>

@@ -589,7 +589,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
             JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
@@ -676,7 +676,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 Pair<IBinaryComparatorFactory[], ITypeTraits[]> comparatorFactoriesAndTypeTraits = getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
                         secondaryIndex.getIndexType(), secondaryIndex.getKeyFieldNames(),
-                        secondaryIndex.getKeyFieldTypes(), DatasetUtils.getPartitioningKeys(dataset), itemType, dataset.getDatasetType());
+                        secondaryIndex.getKeyFieldTypes(), DatasetUtils.getPartitioningKeys(dataset), itemType,
+                        dataset.getDatasetType());
                 comparatorFactories = comparatorFactoriesAndTypeTraits.first;
                 typeTraits = comparatorFactoriesAndTypeTraits.second;
                 if (filterTypeTraits != null) {
@@ -799,21 +800,21 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
-           IAType keyType = null;
-           try {
-               switch (dsType) {
-                   case INTERNAL:
-                   keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
-                   break;
-               case EXTERNAL:
-                   keyType = IndexingConstants.getFieldType(j);
-                   break;
-               default:
-                   throw new AlgebricksException("Unknown Dataset Type");
-               }
-           } catch (AsterixException e) {
-               throw new AlgebricksException(e);
-           }
+            IAType keyType = null;
+            try {
+                switch (dsType) {
+                    case INTERNAL:
+                        keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
+                        break;
+                    case EXTERNAL:
+                        keyType = IndexingConstants.getFieldType(j);
+                        break;
+                    default:
+                        throw new AlgebricksException("Unknown Dataset Type");
+                }
+            } catch (AsterixException e) {
+                throw new AlgebricksException(e);
+            }
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -1363,7 +1364,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification spec, IndexOperation indexOp, IndexType indexType, boolean bulkload)
-                    throws AlgebricksException {
+            throws AlgebricksException {
 
         // Sanity checks.
         if (primaryKeys.size() > 1) {
@@ -1467,6 +1468,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataset.getDatasetName(), indexName);
 
             List<List<String>> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
+            List<IAType> secondaryKeyTypeEntries = secondaryIndex.getKeyFieldTypes();
 
             int numTokenFields = (!isPartitioned) ? secondaryKeys.size() : secondaryKeys.size() + 1;
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
@@ -1476,7 +1478,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // return the derived type.
             // e.g. UNORDERED LIST -> return UNORDERED LIST type
             IAType secondaryKeyType = null;
-            Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyExprs.get(0), recType);
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypeEntries.get(0),
+                    secondaryKeyExprs.get(0), recType);
             secondaryKeyType = keyPairType.first;
             List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             i = 0;
@@ -1552,7 +1555,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         return getIndexInsertOrDeleteRuntime(IndexOperation.DELETE, dataSourceIndex, propagatedSchema, inputSchemas,
                 typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec,
                 false);
@@ -1560,7 +1563,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private AsterixTupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, ILogicalExpression filterExpr, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // No filtering condition.
         if (filterExpr == null) {
             return null;
@@ -2233,7 +2236,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             JobSpecification jobSpec, Dataset dataset, Index secondaryIndex, int[] ridIndexes, boolean retainInput,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> outputVars, IOperatorSchema opSchema,
             JobGenContext context, AqlMetadataProvider metadataProvider, boolean retainNull)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         try {
             // Get data type
             IAType itemType = null;
@@ -2485,7 +2488,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> additionalFilteringKeys, AsterixTupleFilterFactory filterFactory,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexType indexType,
             List<LogicalVariable> prevSecondaryKeys, List<LogicalVariable> prevAdditionalFilteringKeys)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // Check the index is length-partitioned or not.
         boolean isPartitioned;
         if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
@@ -2710,7 +2713,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> additionalFilteringKeys, AsterixTupleFilterFactory filterFactory,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
             List<LogicalVariable> prevSecondaryKeys, List<LogicalVariable> prevAdditionalFilteringKeys)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         try {
             Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
 
@@ -2864,7 +2867,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> additionalFilteringKeys, AsterixTupleFilterFactory filterFactory,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
             List<LogicalVariable> prevSecondaryKeys, List<LogicalVariable> prevAdditionalFilteringKeys)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // we start with the btree
         Dataset dataset = findDataset(dataverseName, datasetName);
         if (dataset == null) {
