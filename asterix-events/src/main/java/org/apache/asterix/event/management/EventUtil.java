@@ -20,6 +20,7 @@ package org.apache.asterix.event.management;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -191,7 +192,7 @@ public class EventUtil {
             String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster.getJavaHome() : cluster
                     .getMasterNode().getJavaHome();
             return new Node(cluster.getMasterNode().getId(), cluster.getMasterNode().getClusterIp(), javaHome, logDir,
-                    null, null, cluster.getMasterNode().getDebugPort());
+                    null, null, cluster.getMasterNode().getDebugPort(), null);
         }
 
         List<Node> nodeList = cluster.getNode();

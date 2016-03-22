@@ -19,6 +19,7 @@
 package org.apache.asterix.api.common;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -83,6 +84,7 @@ public class AsterixHyracksIntegrationUtil {
             ncConfig1.nodeId = ncName;
             ncConfig1.resultTTL = 30000;
             ncConfig1.resultSweepThreshold = 1000;
+            ncConfig1.appArgs = Arrays.asList("-virtual-NC");
             String tempPath = System.getProperty(IO_DIR_KEY);
             if (tempPath.endsWith(File.separator)) {
                 tempPath = tempPath.substring(0, tempPath.length() - 1);
@@ -109,8 +111,19 @@ public class AsterixHyracksIntegrationUtil {
                 }
             }
             ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
-            ncs[n] = new NodeControllerService(ncConfig1);
-            ncs[n].start();
+            NodeControllerService nodeControllerService = new NodeControllerService(ncConfig1);
+            ncs[n] = nodeControllerService;
+            Thread ncStartThread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        nodeControllerService.start();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            ncStartThread.start();
             ++n;
         }
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);

@@ -24,17 +24,8 @@ public class RemoteLogMapping {
 
     private String remoteNodeID;
     private long remoteLSN;
-    private boolean isFlushed = false;
     private long localLSN;
     public AtomicInteger numOfFlushedIndexes = new AtomicInteger();
-
-    public boolean isFlushed() {
-        return isFlushed;
-    }
-
-    public void setFlushed(boolean isFlushed) {
-        this.isFlushed = isFlushed;
-    }
 
     public String getRemoteNodeID() {
         return remoteNodeID;
@@ -66,7 +57,10 @@ public class RemoteLogMapping {
         sb.append("Remote Node: " + remoteNodeID);
         sb.append(" Remote LSN: " + remoteLSN);
         sb.append(" Local LSN: " + localLSN);
-        sb.append(" isFlushed : " + isFlushed);
         return sb.toString();
+    }
+
+    public String getNodeUniqueLSN() {
+        return TxnLogUtil.getNodeUniqueLSN(remoteNodeID, remoteLSN);
     }
 }

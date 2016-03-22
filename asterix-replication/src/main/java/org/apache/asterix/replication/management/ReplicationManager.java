@@ -213,7 +213,7 @@ public class ReplicationManager implements IReplicationManager {
 
     @Override
     public void replicateLog(ILogRecord logRecord) {
-        if (logRecord.getLogType() == LogType.JOB_COMMIT) {
+        if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
             //if replication is suspended, wait until it is resumed.
             while (replicationSuspended.get()) {
                 synchronized (replicationSuspended) {
@@ -734,11 +734,7 @@ public class ReplicationManager implements IReplicationManager {
 
                 return true;
             } else {
-                if (!replicationJobsPendingAcks.containsKey(logRecord.getJobId())) {
-                    synchronized (replicationJobsPendingAcks) {
-                        replicationJobsPendingAcks.put(logRecord.getJobId(), logRecord);
-                    }
-                }
+                replicationJobsPendingAcks.putIfAbsent(logRecord.getJobId(), logRecord);
                 return false;
             }
         }

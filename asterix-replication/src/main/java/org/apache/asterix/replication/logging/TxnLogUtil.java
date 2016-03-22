@@ -16,24 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.replication;
+package org.apache.asterix.replication.logging;
 
-import java.nio.channels.SocketChannel;
+public class TxnLogUtil {
 
-import org.apache.asterix.common.transactions.LogRecord;
-
-public interface IReplicationThread extends Runnable {
-
-    /**
-     * Sends a notification to this thread that logRecord has been flushed.
-     *
-     * @param logRecord
-     *            The log that has been flushed.
-     */
-    public void notifyLogReplicationRequester(LogRecord logRecord);
+    private TxnLogUtil() {
+        //prevent util class construction
+    }
 
     /**
-     * @return The replication client socket channel.
+     * @param nodeId
+     * @param LSN
+     * @return Concatenation of nodeId and LSN
      */
-    public SocketChannel getReplicationClientSocket();
+    public static String getNodeUniqueLSN(String nodeId, long LSN) {
+        return nodeId + LSN;
+    }
 }

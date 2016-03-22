@@ -123,6 +123,7 @@
 				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
 				<xs:element ref="cl:iodevices" minOccurs="0" />
 				<xs:element ref="cl:debug_port" minOccurs="0" />
+				<xs:element ref="cl:replication_port" minOccurs="0" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>

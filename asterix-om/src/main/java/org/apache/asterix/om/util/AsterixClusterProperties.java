@@ -371,6 +371,7 @@ public class AsterixClusterProperties {
                             partitionRecoveryPlan.get(replica).add(partition.getPartitionId());
                         }
                     }
+                    break;
                 }
             }
 

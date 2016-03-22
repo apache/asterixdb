@@ -64,6 +64,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
     public boolean initialRun = false;
 
+    @Option(name = "-virtual-NC", usage = "A flag indicating if this NC is running on virtual cluster (default: false)", required = false)
+    public boolean virtualNC = false;
+
     private INCApplicationContext ncApplicationContext = null;
     private IAsterixAppRuntimeContext runtimeContext;
     private String nodeId;
@@ -88,7 +91,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
-
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
@@ -120,7 +122,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("System is in a state: " + systemState);
             }
 
-            if (replicationEnabled) {
+            //do not attempt to perform remote recovery if this is a virtual NC
+            if (replicationEnabled && !virtualNC) {
                 if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
                     //Try to perform remote recovery
                     IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();

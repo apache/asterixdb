@@ -62,9 +62,10 @@ public class ClusterManager implements IClusterManager {
 
     private ClusterManager() {
         Cluster asterixCluster = AsterixClusterProperties.INSTANCE.getCluster();
-        String eventHome = asterixCluster == null ? null : asterixCluster.getWorkingDir().getDir();
+        String eventHome = asterixCluster == null ? null
+                : asterixCluster.getWorkingDir() == null ? null : asterixCluster.getWorkingDir().getDir();
 
-        if (asterixCluster != null) {
+        if (eventHome != null) {
             String asterixDir = System.getProperty("user.dir") + File.separator + "asterix";
             File configFile = new File(System.getProperty("user.dir") + File.separator + "configuration.xml");
             Configuration configuration = null;
@@ -74,8 +75,8 @@ public class ClusterManager implements IClusterManager {
                 Unmarshaller unmarshaller = configCtx.createUnmarshaller();
                 configuration = (Configuration) unmarshaller.unmarshal(configFile);
                 AsterixEventService.initialize(configuration, asterixDir, eventHome);
-                client = AsterixEventService.getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE
-                        .getCluster());
+                client = AsterixEventService
+                        .getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE.getCluster());
 
                 lookupService = ServiceProvider.INSTANCE.getLookupService();
                 if (!lookupService.isRunning(configuration)) {

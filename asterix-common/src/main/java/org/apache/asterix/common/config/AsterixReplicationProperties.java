@@ -77,10 +77,15 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     }
 
     public int getDataReplicationPort(String nodeId) {
-        if (cluster != null) {
-            return cluster.getDataReplication().getReplicationPort().intValue();
+        if (cluster != null && cluster.getDataReplication() != null) {
+            for (int i = 0; i < cluster.getNode().size(); i++) {
+                Node node = cluster.getNode().get(i);
+                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
+                    return node.getReplicationPort() != null ? node.getReplicationPort().intValue()
+                            : cluster.getDataReplication().getReplicationPort().intValue();
+                }
+            }
         }
-
         return REPLICATION_DATAPORT_DEFAULT;
     }
 

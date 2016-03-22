@@ -37,7 +37,7 @@ public class ReplicationProtocol {
     /**
      * All replication messages start with ReplicationFunctions (4 bytes), then the length of the request in bytes
      */
-    public static final String JOB_COMMIT_ACK = "$";
+    public static final String JOB_REPLICATION_ACK = "$";
 
     public final static int REPLICATION_REQUEST_TYPE_SIZE = Integer.BYTES;
     public final static int REPLICATION_REQUEST_HEADER_SIZE = REPLICATION_REQUEST_TYPE_SIZE + Integer.BYTES;
@@ -297,11 +297,11 @@ public class ReplicationProtocol {
     }
 
     public static int getJobIdFromLogAckMessage(String msg) {
-        return Integer.parseInt(msg.substring((msg.indexOf(JOB_COMMIT_ACK) + 1)));
+        return Integer.parseInt(msg.substring((msg.indexOf(JOB_REPLICATION_ACK) + 1)));
     }
 
     public static String getNodeIdFromLogAckMessage(String msg) {
-        return msg.substring(0, msg.indexOf(JOB_COMMIT_ACK));
+        return msg.substring(0, msg.indexOf(JOB_REPLICATION_ACK));
     }
 
     /**

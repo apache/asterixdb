@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.replication.logging.TxnLogUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
@@ -96,6 +97,8 @@ public class LSMComponentProperties {
     public String getMaskPath(ReplicaResourcesManager resourceManager) {
         if (maskPath == null) {
             LSMIndexFileProperties afp = new LSMIndexFileProperties(this);
+            //split the index file path to get the LSM component file name
+            afp.splitFileName();
             maskPath = getReplicaComponentPath(resourceManager) + File.separator + afp.getFileName()
                     + ReplicaResourcesManager.LSM_COMPONENT_MASK_SUFFIX;
         }
@@ -147,10 +150,6 @@ public class LSMComponentProperties {
         return nodeId;
     }
 
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
-    }
-
     public int getNumberOfFiles() {
         return numberOfFiles.get();
     }
@@ -177,5 +176,9 @@ public class LSMComponentProperties {
 
     public void setOpType(LSMOperationType opType) {
         this.opType = opType;
+    }
+
+    public String getNodeUniqueLSN() {
+        return TxnLogUtil.getNodeUniqueLSN(nodeId, originalLSN);
     }
 }

@@ -134,8 +134,7 @@ public class LogBuffer implements ILogBuffer {
                     flushQ.offer(logRecord);
                 }
             } else if (logRecord.getLogSource() == LogSource.REMOTE) {
-
-                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.FLUSH) {
+                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     remoteJobsQ.offer(logRecord);
                 }
             }
@@ -276,7 +275,7 @@ public class LogBuffer implements ILogBuffer {
                         notifyFlushTerminator();
                     }
                 } else if (logRecord.getLogSource() == LogSource.REMOTE) {
-                    if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.FLUSH) {
+                    if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                         notifyReplicationTerminator();
                     }
                 }

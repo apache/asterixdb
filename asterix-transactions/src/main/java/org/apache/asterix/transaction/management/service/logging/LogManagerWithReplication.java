@@ -72,13 +72,8 @@ public class LogManagerWithReplication extends LogManager {
                             //ignore
                         }
                     }
-                }
-            }
 
-            //wait for job ACK from replicas
-            //TODO should JOB_ABORT be added as well?
-            if ((logRecord.getLogType() == LogType.JOB_COMMIT) && !replicationManager.hasBeenReplicated(logRecord)) {
-                synchronized (logRecord) {
+                    //wait for job Commit/Abort ACK from replicas
                     while (!replicationManager.hasBeenReplicated(logRecord)) {
                         try {
                             logRecord.wait();

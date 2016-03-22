@@ -67,14 +67,12 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
         String indexPath = getIndexPath(afp);
         if (indexPath != null) {
             if (afp.isLSMComponentFile()) {
-                String backupFilePath = indexPath + File.separator + afp.getFileName();
-
-                //delete file
-                File destFile = new File(backupFilePath);
+                //delete index file
+                String indexFilePath = indexPath + File.separator + afp.getFileName();
+                File destFile = new File(indexFilePath);
                 FileUtils.deleteQuietly(destFile);
             } else {
-                //delete index files
-                indexPath = indexPath.substring(0, indexPath.lastIndexOf(File.separator));
+                //delete index directory
                 FileUtils.deleteQuietly(new File(indexPath));
             }
         }

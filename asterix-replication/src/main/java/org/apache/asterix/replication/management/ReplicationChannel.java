@@ -95,10 +95,13 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
     private final static int INTIAL_BUFFER_SIZE = 4000; //4KB
     private final LinkedBlockingQueue<LSMComponentLSNSyncTask> lsmComponentRemoteLSN2LocalLSNMappingTaskQ;
+    private final LinkedBlockingQueue<LogRecord> pendingNotificationRemoteLogsQ;
     private final Map<String, LSMComponentProperties> lsmComponentId2PropertiesMap;
-    private final Map<Long, RemoteLogMapping> localLSN2RemoteLSNMap;
+    private final Map<String, RemoteLogMapping> replicaUniqueLSN2RemoteMapping;
     private final LSMComponentsSyncService lsmComponentLSNMappingService;
     private final Set<Integer> nodeHostedPartitions;
+    private final ReplicationNotifier replicationNotifier;
+    private final Object flushLogslock = new Object();
 
     public ReplicationChannel(String nodeId, AsterixReplicationProperties replicationProperties, ILogManager logManager,
             IReplicaResourcesManager replicaResoucesManager, IReplicationManager replicationManager,
@@ -110,9 +113,11 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         this.replicationProperties = replicationProperties;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         lsmComponentRemoteLSN2LocalLSNMappingTaskQ = new LinkedBlockingQueue<LSMComponentLSNSyncTask>();
+        pendingNotificationRemoteLogsQ = new LinkedBlockingQueue<>();
         lsmComponentId2PropertiesMap = new ConcurrentHashMap<String, LSMComponentProperties>();
-        localLSN2RemoteLSNMap = new ConcurrentHashMap<Long, RemoteLogMapping>();
+        replicaUniqueLSN2RemoteMapping = new ConcurrentHashMap<>();
         lsmComponentLSNMappingService = new LSMComponentsSyncService();
+        replicationNotifier = new ReplicationNotifier();
         replicationThreads = Executors.newCachedThreadPool(appContext.getThreadFactory());
         Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
                 .getAppContext()).getMetadataProperties().getNodePartitions();
@@ -140,7 +145,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     dataPort);
             serverSocketChannel.socket().bind(replicationChannelAddress);
             lsmComponentLSNMappingService.start();
-
+            replicationNotifier.start();
             LOGGER.log(Level.INFO, "opened Replication Channel @ IP Address: " + nodeIP + ":" + dataPort);
 
             //start accepting replication requests
@@ -152,7 +157,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             }
         } catch (IOException e) {
             throw new IllegalStateException(
-                    "Could not opened replication channel @ IP Address: " + nodeIP + ":" + dataPort, e);
+                    "Could not open replication channel @ IP Address: " + nodeIP + ":" + dataPort, e);
         }
     }
 
@@ -164,13 +169,13 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         if (remainingFile == 0) {
             if (lsmCompProp.getOpType() == LSMOperationType.FLUSH && lsmCompProp.getReplicaLSN() != null) {
                 //if this LSN wont be used for any other index, remove it
-                if (localLSN2RemoteLSNMap.containsKey(lsmCompProp.getReplicaLSN())) {
-                    int remainingIndexes = localLSN2RemoteLSNMap.get(lsmCompProp.getReplicaLSN()).numOfFlushedIndexes
-                            .decrementAndGet();
+                if (replicaUniqueLSN2RemoteMapping.containsKey(lsmCompProp.getNodeUniqueLSN())) {
+                    int remainingIndexes = replicaUniqueLSN2RemoteMapping
+                            .get(lsmCompProp.getNodeUniqueLSN()).numOfFlushedIndexes.decrementAndGet();
                     if (remainingIndexes == 0) {
                         //Note: there is a chance that this is never deleted because some index in the dataset was not flushed because it is empty.
                         //This could be solved by passing only the number of successfully flushed indexes
-                        localLSN2RemoteLSNMap.remove(lsmCompProp.getReplicaLSN());
+                        replicaUniqueLSN2RemoteMapping.remove(lsmCompProp.getNodeUniqueLSN());
                     }
                 }
             }
@@ -180,22 +185,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             lsmComponentId2PropertiesMap.remove(lsmComponentId);
             LOGGER.log(Level.INFO, "Completed LSMComponent " + lsmComponentId + " Replication.");
         }
-    }
-
-    /**
-     * @param replicaId
-     *            the remote replica id this log belongs to.
-     * @param remoteLSN
-     *            the remote LSN received from the remote replica.
-     * @return The local log mapping if found. Otherwise null.
-     */
-    private RemoteLogMapping getRemoteLogMapping(String replicaId, long remoteLSN) {
-        for (RemoteLogMapping mapping : localLSN2RemoteLSNMap.values()) {
-            if (mapping.getRemoteLSN() == remoteLSN && mapping.getRemoteNodeID().equals(replicaId)) {
-                return mapping;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -538,56 +527,65 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     }
                     break;
                 case LogType.JOB_COMMIT:
-                    LogRecord jobCommitLog = new LogRecord();
-                    TransactionUtil.formJobTerminateLogRecord(jobCommitLog, remoteLog.getJobId(), true);
-                    jobCommitLog.setReplicationThread(this);
-                    jobCommitLog.setLogSource(LogSource.REMOTE);
-                    logManager.log(jobCommitLog);
+                case LogType.ABORT:
+                    LogRecord jobTerminationLog = new LogRecord();
+                    TransactionUtil.formJobTerminateLogRecord(jobTerminationLog, remoteLog.getJobId(),
+                            remoteLog.getLogType() == LogType.JOB_COMMIT);
+                    jobTerminationLog.setReplicationThread(this);
+                    jobTerminationLog.setLogSource(LogSource.REMOTE);
+                    logManager.log(jobTerminationLog);
                     break;
                 case LogType.FLUSH:
-                    LogRecord flushLog = new LogRecord();
-                    TransactionUtil.formFlushLogRecord(flushLog, remoteLog.getDatasetId(), null, remoteLog.getNodeId(),
-                            remoteLog.getNumOfFlushedIndexes());
-                    flushLog.setReplicationThread(this);
-                    flushLog.setLogSource(LogSource.REMOTE);
-                    synchronized (localLSN2RemoteLSNMap) {
-                        logManager.log(flushLog);
-                        //store mapping information for flush logs to use them in incoming LSM components.
-                        RemoteLogMapping flushLogMap = new RemoteLogMapping();
-                        flushLogMap.setRemoteLSN(remoteLog.getLSN());
-                        flushLogMap.setRemoteNodeID(remoteLog.getNodeId());
-                        flushLogMap.setLocalLSN(flushLog.getLSN());
-                        flushLogMap.numOfFlushedIndexes.set(remoteLog.getNumOfFlushedIndexes());
-                        localLSN2RemoteLSNMap.put(flushLog.getLSN(), flushLogMap);
-                        localLSN2RemoteLSNMap.notifyAll();
+                    //store mapping information for flush logs to use them in incoming LSM components.
+                    RemoteLogMapping flushLogMap = new RemoteLogMapping();
+                    flushLogMap.setRemoteNodeID(remoteLog.getNodeId());
+                    flushLogMap.setRemoteLSN(remoteLog.getLSN());
+                    logManager.log(remoteLog);
+                    //the log LSN value is updated by logManager.log(.) to a local value
+                    flushLogMap.setLocalLSN(remoteLog.getLSN());
+                    flushLogMap.numOfFlushedIndexes.set(remoteLog.getNumOfFlushedIndexes());
+                    replicaUniqueLSN2RemoteMapping.put(flushLogMap.getNodeUniqueLSN(), flushLogMap);
+                    synchronized (flushLogslock) {
+                        flushLogslock.notify();
                     }
                     break;
                 default:
-                    throw new ACIDException("Unsupported LogType: " + remoteLog.getLogType());
+                    LOGGER.severe("Unsupported LogType: " + remoteLog.getLogType());
             }
         }
 
-        //this method is called sequentially by LogPage (notifyReplicationTerminator) for JOB_COMMIT and FLUSH log types
+        //this method is called sequentially by LogPage (notifyReplicationTerminator) for JOB_COMMIT and JOB_ABORT log types.
         @Override
         public void notifyLogReplicationRequester(LogRecord logRecord) {
-            //Note: this could be optimized by moving this to a different thread and freeing the LogPage thread faster
-            if (logRecord.getLogType() == LogType.JOB_COMMIT) {
-                //send ACK to requester
+            pendingNotificationRemoteLogsQ.offer(logRecord);
+        }
+
+        @Override
+        public SocketChannel getReplicationClientSocket() {
+            return socketChannel;
+        }
+    }
+
+    /**
+     * This thread is responsible for sending JOB_COMMIT/ABORT ACKs to replication clients.
+     */
+    private class ReplicationNotifier extends Thread {
+        @Override
+        public void run() {
+            Thread.currentThread().setName("ReplicationNotifier Thread");
+            while (true) {
                 try {
-                    socketChannel.socket().getOutputStream()
-                            .write((localNodeID + ReplicationProtocol.JOB_COMMIT_ACK + logRecord.getJobId() + "\n")
-                                    .getBytes());
-                    socketChannel.socket().getOutputStream().flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else if (logRecord.getLogType() == LogType.FLUSH) {
-                synchronized (localLSN2RemoteLSNMap) {
-                    RemoteLogMapping remoteLogMap = localLSN2RemoteLSNMap.get(logRecord.getLSN());
-                    synchronized (remoteLogMap) {
-                        remoteLogMap.setFlushed(true);
-                        remoteLogMap.notifyAll();
+                    LogRecord logRecord = pendingNotificationRemoteLogsQ.take();
+                    //send ACK to requester
+                    try {
+                        logRecord.getReplicationThread().getReplicationClientSocket().socket().getOutputStream()
+                                .write((localNodeID + ReplicationProtocol.JOB_REPLICATION_ACK + logRecord.getJobId()
+                                        + System.lineSeparator()).getBytes());
+                    } catch (IOException e) {
+                        LOGGER.severe("Failed to send job replication ACK " + logRecord.getLogRecordForDisplay());
                     }
+                } catch (InterruptedException e1) {
+                    LOGGER.severe("ReplicationNotifier Thread interrupted.");
                 }
             }
         }
@@ -629,26 +627,23 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 return;
             }
 
+            //path to the LSM component file
+            Path path = Paths.get(syncTask.getComponentFilePath());
             if (lsmCompProp.getReplicaLSN() == null) {
                 if (lsmCompProp.getOpType() == LSMOperationType.FLUSH) {
                     //need to look up LSN mapping from memory
-                    RemoteLogMapping remoteLogMap = getRemoteLogMapping(lsmCompProp.getNodeId(), remoteLSN);
-
-                    //wait until flush log arrives
-                    while (remoteLogMap == null) {
-                        synchronized (localLSN2RemoteLSNMap) {
-                            localLSN2RemoteLSNMap.wait();
-                        }
-                        remoteLogMap = getRemoteLogMapping(lsmCompProp.getNodeId(), remoteLSN);
-                    }
-
-                    //wait until the log is flushed locally before updating the disk component LSN
-                    synchronized (remoteLogMap) {
-                        while (!remoteLogMap.isFlushed()) {
-                            remoteLogMap.wait();
+                    RemoteLogMapping remoteLogMap = replicaUniqueLSN2RemoteMapping.get(lsmCompProp.getNodeUniqueLSN());
+                    if (remoteLogMap == null) {
+                        synchronized (flushLogslock) {
+                            remoteLogMap = replicaUniqueLSN2RemoteMapping.get(lsmCompProp.getNodeUniqueLSN());
+                            //wait until flush log arrives, and verify the LSM component file still exists
+                            //The component file could be deleted if its NC fails.
+                            while (remoteLogMap == null && Files.exists(path)) {
+                                flushLogslock.wait();
+                                remoteLogMap = replicaUniqueLSN2RemoteMapping.get(lsmCompProp.getNodeUniqueLSN());
+                            }
                         }
                     }
-
                     lsmCompProp.setReplicaLSN(remoteLogMap.getLocalLSN());
                 } else if (lsmCompProp.getOpType() == LSMOperationType.MERGE) {
                     //need to load the LSN mapping from disk
@@ -665,13 +660,11 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                          *
                          */
                         mappingLSN = logManager.getAppendLSN();
-                    } else {
-                        lsmCompProp.setReplicaLSN(mappingLSN);
                     }
+                    lsmCompProp.setReplicaLSN(mappingLSN);
                 }
             }
 
-            Path path = Paths.get(syncTask.getComponentFilePath());
             if (Files.notExists(path)) {
                 /*
                  * This could happen when a merged component arrives and deletes the flushed
