@@ -21,10 +21,8 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -75,10 +73,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewriteRule {
@@ -260,22 +256,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 throw new AlgebricksException(e);
             }
         }
-        Set<LogicalVariable> projectVars = new HashSet<LogicalVariable>();
-        VariableUtilities.getUsedVariables(op1, projectVars);
-        if (enforcedRecordVar != null) {
-            projectVars.add(enforcedRecordVar);
-        }
-        if (insertOp.getOperation() == Kind.UPSERT) {
-            projectVars.add(insertOp.getPrevRecordVar());
-            if (filteringFields != null) {
-                // project prev filter value
-                projectVars.add(insertOp.getPrevFilterVar());
-            }
-        }
-        ProjectOperator project = new ProjectOperator(new ArrayList<LogicalVariable>(projectVars));
-        project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
-        context.computeAndSetTypeEnvironmentForOperator(project);
-        currentTop = project;
 
         // Replicate Operator is applied only when doing the bulk-load.
         AbstractLogicalOperator replicateOp = null;
