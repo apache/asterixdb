@@ -24,4 +24,5 @@
 use dataverse externallibtest;
 
 for $x in dataset Condor
+order by $x.GlobalJobId
 return $x;

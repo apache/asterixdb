@@ -16,20 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create an adapter that uses external parser to parse data from files
- * Expected Res : Success
- * Date         : Feb, 09, 2016
- */
-use dataverse externallibtest;
-
-create type Classad as open {
-  GlobalJobId: string
-}
-
-create external dataset Condor(Classad) using localfs(
-("path"="asterix_nc1://../../../../data/jobads.new"),
-("format"="semi-structured"),
-("record-start"="["),
-("record-end"="]"),
-("parser"="testlib#org.apache.asterix.external.library.ClassAdParserFactory"));
+10000

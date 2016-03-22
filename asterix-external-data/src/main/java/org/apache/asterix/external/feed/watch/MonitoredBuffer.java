@@ -26,13 +26,13 @@ import java.util.logging.Level;
 
 import org.apache.asterix.external.feed.api.IExceptionHandler;
 import org.apache.asterix.external.feed.api.IFeedMetricCollector;
-import org.apache.asterix.external.feed.api.IFrameEventCallback;
-import org.apache.asterix.external.feed.api.IFramePostProcessor;
-import org.apache.asterix.external.feed.api.IFramePreprocessor;
 import org.apache.asterix.external.feed.api.IFeedMetricCollector.MetricType;
 import org.apache.asterix.external.feed.api.IFeedMetricCollector.ValueType;
 import org.apache.asterix.external.feed.api.IFeedRuntime.Mode;
+import org.apache.asterix.external.feed.api.IFrameEventCallback;
 import org.apache.asterix.external.feed.api.IFrameEventCallback.FrameEvent;
+import org.apache.asterix.external.feed.api.IFramePostProcessor;
+import org.apache.asterix.external.feed.api.IFramePreprocessor;
 import org.apache.asterix.external.feed.dataflow.DataBucket;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.StorageFrameHandler;
@@ -170,7 +170,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
             this.timer.scheduleAtFixedRate(monitorInputQueueLengthTask, 0, INPUT_QUEUE_MEASURE_FREQUENCY);
         }
 
-        if (logInflowOutflowRate || reportInflowRate || reportOutflowRate) {
+        if (reportInflowRate || reportOutflowRate) {
             this.logInflowOutflowRateTask = new LogInputOutputRateTask(this, logInflowOutflowRate, reportInflowRate,
                     reportOutflowRate);
             this.timer.scheduleAtFixedRate(logInflowOutflowRateTask, 0, LOG_INPUT_OUTPUT_RATE_FREQUENCY);
@@ -188,7 +188,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
         if (processingRateTask != null) {
             processingRateTask.cancel();
         }
-        if (logInflowOutflowRate || reportInflowRate || reportOutflowRate) {
+        if (reportInflowRate || reportOutflowRate) {
             metricCollector.removeReportSender(inflowReportSenderId);
             metricCollector.removeReportSender(outflowReportSenderId);
             logInflowOutflowRateTask.cancel();
@@ -244,7 +244,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     }
 
     public void sendReport(ByteBuffer frame) {
-        if ((logInflowOutflowRate || reportInflowRate) && !(inputHandler.getMode().equals(Mode.PROCESS_BACKLOG)
+        if ((reportInflowRate) && !(inputHandler.getMode().equals(Mode.PROCESS_BACKLOG)
                 || inputHandler.getMode().equals(Mode.PROCESS_SPILL))) {
             inflowFta.reset(frame);
             metricCollector.sendReport(inflowReportSenderId, inflowFta.getTupleCount());

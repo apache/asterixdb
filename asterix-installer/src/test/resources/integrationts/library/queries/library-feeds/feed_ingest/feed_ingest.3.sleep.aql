@@ -17,19 +17,10 @@
  * under the License.
  */
 /*
- * Description  : Create an adapter that uses external parser to parse data from files
+ * Description  : Create a socket feed with a client that pushes
+ * 10 records. The feed is connected to a dataset that is then
+ * queried for the data.
  * Expected Res : Success
- * Date         : Feb, 09, 2016
+ * Date         : 24th Feb 2016
  */
-use dataverse externallibtest;
-
-create type Classad as open {
-  GlobalJobId: string
-}
-
-create external dataset Condor(Classad) using localfs(
-("path"="asterix_nc1://../../../../data/jobads.new"),
-("format"="semi-structured"),
-("record-start"="["),
-("record-end"="]"),
-("parser"="testlib#org.apache.asterix.external.library.ClassAdParserFactory"));
+10000

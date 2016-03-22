@@ -72,13 +72,17 @@ public abstract class AbstractExecutionIT {
                 .copyFile(
                         new File(StringUtils.join(new String[] { "src", "test", "resources", "integrationts",
                                 "asterix-configuration.xml" }, File.separator)),
-                new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/conf/asterix-configuration.xml"));
+                        new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/conf/asterix-configuration.xml"));
 
         AsterixLifecycleIT.setUp();
 
         FileUtils.copyDirectoryStructure(
                 new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/data"));
+
+        FileUtils.copyDirectoryStructure(new File(StringUtils.join(new String[] { "target", "data" }, File.separator)),
+                new File(AsterixInstallerIntegrationUtil.getManagixHome()
+                        + "/clusters/local/working_dir/target/data/csv"));
 
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.

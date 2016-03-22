@@ -30,6 +30,11 @@
         QueryFileExtension=".aql">
     <test-group name="feeds">
         <test-case FilePath="feeds">
+            <compilation-unit name="feed-with-external-function">
+                <output-dir compare="Text">feed-with-external-function</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="feeds">
             <compilation-unit name="change-feed-with-meta-pk-in-meta">
                 <output-dir compare="Text">change-feed-with-meta-pk-in-meta</output-dir>
             </compilation-unit>

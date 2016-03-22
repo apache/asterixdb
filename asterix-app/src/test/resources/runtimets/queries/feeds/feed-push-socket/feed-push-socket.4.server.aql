@@ -23,4 +23,4 @@
  * Expected Res : Success
  * Date         : 24th Feb 2016
  */
-start client 10001 file-client localhost data/twitter/tw_messages.adm 500 50 1000
+start client 10001 file-client localhost ../asterix-app/data/twitter/tw_messages.adm 500 50 1000

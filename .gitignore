@@ -18,6 +18,7 @@ asterix-app/opt_parserts/
 asterix-app/runtime_parserts/
 asterix-installer/ittest/
 asterix-installer/repliationtest/
+asterix-installer/src/test/resources/clusterts/asterix-installer-0.8.9-SNAPSHOT-binary-assembly/
 build
 asterix_logs
 bin/

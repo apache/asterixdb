@@ -95,9 +95,14 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
 
     private ByteBuffer message = ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE);
 
+    private final FeedMetaOperatorDescriptor opDesc;
+
+    private final IRecordDescriptorProvider recordDescProvider;
+
     public FeedMetaComputeNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
+            Map<String, String> feedPolicyProperties, String operationId,
+            FeedMetaOperatorDescriptor feedMetaOperatorDescriptor) throws HyracksDataException {
         this.ctx = ctx;
         this.coreOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
@@ -108,6 +113,8 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.feedManager = (IFeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getFeedManager();
         ctx.setSharedObject(message);
+        this.opDesc = feedMetaOperatorDescriptor;
+        this.recordDescProvider = recordDescProvider;
     }
 
     @Override
@@ -129,7 +136,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     }
 
     private void initializeNewFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
-        this.fta = new FrameTupleAccessor(recordDesc);
+        this.fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
         this.inputSideHandler = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
                 policyEnforcer.getFeedPolicyAccessor(), policyEnforcer.getFeedPolicyAccessor().bufferingEnabled(), fta,
                 recordDesc, feedManager, nPartitions);

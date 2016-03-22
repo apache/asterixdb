@@ -90,12 +90,12 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         IOperatorNodePushable nodePushable = null;
         switch (runtimeType) {
             case COMPUTE:
                 nodePushable = new FeedMetaComputeNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId);
+                        coreOperator, feedConnectionId, feedPolicyProperties, operandId, this);
                 break;
             case STORE:
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,

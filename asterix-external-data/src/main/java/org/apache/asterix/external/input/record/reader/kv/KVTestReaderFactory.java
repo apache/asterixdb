@@ -69,8 +69,8 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     @Override
     public IRecordReader<? extends DCPRequest> createRecordReader(final IHyracksTaskContext ctx, final int partition) {
         return new KVTestReader(partition, bucket, schedule,
-                (int) Math.ceil((double) numOfRecords / (double) getPartitionConstraint().getLocations().length),
-                deleteCycle, upsertCycle, (numOfRecords / numOfReaders) * partition);
+                (int) Math.ceil((double) numOfRecords / (double) numOfReaders), deleteCycle, upsertCycle,
+                (numOfRecords / numOfReaders) * partition);
     }
 
     @Override

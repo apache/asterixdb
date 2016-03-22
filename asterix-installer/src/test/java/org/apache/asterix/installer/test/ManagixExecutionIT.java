@@ -24,10 +24,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class ManagixExecutionIT extends AbstractExecutionIT {
 
-    private TestCaseContext tcCtx;
-
     public ManagixExecutionIT(TestCaseContext tcCtx) {
         super(tcCtx);
-        this.tcCtx = tcCtx;
     }
 }

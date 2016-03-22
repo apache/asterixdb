@@ -214,12 +214,15 @@ public class FeedMetadataUtil {
         Map<ConnectorDescriptorId, ConnectorDescriptorId> connectorMapping = new HashMap<ConnectorDescriptorId, ConnectorDescriptorId>();
         for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()) {
             IConnectorDescriptor connDesc = entry.getValue();
+            ConnectorDescriptorId newConnId;
             if (connDesc instanceof MToNPartitioningConnectorDescriptor) {
                 MToNPartitioningConnectorDescriptor m2nConn = (MToNPartitioningConnectorDescriptor) connDesc;
                 connDesc = new MToNPartitioningWithMessageConnectorDescriptor(altered,
                         m2nConn.getTuplePartitionComputerFactory());
+                newConnId = connDesc.getConnectorId();
+            } else {
+                newConnId = altered.createConnectorDescriptor(connDesc);
             }
-            ConnectorDescriptorId newConnId = altered.createConnectorDescriptor(connDesc);
             connectorMapping.put(entry.getKey(), newConnId);
         }
 
@@ -466,7 +469,7 @@ public class FeedMetadataUtil {
     @SuppressWarnings("rawtypes")
     public static Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> getPrimaryFeedFactoryAndOutput(
             Feed feed, FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // This method needs to be re-visited
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
@@ -606,7 +609,7 @@ public class FeedMetadataUtil {
 
     public static String getSecondaryFeedOutput(Feed feed, FeedPolicyAccessor policyAccessor,
             MetadataTransactionContext mdTxnCtx)
-                    throws AlgebricksException, MetadataException, RemoteException, ACIDException {
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
         String outputType = null;
         String primaryFeedName = feed.getSourceFeedName();
         Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feed.getDataverseName(), primaryFeedName);

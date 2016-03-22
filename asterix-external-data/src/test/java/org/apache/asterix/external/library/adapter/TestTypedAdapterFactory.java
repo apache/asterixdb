@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
@@ -36,6 +38,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -74,12 +77,19 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
+                IAsterixPropertiesProvider propertiesProvider = (IAsterixPropertiesProvider) ((NodeControllerService) ctx
+                        .getJobletContext().getApplicationContext().getControllerService()).getApplicationContext()
+                                .getApplicationObject();
+                ClusterPartition[] nodePartitions = propertiesProvider.getMetadataProperties().getNodePartitions()
+                        .get(nodeId);
                 try {
                     parser = new ADMDataParser(outputType, true);
-                    forwarder = DataflowUtils.getTupleForwarder(configuration,
-                            FeedUtils.getFeedLogManager(ctx, partition,
-                                    FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
-                                            ExternalDataUtils.getFeedName(configuration), nodeId, partition)));
+                    forwarder = DataflowUtils
+                            .getTupleForwarder(configuration,
+                                    FeedUtils.getFeedLogManager(ctx,
+                                            FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
+                                                    ExternalDataUtils.getFeedName(configuration), partition,
+                                                    nodePartitions)));
                     tb = new ArrayTupleBuilder(1);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

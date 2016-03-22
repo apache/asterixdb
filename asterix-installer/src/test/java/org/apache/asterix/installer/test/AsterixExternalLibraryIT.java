@@ -35,8 +35,8 @@ public class AsterixExternalLibraryIT {
     private static final String LIBRARY_DATAVERSE = "externallibtest";
     private static final String PATH_BASE = "src/test/resources/integrationts/library";
     private static final String PATH_ACTUAL = "ittest/";
-    private static final String LIBRARY_PATH = "asterix-external-data" + File.separator + "target" + File.separator
-            + "testlib-zip-binary-assembly.zip";
+    private static final String LIBRARY_PATH = "target" + File.separator + "resources" + File.separator + "externallib"
+            + File.separator + "testlib-zip-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
     private final TestExecutor testExecutor = new TestExecutor();
@@ -46,8 +46,8 @@ public class AsterixExternalLibraryIT {
         try {
             AsterixInstallerIntegrationUtil.init();
             File asterixInstallerProjectDir = new File(System.getProperty("user.dir"));
-            String asterixExternalLibraryPath = asterixInstallerProjectDir.getParentFile().getAbsolutePath()
-                    + File.separator + LIBRARY_PATH;
+            String asterixExternalLibraryPath = asterixInstallerProjectDir.getAbsolutePath() + File.separator
+                    + LIBRARY_PATH;
             LOGGER.info("Installing library :" + LIBRARY_NAME + " located at " + asterixExternalLibraryPath
                     + " in dataverse " + LIBRARY_DATAVERSE);
             AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, asterixExternalLibraryPath);

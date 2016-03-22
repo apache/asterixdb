@@ -45,16 +45,17 @@ public class FeedUtils {
         return dataverseName + File.separator + feedName;
     }
 
-    public static FileSplit[] splitsForAdapter(String dataverseName, String feedName, String nodeName, int partition) {
+    public static FileSplit splitsForAdapter(String dataverseName, String feedName, int partition,
+            ClusterPartition[] nodePartitions) {
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
-        ClusterPartition nodePartition = AsterixClusterProperties.INSTANCE.getNodePartitions(nodeName)[0];
+        ClusterPartition nodePartition = nodePartitions[0];
         String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(storageDirName,
                 nodePartition.getPartitionId());
         // format: 'storage dir name'/partition_#/dataverse/feed/adapter_#
         File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator
                 + StoragePathUtil.ADAPTER_INSTANCE_PREFIX + partition);
-        return new FileSplit[] { StoragePathUtil.getFileSplitForClusterPartition(nodePartition, f) };
+        return StoragePathUtil.getFileSplitForClusterPartition(nodePartition, f);
     }
 
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
@@ -91,6 +92,12 @@ public class FeedUtils {
         return new FeedLogManager(
                 FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
                         feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager()).getFile());
+    }
+
+    public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, FileSplit feedLogFileSplit)
+            throws HyracksDataException {
+        return new FeedLogManager(FeedUtils.getAbsoluteFileRef(feedLogFileSplit.getLocalFile().getFile().getPath(),
+                feedLogFileSplit.getIODeviceId(), ctx.getIOManager()).getFile());
     }
 
     public static void processFeedMessage(ByteBuffer input, ByteBuffer message, FrameTupleAccessor fta) {
