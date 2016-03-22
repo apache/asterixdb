@@ -35,7 +35,19 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
-import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IIndexCursor;
+import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -538,8 +550,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             BTree btree = component.getBTree();
             BTree buddyBtree = component.getBuddyBTree();
             BloomFilter bloomFilter = component.getBloomFilter();
-            btree.deactivate();
-            buddyBtree.deactivate();
+            btree.deactivateCloseHandle();
+            buddyBtree.deactivateCloseHandle();
             bloomFilter.deactivate();
         }
         for (ILSMComponent c : secondDiskComponents) {
@@ -549,8 +561,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 BTree btree = component.getBTree();
                 BTree buddyBtree = component.getBuddyBTree();
                 BloomFilter bloomFilter = component.getBloomFilter();
-                btree.deactivate();
-                buddyBtree.deactivate();
+                btree.deactivateCloseHandle();
+                buddyBtree.deactivateCloseHandle();
                 bloomFilter.deactivate();
             }
         }
@@ -603,8 +615,10 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
         if (createComponent) {
             component.getBloomFilter().create();
+        } else {
+            component.getBTree().activate();
+            component.getBuddyBTree().activate();
         }
-
         component.getBloomFilter().activate();
         return component;
     }
