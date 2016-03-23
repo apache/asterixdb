@@ -16,11 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Drop a dataverse with disconnected feed
- * Expected Res : Success
- * Date         : 24th Feb 2016
- */
+package org.apache.asterix.external.feed.message;
 
-use dataverse experiments;
-disconnect feed TweetFeed from dataset Tweets;
+import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.hyracks.api.job.JobId;
+
+public class FeedProviderReadyMessage extends AbstractApplicationMessage {
+
+    private static final long serialVersionUID = 1L;
+    private final FeedId feedId;
+    private final JobId jobId;
+
+    public FeedProviderReadyMessage(FeedId feedId, JobId jobId) {
+        this.feedId = feedId;
+        this.jobId = jobId;
+    }
+
+    @Override
+    public ApplicationMessageType getMessageType() {
+        return ApplicationMessageType.FEED_PROVIDER_READY;
+    }
+
+    public FeedId getFeedId() {
+        return feedId;
+    }
+
+    public JobId getJobId() {
+        return jobId;
+    }
+}

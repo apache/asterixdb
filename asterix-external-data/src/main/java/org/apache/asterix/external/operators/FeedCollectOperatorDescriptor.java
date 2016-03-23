@@ -147,22 +147,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     }
 
     private IngestionRuntime getIntakeRuntime(SubscribableFeedRuntimeId subscribableRuntimeId) {
-        int waitCycleCount = 0;
-        ISubscribableRuntime ingestionRuntime = subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
-        while (ingestionRuntime == null && waitCycleCount < 1000) {
-            try {
-                Thread.sleep(3000);
-                waitCycleCount++;
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("waiting to obtain ingestion runtime for subscription " + subscribableRuntimeId);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                break;
-            }
-            ingestionRuntime = subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
-        }
-        return (IngestionRuntime) ingestionRuntime;
+        return (IngestionRuntime) subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
     }
 
     public ConnectionLocation getSubscriptionLocation() {

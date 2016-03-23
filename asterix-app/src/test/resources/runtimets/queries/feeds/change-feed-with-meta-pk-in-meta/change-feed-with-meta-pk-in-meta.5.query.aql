@@ -23,8 +23,12 @@
  */
 use dataverse KeyVerse;
 
-count(
+
 for $d in dataset KVStore
-distinct by meta()."key"
-return 1
-);
+group by $vb := meta().vbucket with $d
+order by $vb
+limit 5
+return {
+   "vbucket": $vb,
+   "tuple_count": count($d)
+};

@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -2205,8 +2204,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                         metadataProvider, policyAccessor);
                 //adapter configuration are valid at this stage
                 //register the feed joints (these are auto-de-registered)
+                int numOfPrividers = pair.second.getPartitionConstraint().getLocations().length;
                 for (IFeedJoint fj : triple.third) {
-                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj, numOfPrividers);
                 }
                 JobUtils.runJob(hcc, pair.first, false);
                 /*
@@ -2220,7 +2220,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_INTAKE_STARTED);
             } else {
                 for (IFeedJoint fj : triple.third) {
-                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj, 0);
                 }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

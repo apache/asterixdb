@@ -24,6 +24,7 @@
 use dataverse KeyVerse;
 
 count(
-    for $d in dataset KVStore
-    return $d
+for $d in dataset KVStore
+distinct by meta()."key"
+return 1
 );

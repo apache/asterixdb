@@ -23,7 +23,7 @@
  */
 use dataverse KeyVerse;
 
-count(
-    for $d in dataset KVStore
-    return $d
-);
+for $d in dataset KVStore
+order by meta().id
+limit 5
+return meta().id;

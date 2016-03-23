@@ -88,7 +88,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     public static FeedLifecycleListener INSTANCE = new FeedLifecycleListener();
     private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
-    private final LinkedBlockingQueue<Message> jobEventInbox;
+    private final LinkedBlockingQueue<FeedEvent> jobEventInbox;
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
     private final Map<FeedCollectInfo, List<String>> dependentFeeds = new HashMap<FeedCollectInfo, List<String>>();
     private final Map<FeedConnectionId, LinkedBlockingQueue<String>> feedReportQueue;
@@ -99,7 +99,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     private ClusterState state;
 
     private FeedLifecycleListener() {
-        this.jobEventInbox = new LinkedBlockingQueue<Message>();
+        this.jobEventInbox = new LinkedBlockingQueue<FeedEvent>();
         this.feedJobNotificationHandler = new FeedJobNotificationHandler(jobEventInbox);
         this.responseInbox = new LinkedBlockingQueue<IClusterManagementWorkResponse>();
         this.feedWorkRequestResponseHandler = new FeedWorkRequestResponseHandler(responseInbox);
@@ -114,14 +114,14 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     @Override
     public void notifyJobStart(JobId jobId) throws HyracksException {
         if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
-            jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_START));
+            jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.JOB_START));
         }
     }
 
     @Override
     public void notifyJobFinish(JobId jobId) throws HyracksException {
         if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
-            jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_FINISH));
+            jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.JOB_FINISH));
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NO NEED TO NOTIFY JOB FINISH!");
@@ -178,19 +178,26 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.getFeedJobState(connectionId);
     }
 
-    public static class Message {
+    public static class FeedEvent {
         public JobId jobId;
+        public FeedId feedId;
 
-        public enum MessageKind {
+        public enum EventKind {
             JOB_START,
-            JOB_FINISH
+            JOB_FINISH,
+            PROVIDER_READY
         }
 
-        public MessageKind messageKind;
+        public EventKind eventKind;
 
-        public Message(JobId jobId, MessageKind msgKind) {
+        public FeedEvent(JobId jobId, EventKind eventKind) {
+            this(jobId, eventKind, null);
+        }
+
+        public FeedEvent(JobId jobId, EventKind eventKind, FeedId feedId) {
             this.jobId = jobId;
-            this.messageKind = msgKind;
+            this.eventKind = eventKind;
+            this.feedId = feedId;
         }
     }
 
@@ -469,8 +476,8 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.isFeedPointAvailable(feedJointKey);
     }
 
-    public void registerFeedJoint(IFeedJoint feedJoint) {
-        feedJobNotificationHandler.registerFeedJoint(feedJoint);
+    public void registerFeedJoint(IFeedJoint feedJoint, int numOfPrividers) {
+        feedJobNotificationHandler.registerFeedJoint(feedJoint, numOfPrividers);
     }
 
     public IFeedJoint getFeedJoint(FeedJointKey feedJointKey) {
@@ -494,6 +501,10 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
 
     public JobId getFeedCollectJobId(FeedConnectionId connectionId) {
         return feedJobNotificationHandler.getFeedCollectJobId(connectionId);
+    }
+
+    public void notifyProviderReady(FeedId feedId, JobId jobId) {
+        jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.PROVIDER_READY, feedId));
     }
 
 }

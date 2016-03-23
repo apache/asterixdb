@@ -26,3 +26,4 @@ use dataverse experiments;
 set wait-for-completion-feed "false";
 
 connect feed TweetFeed to dataset Tweets;
+disconnect feed TweetFeed from dataset Tweets;
