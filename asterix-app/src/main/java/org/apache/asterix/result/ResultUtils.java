@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.api.http.servlet.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -135,6 +136,7 @@ public class ResultUtils {
                 break;
         }
 
+        final boolean indentJSON = conf.is(SessionConfig.INDENT_JSON);
         if (bytesRead > 0) {
             do {
                 try {
@@ -157,6 +159,10 @@ public class ResultUtils {
                             conf.out().print(", ");
                         }
                         notfirst = true;
+                        if (indentJSON) {
+                            // TODO(tillw): this is inefficient - do this during result generation
+                            result = JSONUtil.indent(result, 2);
+                        }
                         conf.out().print(result);
                         if (conf.fmt() == OutputFormat.CSV) {
                             conf.out().print("\r\n");

@@ -26,13 +26,17 @@ import org.json.JSONObject;
 
 public class JSONUtil {
 
-    static final String INDENT = "    ";
+    static final String INDENT = "\t";
 
     public static String indent(String str) {
+        return indent(str, 0);
+    }
+
+    public static String indent(String str, int initialIndent) {
         try {
-            return append(new StringBuilder(), new JSONObject(str), 0).toString();
+            return append(new StringBuilder(), new JSONObject(str), initialIndent).toString();
         } catch (JSONException e) {
-            throw new IllegalArgumentException(e);
+            return str;
         }
     }
 
@@ -43,7 +47,7 @@ public class JSONUtil {
             return append(sb, (JSONArray) o, indent);
         } else if (o instanceof String) {
             return quote(sb, (String) o);
-        } else if (o instanceof Number || o instanceof Boolean) {
+        } else if (JSONObject.NULL.equals(o) || o instanceof Number || o instanceof Boolean) {
             return sb.append(String.valueOf(o));
         }
         throw new UnsupportedOperationException(o.getClass().getSimpleName());

@@ -63,7 +63,8 @@ public class QueryServiceServlet extends HttpServlet {
         statement,
         format,
         // Asterix
-        header
+        header,
+        indent
     }
 
     public enum Header {
@@ -159,14 +160,16 @@ public class QueryServiceServlet extends HttpServlet {
         SessionConfig.ResultDecorator resultPostfix = new SessionConfig.ResultDecorator() {
             @Override
             public PrintWriter print(PrintWriter pw) {
-                pw.print(",\n");
+                pw.print("\t,\n");
                 return pw;
             }
         };
 
         SessionConfig.OutputFormat format = getFormat(request);
         SessionConfig sessionConfig = new SessionConfig(resultWriter, format, resultPrefix, resultPostfix);
-        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, (format == SessionConfig.OutputFormat.CLEAN_JSON));
+        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, format == SessionConfig.OutputFormat.CLEAN_JSON);
+        boolean indentJson = Boolean.parseBoolean(request.getParameter(Parameter.indent.name()));
+        sessionConfig.set(SessionConfig.INDENT_JSON, indentJson);
 
         if (format == SessionConfig.OutputFormat.CSV && ("present".equals(request.getParameter(Parameter.header.name()))
                 || request.getHeader(Header.Accept.str()).contains("header=present"))) {

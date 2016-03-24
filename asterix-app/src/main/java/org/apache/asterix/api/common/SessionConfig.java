@@ -92,6 +92,11 @@ public class SessionConfig {
      */
     public static final String FORMAT_WRAPPER_ARRAY = "format-wrapper-array";
 
+    /**
+     * Format flag: indent JSON results.
+     */
+    public static final String INDENT_JSON = "indent-json";
+
     public interface ResultDecorator {
         PrintWriter print(PrintWriter pw);
     }
