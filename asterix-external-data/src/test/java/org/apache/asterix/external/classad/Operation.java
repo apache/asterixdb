@@ -19,6 +19,7 @@
 package org.apache.asterix.external.classad;
 
 import org.apache.asterix.external.classad.Value.ValueType;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -91,9 +92,9 @@ public class Operation extends ExprTree {
     public static final int OpKind_LAST_OP = OpKind_MISC_END;
 
     private int opKind;
-    private ExprTree child1;
-    private ExprTree child2;
-    private ExprTree child3;
+    private final ExprTreeHolder child1;
+    private final ExprTreeHolder child2;
+    private final ExprTreeHolder child3;
 
     /// node type
     @Override
@@ -117,14 +118,17 @@ public class Operation extends ExprTree {
      * @param e3
      *            The third sub-expression child of the node (if any).
      * @return The constructed operation
+     * @throws HyracksDataException
      */
 
-    public static Operation createOperation(int opkind, ExprTree e1, ExprTree e2) {
-        return createOperation(opkind, e1, e2, null);
+    public static Operation createOperation(int opkind, ExprTree e1, ExprTree e2, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        return createOperation(opkind, e1, e2, null, objectPool);
     }
 
-    public static Operation createOperation(int opkind, ExprTree e1) {
-        return createOperation(opkind, e1, null, null);
+    public static Operation createOperation(int opkind, ExprTree e1, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        return createOperation(opkind, e1, null, null, objectPool);
     }
 
     // public access to operation function
@@ -166,57 +170,36 @@ public class Operation extends ExprTree {
      * @return true if the operator is strict, false otherwise.
      */
 
-    public Operation() {
+    public Operation(ClassAdObjectPool objectPool) {
+        super(objectPool);
         opKind = OpKind_NO_OP;
-        child1 = null;
-        child2 = null;
-        child3 = null;
+        child1 = new ExprTreeHolder(objectPool);
+        child2 = new ExprTreeHolder(objectPool);
+        child3 = new ExprTreeHolder(objectPool);
     }
 
-    public Operation(Operation op) throws HyracksDataException {
+    public Operation(Operation op, ClassAdObjectPool objectPool) throws HyracksDataException {
+        super(objectPool);
+        child1 = new ExprTreeHolder(objectPool);
+        child2 = new ExprTreeHolder(objectPool);
+        child3 = new ExprTreeHolder(objectPool);
         copyFrom(op);
-        return;
     }
 
     @Override
     public ExprTree copy() throws HyracksDataException {
-        Operation newTree = new Operation();
+        Operation newTree = objectPool.operationPool.get();
         newTree.copyFrom(this);
         return newTree;
     }
 
     public boolean copyFrom(Operation op) throws HyracksDataException {
-        boolean success = true;
-        if (op.child1 == null) {
-            child1 = null;
-        } else {
-            if (child1 == null) {
-                child1 = new ExprTreeHolder();
-            }
-            child1.copyFrom(op.child1);
-            child1 = child1.self();
-        }
-        if (op.child2 == null) {
-            child2 = null;
-        } else {
-            if (child2 == null) {
-                child2 = new ExprTreeHolder();
-            }
-            child2.copyFrom(op.child2);
-            child2 = child2.self();
-        }
-        if (op.child3 == null) {
-            child3 = null;
-        } else {
-            if (child3 == null) {
-                child3 = new ExprTreeHolder();
-            }
-            child3.copyFrom(op.child3);
-            child3 = child3.self();
-        }
+        child1.copyFrom(op.child1);
+        child2.copyFrom(op.child2);
+        child3.copyFrom(op.child3);
         this.opKind = op.opKind;
         super.copyFrom(op);
-        return success;
+        return true;
     }
 
     @Override
@@ -257,33 +240,28 @@ public class Operation extends ExprTree {
 
     @Override
     public void privateSetParentScope(ClassAd parent) {
-        if (child1 != null) {
-            child1.setParentScope(parent);
-        }
-        if (child2 != null) {
-            child2.setParentScope(parent);
-        }
-        if (child3 != null) {
-            child3.setParentScope(parent);
-        }
+        child1.setParentScope(parent);
+        child2.setParentScope(parent);
+        child3.setParentScope(parent);
     }
 
-    public static void operate(int opKind, Value op1, Value op2, Value result) throws HyracksDataException {
-        Value dummy = new Value();
-        privateDoOperation(opKind, op1, op2, dummy, true, true, false, result, null);
+    public static void operate(int opKind, Value op1, Value op2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        Value dummy = objectPool.valuePool.get();
+        privateDoOperation(opKind, op1, op2, dummy, true, true, false, result, null, objectPool);
     }
 
     public void operate(int op, Value op1, Value op2, Value op3, Value result) throws HyracksDataException {
-        privateDoOperation(op, op1, op2, op3, true, true, true, result, null);
+        privateDoOperation(op, op1, op2, op3, true, true, true, result, null, objectPool);
     }
 
     public static int privateDoOperation(int op, Value val1, Value val2, Value val3, boolean valid1, boolean valid2,
-            boolean valid3, Value result) throws HyracksDataException {
-        return privateDoOperation(op, val1, val2, val3, valid1, valid2, valid3, result, null);
+            boolean valid3, Value result, ClassAdObjectPool objectPool) throws HyracksDataException {
+        return privateDoOperation(op, val1, val2, val3, valid1, valid2, valid3, result, null, objectPool);
     }
 
     public static int privateDoOperation(int op, Value val1, Value val2, Value val3, boolean valid1, boolean valid2,
-            boolean valid3, Value result, EvalState es) throws HyracksDataException {
+            boolean valid3, Value result, EvalState es, ClassAdObjectPool objectPool) throws HyracksDataException {
         ValueType vt1;
         ValueType vt2;
         ValueType vt3;
@@ -295,7 +273,7 @@ public class Operation extends ExprTree {
 
         // take care of the easy cases
         if (op == OpKind_NO_OP || op == OpKind_PARENTHESES_OP) {
-            result.copyFrom(val1);
+            result.setValue(val1);
             return SigValues.SIG_CHLD1.ordinal();
         } else if (op == OpKind_UNARY_PLUS_OP) {
             if (vt1 == ValueType.BOOLEAN_VALUE || vt1 == ValueType.STRING_VALUE || val1.isListValue()
@@ -303,7 +281,7 @@ public class Operation extends ExprTree {
                 result.setErrorValue();
             } else {
                 // applies for ERROR, UNDEFINED and Numbers
-                result.copyFrom(val1);
+                result.setValue(val1);
             }
             return SigValues.SIG_CHLD1.ordinal();
         }
@@ -342,28 +320,28 @@ public class Operation extends ExprTree {
 
         // comparison operations (binary, one unary)
         if (op >= OpKind_COMPARISON_START && op <= OpKind_COMPARISON_END) {
-            return (doComparison(op, val1, val2, result));
+            return (doComparison(op, val1, val2, result, objectPool));
         }
 
         // arithmetic operations (binary)
         if (op >= OpKind_ARITHMETIC_START && op <= OpKind_ARITHMETIC_END) {
-            return (doArithmetic(op, val1, val2, result));
+            return (doArithmetic(op, val1, val2, result, objectPool));
         }
 
         // logical operators (binary, one unary)
         if (op >= OpKind_LOGIC_START && op <= OpKind_LOGIC_END) {
-            return (doLogical(op, val1, val2, result));
+            return (doLogical(op, val1, val2, result, objectPool));
         }
 
         // bitwise operators (binary, one unary)
         if (op >= OpKind_BITWISE_START && op <= OpKind_BITWISE_END) {
-            return (doBitwise(op, val1, val2, result));
+            return (doBitwise(op, val1, val2, result, objectPool));
         }
 
         // misc.
         if (op == OpKind_TERNARY_OP) {
             // ternary (if-operator)
-            MutableBoolean b = new MutableBoolean(false);
+            MutableBoolean b = objectPool.boolPool.get();
 
             // if the selector is UNDEFINED, the result is undefined
             if (vt1 == ValueType.UNDEFINED_VALUE) {
@@ -375,18 +353,18 @@ public class Operation extends ExprTree {
                 result.setErrorValue();
                 return SigValues.SIG_CHLD1.ordinal();
             } else if (b.booleanValue()) {
-                result.copyFrom(val2);
+                result.setValue(val2);
                 return (SigValues.SIG_CHLD2.ordinal());
             } else {
-                result.copyFrom(val3);
+                result.setValue(val3);
                 return (SigValues.SIG_CHLD3.ordinal());
             }
         } else if (op == OpKind_SUBSCRIPT_OP) {
             // subscripting from a list (strict)
 
             if (vt1 == ValueType.CLASSAD_VALUE && vt2 == ValueType.STRING_VALUE) {
-                ClassAd classad = new ClassAd();
-                AMutableCharArrayString index = new AMutableCharArrayString();
+                ClassAd classad = objectPool.classAdPool.get();
+                AMutableCharArrayString index = objectPool.strPool.get();
 
                 val1.isClassAdValue(classad);
                 val2.isStringValue(index);
@@ -402,8 +380,8 @@ public class Operation extends ExprTree {
 
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
             } else if (val1.isListValue() && vt2 == ValueType.INTEGER_VALUE) {
-                AMutableInt64 index = new AMutableInt64(0);
-                ExprList elist = new ExprList();
+                AMutableInt64 index = objectPool.int64Pool.get();
+                ExprList elist = objectPool.exprListPool.get();
 
                 val1.isListValue(elist);
                 val2.isIntegerValue(index);
@@ -425,9 +403,9 @@ public class Operation extends ExprTree {
 
     @Override
     public boolean privateEvaluate(EvalState state, Value result) throws HyracksDataException {
-        Value val1 = new Value();
-        Value val2 = new Value();
-        Value val3 = new Value();
+        Value val1 = objectPool.valuePool.get();
+        Value val2 = objectPool.valuePool.get();
+        Value val3 = objectPool.valuePool.get();
         boolean valid1, valid2, valid3;
         int rval = 0;
 
@@ -435,10 +413,10 @@ public class Operation extends ExprTree {
         valid2 = false;
         valid3 = false;
 
-        AMutableInt32 operationKind = new AMutableInt32(OpKind_NO_OP);
-        ExprTreeHolder child1 = new ExprTreeHolder();
-        ExprTreeHolder child2 = new ExprTreeHolder();
-        ExprTreeHolder child3 = new ExprTreeHolder();
+        AMutableInt32 operationKind = objectPool.int32Pool.get();
+        ExprTreeHolder child1 = objectPool.mutableExprPool.get();
+        ExprTreeHolder child2 = objectPool.mutableExprPool.get();
+        ExprTreeHolder child3 = objectPool.mutableExprPool.get();
         getComponents(operationKind, child1, child2, child3);
 
         // Evaluate all valid children
@@ -469,13 +447,13 @@ public class Operation extends ExprTree {
             valid3 = true;
         }
 
-        rval = privateDoOperation(opKind, val1, val2, val3, valid1, valid2, valid3, result, state);
+        rval = privateDoOperation(opKind, val1, val2, val3, valid1, valid2, valid3, result, state, objectPool);
 
         return (rval != SigValues.SIG_NONE.ordinal());
     }
 
     public boolean shortCircuit(EvalState state, Value arg1, Value result) throws HyracksDataException {
-        MutableBoolean arg1_bool = new MutableBoolean();
+        MutableBoolean arg1_bool = objectPool.boolPool.get();
         switch (opKind) {
             case OpKind_LOGICAL_OR_OP:
                 if (arg1.isBooleanValueEquiv(arg1_bool) && arg1_bool.booleanValue()) {
@@ -512,21 +490,21 @@ public class Operation extends ExprTree {
     @Override
     public boolean privateEvaluate(EvalState state, Value result, ExprTreeHolder tree) throws HyracksDataException {
         int sig;
-        Value val1 = new Value();
-        Value val2 = new Value();
-        Value val3 = new Value();
-        ExprTreeHolder t1 = new ExprTreeHolder();
-        ExprTreeHolder t2 = new ExprTreeHolder();
-        ExprTreeHolder t3 = new ExprTreeHolder();
+        Value val1 = objectPool.valuePool.get();
+        Value val2 = objectPool.valuePool.get();
+        Value val3 = objectPool.valuePool.get();
+        ExprTreeHolder t1 = objectPool.mutableExprPool.get();
+        ExprTreeHolder t2 = objectPool.mutableExprPool.get();
+        ExprTreeHolder t3 = objectPool.mutableExprPool.get();
         boolean valid1 = false, valid2 = false, valid3 = false;
-        AMutableInt32 opKind = new AMutableInt32(OpKind_NO_OP);
-        ExprTreeHolder child1 = new ExprTreeHolder();
-        ExprTreeHolder child2 = new ExprTreeHolder();
-        ExprTreeHolder child3 = new ExprTreeHolder();
+        AMutableInt32 opKind = objectPool.int32Pool.get();
+        ExprTreeHolder child1 = objectPool.mutableExprPool.get();
+        ExprTreeHolder child2 = objectPool.mutableExprPool.get();
+        ExprTreeHolder child3 = objectPool.mutableExprPool.get();
         getComponents(opKind, child1, child2, child3);
 
         // Evaluate all valid children
-        tree = new ExprTreeHolder();
+        tree = objectPool.mutableExprPool.get();
         if (child1.getInnerTree() != null) {
             if (!child1.publicEvaluate(state, val1, t1)) {
                 result.setErrorValue();
@@ -552,7 +530,7 @@ public class Operation extends ExprTree {
 
         // do evaluation
         sig = privateDoOperation(opKind.getIntegerValue().intValue(), val1, val2, val3, valid1, valid2, valid3, result,
-                state);
+                state, objectPool);
 
         // delete trees which were not significant
         if (valid1 && 0 != (sig & SigValues.SIG_CHLD1.ordinal())) {
@@ -587,7 +565,7 @@ public class Operation extends ExprTree {
                 } else {
                     // the node operated on the value; the operator is also
                     // significant
-                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1));
+                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, objectPool));
                 }
                 return (true);
             } else {
@@ -604,7 +582,7 @@ public class Operation extends ExprTree {
                     throw new HyracksDataException("Should not reach here");
                 } else {
                     // the node is also significant
-                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2));
+                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2, objectPool));
                     return (true);
                 }
             }
@@ -613,7 +591,7 @@ public class Operation extends ExprTree {
             if (opKind.getIntegerValue().intValue() == OpKind_IS_OP
                     || opKind.getIntegerValue().intValue() == OpKind_ISNT_OP) {
                 // the operation is *always* significant for IS and ISNT
-                tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2));
+                tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2, objectPool));
                 return (true);
             }
             // other non-strict binary operators
@@ -621,7 +599,7 @@ public class Operation extends ExprTree {
                     || opKind.getIntegerValue().intValue() == OpKind_LOGICAL_OR_OP) {
                 if ((SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD1.ordinal()) != 0
                         && (SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD2.ordinal()) != 0) {
-                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2));
+                    tree.setInnerTree(createOperation(opKind.getIntegerValue().intValue(), t1, t2, objectPool));
                     return (true);
                 } else if ((SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD1.ordinal()) != 0) {
                     tree.setInnerTree(t1);
@@ -636,9 +614,9 @@ public class Operation extends ExprTree {
             // non-strict ternary operator (conditional operator) s ? t : f
             // selector is always significant (???)
             if (opKind.getIntegerValue().intValue() == OpKind_TERNARY_OP) {
-                Value tmpVal = new Value();
+                Value tmpVal = objectPool.valuePool.get();
                 tmpVal.setUndefinedValue();
-                tree.setInnerTree(Literal.createLiteral(tmpVal));
+                tree.setInnerTree(Literal.createLiteral(tmpVal, objectPool));
 
                 // "true" consequent taken
                 if ((SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD2.ordinal()) != 0) {
@@ -659,14 +637,17 @@ public class Operation extends ExprTree {
     @Override
     public boolean privateFlatten(EvalState state, Value val, ExprTreeHolder tree, AMutableInt32 opPtr)
             throws HyracksDataException {
-        AMutableInt32 childOp1 = new AMutableInt32(OpKind_NO_OP);
-        AMutableInt32 childOp2 = new AMutableInt32(OpKind_NO_OP);
-        ExprTreeHolder fChild1 = new ExprTreeHolder();
-        ExprTreeHolder fChild2 = new ExprTreeHolder();;
-        Value val1 = new Value();
-        Value val2 = new Value();
-        Value val3 = new Value();
-        AMutableInt32 newOp = new AMutableInt32(opKind);
+        AMutableInt32 childOp1 = objectPool.int32Pool.get();
+        childOp1.setValue(OpKind_NO_OP);
+        AMutableInt32 childOp2 = objectPool.int32Pool.get();
+        childOp2.setValue(OpKind_NO_OP);
+        ExprTreeHolder fChild1 = objectPool.mutableExprPool.get();
+        ExprTreeHolder fChild2 = objectPool.mutableExprPool.get();;
+        Value val1 = objectPool.valuePool.get();
+        Value val2 = objectPool.valuePool.get();
+        Value val3 = objectPool.valuePool.get();
+        AMutableInt32 newOp = objectPool.int32Pool.get();
+        newOp.setValue(opKind);
         int op = opKind;
 
         tree.setInnerTree(null);; // Just to be safe...  wenger 2003-12-11.
@@ -675,21 +656,22 @@ public class Operation extends ExprTree {
         if ((op >= OpKind_COMPARISON_START && op <= OpKind_COMPARISON_END) || op == OpKind_SUBTRACTION_OP
                 || op == OpKind_DIVISION_OP || op == OpKind_MODULUS_OP || op == OpKind_LEFT_SHIFT_OP
                 || op == OpKind_RIGHT_SHIFT_OP || op == OpKind_URIGHT_SHIFT_OP) {
-            if (opPtr != null)
+            if (opPtr != null) {
                 opPtr.setValue(OpKind_NO_OP);
+            }
             if (child1.publicFlatten(state, val1, fChild1) && child2.publicFlatten(state, val2, fChild2)) {
                 if (fChild1.getInnerTree() == null && fChild2.getInnerTree() == null) {
-                    privateDoOperation(op, val1, val2, val3, true, true, false, val);
+                    privateDoOperation(op, val1, val2, val3, true, true, false, val, objectPool);
                     tree.setInnerTree(null);
                     return true;
                 } else if (fChild1.getInnerTree() != null && fChild2.getInnerTree() != null) {
-                    tree.setInnerTree(Operation.createOperation(op, fChild1, fChild2));
+                    tree.setInnerTree(Operation.createOperation(op, fChild1, fChild2, objectPool));
                     return true;
                 } else if (fChild1.getInnerTree() != null) {
-                    tree.setInnerTree(Operation.createOperation(op, fChild1, val2));
+                    tree.setInnerTree(Operation.createOperation(op, fChild1, val2, objectPool));
                     return true;
                 } else if (fChild2.getInnerTree() != null) {
-                    tree.setInnerTree(Operation.createOperation(op, val1, fChild2));
+                    tree.setInnerTree(Operation.createOperation(op, val1, fChild2, objectPool));
                     return true;
                 }
             } else {
@@ -706,8 +688,8 @@ public class Operation extends ExprTree {
 
         // any op that got past the above is binary, commutative and associative
         // Flatten sub expressions
-        if ((child1 != null && !child1.publicFlatten(state, val1, fChild1, childOp1))
-                || (child2 != null && !child2.publicFlatten(state, val2, fChild2, childOp2))) {
+        if ((child1.getInnerTree() != null && !child1.publicFlatten(state, val1, fChild1, childOp1))
+                || (child2.getInnerTree() != null && !child2.publicFlatten(state, val2, fChild2, childOp2))) {
             tree.setInnerTree(null);
             return false;
         }
@@ -724,7 +706,7 @@ public class Operation extends ExprTree {
 
         // if splitting is disallowed, fold the value and tree into a tree
         if (opPtr == null && newOp.getIntegerValue().intValue() != OpKind_NO_OP) {
-            tree.setInnerTree(Operation.createOperation(newOp.getIntegerValue().intValue(), val, tree));
+            tree.setInnerTree(Operation.createOperation(newOp.getIntegerValue().intValue(), val, tree, objectPool));
             if (tree.getInnerTree() == null) {
                 return false;
             }
@@ -737,15 +719,15 @@ public class Operation extends ExprTree {
 
     public boolean combine(AMutableInt32 op, Value val, ExprTreeHolder tree, AMutableInt32 op1, Value val1,
             ExprTreeHolder tree1, AMutableInt32 op2, Value val2, ExprTreeHolder tree2) throws HyracksDataException {
-        Operation newOp = new Operation();
-        Value dummy = new Value(); // undefined
+        Operation newOp = objectPool.operationPool.get();
+        Value dummy = objectPool.valuePool.get(); // undefined
 
         // special don't care cases for logical operators with exactly one value
         if ((tree1.getInnerTree() == null || tree2.getInnerTree() == null)
                 && (tree1.getInnerTree() != null || tree2.getInnerTree() != null)
                 && (op.getIntegerValue() == OpKind_LOGICAL_OR_OP || op.getIntegerValue() == OpKind_LOGICAL_AND_OP)) {
             privateDoOperation(op.getIntegerValue().intValue(), tree1.getInnerTree() == null ? val1 : dummy,
-                    tree2.getInnerTree() == null ? val2 : dummy, dummy, true, true, false, val);
+                    tree2.getInnerTree() == null ? val2 : dummy, dummy, true, true, false, val, objectPool);
             if (val.isBooleanValue()) {
                 tree.setInnerTree(null);
                 op.setValue(OpKind_NO_OP);
@@ -755,7 +737,7 @@ public class Operation extends ExprTree {
 
         if (tree1.getInnerTree() == null && tree2.getInnerTree() == null) {
             // left and rightsons are only values
-            privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val);
+            privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val, objectPool);
             tree.setInnerTree(null);
             op.setValue(OpKind_NO_OP);
             return true;
@@ -763,18 +745,18 @@ public class Operation extends ExprTree {
                 && (tree2.getInnerTree() != null && op2.getIntegerValue().intValue() == OpKind_NO_OP)) {
             // leftson is a value, rightson is a tree
             tree.setInnerTree(tree2.getInnerTree());
-            val.copyFrom(val1);
+            val.setValue(val1);
             return true;
         } else if (tree2.getInnerTree() == null
                 && (tree1.getInnerTree() != null && op1.getIntegerValue().intValue() == OpKind_NO_OP)) {
             // rightson is a value, leftson is a tree
             tree.setInnerTree(tree1.getInnerTree());
-            val.copyFrom(val2);
+            val.setValue(val2);
             return true;
         } else if ((tree1.getInnerTree() != null && op1.getIntegerValue().intValue() == OpKind_NO_OP)
                 && (tree2.getInnerTree() != null && op2.getIntegerValue().intValue() == OpKind_NO_OP)) {
             // left and rightsons are trees only
-            if (null != (newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2))) {
+            if (null != (newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2, objectPool))) {
                 return false;
             }
             tree.setInnerTree(newOp);
@@ -787,23 +769,25 @@ public class Operation extends ExprTree {
                 && !op.equals(op1) && !op.equals(op1)) {
             // at least one of them returned a value and a tree, and parent does
             // not share the same operation with either child
-            ExprTreeHolder newOp1 = new ExprTreeHolder();
-            ExprTreeHolder newOp2 = new ExprTreeHolder();
+            ExprTreeHolder newOp1 = objectPool.mutableExprPool.get();
+            ExprTreeHolder newOp2 = objectPool.mutableExprPool.get();
 
             if (op1.getIntegerValue().intValue() != OpKind_NO_OP) {
-                newOp1.setInnerTree(Operation.createOperation(op1.getIntegerValue().intValue(), val1, tree1));
+                newOp1.setInnerTree(
+                        Operation.createOperation(op1.getIntegerValue().intValue(), val1, tree1, objectPool));
             } else if (tree1.getInnerTree() != null) {
                 newOp1.setInnerTree(tree1.getInnerTree());
             } else {
-                newOp1.setInnerTree(Literal.createLiteral(val1));
+                newOp1.setInnerTree(Literal.createLiteral(val1, objectPool));
             }
 
             if (op2.getIntegerValue().intValue() != OpKind_NO_OP) {
-                newOp2.setInnerTree(Operation.createOperation(op2.getIntegerValue().intValue(), val2, tree2));
+                newOp2.setInnerTree(
+                        Operation.createOperation(op2.getIntegerValue().intValue(), val2, tree2, objectPool));
             } else if (tree2.getInnerTree() != null) {
                 newOp2.setInnerTree(tree2);
             } else {
-                newOp2.setInnerTree(Literal.createLiteral(val2));
+                newOp2.setInnerTree(Literal.createLiteral(val2, objectPool));
             }
 
             if (newOp1.getInnerTree() == null || newOp2.getInnerTree() == null) {
@@ -811,7 +795,7 @@ public class Operation extends ExprTree {
                 op.setValue(OpKind_NO_OP);
                 return false;
             }
-            newOp = createOperation(op.getIntegerValue().intValue(), newOp1, newOp2);
+            newOp = createOperation(op.getIntegerValue().intValue(), newOp1, newOp2, objectPool);
             if (newOp == null) {
                 tree.setInnerTree(null);
                 op.setValue(OpKind_NO_OP);
@@ -825,29 +809,30 @@ public class Operation extends ExprTree {
         if (op.equals(op1) && op.equals(op2)) {
             // same operators on both children . since op!=NO_OP, neither are op1,
             // op2.  so they both make tree and value contributions
-            newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2);
+            newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2, objectPool);
             if (newOp == null) {
                 return false;
             }
-            privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val);
+            privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val, objectPool);
             tree.setInnerTree(newOp);
             return true;
         } else if (op.equals(op1)) {
             // leftson makes a tree,value contribution
             if (tree2.getInnerTree() == null) {
                 // rightson makes a value contribution
-                privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val);
+                privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val,
+                        objectPool);
                 tree.setInnerTree(tree1);
                 return true;
             } else {
                 // rightson makes a tree contribution
-                Operation local_newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2);
+                Operation local_newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2, objectPool);
                 if (local_newOp == null) {
                     tree.setInnerTree(null);
                     op.setValue(OpKind_NO_OP);
                     return false;
                 }
-                val.copyFrom(val1);
+                val.setValue(val1);
                 tree.setInnerTree(local_newOp); // NAC - BUG FIX
                 return true;
             }
@@ -855,19 +840,20 @@ public class Operation extends ExprTree {
             // rightson makes a tree,value contribution
             if (tree1.getInnerTree() == null) {
                 // leftson makes a value contribution
-                privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val);
+                privateDoOperation(op.getIntegerValue().intValue(), val1, val2, dummy, true, true, false, val,
+                        objectPool);
                 tree.setInnerTree(tree2);
                 return true;
             } else {
                 // leftson makes a tree contribution
-                Operation local_newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2);
+                Operation local_newOp = createOperation(op.getIntegerValue().intValue(), tree1, tree2, objectPool);
                 if (local_newOp == null) {
                     tree.setInnerTree(null);
                     op.setValue(OpKind_NO_OP);
                     return false;
                 }
                 tree.setInnerTree(local_newOp); // NAC BUG FIX
-                val.copyFrom(val2);
+                val.setValue(val2);
                 return true;
             }
         }
@@ -875,7 +861,8 @@ public class Operation extends ExprTree {
         throw new HyracksDataException("Should not reach here");
     }
 
-    public static int doComparison(int op, Value v1, Value v2, Value result) throws HyracksDataException {
+    public static int doComparison(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         ValueType vt1;
         ValueType vt2;
         ValueType coerceResult;
@@ -887,7 +874,7 @@ public class Operation extends ExprTree {
             coerceResult = vt1;
         } else {
             // do numerical type promotions --- other types/values are unchanged
-            coerceResult = coerceToNumber(v1, v2);
+            coerceResult = coerceToNumber(v1, v2, objectPool);
             vt1 = v1.getType();
             vt2 = v2.getType();
         }
@@ -929,15 +916,15 @@ public class Operation extends ExprTree {
                     result.setErrorValue();
                     return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
                 }
-                compareStrings(op, v1, v2, result);
+                compareStrings(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             case INTEGER_VALUE:
-                compareIntegers(op, v1, v2, result);
+                compareIntegers(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             case REAL_VALUE:
-                compareReals(op, v1, v2, result);
+                compareReals(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             case BOOLEAN_VALUE:
@@ -946,7 +933,7 @@ public class Operation extends ExprTree {
                     result.setErrorValue();
                     return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
                 }
-                compareBools(op, v1, v2, result);
+                compareBools(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             case LIST_VALUE:
@@ -960,7 +947,7 @@ public class Operation extends ExprTree {
                     result.setErrorValue();
                     return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
                 }
-                compareAbsoluteTimes(op, v1, v2, result);
+                compareAbsoluteTimes(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             case RELATIVE_TIME_VALUE:
@@ -968,7 +955,7 @@ public class Operation extends ExprTree {
                     result.setErrorValue();
                     return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
                 }
-                compareRelativeTimes(op, v1, v2, result);
+                compareRelativeTimes(op, v1, v2, result, objectPool);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
 
             default:
@@ -977,12 +964,13 @@ public class Operation extends ExprTree {
         }
     }
 
-    public static int doArithmetic(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        AMutableInt64 i1 = new AMutableInt64(0);
-        AMutableInt64 i2 = new AMutableInt64(0);
-        ClassAdTime t1 = new ClassAdTime();
-        AMutableDouble r1 = new AMutableDouble(0);
-        MutableBoolean b1 = new MutableBoolean();
+    public static int doArithmetic(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        AMutableInt64 i1 = objectPool.int64Pool.get();
+        AMutableInt64 i2 = objectPool.int64Pool.get();
+        ClassAdTime t1 = objectPool.classAdTimePool.get();
+        AMutableDouble r1 = objectPool.doublePool.get();
+        MutableBoolean b1 = objectPool.boolPool.get();
 
         // ensure the operands have arithmetic types
         if ((!v1.isIntegerValue() && !v1.isRealValue() && !v1.isAbsoluteTimeValue() && !v1.isRelativeTimeValue()
@@ -1009,7 +997,7 @@ public class Operation extends ExprTree {
                 result.setBooleanValue(!b1.booleanValue());
             } else if (v1.isExceptional()) {
                 // undefined or error --- same as operand
-                result.copyFrom(v1);
+                result.setValue(v1);
                 return SigValues.SIG_CHLD1.ordinal();
             }
             // unary minus not defined on any other operand type
@@ -1018,7 +1006,7 @@ public class Operation extends ExprTree {
         }
 
         // perform type promotions and proceed with arithmetic
-        switch (coerceToNumber(v1, v2)) {
+        switch (coerceToNumber(v1, v2, objectPool)) {
             case INTEGER_VALUE:
                 v1.isIntegerValue(i1);
                 v2.isIntegerValue(i2);
@@ -1057,11 +1045,11 @@ public class Operation extends ExprTree {
                 }
 
             case REAL_VALUE: {
-                return (doRealArithmetic(op, v1, v2, result));
+                return (doRealArithmetic(op, v1, v2, result, objectPool));
             }
             case ABSOLUTE_TIME_VALUE:
             case RELATIVE_TIME_VALUE: {
-                return (doTimeArithmetic(op, v1, v2, result));
+                return (doTimeArithmetic(op, v1, v2, result, objectPool));
             }
             default:
                 // should not get here
@@ -1069,9 +1057,10 @@ public class Operation extends ExprTree {
         }
     }
 
-    public static int doLogical(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        MutableBoolean b1 = new MutableBoolean();
-        MutableBoolean b2 = new MutableBoolean();
+    public static int doLogical(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        MutableBoolean b1 = objectPool.boolPool.get();
+        MutableBoolean b2 = objectPool.boolPool.get();
 
         // first coerece inputs to boolean if they are considered equivalent
         if (!v1.isBooleanValue(b1) && v1.isBooleanValueEquiv(b1)) {
@@ -1098,7 +1087,7 @@ public class Operation extends ExprTree {
             if (vt1 == ValueType.BOOLEAN_VALUE) {
                 result.setBooleanValue(!b1.booleanValue());
             } else {
-                result.copyFrom(v1);
+                result.setValue(v1);
             }
             return SigValues.SIG_CHLD1.ordinal();
         }
@@ -1111,9 +1100,9 @@ public class Operation extends ExprTree {
                 result.setErrorValue();
                 return SigValues.SIG_CHLD1.ordinal();
             } else if (vt1 == ValueType.BOOLEAN_VALUE && !b1.booleanValue()) {
-                result.copyFrom(v2);
+                result.setValue(v2);
             } else if (vt2 != ValueType.BOOLEAN_VALUE) {
-                result.copyFrom(v2);
+                result.setValue(v2);
             } else if (b2.booleanValue()) {
                 result.setBooleanValue(true);
             } else {
@@ -1128,9 +1117,9 @@ public class Operation extends ExprTree {
                 result.setErrorValue();
                 return SigValues.SIG_CHLD1.ordinal();
             } else if (vt1 == ValueType.BOOLEAN_VALUE && b1.booleanValue()) {
-                result.copyFrom(v2);
+                result.setValue(v2);
             } else if (vt2 != ValueType.BOOLEAN_VALUE) {
-                result.copyFrom(v2);
+                result.setValue(v2);
             } else if (!b2.booleanValue()) {
                 result.setBooleanValue(false);
             } else {
@@ -1142,9 +1131,10 @@ public class Operation extends ExprTree {
         throw new HyracksDataException("Shouldn't reach here");
     }
 
-    public static int doBitwise(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        AMutableInt64 i1 = new AMutableInt64(0);
-        AMutableInt64 i2 = new AMutableInt64(0);
+    public static int doBitwise(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        AMutableInt64 i1 = objectPool.int64Pool.get();
+        AMutableInt64 i2 = objectPool.int64Pool.get();
 
         // bitwise operations are defined only on integers
         if (op == OpKind_BITWISE_NOT_OP) {
@@ -1209,9 +1199,10 @@ public class Operation extends ExprTree {
     //out of domain value
     public static final int EDOM = 33;
 
-    public static int doRealArithmetic(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        AMutableDouble r1 = new AMutableDouble(0);
-        AMutableDouble r2 = new AMutableDouble(0);
+    public static int doRealArithmetic(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        AMutableDouble r1 = objectPool.doublePool.get();
+        AMutableDouble r2 = objectPool.doublePool.get();
         double comp = 0;
 
         // we want to prevent FPE and set the ERROR value on the result; on Unix
@@ -1251,9 +1242,9 @@ public class Operation extends ExprTree {
         return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
     }
 
-    public static int doTimeArithmetic(int op, Value v1, Value v2, Value result) {
-        ClassAdTime asecs1 = new ClassAdTime();
-        ClassAdTime asecs2 = new ClassAdTime();
+    public static int doTimeArithmetic(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool) {
+        ClassAdTime asecs1 = objectPool.classAdTimePool.get();
+        ClassAdTime asecs2 = objectPool.classAdTimePool.get();
         ValueType vt1 = v1.getType();
         ValueType vt2 = v2.getType();
 
@@ -1309,8 +1300,8 @@ public class Operation extends ExprTree {
 
         if (op == OpKind_MULTIPLICATION_OP || op == OpKind_DIVISION_OP) {
             if (vt1 == ValueType.RELATIVE_TIME_VALUE && vt2 == ValueType.INTEGER_VALUE) {
-                AMutableInt64 num = new AMutableInt64(0);
-                ClassAdTime msecs = new ClassAdTime();
+                AMutableInt64 num = objectPool.int64Pool.get();
+                ClassAdTime msecs = objectPool.classAdTimePool.get();
                 v1.isRelativeTimeValue(asecs1);
                 v2.isIntegerValue(num);
                 if (op == OpKind_MULTIPLICATION_OP) {
@@ -1323,8 +1314,8 @@ public class Operation extends ExprTree {
             }
 
             if (vt1 == ValueType.RELATIVE_TIME_VALUE && vt2 == ValueType.REAL_VALUE) {
-                AMutableDouble num = new AMutableDouble(0);
-                AMutableDouble msecs = new AMutableDouble(0);
+                AMutableDouble num = objectPool.doublePool.get();
+                AMutableDouble msecs = objectPool.doublePool.get();
                 v1.isRelativeTimeValue(asecs1);
                 v2.isRealValue(num);
                 if (op == OpKind_MULTIPLICATION_OP) {
@@ -1332,25 +1323,30 @@ public class Operation extends ExprTree {
                 } else {
                     msecs.setValue(asecs1.getRelativeTime() * num.getDoubleValue());
                 }
-                result.setRelativeTimeValue(new ClassAdTime(1000L * ((long) msecs.getDoubleValue()), false));
+                ClassAdTime time = objectPool.classAdTimePool.get();
+                time.setRelativeTime(1000L * ((long) msecs.getDoubleValue()));
+                result.setRelativeTimeValue(time);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
             }
 
             if (vt1 == ValueType.INTEGER_VALUE && vt2 == ValueType.RELATIVE_TIME_VALUE
                     && op == OpKind_MULTIPLICATION_OP) {
-                AMutableInt64 num = new AMutableInt64(0);
+                AMutableInt64 num = objectPool.int64Pool.get();
                 v1.isIntegerValue(num);
                 v2.isRelativeTimeValue(asecs1);
-                result.setRelativeTimeValue(new ClassAdTime(num.getLongValue() * asecs1.getRelativeTime(), false));
+                ClassAdTime time = objectPool.classAdTimePool.get();
+                time.setRelativeTime(num.getLongValue() * asecs1.getRelativeTime());
+                result.setRelativeTimeValue(time);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
             }
 
             if (vt2 == ValueType.RELATIVE_TIME_VALUE && vt1 == ValueType.REAL_VALUE && op == OpKind_MULTIPLICATION_OP) {
-                AMutableDouble num = new AMutableDouble(0);
+                AMutableDouble num = objectPool.doublePool.get();
                 v1.isRelativeTimeValue(asecs1);
                 v2.isRealValue(num);
-                result.setRelativeTimeValue(
-                        new ClassAdTime((long) (asecs1.getRelativeTime() * num.getDoubleValue()), false));
+                ClassAdTime time = objectPool.classAdTimePool.get();
+                time.setRelativeTime((long) (asecs1.getRelativeTime() * num.getDoubleValue()));
+                result.setRelativeTimeValue(time);
                 return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
             }
         }
@@ -1359,9 +1355,9 @@ public class Operation extends ExprTree {
         return (SigValues.SIG_CHLD1.ordinal() | SigValues.SIG_CHLD2.ordinal());
     }
 
-    public static void compareStrings(int op, Value v1, Value v2, Value result) {
-        AMutableCharArrayString s1 = new AMutableCharArrayString();
-        AMutableCharArrayString s2 = new AMutableCharArrayString();
+    public static void compareStrings(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool) {
+        AMutableCharArrayString s1 = objectPool.strPool.get();
+        AMutableCharArrayString s2 = objectPool.strPool.get();
         int cmp;
         v1.isStringValue(s1);
         v2.isStringValue(s2);
@@ -1392,9 +1388,10 @@ public class Operation extends ExprTree {
         }
     }
 
-    public static void compareAbsoluteTimes(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        ClassAdTime asecs1 = new ClassAdTime();
-        ClassAdTime asecs2 = new ClassAdTime();
+    public static void compareAbsoluteTimes(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        ClassAdTime asecs1 = objectPool.classAdTimePool.get();
+        ClassAdTime asecs2 = objectPool.classAdTimePool.get();
         boolean compResult = false;
         v1.isAbsoluteTimeValue(asecs1);
         v2.isAbsoluteTimeValue(asecs2);
@@ -1430,9 +1427,10 @@ public class Operation extends ExprTree {
         result.setBooleanValue(compResult);
     }
 
-    public static void compareRelativeTimes(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        ClassAdTime rsecs1 = new ClassAdTime();
-        ClassAdTime rsecs2 = new ClassAdTime();
+    public static void compareRelativeTimes(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        ClassAdTime rsecs1 = objectPool.classAdTimePool.get();
+        ClassAdTime rsecs2 = objectPool.classAdTimePool.get();
         boolean compResult = false;
 
         v1.isRelativeTimeValue(rsecs1);
@@ -1472,9 +1470,10 @@ public class Operation extends ExprTree {
         result.setBooleanValue(compResult);
     }
 
-    public static void compareBools(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        MutableBoolean b1 = new MutableBoolean();
-        MutableBoolean b2 = new MutableBoolean();
+    public static void compareBools(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        MutableBoolean b1 = objectPool.boolPool.get();
+        MutableBoolean b2 = objectPool.boolPool.get();
         boolean compResult = false;
         v1.isBooleanValue(b1);
         v2.isBooleanValue(b2);
@@ -1511,9 +1510,10 @@ public class Operation extends ExprTree {
         result.setBooleanValue(compResult);
     }
 
-    public static void compareIntegers(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        AMutableInt64 i1 = new AMutableInt64(0);
-        AMutableInt64 i2 = new AMutableInt64(0);
+    public static void compareIntegers(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        AMutableInt64 i1 = objectPool.int64Pool.get();
+        AMutableInt64 i2 = objectPool.int64Pool.get();
         boolean compResult = false;
         v1.isIntegerValue(i1);
         v2.isIntegerValue(i2);
@@ -1549,9 +1549,10 @@ public class Operation extends ExprTree {
         result.setBooleanValue(compResult);
     }
 
-    public static void compareReals(int op, Value v1, Value v2, Value result) throws HyracksDataException {
-        AMutableDouble r1 = new AMutableDouble(0);
-        AMutableDouble r2 = new AMutableDouble(0);
+    public static void compareReals(int op, Value v1, Value v2, Value result, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        AMutableDouble r1 = objectPool.doublePool.get();
+        AMutableDouble r2 = objectPool.doublePool.get();
         boolean compResult = false;
 
         v1.isRealValue(r1);
@@ -1594,26 +1595,33 @@ public class Operation extends ExprTree {
     //  + if both v1 and v2 are Numbers and of the same type, return type
     //  + if v1 is an int and v2 is a real, convert v1 to real; return REAL_VALUE
     //  + if v1 is a real and v2 is an int, convert v2 to real; return REAL_VALUE
-    public static ValueType coerceToNumber(Value v1, Value v2) {
-        AMutableInt64 i = new AMutableInt64(0);
-        AMutableDouble r = new AMutableDouble(0);
-        MutableBoolean b = new MutableBoolean();
+    public static ValueType coerceToNumber(Value v1, Value v2, ClassAdObjectPool objectPool) {
+        AMutableInt64 i = objectPool.int64Pool.get();
+        AMutableDouble r = objectPool.doublePool.get();
+        MutableBoolean b = objectPool.boolPool.get();
 
         // either of v1, v2 not numerical?
-        if (v1.isClassAdValue() || v2.isClassAdValue())
+        if (v1.isClassAdValue() || v2.isClassAdValue()) {
             return ValueType.CLASSAD_VALUE;
-        if (v1.isListValue() || v2.isListValue())
+        }
+        if (v1.isListValue() || v2.isListValue()) {
             return ValueType.LIST_VALUE;
-        if (v1.isStringValue() || v2.isStringValue())
+        }
+        if (v1.isStringValue() || v2.isStringValue()) {
             return ValueType.STRING_VALUE;
-        if (v1.isUndefinedValue() || v2.isUndefinedValue())
+        }
+        if (v1.isUndefinedValue() || v2.isUndefinedValue()) {
             return ValueType.UNDEFINED_VALUE;
-        if (v1.isErrorValue() || v2.isErrorValue())
+        }
+        if (v1.isErrorValue() || v2.isErrorValue()) {
             return ValueType.ERROR_VALUE;
-        if (v1.isAbsoluteTimeValue() || v2.isAbsoluteTimeValue())
+        }
+        if (v1.isAbsoluteTimeValue() || v2.isAbsoluteTimeValue()) {
             return ValueType.ABSOLUTE_TIME_VALUE;
-        if (v1.isRelativeTimeValue() || v2.isRelativeTimeValue())
+        }
+        if (v1.isRelativeTimeValue() || v2.isRelativeTimeValue()) {
             return ValueType.RELATIVE_TIME_VALUE;
+        }
 
         // promote booleans to integers
         if (v1.isBooleanValue(b)) {
@@ -1633,41 +1641,51 @@ public class Operation extends ExprTree {
         }
 
         // both v1 and v2 of same numerical type
-        if (v1.isIntegerValue(i) && v2.isIntegerValue(i))
+        if (v1.isIntegerValue(i) && v2.isIntegerValue(i)) {
             return ValueType.INTEGER_VALUE;
-        if (v1.isRealValue(r) && v2.isRealValue(r))
+        }
+        if (v1.isRealValue(r) && v2.isRealValue(r)) {
             return ValueType.REAL_VALUE;
+        }
 
         // type promotions required
-        if (v1.isIntegerValue(i) && v2.isRealValue(r))
+        if (v1.isIntegerValue(i) && v2.isRealValue(r)) {
             v1.setRealValue(i.getLongValue());
-        else if (v1.isRealValue(r) && v2.isIntegerValue(i))
+        } else if (v1.isRealValue(r) && v2.isIntegerValue(i)) {
             v2.setRealValue(i.getLongValue());
+        }
 
         return ValueType.REAL_VALUE;
     }
 
-    public Operation(int op, ExprTreeHolder e1, ExprTreeHolder e2, ExprTreeHolder e3) {
+    public Operation(int op, ExprTreeHolder e1, ExprTreeHolder e2, ExprTreeHolder e3, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        super(objectPool);
         this.opKind = op;
-        this.child1 = e1 == null ? null : e1.self();
-        this.child2 = e2 == null ? null : e2.self();
-        this.child3 = e3 == null ? null : e3.self();
+        this.child1 = new ExprTreeHolder(objectPool);
+        this.child2 = new ExprTreeHolder(objectPool);
+        this.child3 = new ExprTreeHolder(objectPool);
+        child1.copyFrom(e1);
+        child2.copyFrom(e2);
+        child3.copyFrom(e3);
     }
 
-    public static Operation createOperation(int op, ExprTree e1, ExprTree e2, ExprTree e3) {
-        Operation opnode = new Operation();
+    public static Operation createOperation(int op, ExprTree e1, ExprTree e2, ExprTree e3, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        Operation opnode = objectPool.operationPool.get();
         opnode.opKind = op;
-        opnode.child1 = e1 == null ? null : e1.self();
-        opnode.child2 = e2 == null ? null : e2.self();
-        opnode.child3 = e3 == null ? null : e3.self();
+        opnode.child1.copyFrom(e1);
+        opnode.child2.copyFrom(e2);
+        opnode.child3.copyFrom(e3);
         return opnode;
     }
 
-    public static void createOperation(int op, ExprTree e1, ExprTree e2, ExprTree e3, Operation opnode) {
+    public static void createOperation(int op, ExprTree e1, ExprTree e2, ExprTree e3, Operation opnode)
+            throws HyracksDataException {
         opnode.opKind = op;
-        opnode.child1 = e1 == null ? null : e1.self();
-        opnode.child2 = e2 == null ? null : e2.self();
-        opnode.child3 = e3 == null ? null : e3.self();
+        opnode.child1.copyFrom(e1);
+        opnode.child2.copyFrom(e2);
+        opnode.child3.copyFrom(e3);
     }
 
     public void getComponents(AMutableInt32 op, ExprTreeHolder e1, ExprTreeHolder e2, ExprTreeHolder e3) {
@@ -1677,37 +1695,39 @@ public class Operation extends ExprTree {
         e3.setInnerTree(child3);
     }
 
-    public static Operation createOperation(int op, Value val, ExprTreeHolder tree) throws HyracksDataException {
+    public static Operation createOperation(int op, Value val, ExprTreeHolder tree, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         if (tree.getInnerTree() == null) {
             return null;
         }
-        Literal lit = Literal.createLiteral(val);
+        Literal lit = Literal.createLiteral(val, objectPool);
         if (lit == null) {
             return null;
         }
-        Operation newOp = createOperation(op, lit, tree);
+        Operation newOp = createOperation(op, lit, tree, objectPool);
         return newOp;
     }
 
-    public static Operation createOperation(int op, ExprTreeHolder tree, Value val) throws HyracksDataException {
+    public static Operation createOperation(int op, ExprTreeHolder tree, Value val, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         if (tree.getInnerTree() == null) {
             return null;
         }
-        Literal lit = Literal.createLiteral(val);
+        Literal lit = Literal.createLiteral(val, objectPool);
         if (lit == null) {
             return null;
         }
-        Operation newOp = createOperation(op, lit, tree);
+        Operation newOp = createOperation(op, lit, tree, objectPool);
         return newOp;
     }
 
     public boolean flattenSpecials(EvalState state, Value val, ExprTreeHolder tree) throws HyracksDataException {
-        ExprTreeHolder fChild1 = new ExprTreeHolder();
-        ExprTreeHolder fChild2 = new ExprTreeHolder();
-        ExprTreeHolder fChild3 = new ExprTreeHolder();
-        Value eval1 = new Value();
-        Value eval2 = new Value();
-        Value eval3 = new Value();
+        ExprTreeHolder fChild1 = objectPool.mutableExprPool.get();
+        ExprTreeHolder fChild2 = objectPool.mutableExprPool.get();
+        ExprTreeHolder fChild3 = objectPool.mutableExprPool.get();
+        Value eval1 = objectPool.valuePool.get();
+        Value eval2 = objectPool.valuePool.get();
+        Value eval3 = objectPool.valuePool.get();
 
         switch (opKind) {
             case OpKind_UNARY_PLUS_OP:
@@ -1720,12 +1740,12 @@ public class Operation extends ExprTree {
                     return false;
                 }
                 if (fChild1.getInnerTree() != null) {
-                    tree.setInnerTree(Operation.createOperation(opKind, fChild1));
+                    tree.setInnerTree(Operation.createOperation(opKind, fChild1, objectPool));
                     return (tree.getInnerTree() != null);
                 } else {
-                    privateDoOperation(opKind, eval1, null, null, true, false, false, val);
+                    privateDoOperation(opKind, eval1, null, null, true, false, false, val, objectPool);
                     tree.setInnerTree(null);
-                    eval1.clear();
+                    eval1.setUndefinedValue();
                     return true;
                 }
             case OpKind_TERNARY_OP:
@@ -1737,11 +1757,11 @@ public class Operation extends ExprTree {
 
                 // check if selector expression collapsed to a non-undefined value
                 if (fChild1.getInnerTree() == null && !eval1.isUndefinedValue()) {
-                    MutableBoolean b = new MutableBoolean();
+                    MutableBoolean b = objectPool.boolPool.get();
                     // if the selector is not boolean-equivalent, propagate error
                     if (!eval1.isBooleanValueEquiv(b)) {
                         val.setErrorValue();
-                        eval1.clear();
+                        eval1.setUndefinedValue();
                         tree.setInnerTree(null);
                         return true;
                     }
@@ -1761,10 +1781,12 @@ public class Operation extends ExprTree {
                     }
 
                     // if any arm collapsed into a value, make it a Literal
-                    if (fChild2.getInnerTree() == null)
-                        fChild2.setInnerTree(Literal.createLiteral(eval2));
-                    if (fChild3.getInnerTree() == null)
-                        fChild3.setInnerTree(Literal.createLiteral(eval3));
+                    if (fChild2.getInnerTree() == null) {
+                        fChild2.setInnerTree(Literal.createLiteral(eval2, objectPool));
+                    }
+                    if (fChild3.getInnerTree() == null) {
+                        fChild3.setInnerTree(Literal.createLiteral(eval3, objectPool));
+                    }
                     if (fChild2.getInnerTree() == null || fChild3.getInnerTree() == null) {
                         tree.setInnerTree(null);;
                         return false;
@@ -1775,7 +1797,7 @@ public class Operation extends ExprTree {
                         fChild1.setInnerTree(child1.copy());
                     }
 
-                    tree.setInnerTree(Operation.createOperation(opKind, fChild1, fChild2, fChild3));
+                    tree.setInnerTree(Operation.createOperation(opKind, fChild1, fChild2, fChild3, objectPool));
                     if (tree.getInnerTree() == null) {
                         return false;
                     }
@@ -1790,22 +1812,24 @@ public class Operation extends ExprTree {
 
                 // if both arguments Flattened to values, Evaluate now
                 if (fChild1.getInnerTree() == null && fChild2.getInnerTree() == null) {
-                    privateDoOperation(opKind, eval1, eval2, null, true, true, false, val);
+                    privateDoOperation(opKind, eval1, eval2, null, true, true, false, val, objectPool);
                     tree.setInnerTree(null);
                     return true;
                 }
 
                 // otherwise convert Flattened values into literals
-                if (fChild1.getInnerTree() == null)
-                    fChild1.setInnerTree(Literal.createLiteral(eval1));
-                if (fChild2.getInnerTree() == null)
-                    fChild2.setInnerTree(Literal.createLiteral(eval2));
+                if (fChild1.getInnerTree() == null) {
+                    fChild1.setInnerTree(Literal.createLiteral(eval1, objectPool));
+                }
+                if (fChild2.getInnerTree() == null) {
+                    fChild2.setInnerTree(Literal.createLiteral(eval2, objectPool));
+                }
                 if (fChild1.getInnerTree() == null || fChild2.getInnerTree() == null) {
                     tree.setInnerTree(null);
                     return false;
                 }
 
-                tree.setInnerTree(Operation.createOperation(opKind, fChild1, fChild2));
+                tree.setInnerTree(Operation.createOperation(opKind, fChild1, fChild2, objectPool));
                 if (tree.getInnerTree() == null) {
                     return false;
                 }
@@ -1892,11 +1916,8 @@ public class Operation extends ExprTree {
     @Override
     public void reset() {
         opKind = OpKind_NO_OP;
-        if (child1 != null)
-            child1.reset();
-        if (child2 != null)
-            child2.reset();
-        if (child3 != null)
-            child3.reset();
+        child1.reset();
+        child2.reset();
+        child3.reset();
     }
 }

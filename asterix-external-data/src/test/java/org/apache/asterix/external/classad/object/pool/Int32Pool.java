@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.classad.object.pool;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.om.base.AMutableInt32;
 
-public interface IInputStreamProviderFactory extends IExternalDataSourceFactory {
-
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException;
+public class Int32Pool extends Pool<AMutableInt32> {
 
     @Override
-    public default DataSourceType getDataSourceType() {
-        return DataSourceType.STREAM;
+    public AMutableInt32 newInstance() {
+        return new AMutableInt32(0);
     }
+
+    @Override
+    protected void reset(AMutableInt32 obj) {
+        obj.setValue(0);
+    }
+
 }

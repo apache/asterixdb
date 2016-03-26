@@ -28,7 +28,7 @@ import java.util.List;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.converter.CSVToRecordWithMetadataAndPKConverter;
 import org.apache.asterix.external.input.record.reader.stream.QuotedLineRecordReader;
-import org.apache.asterix.external.input.stream.LocalFileSystemInputStream;
+import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -42,7 +42,9 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -78,8 +80,10 @@ public class RecordWithMetaTest {
             int[] pkIndicators = { 1 };
 
             // create input stream
-            LocalFileSystemInputStream inputStream = new LocalFileSystemInputStream(
-                    Paths.get(getClass().getResource("/beer.csv").toURI()).toAbsolutePath(), null, false);
+            LocalFSInputStream inputStream = new LocalFSInputStream(
+                    new FileSplit[] { new FileSplit(null,
+                            new FileReference(Paths.get(getClass().getResource("/beer.csv").toURI()).toFile())) },
+                    null, null, 0, null, false);
 
             // create reader record reader
             QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream, null,

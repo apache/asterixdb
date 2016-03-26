@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -32,7 +32,7 @@ public class EmptyLineSeparatedRecordReaderFactory extends AbstractStreamRecordR
     @Override
     public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        final Pair<AInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
+        final Pair<AsterixInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
         return new EmptyLineSeparatedRecordReader(streamAndIndexer.first, streamAndIndexer.second);
     }
 

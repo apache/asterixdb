@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
@@ -116,13 +116,13 @@ public class ExternalDataUtils {
         return aString.trim().split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[1];
     }
 
-    public static IInputStreamProviderFactory createExternalInputStreamFactory(String dataverse, String stream)
+    public static IInputStreamFactory createExternalInputStreamFactory(String dataverse, String stream)
             throws AsterixException {
         try {
             String libraryName = getLibraryName(stream);
             String className = getExternalClassName(stream);
             ClassLoader classLoader = getClassLoader(dataverse, libraryName);
-            return ((IInputStreamProviderFactory) (classLoader.loadClass(className).newInstance()));
+            return ((IInputStreamFactory) (classLoader.loadClass(className).newInstance()));
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AsterixException("Failed to create stream factory", e);
         }

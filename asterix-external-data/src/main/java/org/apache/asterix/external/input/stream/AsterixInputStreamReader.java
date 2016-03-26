@@ -25,26 +25,23 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 
-public class AInputStreamReader extends Reader {
-    private AInputStream in;
+public class AsterixInputStreamReader extends Reader {
+    private AsterixInputStream in;
     private byte[] bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
     private ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
     private CharBuffer charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
     private CharsetDecoder decoder;
     private boolean done = false;
 
-    public AInputStreamReader(AInputStream in) {
+    public AsterixInputStreamReader(AsterixInputStream in) {
         this.in = in;
         this.decoder = StandardCharsets.UTF_8.newDecoder();
         this.byteBuffer.flip();
-    }
-
-    public boolean skipError() throws Exception {
-        return in.skipError();
     }
 
     public void stop() throws IOException {
@@ -110,5 +107,14 @@ public class AInputStreamReader extends Reader {
     @Override
     public void close() throws IOException {
         in.close();
+    }
+
+    public boolean handleException(Throwable th) {
+        return in.handleException(th);
+    }
+
+    @Override
+    public void reset() throws IOException {
+        byteBuffer.clear();
     }
 }

@@ -39,7 +39,8 @@ public class SimpleSerializerDeserializerTest {
             String className = cl.getName();
             if (className.endsWith("ARecordSerializerDeserializer")
                     || className.endsWith("AUnorderedListSerializerDeserializer")
-                    || className.endsWith("AOrderedListSerializerDeserializer")) {
+                    || className.endsWith("AOrderedListSerializerDeserializer")
+                    || className.endsWith("AStringSerializerDeserializer")) {
                 // Serializer/Deserializer for complex types can have (immutable) states.
                 continue;
             }

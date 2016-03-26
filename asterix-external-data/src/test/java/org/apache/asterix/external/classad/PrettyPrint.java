@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.asterix.external.classad.ExprTree.NodeKind;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -32,7 +33,8 @@ public class PrettyPrint extends ClassAdUnParser {
     private boolean minimalParens;
     private int indentLevel;
 
-    public PrettyPrint() {
+    public PrettyPrint(ClassAdObjectPool objectPool) {
+        super(objectPool);
         classadIndent = 4;
         listIndent = 3;
         wantStringQuotes = true;
@@ -116,8 +118,9 @@ public class PrettyPrint extends ClassAdUnParser {
             return;
         }
         // all others are binary ops
-        AMutableInt32 top = new AMutableInt32(0);
-        ExprTreeHolder t1 = new ExprTreeHolder(), t2 = new ExprTreeHolder(), t3 = new ExprTreeHolder();
+        AMutableInt32 top = objectPool.int32Pool.get();
+        ExprTreeHolder t1 = objectPool.mutableExprPool.get(), t2 = objectPool.mutableExprPool.get(),
+                t3 = objectPool.mutableExprPool.get();
 
         if (op1.getKind() == NodeKind.OP_NODE) {
             ((Operation) op1.getInnerTree()).getComponents(top, t1, t2, t3);

@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.feed.api.IFeedJoint;
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedId;
@@ -49,13 +49,13 @@ public class FeedJoint implements IFeedJoint {
     /** A list of feed subscription requests submitted for subscribing to the FeedPoint's data **/
     private final List<FeedConnectionRequest> connectionRequests;
 
-    private final ConnectionLocation connectionLocation;
+    private final FeedRuntimeType connectionLocation;
 
     private final FeedJointType type;
 
     private FeedConnectionId provider;
 
-    public FeedJoint(FeedJointKey key, FeedId ownerFeedId, ConnectionLocation subscriptionLocation, FeedJointType type,
+    public FeedJoint(FeedJointKey key, FeedId ownerFeedId, FeedRuntimeType subscriptionLocation, FeedJointType type,
             FeedConnectionId provider) {
         this.key = key;
         this.ownerFeedId = ownerFeedId;
@@ -72,14 +72,17 @@ public class FeedJoint implements IFeedJoint {
         return key.hashCode();
     }
 
+    @Override
     public void addReceiver(FeedConnectionId connectionId) {
         receivers.add(connectionId);
     }
 
+    @Override
     public void removeReceiver(FeedConnectionId connectionId) {
         receivers.remove(connectionId);
     }
 
+    @Override
     public synchronized void addConnectionRequest(FeedConnectionRequest request) {
         connectionRequests.add(request);
         if (state.equals(State.ACTIVE)) {
@@ -87,6 +90,7 @@ public class FeedJoint implements IFeedJoint {
         }
     }
 
+    @Override
     public synchronized void setState(State state) {
         if (this.state.equals(state)) {
             return;
@@ -121,6 +125,7 @@ public class FeedJoint implements IFeedJoint {
         connectionRequests.clear();
     }
 
+    @Override
     public FeedConnectionId getReceiver(FeedConnectionId connectionId) {
         for (FeedConnectionId cid : receivers) {
             if (cid.equals(connectionId)) {
@@ -149,18 +154,22 @@ public class FeedJoint implements IFeedJoint {
         return ((FeedJoint) o).getFeedJointKey().equals(this.key);
     }
 
+    @Override
     public FeedId getOwnerFeedId() {
         return ownerFeedId;
     }
 
+    @Override
     public List<FeedConnectionRequest> getConnectionRequests() {
         return connectionRequests;
     }
 
-    public ConnectionLocation getConnectionLocation() {
+    @Override
+    public FeedRuntimeType getConnectionLocation() {
         return connectionLocation;
     }
 
+    @Override
     public FeedJointType getType() {
         return type;
     }
@@ -170,6 +179,7 @@ public class FeedJoint implements IFeedJoint {
         return provider;
     }
 
+    @Override
     public List<FeedConnectionId> getReceivers() {
         return receivers;
     }
@@ -178,6 +188,7 @@ public class FeedJoint implements IFeedJoint {
         return key;
     }
 
+    @Override
     public synchronized State getState() {
         return state;
     }

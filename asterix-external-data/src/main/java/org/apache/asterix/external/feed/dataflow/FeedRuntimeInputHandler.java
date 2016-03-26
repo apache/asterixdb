@@ -71,13 +71,13 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     private final FrameEventCallback frameEventCallback;
 
     private boolean bufferingEnabled;
-    private IFrameWriter coreOperator;
     private FrameCollection frameCollection;
     private Mode mode;
     private Mode lastMode;
     private boolean finished;
     private long nProcessed;
     private boolean throttlingEnabled;
+    protected IFrameWriter coreOperator;
 
     public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
             IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
@@ -263,7 +263,6 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
                         }
                     } else {
                         coreOperator.nextFrame(frame); // synchronous
-                        mBuffer.sendReport(frame);
                     }
                 } else {
                     DataBucket bucket = pool.getDataBucket();
@@ -374,8 +373,8 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         }
         mBuffer.close(false, disableMonitoring);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Closed input side handler for " + this.runtimeId + " disabled monitoring "
-                    + disableMonitoring + " Mode for runtime " + this.mode);
+            LOGGER.info("Closed input side handler for " + this.runtimeId + " disabled monitoring " + disableMonitoring
+                    + " Mode for runtime " + this.mode);
         }
     }
 

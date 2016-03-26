@@ -16,14 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.classad.object.pool;
 
-import org.apache.asterix.external.input.stream.AInputStream;
-import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.util.ArrayList;
 
-public interface IInputStreamProvider {
-    public AInputStream getInputStream() throws HyracksDataException;
+public class StringArrayListPool extends Pool<ArrayList<String>> {
 
-    public void setFeedLogManager(FeedLogManager feedLogManager);
+    @Override
+    public ArrayList<String> newInstance() {
+        return new ArrayList<String>();
+    }
+
+    @Override
+    protected void reset(ArrayList<String> obj) {
+        obj.clear();
+    }
+
 }

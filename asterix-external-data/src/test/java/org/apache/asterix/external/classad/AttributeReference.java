@@ -18,39 +18,40 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AttributeReference extends ExprTree {
 
-    private ExprTree expr;
+    private final ExprTreeHolder expr;
     private boolean absolute;
-    private AMutableCharArrayString attributeStr;
-    private ClassAd current = new ClassAd(false, false);
-    private ExprList adList = new ExprList();
-    private Value val = new Value();
-    private MutableBoolean rVal = new MutableBoolean(false);
+    private final AMutableCharArrayString attributeStr;
+    private final ExprList adList;
+    private final Value val;
     private AttributeReference tempAttrRef;
-    private EvalState tstate = new EvalState();
+    private final EvalState tstate;
+    private MutableBoolean rVal = new MutableBoolean(false);
+    private ClassAd current;
 
     public ExprTree getExpr() {
         return expr;
     }
 
     public void setExpr(ExprTree expr) {
-        this.expr = expr == null ? null : expr.self();
+        this.expr.setInnerTree(expr.self());
     }
 
-    public AttributeReference() {
-        expr = null;
-        attributeStr = null;
+    public AttributeReference(ClassAdObjectPool objectPool) {
+        super(objectPool);
+        this.val = new Value(objectPool);
+        this.current = new ClassAd(this.objectPool);
+        this.tstate = new EvalState(this.objectPool);
+        this.adList = new ExprList(this.objectPool);
+        this.attributeStr = new AMutableCharArrayString();
+        this.expr = new ExprTreeHolder(objectPool);
         absolute = false;
-    }
-
-    /// Copy Constructor
-    public AttributeReference(AttributeReference ref) throws HyracksDataException {
-        copyFrom(ref);
     }
 
     /// Assignment operator
@@ -69,8 +70,9 @@ public class AttributeReference extends ExprTree {
         return NodeKind.ATTRREF_NODE;
     }
 
-    public static AttributeReference createAttributeReference(ExprTree expr, AMutableCharArrayString attrName) {
-        return createAttributeReference(expr, attrName, false);
+    public static AttributeReference createAttributeReference(ExprTree expr, AMutableCharArrayString attrName,
+            ClassAdObjectPool objectPool) {
+        return createAttributeReference(expr, attrName, false, objectPool);
     }
 
     /**
@@ -80,7 +82,7 @@ public class AttributeReference extends ExprTree {
      */
     @Override
     public ExprTree copy() throws HyracksDataException {
-        AttributeReference newTree = new AttributeReference();
+        AttributeReference newTree = objectPool.attrRefPool.get();
         newTree.copyFrom(this);
         return newTree;
     }
@@ -94,14 +96,8 @@ public class AttributeReference extends ExprTree {
      * @throws HyracksDataException
      */
     public boolean copyFrom(AttributeReference ref) throws HyracksDataException {
-        if (attributeStr == null) {
-            attributeStr = new AMutableCharArrayString(ref.attributeStr);
-        } else {
-            attributeStr.setValue(ref.attributeStr);
-        }
-        if (ref.expr != null) {
-            expr = ref.expr.copy();
-        }
+        attributeStr.setValue(ref.attributeStr);
+        expr.setInnerTree(ref.expr);
         super.copyFrom(ref);
         this.absolute = ref.absolute;
         return true;
@@ -127,7 +123,7 @@ public class AttributeReference extends ExprTree {
             if (absolute != other_ref.absolute || !attributeStr.equals(other_ref.attributeStr)) {
                 is_same = false;
             } else if ((expr == null && other_ref.expr == null) || (expr.equals(other_ref.expr))
-                    || (expr != null && other_ref.expr != null && ((AttributeReference) expr).sameAs(other_ref.expr))) {
+                    || (expr != null && other_ref.expr != null && expr.sameAs(other_ref.expr))) {
                 // Will this check result in infinite recursion? How do I stop it?
                 is_same = true;
             } else {
@@ -137,18 +133,9 @@ public class AttributeReference extends ExprTree {
         return is_same;
     }
 
-    // a private ctor for use in significant expr identification
-    private AttributeReference(ExprTree tree, AMutableCharArrayString attrname, boolean absolut) {
-        attributeStr = attrname;
-        expr = tree == null ? null : tree.self();
-        absolute = absolut;
-    }
-
     @Override
     public void privateSetParentScope(ClassAd parent) {
-        if (expr != null) {
-            expr.setParentScope(parent);
-        }
+        expr.setParentScope(parent);
     }
 
     public void getComponents(ExprTreeHolder tree, AMutableCharArrayString attr, MutableBoolean abs)
@@ -161,7 +148,7 @@ public class AttributeReference extends ExprTree {
     public EvalResult findExpr(EvalState state, ExprTreeHolder tree, ExprTreeHolder sig, boolean wantSig)
             throws HyracksDataException {
         // establish starting point for search
-        if (expr == null) {
+        if (expr.getTree() == null) {
             // "attr" and ".attr"
             current = absolute ? state.getRootAd() : state.getCurAd();
             if (absolute && (current == null)) { // NAC - circularity so no root
@@ -186,7 +173,7 @@ public class AttributeReference extends ExprTree {
         }
 
         if (val.isListValue()) {
-            ExprList eList = new ExprList();
+            ExprList eList = objectPool.exprListPool.get();
             //
             // iterate through exprList and apply attribute reference
             // to each exprTree
@@ -195,12 +182,12 @@ public class AttributeReference extends ExprTree {
                     return (EvalResult.EVAL_FAIL);
                 } else {
                     if (tempAttrRef == null) {
-                        tempAttrRef = new AttributeReference();
+                        tempAttrRef = objectPool.attrRefPool.get();
                     } else {
                         tempAttrRef.reset();
                     }
                     createAttributeReference(currExpr.copy(), attributeStr, false, tempAttrRef);
-                    val.clear();
+                    val.setUndefinedValue();
                     // Create new EvalState, within this scope, because
                     // attrRef is only temporary, so we do not want to
                     // cache the evaluated result in the outer state object.
@@ -212,8 +199,8 @@ public class AttributeReference extends ExprTree {
                         return (EvalResult.EVAL_FAIL);
                     }
 
-                    ClassAd evaledAd = new ClassAd();
-                    ExprList evaledList = new ExprList();
+                    ClassAd evaledAd = objectPool.classAdPool.get();
+                    ExprList evaledList = objectPool.exprListPool.get();
                     if (val.isClassAdValue(evaledAd)) {
                         eList.add(evaledAd);
                         continue;
@@ -221,12 +208,13 @@ public class AttributeReference extends ExprTree {
                         eList.add(evaledList.copy());
                         continue;
                     } else {
-                        eList.add(Literal.createLiteral(val));
+                        eList.add(Literal.createLiteral(val, objectPool));
                     }
                 }
             }
-            tree.setInnerTree(ExprList.createExprList(eList));
-            ClassAd newRoot = new ClassAd();
+
+            tree.setInnerTree(ExprList.createExprList(eList, objectPool));
+            ClassAd newRoot = objectPool.classAdPool.get();
             tree.setParentScope(newRoot);
             return EvalResult.EVAL_OK;
         }
@@ -242,8 +230,15 @@ public class AttributeReference extends ExprTree {
         if (current == null) {
             return EvalResult.EVAL_UNDEF;
         }
-        int rc = current.lookupInScope(attributeStr.toString(), tree, state);
-        if (expr == null && !absolute && rc == EvalResult.EVAL_UNDEF.ordinal() && current.getAlternateScope() != null) {
+        int rc = 0;
+        try {
+            rc = current.lookupInScope(attributeStr.toString(), tree, state);
+        } catch (Throwable th) {
+            th.printStackTrace();
+            throw th;
+        }
+        if (expr.getTree() == null && !absolute && rc == EvalResult.EVAL_UNDEF.ordinal()
+                && current.getAlternateScope() != null) {
             rc = current.getAlternateScope().lookupInScope(attributeStr.toString(), tree, state);
         }
         return EvalResult.values()[rc];
@@ -251,9 +246,10 @@ public class AttributeReference extends ExprTree {
 
     @Override
     public boolean publicEvaluate(EvalState state, Value val) throws HyracksDataException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder dummy = new ExprTreeHolder();
-        ClassAd curAd = new ClassAd(state.getCurAd());
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ExprTreeHolder dummy = objectPool.mutableExprPool.get();
+        ClassAd curAd = objectPool.classAdPool.get();
+        curAd.copyFrom(state.getCurAd());
         boolean rval;
         // find the expression and the evalstate
         switch (findExpr(state, tree, dummy, false)) {
@@ -286,10 +282,13 @@ public class AttributeReference extends ExprTree {
 
     @Override
     public boolean privateEvaluate(EvalState state, Value val, ExprTreeHolder sig) throws HyracksDataException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder exprSig = new ExprTreeHolder();
-        ClassAd curAd = new ClassAd(state.getCurAd());
-        MutableBoolean rval = new MutableBoolean(true);
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ExprTreeHolder exprSig = objectPool.mutableExprPool.get();
+        ClassAd curAd = objectPool.classAdPool.get();
+        curAd.copyFrom(state.getCurAd());
+        MutableBoolean rval = objectPool.boolPool.get();
+        rval.setValue(true);
+
         switch (findExpr(state, tree, exprSig, true)) {
             case EVAL_FAIL:
                 rval.setValue(false);
@@ -314,7 +313,9 @@ public class AttributeReference extends ExprTree {
             default:
                 throw new HyracksDataException("ClassAd:  Should not reach here");
         }
-        sig.setInnerTree((new AttributeReference(exprSig, attributeStr, absolute)));
+        AttributeReference newAttrRef = objectPool.attrRefPool.get();
+        newAttrRef.setValue(exprSig, attributeStr, absolute);
+        sig.setInnerTree(newAttrRef);
         state.getCurAd().setValue(curAd);
         return rval.booleanValue();
     }
@@ -322,8 +323,8 @@ public class AttributeReference extends ExprTree {
     @Override
     public boolean privateFlatten(EvalState state, Value val, ExprTreeHolder ntree, AMutableInt32 op)
             throws HyracksDataException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder dummy = new ExprTreeHolder();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ExprTreeHolder dummy = objectPool.mutableExprPool.get();
         ClassAd curAd;
         boolean rval;
         ntree.setInnerTree(null); // Just to be safe...  wenger 2003-12-11.
@@ -338,8 +339,8 @@ public class AttributeReference extends ExprTree {
                 return true;
             case EVAL_UNDEF:
                 if (expr != null && state.isFlattenAndInline()) {
-                    ExprTreeHolder expr_ntree = new ExprTreeHolder();
-                    Value expr_val = new Value();
+                    ExprTreeHolder expr_ntree = objectPool.mutableExprPool.get();
+                    Value expr_val = objectPool.valuePool.get();
                     if (state.getDepthRemaining() <= 0) {
                         val.setErrorValue();
                         state.getCurAd().setValue(curAd);
@@ -349,7 +350,7 @@ public class AttributeReference extends ExprTree {
                     rval = expr.publicFlatten(state, expr_val, expr_ntree);
                     state.incrementDepth();
                     if (rval && expr_ntree.getInnerTree() != null) {
-                        ntree.setInnerTree(createAttributeReference(expr_ntree, attributeStr));
+                        ntree.setInnerTree(createAttributeReference(expr_ntree, attributeStr, objectPool));
                         if (ntree.getInnerTree() != null) {
                             state.getCurAd().setValue(curAd);
                             return true;
@@ -412,14 +413,16 @@ public class AttributeReference extends ExprTree {
      *            expr is not NULL, default value is false;
      */
     public static AttributeReference createAttributeReference(ExprTree tree, AMutableCharArrayString attrStr,
-            boolean absolut) {
-        return (new AttributeReference(tree, attrStr, absolut));
+            boolean absolut, ClassAdObjectPool objectPool) {
+        AttributeReference attrRef = objectPool.attrRefPool.get();
+        attrRef.setValue(tree, attrStr, absolut);
+        return attrRef;
     }
 
     public void setValue(ExprTree tree, AMutableCharArrayString attrStr, boolean absolut) {
         this.absolute = absolut;
-        this.attributeStr = attrStr;
-        this.expr = tree == null ? null : tree.self();
+        this.attributeStr.copyValue(attrStr.getValue(), attrStr.size());
+        this.expr.setInnerTree(tree == null ? null : tree.self());
     }
 
     public static void createAttributeReference(ExprTree tree, AMutableCharArrayString attrStr, boolean absolut,
@@ -429,8 +432,8 @@ public class AttributeReference extends ExprTree {
 
     @Override
     public boolean privateEvaluate(EvalState state, Value val) throws HyracksDataException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder dummy = new ExprTreeHolder();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ExprTreeHolder dummy = objectPool.mutableExprPool.get();
         ClassAd curAd;
         boolean rval;
 
@@ -467,8 +470,12 @@ public class AttributeReference extends ExprTree {
 
     @Override
     public void reset() {
-        if (expr != null) {
-            expr.reset();
-        }
+        expr.reset();
+        val.reset();
+        current.reset();
+        tstate.reset();
+        adList.reset();
+        attributeStr.reset();
+        absolute = false;
     }
 }

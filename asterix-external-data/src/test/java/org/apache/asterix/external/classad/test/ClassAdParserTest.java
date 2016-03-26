@@ -24,11 +24,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.apache.asterix.external.classad.ClassAd;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.apache.asterix.external.classad.ClassAd;
 
 public class ClassAdParserTest extends TestCase {
     /**
@@ -54,18 +55,21 @@ public class ClassAdParserTest extends TestCase {
     public void test() {
         try {
             // test here
-            ClassAd pAd = new ClassAd();
+            ClassAdObjectPool objectPool = new ClassAdObjectPool();
+            ClassAd pAd = new ClassAd(objectPool);
             String szInput;
             String[] files = new String[] { "/testdata.txt" };
             BufferedReader infile = null;
             for (String path : files) {
-                infile = Files.newBufferedReader(Paths.get(URLDecoder.decode(getClass().getResource(path).getPath(), "UTF-8")),
+                infile = Files.newBufferedReader(
+                        Paths.get(URLDecoder.decode(getClass().getResource(path).getPath(), "UTF-8")),
                         StandardCharsets.UTF_8);
                 szInput = infile.readLine();
                 while (szInput != null) {
                     if (szInput.trim().length() == 0) {
                         // ClassAdChain completed
                         pAd.clear();
+                        objectPool.reset();
                     } else if (!pAd.insert(szInput)) {
                         // Problem
                         System.out.println("BARFED ON:" + szInput);

@@ -432,7 +432,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         switch (feedDataSource.getSourceFeedType()) {
             case PRIMARY:
                 switch (feedDataSource.getLocation()) {
-                    case SOURCE_FEED_COMPUTE_STAGE:
+                    case COMPUTE:
                         if (feedDataSource.getFeed().getFeedId().equals(feedDataSource.getSourceFeedId())) {
                             locationArray = feedDataSource.getLocations();
                         } else {
@@ -453,9 +453,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             }
                         }
                         break;
-                    case SOURCE_FEED_INTAKE_STAGE:
+                    case INTAKE:
                         locationArray = feedDataSource.getLocations();
                         break;
+                    default:
+                        throw new AsterixException(
+                                "Can't subscibe to a FeedRuntime with type: " + feedDataSource.getLocation());
                 }
                 break;
             case SECONDARY:
@@ -467,14 +470,17 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
                             && activity.getFeedName().equals(feedDataSource.getSourceFeedId().getFeedName())) {
                         switch (feedDataSource.getLocation()) {
-                            case SOURCE_FEED_INTAKE_STAGE:
+                            case INTAKE:
                                 locations = activity.getFeedActivityDetails()
                                         .get(FeedActivityDetails.COLLECT_LOCATIONS);
                                 break;
-                            case SOURCE_FEED_COMPUTE_STAGE:
+                            case COMPUTE:
                                 locations = activity.getFeedActivityDetails()
                                         .get(FeedActivityDetails.COMPUTE_LOCATIONS);
                                 break;
+                            default:
+                                throw new AsterixException(
+                                        "Can't subscibe to a FeedRuntime with type: " + feedDataSource.getLocation());
                         }
                         break;
                     }

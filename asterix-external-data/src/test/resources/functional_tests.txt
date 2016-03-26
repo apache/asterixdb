@@ -1,3 +1,14 @@
+echo Testing select on lists...
+eval x = {
+           [a = 3; b = "I see London"],
+           [a = 2; b = "I see France"],
+           [a = 1; b = "I see Alain's funky pants"]
+         }
+same $x.a, {3, 2, 1}
+same $x.b, {"I see London", "I see France", "I see Alain's funky pants"}
+same $x.c, {undefined, undefined, undefined}
+same {}.a, {}
+
 /////////////////////////////////
 echo Testing basic math...
 eval x = (1 + 2)
@@ -74,16 +85,7 @@ same isundefined($x.e), false
 // same $y, $z[1]
 
 /////////////////////////////////
-echo Testing select on lists...
-eval x = {
-           [a = 3; b = "I see London"],
-           [a = 2; b = "I see France"],
-           [a = 1; b = "I see Alain's funky pants"]
-         }
-same $x.a, {3, 2, 1}
-same $x.b, {"I see London", "I see France", "I see Alain's funky pants"}
-same $x.c, {undefined, undefined, undefined}
-same {}.a, {}
+
 
 /////////////////////////////////
 echo Testing subscripts

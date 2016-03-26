@@ -24,15 +24,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
-import org.apache.asterix.external.input.stream.provider.HDFSInputStreamProvider;
+import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.provider.ExternalIndexerProvider;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -49,7 +49,7 @@ import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
 public class HDFSDataSourceFactory
-        implements IInputStreamProviderFactory, IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
+        implements IInputStreamFactory, IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
 
     protected static final long serialVersionUID = 1L;
     protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
@@ -116,10 +116,9 @@ public class HDFSDataSourceFactory
      * The method below was modified to take care of the following
      * 1. when target files are not null, it generates a file aware input stream that validate
      * against the files
-     * 2. if the data is binary, it returns a generic reade */
+     * 2. if the data is binary, it returns a generic reader */
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         try {
             if (!configured) {
                 conf = confFactory.getConf();
@@ -127,8 +126,7 @@ public class HDFSDataSourceFactory
                 nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
                 configured = true;
             }
-            return new HDFSInputStreamProvider<Object>(read, inputSplits, readSchedule, nodeName, conf, configuration,
-                    files);
+            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, files);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

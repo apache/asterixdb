@@ -20,7 +20,7 @@ package org.apache.asterix.external.feed.api;
 
 public interface IMessageReceiver<T> {
 
-    public void sendMessage(T message);
+    public void sendMessage(T message) throws InterruptedException;
 
     public void close(boolean processPending);
 

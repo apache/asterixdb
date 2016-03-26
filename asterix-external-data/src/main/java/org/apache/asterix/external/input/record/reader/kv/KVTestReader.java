@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -169,11 +169,16 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
     }
 
     @Override
-    public void setController(final IDataFlowController controller) {
+    public void setController(final AbstractFeedDataFlowController controller) {
     }
 
     @Override
     public void setFeedLogManager(final FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 
 }

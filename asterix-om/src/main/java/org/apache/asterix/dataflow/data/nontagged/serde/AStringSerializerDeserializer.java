@@ -25,7 +25,9 @@ import java.io.IOException;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
  * NOTE: this class will have objection creations in each serialize/deserialize
@@ -37,14 +39,23 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
     private static final long serialVersionUID = 1L;
 
     public static final AStringSerializerDeserializer INSTANCE = new AStringSerializerDeserializer();
+    private final UTF8StringWriter utf8StringWriter;
+    private final UTF8StringReader utf8StringReader;
 
     private AStringSerializerDeserializer() {
+        this.utf8StringWriter = null;
+        this.utf8StringReader = null;
+    }
+
+    public AStringSerializerDeserializer(UTF8StringWriter utf8StringWriter, UTF8StringReader utf8StringReader) {
+        this.utf8StringWriter = utf8StringWriter;
+        this.utf8StringReader = utf8StringReader;
     }
 
     @Override
     public AString deserialize(DataInput in) throws HyracksDataException {
         try {
-            return new AString(UTF8StringUtil.readUTF8(in));
+            return new AString(UTF8StringUtil.readUTF8(in, utf8StringReader));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -53,7 +64,7 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
     @Override
     public void serialize(AString instance, DataOutput out) throws HyracksDataException {
         try {
-            UTF8StringUtil.writeUTF8(instance.getStringValue(), out);
+            UTF8StringUtil.writeUTF8(instance.getStringValue(), out, utf8StringWriter);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

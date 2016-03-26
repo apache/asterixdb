@@ -19,31 +19,33 @@
 package org.apache.asterix.external.input.stream.factory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.INodeResolver;
 import org.apache.asterix.external.api.INodeResolverFactory;
-import org.apache.asterix.external.input.stream.provider.LocalFSInputStreamProvider;
+import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 
-public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFactory {
+public class LocalFSInputStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
 
     protected static final INodeResolver DEFAULT_NODE_RESOLVER = new NodeResolverFactory().createNodeResolver();
-    protected static final Logger LOGGER = Logger.getLogger(LocalFSInputStreamProviderFactory.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(LocalFSInputStreamFactory.class.getName());
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
     protected FileSplit[] inputFileSplits;
@@ -54,8 +56,12 @@ public class LocalFSInputStreamProviderFactory implements IInputStreamProviderFa
     private transient AlgebricksAbsolutePartitionConstraint constraints;
 
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition) {
-        return new LocalFSInputStreamProvider(inputFileSplits, ctx, configuration, partition, expression, isFeed);
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+        try {
+            return new LocalFSInputStream(inputFileSplits, ctx, configuration, partition, expression, isFeed);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

@@ -21,7 +21,7 @@ package org.apache.asterix.external.indexing;
 import java.io.IOException;
 
 import org.apache.asterix.external.api.IExternalIndexer;
-import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -52,7 +52,7 @@ public class RecordColumnarIndexer implements IExternalIndexer {
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     @Override
-    public void reset(IRecordReader<?> reader) throws HyracksDataException {
+    public void reset(IIndexingDatasource reader) throws HyracksDataException {
         try {
             //TODO: Make this more generic. right now, it works because we only index hdfs files.
             @SuppressWarnings("unchecked")

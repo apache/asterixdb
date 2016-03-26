@@ -26,9 +26,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFeedFrameHandler {
 
-    public void handleFrame(ByteBuffer frame) throws HyracksDataException;
+    public void handleFrame(ByteBuffer frame) throws HyracksDataException, InterruptedException;
 
-    public void handleDataBucket(DataBucket bucket);
+    public void handleDataBucket(DataBucket bucket) throws InterruptedException;
 
     public void close();
 

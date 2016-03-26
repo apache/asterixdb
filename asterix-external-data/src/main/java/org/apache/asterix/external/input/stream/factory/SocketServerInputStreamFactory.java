@@ -28,9 +28,9 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.provider.SocketServerInputStreamProvider;
+import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IInputStreamFactory;
+import org.apache.asterix.external.input.stream.SocketServerInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.util.AsterixRuntimeUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +39,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class SocketServerInputStreamProviderFactory implements IInputStreamProviderFactory {
+public class SocketServerInputStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> sockets;
@@ -104,13 +104,13 @@ public class SocketServerInputStreamProviderFactory implements IInputStreamProvi
     }
 
     @Override
-    public synchronized IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
+    public synchronized AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
             Pair<String, Integer> socket = sockets.get(partition);
             ServerSocket server;
             server = new ServerSocket(socket.second);
-            return new SocketServerInputStreamProvider(server);
+            return new SocketServerInputStream(server);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

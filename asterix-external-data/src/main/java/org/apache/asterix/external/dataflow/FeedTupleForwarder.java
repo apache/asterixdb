@@ -77,7 +77,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
     public void addTuple(ArrayTupleBuilder tb) throws HyracksDataException {
         if (tb.getSize() > maxRecordSize) {
             try {
-                feedLogManager.logRecord(tb.toString(), ExternalDataConstants.LARGE_RECORD_ERROR_MESSAGE);
+                feedLogManager.logRecord(tb.toString(), ExternalDataConstants.ERROR_LARGE_RECORD);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

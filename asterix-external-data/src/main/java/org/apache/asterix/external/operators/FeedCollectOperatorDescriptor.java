@@ -19,11 +19,9 @@
 package org.apache.asterix.external.operators;
 
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
 import org.apache.asterix.external.feed.api.IFeedManager;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.api.IFeedSubscriptionManager;
@@ -52,7 +50,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(FeedCollectOperatorDescriptor.class.getName());
 
-    /** The type associated with the ADM data output from the feed adaptor */
+    /** The type associated with the ADM data output from (the feed adapter OR the compute operator) */
     private final IAType outputType;
 
     /** unique identifier for a feed instance. */
@@ -67,12 +65,12 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     /** The source feed from which the feed derives its data from. **/
     private final FeedId sourceFeedId;
 
-    /** The subscription location at which the recipient feed receives tuples from the source feed **/
-    private final ConnectionLocation subscriptionLocation;
+    /** The subscription location at which the recipient feed receives tuples from the source feed {SOURCE_FEED_INTAKE_STAGE , SOURCE_FEED_COMPUTE_STAGE} **/
+    private final FeedRuntimeType subscriptionLocation;
 
     public FeedCollectOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId, FeedId sourceFeedId,
             ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicyProperties,
-            ConnectionLocation subscriptionLocation) {
+            FeedRuntimeType subscriptionLocation) {
         super(spec, 0, 1);
         recordDescriptors[0] = rDesc;
         this.outputType = atype;
@@ -85,45 +83,25 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.subscriptionManager = ((IFeedManager) runtimeCtx.getFeedManager()).getFeedSubscriptionManager();
         ISubscribableRuntime sourceRuntime = null;
-        IOperatorNodePushable nodePushable = null;
+        SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
+                subscriptionLocation, partition);
         switch (subscriptionLocation) {
-            case SOURCE_FEED_INTAKE_STAGE:
-                try {
-                    SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
-                            FeedRuntimeType.INTAKE, partition);
-                    sourceRuntime = getIntakeRuntime(feedSubscribableRuntimeId);
-                    if (sourceRuntime == null) {
-                        throw new HyracksDataException(
-                                "Source intake task not found for source feed id " + sourceFeedId);
-                    }
-                    nodePushable = new FeedCollectOperatorNodePushable(ctx, sourceFeedId, connectionId,
-                            feedPolicyProperties, partition, nPartitions, sourceRuntime);
-
-                } catch (Exception exception) {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("Initialization of the feed adaptor failed with exception " + exception);
-                    }
-                    throw new HyracksDataException("Initialization of the feed adapter failed", exception);
-                }
+            case INTAKE:
+                sourceRuntime = getIntakeRuntime(feedSubscribableRuntimeId);
                 break;
-            case SOURCE_FEED_COMPUTE_STAGE:
-                SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
-                        FeedRuntimeType.COMPUTE, partition);
+            case COMPUTE:
                 sourceRuntime = subscriptionManager.getSubscribableRuntime(feedSubscribableRuntimeId);
-                if (sourceRuntime == null) {
-                    throw new HyracksDataException("Source compute task not found for source feed id " + sourceFeedId
-                            + " " + FeedRuntimeType.COMPUTE + "[" + partition + "]");
-                }
-                nodePushable = new FeedCollectOperatorNodePushable(ctx, sourceFeedId, connectionId,
-                        feedPolicyProperties, partition, nPartitions, sourceRuntime);
                 break;
+            default:
+                throw new HyracksDataException("Can't subscirbe to FeedRuntime with Type: " + subscriptionLocation);
         }
-        return nodePushable;
+        return new FeedCollectOperatorNodePushable(ctx, sourceFeedId, connectionId, feedPolicyProperties, partition,
+                nPartitions, sourceRuntime);
     }
 
     public FeedConnectionId getFeedConnectionId() {
@@ -150,7 +128,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
         return (IngestionRuntime) subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
     }
 
-    public ConnectionLocation getSubscriptionLocation() {
+    public FeedRuntimeType getSubscriptionLocation() {
         return subscriptionLocation;
     }
 }

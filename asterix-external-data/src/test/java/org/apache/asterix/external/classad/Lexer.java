@@ -433,8 +433,9 @@ public class Lexer {
 
         if (och == '.' || ch == '.') {
             // fraction part of real or selection operator
-            if (ch == '.')
+            if (ch == '.') {
                 wind();
+            }
             if (Character.isDigit(ch)) {
                 // real; get digits after decimal point
                 numberType = NumberType.REAL;
@@ -459,8 +460,9 @@ public class Lexer {
         //   i.e., [eE][+-]?[0-9]+
         if (numberType == NumberType.REAL && Character.toLowerCase(ch) == 'e') {
             wind();
-            if (ch == '+' || ch == '-')
+            if (ch == '+' || ch == '-') {
                 wind();
+            }
             if (!Character.isDigit(ch)) {
                 cut();
                 tokenType = TokenType.LEX_TOKEN_ERROR;

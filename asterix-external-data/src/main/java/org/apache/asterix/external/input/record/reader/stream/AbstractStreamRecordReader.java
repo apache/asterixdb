@@ -19,21 +19,24 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
+import java.util.List;
 
-import org.apache.asterix.external.api.IDataFlowController;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.CharArrayRecord;
-import org.apache.asterix.external.input.stream.AInputStream;
-import org.apache.asterix.external.input.stream.AInputStreamReader;
+import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.RecordReader;
 
 public abstract class AbstractStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
-    protected final AInputStreamReader reader;
+    protected final AsterixInputStreamReader reader;
     protected CharArrayRecord record;
     protected char[] inputBuffer;
     protected int bufferLength = 0;
@@ -42,8 +45,8 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     protected boolean done = false;
     protected FeedLogManager feedLogManager;
 
-    public AbstractStreamRecordReader(AInputStream inputStream, IExternalIndexer indexer) {
-        this.reader = new AInputStreamReader(inputStream);
+    public AbstractStreamRecordReader(AsterixInputStream inputStream, IExternalIndexer indexer) {
+        this.reader = new AsterixInputStreamReader(inputStream);
         this.indexer = indexer;
         record = new CharArrayRecord();
         inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
@@ -79,13 +82,35 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     }
 
     @Override
-    public void setController(IDataFlowController controller) {
-        reader.setController((AbstractFeedDataFlowController) controller);
+    public void setController(AbstractFeedDataFlowController controller) {
+        reader.setController(controller);
     }
 
     @Override
     public void setFeedLogManager(FeedLogManager feedLogManager) {
         this.feedLogManager = feedLogManager;
         reader.setFeedLogManager(feedLogManager);
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return reader.handleException(th);
+    }
+
+    //TODO: Fix the following method since they don't fit
+    //Already the fix is in another local branch
+    @Override
+    public List<ExternalFile> getSnapshot() {
+        return null;
+    }
+
+    @Override
+    public int getCurrentSplitIndex() {
+        return -1;
+    }
+
+    @Override
+    public RecordReader<?, Writable> getReader() {
+        return null;
     }
 }

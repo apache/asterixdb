@@ -100,7 +100,7 @@ public class DCPRequestToRecordWithMetadataAndPKConverter
     }
 
     public static void set(final ByteBuf content, final CharsetDecoder decoder, final ByteBuffer bytes,
-            final CharBuffer chars, final CharArrayRecord record) {
+            final CharBuffer chars, final CharArrayRecord record) throws IOException {
         int position = content.readerIndex();
         final int limit = content.writerIndex();
         final int contentSize = content.readableBytes();

@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory;
@@ -33,9 +33,9 @@ import org.apache.asterix.external.input.record.reader.stream.EmptyLineSeparated
 import org.apache.asterix.external.input.record.reader.stream.LineRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
-import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamProviderFactory;
+import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
+import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
+import org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
@@ -53,9 +53,9 @@ public class DatasourceFactoryProvider {
         }
     }
 
-    public static IInputStreamProviderFactory getInputStreamFactory(String streamSource,
+    public static IInputStreamFactory getInputStreamFactory(String streamSource,
             Map<String, String> configuration) throws AsterixException {
-        IInputStreamProviderFactory streamSourceFactory;
+        IInputStreamFactory streamSourceFactory;
         if (ExternalDataUtils.isExternal(streamSource)) {
             String dataverse = ExternalDataUtils.getDataverse(configuration);
             streamSourceFactory = ExternalDataUtils.createExternalInputStreamFactory(dataverse, streamSource);
@@ -65,17 +65,17 @@ public class DatasourceFactoryProvider {
                     streamSourceFactory = new HDFSDataSourceFactory();
                     break;
                 case ExternalDataConstants.STREAM_LOCAL_FILESYSTEM:
-                    streamSourceFactory = new LocalFSInputStreamProviderFactory();
+                    streamSourceFactory = new LocalFSInputStreamFactory();
                     break;
                 case ExternalDataConstants.STREAM_SOCKET:
                 case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
-                    streamSourceFactory = new SocketServerInputStreamProviderFactory();
+                    streamSourceFactory = new SocketServerInputStreamFactory();
                     break;
                 case ExternalDataConstants.STREAM_SOCKET_CLIENT:
-                    streamSourceFactory = new SocketServerInputStreamProviderFactory();
+                    streamSourceFactory = new SocketServerInputStreamFactory();
                     break;
                 case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
-                    streamSourceFactory = new TwitterFirehoseStreamProviderFactory();
+                    streamSourceFactory = new TwitterFirehoseStreamFactory();
                     break;
                 default:
                     throw new AsterixException("unknown input stream factory");
@@ -90,7 +90,7 @@ public class DatasourceFactoryProvider {
             return ExternalDataUtils.createExternalRecordReaderFactory(configuration);
         }
         String parser = configuration.get(ExternalDataConstants.KEY_PARSER);
-        IInputStreamProviderFactory inputStreamFactory;
+        IInputStreamFactory inputStreamFactory;
         switch (parser) {
             case ExternalDataConstants.FORMAT_ADM:
             case ExternalDataConstants.FORMAT_JSON:

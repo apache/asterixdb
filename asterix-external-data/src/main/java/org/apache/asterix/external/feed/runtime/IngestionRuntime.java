@@ -76,7 +76,7 @@ public class IngestionRuntime extends SubscribableRuntime {
         subscribers.remove(collectionRuntime);
     }
 
-    public void endOfFeed() {
+    public void endOfFeed() throws InterruptedException {
         dWriter.notifyEndOfFeed();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Notified End Of Feed  [" + this + "]");

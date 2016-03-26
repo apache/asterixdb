@@ -21,7 +21,7 @@ package org.apache.asterix.external.feed.management;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -47,7 +47,7 @@ public class FeedConnectionRequest {
     private final FeedJointKey feedJointKey;
 
     /** Location in the source feed pipeline from where feed tuples are received. **/
-    private final ConnectionLocation connectionLocation;
+    private final FeedRuntimeType connectionLocation;
 
     /** List of functions that need to be applied in sequence after the data hand-off at the source feedPointKey. **/
     private final List<String> functionsToApply;
@@ -66,8 +66,7 @@ public class FeedConnectionRequest {
 
     private final FeedId receivingFeedId;
 
-
-    public FeedConnectionRequest(FeedJointKey feedPointKey, ConnectionLocation connectionLocation,
+    public FeedConnectionRequest(FeedJointKey feedPointKey, FeedRuntimeType connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
             FeedId receivingFeedId) {
         this.feedJointKey = feedPointKey;
@@ -100,7 +99,7 @@ public class FeedConnectionRequest {
         return targetDataset;
     }
 
-    public ConnectionLocation getSubscriptionLocation() {
+    public FeedRuntimeType getSubscriptionLocation() {
         return connectionLocation;
     }
 

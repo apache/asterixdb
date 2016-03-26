@@ -18,31 +18,9 @@
  */
 package org.apache.asterix.external.classad.object.pool;
 
-import java.util.Stack;
-
 import org.apache.asterix.external.classad.CaseInsensitiveString;
 
 public class CaseInsensitiveStringPool extends Pool<CaseInsensitiveString> {
-
-    protected Stack<CaseInsensitiveString> stock = new Stack<CaseInsensitiveString>();
-
-    @Override
-    public CaseInsensitiveString get() {
-        if (!stock.isEmpty()) {
-            return stock.pop();
-        } else {
-            return newInstance();
-
-        }
-    }
-
-    @Override
-    public void reset() {
-    }
-
-    public void put(CaseInsensitiveString aString) {
-        stock.push(aString);
-    }
 
     @Override
     public CaseInsensitiveString newInstance() {
@@ -51,5 +29,6 @@ public class CaseInsensitiveStringPool extends Pool<CaseInsensitiveString> {
 
     @Override
     protected void reset(CaseInsensitiveString obj) {
+        obj.set(null);
     }
 }

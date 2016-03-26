@@ -74,7 +74,7 @@ public class FrameDistributor {
 
     public FrameDistributor(FeedId feedId, FeedRuntimeType feedRuntimeType, int partition,
             boolean enableSynchronousTransfer, IFeedMemoryManager memoryManager, FrameTupleAccessor fta)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         this.feedId = feedId;
         this.feedRuntimeType = feedRuntimeType;
         this.partition = partition;
@@ -85,7 +85,7 @@ public class FrameDistributor {
         this.fta = fta;
     }
 
-    public void notifyEndOfFeed() {
+    public void notifyEndOfFeed() throws InterruptedException {
         DataBucket bucket = getDataBucket();
         if (bucket != null) {
             sendEndOfFeedDataBucket(bucket);
@@ -104,7 +104,7 @@ public class FrameDistributor {
         }
     }
 
-    private void sendEndOfFeedDataBucket(DataBucket bucket) {
+    private void sendEndOfFeedDataBucket(DataBucket bucket) throws InterruptedException {
         bucket.setContentType(DataBucket.ContentType.EOD);
         nextBucket(bucket);
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -207,45 +207,50 @@ public class FrameDistributor {
     }
 
     public synchronized void nextFrame(ByteBuffer frame) throws HyracksDataException {
-        switch (distributionMode) {
-            case INACTIVE:
-                break;
-            case SINGLE:
-                FeedFrameCollector collector = registeredCollectors.values().iterator().next();
-                switch (collector.getState()) {
-                    case HANDOVER:
-                    case ACTIVE:
-                        if (enableSynchronousTransfer) {
-                            collector.nextFrame(frame); // processing is synchronous
-                        } else {
+        try {
+            switch (distributionMode) {
+                case INACTIVE:
+                    break;
+                case SINGLE:
+                    FeedFrameCollector collector = registeredCollectors.values().iterator().next();
+                    switch (collector.getState()) {
+                        case HANDOVER:
+                        case ACTIVE:
+                            if (enableSynchronousTransfer) {
+                                collector.nextFrame(frame); // processing is synchronous
+                            } else {
+                                handleDataBucket(frame);
+                            }
+                            break;
+                        case TRANSITION:
                             handleDataBucket(frame);
-                        }
-                        break;
-                    case TRANSITION:
-                        handleDataBucket(frame);
-                        break;
-                    case FINISHED:
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Discarding fetched tuples, feed has ended [" + registeredCollectors.get(0)
-                                    + "]" + " Feed Id " + feedId + " frame distributor " + this.getFeedRuntimeType());
-                        }
-                        registeredCollectors.remove(0);
-                        break;
-                }
-                break;
-            case SHARED:
-                handleDataBucket(frame);
-                break;
+                            break;
+                        case FINISHED:
+                            if (LOGGER.isLoggable(Level.WARNING)) {
+                                LOGGER.warning("Discarding fetched tuples, feed has ended ["
+                                        + registeredCollectors.get(0) + "]" + " Feed Id " + feedId
+                                        + " frame distributor " + this.getFeedRuntimeType());
+                            }
+                            registeredCollectors.remove(0);
+                            break;
+                    }
+                    break;
+                case SHARED:
+                    handleDataBucket(frame);
+                    break;
+            }
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
     }
 
-    private void nextBucket(DataBucket bucket) {
+    private void nextBucket(DataBucket bucket) throws InterruptedException {
         for (FeedFrameCollector collector : registeredCollectors.values()) {
             collector.sendMessage(bucket); // asynchronous call
         }
     }
 
-    private void handleDataBucket(ByteBuffer frame) throws HyracksDataException {
+    private void handleDataBucket(ByteBuffer frame) throws HyracksDataException, InterruptedException {
         DataBucket bucket = getDataBucket();
         if (bucket == null) {
             handleFrameDuringMemoryCongestion(frame);
@@ -281,32 +286,36 @@ public class FrameDistributor {
         return distributionMode;
     }
 
-    public void close() {
-        switch (distributionMode) {
-            case INACTIVE:
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("FrameDistributor is " + distributionMode);
-                }
-                break;
-            case SINGLE:
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Disconnecting single frame reader in " + distributionMode + " mode " + " for  feedId "
-                            + feedId + " " + this.feedRuntimeType);
-                }
-                setMode(DistributionMode.INACTIVE);
-                if (!enableSynchronousTransfer) {
+    public void close() throws HyracksDataException {
+        try {
+            switch (distributionMode) {
+                case INACTIVE:
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("FrameDistributor is " + distributionMode);
+                    }
+                    break;
+                case SINGLE:
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Disconnecting single frame reader in " + distributionMode + " mode "
+                                + " for  feedId " + feedId + " " + this.feedRuntimeType);
+                    }
+                    setMode(DistributionMode.INACTIVE);
+                    if (!enableSynchronousTransfer) {
+                        notifyEndOfFeed(); // send EOD Data Bucket
+                        waitForCollectorsToFinish();
+                    }
+                    registeredCollectors.values().iterator().next().disconnect();
+                    break;
+                case SHARED:
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Signalling End Of Feed; currently operating in " + distributionMode + " mode");
+                    }
                     notifyEndOfFeed(); // send EOD Data Bucket
                     waitForCollectorsToFinish();
-                }
-                registeredCollectors.values().iterator().next().disconnect();
-                break;
-            case SHARED:
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Signalling End Of Feed; currently operating in " + distributionMode + " mode");
-                }
-                notifyEndOfFeed(); // send EOD Data Bucket
-                waitForCollectorsToFinish();
-                break;
+                    break;
+            }
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
     }
 

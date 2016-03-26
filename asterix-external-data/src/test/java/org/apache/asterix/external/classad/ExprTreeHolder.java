@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -34,9 +35,6 @@ public class ExprTreeHolder extends ExprTree {
         if (tree == null) {
             innerTree = null;
         } else {
-            if (tree.isTreeHolder()) {
-                tree = ((ExprTreeHolder) tree).innerTree;
-            }
             if (innerTree == null) {
                 innerTree = tree.copy();
             } else {
@@ -52,8 +50,8 @@ public class ExprTreeHolder extends ExprTree {
 
     @Override
     public void puke() throws HyracksDataException {
-        PrettyPrint unp = new PrettyPrint();
-        AMutableCharArrayString buffer = new AMutableCharArrayString();
+        PrettyPrint unp = objectPool.prettyPrintPool.get();
+        AMutableCharArrayString buffer = objectPool.strPool.get();
         unp.unparse(buffer, innerTree);
         System.out.println(buffer.toString());
     }
@@ -78,11 +76,13 @@ public class ExprTreeHolder extends ExprTree {
         return true;
     }
 
-    public ExprTreeHolder() {
+    public ExprTreeHolder(ClassAdObjectPool objectPool) {
+        super(objectPool);
         innerTree = null;
     }
 
-    public ExprTreeHolder(ExprTree tree) {
+    public ExprTreeHolder(ExprTree tree, ClassAdObjectPool objectPool) {
+        super(objectPool);
         setInnerTree(tree);
     }
 
@@ -100,7 +100,10 @@ public class ExprTreeHolder extends ExprTree {
 
     @Override
     public ExprTree copy() throws HyracksDataException {
-        return innerTree.copy();
+        if (innerTree != null) {
+            return innerTree.copy();
+        }
+        return null;
     }
 
     @Override
@@ -118,18 +121,18 @@ public class ExprTreeHolder extends ExprTree {
 
     @Override
     public boolean privateEvaluate(EvalState state, Value val) throws HyracksDataException {
-        return innerTree.privateEvaluate(state, val);
+        return innerTree == null ? false : innerTree.privateEvaluate(state, val);
     }
 
     @Override
     public boolean privateEvaluate(EvalState state, Value val, ExprTreeHolder tree) throws HyracksDataException {
-        return innerTree.privateEvaluate(state, val, tree);
+        return innerTree == null ? false : innerTree.privateEvaluate(state, val, tree);
     }
 
     @Override
     public boolean privateFlatten(EvalState state, Value val, ExprTreeHolder tree, AMutableInt32 op)
             throws HyracksDataException {
-        return innerTree.privateFlatten(state, val, tree, op);
+        return innerTree == null ? false : innerTree.privateFlatten(state, val, tree, op);
     }
 
     @Override
@@ -139,6 +142,8 @@ public class ExprTreeHolder extends ExprTree {
 
     @Override
     protected void privateSetParentScope(ClassAd scope) {
-        innerTree.privateSetParentScope(scope);
+        if (innerTree != null) {
+            innerTree.privateSetParentScope(scope);
+        }
     }
 }

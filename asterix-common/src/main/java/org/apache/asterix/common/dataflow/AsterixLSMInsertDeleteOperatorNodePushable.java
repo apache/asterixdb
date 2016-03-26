@@ -83,7 +83,6 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        boolean first = true;
         accessor.reset(buffer);
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
@@ -98,17 +97,15 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 tuple.reset(accessor, i);
                 switch (op) {
                     case INSERT:
-                        if (first && isPrimary) {
+                        if (i == 0 && isPrimary) {
                             lsmAccessor.insert(tuple);
-                            first = false;
                         } else {
                             lsmAccessor.forceInsert(tuple);
                         }
                         break;
                     case DELETE:
-                        if (first && isPrimary) {
+                        if (i == 0 && isPrimary) {
                             lsmAccessor.delete(tuple);
-                            first = false;
                         } else {
                             lsmAccessor.forceDelete(tuple);
                         }

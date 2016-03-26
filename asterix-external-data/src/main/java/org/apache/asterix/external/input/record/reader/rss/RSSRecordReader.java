@@ -25,9 +25,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.log4j.Logger;
@@ -138,7 +138,12 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
     }
 
     @Override
-    public void setController(IDataFlowController controller) {
+    public void setController(AbstractFeedDataFlowController controller) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 }
 

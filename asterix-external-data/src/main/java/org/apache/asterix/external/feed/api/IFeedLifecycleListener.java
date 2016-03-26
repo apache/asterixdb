@@ -27,12 +27,6 @@ import org.apache.asterix.external.feed.management.FeedJointKey;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 
 public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterEventsSubscriber {
-
-    public enum ConnectionLocation {
-        SOURCE_FEED_INTAKE_STAGE,
-        SOURCE_FEED_COMPUTE_STAGE
-    }
-
     public IFeedJoint getAvailableFeedJoint(FeedJointKey feedJoinKey);
 
     public boolean isFeedJointAvailable(FeedJointKey feedJoinKey);

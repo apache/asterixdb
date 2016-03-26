@@ -20,6 +20,7 @@ package org.apache.asterix.external.classad;
 
 public class CaseInsensitiveString implements Comparable<CaseInsensitiveString> {
     private String aString;
+    private String aLowerCaseString;
 
     public String get() {
         return aString;
@@ -32,30 +33,33 @@ public class CaseInsensitiveString implements Comparable<CaseInsensitiveString> 
 
     public void set(String aString) {
         this.aString = aString;
+        this.aLowerCaseString = aString == null ? null : aString.toLowerCase();
     }
 
     public CaseInsensitiveString(String aString) {
         this.aString = aString;
+        this.aLowerCaseString = aString == null ? null : aString.toLowerCase();
     }
 
     public CaseInsensitiveString() {
         this.aString = null;
+        this.aLowerCaseString = null;
     }
 
     @Override
     public int compareTo(CaseInsensitiveString o) {
-        return aString.compareToIgnoreCase(o.aString);
+        return aLowerCaseString.compareTo(o.aLowerCaseString);
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof CaseInsensitiveString) ? aString.equalsIgnoreCase(((CaseInsensitiveString) o).aString)
-                : false;
+        return (o instanceof CaseInsensitiveString)
+                ? aLowerCaseString.equals(((CaseInsensitiveString) o).aLowerCaseString) : false;
     }
 
     @Override
     public int hashCode() {
-        return aString.toLowerCase().hashCode();
+        return aLowerCaseString.hashCode();
     }
 
 }

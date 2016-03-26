@@ -21,6 +21,7 @@ package org.apache.asterix.external.api;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
 
 /**
@@ -54,7 +55,7 @@ public interface IRecordReader<T> extends Closeable {
      * set a pointer to the controller of the feed. the controller can be used to flush()
      * parsed records when waiting for more records to be pushed
      */
-    public void setController(IDataFlowController controller);
+    public void setController(AbstractFeedDataFlowController controller);
 
     // TODO: Find a better way to perform logging. this doesn't fit here
     /**
@@ -62,4 +63,9 @@ public interface IRecordReader<T> extends Closeable {
      * progress and errors
      */
     public void setFeedLogManager(FeedLogManager feedLogManager);
+
+    /**
+     * gives the record reader a chance to recover from IO errors during feed intake
+     */
+    public boolean handleException(Throwable th);
 }

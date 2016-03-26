@@ -141,9 +141,9 @@ public class FeedFrameHandlers {
         }
 
         @Override
-        public void handleDataBucket(DataBucket bucket) {
+        public void handleDataBucket(DataBucket bucket) throws InterruptedException {
             for (FeedFrameCollector collector : frameCollectors) {
-                collector.sendMessage(bucket); // asynchronous call
+                collector.sendMessage(bucket);
             }
         }
 
@@ -174,7 +174,7 @@ public class FeedFrameHandlers {
         }
 
         @Override
-        public void handleFrame(ByteBuffer frame) throws HyracksDataException {
+        public void handleFrame(ByteBuffer frame) throws HyracksDataException, InterruptedException {
             receiver.sendMessage(frame);
         }
 

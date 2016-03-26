@@ -18,3 +18,6 @@
 
 # Explicitly declare binary files
 *testdata.txt binary
+
+#Unset sample_01.cvs
+asterix-app/data/csv/sample_01.csv text=unset

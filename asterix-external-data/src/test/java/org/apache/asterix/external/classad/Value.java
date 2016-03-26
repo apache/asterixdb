@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -30,9 +31,9 @@ public class Value {
     private long longVal;
     private double doubleVal;
     private boolean boolVal;
-    private ClassAdTime timeVal = new ClassAdTime();
-    private ClassAd classadVal = new ClassAd();
-    private ExprList listVal = new ExprList();
+    private final ClassAdTime timeVal;
+    private final ClassAd classadVal;
+    private final ExprList listVal;
     private String stringVal;
 
     /// Value types
@@ -164,7 +165,7 @@ public class Value {
         }
     }
 
-    public boolean isClassAdValue(ClassAd ad) {
+    public boolean isClassAdValue(ClassAd ad) throws HyracksDataException {
         if (valueType == ValueType.CLASSAD_VALUE) {
             ad.setValue(classadVal);
             return true;
@@ -265,49 +266,11 @@ public class Value {
             1024.0 * 1024.0 * 1024.0 * 1024.0 // Terra
     };
 
-    public Value() {
+    public Value(ClassAdObjectPool objectPool) {
         valueType = ValueType.UNDEFINED_VALUE;
-    }
-
-    public Value(Value value) throws HyracksDataException {
-        valueType = value.valueType;
-        switch (value.valueType) {
-            case ABSOLUTE_TIME_VALUE:
-                timeVal = new ClassAdTime(value.timeVal);
-                break;
-            case BOOLEAN_VALUE:
-                this.boolVal = value.boolVal;
-                break;
-            case CLASSAD_VALUE:
-                this.classadVal = new ClassAd(value.classadVal);
-                break;
-            case ERROR_VALUE:
-                break;
-            case INTEGER_VALUE:
-                this.longVal = value.longVal;
-                break;
-            case LIST_VALUE:
-                this.listVal = new ExprList(value.listVal);
-                break;
-            case NULL_VALUE:
-                break;
-            case REAL_VALUE:
-                this.doubleVal = value.doubleVal;
-                break;
-            case RELATIVE_TIME_VALUE:
-                this.timeVal = new ClassAdTime(value.timeVal);
-                break;
-            case SLIST_VALUE:
-                this.listVal = new ExprList(value.listVal);
-                break;
-            case STRING_VALUE:
-                this.stringVal = value.stringVal;
-                break;
-            case UNDEFINED_VALUE:
-                break;
-            default:
-                break;
-        }
+        this.timeVal = new ClassAdTime();
+        this.listVal = new ExprList(objectPool);
+        this.classadVal = new ClassAd(objectPool);
     }
 
     public void setValue(Value value) throws HyracksDataException {
@@ -351,14 +314,15 @@ public class Value {
         }
     }
 
-    public void assign(Value value) throws HyracksDataException {
-        if (this != value) {
-            setValue(value);
-        }
+    private void clear() {
+        valueType = ValueType.UNDEFINED_VALUE;
     }
 
-    public void clear() {
+    public void reset() {
         valueType = ValueType.UNDEFINED_VALUE;
+        listVal.reset();
+        timeVal.reset();
+        classadVal.reset();
     }
 
     public void setRealValue(double r) {
@@ -409,7 +373,7 @@ public class Value {
         listVal.setValue(expList);
     }
 
-    public void setClassAdValue(ClassAd ad) {
+    public void setClassAdValue(ClassAd ad) throws HyracksDataException {
         clear();
         valueType = ValueType.CLASSAD_VALUE;
         classadVal.setValue(ad);
@@ -483,7 +447,7 @@ public class Value {
 
     @Override
     public String toString() {
-        ClassAdUnParser unparser = new PrettyPrint();
+        ClassAdUnParser unparser = new PrettyPrint(new ClassAdObjectPool());
         AMutableCharArrayString unparsed_text = new AMutableCharArrayString();
         switch (valueType) {
             case ABSOLUTE_TIME_VALUE:
@@ -521,14 +485,15 @@ public class Value {
         return null;
     }
 
-    public static boolean convertValueToRealValue(Value value, Value realValue) throws HyracksDataException {
+    public static boolean convertValueToRealValue(Value value, Value realValue, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         boolean could_convert;
-        AMutableCharArrayString buf = new AMutableCharArrayString();
+        AMutableCharArrayString buf = objectPool.strPool.get();
         int endIndex;
         char end;
-        AMutableInt64 ivalue = new AMutableInt64(0);
-        ClassAdTime atvalue = new ClassAdTime();
-        MutableBoolean bvalue = new MutableBoolean();
+        AMutableInt64 ivalue = objectPool.int64Pool.get();
+        ClassAdTime atvalue = objectPool.classAdTimePool.get();
+        MutableBoolean bvalue = objectPool.boolPool.get();
         double rvalue;
         NumberFactor nf = NumberFactor.NO_FACTOR;
 
@@ -604,7 +569,7 @@ public class Value {
                 break;
 
             case REAL_VALUE:
-                realValue.copyFrom(value);
+                realValue.setValue(value);
                 could_convert = true;
                 break;
 
@@ -627,14 +592,15 @@ public class Value {
         return could_convert;
     }
 
-    public static boolean convertValueToIntegerValue(Value value, Value integerValue) throws HyracksDataException {
+    public static boolean convertValueToIntegerValue(Value value, Value integerValue, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         boolean could_convert;
-        AMutableCharArrayString buf = new AMutableCharArrayString();
+        AMutableCharArrayString buf = objectPool.strPool.get();
         char end;
-        AMutableInt64 ivalue = new AMutableInt64(0);
-        AMutableDouble rtvalue = new AMutableDouble(0);
-        ClassAdTime atvalue = new ClassAdTime();
-        MutableBoolean bvalue = new MutableBoolean();
+        AMutableInt64 ivalue = objectPool.int64Pool.get();
+        AMutableDouble rtvalue = objectPool.doublePool.get();
+        ClassAdTime atvalue = objectPool.classAdTimePool.get();
+        MutableBoolean bvalue = objectPool.boolPool.get();
         NumberFactor nf;
 
         switch (value.getType()) {
@@ -700,7 +666,7 @@ public class Value {
                 break;
 
             case INTEGER_VALUE:
-                integerValue.copyFrom(value);
+                integerValue.setValue(value);
                 could_convert = true;
                 break;
 
@@ -729,51 +695,12 @@ public class Value {
         return could_convert;
     }
 
-    public void copyFrom(Value val) throws HyracksDataException {
-        clear();
-        valueType = val.valueType;
-        switch (val.valueType) {
-            case STRING_VALUE:
-                stringVal = val.stringVal;
-                return;
-
-            case BOOLEAN_VALUE:
-                boolVal = val.boolVal;
-                return;
-
-            case INTEGER_VALUE:
-                longVal = val.longVal;
-                return;
-
-            case REAL_VALUE:
-
-                doubleVal = val.doubleVal;
-                return;
-            case UNDEFINED_VALUE:
-            case ERROR_VALUE:
-                return;
-            case LIST_VALUE:
-            case SLIST_VALUE:
-                listVal.copyFrom(val.listVal);
-                return;
-            case CLASSAD_VALUE:
-                classadVal.copyFrom(val.classadVal);
-                return;
-
-            case RELATIVE_TIME_VALUE:
-            case ABSOLUTE_TIME_VALUE:
-                timeVal.setValue(val.timeVal);
-                return;
-            default:
-                setUndefinedValue();
-        }
-    }
-
-    public static boolean convertValueToStringValue(Value value, Value stringValue) throws HyracksDataException {
+    public static boolean convertValueToStringValue(Value value, Value stringValue, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         boolean could_convert = false;
-        ClassAdTime atvalue = new ClassAdTime();
-        AMutableCharArrayString string_representation = new AMutableCharArrayString();
-        ClassAdUnParser unparser = new PrettyPrint();
+        ClassAdTime atvalue = objectPool.classAdTimePool.get();
+        AMutableCharArrayString string_representation = objectPool.strPool.get();
+        ClassAdUnParser unparser = objectPool.prettyPrintPool.get();
 
         switch (value.getType()) {
             case UNDEFINED_VALUE:
@@ -787,7 +714,7 @@ public class Value {
                 break;
 
             case STRING_VALUE:
-                stringValue.copyFrom(value);
+                stringValue.setValue(value);
                 could_convert = true;
                 break;
 

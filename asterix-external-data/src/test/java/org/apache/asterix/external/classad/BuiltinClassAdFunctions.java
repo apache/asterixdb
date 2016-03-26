@@ -21,7 +21,6 @@ package org.apache.asterix.external.classad;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -32,6 +31,7 @@ import java.util.regex.Pattern;
 
 import org.apache.asterix.external.classad.ExprTree.NodeKind;
 import org.apache.asterix.external.classad.Value.ValueType;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.library.ClassAdParser;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -43,7 +43,8 @@ public class BuiltinClassAdFunctions {
 
     public static final ClassAdFunc IsType = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             // need a single argument
             if (argList.size() != 1) {
                 val.setErrorValue();
@@ -95,13 +96,14 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc TestMember = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
-            Value arg0 = new Value();
-            Value arg1 = new Value();
-            Value cArg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg0 = objectPool.valuePool.get();
+            Value arg1 = objectPool.valuePool.get();
+            Value cArg = objectPool.valuePool.get();
 
-            ExprList el = new ExprList();
-            MutableBoolean b = new MutableBoolean();
+            ExprList el = objectPool.exprListPool.get();
+            MutableBoolean b = objectPool.boolPool.get();
             boolean useIS = name.equalsIgnoreCase("identicalmember");
 
             // need two arguments
@@ -126,10 +128,10 @@ public class BuiltinClassAdFunctions {
 
             // Swap
             if (arg0.isListValue() && !arg1.isListValue()) {
-                Value swap = new Value();
-                swap.copyFrom(arg0);
-                arg0.copyFrom(arg1);
-                arg1.copyFrom(swap);
+                Value swap = objectPool.valuePool.get();
+                swap.setValue(arg0);
+                arg0.setValue(arg1);
+                arg1.setValue(swap);
             }
 
             // arg1 must be a list; arg0 must be comparable
@@ -151,7 +153,8 @@ public class BuiltinClassAdFunctions {
                     val.setErrorValue();
                     return (false);
                 }
-                Operation.operate(useIS ? Operation.OpKind_IS_OP : Operation.OpKind_EQUAL_OP, cArg, arg0, val);
+                Operation.operate(useIS ? Operation.OpKind_IS_OP : Operation.OpKind_EQUAL_OP, cArg, arg0, val,
+                        objectPool);
                 if (val.isBooleanValue(b) && b.booleanValue()) {
                     return true;
                 }
@@ -163,11 +166,13 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc Size = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
-            Value arg = new Value();
-            ExprList listToSize = new ExprList();
-            ClassAd classadToSize = new ClassAd();
-            AMutableInt32 length = new AMutableInt32(0);
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            ExprList listToSize = objectPool.exprListPool.get();
+            ClassAd classadToSize = objectPool.classAdPool.get();
+            AMutableInt32 length = objectPool.int32Pool.get();
+            length.setValue(0);
             // we accept only one argument
             if (argList.size() != 1) {
                 val.setErrorValue();
@@ -197,15 +202,17 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc SumAvg = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
 
-            Value listElementValue = new Value();
-            Value listVal = new Value();
-            Value numElements = new Value();
-            Value result = new Value();
-            ExprList listToSum = new ExprList();
-            MutableBoolean first = new MutableBoolean();
-            AMutableInt64 len = new AMutableInt64(0);
+            Value listElementValue = objectPool.valuePool.get();
+            Value listVal = objectPool.valuePool.get();
+            Value numElements = objectPool.valuePool.get();
+            Value result = objectPool.valuePool.get();
+            ExprList listToSum = objectPool.exprListPool.get();
+            MutableBoolean first = objectPool.boolPool.get();
+            AMutableInt64 len = objectPool.int64Pool.get();
+            len.setValue(0);
             boolean onlySum = name.equalsIgnoreCase("sum");
 
             // we accept only one argument
@@ -245,28 +252,28 @@ public class BuiltinClassAdFunctions {
                 // Either take the number if it's the first,
                 // or add to the running sum.
                 if (first.booleanValue()) {
-                    result.copyFrom(listElementValue);
+                    result.setValue(listElementValue);
                     first.setValue(false);
                 } else {
-                    Operation.operate(Operation.OpKind_ADDITION_OP, result, listElementValue, result);
+                    Operation.operate(Operation.OpKind_ADDITION_OP, result, listElementValue, result, objectPool);
                 }
 
             }
 
             // if the sum() function was called, we don't need to find the average
             if (onlySum) {
-                val.copyFrom(result);
+                val.setValue(result);
                 return true;
             }
 
             if (len.getLongValue() > 0) {
                 numElements.setRealValue(len.getLongValue());
-                Operation.operate(Operation.OpKind_DIVISION_OP, result, numElements, result);
+                Operation.operate(Operation.OpKind_DIVISION_OP, result, numElements, result, objectPool);
             } else {
                 val.setUndefinedValue();
             }
 
-            val.copyFrom(result);
+            val.setValue(result);
             return true;
         }
 
@@ -274,14 +281,16 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc MinMax = new ClassAdFunc() {
 
         @Override
-        public boolean call(String fn, ExprList argList, EvalState state, Value val) throws HyracksDataException {
-            Value listElementValue = new Value();
-            Value listVal = new Value();
-            Value cmp = new Value();
-            Value result = new Value();
-            ExprList listToBound = new ExprList();
+        public boolean call(String fn, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value listElementValue = objectPool.valuePool.get();
+            Value listVal = objectPool.valuePool.get();
+            Value cmp = objectPool.valuePool.get();
+            Value result = objectPool.valuePool.get();
+            ExprList listToBound = objectPool.exprListPool.get();
             boolean first = true;
-            MutableBoolean b = new MutableBoolean(false);
+            MutableBoolean b = objectPool.boolPool.get();
+            b.setValue(false);
             int comparisonOperator;
 
             // we accept only one argument
@@ -326,17 +335,17 @@ public class BuiltinClassAdFunctions {
                 // If it's the first element, copy it to the bound,
                 // otherwise compare to decide what to do.
                 if (first) {
-                    result.copyFrom(listElementValue);
+                    result.setValue(listElementValue);
                     first = false;
                 } else {
-                    Operation.operate(comparisonOperator, listElementValue, result, cmp);
+                    Operation.operate(comparisonOperator, listElementValue, result, cmp, objectPool);
                     if (cmp.isBooleanValue(b) && b.booleanValue()) {
-                        result.copyFrom(listElementValue);
+                        result.setValue(listElementValue);
                     }
                 }
             }
 
-            val.copyFrom(result);
+            val.setValue(result);
             return true;
         }
 
@@ -344,15 +353,16 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc ListCompare = new ClassAdFunc() {
 
         @Override
-        public boolean call(String fn, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String fn, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
 
-            Value listElementValue = new Value();
-            Value listVal = new Value();
-            Value compareVal = new Value();
-            Value stringValue = new Value();
-            ExprList listToCompare = new ExprList();
+            Value listElementValue = objectPool.valuePool.get();
+            Value listVal = objectPool.valuePool.get();
+            Value compareVal = objectPool.valuePool.get();
+            Value stringValue = objectPool.valuePool.get();
+            ExprList listToCompare = objectPool.exprListPool.get();
             boolean needAllMatch;
-            AMutableCharArrayString comparison_string = new AMutableCharArrayString();
+            AMutableCharArrayString comparison_string = objectPool.strPool.get();
             int comparisonOperator;
 
             // We take three arguments:
@@ -445,10 +455,10 @@ public class BuiltinClassAdFunctions {
                     val.setErrorValue();
                     return false;
                 } else {
-                    Value compareResult = new Value();
-                    MutableBoolean b = new MutableBoolean();
+                    Value compareResult = objectPool.valuePool.get();
+                    MutableBoolean b = objectPool.boolPool.get();
 
-                    Operation.operate(comparisonOperator, listElementValue, compareVal, compareResult);
+                    Operation.operate(comparisonOperator, listElementValue, compareVal, compareResult, objectPool);
                     if (!compareResult.isBooleanValue(b)) {
                         if (compareResult.isUndefinedValue()) {
                             if (needAllMatch) {
@@ -491,32 +501,37 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc timeZoneOffset = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             // no arguments
             if (argList.size() > 0) {
                 val.setErrorValue();
                 return (true);
             }
-            val.setRelativeTimeValue(new ClassAdTime());
+            val.setRelativeTimeValue(objectPool.classAdTimePool.get());
             return (true);
         }
     };
     public static final ClassAdFunc debug = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             return false;
         }
     };
     public static final ClassAdFunc formatTime = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value time_arg = new Value();
-            Value format_arg = new Value();
-            AMutableInt64 int64 = new AMutableInt64(0);
-            ClassAdTime epoch_time = new ClassAdTime();
-            ClassAdTime time_components = new ClassAdTime("GMT");
-            ClassAd splitClassAd = new ClassAd();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value time_arg = objectPool.valuePool.get();
+            Value format_arg = objectPool.valuePool.get();
+            AMutableInt64 int64 = objectPool.int64Pool.get();
+            int64.setValue(0);
+            ClassAdTime epoch_time = objectPool.classAdTimePool.get();
+            ClassAdTime time_components = objectPool.classAdTimePool.get();
+            time_components.setTimeZone("GMT");
+            ClassAd splitClassAd = objectPool.classAdPool.get();
             String format;
             int number_of_args;
             boolean did_eval;
@@ -535,8 +550,7 @@ public class BuiltinClassAdFunctions {
                 } else if (time_arg.isRelativeTimeValue()) {
                     result.setErrorValue();
                 } else if (time_arg.isAbsoluteTimeValue(time_components)) {
-                } else if (!time_arg
-                        .isClassAdValue(splitClassAd) /* doSplitTime(time_arg, splitClassAd) */) {
+                } else if (!time_arg.isClassAdValue(splitClassAd) /* doSplitTime(time_arg, splitClassAd) */) {
                     result.setErrorValue();
                 } else {
                     if (!splitClassAd.evaluateAttrInt("Seconds", int64)) {
@@ -579,7 +593,7 @@ public class BuiltinClassAdFunctions {
                     if (!argList.get(1).publicEvaluate(state, format_arg)) {
                         did_eval = false;
                     } else {
-                        AMutableCharArrayString formatString = new AMutableCharArrayString();
+                        AMutableCharArrayString formatString = objectPool.strPool.get();
                         if (!format_arg.isStringValue(formatString)) {
                             result.setErrorValue();
                         } else {
@@ -618,12 +632,13 @@ public class BuiltinClassAdFunctions {
 
     public static final ClassAdFunc getField = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
-            Value arg = new Value();
-            ClassAdTime asecs = new ClassAdTime();
-            ClassAdTime rsecs = new ClassAdTime();
-            ClassAdTime clock = new ClassAdTime();
-            ClassAdTime tms = new ClassAdTime();
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            ClassAdTime asecs = objectPool.classAdTimePool.get();
+            ClassAdTime rsecs = objectPool.classAdTimePool.get();
+            ClassAdTime clock = objectPool.classAdTimePool.get();
+            ClassAdTime tms = objectPool.classAdTimePool.get();
 
             if (argList.size() != 1) {
                 val.setErrorValue();
@@ -708,13 +723,14 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc currentTime = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             // no arguments
             if (argList.size() > 0) {
                 val.setErrorValue();
                 return (true);
             }
-            Literal time_literal = Literal.createAbsTime(new ClassAdTime());
+            Literal time_literal = Literal.createAbsTime(objectPool.classAdTimePool.get(), objectPool);
             time_literal.GetValue(val);
             return true;
         }
@@ -722,9 +738,10 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc splitTime = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            ClassAd split = new ClassAd();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            ClassAd split = objectPool.classAdPool.get();
 
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -736,7 +753,7 @@ public class BuiltinClassAdFunctions {
                 return false;
             }
 
-            if (!arg.isClassAdValue() && doSplitTime(arg, split)) {
+            if (!arg.isClassAdValue() && doSplitTime(arg, split, objectPool)) {
                 result.setClassAdValue(split);
             } else {
                 result.setErrorValue();
@@ -746,13 +763,16 @@ public class BuiltinClassAdFunctions {
 
     };
 
-    public static boolean doSplitTime(Value time, ClassAd splitClassAd) throws HyracksDataException {
+    public static boolean doSplitTime(Value time, ClassAd splitClassAd, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         boolean did_conversion;
-        AMutableInt64 integer = new AMutableInt64(0);
-        AMutableDouble real = new AMutableDouble(0);
-        ClassAdTime asecs = new ClassAdTime();
-        ClassAdTime rsecs = new ClassAdTime();
-        ClassAd classad = new ClassAd();
+        AMutableInt64 integer = objectPool.int64Pool.get();
+        integer.setValue(0);
+        AMutableDouble real = objectPool.doublePool.get();
+        real.setValue(0);
+        ClassAdTime asecs = objectPool.classAdTimePool.get();
+        ClassAdTime rsecs = objectPool.classAdTimePool.get();
+        ClassAd classad = objectPool.classAdPool.get();
         did_conversion = true;
         if (time.isIntegerValue(integer)) {
             asecs.setValue(integer.getLongValue());
@@ -767,7 +787,7 @@ public class BuiltinClassAdFunctions {
         } else if (time.isRelativeTimeValue(rsecs)) {
             relTimeToClassAd((rsecs.getRelativeTime() / 1000.0), splitClassAd);
         } else if (time.isClassAdValue(classad)) {
-            splitClassAd = new ClassAd();
+            splitClassAd = objectPool.classAdPool.get();
             splitClassAd.copyFrom(classad);
         } else {
             did_conversion = false;
@@ -828,14 +848,16 @@ public class BuiltinClassAdFunctions {
 
     public static final ClassAdFunc dayTime = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
-            val.setRelativeTimeValue(new ClassAdTime());
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            val.setRelativeTimeValue(objectPool.classAdTimePool.get());
             return (true);
         }
     };
     public static final ClassAdFunc epochTime = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             // no arguments
             if (argList.size() > 0) {
                 val.setErrorValue();
@@ -847,15 +869,16 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc strCat = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            AMutableCharArrayString buf = new AMutableCharArrayString();
-            AMutableCharArrayString s = new AMutableCharArrayString();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            AMutableCharArrayString buf = objectPool.strPool.get();
+            AMutableCharArrayString s = objectPool.strPool.get();
             boolean errorFlag = false;
             boolean undefFlag = false;
             boolean rval = false;
 
-            Value val = new Value();
-            Value stringVal = new Value();
+            Value val = objectPool.valuePool.get();
+            Value stringVal = objectPool.valuePool.get();
 
             for (int i = 0; i < argList.size(); i++) {
 
@@ -867,7 +890,7 @@ public class BuiltinClassAdFunctions {
                 if (val.isStringValue(s)) {
                     buf.appendString(s);
                 } else {
-                    Value.convertValueToStringValue(val, stringVal);
+                    Value.convertValueToStringValue(val, stringVal, objectPool);
                     if (stringVal.isUndefinedValue()) {
                         undefFlag = true;
                         break;
@@ -906,10 +929,11 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc changeCase = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value val = new Value();
-            Value stringVal = new Value();
-            AMutableCharArrayString str = new AMutableCharArrayString();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value val = objectPool.valuePool.get();
+            Value stringVal = objectPool.valuePool.get();
+            AMutableCharArrayString str = objectPool.strPool.get();
             boolean lower = name.equalsIgnoreCase("tolower");
             int len;
 
@@ -926,7 +950,7 @@ public class BuiltinClassAdFunctions {
             }
 
             if (!val.isStringValue(str)) {
-                Value.convertValueToStringValue(val, stringVal);
+                Value.convertValueToStringValue(val, stringVal, objectPool);
                 if (stringVal.isUndefinedValue()) {
                     result.setUndefinedValue();
                     return true;
@@ -949,14 +973,18 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc subString = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg0 = new Value();
-            Value arg1 = new Value();
-            Value arg2 = new Value();
-            AMutableCharArrayString buf = new AMutableCharArrayString();
-            AMutableInt64 offset = new AMutableInt64(0);
-            AMutableInt64 len = new AMutableInt64(0);
-            AMutableInt64 alen = new AMutableInt64(0);
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg0 = objectPool.valuePool.get();
+            Value arg1 = objectPool.valuePool.get();
+            Value arg2 = objectPool.valuePool.get();
+            AMutableCharArrayString buf = objectPool.strPool.get();
+            AMutableInt64 offset = objectPool.int64Pool.get();
+            offset.setValue(0);
+            AMutableInt64 len = objectPool.int64Pool.get();
+            len.setValue(0);
+            AMutableInt64 alen = objectPool.int64Pool.get();
+            len.setValue(0);
 
             // two or three arguments
             if (argList.size() < 2 || argList.size() > 3) {
@@ -1004,10 +1032,12 @@ public class BuiltinClassAdFunctions {
             // to make sure that if length is specified as 0 explicitly
             // then, len is set to 0
             if (argList.size() == 3) {
-                AMutableInt64 templen = new AMutableInt64(0);
+                AMutableInt64 templen = objectPool.int64Pool.get();
+                templen.setValue(0);
                 arg2.isIntegerValue(templen);
-                if (templen.getLongValue() == 0)
+                if (templen.getLongValue() == 0) {
                     len.setValue(0);
+                }
             }
             result.setStringValue(buf.substr((int) offset.getLongValue(), (int) len.getLongValue()));
             return (true);
@@ -1016,8 +1046,9 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc convInt = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
             // takes exactly one argument
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -1027,18 +1058,19 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return (false);
             }
-            Value.convertValueToIntegerValue(arg, result);
+            Value.convertValueToIntegerValue(arg, result, objectPool);
             return true;
         }
     };
     public static final ClassAdFunc compareString = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg0 = new Value();
-            Value arg1 = new Value();
-            Value arg0_s = new Value();
-            Value arg1_s = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg0 = objectPool.valuePool.get();
+            Value arg1 = objectPool.valuePool.get();
+            Value arg0_s = objectPool.valuePool.get();
+            Value arg1_s = objectPool.valuePool.get();
 
             // Must have two arguments
             if (argList.size() != 2) {
@@ -1059,25 +1091,28 @@ public class BuiltinClassAdFunctions {
                 return true;
             }
 
-            AMutableCharArrayString s0 = new AMutableCharArrayString();
-            AMutableCharArrayString s1 = new AMutableCharArrayString();
-            if (Value.convertValueToStringValue(arg0, arg0_s) && Value.convertValueToStringValue(arg1, arg1_s)
-                    && arg0_s.isStringValue(s0) && arg1_s.isStringValue(s1)) {
+            AMutableCharArrayString s0 = objectPool.strPool.get();
+            AMutableCharArrayString s1 = objectPool.strPool.get();
+            if (Value.convertValueToStringValue(arg0, arg0_s, objectPool)
+                    && Value.convertValueToStringValue(arg1, arg1_s, objectPool) && arg0_s.isStringValue(s0)
+                    && arg1_s.isStringValue(s1)) {
 
                 int order;
 
                 if (name.equalsIgnoreCase("strcmp")) {
                     order = s0.compareTo(s1);
-                    if (order < 0)
+                    if (order < 0) {
                         order = -1;
-                    else if (order > 0)
+                    } else if (order > 0) {
                         order = 1;
+                    }
                 } else {
                     order = s0.compareToIgnoreCase(s1);
-                    if (order < 0)
+                    if (order < 0) {
                         order = -1;
-                    else if (order > 0)
+                    } else if (order > 0) {
                         order = 1;
+                    }
                 }
                 result.setIntegerValue(order);
             } else {
@@ -1090,15 +1125,16 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc matchPattern = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             boolean have_options;
-            Value arg0 = new Value();
-            Value arg1 = new Value();
-            Value arg2 = new Value();
+            Value arg0 = objectPool.valuePool.get();
+            Value arg1 = objectPool.valuePool.get();
+            Value arg2 = objectPool.valuePool.get();
 
-            AMutableCharArrayString pattern = new AMutableCharArrayString();
-            AMutableCharArrayString target = new AMutableCharArrayString();
-            AMutableCharArrayString options_string = new AMutableCharArrayString();
+            AMutableCharArrayString pattern = objectPool.strPool.get();
+            AMutableCharArrayString target = objectPool.strPool.get();
+            AMutableCharArrayString options_string = objectPool.strPool.get();
 
             // need two or three arguments: pattern, string, optional settings
             if (argList.size() != 2 && argList.size() != 3) {
@@ -1184,8 +1220,9 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc convReal = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
 
             // takes exactly one argument
             if (argList.size() != 1) {
@@ -1196,15 +1233,16 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return (false);
             }
-            Value.convertValueToRealValue(arg, result);
+            Value.convertValueToRealValue(arg, result, objectPool);
             return true;
         }
     };
     public static final ClassAdFunc convString = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
 
             // takes exactly one argument
             if (argList.size() != 1) {
@@ -1216,21 +1254,22 @@ public class BuiltinClassAdFunctions {
                 return (false);
             }
 
-            Value.convertValueToStringValue(arg, result);
+            Value.convertValueToStringValue(arg, result, objectPool);
             return true;
         }
     };
     public static final ClassAdFunc unparse = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
             if (argList.size() != 1 || argList.get(0).getKind() != NodeKind.ATTRREF_NODE) {
                 result.setErrorValue();
             } else {
 
                 // use the printpretty on arg0 to spew out
-                PrettyPrint unp = new PrettyPrint();
-                AMutableCharArrayString szAttribute = new AMutableCharArrayString();
-                AMutableCharArrayString szValue = new AMutableCharArrayString();
+                PrettyPrint unp = objectPool.prettyPrintPool.get();
+                AMutableCharArrayString szAttribute = objectPool.strPool.get();
+                AMutableCharArrayString szValue = objectPool.strPool.get();
                 ExprTree pTree;
 
                 unp.unparse(szAttribute, argList.get(0));
@@ -1247,8 +1286,9 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc convBool = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
             // takes exactly one argument
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -1273,25 +1313,26 @@ public class BuiltinClassAdFunctions {
                     return (true);
 
                 case BOOLEAN_VALUE:
-                    result.copyFrom(arg);
+                    result.setValue(arg);
                     return (true);
 
                 case INTEGER_VALUE: {
-                    AMutableInt64 ival = new AMutableInt64(0);
+                    AMutableInt64 ival = objectPool.int64Pool.get();
+                    ival.setValue(0);
                     arg.isIntegerValue(ival);
                     result.setBooleanValue(ival.getLongValue() != 0);
                     return (true);
                 }
 
                 case REAL_VALUE: {
-                    AMutableDouble rval = new AMutableDouble(0);
+                    AMutableDouble rval = objectPool.doublePool.get();
                     arg.isRealValue(rval);
                     result.setBooleanValue(rval.getDoubleValue() != 0.0);
                     return (true);
                 }
 
                 case STRING_VALUE: {
-                    AMutableCharArrayString buf = new AMutableCharArrayString();
+                    AMutableCharArrayString buf = objectPool.strPool.get();
                     arg.isStringValue(buf);
                     if (buf.equalsIgnoreCase("false") || buf.size() == 0) {
                         result.setBooleanValue(false);
@@ -1302,7 +1343,7 @@ public class BuiltinClassAdFunctions {
                 }
 
                 case RELATIVE_TIME_VALUE: {
-                    ClassAdTime rsecs = new ClassAdTime();
+                    ClassAdTime rsecs = objectPool.classAdTimePool.get();
                     arg.isRelativeTimeValue(rsecs);
                     result.setBooleanValue(rsecs.getTimeInMillis() != 0);
                     return (true);
@@ -1315,16 +1356,18 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc convTime = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            Value arg2 = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            Value arg2 = objectPool.valuePool.get();
             boolean relative = name.equalsIgnoreCase("reltime");
             boolean secondarg = false; // says whether a 2nd argument exists
-            AMutableInt64 arg2num = new AMutableInt64(0);
+            AMutableInt64 arg2num = objectPool.int64Pool.get();
+            arg2num.setValue(0);
 
             if (argList.size() == 0 && !relative) {
                 // absTime with no arguments returns the current time.
-                return currentTime.call(name, argList, state, result);
+                return currentTime.call(name, argList, state, result, objectPool);
             }
             if ((argList.size() < 1) || (argList.size() > 2)) {
                 result.setErrorValue();
@@ -1340,9 +1383,10 @@ public class BuiltinClassAdFunctions {
                     result.setErrorValue();
                     return (false);
                 }
-                AMutableInt64 ivalue2 = new AMutableInt64(0);
-                AMutableDouble rvalue2 = new AMutableDouble(0);
-                ClassAdTime rsecs = new ClassAdTime();
+                AMutableInt64 ivalue2 = objectPool.int64Pool.get();
+                ivalue2.setValue(0);
+                AMutableDouble rvalue2 = objectPool.doublePool.get();
+                ClassAdTime rsecs = objectPool.classAdTimePool.get();
                 if (relative) {// 2nd argument is N/A for reltime
                     result.setErrorValue();
                     return (true);
@@ -1377,41 +1421,49 @@ public class BuiltinClassAdFunctions {
                     return (true);
 
                 case INTEGER_VALUE: {
-                    AMutableInt64 ivalue = new AMutableInt64(0);
+                    AMutableInt64 ivalue = objectPool.int64Pool.get();
+                    ivalue.setValue(0);
                     arg.isIntegerValue(ivalue);
                     if (relative) {
-                        result.setRelativeTimeValue(new ClassAdTime(ivalue.getLongValue(), false));
+                        ClassAdTime time = objectPool.classAdTimePool.get();
+                        time.setRelativeTime(ivalue.getLongValue());
+                        result.setRelativeTimeValue(time);
                     } else {
-                        ClassAdTime atvalue = new ClassAdTime(true);
+                        ClassAdTime atvalue = objectPool.classAdTimePool.get();
                         atvalue.setValue(ivalue.getLongValue());
-                        if (secondarg) //2nd arg is the offset in secs
+                        if (secondarg) {
                             atvalue.setTimeZone((int) arg2num.getLongValue());
-                        else
+                        } else {
                             // the default offset is the current timezone
                             atvalue.setTimeZone(Literal.findOffset(atvalue));
+                        }
 
                         if (atvalue.getOffset() == -1) {
                             result.setErrorValue();
                             return (false);
-                        } else
+                        } else {
                             result.setAbsoluteTimeValue(atvalue);
+                        }
                     }
                     return (true);
                 }
 
                 case REAL_VALUE: {
-                    AMutableDouble rvalue = new AMutableDouble(0);
+                    AMutableDouble rvalue = objectPool.doublePool.get();
                     arg.isRealValue(rvalue);
                     if (relative) {
-                        result.setRelativeTimeValue(new ClassAdTime((long) (1000 * rvalue.getDoubleValue()), false));
+                        ClassAdTime time = objectPool.classAdTimePool.get();
+                        time.setRelativeTime((long) (1000 * rvalue.getDoubleValue()));
+                        result.setRelativeTimeValue(time);
                     } else {
-                        ClassAdTime atvalue = new ClassAdTime();
+                        ClassAdTime atvalue = objectPool.classAdTimePool.get();
                         atvalue.setValue((long) rvalue.getDoubleValue());
-                        if (secondarg) //2nd arg is the offset in secs
+                        if (secondarg) {
                             atvalue.setTimeZone((int) arg2num.getLongValue());
-                        else
+                        } else {
                             // the default offset is the current timezone
                             atvalue.setTimeZone(Literal.findOffset(atvalue));
+                        }
                         result.setAbsoluteTimeValue(atvalue);
                     }
                     return (true);
@@ -1423,28 +1475,29 @@ public class BuiltinClassAdFunctions {
                 }
 
                 case ABSOLUTE_TIME_VALUE: {
-                    ClassAdTime secs = new ClassAdTime();
+                    ClassAdTime secs = objectPool.classAdTimePool.get();
                     arg.isAbsoluteTimeValue(secs);
                     if (relative) {
                         result.setRelativeTimeValue(secs);
                     } else {
-                        result.copyFrom(arg);
+                        result.setValue(arg);
                     }
                     return (true);
                 }
                 case RELATIVE_TIME_VALUE: {
                     if (relative) {
-                        result.copyFrom(arg);
+                        result.setValue(arg);
                     } else {
-                        ClassAdTime secs = new ClassAdTime();
+                        ClassAdTime secs = objectPool.classAdTimePool.get();
                         arg.isRelativeTimeValue(secs);
-                        ClassAdTime atvalue = new ClassAdTime();
+                        ClassAdTime atvalue = objectPool.classAdTimePool.get();
                         atvalue.setValue(secs);
-                        if (secondarg) //2nd arg is the offset in secs
+                        if (secondarg) {
                             atvalue.setTimeZone((int) arg2num.getLongValue());
-                        else
+                        } else {
                             // the default offset is the current timezone
                             atvalue.setTimeZone(Literal.findOffset(atvalue));
+                        }
                         result.setAbsoluteTimeValue(atvalue);
                     }
                     return (true);
@@ -1458,9 +1511,10 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc doRound = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            Value realValue = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            Value realValue = objectPool.valuePool.get();
             // takes exactly one argument
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -1471,12 +1525,12 @@ public class BuiltinClassAdFunctions {
                 return (false);
             }
             if (arg.getType() == ValueType.INTEGER_VALUE) {
-                result.copyFrom(arg);
+                result.setValue(arg);
             } else {
-                if (!Value.convertValueToRealValue(arg, realValue)) {
+                if (!Value.convertValueToRealValue(arg, realValue, objectPool)) {
                     result.setErrorValue();
                 } else {
-                    AMutableDouble rvalue = new AMutableDouble(0);
+                    AMutableDouble rvalue = objectPool.doublePool.get();
                     realValue.isRealValue(rvalue);
                     if (name.equalsIgnoreCase("floor")) {
                         result.setIntegerValue((long) Math.floor(rvalue.getDoubleValue()));
@@ -1495,9 +1549,10 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc doMath2 = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            Value arg2 = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            Value arg2 = objectPool.valuePool.get();
 
             // takes 2 arguments  pow(val,base)
             if (argList.size() != 2) {
@@ -1511,20 +1566,24 @@ public class BuiltinClassAdFunctions {
 
             if (name.equalsIgnoreCase("pow")) {
                 // take arg2 to the power of arg2
-                AMutableInt64 ival = new AMutableInt64(0);
-                AMutableInt64 ibase = new AMutableInt64(0);
+                AMutableInt64 ival = objectPool.int64Pool.get();
+                ival.setValue(0);
+                AMutableInt64 ibase = objectPool.int64Pool.get();
+                ibase.setValue(0);
                 if (arg.isIntegerValue(ival) && arg2.isIntegerValue(ibase) && ibase.getLongValue() >= 0) {
                     ival.setValue((long) (Math.pow(ival.getLongValue(), ibase.getLongValue())));
                     result.setIntegerValue(ival.getLongValue());
                 } else {
-                    Value realValue = new Value();
-                    Value realBase = new Value();
-                    if (!Value.convertValueToRealValue(arg, realValue)
-                            || !Value.convertValueToRealValue(arg2, realBase)) {
+                    Value realValue = objectPool.valuePool.get();
+                    Value realBase = objectPool.valuePool.get();
+                    if (!Value.convertValueToRealValue(arg, realValue, objectPool)
+                            || !Value.convertValueToRealValue(arg2, realBase, objectPool)) {
                         result.setErrorValue();
                     } else {
-                        AMutableDouble rvalue = new AMutableDouble(0);
-                        AMutableDouble rbase = new AMutableDouble(1);
+                        AMutableDouble rvalue = objectPool.doublePool.get();
+                        rvalue.setValue(0);
+                        AMutableDouble rbase = objectPool.doublePool.get();
+                        rbase.setValue(1);
                         realValue.isRealValue(rvalue);
                         realBase.isRealValue(rbase);
                         result.setRealValue(Math.pow(rvalue.getDoubleValue(), rbase.getDoubleValue()));
@@ -1535,17 +1594,17 @@ public class BuiltinClassAdFunctions {
                 // if arg2 is a list, choose the first item from the list that is larger than arg1
                 // if arg1 is larger than all of the items in the list, the result is an error.
 
-                Value val = new Value();
-                Value base = new Value();
-                if (!Value.convertValueToRealValue(arg, val)) {
+                Value val = objectPool.valuePool.get();
+                Value base = objectPool.valuePool.get();
+                if (!Value.convertValueToRealValue(arg, val, objectPool)) {
                     result.setErrorValue();
                 } else {
                     // get the value to quantize into rval.
-                    AMutableDouble rval = new AMutableDouble(0);
-                    AMutableDouble rbase = new AMutableDouble(0);
+                    AMutableDouble rval = objectPool.doublePool.get();
+                    AMutableDouble rbase = objectPool.doublePool.get();
                     val.isRealValue(rval);
                     if (arg2.isListValue()) {
-                        ExprList list = new ExprList();
+                        ExprList list = objectPool.exprListPool.get();
                         arg2.isListValue(list);
                         base.setRealValue(0.0);
                         rbase.setValue(0.0); // treat an empty list as 'don't quantize'
@@ -1554,7 +1613,7 @@ public class BuiltinClassAdFunctions {
                                 result.setErrorValue();
                                 return false; // eval should not fail
                             }
-                            if (Value.convertValueToRealValue(base, val)) {
+                            if (Value.convertValueToRealValue(base, val, objectPool)) {
                                 val.isRealValue(rbase);
                                 if (rbase.getDoubleValue() >= rval.getDoubleValue()) {
                                     result.setValue(base);
@@ -1575,7 +1634,7 @@ public class BuiltinClassAdFunctions {
                         // if arg2 is not a list, then it must evaluate to a real value
                         // or we can't use it. (note that if it's an int, we still want
                         // to return an int, but we assume that all ints can be converted to real)
-                        if (!Value.convertValueToRealValue(arg2, base)) {
+                        if (!Value.convertValueToRealValue(arg2, base, objectPool)) {
                             result.setErrorValue();
                             return true;
                         }
@@ -1585,13 +1644,15 @@ public class BuiltinClassAdFunctions {
                     // at this point rbase should contain the real value of either arg2 or the
                     // last entry in the list. and rval should contain the value to be quantized.
 
-                    AMutableInt64 ival = new AMutableInt64(0);
-                    AMutableInt64 ibase = new AMutableInt64(0);
+                    AMutableInt64 ival = objectPool.int64Pool.get();
+                    ival.setValue(0);
+                    AMutableInt64 ibase = objectPool.int64Pool.get();
+                    ibase.setValue(0);
                     if (arg2.isIntegerValue(ibase)) {
                         // quantize to an integer base,
-                        if (ibase.getLongValue() == 0L)
+                        if (ibase.getLongValue() == 0L) {
                             result.setValue(arg);
-                        else if (arg.isIntegerValue(ival)) {
+                        } else if (arg.isIntegerValue(ival)) {
                             ival.setValue(((ival.getLongValue() + ibase.getLongValue() - 1) / ibase.getLongValue())
                                     * ibase.getLongValue());
                             result.setIntegerValue(ival.getLongValue());
@@ -1620,10 +1681,12 @@ public class BuiltinClassAdFunctions {
         }
     };
     public static final ClassAdFunc random = new ClassAdFunc() {
+        private Random randomGenerator = new Random(System.currentTimeMillis());
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();;
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();;
             // takes exactly one argument
             if (argList.size() > 1) {
                 result.setErrorValue();
@@ -1634,9 +1697,9 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return (false);
             }
-            AMutableInt64 int_max = new AMutableInt64(0);
-            AMutableDouble double_max = new AMutableDouble(0);
-            Random randomGenerator = new Random(System.currentTimeMillis());
+            AMutableInt64 int_max = objectPool.int64Pool.get();
+            int_max.setValue(0);
+            AMutableDouble double_max = objectPool.doublePool.get();
             if (arg.isIntegerValue(int_max)) {
                 int random_int = randomGenerator.nextInt((int) int_max.getLongValue());
                 result.setIntegerValue(random_int);
@@ -1653,9 +1716,10 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc ifThenElse = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg1 = new Value();
-            MutableBoolean arg1_bool = new MutableBoolean();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg1 = objectPool.valuePool.get();
+            MutableBoolean arg1_bool = objectPool.boolPool.get();
             // takes exactly three arguments
             if (argList.size() != 3) {
                 result.setErrorValue();
@@ -1673,7 +1737,8 @@ public class BuiltinClassAdFunctions {
                     }
                     break;
                 case INTEGER_VALUE: {
-                    AMutableInt64 intval = new AMutableInt64(0);
+                    AMutableInt64 intval = objectPool.int64Pool.get();
+                    intval.setValue(0);
                     if (!arg1.isIntegerValue(intval)) {
                         result.setErrorValue();
                         return (false);
@@ -1682,7 +1747,7 @@ public class BuiltinClassAdFunctions {
                     break;
                 }
                 case REAL_VALUE: {
-                    AMutableDouble realval = new AMutableDouble(0);
+                    AMutableDouble realval = objectPool.doublePool.get();
                     if (!arg1.isRealValue(realval)) {
                         result.setErrorValue();
                         return (false);
@@ -1721,14 +1786,15 @@ public class BuiltinClassAdFunctions {
     public static final ClassAdFunc stringListsIntersect = new ClassAdFunc() {
 
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg0 = new Value();
-            Value arg1 = new Value();
-            Value arg2 = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg0 = objectPool.valuePool.get();
+            Value arg1 = objectPool.valuePool.get();
+            Value arg2 = objectPool.valuePool.get();
             boolean have_delimiter;
-            AMutableCharArrayString str0 = new AMutableCharArrayString();
-            AMutableCharArrayString str1 = new AMutableCharArrayString();
-            AMutableCharArrayString delimiter_string = new AMutableCharArrayString();
+            AMutableCharArrayString str0 = objectPool.strPool.get();
+            AMutableCharArrayString str1 = objectPool.strPool.get();
+            AMutableCharArrayString delimiter_string = objectPool.strPool.get();
 
             // need two or three arguments: pattern, list, optional settings
             if (argList.size() != 2 && argList.size() != 3) {
@@ -1782,7 +1848,7 @@ public class BuiltinClassAdFunctions {
             }
             result.setBooleanValue(false);
 
-            List<String> list0 = new ArrayList<String>();
+            List<String> list0 = objectPool.stringArrayListPool.get();
             Set<String> set1 = new HashSet<String>();
 
             split_string_list(str0, have_delimiter ? delimiter_string.charAt(0) : ',', list0);
@@ -1800,10 +1866,12 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc interval = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            Value intarg = new Value();
-            AMutableInt64 tot_secs = new AMutableInt64(0);
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            Value intarg = objectPool.valuePool.get();
+            AMutableInt64 tot_secs = objectPool.int64Pool.get();
+            tot_secs.setValue(0);
             // takes exactly one argument
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -1813,7 +1881,7 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return (false);
             }
-            if (!Value.convertValueToIntegerValue(arg, intarg)) {
+            if (!Value.convertValueToIntegerValue(arg, intarg, objectPool)) {
                 result.setErrorValue();
                 return (true);
             }
@@ -1843,9 +1911,10 @@ public class BuiltinClassAdFunctions {
     };
     public static final ClassAdFunc eval = new ClassAdFunc() {
         @Override
-        public boolean call(String name, ExprList argList, EvalState state, Value result) throws HyracksDataException {
-            Value arg = new Value();
-            Value strarg = new Value();
+        public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            Value arg = objectPool.valuePool.get();
+            Value strarg = objectPool.valuePool.get();
             // takes exactly one argument
             if (argList.size() != 1) {
                 result.setErrorValue();
@@ -1855,8 +1924,10 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return false;
             }
-            AMutableCharArrayString s = new AMutableCharArrayString();
-            if (!Value.convertValueToStringValue(arg, strarg) || !strarg.isStringValue(s)) {
+            ClassAdParser parser = objectPool.classAdParserPool.get();
+            ExprTreeHolder expr = objectPool.mutableExprPool.get();
+            AMutableCharArrayString s = objectPool.strPool.get();
+            if (!Value.convertValueToStringValue(arg, strarg, objectPool) || !strarg.isStringValue(s)) {
                 result.setErrorValue();
                 return true;
             }
@@ -1864,8 +1935,8 @@ public class BuiltinClassAdFunctions {
                 result.setErrorValue();
                 return false;
             }
-            ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
-            ExprTreeHolder expr = new ExprTreeHolder();
+
+            expr.reset();
             try {
                 if (!parser.parseExpression(s.toString(), expr, true) || (expr.getInnerTree() == null)) {
                     result.setErrorValue();

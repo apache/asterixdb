@@ -21,8 +21,7 @@ package org.apache.asterix.external.indexing;
 import java.io.IOException;
 
 import org.apache.asterix.external.api.IExternalIndexer;
-import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
+import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -40,7 +39,7 @@ public class FileOffsetIndexer implements IExternalIndexer {
     public static final int NUM_OF_FIELDS = 2;
     protected final AMutableInt32 fileNumber = new AMutableInt32(0);
     protected final AMutableInt64 offset = new AMutableInt64(0);
-    protected RecordReader<?, Writable> recordReader;
+    protected RecordReader<?, ? extends Writable> recordReader;
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<IAObject> intSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -50,13 +49,11 @@ public class FileOffsetIndexer implements IExternalIndexer {
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     @Override
-    public void reset(IRecordReader<?> reader) throws HyracksDataException {
+    public void reset(IIndexingDatasource dataSource) throws HyracksDataException {
         try {
-            //TODO: Make it more generic since we can't assume it is always going to be HDFS records.
-            @SuppressWarnings("unchecked")
-            HDFSRecordReader<?, Writable> hdfsReader = (HDFSRecordReader<?, Writable>) reader;
-            fileNumber.setValue(hdfsReader.getSnapshot().get(hdfsReader.getCurrentSplitIndex()).getFileNumber());
-            recordReader = hdfsReader.getReader();
+            //TODO: Make it more generic since we can't assume it is always going to be HDFS records
+            fileNumber.setValue(dataSource.getSnapshot().get(dataSource.getCurrentSplitIndex()).getFileNumber());
+            recordReader = dataSource.getReader();
             offset.setValue(recordReader.getPos());
         } catch (IOException e) {
             throw new HyracksDataException(e);
@@ -79,5 +76,4 @@ public class FileOffsetIndexer implements IExternalIndexer {
     public int getNumberOfFields() {
         return NUM_OF_FIELDS;
     }
-
 }

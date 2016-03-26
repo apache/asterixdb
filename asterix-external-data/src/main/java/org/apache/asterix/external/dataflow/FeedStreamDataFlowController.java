@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -28,10 +28,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class FeedStreamDataFlowController extends AbstractFeedDataFlowController {
 
     private final IStreamDataParser dataParser;
-    private final AInputStream stream;
+    private final AsterixInputStream stream;
 
     public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, int numOfFields, IStreamDataParser streamParser, AInputStream inputStream) {
+            FeedLogManager feedLogManager, int numOfFields, IStreamDataParser streamParser,
+            AsterixInputStream inputStream) {
         super(ctx, tupleForwarder, feedLogManager, numOfFields);
         this.dataParser = streamParser;
         this.stream = inputStream;
@@ -73,7 +74,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     public boolean handleException(Throwable th) {
         boolean handled = true;
         try {
-            handled &= stream.skipError();
+            handled &= stream.handleException(th);
             if (handled) {
                 handled &= dataParser.reset(stream);
             }

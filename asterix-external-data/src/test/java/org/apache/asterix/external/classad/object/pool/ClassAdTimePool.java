@@ -16,28 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream.provider;
+package org.apache.asterix.external.classad.object.pool;
 
-import java.net.ServerSocket;
+import org.apache.asterix.external.classad.ClassAdTime;
 
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.input.stream.AInputStream;
-import org.apache.asterix.external.input.stream.SocketServerInputStream;
-import org.apache.asterix.external.util.FeedLogManager;
+public class ClassAdTimePool extends Pool<ClassAdTime> {
 
-public class SocketServerInputStreamProvider implements IInputStreamProvider {
-    private final ServerSocket server;
-
-    public SocketServerInputStreamProvider(ServerSocket server) {
-        this.server = server;
+    @Override
+    public ClassAdTime newInstance() {
+        return new ClassAdTime();
     }
 
     @Override
-    public AInputStream getInputStream() {
-        return new SocketServerInputStream(server);
+    protected void reset(ClassAdTime obj) {
+        obj.setCurrentAbsolute();
     }
 
-    @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
-    }
 }

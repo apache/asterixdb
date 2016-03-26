@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -42,8 +43,8 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
     private ARecordType recordType;
     private Map<String, String> configuration;
     private boolean oldFormat = false;
-    private boolean evaluateExpr = true;
-    private boolean keepBoth;
+    private boolean evaluateExpr = false;
+    private boolean keepBoth = false;
     private String exprPrefix;
     private String exprSuffix;
     private String exprFieldNameSuffix;
@@ -77,14 +78,12 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
         }
 
         parserConfig = configuration.get(ClassAdParserFactory.KEY_EVALUATE);
-        if ((parserConfig != null) && parserConfig.equalsIgnoreCase("false")) {
-            evaluateExpr = false;
-            keepBoth = false;
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase(ExternalDataConstants.TRUE)) {
+            evaluateExpr = true;
         }
         parserConfig = configuration.get(ClassAdParserFactory.KEY_KEEP_EXPR);
-        if ((parserConfig != null) && parserConfig.equalsIgnoreCase("false")) {
-            keepBoth = false;
-            evaluateExpr = true;
+        if ((parserConfig != null) && parserConfig.equalsIgnoreCase(ExternalDataConstants.TRUE)) {
+            keepBoth = true;
         }
 
         parserConfig = configuration.get(ClassAdParserFactory.KEY_EXPR_PREFIX);
@@ -110,7 +109,7 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
         return new ClassAdParser(recordType, oldFormat, evaluateExpr, keepBoth, exprPrefix, exprSuffix,
-                exprFieldNameSuffix);
+                exprFieldNameSuffix, new ClassAdObjectPool());
     }
 
     @Override

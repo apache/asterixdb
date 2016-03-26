@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream;
+package org.apache.asterix.external.classad.object.pool;
 
-import java.io.InputStream;
+import org.apache.asterix.external.library.ClassAdParser;
 
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.FeedLogManager;
+public class ClassAdParserPool extends Pool<ClassAdParser> {
+    private final ClassAdObjectPool objectPool;
 
-public abstract class AInputStream extends InputStream {
-    public abstract boolean skipError() throws Exception;
+    public ClassAdParserPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
 
-    public abstract boolean stop() throws Exception;
+    @Override
+    public ClassAdParser newInstance() {
+        return new ClassAdParser(objectPool);
+    }
 
-    // TODO: Find a better way to send notifications
-    public abstract void setController(AbstractFeedDataFlowController controller);
+    @Override
+    protected void reset(ClassAdParser obj) {
+    }
 
-    // TODO: Find a better way to send notifications
-    public abstract void setFeedLogManager(FeedLogManager logManager);
 }

@@ -32,6 +32,7 @@ import org.apache.asterix.external.classad.Literal;
 import org.apache.asterix.external.classad.Util;
 import org.apache.asterix.external.classad.Value;
 import org.apache.asterix.external.classad.Value.ValueType;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.library.ClassAdParser;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -200,7 +201,7 @@ public class ClassAdUnitTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static boolean test(int argc, String[] argv) throws IOException {
+    public static boolean test(int argc, String[] argv, ClassAdObjectPool objectPool) throws IOException {
         AMutableInt32 numberOfErrors = new AMutableInt32(0);
         AMutableInt32 numberOfTests = new AMutableInt32(0);
         boolean have_errors;
@@ -213,17 +214,22 @@ public class ClassAdUnitTester {
 
         /* ----- Run tests ----- */
         if (parameters.checkAll || parameters.checkParsing) {
-            testParsing(parameters, results);
+            testParsing(parameters, results, objectPool);
         }
 
         if (parameters.checkAll || parameters.checkClassad) {
-            testClassad(parameters, results);
+            try {
+                testClassad(parameters, results, objectPool);
+            } catch (Throwable th) {
+                th.printStackTrace();
+                throw th;
+            }
         }
         if (parameters.checkAll || parameters.checkExprlist) {
-            testExprList(parameters, results);
+            testExprList(parameters, results, objectPool);
         }
         if (parameters.checkAll || parameters.checkValue) {
-            testValue(parameters, results);
+            testValue(parameters, results, objectPool);
         }
         if (parameters.checkAll || parameters.checkLiteral) {
         }
@@ -255,10 +261,11 @@ public class ClassAdUnitTester {
     }
 
     public static void test(String name, boolean test, String testLine, Results results) {
-        if (test)
+        if (test) {
             results.AddSuccessfulTest(name, testLine);
-        else
+        } else {
             results.AddFailedTest(name, testLine);
+        }
     }
 
     public static void test(String name, boolean test, Results results) {
@@ -272,8 +279,9 @@ public class ClassAdUnitTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void testParsing(Parameters parameters, Results results) throws IOException {
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+    public static void testParsing(Parameters parameters, Results results, ClassAdObjectPool objectPool)
+            throws IOException {
+        ClassAdParser parser = new ClassAdParser(objectPool);
         ExprTree tree;
 
         // My goal is to ensure that these expressions don't crash
@@ -312,23 +320,25 @@ public class ClassAdUnitTester {
     /*********************************************************************
      * Function: test_classad
      * Purpose: Test the ClassAd class.
+     * @param objectPool 
      *
      * @throws IOException
      *********************************************************************/
-    public static void testClassad(Parameters parameters, Results results) throws IOException {
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+    public static void testClassad(Parameters parameters, Results results, ClassAdObjectPool objectPool)
+            throws IOException {
+        ClassAdParser parser = new ClassAdParser(objectPool);
         boolean haveAttribute;
         boolean success;
 
         System.out.println("Testing the ClassAd class...");
 
         String input_basic = "[ A = 3; B = 4.0; C = \"babyzilla\"; D = true; E = {1}; F = [ AA = 3; ]; G =\"deleteme\";]";
-        ClassAd basic = new ClassAd();
+        ClassAd basic = new ClassAd(objectPool);
         AMutableInt64 i = new AMutableInt64(0);
         MutableBoolean b = new MutableBoolean();
         AMutableDouble r = new AMutableDouble(0);
         AMutableCharArrayString s = new AMutableCharArrayString();
-        ClassAd c = new ClassAd();
+        ClassAd c = new ClassAd(objectPool);
         // ExprList *l;
 
         basic = parser.parseClassAd(input_basic);
@@ -426,8 +436,8 @@ public class ClassAdUnitTester {
 
         /* ----- Test Parsing multiple ClassAds ----- */
         String twoClassads = "[ a = 3; ][ b = 4; ]";
-        ClassAd classad1 = new ClassAd();
-        ClassAd classad2 = new ClassAd();
+        ClassAd classad1 = new ClassAd(objectPool);
+        ClassAd classad2 = new ClassAd(objectPool);
         AMutableInt32 offset = new AMutableInt32(0);
 
         parser.parseClassAd(twoClassads, classad1, offset);
@@ -439,7 +449,7 @@ public class ClassAdUnitTester {
 
         /* ----- Test chained ClassAds ----- */
         // classad1 and classad2 from above test are used.
-        ClassAd classad3 = new ClassAd();
+        ClassAd classad3 = new ClassAd(objectPool);
 
         classad1.chainToAd(classad2);
         test("classad1's parent is classad2", classad1.getChainedParentAd().equals(classad2), "Test chained ClassAds 1",
@@ -488,7 +498,8 @@ public class ClassAdUnitTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void testExprList(Parameters parameters, Results results) throws IOException {
+    public static void testExprList(Parameters parameters, Results results, ClassAdObjectPool objectPool)
+            throws IOException {
         System.out.println("Testing the ExprList class...");
 
         Literal literal10;
@@ -506,17 +517,17 @@ public class ClassAdUnitTester {
         ExprList list2Copy;
 
         /* ----- Setup Literals, the vectors, then ExprLists ----- */
-        literal10 = Literal.createReal("1.0");
-        literal20 = Literal.createReal("2.0");
-        literal21 = Literal.createReal("2.1");
+        literal10 = Literal.createReal("1.0", objectPool);
+        literal20 = Literal.createReal("2.0", objectPool);
+        literal21 = Literal.createReal("2.1", objectPool);
 
         vector1.add(literal10);
         vector2.add(literal20);
         vector2.add(literal21);
 
-        list0 = new ExprList();
-        list1 = new ExprList(vector1);
-        list2 = new ExprList(vector2);
+        list0 = new ExprList(objectPool);
+        list1 = new ExprList(vector1, objectPool);
+        list2 = new ExprList(vector2, objectPool);
 
         /* ----- Did the lists get made? ----- */
         test("Made list 0", (list0 != null), "Did the lists get made? 0", results);
@@ -558,7 +569,7 @@ public class ClassAdUnitTester {
 
         /* ----- Test adding and deleting from a list ----- */
         Literal add;
-        add = Literal.createReal("2.2");
+        add = Literal.createReal("2.2", objectPool);
 
         if (list2Copy != null) {
             list2Copy.insert(add);
@@ -574,11 +585,11 @@ public class ClassAdUnitTester {
 
         /* ----- Test an ExprList bug that Nate Mueller found ----- */
         ClassAd classad;
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+        ClassAdParser parser = new ClassAdParser(objectPool);
         MutableBoolean b = new MutableBoolean();
         boolean haveAttribute;
         boolean canEvaluate;
-        Value value = new Value();
+        Value value = new Value(objectPool);
 
         String listClassadText = "[foo = 3; have_foo = member(foo, {1, 2, 3});]";
         classad = parser.parseClassAd(listClassadText);
@@ -598,8 +609,9 @@ public class ClassAdUnitTester {
      *
      * @throws HyracksDataException
      *********************************************************************/
-    public static void testValue(Parameters parameters, Results results) throws HyracksDataException {
-        Value v = new Value();
+    public static void testValue(Parameters parameters, Results results, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        Value v = new Value(objectPool);
         boolean isExpectedType;
         System.out.println("Testing the Value class...");
         test("New value is undefined", (v.isUndefinedValue()), "test_value 1", results);
@@ -659,25 +671,25 @@ public class ClassAdUnitTester {
         test("Relative time is 10", (10 == rt.getRelativeTime()), results);
         test("GetType gives RELATIVE_TIME_VALUE", (v.getType() == ValueType.RELATIVE_TIME_VALUE), results);
 
-        ExprList l = new ExprList();
-        ExprList ll = new ExprList();
+        ExprList l = new ExprList(objectPool);
+        ExprList ll = new ExprList(objectPool);
         v.setListValue(l);
         isExpectedType = v.isListValue(ll);
         test("Value is list value", isExpectedType, results);
         test("List value is correct", l.equals(ll), results);
         test("GetType gives LIST_VALUE", (v.getType() == ValueType.LIST_VALUE), results);
 
-        ExprList sl = new ExprList(true);
-        ll = new ExprList(true);
+        ExprList sl = new ExprList(true, objectPool);
+        ll = new ExprList(true, objectPool);
         v.setListValue(sl);
         isExpectedType = v.isListValue(ll);
         test("Value is list value", isExpectedType, results);
         test("List value is correct", sl.equals(ll), results);
         test("GetType gives SLIST_VALUE", (v.getType() == ValueType.SLIST_VALUE), results);
 
-        ClassAd c = new ClassAd();
+        ClassAd c = new ClassAd(objectPool);
         c.insertAttr("test_int", 10);
-        ClassAd cc = new ClassAd();
+        ClassAd cc = new ClassAd(objectPool);
         v.setClassAdValue(c);
         isExpectedType = v.isClassAdValue(cc);
         test("Value is ClassAd value", isExpectedType, results);

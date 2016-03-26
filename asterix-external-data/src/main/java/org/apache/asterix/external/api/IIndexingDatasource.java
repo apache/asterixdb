@@ -18,6 +18,33 @@
  */
 package org.apache.asterix.external.api;
 
+import java.util.List;
+
+import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.RecordReader;
+
+/**
+ * An interface for external data sources which support indexing
+ */
 public interface IIndexingDatasource {
+    /**
+     * @return an external indexer that is used to write RID fields for each record
+     */
     public IExternalIndexer getIndexer();
+
+    /**
+     * @return a list of external files being accessed
+     */
+    public List<ExternalFile> getSnapshot();
+
+    /**
+     * @return the index of the currently being read file
+     */
+    public int getCurrentSplitIndex();
+
+    /**
+     * @return an HDFS record reader that is used to get the current position in the file
+     */
+    public RecordReader<?, ? extends Writable> getReader();
 }

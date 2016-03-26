@@ -60,7 +60,7 @@ public abstract class AbstractCharRecordLookupReader extends AbstractHDFSLookupR
 
     protected abstract void readRecord(RecordId rid) throws IOException;
 
-    private void writeRecord() {
+    private void writeRecord() throws IOException {
         reusableByteBuffer.clear();
         if (reusableByteBuffer.remaining() < value.getLength()) {
             reusableByteBuffer = ByteBuffer

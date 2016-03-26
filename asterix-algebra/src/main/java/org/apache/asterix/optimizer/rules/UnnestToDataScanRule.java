@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
@@ -268,7 +268,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         }
         FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, aqlId, targetDataset, feedOutputType, metaType,
                 pkTypes, partitioningKeys, keyAccessScalarFunctionCallExpression, sourceFeed.getFeedId(),
-                sourceFeed.getFeedType(), ConnectionLocation.valueOf(subscriptionLocation), locations.split(","),
+                sourceFeed.getFeedType(), FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","),
                 context.getComputationNodeDomain());
         feedDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
         return feedDataSource;

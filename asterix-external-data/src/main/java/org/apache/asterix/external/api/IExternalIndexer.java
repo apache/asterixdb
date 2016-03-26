@@ -36,7 +36,7 @@ public interface IExternalIndexer extends Serializable {
      *            the new reader
      * @throws Exception
      */
-    public void reset(IRecordReader<?> reader) throws IOException;
+    public void reset(IIndexingDatasource reader) throws IOException;
 
     /**
      * This method is called by the dataflow controller with each tuple. the indexer is expected to append record ids to the tuple.

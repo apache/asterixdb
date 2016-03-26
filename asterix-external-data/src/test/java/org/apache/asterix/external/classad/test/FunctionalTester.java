@@ -38,6 +38,7 @@ import org.apache.asterix.external.classad.Lexer.TokenType;
 import org.apache.asterix.external.classad.PrettyPrint;
 import org.apache.asterix.external.classad.StringLexerSource;
 import org.apache.asterix.external.classad.Value;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.library.ClassAdParser;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -54,15 +55,15 @@ public class FunctionalTester {
         public ExprTreeHolder tree;
         public Value value;
 
-        public Variable(String name, ExprTree tree) {
+        public Variable(String name, ExprTree tree, ClassAdObjectPool objectPool) {
             this.name = name;
-            this.tree = new ExprTreeHolder(tree);
+            this.tree = new ExprTreeHolder(tree, objectPool);
             this.isTree = true;
         }
 
-        public Variable() {
+        public Variable(ClassAdObjectPool objectPool) {
             this.name = null;
-            this.tree = new ExprTreeHolder(null);
+            this.tree = new ExprTreeHolder(objectPool);
             this.isTree = false;
         }
 
@@ -73,8 +74,9 @@ public class FunctionalTester {
             this.tree = null;
         }
 
-        public void getStringRepresentation(AMutableCharArrayString representation) throws HyracksDataException {
-            ClassAdUnParser unparser = new PrettyPrint();
+        public void getStringRepresentation(AMutableCharArrayString representation, ClassAdObjectPool objectPool)
+                throws HyracksDataException {
+            ClassAdUnParser unparser = new PrettyPrint(objectPool);
 
             if (isTree) {
                 unparser.unparse(representation, tree);
@@ -179,7 +181,7 @@ public class FunctionalTester {
      *
      *--------------------------------------------------------------------*/
 
-    public static int test(int argc, String[] argv) throws IOException {
+    public static int test(int argc, String[] argv, ClassAdObjectPool objectPool) throws IOException {
         // here
         boolean quit;
         AMutableString line = new AMutableString(null);
@@ -194,10 +196,10 @@ public class FunctionalTester {
             boolean good_line;
             Command command;
 
-            good_line = replace_variables(line, state, parameters);
+            good_line = replace_variables(line, state, parameters, objectPool);
             if (good_line) {
                 command = get_command(line, parameters);
-                quit = handle_command(command, line, state, parameters);
+                quit = handle_command(command, line, state, parameters, objectPool);
             }
         }
         print_final_state(state);
@@ -327,14 +329,14 @@ public class FunctionalTester {
      *
      * @throws HyracksDataException
      *********************************************************************/
-    public static boolean replace_variables(AMutableString mutableLine, State state, Parameters parameters)
-            throws HyracksDataException {
+    public static boolean replace_variables(AMutableString mutableLine, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws HyracksDataException {
         boolean good_line;
         String error;
 
         good_line = true;
         error = "";
-        Variable var = new Variable();
+        Variable var = new Variable(objectPool);
         for (;;) {
             int dollar;
             int current_position;
@@ -366,7 +368,7 @@ public class FunctionalTester {
                 error += "'";
                 break;
             }
-            var.getStringRepresentation(variable_value);
+            var.getStringRepresentation(variable_value, objectPool);
 
             // We have to be careful with substr() because with gcc 2.96, it likes to
             // assert/except if you give it values that are too large.
@@ -457,8 +459,8 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static boolean handle_command(Command command, AMutableString line, State state, Parameters parameters)
-            throws IOException {
+    public static boolean handle_command(Command command, AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
         boolean quit = false;
 
         switch (command) {
@@ -469,31 +471,31 @@ public class FunctionalTester {
                 print_error_message("Unknown command on line", state);
                 break;
             case cmd_Let:
-                handle_let(line, state, parameters);
+                handle_let(line, state, parameters, objectPool);
                 break;
             case cmd_Eval:
-                handle_eval(line, state, parameters);
+                handle_eval(line, state, parameters, objectPool);
                 break;
             case cmd_Print:
-                handle_print(line, state, parameters);
+                handle_print(line, state, parameters, objectPool);
                 break;
             case cmd_Same:
-                handle_same(line, state, parameters);
+                handle_same(line, state, parameters, objectPool);
                 break;
             case cmd_Sameq:
-                handle_sameq(line, state, parameters);
+                handle_sameq(line, state, parameters, objectPool);
                 break;
             case cmd_Diff:
-                handle_diff(line, state, parameters);
+                handle_diff(line, state, parameters, objectPool);
                 break;
             case cmd_Diffq:
-                handle_diffq(line, state, parameters);
+                handle_diffq(line, state, parameters, objectPool);
                 break;
             case cmd_Set:
-                handle_set(line, state, parameters);
+                handle_set(line, state, parameters, objectPool);
                 break;
             case cmd_Show:
-                handle_show(line, state, parameters);
+                handle_show(line, state, parameters, objectPool);
                 break;
             case cmd_Writexml:
                 // handle_writexml(line, state, parameters);
@@ -520,18 +522,19 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_let(AMutableString line, State state, Parameters parameters) throws IOException {
+    public static void handle_let(AMutableString line, State state, Parameters parameters, ClassAdObjectPool objectPool)
+            throws IOException {
         AMutableString variable_name = new AMutableString(null);
         ExprTree tree;
         Variable variable;
 
         if (get_variable_name(line, true, variable_name, state, parameters)) {
-            tree = get_expr(line, state, parameters);
+            tree = get_expr(line, state, parameters, objectPool);
             if (tree != null) {
-                variable = new Variable(variable_name.getStringValue(), tree);
+                variable = new Variable(variable_name.getStringValue(), tree, objectPool);
                 variables.put(variable_name.getStringValue(), variable);
                 if (parameters.interactive) {
-                    print_expr(tree, state, parameters);
+                    print_expr(tree, state, parameters, objectPool);
                 }
             }
         }
@@ -544,16 +547,17 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_eval(AMutableString line, State state, Parameters parameters) throws IOException {
+    public static void handle_eval(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
         AMutableString variable_name = new AMutableString("");
         ExprTree tree;
         Variable variable;
 
         if (get_variable_name(line, true, variable_name, state, parameters)) {
-            tree = get_expr(line, state, parameters);
+            tree = get_expr(line, state, parameters, objectPool);
             if (tree != null) {
-                Value value = new Value();
-                if (!evaluate_expr(tree, value, parameters)) {
+                Value value = new Value(objectPool);
+                if (!evaluate_expr(tree, value, parameters, objectPool)) {
                     print_error_message("Couldn't evaluate rvalue", state);
                 } else {
                     variable = new Variable(variable_name.getStringValue(), value);
@@ -570,11 +574,12 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_print(AMutableString line, State state, Parameters parameters) throws IOException {
+    public static void handle_print(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
         ExprTree tree;
-        tree = get_expr(line, state, parameters);
+        tree = get_expr(line, state, parameters, objectPool);
         if (tree != null) {
-            print_expr(tree, state, parameters);
+            print_expr(tree, state, parameters, objectPool);
         }
     }
 
@@ -584,25 +589,26 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_same(AMutableString line, State state, Parameters parameters) throws IOException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder tree2 = new ExprTreeHolder();
-        Value value1 = new Value();
-        Value value2 = new Value();
+    public static void handle_same(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
+        ExprTreeHolder tree = new ExprTreeHolder(objectPool);
+        ExprTreeHolder tree2 = new ExprTreeHolder(objectPool);
+        Value value1 = new Value(objectPool);
+        Value value2 = new Value(objectPool);
         try {
-            get_two_exprs(line, tree, tree2, state, parameters);
+            get_two_exprs(line, tree, tree2, state, parameters, objectPool);
             if (tree.getInnerTree() != null || tree2.getInnerTree() != null) {
 
                 if (parameters.debug) {
                     System.out.println("Sameeval has two trees:");
                     System.out.print(" ");
-                    print_expr(tree, state, parameters);
+                    print_expr(tree, state, parameters, objectPool);
                     System.out.print(" ");
-                    print_expr(tree2, state, parameters);
+                    print_expr(tree2, state, parameters, objectPool);
                 }
-                if (!evaluate_expr(tree, value1, parameters)) {
+                if (!evaluate_expr(tree, value1, parameters, objectPool)) {
                     print_error_message("Couldn't evaluate first expression.\n", state);
-                } else if (!evaluate_expr(tree2, value2, parameters)) {
+                } else if (!evaluate_expr(tree2, value2, parameters, objectPool)) {
                     print_error_message("Couldn't evaluate second expressions.\n", state);
                 } else if (!value1.sameAs(value2)) {
                     print_error_message("the expressions are different.", state);
@@ -624,14 +630,16 @@ public class FunctionalTester {
     /*********************************************************************
      * Function: handle_sameq
      * Purpose:
+     * @param objectPool 
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_sameq(AMutableString line, State state, Parameters parameters) throws IOException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder tree2 = new ExprTreeHolder();
+    public static void handle_sameq(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
+        ExprTreeHolder tree = new ExprTreeHolder(objectPool);
+        ExprTreeHolder tree2 = new ExprTreeHolder(objectPool);
 
-        get_two_exprs(line, tree, tree2, state, parameters);
+        get_two_exprs(line, tree, tree2, state, parameters, objectPool);
         if (tree.getInnerTree() != null || tree2.getInnerTree() != null) {
             if (!tree.sameAs(tree2)) {
                 print_error_message("the expressions are different.", state);
@@ -646,17 +654,18 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_diff(AMutableString line, State state, Parameters parameters) throws IOException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder tree2 = new ExprTreeHolder();
-        Value value1 = new Value();
-        Value value2 = new Value();
+    public static void handle_diff(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
+        ExprTreeHolder tree = new ExprTreeHolder(objectPool);
+        ExprTreeHolder tree2 = new ExprTreeHolder(objectPool);
+        Value value1 = new Value(objectPool);
+        Value value2 = new Value(objectPool);
 
-        get_two_exprs(line, tree, tree2, state, parameters);
+        get_two_exprs(line, tree, tree2, state, parameters, objectPool);
         if (tree.getInnerTree() != null || tree2.getInnerTree() != null) {
-            if (!evaluate_expr(tree, value1, parameters)) {
+            if (!evaluate_expr(tree, value1, parameters, objectPool)) {
                 print_error_message("Couldn't evaluate first expression.\n", state);
-            } else if (!evaluate_expr(tree2, value2, parameters)) {
+            } else if (!evaluate_expr(tree2, value2, parameters, objectPool)) {
                 print_error_message("Couldn't evaluate second expressions.\n", state);
             } else if (value1.sameAs(value2)) {
                 print_error_message("the expressions are the same.", state);
@@ -669,14 +678,16 @@ public class FunctionalTester {
     /*********************************************************************
      * Function: handle_diffq
      * Purpose:
+     * @param objectPool 
      *
      * @throws IOException
      *********************************************************************/
-    public static void handle_diffq(AMutableString line, State state, Parameters parameters) throws IOException {
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprTreeHolder tree2 = new ExprTreeHolder();
+    public static void handle_diffq(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
+        ExprTreeHolder tree = new ExprTreeHolder(objectPool);
+        ExprTreeHolder tree2 = new ExprTreeHolder(objectPool);
 
-        get_two_exprs(line, tree, tree2, state, parameters);
+        get_two_exprs(line, tree, tree2, state, parameters, objectPool);
         if (tree.getInnerTree() != null || tree2.getInnerTree() != null) {
             if (tree.sameAs(tree2)) {
                 print_error_message("the expressions are the same.", state);
@@ -688,8 +699,10 @@ public class FunctionalTester {
     /*********************************************************************
      * Function: handle_set
      * Purpose:
+     * @param objectPool 
      *********************************************************************/
-    public static void handle_set(AMutableString line, State state, Parameters parameters) {
+    public static void handle_set(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) {
         AMutableString option_name = new AMutableString(null);
         AMutableString option_value = new AMutableString(null);
 
@@ -718,8 +731,10 @@ public class FunctionalTester {
     /*********************************************************************
      * Function: handle_show
      * Purpose:
+     * @param objectPool 
      *********************************************************************/
-    public static void handle_show(AMutableString line, State state, Parameters parameters) {
+    public static void handle_show(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) {
         AMutableString option_name = new AMutableString(null);
 
         if (get_variable_name(line, false, option_name, state, parameters)) {
@@ -906,10 +921,11 @@ public class FunctionalTester {
      *
      * @throws IOException
      *********************************************************************/
-    public static ExprTree get_expr(AMutableString line, State state, Parameters parameters) throws IOException {
+    public static ExprTree get_expr(AMutableString line, State state, Parameters parameters,
+            ClassAdObjectPool objectPool) throws IOException {
         int offset;
         ExprTree tree;
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+        ClassAdParser parser = new ClassAdParser(objectPool);
         StringLexerSource lexer_source = new StringLexerSource(line.getStringValue());
 
         tree = parser.parseExpression(lexer_source, false);
@@ -930,9 +946,9 @@ public class FunctionalTester {
      * @throws IOException
      *********************************************************************/
     public static void get_two_exprs(AMutableString line, ExprTreeHolder tree1, ExprTreeHolder tree2, State state,
-            Parameters parameters) throws IOException {
+            Parameters parameters, ClassAdObjectPool objectPool) throws IOException {
         int offset;
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+        ClassAdParser parser = new ClassAdParser(objectPool);
         StringLexerSource lexer_source = new StringLexerSource(line.getStringValue());
 
         tree1.setInnerTree(parser.parseExpression(lexer_source, false));
@@ -943,7 +959,7 @@ public class FunctionalTester {
         } else {
             if (parameters.debug) {
                 System.out.print("# Tree1: ");
-                print_expr(tree1, state, parameters);
+                print_expr(tree1, state, parameters, objectPool);
             }
 
             if (parser.peekToken() != TokenType.LEX_COMMA) {
@@ -961,9 +977,9 @@ public class FunctionalTester {
                     throw new IOException();
                 } else if (parameters.debug) {
                     System.out.print("# Tree2: ");
-                    print_expr(tree2, state, parameters);
+                    print_expr(tree2, state, parameters, objectPool);
                     System.out.print("# Tree1: ");
-                    print_expr(tree1, state, parameters);
+                    print_expr(tree1, state, parameters, objectPool);
                     System.out.println();
                 }
             }
@@ -978,14 +994,15 @@ public class FunctionalTester {
      *
      * @throws HyracksDataException
      *********************************************************************/
-    public static void print_expr(ExprTree tree, State state, Parameters parameters) throws HyracksDataException {
+    public static void print_expr(ExprTree tree, State state, Parameters parameters, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         AMutableCharArrayString output = new AMutableCharArrayString();
 
         if (state.format == PrintFormat.print_Compact) {
-            ClassAdUnParser unparser = new ClassAdUnParser();
+            ClassAdUnParser unparser = new ClassAdUnParser(objectPool);
             unparser.unparse(output, tree);
         } else if (state.format == PrintFormat.print_Pretty) {
-            PrettyPrint unparser = new PrettyPrint();
+            PrettyPrint unparser = new PrettyPrint(objectPool);
             unparser.unparse(output, tree);
         } else if (state.format == PrintFormat.print_XML) {/*
                                                             * ClassAdXMLUnParser unparser = new
@@ -1009,8 +1026,9 @@ public class FunctionalTester {
      *
      * @throws HyracksDataException
      *********************************************************************/
-    public static boolean evaluate_expr(ExprTree tree, Value value, Parameters parameters) throws HyracksDataException {
-        ClassAd classad = new ClassAd();
+    public static boolean evaluate_expr(ExprTree tree, Value value, Parameters parameters, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
+        ClassAd classad = new ClassAd(objectPool);
         boolean success = false;;
         classad.insert("internal___", tree);
         success = classad.evaluateAttr("internal___", value);

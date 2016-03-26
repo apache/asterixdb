@@ -42,7 +42,7 @@ import org.apache.log4j.Logger;
 public class FileSystemWatcher {
 
     private static final Logger LOGGER = Logger.getLogger(FileSystemWatcher.class.getName());
-    private final WatchService watcher;
+    private WatchService watcher;
     private final HashMap<WatchKey, Path> keys;
     private final LinkedList<File> files = new LinkedList<File>();
     private Iterator<File> it;
@@ -53,17 +53,14 @@ public class FileSystemWatcher {
     private boolean done;
     private File current;
     private AbstractFeedDataFlowController controller;
+    private final LinkedList<Path> dirs;
 
-    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) throws HyracksDataException {
-        try {
-            this.watcher = isFeed ? FileSystems.getDefault().newWatchService() : null;
-            this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
-            this.expression = expression;
-            this.path = inputResource;
-            this.isFeed = isFeed;
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) {
+        this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
+        this.expression = expression;
+        this.path = inputResource;
+        this.isFeed = isFeed;
+        this.dirs = new LinkedList<Path>();
     }
 
     public void setFeedLogManager(FeedLogManager feedLogManager) {
@@ -72,11 +69,19 @@ public class FileSystemWatcher {
 
     public void init() throws HyracksDataException {
         try {
-            LinkedList<Path> dirs = null;
-            dirs = new LinkedList<Path>();
+            dirs.clear();
             LocalFileSystemUtils.traverse(files, path.toFile(), expression, dirs);
             it = files.iterator();
             if (isFeed) {
+                keys.clear();
+                if (watcher != null) {
+                    try {
+                        watcher.close();
+                    } catch (IOException e) {
+                        LOGGER.warn("Failed to close watcher service", e);
+                    }
+                }
+                watcher = FileSystems.getDefault().newWatchService();
                 for (Path path : dirs) {
                     register(path);
                 }
@@ -125,7 +130,7 @@ public class FileSystemWatcher {
         return (WatchEvent<T>) event;
     }
 
-    private void handleEvents(WatchKey key) {
+    private void handleEvents(WatchKey key) throws IOException {
         // get dir associated with the key
         Path dir = keys.get(key);
         if (dir == null) {
@@ -143,7 +148,10 @@ public class FileSystemWatcher {
                 if (LOGGER.isEnabledFor(Level.WARN)) {
                     LOGGER.warn("Overflow event. Some events might have been missed");
                 }
-                continue;
+                // need to read and validate all files.
+                //TODO: use btrees for all logs
+                init();
+                return;
             }
 
             // Context for directory entry event is the file name of entry
@@ -172,6 +180,7 @@ public class FileSystemWatcher {
         if (!done) {
             if (watcher != null) {
                 watcher.close();
+                watcher = null;
             }
             if (logManager != null) {
                 if (current != null) {
@@ -205,7 +214,7 @@ public class FileSystemWatcher {
         return false;
     }
 
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws IOException {
         if (it.hasNext()) {
             return true;
         }
@@ -222,6 +231,7 @@ public class FileSystemWatcher {
         while (key != null) {
             handleEvents(key);
             if (endOfEvents(key)) {
+                close();
                 return false;
             }
             key = watcher.poll();
@@ -237,12 +247,18 @@ public class FileSystemWatcher {
                 if (LOGGER.isEnabledFor(Level.WARN)) {
                     LOGGER.warn("Feed Closed");
                 }
-                return false;
+                if (watcher == null) {
+                    return false;
+                }
+                continue;
             } catch (ClosedWatchServiceException e) {
                 if (LOGGER.isEnabledFor(Level.WARN)) {
                     LOGGER.warn("The watcher has exited");
                 }
-                return false;
+                if (watcher == null) {
+                    return false;
+                }
+                continue;
             }
             handleEvents(key);
             if (endOfEvents(key)) {

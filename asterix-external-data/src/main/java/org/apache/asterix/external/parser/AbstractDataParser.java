@@ -114,7 +114,7 @@ public abstract class AbstractDataParser implements IDataParser {
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+            .getAStringSerializerDeserializer();
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABINARY);

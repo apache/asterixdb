@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record;
 
+import java.io.IOException;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 
@@ -28,6 +29,16 @@ public class CharArrayRecord implements IRawRecord<char[]> {
 
     private char[] value;
     private int size;
+
+    public CharArrayRecord(int initialCapacity) {
+        value = new char[initialCapacity];
+        size = 0;
+    }
+
+    public CharArrayRecord() {
+        value = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+        size = 0;
+    }
 
     @Override
     public byte[] getBytes() {
@@ -44,16 +55,6 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         return size;
     }
 
-    public CharArrayRecord(int initialCapacity) {
-        value = new char[initialCapacity];
-        size = 0;
-    }
-
-    public CharArrayRecord() {
-        value = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-        size = 0;
-    }
-
     public void setValue(char[] recordBuffer, int offset, int length) {
         if (value.length < length) {
             value = new char[length];
@@ -62,13 +63,21 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         size = length;
     }
 
-    private void ensureCapacity(int len) {
+    private void ensureCapacity(int len) throws IOException {
         if (value.length < len) {
-            value = Arrays.copyOf(value, (int) (len * 1.25));
+            if (len > ExternalDataConstants.MAX_RECORD_SIZE) {
+                throw new IOException(
+                        "Record is too large!. Maximum record size is " + ExternalDataConstants.MAX_RECORD_SIZE);
+            }
+            int newSize = len + ExternalDataConstants.DEFAULT_BUFFER_INCREMENT;
+            if (newSize > ExternalDataConstants.MAX_RECORD_SIZE) {
+                newSize = ExternalDataConstants.MAX_RECORD_SIZE;
+            }
+            value = Arrays.copyOf(value, newSize);
         }
     }
 
-    public void append(char[] recordBuffer, int offset, int length) {
+    public void append(char[] recordBuffer, int offset, int length) throws IOException {
         ensureCapacity(size + length);
         System.arraycopy(recordBuffer, offset, value, size, length);
         size += length;
@@ -84,25 +93,25 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         return String.valueOf(value, 0, size);
     }
 
-    public void endRecord() {
+    public void endRecord() throws IOException {
         if (value[size - 1] != ExternalDataConstants.LF) {
             appendChar(ExternalDataConstants.LF);
         }
     }
 
-    private void appendChar(char c) {
+    private void appendChar(char c) throws IOException {
         ensureCapacity(size + 1);
         value[size] = c;
         size++;
     }
 
-    public void append(char[] recordBuffer) {
+    public void append(char[] recordBuffer) throws IOException {
         ensureCapacity(size + recordBuffer.length);
         System.arraycopy(recordBuffer, 0, value, size, recordBuffer.length);
         size += recordBuffer.length;
     }
 
-    public void append(CharBuffer chars) {
+    public void append(CharBuffer chars) throws IOException {
         ensureCapacity(size + chars.limit());
         chars.get(value, size, chars.limit());
         size += chars.limit();
@@ -114,7 +123,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         this.size = value.length;
     }
 
-    public void set(StringBuilder builder) {
+    public void set(StringBuilder builder) throws IOException {
         ensureCapacity(builder.length());
         builder.getChars(0, builder.length(), value, 0);
         this.size = builder.length();

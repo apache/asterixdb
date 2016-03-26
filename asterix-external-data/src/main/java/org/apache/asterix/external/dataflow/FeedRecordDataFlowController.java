@@ -67,22 +67,29 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                     continue;
                 }
                 tb.reset();
-                dataParser.parse(record, tb.getDataOutput());
+                try {
+                    dataParser.parse(record, tb.getDataOutput());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    LOGGER.warn(ExternalDataConstants.ERROR_PARSE_RECORD, e);
+                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_PARSE_RECORD);
+                    continue;
+                }
                 tb.addFieldEndOffset();
                 addMetaPart(tb, record);
                 addPrimaryKeys(tb, record);
                 if (tb.getSize() > tupleForwarder.getMaxRecordSize()) {
                     // log
-                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.LARGE_RECORD_ERROR_MESSAGE);
+                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_LARGE_RECORD);
                     continue;
                 }
                 tupleForwarder.addTuple(tb);
             }
-        } catch (Throwable th) {
+        } catch (Exception e) {
             failed = true;
             tupleForwarder.flush();
-            LOGGER.warn("Failure during while operating a feed source", th);
-            throw new HyracksDataException(th);
+            LOGGER.warn("Failure while operating a feed source", e);
+            throw new HyracksDataException(e);
         }
         try {
             tupleForwarder.close();
@@ -156,6 +163,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     @Override
     public boolean handleException(Throwable th) {
-        return true;
+        // This is not a parser record. most likely, this error happened in the record reader.
+        return recordReader.handleException(th);
     }
 }

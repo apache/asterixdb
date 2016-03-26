@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import org.apache.asterix.external.classad.Value.NumberFactor;
-import org.apache.asterix.external.classad.object.pool.CaseInsensitiveStringPool;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.library.ClassAdParser;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -97,7 +97,6 @@ public class ClassAd extends ExprTree {
     private static final int CLASSAD_VERSION_PATCH = 0;
     private static final String CLASSAD_VERSION = "8.0.0";
     public static final ArrayList<String> specialAttrNames = new ArrayList<String>();
-    private final CaseInsensitiveStringPool StringPool = new CaseInsensitiveStringPool();
 
     static {
         specialAttrNames.add(ATTR_TOPLEVEL);
@@ -106,42 +105,22 @@ public class ClassAd extends ExprTree {
         specialAttrNames.add(ATTR_PARENT);
     }
 
-    public static final FunctionCall curr_time_expr = FunctionCall.createFunctionCall("time", new ExprList());
+    public static final FunctionCall curr_time_expr = FunctionCall.createFunctionCall("time",
+            new ExprList(new ClassAdObjectPool()), new ClassAdObjectPool());
 
     private ClassAd alternateScope;
-    //private boolean doDirtyTracking;
-    private Map<CaseInsensitiveString, ExprTree> attrList = new HashMap<CaseInsensitiveString, ExprTree>();
+    private final Map<CaseInsensitiveString, ExprTree> attrList;
     private ClassAd chainedParentAd;
     private ClassAdParser parser = null;
-    private ClassAd newAd = null;
+    private ClassAd newAd;
 
     /*
      * Constructors
      */
-    public ClassAd() {
-        chainedParentAd = null;
-        alternateScope = null;
-        newAd = new ClassAd(false, false);
-        parser = new ClassAdParser(null, false, true, false, null, null, null);
-    }
-
-    public ClassAd(boolean initializeParser, boolean initializeNewAd) {
-        chainedParentAd = null;
-        alternateScope = null;
-        if (initializeNewAd) {
-            newAd = new ClassAd(false, false);
-        }
-        if (initializeParser) {
-            parser = new ClassAdParser(null, false, true, false, null, null, null);
-        }
-    }
-
-    public ClassAd(ClassAd ad) throws HyracksDataException {
-        if (ad == null) {
-            clear();
-        } else {
-            copyFrom(ad);
-        }
+    public ClassAd(ClassAdObjectPool objectPool) {
+        super(objectPool);
+        parser = new ClassAdParser(this.objectPool);
+        attrList = new HashMap<CaseInsensitiveString, ExprTree>();
     }
 
     @Override
@@ -165,10 +144,6 @@ public class ClassAd extends ExprTree {
         return attrList;
     }
 
-    public void setAttrList(Map<CaseInsensitiveString, ExprTree> attrList) {
-        this.attrList = attrList;
-    }
-
     public void classAdLibraryVersion(AMutableInt32 major, AMutableInt32 minor, AMutableInt32 patch) {
         major.setValue(CLASSAD_VERSION_MAJOR);
         minor.setValue(CLASSAD_VERSION_MINOR);
@@ -187,21 +162,6 @@ public class ClassAd extends ExprTree {
         return curr_time_expr;
     }
 
-    //public TreeSet<CaseInsensitiveString> dirtyAttrList = new TreeSet<CaseInsensitiveString>();
-
-    /*
-     * Reference is an ordered set of Strings <The ordering uses less than ignore case>. Example
-     * below
-     * TreeSet<String> references = new TreeSet<String>(
-     * new Comparator<String>(){
-     * public int compare(String o1, String o2) {
-     * return o1.compareToIgnoreCase(o2);
-     * }
-     * });
-     *
-     * // PortReferences is a Map<ClassAd,OrderedSet<Strings>>
-     */
-
     public boolean copyFrom(ClassAd ad) throws HyracksDataException {
 
         boolean succeeded = true;
@@ -211,38 +171,26 @@ public class ClassAd extends ExprTree {
             clear();
             // copy scoping attributes
             super.copyFrom(ad);
-            if (ad.chainedParentAd != null) {
-                if (chainedParentAd == null) {
-                    chainedParentAd = new ClassAd();
-                }
-                chainedParentAd.setValue(ad.chainedParentAd);
-            }
-            if (ad.alternateScope != null) {
-                if (alternateScope == null) {
-                    alternateScope = new ClassAd();
-                }
-                alternateScope.setValue(ad.alternateScope);
-            }
-            //this.doDirtyTracking = false;
+            chainedParentAd = ad.chainedParentAd;
+            alternateScope = ad.alternateScope;
             for (Entry<CaseInsensitiveString, ExprTree> attr : ad.attrList.entrySet()) {
-                ExprTree tree = attr.getValue().copy();
-                attrList.put(attr.getKey(), tree);
-                // if (ad.doDirtyTracking && ad.IsAttributeDirty(attr.getKey())) {
-                //   dirtyAttrList.add(attr.getKey());
-                //}
+                ExprTree tree = objectPool.mutableExprPool.get();
+                CaseInsensitiveString key = objectPool.caseInsensitiveStringPool.get();
+                tree.copyFrom(attr.getValue());
+                key.set(attr.getKey().get());
+                attrList.put(key, tree);
             }
-            //doDirtyTracking = ad.doDirtyTracking;
         }
         return succeeded;
     }
 
     public boolean update(ClassAd ad) throws HyracksDataException {
         for (Entry<CaseInsensitiveString, ExprTree> attr : ad.attrList.entrySet()) {
-            ExprTree tree = attr.getValue().copy();
-            attrList.put(attr.getKey(), tree);
-            // if (ad.doDirtyTracking && ad.IsAttributeDirty(attr.getKey())) {
-            //   dirtyAttrList.add(attr.getKey());
-            //}
+            ExprTree tree = objectPool.mutableExprPool.get();
+            CaseInsensitiveString key = objectPool.caseInsensitiveStringPool.get();
+            tree.copyFrom(attr.getValue());
+            key.set(attr.getKey().get());
+            attrList.put(key, tree);
         }
         return true;
     }
@@ -306,9 +254,6 @@ public class ClassAd extends ExprTree {
         if (alternateScope != null) {
             alternateScope.clear();
         }
-        if (parser != null) {
-            parser.reset();
-        }
     }
 
     public void unchain() {
@@ -317,18 +262,24 @@ public class ClassAd extends ExprTree {
         }
     }
 
-    public void getComponents(Map<CaseInsensitiveString, ExprTree> attrs) {
+    public void getComponents(Map<CaseInsensitiveString, ExprTree> attrs, ClassAdObjectPool objectPool)
+            throws HyracksDataException {
         attrs.clear();
         for (Entry<CaseInsensitiveString, ExprTree> attr : this.attrList.entrySet()) {
-            attrs.put(attr.getKey(), attr.getValue());
+            ExprTree tree = objectPool.mutableExprPool.get();
+            CaseInsensitiveString key = objectPool.caseInsensitiveStringPool.get();
+            tree.copyFrom(attr.getValue());
+            key.set(attr.getKey().get());
+            attrs.put(key, tree);
         }
     }
 
     public ClassAd privateGetDeepScope(ExprTree tree) throws HyracksDataException {
-        ClassAd scope = new ClassAd();
-        Value val = new Value();
-        if (tree == null)
+        if (tree == null) {
             return (null);
+        }
+        ClassAd scope = objectPool.classAdPool.get();
+        Value val = objectPool.valuePool.get();
         tree.setParentScope(this);
         if (!tree.publicEvaluate(val) || !val.isClassAdValue(scope)) {
             return (null);
@@ -339,9 +290,9 @@ public class ClassAd extends ExprTree {
     // --- begin integer attribute insertion ----
     public boolean insertAttr(String name, int value, NumberFactor f) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         val.setIntegerValue(value);
-        plit = Literal.createLiteral(val, f);
+        plit = Literal.createLiteral(val, f, objectPool);
         return insert(name, plit);
     }
 
@@ -351,10 +302,10 @@ public class ClassAd extends ExprTree {
 
     public boolean insertAttr(String name, long value, NumberFactor f) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
 
         val.setIntegerValue(value);
-        plit = Literal.createLiteral(val, f);
+        plit = Literal.createLiteral(val, f, objectPool);
         return (insert(name, plit));
     }
 
@@ -365,16 +316,18 @@ public class ClassAd extends ExprTree {
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, int value, NumberFactor f)
             throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value, f));
     }
 
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, long value, NumberFactor f)
             throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value, f));
     }
 
@@ -383,17 +336,18 @@ public class ClassAd extends ExprTree {
     // --- begin real attribute insertion ---
     public boolean insertAttr(String name, double value, NumberFactor f) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         val.setRealValue(value);
-        plit = Literal.createLiteral(val, f);
+        plit = Literal.createLiteral(val, f, objectPool);
         return (insert(name, plit));
     }
 
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, double value, NumberFactor f)
             throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value, f));
     }
 
@@ -402,16 +356,17 @@ public class ClassAd extends ExprTree {
     // --- begin boolean attribute insertion
     public boolean insertAttr(String name, boolean value) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         val.setBooleanValue(value);
-        plit = Literal.createLiteral(val);
+        plit = Literal.createLiteral(val, objectPool);
         return (insert(name, plit));
     }
 
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, boolean value) throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value));
     }
 
@@ -420,33 +375,35 @@ public class ClassAd extends ExprTree {
     // --- begin string attribute insertion
     public boolean insertAttr(String name, AMutableCharArrayString value) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         val.setStringValue(value);
-        plit = Literal.createLiteral(val);
+        plit = Literal.createLiteral(val, objectPool);
         return (insert(name, plit));
     }
 
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, AMutableCharArrayString value)
             throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value));
     }
 
     public boolean insertAttr(String name, String value) throws HyracksDataException {
         ExprTree plit;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
 
         val.setStringValue(value);
-        plit = Literal.createLiteral(val);
+        plit = Literal.createLiteral(val, objectPool);
         return (insert(name, plit));
     }
 
     public boolean deepInsertAttr(ExprTree scopeExpr, String name, String value) throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insertAttr(name, value));
     }
 
@@ -498,7 +455,7 @@ public class ClassAd extends ExprTree {
                 // cache doesn't already have an entry for this name:value, so add
                 // it to the cache now.
                 if (newTree.getKind() != NodeKind.LITERAL_NODE) {
-                    Literal lit = parser.getLiteral();
+                    Literal lit = objectPool.literalPool.get();
                     lit.getValue().setStringValue(szValue);
                     bRet = insert(name, lit, false);
                 } else {
@@ -511,7 +468,8 @@ public class ClassAd extends ExprTree {
     }
 
     public boolean insert(String attrName, ExprTree expr) throws HyracksDataException {
-        boolean result = insert(attrName, expr.isTreeHolder() ? ((ExprTreeHolder) expr).getInnerTree() : expr, false);
+        ExprTree tree = expr.copy();
+        boolean result = insert(attrName, tree.isTreeHolder() ? ((ExprTreeHolder) tree).getInnerTree() : tree, false);
         return result;
     }
 
@@ -522,13 +480,14 @@ public class ClassAd extends ExprTree {
         if (attrName.isEmpty() || pRef == null) {
             throw new HyracksDataException();
         }
-        CaseInsensitiveString pstrAttr = StringPool.get();
-        pstrAttr.set(attrName);
-
         if (tree != null) {
+            CaseInsensitiveString pstrAttr = objectPool.caseInsensitiveStringPool.get();
+            pstrAttr.set(attrName);
+            ExprTreeHolder mutableTree = objectPool.mutableExprPool.get();
+            mutableTree.copyFrom(tree);
             // parent of the expression is this classad
             tree.setParentScope(this);
-            attrList.put(pstrAttr, tree);
+            attrList.put(pstrAttr, mutableTree);
             bRet = true;
         }
         return (bRet);
@@ -536,8 +495,9 @@ public class ClassAd extends ExprTree {
 
     public boolean deepInsert(ExprTree scopeExpr, String name, ExprTree tree) throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
+        }
         return (ad.insert(name, tree));
     }
 
@@ -545,10 +505,9 @@ public class ClassAd extends ExprTree {
 
     // --- begin lookup methods
     public ExprTree lookup(String name) {
-        CaseInsensitiveString aString = StringPool.get();
+        CaseInsensitiveString aString = objectPool.caseInsensitiveStringPool.get();
         aString.set(name);
         ExprTree expr = lookup(aString);
-        StringPool.put(aString);
         return expr;
     }
 
@@ -569,9 +528,9 @@ public class ClassAd extends ExprTree {
         }
     }
 
-    public ExprTree lookupInScope(AMutableCharArrayString name, ClassAd finalScope) {
-        EvalState state = new EvalState();
-        ExprTreeHolder tree = new ExprTreeHolder();
+    public ExprTree lookupInScope(AMutableCharArrayString name, ClassAd finalScope) throws HyracksDataException {
+        EvalState state = objectPool.evalStatePool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         int rval;
         state.setScopes(this);
         rval = lookupInScope(name.toString(), tree, state);
@@ -583,10 +542,10 @@ public class ClassAd extends ExprTree {
         return null;
     }
 
-    public int lookupInScope(String name, ExprTreeHolder expr, EvalState state) {
+    public int lookupInScope(String name, ExprTreeHolder expr, EvalState state) throws HyracksDataException {
 
         ClassAd current = this;
-        ClassAd superScope = new ClassAd();
+        ClassAd superScope = objectPool.classAdPool.get();
         expr.setInnerTree(null);
 
         while (expr.getInnerTree() == null && current != null) {
@@ -598,11 +557,17 @@ public class ClassAd extends ExprTree {
             if ((expr.getInnerTree() != null)) {
                 return EvalResult.EVAL_OK.ordinal();
             }
-
-            if (state.getRootAd().equals(current)) {
-                superScope = null;
-            } else {
-                superScope = current.parentScope;
+            try {
+                if (state.getRootAd() == null) {
+                    return (EvalResult.EVAL_UNDEF.ordinal());
+                } else if (state.getRootAd().equals(current)) {
+                    superScope = null;
+                } else {
+                    superScope = current.parentScope;
+                }
+            } catch (Throwable th) {
+                th.printStackTrace();
+                throw th;
             }
             if (!getSpecialAttrNames().contains(name)) {
                 // continue searching from the superScope ...
@@ -638,10 +603,9 @@ public class ClassAd extends ExprTree {
 
     // --- begin deletion methods
     public boolean delete(String name) throws HyracksDataException {
-        CaseInsensitiveString aString = StringPool.get();
+        CaseInsensitiveString aString = objectPool.caseInsensitiveStringPool.get();
         aString.set(name);
         boolean success = delete(aString);
-        StringPool.put(aString);
         return success;
     }
 
@@ -657,10 +621,10 @@ public class ClassAd extends ExprTree {
         // behavior copied from old ClassAds. It's also one reason you
         // probably don't want to use this feature in the future.
         if (chainedParentAd != null && chainedParentAd.lookup(name) != null) {
-            Value undefined_value = new Value();
+            Value undefined_value = objectPool.valuePool.get();
             undefined_value.setUndefinedValue();
             deleted_attribute = true;
-            ExprTree plit = Literal.createLiteral(undefined_value);
+            ExprTree plit = Literal.createLiteral(undefined_value, objectPool);
             insert(name.get(), plit);
         }
         return deleted_attribute;
@@ -668,12 +632,12 @@ public class ClassAd extends ExprTree {
 
     public boolean deepDelete(ExprTree scopeExpr, String name) throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (false);
-        CaseInsensitiveString aString = StringPool.get();
+        }
+        CaseInsensitiveString aString = objectPool.caseInsensitiveStringPool.get();
         aString.set(name);;
         boolean success = ad.delete(aString);
-        StringPool.put(aString);
         return success;
     }
 
@@ -694,9 +658,9 @@ public class ClassAd extends ExprTree {
             if (tree == null) {
                 tree = chainedParentAd.lookup(name);
             }
-            Value undefined_value = new Value();
+            Value undefined_value = objectPool.valuePool.get();
             undefined_value.setUndefinedValue();
-            ExprTree plit = Literal.createLiteral(undefined_value);
+            ExprTree plit = Literal.createLiteral(undefined_value, objectPool);
             //why??
             insert(name, plit);
         }
@@ -705,8 +669,9 @@ public class ClassAd extends ExprTree {
 
     public ExprTree deepRemove(ExprTree scopeExpr, String name) throws HyracksDataException {
         ClassAd ad = privateGetDeepScope(scopeExpr);
-        if (ad == null)
+        if (ad == null) {
             return (null);
+        }
         return (ad.remove(name));
     }
 
@@ -721,7 +686,7 @@ public class ClassAd extends ExprTree {
     public void modify(ClassAd mod) throws HyracksDataException {
         ClassAd ctx;
         ExprTree expr;
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
 
         // Step 0:  Determine Context
         if ((expr = mod.lookup(Common.ATTR_CONTEXT)) != null) {
@@ -734,7 +699,7 @@ public class ClassAd extends ExprTree {
 
         // Step 1:  Process Replace attribute
         if ((expr = mod.lookup(Common.ATTR_REPLACE)) != null) {
-            ClassAd ad = new ClassAd();
+            ClassAd ad = objectPool.classAdPool.get();
             if (expr.publicEvaluate(val) && val.isClassAdValue(ad)) {
                 ctx.clear();
                 ctx.update(ad);
@@ -743,7 +708,7 @@ public class ClassAd extends ExprTree {
 
         // Step 2:  Process Updates attribute
         if ((expr = mod.lookup(Common.ATTR_UPDATES)) != null) {
-            ClassAd ad = new ClassAd();
+            ClassAd ad = objectPool.classAdPool.get();
             if (expr.publicEvaluate(val) && val.isClassAdValue(ad)) {
                 ctx.update(ad);
             }
@@ -751,8 +716,8 @@ public class ClassAd extends ExprTree {
 
         // Step 3:  Process Deletes attribute
         if ((expr = mod.lookup(Common.ATTR_DELETES)) != null) {
-            ExprList list = new ExprList();
-            AMutableCharArrayString attrName = new AMutableCharArrayString();
+            ExprList list = objectPool.exprListPool.get();
+            AMutableCharArrayString attrName = objectPool.strPool.get();
 
             // make a first pass to check that it is a list of strings ...
             if (!expr.publicEvaluate(val) || !val.isListValue(list)) {
@@ -774,18 +739,18 @@ public class ClassAd extends ExprTree {
 
     @Override
     public ExprTree copy() throws HyracksDataException {
-        ClassAd newAd = new ClassAd();
-        newAd.parentScope = parentScope;
-        newAd.chainedParentAd = chainedParentAd;
+        ClassAd newAd = objectPool.classAdPool.get();
+        newAd.parentScope = (parentScope == null) ? null : (ClassAd) parentScope.copy();
+        newAd.chainedParentAd = chainedParentAd == null ? null : (ClassAd) chainedParentAd.copy();
 
         for (Entry<CaseInsensitiveString, ExprTree> entry : attrList.entrySet()) {
-            newAd.insert(entry.getKey().get(), entry.getValue().copy(), false);
+            newAd.insert(entry.getKey().get(), entry.getValue(), false);
         }
         return newAd;
     }
 
     @Override
-    public boolean publicEvaluate(EvalState state, Value val) {
+    public boolean publicEvaluate(EvalState state, Value val) throws HyracksDataException {
         val.setClassAdValue(this);
         return (true);
     }
@@ -800,9 +765,9 @@ public class ClassAd extends ExprTree {
     @Override
     public boolean privateFlatten(EvalState state, Value val, ExprTreeHolder tree, AMutableInt32 i)
             throws HyracksDataException {
-        ClassAd newAd = new ClassAd();
-        Value eval = new Value();
-        ExprTreeHolder etree = new ExprTreeHolder();
+        ClassAd newAd = objectPool.classAdPool.get();
+        Value eval = objectPool.valuePool.get();
+        ExprTreeHolder etree = objectPool.mutableExprPool.get();;
         ClassAd oldAd;
 
         tree.setInnerTree(null); // Just to be safe...  wenger 2003-12-11.
@@ -814,23 +779,27 @@ public class ClassAd extends ExprTree {
             // flatten expression
             if (!entry.getValue().publicFlatten(state, eval, etree)) {
                 tree.setInnerTree(null);;
-                eval.clear();
+                eval.setUndefinedValue();
                 state.setCurAd(oldAd);
                 return false;
             }
 
             // if a value was obtained, convert it to a literal
             if (etree.getInnerTree() == null) {
-                etree.setInnerTree(Literal.createLiteral(eval));
+                etree.setInnerTree(Literal.createLiteral(eval, objectPool));
                 if (etree.getInnerTree() == null) {
                     tree.setInnerTree(null);
-                    eval.clear();
+                    eval.setUndefinedValue();
                     state.setCurAd(oldAd);
                     return false;
                 }
             }
-            newAd.attrList.put(entry.getKey(), etree);
-            eval.clear();
+            CaseInsensitiveString key = objectPool.caseInsensitiveStringPool.get();
+            ExprTreeHolder value = objectPool.mutableExprPool.get();
+            key.set(entry.getKey().get());
+            value.copyFrom(etree);
+            newAd.attrList.put(key, value);
+            eval.setUndefinedValue();
         }
 
         tree.setInnerTree(newAd);
@@ -839,8 +808,8 @@ public class ClassAd extends ExprTree {
     }
 
     public boolean evaluateAttr(String attr, Value val) throws HyracksDataException {
-        EvalState state = new EvalState();
-        ExprTreeHolder tree = new ExprTreeHolder();
+        EvalState state = objectPool.evalStatePool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         state.setScopes(this);
         switch (lookupInScope(attr, tree, state)) {
             case ExprTree.EVAL_FAIL_Int:
@@ -860,8 +829,8 @@ public class ClassAd extends ExprTree {
 
     public boolean evaluateExpr(String buf, Value result) throws HyracksDataException {
         boolean successfully_evaluated;
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ClassAdParser parser = objectPool.classAdParserPool.get();
 
         try {
             if (parser.parseExpression(buf, tree)) {
@@ -876,54 +845,54 @@ public class ClassAd extends ExprTree {
     }
 
     public boolean evaluateExpr(ExprTreeHolder tree, Value val) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         state.setScopes(this);
         return (tree.publicEvaluate(state, val));
     }
 
     public boolean evaluateExpr(ExprTreeHolder tree, Value val, ExprTreeHolder sig) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         state.setScopes(this);
         return (tree.publicEvaluate(state, val, sig));
     }
 
     public boolean evaluateAttrInt(String attr, AMutableInt64 i) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isIntegerValue(i));
     }
 
     public boolean evaluateAttrReal(String attr, AMutableDouble r) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isRealValue(r));
     }
 
     public boolean evaluateAttrNumber(String attr, AMutableInt64 i) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isNumber(i));
     }
 
     public boolean evaluateAttrNumber(String attr, AMutableDouble r) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isNumber(r));
     }
 
     public boolean evaluateAttrString(String attr, AMutableCharArrayString buf, int len) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isStringValue(buf, len));
     }
 
     public boolean evaluateAttrString(String attr, AMutableCharArrayString buf) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isStringValue(buf));
     }
 
     public boolean evaluateAttrBool(String attr, MutableBoolean b) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isBooleanValue(b));
     }
 
     public boolean evaluateAttrBoolEquiv(String attr, MutableBoolean b) throws HyracksDataException {
-        Value val = new Value();
+        Value val = objectPool.valuePool.get();
         return (evaluateAttr(attr, val) && val.isBooleanValueEquiv(b));
     }
 
@@ -942,7 +911,7 @@ public class ClassAd extends ExprTree {
 
     public boolean getExternalReferences(ExprTree tree, TreeSet<String> refs, boolean fullNames)
             throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         // Treat this ad as the root of the tree for reference tracking.
         // If an attribute is only present in a parent scope of this ad,
         // then we want to treat it as an external reference.
@@ -962,12 +931,12 @@ public class ClassAd extends ExprTree {
                 return (true);
 
             case ATTRREF_NODE: {
-                ClassAd start = new ClassAd();
-                ExprTreeHolder tree = new ExprTreeHolder();
-                ExprTreeHolder result = new ExprTreeHolder();
-                AMutableCharArrayString attr = new AMutableCharArrayString();
-                Value val = new Value();
-                MutableBoolean abs = new MutableBoolean();
+                ClassAd start = objectPool.classAdPool.get();
+                ExprTreeHolder tree = objectPool.mutableExprPool.get();
+                ExprTreeHolder result = objectPool.mutableExprPool.get();
+                AMutableCharArrayString attr = objectPool.strPool.get();
+                Value val = objectPool.valuePool.get();
+                MutableBoolean abs = objectPool.boolPool.get();
 
                 ((AttributeReference) expr).getComponents(tree, attr, abs);
                 // establish starting point for attribute search
@@ -984,9 +953,9 @@ public class ClassAd extends ExprTree {
                     // are in the tree part
                     if (val.isUndefinedValue()) {
                         if (fullNames) {
-                            AMutableCharArrayString fullName = new AMutableCharArrayString();
+                            AMutableCharArrayString fullName = objectPool.strPool.get();
                             if (tree.getInnerTree() != null) {
-                                ClassAdUnParser unparser = new PrettyPrint();
+                                ClassAdUnParser unparser = objectPool.prettyPrintPool.get();
                                 unparser.unparse(fullName, tree);
                                 fullName.appendChar('.');
                             }
@@ -1041,10 +1010,10 @@ public class ClassAd extends ExprTree {
             }
             case OP_NODE: {
                 // recurse on subtrees
-                AMutableInt32 opKind = new AMutableInt32(0);
-                ExprTreeHolder t1 = new ExprTreeHolder();
-                ExprTreeHolder t2 = new ExprTreeHolder();
-                ExprTreeHolder t3 = new ExprTreeHolder();
+                AMutableInt32 opKind = objectPool.int32Pool.get();
+                ExprTreeHolder t1 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t2 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t3 = objectPool.mutableExprPool.get();
 
                 ((Operation) expr).getComponents(opKind, t1, t2, t3);
                 if (t1.getInnerTree() != null && !privateGetExternalReferences(t1, ad, state, refs, fullNames)) {
@@ -1060,8 +1029,8 @@ public class ClassAd extends ExprTree {
             }
             case FN_CALL_NODE: {
                 // recurse on subtrees
-                AMutableCharArrayString fnName = new AMutableCharArrayString();
-                ExprList args = new ExprList();
+                AMutableCharArrayString fnName = objectPool.strPool.get();
+                ExprList args = objectPool.exprListPool.get();
                 ((FunctionCall) expr).getComponents(fnName, args);
                 for (ExprTree tree : args.getExprList()) {
                     if (!privateGetExternalReferences(tree, ad, state, refs, fullNames)) {
@@ -1072,8 +1041,8 @@ public class ClassAd extends ExprTree {
             }
             case CLASSAD_NODE: {
                 // recurse on subtrees
-                Map<CaseInsensitiveString, ExprTree> attrs = new HashMap<CaseInsensitiveString, ExprTree>();
-                ((ClassAd) expr).getComponents(attrs);
+                Map<CaseInsensitiveString, ExprTree> attrs = objectPool.strToExprPool.get();
+                ((ClassAd) expr).getComponents(attrs, objectPool);
                 for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
                     if (state.getDepthRemaining() <= 0) {
                         return false;
@@ -1089,7 +1058,7 @@ public class ClassAd extends ExprTree {
             }
             case EXPR_LIST_NODE: {
                 // recurse on subtrees
-                ExprList exprs = new ExprList();
+                ExprList exprs = objectPool.exprListPool.get();
 
                 ((ExprList) expr).getComponents(exprs);
                 for (ExprTree exprTree : exprs.getExprList()) {
@@ -1115,7 +1084,7 @@ public class ClassAd extends ExprTree {
     // PortReferences is a Map<ClassAd,TreeSet<Strings>>
     public boolean getExternalReferences(ExprTree tree, Map<ClassAd, TreeSet<String>> refs)
             throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         // Treat this ad as the root of the tree for reference tracking.
         // If an attribute is only present in a parent scope of this ad,
         // then we want to treat it as an external reference.
@@ -1133,12 +1102,12 @@ public class ClassAd extends ExprTree {
                 return (true);
 
             case ATTRREF_NODE: {
-                ClassAd start = new ClassAd();
-                ExprTreeHolder tree = new ExprTreeHolder();
-                ExprTreeHolder result = new ExprTreeHolder();
-                AMutableCharArrayString attr = new AMutableCharArrayString();
-                Value val = new Value();
-                MutableBoolean abs = new MutableBoolean();
+                ClassAd start = objectPool.classAdPool.get();
+                ExprTreeHolder tree = objectPool.mutableExprPool.get();
+                ExprTreeHolder result = objectPool.mutableExprPool.get();
+                AMutableCharArrayString attr = objectPool.strPool.get();
+                Value val = objectPool.valuePool.get();
+                MutableBoolean abs = objectPool.boolPool.get();
 
                 ((AttributeReference) expr).getComponents(tree, attr, abs);
                 // establish starting point for attribute search
@@ -1148,8 +1117,9 @@ public class ClassAd extends ExprTree {
                         return false; // NAC
                     } // NAC
                 } else {
-                    if (!tree.publicEvaluate(state, val))
+                    if (!tree.publicEvaluate(state, val)) {
                         return (false);
+                    }
                     // if the tree evals to undefined, the external references
                     // are in the tree part
                     if (val.isUndefinedValue()) {
@@ -1157,8 +1127,9 @@ public class ClassAd extends ExprTree {
                     }
                     // otherwise, if the tree didn't evaluate to a classad,
                     // we have a problem
-                    if (!val.isClassAdValue(start))
+                    if (!val.isClassAdValue(start)) {
                         return (false);
+                    }
 
                     // make sure that we are starting from a "valid" scope
                     if (!refs.containsKey(start) && start != this) {
@@ -1169,7 +1140,7 @@ public class ClassAd extends ExprTree {
                 ClassAd curAd = state.getCurAd();
                 TreeSet<String> pitr = refs.get(start);
                 if (pitr == null) {
-                    pitr = new TreeSet<String>();
+                    pitr = objectPool.strSetPool.get();
                     refs.put(start, pitr);
                 }
                 switch (start.lookupInScope(attr.toString(), result, state)) {
@@ -1198,10 +1169,10 @@ public class ClassAd extends ExprTree {
 
             case OP_NODE: {
                 // recurse on subtrees
-                AMutableInt32 opKind = new AMutableInt32(0);
-                ExprTreeHolder t1 = new ExprTreeHolder();
-                ExprTreeHolder t2 = new ExprTreeHolder();
-                ExprTreeHolder t3 = new ExprTreeHolder();
+                AMutableInt32 opKind = objectPool.int32Pool.get();
+                ExprTreeHolder t1 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t2 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t3 = objectPool.mutableExprPool.get();
                 ((Operation) expr).getComponents(opKind, t1, t2, t3);
                 if (t1.getInnerTree() != null && !privateGetExternalReferences(t1, ad, state, refs)) {
                     return (false);
@@ -1217,8 +1188,8 @@ public class ClassAd extends ExprTree {
 
             case FN_CALL_NODE: {
                 // recurse on subtrees
-                AMutableCharArrayString fnName = new AMutableCharArrayString();
-                ExprList args = new ExprList();
+                AMutableCharArrayString fnName = objectPool.strPool.get();
+                ExprList args = objectPool.exprListPool.get();
 
                 ((FunctionCall) expr).getComponents(fnName, args);
                 for (ExprTree exprTree : args.getExprList()) {
@@ -1231,9 +1202,9 @@ public class ClassAd extends ExprTree {
 
             case CLASSAD_NODE: {
                 // recurse on subtrees
-                HashMap<CaseInsensitiveString, ExprTree> attrs = new HashMap<CaseInsensitiveString, ExprTree>();
+                HashMap<CaseInsensitiveString, ExprTree> attrs = objectPool.strToExprPool.get();
 
-                ((ClassAd) expr).getComponents(attrs);
+                ((ClassAd) expr).getComponents(attrs, objectPool);
                 for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
                     if (!privateGetExternalReferences(entry.getValue(), ad, state, refs)) {
                         return (false);
@@ -1244,7 +1215,7 @@ public class ClassAd extends ExprTree {
 
             case EXPR_LIST_NODE: {
                 // recurse on subtrees
-                ExprList exprs = new ExprList();
+                ExprList exprs = objectPool.exprListPool.get();
                 ((ExprList) expr).getComponents(exprs);
                 for (ExprTree exprTree : exprs.getExprList()) {
                     if (!privateGetExternalReferences(exprTree, ad, state, refs)) {
@@ -1273,7 +1244,7 @@ public class ClassAd extends ExprTree {
      */
     public boolean getInternalReferences(ExprTree tree, TreeSet<String> refs, boolean fullNames)
             throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
 
         // Treat this ad as the root of the tree for reference tracking.
         // If an attribute is only present in a parent scope of this ad,
@@ -1295,12 +1266,12 @@ public class ClassAd extends ExprTree {
             }
 
             case ATTRREF_NODE: {
-                ClassAd start = new ClassAd();
-                ExprTreeHolder tree = new ExprTreeHolder();
-                ExprTreeHolder result = new ExprTreeHolder();
-                AMutableCharArrayString attr = new AMutableCharArrayString();
-                Value val = new Value();
-                MutableBoolean abs = new MutableBoolean();
+                ClassAd start = objectPool.classAdPool.get();;
+                ExprTreeHolder tree = objectPool.mutableExprPool.get();
+                ExprTreeHolder result = objectPool.mutableExprPool.get();
+                AMutableCharArrayString attr = objectPool.strPool.get();
+                Value val = objectPool.valuePool.get();
+                MutableBoolean abs = objectPool.boolPool.get();
 
                 ((AttributeReference) expr).getComponents(tree, attr, abs);
 
@@ -1393,10 +1364,10 @@ public class ClassAd extends ExprTree {
             case OP_NODE: {
 
                 //recurse on subtrees
-                AMutableInt32 op = new AMutableInt32(0);
-                ExprTreeHolder t1 = new ExprTreeHolder();
-                ExprTreeHolder t2 = new ExprTreeHolder();
-                ExprTreeHolder t3 = new ExprTreeHolder();
+                AMutableInt32 op = objectPool.int32Pool.get();
+                ExprTreeHolder t1 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t2 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t3 = objectPool.mutableExprPool.get();
                 ((Operation) expr).getComponents(op, t1, t2, t3);
                 if (t1.getInnerTree() != null && !privateGetInternalReferences(t1, ad, state, refs, fullNames)) {
                     return false;
@@ -1414,8 +1385,8 @@ public class ClassAd extends ExprTree {
 
             case FN_CALL_NODE: {
                 //recurse on the subtrees!
-                AMutableCharArrayString fnName = new AMutableCharArrayString();
-                ExprList args = new ExprList();
+                AMutableCharArrayString fnName = objectPool.strPool.get();
+                ExprList args = objectPool.exprListPool.get();
 
                 ((FunctionCall) expr).getComponents(fnName, args);
                 for (ExprTree exprTree : args.getExprList()) {
@@ -1429,7 +1400,7 @@ public class ClassAd extends ExprTree {
 
             case CLASSAD_NODE: {
                 //also recurse on subtrees...
-                HashMap<CaseInsensitiveString, ExprTree> attrs = new HashMap<CaseInsensitiveString, ExprTree>();
+                HashMap<CaseInsensitiveString, ExprTree> attrs = objectPool.strToExprPool.get();
 
                 // If this ClassAd is only being used here as the scoping
                 // for an attribute reference, don't recurse into all of
@@ -1438,7 +1409,7 @@ public class ClassAd extends ExprTree {
                     return true;
                 }
 
-                ((ClassAd) expr).getComponents(attrs);
+                ((ClassAd) expr).getComponents(attrs, objectPool);
                 for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
                     if (state.getDepthRemaining() <= 0) {
                         return false;
@@ -1457,7 +1428,7 @@ public class ClassAd extends ExprTree {
             }
 
             case EXPR_LIST_NODE: {
-                ExprList exprs = new ExprList();
+                ExprList exprs = objectPool.exprListPool.get();
 
                 ((ExprList) expr).getComponents(exprs);
                 for (ExprTree exprTree : exprs.getExprList()) {
@@ -1484,14 +1455,14 @@ public class ClassAd extends ExprTree {
     }
 
     public boolean publicFlatten(ExprTree tree, Value val, ExprTreeHolder fexpr) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
 
         state.setScopes(this);
         return (tree.publicFlatten(state, val, fexpr));
     }
 
     public boolean flattenAndInline(ExprTree tree, Value val, ExprTreeHolder fexpr) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
 
         state.setScopes(this);
         state.setFlattenAndInline(true);
@@ -1529,12 +1500,8 @@ public class ClassAd extends ExprTree {
         return chainedParentAd;
     }
 
-    public void setValue(ClassAd value) {
-        this.attrList = value.attrList;
-        this.alternateScope = value.alternateScope;
-        this.chainedParentAd = value.chainedParentAd;
-        this.parentScope = value.parentScope;
-        this.size = value.size;
+    public void setValue(ClassAd value) throws HyracksDataException {
+        copyFrom(value);
     }
 
     @Override
@@ -1566,6 +1533,6 @@ public class ClassAd extends ExprTree {
     }
 
     public void createParser() {
-        parser = new ClassAdParser(null, false, true, false, null, null, null);
+        parser = objectPool.classAdParserPool.get();
     }
 }

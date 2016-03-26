@@ -46,10 +46,9 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
- * The runtime for @see{FeedIntakeOperationDescriptor}
+ * The first operator in a collect job in a feed.
  */
 public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-
     private static Logger LOGGER = Logger.getLogger(FeedCollectOperatorNodePushable.class.getName());
 
     private final int partition;
@@ -74,19 +73,16 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.connectionId = feedConnectionId;
         this.sourceRuntime = sourceRuntime;
         this.feedPolicy = feedPolicy;
-        policyAccessor = new FeedPolicyAccessor(feedPolicy);
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
-        this.feedManager = (IFeedManager) runtimeCtx.getFeedManager();
+        this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
+        this.feedManager = (IFeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+                .getApplicationObject()).getFeedManager();
     }
 
     @Override
     public void initialize() throws HyracksDataException {
         try {
             outputRecordDescriptor = recordDesc;
-            FeedRuntimeType sourceRuntimeType = ((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId())
-                    .getFeedRuntimeType();
-            switch (sourceRuntimeType) {
+            switch (((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getFeedRuntimeType()) {
                 case INTAKE:
                     handleCompleteConnection();
                     break;
@@ -94,7 +90,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     handlePartialConnection();
                     break;
                 default:
-                    throw new IllegalStateException("Invalid source type " + sourceRuntimeType);
+                    throw new IllegalStateException("Invalid source type "
+                            + ((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getFeedRuntimeType());
             }
 
             State state = collectRuntime.waitTillCollectionOver();

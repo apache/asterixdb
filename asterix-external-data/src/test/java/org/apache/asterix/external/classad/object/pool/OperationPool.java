@@ -22,9 +22,15 @@ import org.apache.asterix.external.classad.Operation;
 
 public class OperationPool extends Pool<Operation> {
 
+    private final ClassAdObjectPool objectPool;
+
+    public OperationPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public Operation newInstance() {
-        return new Operation();
+        return new Operation(objectPool);
     }
 
     @Override

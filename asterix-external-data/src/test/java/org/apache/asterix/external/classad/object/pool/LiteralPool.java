@@ -21,9 +21,15 @@ package org.apache.asterix.external.classad.object.pool;
 import org.apache.asterix.external.classad.Literal;
 
 public class LiteralPool extends Pool<Literal> {
+    private final ClassAdObjectPool objectPool;
+
+    public LiteralPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public Literal newInstance() {
-        return new Literal();
+        return new Literal(objectPool);
     }
 
     @Override

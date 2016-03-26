@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class EvalState {
 
     private int depthRemaining; // max recursion depth - current depth
@@ -27,10 +30,13 @@ public class EvalState {
     // It can be set to a closer parent scope. Then that ClassAd is
     // treated like it has no parent scope for LookupInScope() and
     // Evaluate().
+    private final ClassAd rootAdTemp;
+    private final ClassAd curAdTemp;
     private ClassAd rootAd;
     private ClassAd curAd;
     private boolean flattenAndInline; // NAC
     private boolean inAttrRefScope;
+    private final ClassAdObjectPool objectPool;
 
     public boolean isInAttrRefScope() {
         return inAttrRefScope;
@@ -44,12 +50,15 @@ public class EvalState {
         this.inAttrRefScope = inAttrRefScope;
     }
 
-    public EvalState() {
-        rootAd = new ClassAd();
-        curAd = new ClassAd();
+    public EvalState(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+        rootAd = new ClassAd(this.objectPool);
+        curAd = new ClassAd(this.objectPool);
         depthRemaining = ExprTree.MAX_CLASSAD_RECURSION;
         flattenAndInline = false; // NAC
         inAttrRefScope = false;
+        rootAdTemp = rootAd;
+        curAdTemp = curAd;
     }
 
     public boolean isFlattenAndInline() {
@@ -76,13 +85,14 @@ public class EvalState {
                 prevScope = curScope;
                 curScope = curScope.getParentScope();
             }
-
             rootAd = prevScope;
         }
         return;
     }
 
     public void reset() {
+        rootAd = rootAdTemp;
+        curAd = curAdTemp;
         rootAd.reset();
         curAd.reset();
         depthRemaining = ExprTree.MAX_CLASSAD_RECURSION;
@@ -116,5 +126,17 @@ public class EvalState {
 
     public void setRootAd(ClassAd classAd) {
         this.rootAd = classAd;
+    }
+
+    public void set(EvalState state) throws HyracksDataException {
+        rootAd = rootAdTemp;
+        curAd = curAdTemp;
+        rootAd.reset();
+        curAd.reset();
+        rootAd.copyFrom(state.rootAd);
+        curAd.copyFrom(state.curAd);
+        depthRemaining = state.depthRemaining;
+        flattenAndInline = state.flattenAndInline;
+        inAttrRefScope = state.inAttrRefScope;
     }
 }

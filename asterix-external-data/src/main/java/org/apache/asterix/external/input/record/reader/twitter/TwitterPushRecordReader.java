@@ -21,9 +21,9 @@ package org.apache.asterix.external.input.record.reader.twitter;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 
@@ -131,6 +131,11 @@ public class TwitterPushRecordReader implements IRecordReader<Status> {
     }
 
     @Override
-    public void setController(IDataFlowController controller) {
+    public void setController(AbstractFeedDataFlowController controller) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 }

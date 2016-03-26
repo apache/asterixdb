@@ -22,9 +22,15 @@ import org.apache.asterix.external.classad.ClassAd;
 
 public class ClassAdPool extends Pool<ClassAd> {
 
+    private final ClassAdObjectPool objectPool;
+
+    public ClassAdPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public ClassAd newInstance() {
-        return new ClassAd(false, false);
+        return new ClassAd(objectPool);
     }
 
     @Override

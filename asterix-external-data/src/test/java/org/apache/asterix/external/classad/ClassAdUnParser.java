@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.external.classad;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.asterix.external.classad.Value.NumberFactor;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -38,8 +38,11 @@ public class ClassAdUnParser {
             " >>> ", " () ", " [] ", " ?: " };
     protected static char delimiter = '\"';
 
+    protected final ClassAdObjectPool objectPool;
+
     /// Constructor
-    public ClassAdUnParser() {
+    public ClassAdUnParser(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
     }
 
     // The default delimiter for strings is '\"'
@@ -64,7 +67,7 @@ public class ClassAdUnParser {
                 break;
 
             case STRING_VALUE: {
-                AMutableCharArrayString s = new AMutableCharArrayString();
+                AMutableCharArrayString s = objectPool.strPool.get();
                 val.isStringValue(s);
                 buffer.appendChar('"');
                 for (int i = 0; i < s.getLength(); i++) {
@@ -118,13 +121,13 @@ public class ClassAdUnParser {
                 return;
             }
             case INTEGER_VALUE: {
-                AMutableInt64 i = new AMutableInt64(0);
+                AMutableInt64 i = objectPool.int64Pool.get();
                 val.isIntegerValue(i);
                 buffer.appendString(String.valueOf(i.getLongValue()));
                 return;
             }
             case REAL_VALUE: {
-                AMutableDouble real = new AMutableDouble(0);
+                AMutableDouble real = objectPool.doublePool.get();
                 val.isRealValue(real);
                 if (real.getDoubleValue() == 0.0) {
                     // It might be positive or negative and it's
@@ -145,7 +148,7 @@ public class ClassAdUnParser {
                 return;
             }
             case BOOLEAN_VALUE: {
-                MutableBoolean b = new MutableBoolean();
+                MutableBoolean b = objectPool.boolPool.get();
                 val.isBooleanValue(b);
                 buffer.appendString(b.booleanValue() ? "true" : "false");
                 return;
@@ -159,7 +162,7 @@ public class ClassAdUnParser {
                 return;
             }
             case ABSOLUTE_TIME_VALUE: {
-                ClassAdTime asecs = new ClassAdTime();
+                ClassAdTime asecs = objectPool.classAdTimePool.get();
                 val.isAbsoluteTimeValue(asecs);
 
                 buffer.appendString("absTime(\"");
@@ -168,7 +171,7 @@ public class ClassAdUnParser {
                 return;
             }
             case RELATIVE_TIME_VALUE: {
-                ClassAdTime rsecs = new ClassAdTime();
+                ClassAdTime rsecs = objectPool.classAdTimePool.get();
                 val.isRelativeTimeValue(rsecs);
                 buffer.appendString("relTime(\"");
                 Util.relTimeToString(rsecs.getRelativeTime(), buffer);
@@ -177,16 +180,16 @@ public class ClassAdUnParser {
                 return;
             }
             case CLASSAD_VALUE: {
-                ClassAd ad = new ClassAd();
-                Map<CaseInsensitiveString, ExprTree> attrs = new HashMap<CaseInsensitiveString, ExprTree>();
+                ClassAd ad = objectPool.classAdPool.get();
+                Map<CaseInsensitiveString, ExprTree> attrs = objectPool.strToExprPool.get();
                 val.isClassAdValue(ad);
-                ad.getComponents(attrs);
+                ad.getComponents(attrs, objectPool);
                 unparseAux(buffer, attrs);
                 return;
             }
             case SLIST_VALUE:
             case LIST_VALUE: {
-                ExprList el = new ExprList();
+                ExprList el = objectPool.exprListPool.get();
                 val.isListValue(el);
                 unparseAux(buffer, el);
                 return;
@@ -211,49 +214,49 @@ public class ClassAdUnParser {
 
         switch (tree.getKind()) {
             case LITERAL_NODE: { // value
-                Value val = new Value();
-                AMutableNumberFactor factor = new AMutableNumberFactor();
-                ((Literal) tree.self()).getComponents(val, factor);
+                Value val = objectPool.valuePool.get();
+                AMutableNumberFactor factor = objectPool.numFactorPool.get();
+                ((Literal) tree.getTree()).getComponents(val, factor);
                 unparseAux(buffer, val, factor.getFactor());
                 return;
             }
 
             case ATTRREF_NODE: { // string
-                ExprTreeHolder expr = new ExprTreeHolder(); //needs initialization
-                AMutableCharArrayString ref = new AMutableCharArrayString();
-                MutableBoolean absolute = new MutableBoolean();
-                ((AttributeReference) tree.self()).getComponents(expr, ref, absolute);
+                ExprTreeHolder expr = objectPool.mutableExprPool.get(); //needs initialization
+                AMutableCharArrayString ref = objectPool.strPool.get();
+                MutableBoolean absolute = objectPool.boolPool.get();
+                ((AttributeReference) tree.getTree()).getComponents(expr, ref, absolute);
                 unparseAux(buffer, expr, ref, absolute.booleanValue());
                 return;
             }
 
             case OP_NODE: { //string
-                AMutableInt32 op = new AMutableInt32(0);
-                ExprTreeHolder t1 = new ExprTreeHolder();
-                ExprTreeHolder t2 = new ExprTreeHolder();
-                ExprTreeHolder t3 = new ExprTreeHolder();
-                ((Operation) tree.self()).getComponents(op, t1, t2, t3);
+                AMutableInt32 op = objectPool.int32Pool.get();
+                ExprTreeHolder t1 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t2 = objectPool.mutableExprPool.get();
+                ExprTreeHolder t3 = objectPool.mutableExprPool.get();
+                ((Operation) tree.getTree()).getComponents(op, t1, t2, t3);
                 unparseAux(buffer, op.getIntegerValue().intValue(), t1, t2, t3);
                 return;
             }
 
             case FN_CALL_NODE: { // string
-                AMutableCharArrayString fnName = new AMutableCharArrayString();
-                ExprList args = new ExprList();
-                ((FunctionCall) tree.self()).getComponents(fnName, args);
+                AMutableCharArrayString fnName = objectPool.strPool.get();
+                ExprList args = objectPool.exprListPool.get();
+                ((FunctionCall) tree.getTree()).getComponents(fnName, args);
                 unparseAux(buffer, fnName, args);
                 return;
             }
 
             case CLASSAD_NODE: { // nested record
-                Map<CaseInsensitiveString, ExprTree> attrs = new HashMap<CaseInsensitiveString, ExprTree>();
-                ((ClassAd) tree.self()).getComponents(attrs);
+                Map<CaseInsensitiveString, ExprTree> attrs = objectPool.strToExprPool.get();
+                ((ClassAd) tree.getTree()).getComponents(attrs, objectPool);
                 unparseAux(buffer, attrs);
                 return;
             }
             case EXPR_LIST_NODE: { // list
-                ExprList exprs = new ExprList();
-                ((ExprList) tree.self()).getComponents(exprs);
+                ExprList exprs = objectPool.exprListPool.get();
+                ((ExprList) tree.getTree()).getComponents(exprs);
                 unparseAux(buffer, exprs);
                 return;
             }
@@ -345,8 +348,8 @@ public class ClassAdUnParser {
     // to unparse attribute names (quoted & unquoted attributes)
     public void unparseAux(AMutableCharArrayString buffer, AMutableCharArrayString identifier)
             throws HyracksDataException {
-        Value val = new Value();
-        AMutableCharArrayString idstr = new AMutableCharArrayString();
+        Value val = objectPool.valuePool.get();
+        AMutableCharArrayString idstr = objectPool.strPool.get();
 
         val.setStringValue(identifier);
         setDelimiter('\''); // change the delimiter from string-literal mode to quoted attribute mode
@@ -386,8 +389,9 @@ public class ClassAdUnParser {
             buffer.appendString("." + attrName);
             return;
         }
-        if (absolute)
+        if (absolute) {
             buffer.appendChar('.');
+        }
         unparseAux(buffer, attrName);
     }
 
@@ -474,8 +478,8 @@ public class ClassAdUnParser {
      * it's unparsed either as a quoted attribute or non-quoted attribute
      */
     public void unparseAux(AMutableCharArrayString buffer, String identifier) throws HyracksDataException {
-        Value val = new Value();
-        AMutableCharArrayString idstr = new AMutableCharArrayString();
+        Value val = objectPool.valuePool.get();
+        AMutableCharArrayString idstr = objectPool.strPool.get();
 
         val.setStringValue(identifier);
         setDelimiter('\''); // change the delimiter from string-literal mode to quoted attribute mode

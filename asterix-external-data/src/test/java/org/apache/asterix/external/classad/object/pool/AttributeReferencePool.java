@@ -22,9 +22,16 @@ import org.apache.asterix.external.classad.AttributeReference;
 
 public class AttributeReferencePool extends Pool<AttributeReference> {
 
+    private final ClassAdObjectPool objectPool;
+
+    public AttributeReferencePool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+
+    }
+
     @Override
     public AttributeReference newInstance() {
-        return new AttributeReference();
+        return new AttributeReference(objectPool);
     }
 
     @Override

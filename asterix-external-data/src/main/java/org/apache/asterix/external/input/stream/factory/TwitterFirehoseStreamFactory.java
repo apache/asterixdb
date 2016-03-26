@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.external.input.stream.factory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.provider.TwitterFirehoseInputStreamProvider;
+import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IInputStreamFactory;
+import org.apache.asterix.external.input.stream.TwitterFirehoseInputStream;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -36,7 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * configurable rate measured in terms of TPS (tweets/second). The stream of
  * tweets lasts for a configurable duration (measured in seconds).
  */
-public class TwitterFirehoseStreamProviderFactory implements IInputStreamProviderFactory {
+public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -91,8 +92,11 @@ public class TwitterFirehoseStreamProviderFactory implements IInputStreamProvide
     }
 
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        return new TwitterFirehoseInputStreamProvider(configuration, ctx, partition);
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+        try {
+            return new TwitterFirehoseInputStream(configuration, ctx, partition);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.external.feed.message;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,11 +31,11 @@ public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
 
     protected static final Logger LOGGER = Logger.getLogger(MessageReceiver.class.getName());
 
-    protected final LinkedBlockingQueue<T> inbox;
+    protected final ArrayBlockingQueue<T> inbox;
     protected ExecutorService executor;
 
     public MessageReceiver() {
-        inbox = new LinkedBlockingQueue<T>();
+        inbox = new ArrayBlockingQueue<T>(2);
     }
 
     public abstract void processMessage(T message) throws Exception;
@@ -47,8 +47,8 @@ public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
     }
 
     @Override
-    public synchronized void sendMessage(T message) {
-        inbox.add(message);
+    public synchronized void sendMessage(T message) throws InterruptedException {
+        inbox.put(message);
     }
 
     @Override
@@ -68,7 +68,7 @@ public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
 
     private static class MessageReceiverRunnable<T> implements Runnable {
 
-        private final LinkedBlockingQueue<T> inbox;
+        private final ArrayBlockingQueue<T> inbox;
         private final MessageReceiver<T> messageReceiver;
 
         public MessageReceiverRunnable(MessageReceiver<T> messageReceiver) {

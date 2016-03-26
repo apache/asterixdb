@@ -22,20 +22,41 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ExprList extends ExprTree {
 
-    private List<ExprTree> exprList;
-    private EvalState state = new EvalState();
+    private final List<ExprTree> exprList;
+    private final EvalState state;
     public boolean isShared = false;
+
+    public ExprList(List<ExprTree> exprs, ClassAdObjectPool objectPool) {
+        super(objectPool);
+        exprList = new ArrayList<ExprTree>();
+        this.state = new EvalState(this.objectPool);
+        copyList(exprs);
+        return;
+    }
+
+    public ExprList(ClassAdObjectPool objectPool) {
+        super(objectPool);
+        this.state = new EvalState(this.objectPool);
+        this.exprList = new ArrayList<ExprTree>();
+    }
+
+    public ExprList(boolean b, ClassAdObjectPool objectPool) {
+        super(objectPool);
+        this.state = new EvalState(this.objectPool);
+        this.exprList = new ArrayList<ExprTree>();
+        this.isShared = b;
+    }
 
     public boolean copyFrom(ExprList exprList) throws HyracksDataException {
         this.exprList.clear();
-        for (ExprTree expr : exprList.exprList) {
-            this.exprList.add(expr.copy());
-        }
+        copyList(exprList.getExprList());
+        this.state.set(exprList.state);
         return true;
     }
 
@@ -86,28 +107,8 @@ public class ExprList extends ExprTree {
     }
 
     public void setExprList(List<ExprTree> exprList) {
-        this.exprList = exprList;
-    }
-
-    public ExprList(List<ExprTree> exprs) {
-        exprList = new ArrayList<ExprTree>();
-        copyList(exprs);
-        return;
-    }
-
-    public ExprList(ExprList other_list) throws HyracksDataException {
-        exprList = new ArrayList<ExprTree>();
-        copyFrom(other_list);
-        return;
-    }
-
-    public ExprList() {
-        exprList = new ArrayList<ExprTree>();
-    }
-
-    public ExprList(boolean b) {
-        this.exprList = new ArrayList<ExprTree>();
-        this.isShared = b;
+        this.exprList.clear();
+        this.exprList.addAll(exprList);
     }
 
     public void clear() {
@@ -116,7 +117,7 @@ public class ExprList extends ExprTree {
 
     @Override
     public ExprTree copy() throws HyracksDataException {
-        ExprList newList = new ExprList();
+        ExprList newList = objectPool.exprListPool.get();
         newList.copyFrom(this);
         return newList;
     }
@@ -129,7 +130,7 @@ public class ExprList extends ExprTree {
         } else if (tree.getKind() != NodeKind.EXPR_LIST_NODE) {
             is_same = false;
         } else {
-            ExprList other_list = (ExprList) tree;
+            ExprList other_list = (ExprList) tree.getTree();
             if (exprList.size() != other_list.size()) {
                 is_same = false;
             } else {
@@ -145,14 +146,14 @@ public class ExprList extends ExprTree {
         return is_same;
     }
 
-    public static ExprList createExprList(List<ExprTree> exprs) {
-        ExprList el = new ExprList();
+    public static ExprList createExprList(List<ExprTree> exprs, ClassAdObjectPool objectPool) {
+        ExprList el = objectPool.exprListPool.get();
         el.copyList(exprs);
         return el;
     }
 
-    public static ExprList createExprList(ExprList exprs) {
-        ExprList el = new ExprList();
+    public static ExprList createExprList(ExprList exprs, ClassAdObjectPool objectPool) {
+        ExprList el = objectPool.exprListPool.get();
         el.copyList(exprs.exprList);
         return el;
     }
@@ -217,9 +218,9 @@ public class ExprList extends ExprTree {
     @Override
     public boolean privateFlatten(EvalState state, Value val, ExprTreeHolder tree, AMutableInt32 aInt)
             throws HyracksDataException {
-        ExprTreeHolder nexpr = new ExprTreeHolder();
-        Value tempVal = new Value();
-        ExprList newList = new ExprList();
+        ExprTreeHolder nexpr = objectPool.mutableExprPool.get();
+        Value tempVal = objectPool.valuePool.get();
+        ExprList newList = objectPool.exprListPool.get();
 
         tree.setInnerTree(null);; // Just to be safe...  wenger 2003-12-11.
 
@@ -230,7 +231,7 @@ public class ExprList extends ExprTree {
             }
             // if only a value was obtained, convert to an expression
             if (nexpr.getInnerTree() == null) {
-                nexpr.setInnerTree(Literal.createLiteral(tempVal));
+                nexpr.setInnerTree(Literal.createLiteral(tempVal, objectPool));
                 if (nexpr.getInnerTree() == null) {
                     return false;
                 }
@@ -249,10 +250,11 @@ public class ExprList extends ExprTree {
     }
 
     public boolean getValue(Value val, ExprTree tree, EvalState es) throws HyracksDataException {
-        EvalState currentState = new EvalState();
+        EvalState currentState = objectPool.evalStatePool.get();
 
-        if (tree == null)
+        if (tree == null) {
             return false;
+        }
 
         // if called from user code, es == NULL so we use &state instead
         currentState = (es != null) ? es : state;
@@ -276,5 +278,6 @@ public class ExprList extends ExprTree {
     @Override
     public void reset() {
         exprList.clear();
+        state.reset();
     }
 }

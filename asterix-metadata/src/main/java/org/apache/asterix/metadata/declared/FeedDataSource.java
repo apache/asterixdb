@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.util.List;
 
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.om.types.IAType;
@@ -36,7 +36,7 @@ public class FeedDataSource extends AqlDataSource {
     private final Feed feed;
     private final FeedId sourceFeedId;
     private final IFeed.FeedType sourceFeedType;
-    private final ConnectionLocation location;
+    private final FeedRuntimeType location;
     private final String targetDataset;
     private final String[] locations;
     private final int computeCardinality;
@@ -46,7 +46,7 @@ public class FeedDataSource extends AqlDataSource {
     public FeedDataSource(Feed feed, AqlSourceId id, String targetDataset, IAType itemType, IAType metaType,
             List<IAType> pkTypes, List<List<String>> partitioningKeys,
             List<ScalarFunctionCallExpression> keyAccessExpression, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
-            ConnectionLocation location, String[] locations, INodeDomain domain) throws AlgebricksException {
+            FeedRuntimeType location, String[] locations, INodeDomain domain) throws AlgebricksException {
         super(id, itemType, metaType, AqlDataSourceType.FEED, domain);
         this.feed = feed;
         this.targetDataset = targetDataset;
@@ -77,7 +77,7 @@ public class FeedDataSource extends AqlDataSource {
         return sourceFeedId;
     }
 
-    public ConnectionLocation getLocation() {
+    public FeedRuntimeType getLocation() {
         return location;
     }
 

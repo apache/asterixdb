@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -71,15 +72,24 @@ public abstract class ExprTree {
     public ClassAd parentScope;
 
     private CallableDebugFunction userDebugFunction;
+    protected final ClassAdObjectPool objectPool;
 
     public abstract void reset();
 
-    public ExprTree() {
+    public ExprTree(ClassAdObjectPool objectPool) {
+        if (objectPool == null) {
+            System.out.println();
+        }
+        this.objectPool = objectPool;
         this.parentScope = null;
         this.size = 0;
     }
 
-    public ExprTree(ExprTree expr) {
+    public ExprTree(ExprTree expr, ClassAdObjectPool objectPool) {
+        if (objectPool == null) {
+            System.out.println();
+        }
+        this.objectPool = objectPool;
         this.size = expr.size;
     }
 
@@ -112,14 +122,7 @@ public abstract class ExprTree {
      * into a ClassAd.
      */
     public void setParentScope(ClassAd scope) {
-        if (scope == null) {
-            parentScope = null;
-            return;
-        }
-        if (parentScope == null) {
-            parentScope = new ClassAd();
-        }
-        parentScope.setValue(scope);
+        parentScope = scope;
         privateSetParentScope(scope);
     }
 
@@ -169,8 +172,8 @@ public abstract class ExprTree {
 
     /// A debugging method; send expression to stdout
     public void puke() throws HyracksDataException {
-        PrettyPrint unp = new PrettyPrint();
-        AMutableCharArrayString buffer = new AMutableCharArrayString();
+        PrettyPrint unp = objectPool.prettyPrintPool.get();
+        AMutableCharArrayString buffer = objectPool.strPool.get();
         unp.unparse(buffer, this);
         System.out.println(buffer.toString());
     }
@@ -193,16 +196,17 @@ public abstract class ExprTree {
     }
 
     public void debugFormatValue(Value value, double time) throws HyracksDataException {
-        MutableBoolean boolValue = new MutableBoolean(false);
-        AMutableInt64 intValue = new AMutableInt64(0);
-        AMutableDouble doubleValue = new AMutableDouble(0.0);
-        AMutableCharArrayString stringValue = new AMutableCharArrayString();
+        MutableBoolean boolValue = objectPool.boolPool.get();
+        AMutableInt64 intValue = objectPool.int64Pool.get();
+        AMutableDouble doubleValue = objectPool.doublePool.get();
+        AMutableCharArrayString stringValue = objectPool.strPool.get();
 
-        if (NodeKind.CLASSAD_NODE == getKind())
+        if (NodeKind.CLASSAD_NODE == getKind()) {
             return;
+        }
 
-        PrettyPrint unp = new PrettyPrint();
-        AMutableCharArrayString buffer = new AMutableCharArrayString();
+        PrettyPrint unp = objectPool.prettyPrintPool.get();
+        AMutableCharArrayString buffer = objectPool.strPool.get();
         unp.unparse(buffer, this);
 
         String result = "Classad debug: ";
@@ -230,8 +234,9 @@ public abstract class ExprTree {
                 result += "UNDEFINED\n";
                 break;
             case BOOLEAN_VALUE:
-                if (value.isBooleanValue(boolValue))
+                if (value.isBooleanValue(boolValue)) {
                     result += boolValue.booleanValue() ? "TRUE\n" : "FALSE\n";
+                }
                 break;
             case INTEGER_VALUE:
                 if (value.isIntegerValue(intValue)) {
@@ -305,7 +310,7 @@ public abstract class ExprTree {
      * @throws HyracksDataException
      */
     public boolean publicEvaluate(Value val) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         if (parentScope == null) {
             val.setErrorValue();
             return false;
@@ -340,13 +345,13 @@ public abstract class ExprTree {
     }
 
     public boolean publicEvaluate(Value val, ExprTreeHolder sig) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         state.setScopes(parentScope);
         return (publicEvaluate(state, val, sig));
     }
 
     public boolean publicFlatten(Value val, ExprTreeHolder tree) throws HyracksDataException {
-        EvalState state = new EvalState();
+        EvalState state = objectPool.evalStatePool.get();
         state.setScopes(parentScope);
         return (publicFlatten(state, val, tree));
     }
@@ -375,8 +380,9 @@ public abstract class ExprTree {
 
     @Override
     public String toString() {
-        ClassAdUnParser unparser = new PrettyPrint();
-        AMutableCharArrayString string_representation = new AMutableCharArrayString();
+        ClassAdObjectPool objectPool = new ClassAdObjectPool();
+        ClassAdUnParser unparser = new ClassAdUnParser(objectPool);
+        AMutableCharArrayString string_representation = objectPool.strPool.get();
 
         try {
             unparser.unparse(string_representation, this);

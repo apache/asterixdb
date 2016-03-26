@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream.provider;
+package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -29,99 +28,60 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.input.stream.AInputStream;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.TweetGenerator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider {
+public class TwitterFirehoseInputStream extends AsterixInputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseInputStreamProvider.class.getName());
-
+    private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseInputStream.class.getName());
     private final ExecutorService executorService;
-
     private final PipedOutputStream outputStream;
-
     private final PipedInputStream inputStream;
+    private final DataProvider dataProvider;
+    private boolean started;
 
-    private final TwitterServer twitterServer;
+    public TwitterFirehoseInputStream(Map<String, String> configuration, IHyracksTaskContext ctx, int partition)
+            throws IOException {
+        executorService = Executors.newCachedThreadPool();
+        outputStream = new PipedOutputStream();
+        inputStream = new PipedInputStream(outputStream);
+        dataProvider = new DataProvider(configuration, partition, outputStream);
+        started = false;
+    }
 
-    public TwitterFirehoseInputStreamProvider(Map<String, String> configuration, IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        try {
-            executorService = Executors.newCachedThreadPool();
-            outputStream = new PipedOutputStream();
-            inputStream = new PipedInputStream(outputStream);
-            twitterServer = new TwitterServer(configuration, partition, outputStream, executorService, inputStream);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
+    @Override
+    public boolean stop() throws IOException {
+        dataProvider.stop();
+        return true;
+    }
+
+    public synchronized void start() {
+        if (!started) {
+            executorService.execute(dataProvider);
+            started = true;
         }
     }
 
     @Override
-    public AInputStream getInputStream() {
-        return twitterServer;
+    public int read() throws IOException {
+        if (!started) {
+            start();
+        }
+        return inputStream.read();
     }
 
-    private static class TwitterServer extends AInputStream {
-        private final DataProvider dataProvider;
-        private final ExecutorService executorService;
-        private final InputStream in;
-        private boolean started;
-
-        public TwitterServer(Map<String, String> configuration, int partition, OutputStream os,
-                ExecutorService executorService, InputStream in) {
-            dataProvider = new DataProvider(configuration, partition, os);
-            this.executorService = executorService;
-            this.in = in;
-            this.started = false;
+    @Override
+    public int read(byte b[], int off, int len) throws IOException {
+        if (!started) {
+            start();
         }
+        return inputStream.read(b, off, len);
+    }
 
-        @Override
-        public boolean stop() throws IOException {
-            dataProvider.stop();
-            return true;
-        }
-
-        public synchronized void start() {
-            if (!started) {
-                executorService.execute(dataProvider);
-                started = true;
-            }
-        }
-
-        @Override
-        public boolean skipError() throws Exception {
-            return false;
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (!started) {
-                start();
-            }
-            return in.read();
-        }
-
-        @Override
-        public int read(byte b[], int off, int len) throws IOException {
-            if (!started) {
-                start();
-                started = true;
-            }
-            return in.read(b, off, len);
-        }
-
-        @Override
-        public void setFeedLogManager(FeedLogManager logManager) {
-        }
-
-        @Override
-        public void setController(AbstractFeedDataFlowController controller) {
-        }
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 
     private static class DataProvider implements Runnable {
@@ -194,9 +154,5 @@ public class TwitterFirehoseInputStreamProvider implements IInputStreamProvider 
         public void stop() {
             continuePush = false;
         }
-    }
-
-    @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
     }
 }

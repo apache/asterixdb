@@ -21,11 +21,11 @@ package org.apache.asterix.external.input.record.reader.hdfs;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -121,8 +121,9 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
                     FileStatus fileStatus = hdfs.getFileStatus(new Path(fileName));
                     // Skip if not the same file stored in the files snapshot
                     if (fileStatus.getModificationTime() != snapshot.get(currentSplitIndex).getLastModefiedTime()
-                            .getTime())
+                            .getTime()) {
                         continue;
+                    }
                 }
 
                 reader.close();
@@ -160,10 +161,12 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
         return indexer;
     }
 
+    @Override
     public List<ExternalFile> getSnapshot() {
         return snapshot;
     }
 
+    @Override
     public int getCurrentSplitIndex() {
         return currentSplitIndex;
     }
@@ -177,6 +180,11 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
     }
 
     @Override
-    public void setController(IDataFlowController controller) {
+    public void setController(AbstractFeedDataFlowController controller) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 }

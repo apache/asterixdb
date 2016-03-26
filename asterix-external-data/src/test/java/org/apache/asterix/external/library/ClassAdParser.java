@@ -59,15 +59,7 @@ import org.apache.asterix.external.classad.StringLexerSource;
 import org.apache.asterix.external.classad.TokenValue;
 import org.apache.asterix.external.classad.Value;
 import org.apache.asterix.external.classad.Value.NumberFactor;
-import org.apache.asterix.external.classad.object.pool.AttributeReferencePool;
-import org.apache.asterix.external.classad.object.pool.BitSetPool;
-import org.apache.asterix.external.classad.object.pool.ClassAdPool;
-import org.apache.asterix.external.classad.object.pool.ExprHolderPool;
-import org.apache.asterix.external.classad.object.pool.ExprListPool;
-import org.apache.asterix.external.classad.object.pool.LiteralPool;
-import org.apache.asterix.external.classad.object.pool.OperationPool;
-import org.apache.asterix.external.classad.object.pool.TokenValuePool;
-import org.apache.asterix.external.classad.object.pool.ValuePool;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.parser.AbstractDataParser;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -94,16 +86,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     private Lexer lexer = new Lexer();
     private LexerSource currentSource = null;
     private boolean isExpr = false;
-    // object pools
-    private final ExprHolderPool mutableExprPool = new ExprHolderPool();
-    private final TokenValuePool tokenValuePool = new TokenValuePool();
-    private final ClassAdPool classAdPool = new ClassAdPool();
-    private final ExprListPool exprListPool = new ExprListPool();
-    private final ValuePool valuePool = new ValuePool();
-    private final LiteralPool literalPool = new LiteralPool();
-    private final BitSetPool bitSetPool = new BitSetPool();
-    private final OperationPool operationPool = new OperationPool();
-    private final AttributeReferencePool attrRefPool = new AttributeReferencePool();
+    private final ClassAdObjectPool objectPool;
     // asterix objects
     private ARecordType recordType;
     private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
@@ -112,17 +95,22 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             new ListBuilderFactory());
     private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
             new AbvsBuilderFactory());
-    private ClassAd rootAd = new ClassAd(false, true);
+    private final ClassAd rootAd;
     private String exprPrefix = "expr=";
     private String exprSuffix = "";
     private boolean evaluateExpr = true;
     private String exprFieldNameSuffix = "Expr";
     private boolean keepBoth = true;
-    private boolean oldFormat = false;
+    private boolean oldFormat = true;
     private StringLexerSource stringLexerSource = new StringLexerSource("");
 
     public ClassAdParser(ARecordType recordType, boolean oldFormat, boolean evaluateExpr, boolean keepBoth,
-            String exprPrefix, String exprSuffix, String exprFieldNameSuffix) {
+            String exprPrefix, String exprSuffix, String exprFieldNameSuffix, ClassAdObjectPool objectPool) {
+        if (objectPool == null) {
+            System.out.println();
+        }
+        this.objectPool = objectPool;
+        this.rootAd = new ClassAd(objectPool);
         this.recordType = recordType;
         this.currentSource = new CharArrayLexerSource();
         this.recordType = recordType;
@@ -135,6 +123,15 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         this.exprPrefix = exprPrefix;
         this.exprSuffix = exprSuffix;
         this.exprFieldNameSuffix = exprFieldNameSuffix;
+    }
+
+    public ClassAdParser(ClassAdObjectPool objectPool) {
+        if (objectPool == null) {
+            System.out.println();
+        }
+        this.objectPool = objectPool;
+        this.currentSource = new CharArrayLexerSource();
+        rootAd = null;
     }
 
     /***********************************
@@ -160,8 +157,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             return false;
         }
         tt = lexer.peekToken();
-        TokenValue tv = tokenValuePool.get();
-        ExprTreeHolder tree = mutableExprPool.get();
+        TokenValue tv = objectPool.tokenValuePool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         while (tt != TokenType.LEX_CLOSE_BOX) {
             // Get the name of the expression
             tv.reset();
@@ -200,8 +197,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 // we will store a string representation of the expression
                 int len = lexer.getLexSource().getPosition() - positionBefore;
                 // add it as it is to the classAd
-                Literal lit = literalPool.get();
-                Value exprVal = valuePool.get();
+                Literal lit = objectPool.literalPool.get();
+                Value exprVal = objectPool.valuePool.get();
                 exprVal.setStringValue(exprPrefix
                         + String.valueOf(lexer.getLexSource().getBuffer(), positionBefore, len) + exprSuffix);
                 Literal.createLiteral(lit, exprVal, NumberFactor.NO_FACTOR);
@@ -263,15 +260,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         listBuilderPool.reset();
         recordBuilderPool.reset();
         abvsBuilderPool.reset();
-        mutableExprPool.reset();
-        tokenValuePool.reset();
-        classAdPool.reset();
-        exprListPool.reset();
-        valuePool.reset();
-        literalPool.reset();
-        bitSetPool.reset();
-        operationPool.reset();
-        attrRefPool.reset();
+        objectPool.reset();
     }
 
     private ATypeTag getTargetTypeTag(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
@@ -384,7 +373,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case EXPR_LIST_NODE:
             case FN_CALL_NODE:
             case OP_NODE:
-                val = valuePool.get();
+                val = objectPool.valuePool.get();
                 if (pAd.evaluateAttr(name, val)) {
 
                 } else {
@@ -393,7 +382,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 }
                 break;
             case LITERAL_NODE:
-                val = ((Literal) tree).getValue();
+                val = ((Literal) tree.getTree()).getValue();
                 break;
             default:
                 throw new HyracksDataException("Unknown Expression type detected: " + tree.getKind());
@@ -574,7 +563,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     private BitSet getBitSet() {
-        return bitSetPool.get();
+        return objectPool.bitSetPool.get();
     }
 
     public static int checkNullConstraints(ARecordType recType, BitSet nulls) {
@@ -710,7 +699,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
     public ClassAd parseClassAd(LexerSource lexer_source, boolean full) throws IOException {
         System.out.println("Don't use this call. instead, pass a mutable classad instance");
-        ClassAd ad = classAdPool.get();
+        ClassAd ad = objectPool.classAdPool.get();
         if (lexer.initialize(lexer_source)) {
             if (!parseClassAd(ad, full)) {
                 return null;
@@ -804,7 +793,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
      */
     public ExprTree parseExpression(String buffer, boolean full) throws IOException {
         stringLexerSource.setNewSource(buffer);
-        ExprTreeHolder mutableExpr = mutableExprPool.get();
+        ExprTreeHolder mutableExpr = objectPool.mutableExprPool.get();
         if (lexer.initialize(stringLexerSource)) {
             parseExpression(mutableExpr, full);
         }
@@ -816,7 +805,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     public ExprTree parseExpression(LexerSource lexer_source, boolean full) throws IOException {
-        ExprTreeHolder mutableExpr = mutableExprPool.get();
+        ExprTreeHolder mutableExpr = objectPool.mutableExprPool.get();
         if (lexer.initialize(lexer_source)) {
             parseExpression(mutableExpr, full);
         }
@@ -827,7 +816,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         if (!lexer.wasInitialized()) {
             return null;
         } else {
-            ExprTreeHolder expr = mutableExprPool.get();
+            ExprTreeHolder expr = objectPool.mutableExprPool.get();
             parseExpression(expr, false);
             ExprTree innerTree = expr.getInnerTree();
             return innerTree;
@@ -849,20 +838,21 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
     private boolean parseExpression(ExprTreeHolder tree, boolean full) throws IOException {
         TokenType tt;
-        if (!parseLogicalORExpression(tree))
+        if (!parseLogicalORExpression(tree)) {
             return false;
+        }
         if ((tt = lexer.peekToken()) == TokenType.LEX_QMARK) {
             lexer.consumeToken();
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeM = mutableExprPool.get();
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeM = objectPool.mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             parseExpression(treeM);
             if ((tt = lexer.consumeToken()) != TokenType.LEX_COLON) {
                 throw new HyracksDataException("expected LEX_COLON, but got " + Lexer.strLexToken(tt));
             }
             parseExpression(treeR);
             if (treeL.getInnerTree() != null && treeM.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_TERNARY_OP, treeL, treeM, treeR, newTree);
                 tree.setInnerTree(newTree);
                 return (true);
@@ -882,15 +872,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | LogicalORExpression '||' LogicalANDExpression
 
     private boolean parseLogicalORExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseLogicalANDExpression(tree))
+        if (!parseLogicalANDExpression(tree)) {
             return false;
+        }
         while ((lexer.peekToken()) == TokenType.LEX_LOGICAL_OR) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseLogicalANDExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_LOGICAL_OR_OP, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -904,15 +895,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // LogicalANDExpression .= InclusiveORExpression
     // | LogicalANDExpression '&&' InclusiveORExpression
     private boolean parseLogicalANDExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseInclusiveORExpression(tree))
+        if (!parseInclusiveORExpression(tree)) {
             return false;
+        }
         while ((lexer.peekToken()) == TokenType.LEX_LOGICAL_AND) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseInclusiveORExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_LOGICAL_AND_OP, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -926,15 +918,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // InclusiveORExpression .= ExclusiveORExpression
     // | InclusiveORExpression '|' ExclusiveORExpression
     public boolean parseInclusiveORExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseExclusiveORExpression(tree))
+        if (!parseExclusiveORExpression(tree)) {
             return false;
+        }
         while ((lexer.peekToken()) == TokenType.LEX_BITWISE_OR) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseExclusiveORExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_BITWISE_OR_OP, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -948,15 +941,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // ExclusiveORExpression .= ANDExpression
     // | ExclusiveORExpression '^' ANDExpression
     private boolean parseExclusiveORExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseANDExpression(tree))
+        if (!parseANDExpression(tree)) {
             return false;
+        }
         while ((lexer.peekToken()) == TokenType.LEX_BITWISE_XOR) {
             lexer.consumeToken();
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             parseANDExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_BITWISE_XOR_OP, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -970,15 +964,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // ANDExpression .= EqualityExpression
     // | ANDExpression '&' EqualityExpression
     private boolean parseANDExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseEqualityExpression(tree))
+        if (!parseEqualityExpression(tree)) {
             return false;
+        }
         while ((lexer.peekToken()) == TokenType.LEX_BITWISE_AND) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseEqualityExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(Operation.OpKind_BITWISE_AND_OP, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -997,13 +992,14 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     private boolean parseEqualityExpression(ExprTreeHolder tree) throws IOException {
         TokenType tt;
         int op = Operation.OpKind_NO_OP;
-        if (!parseRelationalExpression(tree))
+        if (!parseRelationalExpression(tree)) {
             return false;
+        }
         tt = lexer.peekToken();
         while (tt == TokenType.LEX_EQUAL || tt == TokenType.LEX_NOT_EQUAL || tt == TokenType.LEX_META_EQUAL
                 || tt == TokenType.LEX_META_NOT_EQUAL) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseRelationalExpression(treeR);
             switch (tt) {
@@ -1023,7 +1019,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("ClassAd:  Should not reach here");
             }
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(op, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -1042,14 +1038,15 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | RelationalExpression '>=' ShiftExpression
     private boolean parseRelationalExpression(ExprTreeHolder tree) throws IOException {
         TokenType tt;
-        if (!parseShiftExpression(tree))
+        if (!parseShiftExpression(tree)) {
             return false;
+        }
         tt = lexer.peekToken();
         while (tt == TokenType.LEX_LESS_THAN || tt == TokenType.LEX_GREATER_THAN || tt == TokenType.LEX_LESS_OR_EQUAL
                 || tt == TokenType.LEX_GREATER_OR_EQUAL) {
             int op = Operation.OpKind_NO_OP;
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseShiftExpression(treeR);
             switch (tt) {
@@ -1069,7 +1066,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("ClassAd:  Should not reach here");
             }
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(op, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -1086,13 +1083,14 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | ShiftExpression '>>' AdditiveExpression
     // | ShiftExpression '>>>' AditiveExpression
     private boolean parseShiftExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseAdditiveExpression(tree))
+        if (!parseAdditiveExpression(tree)) {
             return false;
+        }
 
         TokenType tt = lexer.peekToken();
         while (tt == TokenType.LEX_LEFT_SHIFT || tt == TokenType.LEX_RIGHT_SHIFT || tt == TokenType.LEX_URIGHT_SHIFT) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             int op;
             lexer.consumeToken();
             parseAdditiveExpression(treeR);
@@ -1112,7 +1110,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             }
 
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(op, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -1128,17 +1126,18 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | AdditiveExpression '+' MultiplicativeExpression
     // | AdditiveExpression '-' MultiplicativeExpression
     private boolean parseAdditiveExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseMultiplicativeExpression(tree))
+        if (!parseMultiplicativeExpression(tree)) {
             return false;
+        }
 
         TokenType tt = lexer.peekToken();
         while (tt == TokenType.LEX_PLUS || tt == TokenType.LEX_MINUS) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             lexer.consumeToken();
             parseMultiplicativeExpression(treeR);
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(
                         (tt == TokenType.LEX_PLUS) ? Operation.OpKind_ADDITION_OP : Operation.OpKind_SUBTRACTION_OP,
                         treeL, treeR, null, newTree);
@@ -1157,13 +1156,14 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | MultiplicativeExpression '/' UnaryExpression
     // | MultiplicativeExpression '%' UnaryExpression
     private boolean parseMultiplicativeExpression(ExprTreeHolder tree) throws IOException {
-        if (!parseUnaryExpression(tree))
+        if (!parseUnaryExpression(tree)) {
             return false;
+        }
 
         TokenType tt = lexer.peekToken();
         while (tt == TokenType.LEX_MULTIPLY || tt == TokenType.LEX_DIVIDE || tt == TokenType.LEX_MODULUS) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
             int op;
             lexer.consumeToken();
             parseUnaryExpression(treeR);
@@ -1182,7 +1182,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("ClassAd:  Should not reach here");
             }
             if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(op, treeL, treeR, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -1202,7 +1202,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         if (tt == TokenType.LEX_MINUS || tt == TokenType.LEX_PLUS || tt == TokenType.LEX_BITWISE_NOT
                 || tt == TokenType.LEX_LOGICAL_NOT) {
             lexer.consumeToken();
-            ExprTreeHolder treeM = mutableExprPool.get();
+            ExprTreeHolder treeM = objectPool.mutableExprPool.get();
             int op = Operation.OpKind_NO_OP;
             parseUnaryExpression(treeM);
             switch (tt) {
@@ -1222,7 +1222,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("ClassAd: Shouldn't Get here");
             }
             if (treeM.getInnerTree() != null) {
-                Operation newTree = operationPool.get();
+                Operation newTree = objectPool.operationPool.get();
                 Operation.createOperation(op, treeM, null, null, newTree);
                 tree.setInnerTree(newTree);
             } else {
@@ -1240,18 +1240,19 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // | PostfixExpression '[' Expression ']'
     private boolean parsePostfixExpression(ExprTreeHolder tree) throws IOException {
         TokenType tt;
-        if (!parsePrimaryExpression(tree))
+        if (!parsePrimaryExpression(tree)) {
             return false;
+        }
         while ((tt = lexer.peekToken()) == TokenType.LEX_OPEN_BOX || tt == TokenType.LEX_SELECTION) {
             ExprTreeHolder treeL = tree;
-            ExprTreeHolder treeR = mutableExprPool.get();
-            TokenValue tv = tokenValuePool.get();
+            ExprTreeHolder treeR = objectPool.mutableExprPool.get();
+            TokenValue tv = objectPool.tokenValuePool.get();
             lexer.consumeToken();
             if (tt == TokenType.LEX_OPEN_BOX) {
                 // subscript operation
                 parseExpression(treeR);
                 if (treeL.getInnerTree() != null && treeR.getInnerTree() != null) {
-                    Operation newTree = operationPool.get();
+                    Operation newTree = objectPool.operationPool.get();
                     Operation.createOperation(Operation.OpKind_SUBSCRIPT_OP, treeL, treeR, null, newTree);
                     if (lexer.consumeToken() == TokenType.LEX_CLOSE_BOX) {
                         tree.setInnerTree(newTree);
@@ -1266,7 +1267,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("second argument of selector must be an " + "identifier (got"
                             + String.valueOf(Lexer.strLexToken(tt)) + ")");
                 }
-                AttributeReference newTree = attrRefPool.get();
+                AttributeReference newTree = objectPool.attrRefPool.get();
                 AttributeReference.createAttributeReference(treeL, tv.getStrValue(), false, newTree);
                 tree.setInnerTree(newTree);
             }
@@ -1285,7 +1286,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     // ( ArgumentList non-terminal includes parentheses )
     private boolean parsePrimaryExpression(ExprTreeHolder tree) throws IOException {
         ExprTreeHolder treeL;
-        TokenValue tv = tokenValuePool.get();
+        TokenValue tv = objectPool.tokenValuePool.get();
         TokenType tt;
         tree.setInnerTree(null);
         switch ((tt = lexer.peekToken(tv))) {
@@ -1295,22 +1296,24 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 lexer.consumeToken();
                 // check for funcion call
                 if ((tt = lexer.peekToken()) == TokenType.LEX_OPEN_PAREN) {
-                    ExprList argList = exprListPool.get();
+                    ExprList argList = objectPool.exprListPool.get();
                     if (!parseArgumentList(argList)) {
                         tree.setInnerTree(null);
                         return false;
-                    };
+                    } ;
                     // special case function-calls should be converted
                     // into a literal expression if the argument is a
                     // string literal
                     if (shouldEvaluateAtParseTime(tv.getStrValue().toString(), argList)) {
                         tree.setInnerTree(evaluateFunction(tv.getStrValue().toString(), argList));
                     } else {
-                        tree.setInnerTree(FunctionCall.createFunctionCall(tv.getStrValue().toString(), argList));
+                        tree.setInnerTree(
+                                FunctionCall.createFunctionCall(tv.getStrValue().toString(), argList, objectPool));
                     }
                 } else {
                     // I don't think this is ever hit
-                    tree.setInnerTree(AttributeReference.createAttributeReference(null, tv.getStrValue(), false));
+                    tree.setInnerTree(
+                            AttributeReference.createAttributeReference(null, tv.getStrValue(), false, objectPool));
                 }
                 return (tree.getInnerTree() != null);
             case LEX_SELECTION:
@@ -1318,7 +1321,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 lexer.consumeToken();
                 if ((tt = lexer.consumeToken(tv)) == TokenType.LEX_IDENTIFIER) {
                     // the boolean final arg signifies that reference is absolute
-                    tree.setInnerTree(AttributeReference.createAttributeReference(null, tv.getStrValue(), true));
+                    tree.setInnerTree(
+                            AttributeReference.createAttributeReference(null, tv.getStrValue(), true, objectPool));
                     return (tree.size() != 0);
                 }
                 // not an identifier following the '.'
@@ -1328,7 +1332,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case LEX_OPEN_PAREN: {
                 isExpr = true;
                 lexer.consumeToken();
-                treeL = mutableExprPool.get();
+                treeL = objectPool.mutableExprPool.get();
                 parseExpression(treeL);
                 if (treeL.getInnerTree() == null) {
                     tree.resetExprTree(null);
@@ -1341,13 +1345,13 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     // return false;
                 }
                 // assume make operation will return a new tree
-                tree.setInnerTree(Operation.createOperation(Operation.OpKind_PARENTHESES_OP, treeL));
+                tree.setInnerTree(Operation.createOperation(Operation.OpKind_PARENTHESES_OP, treeL, objectPool));
                 return (tree.size() != 0);
             }
-                // constants
+            // constants
             case LEX_OPEN_BOX: {
                 isExpr = true;
-                ClassAd newAd = classAdPool.get();
+                ClassAd newAd = objectPool.classAdPool.get();
                 if (!parseClassAd(newAd)) {
                     tree.resetExprTree(null);
                     return false;
@@ -1358,7 +1362,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
             case LEX_OPEN_BRACE: {
                 isExpr = true;
-                ExprList newList = exprListPool.get();
+                ExprList newList = objectPool.exprListPool.get();
                 if (!parseExprList(newList)) {
                     tree.setInnerTree(null);
                     return false;
@@ -1368,66 +1372,66 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 return true;
 
             case LEX_UNDEFINED_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setUndefinedValue();
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
             case LEX_ERROR_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setErrorValue();
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
             case LEX_BOOLEAN_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 MutableBoolean b = new MutableBoolean();
                 tv.getBoolValue(b);
                 lexer.consumeToken();
                 val.setBooleanValue(b);
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
 
             case LEX_INTEGER_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setIntegerValue(tv.getIntValue());
-                tree.setInnerTree(Literal.createLiteral(val, tv.getFactor()));
+                tree.setInnerTree(Literal.createLiteral(val, tv.getFactor(), objectPool));
                 return (tree.getInnerTree() != null);
             }
 
             case LEX_REAL_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setRealValue(tv.getRealValue());
-                tree.setInnerTree(Literal.createLiteral(val, tv.getFactor()));
+                tree.setInnerTree(Literal.createLiteral(val, tv.getFactor(), objectPool));
                 return (tree.getInnerTree() != null);
             }
 
             case LEX_STRING_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setStringValue(tv.getStrValue());
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
 
             case LEX_ABSOLUTE_TIME_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setAbsoluteTimeValue(tv.getTimeValue());
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
 
             case LEX_RELATIVE_TIME_VALUE: {
-                Value val = valuePool.get();
+                Value val = objectPool.valuePool.get();
                 lexer.consumeToken();
                 val.setRelativeTimeValue(tv.getTimeValue().getRelativeTime());
-                tree.setInnerTree(Literal.createLiteral(val));
+                tree.setInnerTree(Literal.createLiteral(val, objectPool));
                 return (tree.getInnerTree() != null);
             }
 
@@ -1448,7 +1452,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             // return false;
         }
         tt = lexer.peekToken();
-        ExprTreeHolder tree = mutableExprPool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         while (tt != TokenType.LEX_CLOSE_PAREN) {
             // parse the expression
             tree.reset();
@@ -1462,9 +1466,9 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             // the next token must be a ',' or a ')'
             // or it can be a ';' if using old ClassAd semantics
             tt = lexer.peekToken();
-            if (tt == TokenType.LEX_COMMA || (tt == TokenType.LEX_SEMICOLON && false))
+            if (tt == TokenType.LEX_COMMA || (tt == TokenType.LEX_SEMICOLON && false)) {
                 lexer.consumeToken();
-            else if (tt != TokenType.LEX_CLOSE_PAREN) {
+            } else if (tt != TokenType.LEX_CLOSE_PAREN) {
                 argList.clear();
                 throw new HyracksDataException(
                         "expected LEX_COMMA or LEX_CLOSE_PAREN but got " + String.valueOf(Lexer.strLexToken(tt)));
@@ -1490,11 +1494,12 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     public boolean parseClassAd(ClassAd ad, boolean full) throws IOException {
         TokenType tt;
         ad.clear();
-        if ((tt = lexer.consumeToken()) != TokenType.LEX_OPEN_BOX)
+        if ((tt = lexer.consumeToken()) != TokenType.LEX_OPEN_BOX) {
             return false;
+        }
         tt = lexer.peekToken();
-        TokenValue tv = tokenValuePool.get();
-        ExprTreeHolder tree = mutableExprPool.get();
+        TokenValue tv = objectPool.tokenValuePool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         while (tt != TokenType.LEX_CLOSE_BOX) {
             // Get the name of the expression
             tv.reset();
@@ -1567,8 +1572,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
     public boolean parseExprList(ExprList list, boolean full) throws IOException {
         TokenType tt;
-        ExprTreeHolder tree = new ExprTreeHolder();
-        ExprList loe = new ExprList();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
+        ExprList loe = objectPool.exprListPool.get();
 
         if ((tt = lexer.consumeToken()) != TokenType.LEX_OPEN_BRACE) {
             throw new HyracksDataException(
@@ -1589,16 +1594,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
             // the next token must be a ',' or a '}'
             tt = lexer.peekToken();
-            if (tt == TokenType.LEX_COMMA)
+            if (tt == TokenType.LEX_COMMA) {
                 lexer.consumeToken();
-            else if (tt != TokenType.LEX_CLOSE_BRACE) {
+            } else if (tt != TokenType.LEX_CLOSE_BRACE) {
                 throw new HyracksDataException("while parsing expression list:  expected "
                         + "LEX_CLOSE_BRACE or LEX_COMMA but got " + Lexer.strLexToken(tt));
             }
         }
 
         lexer.consumeToken();
-        list.setValue(ExprList.createExprList(loe));
+        list.setValue(ExprList.createExprList(loe, objectPool));
 
         // if a full parse was requested, ensure that input is exhausted
         if (full && (lexer.consumeToken() != TokenType.LEX_END_OF_INPUT)) {
@@ -1613,8 +1618,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         boolean should_eval = false;
         if (functionName.equalsIgnoreCase("absTime") || functionName.equalsIgnoreCase("relTime")) {
             if (argList.size() == 1 && argList.get(0).getKind() == NodeKind.LITERAL_NODE) {
-                Value val = new Value();
-                AMutableNumberFactor factor = new AMutableNumberFactor();
+                Value val = objectPool.valuePool.get();
+                AMutableNumberFactor factor = objectPool.numFactorPool.get();
                 ((Literal) argList.get(0)).getComponents(val, factor);
                 if (val.isStringValue()) {
                     should_eval = true;
@@ -1625,22 +1630,22 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     public ExprTree evaluateFunction(String functionName, ExprList argList) throws HyracksDataException {
-        Value val = new Value();
-        AMutableNumberFactor factor = new AMutableNumberFactor();
-        ExprTreeHolder tree = new ExprTreeHolder();
+        Value val = objectPool.valuePool.get();
+        AMutableNumberFactor factor = objectPool.numFactorPool.get();
+        ExprTreeHolder tree = objectPool.mutableExprPool.get();
         ((Literal) argList.get(0)).getComponents(val, factor);
 
-        AMutableCharArrayString string_value = new AMutableCharArrayString();
+        AMutableCharArrayString string_value = objectPool.strPool.get();
         if (val.isStringValue(string_value)) {
             if (functionName.equalsIgnoreCase("absTime")) {
-                tree.setInnerTree(Literal.createAbsTime(string_value));
+                tree.setInnerTree(Literal.createAbsTime(string_value, objectPool));
             } else if (functionName.equalsIgnoreCase("relTime")) {
-                tree.setInnerTree(Literal.createRelTime(string_value));
+                tree.setInnerTree(Literal.createRelTime(string_value, objectPool));
             } else {
-                tree.setInnerTree(FunctionCall.createFunctionCall(functionName, argList));
+                tree.setInnerTree(FunctionCall.createFunctionCall(functionName, argList, objectPool));
             }
         } else {
-            tree.setInnerTree(FunctionCall.createFunctionCall(functionName, argList));
+            tree.setInnerTree(FunctionCall.createFunctionCall(functionName, argList, objectPool));
         }
         return tree;
     }
@@ -1688,17 +1693,10 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         this.currentSource = lexerSource;
     }
 
-    public void reset() {
-        resetPools();
-    }
-
-    public Literal getLiteral() {
-        return literalPool.get();
-    }
-
     @Override
     public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
         try {
+            resetPools();
             if (oldFormat) {
                 int maxOffset = record.size();
                 rootAd.clear();
@@ -1718,7 +1716,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     line = readLine(buffer, aInt32, maxOffset);
                 }
             } else {
-                resetPools();
                 currentSource.setNewSource(record.get());
                 rootAd.reset();
                 asterixParseClassAd(rootAd);

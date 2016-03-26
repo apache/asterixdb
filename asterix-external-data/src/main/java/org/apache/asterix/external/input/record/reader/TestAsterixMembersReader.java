@@ -20,9 +20,9 @@ package org.apache.asterix.external.input.record.reader;
 
 import java.io.IOException;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.input.record.RecordWithPK;
@@ -79,10 +79,15 @@ public class TestAsterixMembersReader implements IRecordReader<RecordWithPK<char
     }
 
     @Override
-    public void setController(final IDataFlowController controller) {
+    public void setController(final AbstractFeedDataFlowController controller) {
     }
 
     @Override
     public void setFeedLogManager(final FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 }

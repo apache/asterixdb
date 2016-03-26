@@ -92,6 +92,7 @@ public class ClassAdTime {
     }
 
     public void setRelativeTime(long ms) {
+        this.isAbsolute = false;
         timeZoneCalendar.setTimeInMillis(ms);
     }
 
@@ -138,6 +139,17 @@ public class ClassAdTime {
     public ClassAdTime() {
         this.isAbsolute = true;
         this.timeZoneCalendar = Calendar.getInstance();
+        this.timeZoneCalendar.setTimeInMillis(0);
+    }
+
+    public void setCurrentAbsolute() {
+        this.isAbsolute = true;
+        this.timeZoneCalendar = Calendar.getInstance();
+        this.timeZoneCalendar.setTimeInMillis(0);
+    }
+
+    public void setTimeZone(String timeZoneId) {
+        this.timeZoneCalendar = Calendar.getInstance(TimeZone.getTimeZone(timeZoneId));
         this.timeZoneCalendar.setTimeInMillis(0);
     }
 

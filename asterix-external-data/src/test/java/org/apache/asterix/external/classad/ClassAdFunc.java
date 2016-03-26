@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.external.classad;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ClassAdFunc {
-    public boolean call(String name, ExprList argList, EvalState state, Value val) throws HyracksDataException;
+    public boolean call(String name, ExprList argList, EvalState state, Value val, ClassAdObjectPool objectPool)
+            throws HyracksDataException;
 }

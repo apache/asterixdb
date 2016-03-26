@@ -22,14 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IIndexingDatasource;
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
+import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -39,11 +38,11 @@ public abstract class AbstractStreamRecordReaderFactory<T>
         implements IRecordReaderFactory<T>, IIndexibleExternalDataSource {
 
     private static final long serialVersionUID = 1L;
-    protected IInputStreamProviderFactory inputStreamFactory;
+    protected IInputStreamFactory inputStreamFactory;
     protected Map<String, String> configuration;
 
     public AbstractStreamRecordReaderFactory<T> setInputStreamFactoryProvider(
-            IInputStreamProviderFactory inputStreamFactory) {
+            IInputStreamFactory inputStreamFactory) {
         this.inputStreamFactory = inputStreamFactory;
         return this;
     }
@@ -82,15 +81,15 @@ public abstract class AbstractStreamRecordReaderFactory<T>
         return false;
     }
 
-    protected Pair<AInputStream, IExternalIndexer> getStreamAndIndexer(IHyracksTaskContext ctx, int partition)
+    protected Pair<AsterixInputStream, IExternalIndexer> getStreamAndIndexer(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        IInputStreamProvider inputStreamProvider = inputStreamFactory.createInputStreamProvider(ctx, partition);
+        AsterixInputStream inputStream = inputStreamFactory.createInputStream(ctx, partition);
         IExternalIndexer indexer = null;
         if (inputStreamFactory.isIndexible()) {
             if (((IIndexibleExternalDataSource) inputStreamFactory).isIndexingOp()) {
-                indexer = ((IIndexingDatasource) inputStreamProvider).getIndexer();
+                indexer = ((IIndexingDatasource) inputStream).getIndexer();
             }
         }
-        return new Pair<AInputStream, IExternalIndexer>(inputStreamProvider.getInputStream(), indexer);
+        return new Pair<AsterixInputStream, IExternalIndexer>(inputStream, indexer);
     }
 }

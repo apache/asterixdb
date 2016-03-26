@@ -28,7 +28,7 @@ import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
-import org.apache.asterix.external.input.stream.provider.HDFSInputStreamProvider;
+import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hadoop.fs.BlockLocation;
@@ -186,7 +186,7 @@ public class HDFSUtils {
         conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI,
                 configuration.get(ExternalDataConstants.KEY_HDFS_URL).trim());
         conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_CLASS, ExternalDataConstants.CLASS_NAME_HDFS_FILESYSTEM);
-        conf.setClassLoader(HDFSInputStreamProvider.class.getClassLoader());
+        conf.setClassLoader(HDFSInputStream.class.getClassLoader());
         conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, configuration.get(ExternalDataConstants.KEY_PATH).trim());
         conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_FORMAT, formatClassName);
 

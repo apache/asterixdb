@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.classad.test;
 
-import java.io.IOException;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -51,8 +51,9 @@ public class ClassAdUnitTest extends TestCase {
     public void test() {
         String[] args = { "", "-d", "-vv", "-all" };
         try {
-            ClassAdUnitTester.test(args.length, args);
-        } catch (IOException e) {
+            ClassAdUnitTester.test(args.length, args, new ClassAdObjectPool());
+        } catch (Throwable e) {
+            e.printStackTrace();
             assertTrue(false);
         }
         assertTrue(true);

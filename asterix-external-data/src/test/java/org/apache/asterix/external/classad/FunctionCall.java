@@ -20,6 +20,7 @@ package org.apache.asterix.external.classad;
 
 import java.util.HashMap;
 
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -28,7 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class FunctionCall extends ExprTree {
 
     public static boolean initialized = false;
-
+    public static final HashMap<String, ClassAdFunc> funcTable = new HashMap<String, ClassAdFunc>();
     public static final ClassAdFunc[] ClassAdBuiltinFunc = { BuiltinClassAdFunctions.IsType,
             BuiltinClassAdFunctions.TestMember, BuiltinClassAdFunctions.Size, BuiltinClassAdFunctions.SumAvg,
             BuiltinClassAdFunctions.MinMax, BuiltinClassAdFunctions.ListCompare, BuiltinClassAdFunctions.debug,
@@ -42,12 +43,6 @@ public class FunctionCall extends ExprTree {
             BuiltinClassAdFunctions.doRound, BuiltinClassAdFunctions.doMath2, BuiltinClassAdFunctions.random,
             BuiltinClassAdFunctions.ifThenElse, BuiltinClassAdFunctions.stringListsIntersect,
             BuiltinClassAdFunctions.interval, BuiltinClassAdFunctions.eval };
-
-    // function call specific information
-    private String functionName;
-    private ClassAdFunc function;
-    private ExprList arguments;
-    public static final HashMap<String, ClassAdFunc> funcTable = new HashMap<String, ClassAdFunc>();
 
     static {
         // load up the function dispatch table
@@ -144,6 +139,36 @@ public class FunctionCall extends ExprTree {
         initialized = true;
     }
 
+    // function call specific information
+    private final CaseInsensitiveString functionName;
+    private ClassAdFunc function;
+    private final ExprList arguments;
+
+    public FunctionCall(ClassAdObjectPool objectPool) {
+        super(objectPool);
+        functionName = new CaseInsensitiveString();
+        arguments = new ExprList(objectPool);
+        function = null;
+    }
+
+    public static FunctionCall createFunctionCall(String functionName, ExprList args, ClassAdObjectPool objectPool) {
+        FunctionCall fc = objectPool != null ? objectPool.funcPool.get() : new FunctionCall(null);
+        fc.function = funcTable.get(functionName.toLowerCase());
+        fc.functionName.set(functionName);
+        fc.arguments.setExprList(args.getExprList());
+        return fc;
+    }
+
+    // start up with an argument list of size 4
+
+    public FunctionCall(FunctionCall functioncall, ClassAdObjectPool objectPool) throws HyracksDataException {
+        super(objectPool);
+        functionName = new CaseInsensitiveString();
+        arguments = new ExprList(objectPool);
+        function = null;
+        copyFrom(functioncall);
+    }
+
     /**
      * Returns true if the function expression points to a valid
      * function in the ClassAd library.
@@ -154,37 +179,13 @@ public class FunctionCall extends ExprTree {
 
     public void copyFrom(FunctionCall copiedFrom) throws HyracksDataException {
         this.function = copiedFrom.function;
-        this.functionName = copiedFrom.functionName;
-        if (this.arguments == null) {
-            this.arguments = (ExprList) copiedFrom.arguments.copy();
-        } else {
-            this.arguments.copyFrom(copiedFrom.arguments);
-        }
-    }
-
-    public FunctionCall() {
-        functionName = null;
-        function = null;
-        arguments = null;
-    }
-
-    public static FunctionCall createFunctionCall(String functionName, ExprList args) {
-        FunctionCall fc = new FunctionCall();
-        fc.function = funcTable.get(functionName.toLowerCase());
-        fc.functionName = functionName;
-        fc.arguments = args;
-        return fc;
-    }
-
-    // start up with an argument list of size 4
-
-    public FunctionCall(FunctionCall functioncall) throws HyracksDataException {
-        copyFrom(functioncall);
+        this.functionName.set(copiedFrom.functionName.get());
+        this.arguments.setExprList(copiedFrom.arguments.getExprList());
     }
 
     @Override
     public ExprTree copy() throws HyracksDataException {
-        FunctionCall newTree = new FunctionCall();
+        FunctionCall newTree = objectPool.funcPool.get();
         newTree.copyFrom(this);
         return newTree;
     }
@@ -192,7 +193,7 @@ public class FunctionCall extends ExprTree {
     @Override
     public void copyFrom(ExprTree tree) throws HyracksDataException {
         FunctionCall functioncall = (FunctionCall) tree;
-        functionName = functioncall.functionName;
+        functionName.set(functioncall.functionName.get());
         function = functioncall.function;
         arguments.copyFrom(arguments);
         super.copyFrom(functioncall);
@@ -209,13 +210,17 @@ public class FunctionCall extends ExprTree {
         } else if (pSelfTree.getKind() != NodeKind.FN_CALL_NODE) {
             is_same = false;
         } else {
-            other_fn = (FunctionCall) pSelfTree;
-            if (functionName == other_fn.functionName && function.equals(other_fn.function)
-                    && arguments.equals(other_fn.arguments)) {
-                is_same = true;
+            try {
+                other_fn = (FunctionCall) pSelfTree;
+                if (functionName == other_fn.functionName && function.equals(other_fn.function)
+                        && arguments.equals(other_fn.arguments)) {
+                    is_same = true;
 
-            } else {
-                is_same = false;
+                } else {
+                    is_same = false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return is_same;
@@ -242,14 +247,14 @@ public class FunctionCall extends ExprTree {
 
     //This will move pointers to objects (not create clones)
     public void getComponents(AMutableString fn, ExprList exprList) {
-        fn.setValue(functionName);
+        fn.setValue(functionName.get());
         for (ExprTree tree : arguments.getExprList()) {
             exprList.add(tree);
         }
     }
 
     public void getComponents(AMutableCharArrayString fn, ExprList exprList) {
-        fn.setValue(functionName);
+        fn.setValue(functionName.get());
         for (ExprTree tree : arguments.getExprList()) {
             exprList.add(tree);
         }
@@ -258,7 +263,7 @@ public class FunctionCall extends ExprTree {
     @Override
     public boolean privateEvaluate(EvalState state, Value value) throws HyracksDataException {
         if (function != null) {
-            return function.call(functionName, arguments, state, value);
+            return function.call(functionName.get(), arguments, state, value, objectPool);
         } else {
             value.setErrorValue();
             return (true);
@@ -267,19 +272,20 @@ public class FunctionCall extends ExprTree {
 
     @Override
     public boolean privateEvaluate(EvalState state, Value value, ExprTreeHolder tree) throws HyracksDataException {
-        FunctionCall tmpSig = new FunctionCall();
-        Value tmpVal = new Value();
-        ExprTreeHolder argSig = new ExprTreeHolder();
-        MutableBoolean rval = new MutableBoolean();
+        FunctionCall tmpSig = objectPool.funcPool.get();
+        Value tmpVal = objectPool.valuePool.get();
+        ExprTreeHolder argSig = objectPool.mutableExprPool.get();
+        MutableBoolean rval = objectPool.boolPool.get();
         if (!privateEvaluate(state, value)) {
             return false;
         }
-        tmpSig.functionName = functionName;
+        tmpSig.functionName.set(functionName.get());
         rval.setValue(true);
         for (ExprTree i : arguments.getExprList()) {
             rval.setValue(i.publicEvaluate(state, tmpVal, argSig));
-            if (rval.booleanValue())
+            if (rval.booleanValue()) {
                 tmpSig.arguments.add(argSig.getInnerTree());
+            }
         }
         tree.setInnerTree(tmpSig);
         return rval.booleanValue();
@@ -288,11 +294,10 @@ public class FunctionCall extends ExprTree {
     @Override
     public boolean privateFlatten(EvalState state, Value value, ExprTreeHolder tree, AMutableInt32 i)
             throws HyracksDataException {
-        FunctionCall newCall = new FunctionCall();
-        ExprTreeHolder argTree = new ExprTreeHolder();
-        Value argValue = new Value();
+        FunctionCall newCall = objectPool.funcPool.get();
+        ExprTreeHolder argTree = objectPool.mutableExprPool.get();
+        Value argValue = objectPool.valuePool.get();
         boolean fold = true;
-
         tree.setInnerTree(null); // Just to be safe...  wenger 2003-12-11.
 
         // if the function cannot be resolved, the value is "error"
@@ -301,7 +306,7 @@ public class FunctionCall extends ExprTree {
             return true;
         }
 
-        newCall.functionName = functionName;
+        newCall.functionName.set(functionName.get());
         newCall.function = function;
 
         // flatten the arguments
@@ -313,7 +318,7 @@ public class FunctionCall extends ExprTree {
                     continue;
                 } else {
                     // Assert: argTree == NULL
-                    argTree.setInnerTree(Literal.createLiteral(argValue));
+                    argTree.setInnerTree(Literal.createLiteral(argValue, objectPool));
                     if (argTree.getInnerTree() != null) {
                         newCall.arguments.add(argTree.getInnerTree());
                         continue;
@@ -330,7 +335,7 @@ public class FunctionCall extends ExprTree {
         // assume all functions are "pure" (i.e., side-affect free)
         if (fold) {
             // flattened to a value
-            if (!function.call(functionName, arguments, state, value)) {
+            if (!function.call(functionName.get(), arguments, state, value, objectPool)) {
                 return false;
             }
             tree.setInnerTree(null);
@@ -349,6 +354,6 @@ public class FunctionCall extends ExprTree {
     public void reset() {
         this.arguments.clear();
         this.function = null;
-        this.functionName = "";
+        this.functionName.set("");;
     }
 }

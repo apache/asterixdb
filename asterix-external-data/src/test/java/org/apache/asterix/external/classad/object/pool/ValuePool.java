@@ -21,13 +21,20 @@ package org.apache.asterix.external.classad.object.pool;
 import org.apache.asterix.external.classad.Value;
 
 public class ValuePool extends Pool<Value> {
+
+    private final ClassAdObjectPool objectPool;
+
+    public ValuePool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public Value newInstance() {
-        return new Value();
+        return new Value(objectPool);
     }
 
     @Override
     protected void reset(Value obj) {
-        obj.clear();
+        obj.reset();
     }
 }

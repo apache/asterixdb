@@ -23,16 +23,16 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
-import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.log4j.Logger;
 
-public class SocketServerInputStream extends AInputStream {
+public class SocketServerInputStream extends AsterixInputStream {
+    private static final Logger LOGGER = Logger.getLogger(SocketServerInputStream.class.getName());
     private ServerSocket server;
     private Socket socket;
     private InputStream connectionStream;
-    private AbstractFeedDataFlowController controller;
 
     public SocketServerInputStream(ServerSocket server) {
         this.server = server;
@@ -53,12 +53,6 @@ public class SocketServerInputStream extends AInputStream {
             read = connectionStream.read();
         }
         return read;
-    }
-
-    @Override
-    public boolean skipError() throws Exception {
-        accept();
-        return true;
     }
 
     @Override
@@ -160,11 +154,13 @@ public class SocketServerInputStream extends AInputStream {
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager logManager) {
-    }
-
-    @Override
-    public void setController(AbstractFeedDataFlowController controller) {
-        this.controller = controller;
+    public boolean handleException(Throwable th) {
+        try {
+            accept();
+        } catch (IOException e) {
+            LOGGER.warn("Failed accepting more connections", e);
+            return false;
+        }
+        return true;
     }
 }

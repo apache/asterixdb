@@ -66,7 +66,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
 
     public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer,
             FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IFeedManager feedManager)
-                    throws IOException {
+            throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor(feedId, feedRuntimeType, partition, true,
                 feedManager.getFeedMemoryManager(), fta);
@@ -108,7 +108,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
         }
     }
 
-    public void notifyEndOfFeed() {
+    public void notifyEndOfFeed() throws InterruptedException {
         frameDistributor.notifyEndOfFeed();
     }
 

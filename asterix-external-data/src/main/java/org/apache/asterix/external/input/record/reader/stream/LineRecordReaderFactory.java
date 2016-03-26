@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -36,7 +36,7 @@ public class LineRecordReaderFactory extends AbstractStreamRecordReaderFactory<c
             throws HyracksDataException {
         String quoteString = configuration.get(ExternalDataConstants.KEY_QUOTE);
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
-        Pair<AInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
+        Pair<AsterixInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
         if (quoteString != null) {
             return new QuotedLineRecordReader(hasHeader, streamAndIndexer.first, streamAndIndexer.second, quoteString);
         } else {

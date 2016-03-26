@@ -64,6 +64,8 @@ import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class AqlSerializerDeserializerProvider implements ISerializerDeserializerProvider, Serializable {
 
@@ -71,6 +73,13 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
     public static final AqlSerializerDeserializerProvider INSTANCE = new AqlSerializerDeserializerProvider();
 
     private AqlSerializerDeserializerProvider() {
+    }
+
+    // Can't be shared among threads <Stateful>
+    @SuppressWarnings("rawtypes")
+    public ISerializerDeserializer getAStringSerializerDeserializer() {
+        return addTag(new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()),
+                ATypeTag.STRING);
     }
 
     @SuppressWarnings("rawtypes")

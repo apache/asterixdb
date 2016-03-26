@@ -19,9 +19,9 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.stream.AInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -34,7 +34,7 @@ public class SemiStructuredRecordReaderFactory extends AbstractStreamRecordReade
     @Override
     public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        Pair<AInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
+        Pair<AsterixInputStream, IExternalIndexer> streamAndIndexer = getStreamAndIndexer(ctx, partition);
         try {
             return new SemiStructuredRecordReader(streamAndIndexer.first, streamAndIndexer.second,
                     configuration.get(ExternalDataConstants.KEY_RECORD_START),

@@ -22,9 +22,15 @@ import org.apache.asterix.external.classad.ExprList;
 
 public class ExprListPool extends Pool<ExprList> {
 
+    private final ClassAdObjectPool objectPool;
+
+    public ExprListPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public ExprList newInstance() {
-        return new ExprList();
+        return new ExprList(objectPool);
     }
 
     @Override

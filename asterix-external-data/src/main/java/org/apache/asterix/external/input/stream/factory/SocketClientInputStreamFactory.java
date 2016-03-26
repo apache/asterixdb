@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.stream.factory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -25,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
-import org.apache.asterix.external.api.IInputStreamProvider;
-import org.apache.asterix.external.api.IInputStreamProviderFactory;
-import org.apache.asterix.external.input.stream.provider.SocketClientInputStreamProvider;
+import org.apache.asterix.external.api.IInputStreamFactory;
+import org.apache.asterix.external.input.stream.SocketClientInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -36,7 +37,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class SocketClientInputStreamProviderFactory implements IInputStreamProviderFactory {
+public class SocketClientInputStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
@@ -73,8 +74,11 @@ public class SocketClientInputStreamProviderFactory implements IInputStreamProvi
     }
 
     @Override
-    public IInputStreamProvider createInputStreamProvider(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        return new SocketClientInputStreamProvider(sockets.get(partition));
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+        try {
+            return new SocketClientInputStream(sockets.get(partition));
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

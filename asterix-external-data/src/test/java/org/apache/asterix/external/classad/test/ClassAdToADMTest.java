@@ -28,9 +28,12 @@ import org.apache.asterix.external.classad.CharArrayLexerSource;
 import org.apache.asterix.external.classad.ClassAd;
 import org.apache.asterix.external.classad.ExprTree;
 import org.apache.asterix.external.classad.Value;
+import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReader;
-import org.apache.asterix.external.input.stream.LocalFileSystemInputStream;
+import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.library.ClassAdParser;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -60,17 +63,20 @@ public class ClassAdToADMTest extends TestCase {
     public void test() {
         try {
             // test here
-            ClassAd pAd = new ClassAd();
+            ClassAdObjectPool objectPool = new ClassAdObjectPool();
+            ClassAd pAd = new ClassAd(objectPool);
             String[] files = new String[] { "/jobads.txt" };
-            ClassAdParser parser = new ClassAdParser(null, false, true, false, null, null, null);
+            ClassAdParser parser = new ClassAdParser(objectPool);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {
-                LocalFileSystemInputStream in = new LocalFileSystemInputStream(
-                        Paths.get(getClass().getResource(path).toURI()), null, false);
+                LocalFSInputStream in = new LocalFSInputStream(
+                        new FileSplit[] { new FileSplit("",
+                                new FileReference(Paths.get(getClass().getResource(path).toURI()).toFile())) },
+                        null, null, 0, null, false);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, null, "[", "]");
-                Value val = new Value();
+                Value val = new Value(objectPool);
                 while (recordReader.hasNext()) {
-                    val.clear();
+                    val.reset();
                     IRawRecord<char[]> record = recordReader.next();
                     lexerSource.setNewSource(record.get());
                     parser.setLexerSource(lexerSource);

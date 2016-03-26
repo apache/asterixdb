@@ -20,7 +20,7 @@ package org.apache.asterix.external.feed.api;
 
 import java.util.List;
 
-import org.apache.asterix.external.feed.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedId;
@@ -71,7 +71,7 @@ public interface IFeedJoint {
     /**
      * @return the subscription location {@link ConnectionLocation} associated with the FeedJoint
      */
-    public ConnectionLocation getConnectionLocation();
+    public FeedRuntimeType getConnectionLocation();
 
     /**
      * @return the unique {@link FeedJointKey} associated with the FeedJoint

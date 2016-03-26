@@ -21,7 +21,6 @@ package org.apache.asterix.external.input.record.reader.kv;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
@@ -92,10 +91,10 @@ public class KVReader implements IRecordReader<DCPRequest> {
     }
 
     private void connect() {
-        core.send(new SeedNodesRequest(sourceNodes))
-                .timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT).toBlocking().single();
-        core.send(new OpenBucketRequest(bucket, password))
-                .timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT).toBlocking().single();
+        core.send(new SeedNodesRequest(sourceNodes)).timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT)
+                .toBlocking().single();
+        core.send(new OpenBucketRequest(bucket, password)).timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT)
+                .toBlocking().single();
         this.pushThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -183,11 +182,16 @@ public class KVReader implements IRecordReader<DCPRequest> {
     }
 
     @Override
-    public void setController(IDataFlowController controller) {
-        this.controller = (AbstractFeedDataFlowController) controller;
+    public void setController(AbstractFeedDataFlowController controller) {
+        this.controller = controller;
     }
 
     @Override
     public void setFeedLogManager(FeedLogManager feedLogManager) {
+    }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return false;
     }
 }

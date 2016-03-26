@@ -16,6 +16,7 @@ asterix-app/opttest/
 asterix-app/parserts/
 asterix-app/opt_parserts/
 asterix-app/runtime_parserts/
+asterix-app/data/csv/beer.csv
 asterix-installer/ittest/
 asterix-installer/repliationtest/
 asterix-installer/src/test/resources/clusterts/asterix-installer-0.8.9-SNAPSHOT-binary-assembly/

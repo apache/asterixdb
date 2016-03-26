@@ -21,9 +21,16 @@ package org.apache.asterix.external.classad.object.pool;
 import org.apache.asterix.external.classad.ExprTreeHolder;
 
 public class ExprHolderPool extends Pool<ExprTreeHolder> {
+
+    private final ClassAdObjectPool objectPool;
+
+    public ExprHolderPool(ClassAdObjectPool objectPool) {
+        this.objectPool = objectPool;
+    }
+
     @Override
     public ExprTreeHolder newInstance() {
-        return new ExprTreeHolder();
+        return new ExprTreeHolder(objectPool);
     }
 
     @Override

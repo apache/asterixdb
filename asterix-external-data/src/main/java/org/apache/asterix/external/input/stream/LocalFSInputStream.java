@@ -18,34 +18,48 @@
  */
 package org.apache.asterix.external.input.stream;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.log4j.Logger;
 
-public class LocalFileSystemInputStream extends AInputStream {
+public class LocalFSInputStream extends AsterixInputStream {
+
+    private static final Logger LOGGER = Logger.getLogger(LocalFSInputStream.class.getName());
+    private final Path path;
     private final FileSystemWatcher watcher;
     private FileInputStream in;
     private byte lastByte;
+    private File currentFile;
 
-    public LocalFileSystemInputStream(Path inputResource, String expression, boolean isFeed)
-            throws HyracksDataException {
-        this.watcher = new FileSystemWatcher(inputResource, expression, isFeed);
-        watcher.init();
+    public LocalFSInputStream(final FileSplit[] fileSplits, final IHyracksTaskContext ctx,
+            final Map<String, String> configuration, final int partition, final String expression, final boolean isFeed)
+            throws IOException {
+        this.path = fileSplits[partition].getLocalFile().getFile().toPath();
+        this.watcher = new FileSystemWatcher(path, expression, isFeed);
+        this.watcher.init();
     }
 
     @Override
     public void setFeedLogManager(FeedLogManager logManager) {
+        super.setFeedLogManager(logManager);
         watcher.setFeedLogManager(logManager);
     }
 
     @Override
     public void setController(AbstractFeedDataFlowController controller) {
+        super.setController(controller);
         watcher.setController(controller);
     }
 
@@ -76,6 +90,7 @@ public class LocalFileSystemInputStream extends AInputStream {
                 in.close();
             } finally {
                 in = null;
+                currentFile = null;
             }
         }
     }
@@ -86,7 +101,8 @@ public class LocalFileSystemInputStream extends AInputStream {
     private boolean advance() throws IOException {
         closeFile();
         if (watcher.hasNext()) {
-            in = new FileInputStream(watcher.next());
+            currentFile = watcher.next();
+            in = new FileInputStream(currentFile);
             return true;
         }
         return false;
@@ -124,14 +140,43 @@ public class LocalFileSystemInputStream extends AInputStream {
     }
 
     @Override
-    public boolean skipError() throws Exception {
-        advance();
+    public boolean stop() throws Exception {
+        watcher.close();
         return true;
     }
 
     @Override
-    public boolean stop() throws Exception {
-        watcher.close();
-        return true;
+    public boolean handleException(Throwable th) {
+        if (in == null) {
+            return false;
+        }
+        if (th instanceof IOException) {
+            // TODO: Change from string check to exception type
+            if (th.getCause().getMessage().contains("Malformed input stream")) {
+                if (currentFile != null) {
+                    try {
+                        logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
+                    } catch (IOException e) {
+                        LOGGER.warn("Filed to write to feed log file", e);
+                    }
+                    LOGGER.warn("Corrupted input file: " + currentFile.getAbsolutePath());
+                }
+                try {
+                    advance();
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            } else {
+                try {
+                    watcher.init();
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to initialize watcher during failure recovery", e);
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }
