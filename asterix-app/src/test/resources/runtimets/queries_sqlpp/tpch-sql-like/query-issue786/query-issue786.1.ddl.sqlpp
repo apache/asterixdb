@@ -80,15 +80,15 @@ create type tpch.RegionType as
   r_comment : string
 }
 
-create  table Orders(OrderType) primary key o_orderkey;
+create  collection Orders(OrderType) primary key o_orderkey;
 
-create  table Supplier(SupplierType) primary key s_suppkey;
+create  collection Supplier(SupplierType) primary key s_suppkey;
 
-create  table Region(RegionType) primary key r_regionkey;
+create  collection Region(RegionType) primary key r_regionkey;
 
-create  table Nation(NationType) primary key n_nationkey;
+create  collection Nation(NationType) primary key n_nationkey;
 
-create  table Customer(CustomerType) primary key c_custkey;
+create  collection Customer(CustomerType) primary key c_custkey;
 
-create  table SelectedNation(NationType) primary key n_nationkey;
+create  collection SelectedNation(NationType) primary key n_nationkey;
 

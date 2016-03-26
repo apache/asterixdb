@@ -433,7 +433,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
 }
 {
   (
-    <EXTERNAL> <DATASET> nameComponents = QualifiedName()
+    <EXTERNAL> Dataset() nameComponents = QualifiedName()
     <LEFTPAREN> typeComponents = TypeName() <RIGHTPAREN>
     ifNotExists = IfNotExists()
     <USING> adapterName = AdapterName() properties = Configuration()
@@ -460,7 +460,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
       }
 
     | (<INTERNAL> | <TEMPORARY> { temp = true; })?
-    <DATASET> nameComponents = QualifiedName()
+    Dataset() nameComponents = QualifiedName()
     <LEFTPAREN> typeComponents = TypeName() <RIGHTPAREN>
     (
         { String name; }
@@ -516,7 +516,7 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
   String datasetName = null;
 }
 {
-    <REFRESH> <EXTERNAL> <DATASET> nameComponents = QualifiedName()
+    <REFRESH> <EXTERNAL> Dataset() nameComponents = QualifiedName()
     {
     redss.setDataverseName(nameComponents.first);
     redss.setDatasetName(nameComponents.second);
@@ -538,8 +538,8 @@ RunStatement RunStatement() throws ParseException:
       parameters.add(tmp);
     }
   )*<RIGHTPAREN>
-  <FROM> <DATASET> nameComponentsFrom  = QualifiedName()
-  <TO> <DATASET> nameComponentsTo  = QualifiedName()
+  <FROM> Dataset() nameComponentsFrom  = QualifiedName()
+  <TO> Dataset() nameComponentsTo  = QualifiedName()
     {
       return new RunStatement(system, parameters, nameComponentsFrom.first, nameComponentsFrom.second, nameComponentsTo.first, nameComponentsTo.second);
     }
@@ -866,7 +866,7 @@ Statement DropStatement() throws ParseException:
 {
   <DROP>
   (
-    <DATASET> pairId = QualifiedName() ifExists = IfExists()
+    Dataset() pairId = QualifiedName() ifExists = IfExists()
       {
         stmt = new DropStatement(pairId.first, pairId.second, ifExists);
       }
@@ -1041,7 +1041,7 @@ LoadStatement LoadStatement() throws ParseException:
   Pair<Identifier,Identifier> nameComponents = null;
 }
 {
-  <LOAD> <DATASET> nameComponents = QualifiedName()
+  <LOAD> Dataset() nameComponents = QualifiedName()
     {
       dataverseName = nameComponents.first;
       datasetName = nameComponents.second;
@@ -1075,7 +1075,7 @@ Statement CompactStatement() throws ParseException:
   Statement stmt = null;
 }
 {
-  <COMPACT> <DATASET> nameComponents = QualifiedName()
+  <COMPACT> Dataset() nameComponents = QualifiedName()
     {
       stmt = new CompactStatement(nameComponents.first, nameComponents.second);
     }
@@ -1095,11 +1095,11 @@ Statement FeedStatement() throws ParseException:
 }
 {
   (
-    <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> <DATASET> datasetNameComponents = QualifiedName() (policy = GetPolicy())?
+    <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> Dataset() datasetNameComponents = QualifiedName() (policy = GetPolicy())?
       {
         stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
       }
-    | <DISCONNECT> <FEED> feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
+    | <DISCONNECT> <FEED> feedNameComponents = QualifiedName() <FROM> Dataset() datasetNameComponents = QualifiedName()
       {
         stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
       }
@@ -1387,6 +1387,13 @@ String Identifier() throws ParseException:
       return lit;
     }
   )
+}
+
+void Dataset() throws ParseException:
+{
+}
+{
+    (<DATASET>|<COLLECTION>)
 }
 
 Pair<Integer, Pair<List<String>, TypeExpression>> OpenField() throws ParseException:
@@ -2671,6 +2678,7 @@ TOKEN [IGNORE_CASE]:
   | <CONNECT : "connect">
   | <CORRELATE : "correlate">
   | <DATASET : "table">
+  | <COLLECTION : "collection">
   | <DATAVERSE : "database">
   | <DECLARE : "declare">
   | <DEFINITION : "definition">

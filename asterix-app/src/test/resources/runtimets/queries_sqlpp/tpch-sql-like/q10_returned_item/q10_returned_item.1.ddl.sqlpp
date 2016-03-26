@@ -116,19 +116,19 @@ create type tpch.PartSuppType as
   ps_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  collection LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
-create  table Orders(OrderType) primary key o_orderkey;
+create  collection Orders(OrderType) primary key o_orderkey;
 
-create  table Supplier(SupplierType) primary key s_suppkey;
+create  collection Supplier(SupplierType) primary key s_suppkey;
 
-create  table Region(RegionType) primary key r_regionkey;
+create  collection Region(RegionType) primary key r_regionkey;
 
-create  table Nation(NationType) primary key n_nationkey;
+create  collection Nation(NationType) primary key n_nationkey;
 
-create  table Part(PartType) primary key p_partkey;
+create  collection Part(PartType) primary key p_partkey;
 
-create  table Partsupp(PartSuppType) primary key ps_partkey,ps_suppkey;
+create  collection Partsupp(PartSuppType) primary key ps_partkey,ps_suppkey;
 
-create  table Customer(CustomerType) primary key c_custkey;
+create  collection Customer(CustomerType) primary key c_custkey;
 

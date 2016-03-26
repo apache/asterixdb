@@ -49,5 +49,5 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  collection LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
