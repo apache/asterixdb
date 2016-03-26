@@ -34,6 +34,7 @@ import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.api.http.servlet.JSONUtil;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -73,7 +74,12 @@ public class ResultUtils {
         return s;
     }
 
-    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf) {
+    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf)
+            throws AsterixException {
+        if (recordType == null) {
+            throw new AsterixException(
+               "Cannot output CSV with header without specifying output-record-type");
+        }
         // If HTML-ifying, we have to output this here before the header -
         // pretty ugly
         if (conf.is(SessionConfig.FORMAT_HTML)) {
@@ -251,7 +257,7 @@ public class ResultUtils {
         String message = e.getMessage();
         message = message.replace("<", "&lt");
         message = message.replace(">", "&gt");
-        errorMessage.append("SyntaxError: " + message + "\n");
+        errorMessage.append("Error: " + message + "\n");
         int pos = message.indexOf("line");
         if (pos > 0) {
             Pattern p = Pattern.compile("\\d+");

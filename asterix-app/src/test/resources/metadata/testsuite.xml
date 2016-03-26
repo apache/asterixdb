@@ -328,61 +328,61 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_7">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
+        <expected-error>Error: Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
+        <expected-error>Error: Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
@@ -407,7 +407,7 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The partitioning key "[open-type]" cannot be of type RECORD.</expected-error>
+        <expected-error>Error: The partitioning key "[open-type]" cannot be of type RECORD.</expected-error>
       </compilation-unit>
     </test-case>
     <!-- Feed datasets are not supported anymore
@@ -427,43 +427,43 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The partitioning key "[id]" cannot be nullable</expected-error>
+        <expected-error>Error: The partitioning key "[id]" cannot be nullable</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the BTree index.</expected-error>
+        <expected-error>Error: The field "[loc]" which is of type POINT cannot be indexed using the BTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[age]" which is of type INT32 cannot be indexed using the RTree index.</expected-error>
+        <expected-error>Error: The field "[age]" which is of type INT32 cannot be indexed using the RTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>Error: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>Error: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>Error: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>SyntaxError: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>Error: The field "[loc]" which is of type POINT cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

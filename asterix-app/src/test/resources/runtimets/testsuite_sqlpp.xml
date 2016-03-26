@@ -2729,7 +2729,7 @@
             <test-case FilePath="open-index-enforced/error-checking">
                 <compilation-unit name="enforced-field-type-collision">
                     <output-dir compare="Text">enforced-field-type-collision</output-dir>
-                    <expected-error>SyntaxError: A field "[value]" is already defined with the type "STRING"</expected-error>
+                    <expected-error>Error: A field "[value]" is already defined with the type "STRING"</expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
@@ -5674,7 +5674,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv13">
                 <output-dir compare="Text">cross-dv13</output-dir>
-                <expected-error>SyntaxError: ERROR:Recursive invocation testdv2.fun03@0</expected-error>
+                <expected-error>Error: ERROR:Recursive invocation testdv2.fun03@0</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
@@ -5690,7 +5690,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv16">
                 <output-dir compare="Text">cross-dv16</output-dir>
-                <expected-error>SyntaxError: ERROR:Recursive invocation testdv1.fun04@0</expected-error>
+                <expected-error>Error: ERROR:Recursive invocation testdv1.fun04@0</expected-error>
             </compilation-unit>
         </test-case>
         <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -5752,7 +5752,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="query-issue455">
                 <output-dir compare="Text">query-issue455</output-dir>
-                <expected-error>SyntaxError:  function test.printName@0 is undefined</expected-error>
+                <expected-error>Error:  function test.printName@0 is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -5896,7 +5896,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf26">
                 <output-dir compare="Text">udf26</output-dir>
-                <expected-error>SyntaxError:  function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
+                <expected-error>Error:  function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -5918,13 +5918,13 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf30">
                 <output-dir compare="Text">udf30</output-dir>
-                <expected-error>SyntaxError: </expected-error>
+                <expected-error>Error: </expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="f01">
                 <output-dir compare="Text">f01</output-dir>
-                <expected-error>SyntaxError:  function test.int8@0 is undefined</expected-error>
+                <expected-error>Error:  function test.int8@0 is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->

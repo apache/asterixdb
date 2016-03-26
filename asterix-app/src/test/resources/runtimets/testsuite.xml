@@ -5889,7 +5889,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv13">
                 <output-dir compare="Text">cross-dv13</output-dir>
-                <expected-error>SyntaxError: ERROR:Recursive invocation testdv2.fun03@0</expected-error>
+                <expected-error>Error: ERROR:Recursive invocation testdv2.fun03@0</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
@@ -5905,7 +5905,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv16">
                 <output-dir compare="Text">cross-dv16</output-dir>
-                <expected-error>SyntaxError: ERROR:Recursive invocation testdv1.fun04@0</expected-error>
+                <expected-error>Error: ERROR:Recursive invocation testdv1.fun04@0</expected-error>
             </compilation-unit>
         </test-case>
         <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -5944,19 +5944,19 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="drop-type-used-elsewhere">
                 <output-dir compare="Text">drop-type-used-elsewhere</output-dir>
-                <expected-error>SyntaxError: Cannot drop type a.a being used by dataset b.b1</expected-error>
+                <expected-error>Error: Cannot drop type a.a being used by dataset b.b1</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="drop-type-used-here-dataset">
                 <output-dir compare="Text">drop-type-used-here-dataset</output-dir>
-                <expected-error>SyntaxError: Cannot drop type c.a being used by dataset c.a1</expected-error>
+                <expected-error>Error: Cannot drop type c.a being used by dataset c.a1</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="drop-type-used-here-type">
                 <output-dir compare="Text">drop-type-used-here-type</output-dir>
-                <expected-error>SyntaxError: Cannot drop type c.a being used by type c.b</expected-error>
+                <expected-error>Error: Cannot drop type c.a being used by type c.b</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
@@ -5989,7 +5989,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="query-issue455">
                 <output-dir compare="Text">query-issue455</output-dir>
-                <expected-error>SyntaxError:  function test.printName@0 is undefined</expected-error>
+                <expected-error>Error:  function test.printName@0 is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -6133,7 +6133,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf26"><!-- Error not propagated properly -->
                 <output-dir compare="Text">udf26</output-dir>
-                <expected-error>SyntaxError:  function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
+                <expected-error>Error:  function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions"><!-- Exception is never thrown!! -->
@@ -6154,7 +6154,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf30">
                 <output-dir compare="Text">udf30</output-dir>
-                <expected-error>SyntaxError: can't find variable $y</expected-error>
+                <expected-error>Error: can't find variable $y</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -6165,7 +6165,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="f01">
                 <output-dir compare="Text">f01</output-dir>
-                <expected-error>SyntaxError:  function test.int8@0 is undefined</expected-error>
+                <expected-error>Error:  function test.int8@0 is undefined</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
