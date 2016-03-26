@@ -448,7 +448,7 @@ public class UTF8StringUtil {
         return readUTF8(in, null);
     }
 
-    static String readUTF8(DataInput in, UTF8StringReader reader) throws IOException {
+    public static String readUTF8(DataInput in, UTF8StringReader reader) throws IOException {
         int utflen = VarLenIntEncoderDecoder.decode(in);
         byte[] bytearr;
         char[] chararr;
@@ -473,8 +473,9 @@ public class UTF8StringUtil {
 
         while (count < utflen) {
             c = bytearr[count] & 0xff;
-            if (c > 127)
+            if (c > 127) {
                 break;
+            }
             count++;
             chararr[chararr_count++] = (char) c;
         }
@@ -498,22 +499,26 @@ public class UTF8StringUtil {
                 case 13:
                     /* 110x xxxx   10xx xxxx*/
                     count += 2;
-                    if (count > utflen)
+                    if (count > utflen) {
                         throw new UTFDataFormatException("malformed input: partial character at end");
+                    }
                     char2 = bytearr[count - 1];
-                    if ((char2 & 0xC0) != 0x80)
+                    if ((char2 & 0xC0) != 0x80) {
                         throw new UTFDataFormatException("malformed input around byte " + count);
+                    }
                     chararr[chararr_count++] = (char) (((c & 0x1F) << 6) | (char2 & 0x3F));
                     break;
                 case 14:
                     /* 1110 xxxx  10xx xxxx  10xx xxxx */
                     count += 3;
-                    if (count > utflen)
+                    if (count > utflen) {
                         throw new UTFDataFormatException("malformed input: partial character at end");
+                    }
                     char2 = bytearr[count - 2];
                     char3 = bytearr[count - 1];
-                    if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
+                    if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
                         throw new UTFDataFormatException("malformed input around byte " + (count - 1));
+                    }
                     chararr[chararr_count++] = (char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6)
                             | ((char3 & 0x3F) << 0));
                     break;
@@ -539,7 +544,7 @@ public class UTF8StringUtil {
         writeUTF8(str, out, null);
     }
 
-    static void writeUTF8(CharSequence str, DataOutput out, UTF8StringWriter writer) throws IOException {
+    public static void writeUTF8(CharSequence str, DataOutput out, UTF8StringWriter writer) throws IOException {
         int strlen = str.length();
         int utflen = 0;
         char c;
