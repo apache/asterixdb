@@ -99,6 +99,8 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         AggregateFunctionCallExpression exprCopy = new AggregateFunctionCallExpression(expr.getFunctionInfo(),
                 expr.isTwoStep(), deepCopyExpressionReferenceList(expr.getArguments()));
+        exprCopy.setStepOneAggregate(expr.getStepOneAggregate());
+        exprCopy.setStepTwoAggregate(expr.getStepTwoAggregate());
         deepCopyAnnotations(expr, exprCopy);
         deepCopyOpaqueParameters(expr, exprCopy);
         return exprCopy;

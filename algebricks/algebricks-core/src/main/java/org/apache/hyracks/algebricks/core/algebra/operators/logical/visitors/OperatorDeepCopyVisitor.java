@@ -102,16 +102,19 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decoList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
         ArrayList<ILogicalPlan> newSubplans = new ArrayList<ILogicalPlan>();
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getGroupByList())
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getGroupByList()) {
             groupByList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(pair.first,
                     deepCopyExpressionRef(pair.second)));
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getDecorList())
+        }
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getDecorList()) {
             decoList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(pair.first,
                     deepCopyExpressionRef(pair.second)));
-        for (ILogicalPlan plan : op.getNestedPlans()) {
-            newSubplans.add(OperatorManipulationUtil.deepCopy(plan));
         }
-        return new GroupByOperator(groupByList, decoList, newSubplans);
+        GroupByOperator gbyOp = new GroupByOperator(groupByList, decoList, newSubplans);
+        for (ILogicalPlan plan : op.getNestedPlans()) {
+            newSubplans.add(OperatorManipulationUtil.deepCopy(plan, gbyOp));
+        }
+        return gbyOp;
     }
 
     @Override
@@ -190,19 +193,21 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
         ArrayList<ILogicalPlan> newSubplans = new ArrayList<ILogicalPlan>();
+        SubplanOperator subplanOp = new SubplanOperator(newSubplans);
         for (ILogicalPlan plan : op.getNestedPlans()) {
-            newSubplans.add(OperatorManipulationUtil.deepCopy(plan));
+            newSubplans.add(OperatorManipulationUtil.deepCopy(plan, subplanOp));
         }
-        return new SubplanOperator(newSubplans);
+        return subplanOp;
     }
 
     @Override
     public ILogicalOperator visitUnionOperator(UnionAllOperator op, Void arg) throws AlgebricksException {
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> newVarMap = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = op.getVariableMappings();
-        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varMap)
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varMap) {
             newVarMap.add(new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(triple.first, triple.second,
                     triple.third));
+        }
         return new UnionAllOperator(newVarMap);
     }
 
@@ -343,34 +348,41 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     private void deepCopyExpressionRefs(List<Mutable<ILogicalExpression>> newExprs,
             List<Mutable<ILogicalExpression>> oldExprs) {
-        for (Mutable<ILogicalExpression> oldExpr : oldExprs)
+        for (Mutable<ILogicalExpression> oldExpr : oldExprs) {
             newExprs.add(new MutableObject<ILogicalExpression>(
                     ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression()));
+        }
     }
 
-    private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExpr) {
-        return new MutableObject<ILogicalExpression>(
-                ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
+    private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExprRef) {
+        ILogicalExpression oldExpr = oldExprRef.getValue();
+        if (oldExpr == null) {
+            return new MutableObject<ILogicalExpression>(null);
+        }
+        return new MutableObject<ILogicalExpression>(oldExpr.cloneExpression());
     }
 
     private List<LogicalVariable> deepCopyVars(List<LogicalVariable> newVars, List<LogicalVariable> oldVars) {
-        for (LogicalVariable oldVar : oldVars)
+        for (LogicalVariable oldVar : oldVars) {
             newVars.add(oldVar);
+        }
         return newVars;
     }
 
     private List<Object> deepCopyObjects(List<Object> newObjs, List<Object> oldObjs) {
-        for (Object oldObj : oldObjs)
+        for (Object oldObj : oldObjs) {
             newObjs.add(oldObj);
+        }
         return newObjs;
     }
 
     private List<Pair<IOrder, Mutable<ILogicalExpression>>> deepCopyOrderAndExpression(
             List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
-        for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs)
+        for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs) {
             newOrdersAndExprs
                     .add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first, deepCopyExpressionRef(pair.second)));
+        }
         return newOrdersAndExprs;
     }
 

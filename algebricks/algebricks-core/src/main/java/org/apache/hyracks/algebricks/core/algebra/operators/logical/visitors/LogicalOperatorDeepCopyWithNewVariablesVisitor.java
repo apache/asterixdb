@@ -335,8 +335,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         InnerJoinOperator opCopy = new InnerJoinOperator(
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
-                deepCopyOperatorReference(op.getInputs().get(0), null),
-                deepCopyOperatorReference(op.getInputs().get(1), null));
+                deepCopyOperatorReference(op.getInputs().get(0), arg),
+                deepCopyOperatorReference(op.getInputs().get(1), arg));
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
@@ -347,8 +347,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LeftOuterJoinOperator opCopy = new LeftOuterJoinOperator(
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
-                deepCopyOperatorReference(op.getInputs().get(0), null),
-                deepCopyOperatorReference(op.getInputs().get(1), null));
+                deepCopyOperatorReference(op.getInputs().get(0), arg),
+                deepCopyOperatorReference(op.getInputs().get(1), arg));
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;

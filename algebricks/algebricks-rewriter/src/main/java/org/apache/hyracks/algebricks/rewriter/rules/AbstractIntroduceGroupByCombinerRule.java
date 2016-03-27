@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleS
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntroduceCombinerRule {
@@ -135,10 +136,23 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         annotations.putAll(gbyOp.getAnnotations());
 
         List<LogicalVariable> gbyVars = gbyOp.getGbyVarList();
+
+        // Backup nested plans since tryToPushSubplan(...) may mutate them.
+        List<ILogicalPlan> copiedNestedPlans = new ArrayList<>();
+        for (ILogicalPlan nestedPlan : gbyOp.getNestedPlans()) {
+            ILogicalPlan copiedNestedPlan = OperatorManipulationUtil.deepCopy(nestedPlan, gbyOp);
+            OperatorManipulationUtil.computeTypeEnvironment(copiedNestedPlan, context);
+            copiedNestedPlans.add(copiedNestedPlan);
+        }
+
         for (ILogicalPlan p : gbyOp.getNestedPlans()) {
+            // NOTE: tryToPushSubplan(...) can mutate the nested subplan p.
             Pair<Boolean, ILogicalPlan> bip = tryToPushSubplan(p, gbyOp, newGbyOp, bi, gbyVars, context);
             if (!bip.first) {
                 // For now, if we cannot push everything, give up.
+                // Resets the group-by operator with backup nested plans.
+                gbyOp.getNestedPlans().clear();
+                gbyOp.getNestedPlans().addAll(copiedNestedPlans);
                 return null;
             }
             ILogicalPlan pushedSubplan = bip.second;

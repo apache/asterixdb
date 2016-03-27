@@ -178,10 +178,12 @@ public class OperatorManipulationUtil {
         }
     }
 
-    public static ILogicalPlan deepCopy(ILogicalPlan plan) throws AlgebricksException {
+    public static ILogicalPlan deepCopy(ILogicalPlan plan, ILogicalOperator dataSource) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> roots = plan.getRoots();
         List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);
-        return new ALogicalPlanImpl(newRoots);
+        ILogicalPlan newPlan = new ALogicalPlanImpl(newRoots);
+        setDataSource(newPlan, dataSource);
+        return newPlan;
     }
 
     public static ILogicalPlan deepCopy(ILogicalPlan plan, IOptimizationContext ctx) throws AlgebricksException {
@@ -189,6 +191,23 @@ public class OperatorManipulationUtil {
         List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);
         cloneTypeEnvironments(ctx, roots, newRoots);
         return new ALogicalPlanImpl(newRoots);
+    }
+
+    private static void setDataSource(ILogicalPlan plan, ILogicalOperator dataSource) {
+        for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+            setDataSource(rootRef, dataSource);
+        }
+    }
+
+    private static void setDataSource(Mutable<ILogicalOperator> opRef, ILogicalOperator dataSource) {
+        ILogicalOperator op = opRef.getValue();
+        if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
+            nts.setDataSourceReference(new MutableObject<ILogicalOperator>(dataSource));
+        }
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            setDataSource(childRef, dataSource);
+        }
     }
 
     private static List<Mutable<ILogicalOperator>> clonePipeline(List<Mutable<ILogicalOperator>> roots)
@@ -225,15 +244,15 @@ public class OperatorManipulationUtil {
 
     public static ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
         OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
-        return op.accept(visitor, null);
+        AbstractLogicalOperator copiedOperator = (AbstractLogicalOperator) op.accept(visitor, null);
+        copiedOperator.setExecutionMode(op.getExecutionMode());
+        copiedOperator.getAnnotations().putAll(op.getAnnotations());
+        copiedOperator.setSchema(op.getSchema());
+        AbstractLogicalOperator sourceOp = (AbstractLogicalOperator) op;
+        copiedOperator.setPhysicalOperator(sourceOp.getPhysicalOperator());
+        return copiedOperator;
     }
 
-    public static ILogicalOperator deepCopyWithExcutionMode(ILogicalOperator op) throws AlgebricksException {
-        OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
-        AbstractLogicalOperator newOp = (AbstractLogicalOperator) op.accept(visitor, null);
-        newOp.setExecutionMode(op.getExecutionMode());
-        return newOp;
-    }
     /**
      * Compute type environment of a newly generated operator {@code op} and its input.
      *
@@ -257,6 +276,21 @@ public class OperatorManipulationUtil {
             }
         }
         context.computeAndSetTypeEnvironmentForOperator(op);
+    }
+
+    /**
+     * Computes the type environment for a logical query plan.
+     *
+     * @param plan,
+     *            the logical plan to consider.
+     * @param context
+     *            the typing context.
+     * @throws AlgebricksException
+     */
+    public static void computeTypeEnvironment(ILogicalPlan plan, ITypingContext context) throws AlgebricksException {
+        for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+            computeTypeEnvironmentBottomUp(rootRef.getValue(), context);
+        }
     }
 
     /***

@@ -88,6 +88,14 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         return schema;
     }
 
+    public void setSchema(List<LogicalVariable> schema) {
+        if (schema == null) {
+            return;
+        }
+        this.schema = new ArrayList<>();
+        this.schema.addAll(schema);
+    }
+
     public void setPhysicalOperator(IPhysicalOperator physicalOp) {
         this.physicalOperator = physicalOp;
     }

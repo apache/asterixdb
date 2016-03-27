@@ -19,9 +19,9 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -64,7 +64,10 @@ public class NestedTupleSourceOperator extends AbstractLogicalOperator {
         schema = new ArrayList<LogicalVariable>();
         ILogicalOperator topOp = dataSourceReference.getValue();
         for (Mutable<ILogicalOperator> i : topOp.getInputs()) {
-            schema.addAll(i.getValue().getSchema());
+            List<LogicalVariable> inputSchema = i.getValue().getSchema();
+            if (inputSchema != null) {
+                schema.addAll(inputSchema);
+            }
         }
     }
 

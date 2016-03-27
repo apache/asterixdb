@@ -124,18 +124,6 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             sb.append(ref.getValue());
         }
         sb.append("]");
-        if (opaqueParameters != null) {
-            sb.append(", OpaqueArgs:[");
-            first = true;
-            for (Object param : opaqueParameters) {
-                if (first) {
-                    first = false;
-                } else {
-                    sb.append(", ");
-                }
-                sb.append(param);
-            }
-        }
         return sb.toString();
     }
 
