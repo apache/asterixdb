@@ -17,13 +17,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cid]
     :
-    Variable [ Name=cid ]
+    Variable [ Name=$cid ]
   )
   (
     LiteralExpr [STRING] [ordpercust]
     :
     FunctionCall orders-aggreg.count@1[
-      Variable [ Name=o ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=o
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
   (
@@ -33,13 +44,13 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=total
         ]
         ]
-        FROM [          Variable [ Name=o ]
+        FROM [          Variable [ Name=$o ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -51,13 +62,13 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=total
         ]
         ]
-        FROM [          Variable [ Name=o ]
+        FROM [          Variable [ Name=$o ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -68,15 +79,19 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Groupby
-  Variable [ Name=cid ]
+  Variable [ Name=$cid ]
   :=
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=cid
   ]
-  With
-  Variable [ Name=o ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$o ]
+   AS o
+  )
 

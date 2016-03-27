@@ -17,21 +17,21 @@ DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
 WriteOutputTo asterix_nc1:rttest/inverted-index-complex_ngram-jaccard-check-let.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=o ]
+Variable [ Name=$o ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FunctionCall test.gram-tokens@3[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=title
@@ -48,6 +48,6 @@ LetVariable [ Name=jacc ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     Index:     LiteralExpr [LONG] [0]
   ]

@@ -3,7 +3,7 @@ Query:
 SELECT ELEMENT [
 FunctionCall test.lowercase@1[
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=name
   ]
 ]
@@ -12,11 +12,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=name
   ]
   ASC

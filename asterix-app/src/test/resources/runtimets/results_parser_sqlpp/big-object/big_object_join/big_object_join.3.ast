@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [c_custkey]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=c_custkey
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderkey]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_orderkey
     ]
   )
@@ -23,7 +23,7 @@ RecordConstructor [
     :
     FunctionCall test.string-length@1[
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_comment
       ]
     ]
@@ -33,7 +33,7 @@ RecordConstructor [
     :
     FunctionCall test.string-length@1[
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_comment
       ]
     ]
@@ -42,7 +42,7 @@ RecordConstructor [
     LiteralExpr [STRING] [c_comment]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=c_comment
     ]
   )
@@ -52,34 +52,34 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Order]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=c_custkey
     ]
     =
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_custkey
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=o_orderkey
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=c_custkey
   ]
   ASC

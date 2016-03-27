@@ -1,15 +1,15 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=m ]
+Variable [ Name=$m ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Emp]
   ]
   AS
-  Variable [ Name=e ]
+  Variable [ Name=$e ]
 ]
-LetVariable [ Name=m ]
+Let Variable [ Name=$m ]
   :=
   OrderedListConstructor [
     RecordConstructor [
@@ -17,7 +17,7 @@ LetVariable [ Name=m ]
         LiteralExpr [STRING] [EmpName]
         :
         FieldAccessor [
-          Variable [ Name=e ]
+          Variable [ Name=$e ]
           Field=name
         ]
       )
@@ -26,7 +26,7 @@ LetVariable [ Name=m ]
         :
         IndexAccessor [
           FieldAccessor [
-            Variable [ Name=e ]
+            Variable [ Name=$e ]
             Field=interests
           ]
           Index: ANY
@@ -37,7 +37,7 @@ LetVariable [ Name=m ]
         :
         IndexAccessor [
           FieldAccessor [
-            Variable [ Name=e ]
+            Variable [ Name=$e ]
             Field=children
           ]
           Index: ANY
@@ -48,7 +48,7 @@ LetVariable [ Name=m ]
         :
         IndexAccessor [
           FieldAccessor [
-            Variable [ Name=e ]
+            Variable [ Name=$e ]
             Field=children
           ]
           Index:           LiteralExpr [LONG] [1]

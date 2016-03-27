@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FieldAccessor [
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=test ]
+      Variable [ Name=$test ]
       Field=nested
     ]
     Field=nested
@@ -16,5 +16,5 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [doublenests]
   ]
   AS
-  Variable [ Name=test ]
+  Variable [ Name=$test ]
 ]

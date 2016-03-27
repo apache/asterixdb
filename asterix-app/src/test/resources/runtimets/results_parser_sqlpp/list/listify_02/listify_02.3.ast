@@ -1,19 +1,19 @@
 DataverseUse test
 Query:
-LetVariable [ Name=token_list ]
+Let Variable [ Name=$token_list ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=token ]
+    Variable [ Name=$token ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [STRING] [foo]
         LiteralExpr [STRING] [bar]
       ]
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
     ]
   )
 SELECT ELEMENT [
-Variable [ Name=token_list ]
+Variable [ Name=$token_list ]
 ]

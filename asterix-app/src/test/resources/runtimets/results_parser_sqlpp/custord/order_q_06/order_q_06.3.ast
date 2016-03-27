@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [item1]
     :
     IndexAccessor [
-      Variable [ Name=c3 ]
+      Variable [ Name=$c3 ]
       Index: ANY
     ]
   )
@@ -16,17 +16,17 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=c3 ]
+Let Variable [ Name=$c3 ]
   :=
   UnorderedListConstructor [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=heList
     ]
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=openlist
     ]
   ]

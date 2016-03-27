@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=a ]
+Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
     FunctionCall null.matches@2[
@@ -57,5 +57,5 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]

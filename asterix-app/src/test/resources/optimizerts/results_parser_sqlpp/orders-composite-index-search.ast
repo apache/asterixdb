@@ -21,7 +21,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderkey]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_orderkey
     ]
   )
@@ -29,7 +29,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_custkey]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_custkey
     ]
   )
@@ -37,7 +37,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderstatus]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_orderstatus
     ]
   )
@@ -47,13 +47,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_custkey
       ]
       =
@@ -62,7 +62,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_orderstatus
       ]
       =

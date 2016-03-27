@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=a ]
+Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
     FunctionCall null.lowercase@1[
@@ -44,5 +44,5 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]

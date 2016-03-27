@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FunctionCall test.min@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [LONG] [1]
@@ -12,11 +12,11 @@ FunctionCall test.min@1[
         LiteralExpr [LONG] [3]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
         >
         LiteralExpr [LONG] [10]
       ]

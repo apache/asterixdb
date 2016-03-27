@@ -29,7 +29,7 @@ RecordConstructor [
     LiteralExpr [STRING] [aauthors]
     :
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=authors
     ]
   )
@@ -37,7 +37,7 @@ RecordConstructor [
     LiteralExpr [STRING] [bauthors]
     :
     FieldAccessor [
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       Field=authors
     ]
   )
@@ -47,36 +47,36 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=authors
       ]
       ~=
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=authors
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=id
       ]
       <
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=id
       ]
     ]

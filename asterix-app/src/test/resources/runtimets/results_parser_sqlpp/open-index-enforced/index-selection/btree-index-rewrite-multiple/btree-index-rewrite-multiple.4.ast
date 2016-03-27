@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderkey]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_orderkey
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_custkey]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_custkey
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderstatus]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=o_orderstatus
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderkey2]
     :
     FieldAccessor [
-      Variable [ Name=o2 ]
+      Variable [ Name=$o2 ]
       Field=o_orderkey
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_custkey2]
     :
     FieldAccessor [
-      Variable [ Name=o2 ]
+      Variable [ Name=$o2 ]
       Field=o_custkey
     ]
   )
@@ -46,7 +46,7 @@ RecordConstructor [
     LiteralExpr [STRING] [o_orderstatus2]
     :
     FieldAccessor [
-      Variable [ Name=o2 ]
+      Variable [ Name=$o2 ]
       Field=o_orderstatus
     ]
   )
@@ -56,19 +56,19 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [OrdersOpen]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [OrdersOpen]
   ]
   AS
-  Variable [ Name=o2 ]
+  Variable [ Name=$o2 ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_custkey
       ]
       =
@@ -77,7 +77,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=o_custkey
       ]
       =
@@ -86,24 +86,24 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_orderstatus
       ]
       <
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=o_orderstatus
       ]
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=o_orderkey
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=o2 ]
+    Variable [ Name=$o2 ]
     Field=o_orderkey
   ]
   ASC

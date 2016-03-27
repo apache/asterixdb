@@ -10,15 +10,15 @@ TypeDecl CHPReport [
 DatasetDecl CHPReports(CHPReport) partitioned by [[timestamp]]
 Query:
 SELECT ELEMENT [
-Variable [ Name=emergency ]
+Variable [ Name=$emergency ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CHPReports]
   ]
   AS
-  Variable [ Name=emergency ]
+  Variable [ Name=$emergency ]
 ]
-LetVariable [ Name=time ]
+Let Variable [ Name=$time ]
   :=
   OperatorExpr [
     FunctionCall emergencyTest.current-datetime@0[
@@ -31,9 +31,9 @@ LetVariable [ Name=time ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=emergency ]
+      Variable [ Name=$emergency ]
       Field=timestamp
     ]
     >=
-    Variable [ Name=time ]
+    Variable [ Name=$time ]
   ]

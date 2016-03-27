@@ -30,7 +30,7 @@ public class SqlppSubstituteVariablesVisitor extends SqlppCloneAndSubstituteVari
     }
 
     @Override
-    public Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
+    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
         if (env.constainsOldVar(expr)) {
             return env.findSubstituion(expr);
         }

@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
   Field=nested
 ]
 ]
@@ -10,14 +10,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance-check@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=nested
       ]
       Field=interests
@@ -31,13 +31,13 @@ LetVariable [ Name=ed ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
     Index:     LiteralExpr [LONG] [0]
   ]
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=nested
     ]
     Field=cid

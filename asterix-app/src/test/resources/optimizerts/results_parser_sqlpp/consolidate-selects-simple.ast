@@ -15,19 +15,19 @@ DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
 WriteOutputTo asterix_nc1:rttest/consolidate-selects-simple.aql
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_name
       ]
       =
@@ -36,7 +36,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_address
       ]
       =
@@ -45,7 +45,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_nationkey
       ]
       =
@@ -54,7 +54,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_phone
       ]
       =

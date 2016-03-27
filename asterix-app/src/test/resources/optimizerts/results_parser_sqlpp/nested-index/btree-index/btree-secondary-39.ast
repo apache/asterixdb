@@ -15,19 +15,19 @@ TypeDecl TestType [
 DatasetDecl testdst(TestType) partitioned by [[nested, id]]
 Query:
 SELECT ELEMENT [
-Variable [ Name=emp ]
+Variable [ Name=$emp ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS
-  Variable [ Name=emp ]
+  Variable [ Name=$emp ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=emp ]
+        Variable [ Name=$emp ]
         Field=nested
       ]
       Field=lname

@@ -4,18 +4,18 @@ SELECT ELEMENT [
 FunctionCall TinySocial.count@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=t ]
+    Variable [ Name=$t ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [TweetMessages]
       ]
       AS
-      Variable [ Name=t ]
+      Variable [ Name=$t ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=tweetid
         ]
         =

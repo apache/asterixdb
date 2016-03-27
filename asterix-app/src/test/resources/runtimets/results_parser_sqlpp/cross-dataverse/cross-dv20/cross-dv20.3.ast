@@ -4,22 +4,22 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ug-student]
     :
-    Variable [ Name=s ]
+    Variable [ Name=$s ]
   )
   (
     LiteralExpr [STRING] [prof]
     :
-    Variable [ Name=p ]
+    Variable [ Name=$p ]
   )
   (
     LiteralExpr [STRING] [grd-student]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [postdoc]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
 ]
 ]
@@ -27,23 +27,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [student.ugdstd]
   ]
   AS
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [teacher.prof]
   ]
   AS
-  Variable [ Name=p ]
+  Variable [ Name=$p ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [student.gdstd]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [teacher.pstdoc]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]

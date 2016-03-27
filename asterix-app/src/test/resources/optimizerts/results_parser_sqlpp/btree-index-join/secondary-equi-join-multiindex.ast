@@ -41,7 +41,7 @@ RecordConstructor [
     LiteralExpr [STRING] [fbu-ID]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=id
     ]
   )
@@ -49,7 +49,7 @@ RecordConstructor [
     LiteralExpr [STRING] [fbm-auth-ID]
     :
     FieldAccessor [
-      Variable [ Name=message ]
+      Variable [ Name=$message ]
       Field=author-id
     ]
   )
@@ -57,7 +57,7 @@ RecordConstructor [
     LiteralExpr [STRING] [uname]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=name
     ]
   )
@@ -65,7 +65,7 @@ RecordConstructor [
     LiteralExpr [STRING] [message]
     :
     FieldAccessor [
-      Variable [ Name=message ]
+      Variable [ Name=$message ]
       Field=message
     ]
   )
@@ -75,31 +75,31 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS
-  Variable [ Name=message ]
+  Variable [ Name=$message ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=id
       ]
       =
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=author-id-copy
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=id
       ]
       >=
@@ -108,7 +108,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=id
       ]
       <=

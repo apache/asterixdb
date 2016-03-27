@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
   Field=id
 ]
 ]
@@ -10,11 +10,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [MyData]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     Field=id
   ]
   ASC

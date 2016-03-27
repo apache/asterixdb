@@ -57,7 +57,7 @@ DatasetDecl Nation(NationType) partitioned by [[n_nationkey]]
 DatasetDecl Customer(CustomerType) partitioned by [[c_custkey]]
 DatasetDecl SelectedNation(NationType) partitioned by [[n_nationkey]]
 Query:
-LetVariable [ Name=t ]
+Let Variable [ Name=$t ]
   :=
   (
     SELECT ELEMENT [
@@ -66,7 +66,7 @@ LetVariable [ Name=t ]
         LiteralExpr [STRING] [n_nationkey]
         :
         FieldAccessor [
-          Variable [ Name=nation ]
+          Variable [ Name=$nation ]
           Field=n_nationkey
         ]
       )
@@ -74,7 +74,7 @@ LetVariable [ Name=t ]
         LiteralExpr [STRING] [n_name]
         :
         FieldAccessor [
-          Variable [ Name=nation ]
+          Variable [ Name=$nation ]
           Field=n_name
         ]
       )
@@ -84,28 +84,28 @@ LetVariable [ Name=t ]
         LiteralExpr [STRING] [Nation]
       ]
       AS
-      Variable [ Name=nation ]
+      Variable [ Name=$nation ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [SelectedNation]
       ]
       AS
-      Variable [ Name=sn ]
+      Variable [ Name=$sn ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=nation ]
+          Variable [ Name=$nation ]
           Field=n_nationkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=sn ]
+          Variable [ Name=$sn ]
           Field=n_nationkey
         ]
       ]
   )
-LetVariable [ Name=X ]
+Let Variable [ Name=$X ]
   :=
   (
     SELECT ELEMENT [
@@ -113,94 +113,101 @@ LetVariable [ Name=X ]
       (
         LiteralExpr [STRING] [nation_key]
         :
-        Variable [ Name=nation_key ]
+        Variable [ Name=$nation_key ]
       )
       (
         LiteralExpr [STRING] [order_date]
         :
-        Variable [ Name=orderdate ]
+        Variable [ Name=$orderdate ]
       )
       (
         LiteralExpr [STRING] [sum_price]
         :
-        Variable [ Name=sum ]
+        Variable [ Name=$sum ]
       )
     ]
     ]
-    FROM [      Variable [ Name=t ]
+    FROM [      Variable [ Name=$t ]
       AS
-      Variable [ Name=n ]
+      Variable [ Name=$n ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Customer]
       ]
       AS
-      Variable [ Name=customer ]
+      Variable [ Name=$customer ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=orders ]
+      Variable [ Name=$orders ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=orders ]
+            Variable [ Name=$orders ]
             Field=o_custkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=customer ]
+            Variable [ Name=$customer ]
             Field=c_custkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=customer ]
+            Variable [ Name=$customer ]
             Field=c_nationkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=n ]
+            Variable [ Name=$n ]
             Field=n_nationkey
           ]
         ]
       ]
     Groupby
-      Variable [ Name=orderdate ]
+      Variable [ Name=$orderdate ]
       :=
       FieldAccessor [
-        Variable [ Name=orders ]
+        Variable [ Name=$orders ]
         Field=o_orderdate
       ]
-      Variable [ Name=nation_key ]
+      Variable [ Name=$nation_key ]
       :=
       FieldAccessor [
-        Variable [ Name=n ]
+        Variable [ Name=$n ]
         Field=n_nationkey
       ]
-      With
-      Variable [ Name=orders ]
-      Variable [ Name=n ]
-      Variable [ Name=customer ]
-      Variable [ Name=t ]
+      GROUP AS
+      Variable [ Name=#1 ]
+      (
+      Variable [ Name=$orders ]
+       AS orders
+      Variable [ Name=$customer ]
+       AS customer
+      Variable [ Name=$n ]
+       AS n
+      Variable [ Name=$t ]
+       AS t
+      )
 
-    LetVariable [ Name=sum ]
+    Let Variable [ Name=$sum ]
       :=
       FunctionCall tpch.sum@1[
         (
           SELECT ELEMENT [
           FieldAccessor [
-            Variable [ Name=o ]
+            Variable [ Name=$o ]
             Field=o_totalprice
           ]
           ]
-          FROM [            Variable [ Name=orders ]
+          FROM [            Variable [ Name=$orders ]
             AS
-            Variable [ Name=o ]
+            Variable [ Name=$o ]
           ]
         )
       ]
@@ -210,7 +217,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [nation_key]
     :
-    Variable [ Name=nation_key ]
+    Variable [ Name=$nation_key ]
   )
   (
     LiteralExpr [STRING] [sum_price]
@@ -222,7 +229,7 @@ RecordConstructor [
           LiteralExpr [STRING] [orderdate]
           :
           FieldAccessor [
-            Variable [ Name=y ]
+            Variable [ Name=$y ]
             Field=order_date
           ]
         )
@@ -230,19 +237,19 @@ RecordConstructor [
           LiteralExpr [STRING] [sum_price]
           :
           FieldAccessor [
-            Variable [ Name=y ]
+            Variable [ Name=$y ]
             Field=sum_price
           ]
         )
       ]
       ]
-      FROM [        Variable [ Name=x ]
+      FROM [        Variable [ Name=$x ]
         AS
-        Variable [ Name=y ]
+        Variable [ Name=$y ]
       ]
       Orderby
         FieldAccessor [
-          Variable [ Name=y ]
+          Variable [ Name=$y ]
           Field=sum_price
         ]
         DESC
@@ -253,19 +260,25 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  Variable [ Name=X ]
+FROM [  Variable [ Name=$X ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]
 Groupby
-  Variable [ Name=nation_key ]
+  Variable [ Name=$nation_key ]
   :=
   FieldAccessor [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     Field=nation_key
   ]
-  With
-  Variable [ Name=x ]
-  Variable [ Name=X ]
-  Variable [ Name=t ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$x ]
+   AS x
+  Variable [ Name=$X ]
+   AS X
+  Variable [ Name=$t ]
+   AS t
+  )
 

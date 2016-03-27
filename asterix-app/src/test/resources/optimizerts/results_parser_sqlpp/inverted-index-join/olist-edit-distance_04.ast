@@ -30,17 +30,17 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
   (
     LiteralExpr [STRING] [ed]
     :
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
   )
 ]
 ]
@@ -48,42 +48,42 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance@2[
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=interests
     ]
     FieldAccessor [
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       Field=interests
     ]
   ]
 Where
   OperatorExpr [
     OperatorExpr [
-      Variable [ Name=ed ]
+      Variable [ Name=$ed ]
       <=
       LiteralExpr [LONG] [2]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=cid
       ]
       <
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=cid
       ]
     ]

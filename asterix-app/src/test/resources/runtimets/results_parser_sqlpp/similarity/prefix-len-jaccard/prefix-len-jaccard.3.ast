@@ -33,5 +33,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]

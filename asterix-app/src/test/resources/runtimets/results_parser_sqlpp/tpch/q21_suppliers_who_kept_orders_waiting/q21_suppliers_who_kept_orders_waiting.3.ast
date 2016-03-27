@@ -6,7 +6,7 @@ FunctionDecl tmp1([]) {
       (
         LiteralExpr [STRING] [l_orderkey]
         :
-        Variable [ Name=l_orderkey ]
+        Variable [ Name=$l_orderkey ]
       )
       (
         LiteralExpr [STRING] [count_suppkey]
@@ -15,13 +15,13 @@ FunctionDecl tmp1([]) {
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_suppkey
             ]
             ]
-            FROM [              Variable [ Name=l2 ]
+            FROM [              Variable [ Name=$l2 ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
@@ -33,13 +33,13 @@ FunctionDecl tmp1([]) {
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_suppkey
             ]
             ]
-            FROM [              Variable [ Name=l2 ]
+            FROM [              Variable [ Name=$l2 ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
@@ -52,42 +52,42 @@ FunctionDecl tmp1([]) {
           (
             LiteralExpr [STRING] [l_orderkey]
             :
-            Variable [ Name=l_orderkey1 ]
+            Variable [ Name=$l_orderkey1 ]
           )
           (
             LiteralExpr [STRING] [l_suppkey]
             :
-            Variable [ Name=l_suppkey1 ]
+            Variable [ Name=$l_suppkey1 ]
           )
         ]
         ]
-        FROM [          Variable [ Name=LineItem ]
+        FROM [          Variable [ Name=$LineItem ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
         Groupby
-          Variable [ Name=l_orderkey1 ]
+          Variable [ Name=$l_orderkey1 ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_orderkey
           ]
-          Variable [ Name=l_suppkey1 ]
+          Variable [ Name=$l_suppkey1 ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_suppkey
           ]
 
       )
       AS
-      Variable [ Name=l2 ]
+      Variable [ Name=$l2 ]
     ]
     Groupby
-      Variable [ Name=l_orderkey ]
+      Variable [ Name=$l_orderkey ]
       :=
       FieldAccessor [
-        Variable [ Name=l2 ]
+        Variable [ Name=$l2 ]
         Field=l_orderkey
       ]
 
@@ -101,7 +101,7 @@ FunctionDecl tmp2([]) {
       (
         LiteralExpr [STRING] [l_orderkey]
         :
-        Variable [ Name=l_orderkey ]
+        Variable [ Name=$l_orderkey ]
       )
       (
         LiteralExpr [STRING] [count_suppkey]
@@ -110,13 +110,13 @@ FunctionDecl tmp2([]) {
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_suppkey
             ]
             ]
-            FROM [              Variable [ Name=l2 ]
+            FROM [              Variable [ Name=$l2 ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
@@ -128,13 +128,13 @@ FunctionDecl tmp2([]) {
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_suppkey
             ]
             ]
-            FROM [              Variable [ Name=l2 ]
+            FROM [              Variable [ Name=$l2 ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
@@ -147,54 +147,54 @@ FunctionDecl tmp2([]) {
           (
             LiteralExpr [STRING] [l_orderkey]
             :
-            Variable [ Name=l_orderkey1 ]
+            Variable [ Name=$l_orderkey1 ]
           )
           (
             LiteralExpr [STRING] [l_suppkey]
             :
-            Variable [ Name=l_suppkey1 ]
+            Variable [ Name=$l_suppkey1 ]
           )
         ]
         ]
-        FROM [          Variable [ Name=LineItem ]
+        FROM [          Variable [ Name=$LineItem ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_receiptdate
             ]
             >
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_commitdate
             ]
           ]
         Groupby
-          Variable [ Name=l_orderkey1 ]
+          Variable [ Name=$l_orderkey1 ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_orderkey
           ]
-          Variable [ Name=l_suppkey1 ]
+          Variable [ Name=$l_suppkey1 ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_suppkey
           ]
 
       )
       AS
-      Variable [ Name=l2 ]
+      Variable [ Name=$l2 ]
     ]
     Groupby
-      Variable [ Name=l_orderkey ]
+      Variable [ Name=$l_orderkey ]
       :=
       FieldAccessor [
-        Variable [ Name=l2 ]
+        Variable [ Name=$l2 ]
         Field=l_orderkey
       ]
 
@@ -207,12 +207,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [s_name]
     :
-    Variable [ Name=s_name ]
+    Variable [ Name=$s_name ]
   )
   (
     LiteralExpr [STRING] [numwait]
     :
-    Variable [ Name=numwait ]
+    Variable [ Name=$numwait ]
   )
 ]
 ]
@@ -223,7 +223,7 @@ FROM [  (
         LiteralExpr [STRING] [s_name]
         :
         FieldAccessor [
-          Variable [ Name=t3 ]
+          Variable [ Name=$t3 ]
           Field=s_name
         ]
       )
@@ -231,7 +231,7 @@ FROM [  (
         LiteralExpr [STRING] [l_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=t3 ]
+          Variable [ Name=$t3 ]
           Field=l_suppkey
         ]
       )
@@ -239,7 +239,7 @@ FROM [  (
         LiteralExpr [STRING] [l_orderkey]
         :
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=l_orderkey
         ]
       )
@@ -247,7 +247,7 @@ FROM [  (
         LiteralExpr [STRING] [count_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=count_suppkey
         ]
       )
@@ -255,7 +255,7 @@ FROM [  (
         LiteralExpr [STRING] [max_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=max_suppkey
         ]
       )
@@ -268,7 +268,7 @@ FROM [  (
             LiteralExpr [STRING] [s_name]
             :
             FieldAccessor [
-              Variable [ Name=ns ]
+              Variable [ Name=$ns ]
               Field=s_name
             ]
           )
@@ -276,7 +276,7 @@ FROM [  (
             LiteralExpr [STRING] [l_orderkey]
             :
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=l_orderkey
             ]
           )
@@ -284,7 +284,7 @@ FROM [  (
             LiteralExpr [STRING] [l_suppkey]
             :
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_suppkey
             ]
           )
@@ -294,7 +294,7 @@ FROM [  (
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
 ,
           (
             SELECT ELEMENT [
@@ -303,7 +303,7 @@ FROM [  (
                 LiteralExpr [STRING] [s_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_name
                 ]
               )
@@ -311,7 +311,7 @@ FROM [  (
                 LiteralExpr [STRING] [s_suppkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_suppkey
                 ]
               )
@@ -321,105 +321,105 @@ FROM [  (
                 LiteralExpr [STRING] [Nation]
               ]
               AS
-              Variable [ Name=n ]
+              Variable [ Name=$n ]
 ,
               FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Supplier]
               ]
               AS
-              Variable [ Name=s ]
+              Variable [ Name=$s ]
             ]
             Where
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_nationkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=n ]
+                  Variable [ Name=$n ]
                   Field=n_nationkey
                 ]
               ]
           )
           AS
-          Variable [ Name=ns ]
+          Variable [ Name=$ns ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
           AS
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
 ,
           FunctionCall tpch.tmp1@0[
           ]
           AS
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
         ]
         Where
           OperatorExpr [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=ns ]
+                Variable [ Name=$ns ]
                 Field=s_suppkey
               ]
               =
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_suppkey
               ]
             ]
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_receiptdate
               ]
               >
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_commitdate
               ]
             ]
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=o ]
+                Variable [ Name=$o ]
                 Field=o_orderkey
               ]
               =
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_orderkey
               ]
             ]
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_orderkey
               ]
               =
               FieldAccessor [
-                Variable [ Name=t1 ]
+                Variable [ Name=$t1 ]
                 Field=l_orderkey
               ]
             ]
           ]
       )
       AS
-      Variable [ Name=t3 ]
+      Variable [ Name=$t3 ]
 ,
       FunctionCall tpch.tmp2@0[
       ]
       AS
-      Variable [ Name=t2 ]
+      Variable [ Name=$t2 ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=count_suppkey
           ]
           >=
@@ -428,38 +428,53 @@ FROM [  (
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t3 ]
+            Variable [ Name=$t3 ]
             Field=l_orderkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=l_orderkey
           ]
         ]
       ]
   )
   AS
-  Variable [ Name=t4 ]
+  Variable [ Name=$t4 ]
 ]
 Groupby
-  Variable [ Name=s_name ]
+  Variable [ Name=$s_name ]
   :=
   FieldAccessor [
-    Variable [ Name=t4 ]
+    Variable [ Name=$t4 ]
     Field=s_name
   ]
-  With
-  Variable [ Name=t4 ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$t4 ]
+   AS t4
+  )
 
-LetVariable [ Name=numwait ]
+Let Variable [ Name=$numwait ]
   :=
   FunctionCall tpch.count@1[
-    Variable [ Name=t4 ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#2 ]
+        Field=t4
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS
+        Variable [ Name=#2 ]
+      ]
+    )
   ]
 Orderby
-  Variable [ Name=numwait ]
+  Variable [ Name=$numwait ]
   DESC
-  Variable [ Name=s_name ]
+  Variable [ Name=$s_name ]
   ASC
 

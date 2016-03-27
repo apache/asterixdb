@@ -1,5 +1,5 @@
 Query:
-LetVariable [ Name=sample ]
+Let Variable [ Name=$sample ]
   :=
   UnorderedListConstructor [
     RecordConstructor [
@@ -152,35 +152,40 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [u]
     :
-    Variable [ Name=u ]
+    Variable [ Name=$u ]
   )
   (
     LiteralExpr [STRING] [recs]
     :
     (
       SELECT ELEMENT [
-      Variable [ Name=srec ]
+      Variable [ Name=$srec ]
       ]
-      FROM [        Variable [ Name=s ]
+      FROM [        Variable [ Name=$s ]
         AS
-        Variable [ Name=srec ]
+        Variable [ Name=$srec ]
       ]
     )
   )
 ]
 ]
-FROM [  Variable [ Name=sample ]
+FROM [  Variable [ Name=$sample ]
   AS
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
 ]
 Groupby
-  Variable [ Name=u ]
+  Variable [ Name=$u ]
   :=
   FieldAccessor [
-    Variable [ Name=s ]
+    Variable [ Name=$s ]
     Field=uid
   ]
-  With
-  Variable [ Name=s ]
-  Variable [ Name=sample ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$s ]
+   AS s
+  Variable [ Name=$sample ]
+   AS sample
+  )
 

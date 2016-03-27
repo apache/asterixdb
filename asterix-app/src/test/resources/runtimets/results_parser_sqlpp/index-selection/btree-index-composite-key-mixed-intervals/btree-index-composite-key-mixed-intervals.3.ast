@@ -1,19 +1,19 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=l ]
+Variable [ Name=$l ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [employee]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=fname
       ]
       >
@@ -22,7 +22,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=lname
       ]
       >
@@ -31,7 +31,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=fname
       ]
       <=
@@ -40,7 +40,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=lname
       ]
       <
@@ -49,7 +49,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=id
   ]
   ASC

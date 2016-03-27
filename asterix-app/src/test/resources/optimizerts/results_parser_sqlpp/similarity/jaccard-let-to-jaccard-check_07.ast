@@ -12,20 +12,20 @@ DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 WriteOutputTo asterix_nc1:rttest/similarity_jaccard-let-to-jaccard-check_01.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=jacc ]
+Variable [ Name=$jacc ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paper ]
+  Variable [ Name=$paper ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard@2[
     FunctionCall test.word-tokens@1[
       FieldAccessor [
-        Variable [ Name=paper ]
+        Variable [ Name=$paper ]
         Field=title
       ]
     ]
@@ -35,7 +35,7 @@ LetVariable [ Name=jacc ]
   ]
 Where
   OperatorExpr [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     <
     LiteralExpr [FLOAT] [0.8]
   ]

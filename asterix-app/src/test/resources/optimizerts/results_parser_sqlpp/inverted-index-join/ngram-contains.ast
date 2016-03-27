@@ -17,7 +17,7 @@ RecordConstructor [
     LiteralExpr [STRING] [title1]
     :
     FieldAccessor [
-      Variable [ Name=o1 ]
+      Variable [ Name=$o1 ]
       Field=title
     ]
   )
@@ -25,7 +25,7 @@ RecordConstructor [
     LiteralExpr [STRING] [title2]
     :
     FieldAccessor [
-      Variable [ Name=o2 ]
+      Variable [ Name=$o2 ]
       Field=title
     ]
   )
@@ -35,47 +35,47 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o1 ]
+  Variable [ Name=$o1 ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o2 ]
+  Variable [ Name=$o2 ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.contains@2[
       FieldAccessor [
-        Variable [ Name=o1 ]
+        Variable [ Name=$o1 ]
         Field=title
       ]
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=title
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o1 ]
+        Variable [ Name=$o1 ]
         Field=id
       ]
       <
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=id
       ]
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=o1 ]
+    Variable [ Name=$o1 ]
     Field=id
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=o2 ]
+    Variable [ Name=$o2 ]
     Field=id
   ]
   ASC

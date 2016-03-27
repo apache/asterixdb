@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [tweetid1]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=tweetid
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count1]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=countA
     ]
   )
@@ -28,7 +28,7 @@ RecordConstructor [
           LiteralExpr [STRING] [tweetid2]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=tweetid
           ]
         )
@@ -36,7 +36,7 @@ RecordConstructor [
           LiteralExpr [STRING] [count2]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=countB
           ]
         )
@@ -46,37 +46,37 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
       ]
       Where
         OperatorExpr [
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=countA
             ]
             =
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=countB
             ]
           ]
           and
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=tweetid
             ]
             !=
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=tweetid
             ]
           ]
         ]
       Orderby
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=tweetid
         ]
         ASC
@@ -89,12 +89,12 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=tweetid
     ]
     <
@@ -104,7 +104,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=tweetid
   ]
   ASC

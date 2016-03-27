@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_name]
     :
     FieldAccessor [
-      Variable [ Name=t4 ]
+      Variable [ Name=$t4 ]
       Field=s_name
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_address]
     :
     FieldAccessor [
-      Variable [ Name=t4 ]
+      Variable [ Name=$t4 ]
       Field=s_address
     ]
   )
@@ -27,7 +27,7 @@ FROM [  (
         LiteralExpr [STRING] [ps_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=pst1 ]
+          Variable [ Name=$pst1 ]
           Field=ps_suppkey
         ]
       )
@@ -39,12 +39,12 @@ FROM [  (
           (
             LiteralExpr [STRING] [l_partkey]
             :
-            Variable [ Name=l_partkey ]
+            Variable [ Name=$l_partkey ]
           )
           (
             LiteralExpr [STRING] [l_suppkey]
             :
-            Variable [ Name=l_suppkey ]
+            Variable [ Name=$l_suppkey ]
           )
           (
             LiteralExpr [STRING] [sum_quantity]
@@ -56,13 +56,13 @@ FROM [  (
                 (
                   SELECT ELEMENT [
                   FieldAccessor [
-                    Variable [ Name=i ]
+                    Variable [ Name=$i ]
                     Field=l_quantity
                   ]
                   ]
-                  FROM [                    Variable [ Name=l ]
+                  FROM [                    Variable [ Name=$l ]
                     AS
-                    Variable [ Name=i ]
+                    Variable [ Name=$i ]
                   ]
                 )
               ]
@@ -74,27 +74,31 @@ FROM [  (
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
         Groupby
-          Variable [ Name=l_partkey ]
+          Variable [ Name=$l_partkey ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_partkey
           ]
-          Variable [ Name=l_suppkey ]
+          Variable [ Name=$l_suppkey ]
           :=
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_suppkey
           ]
-          With
-          Variable [ Name=l ]
+          GROUP AS
+          Variable [ Name=#1 ]
+          (
+          Variable [ Name=$l ]
+           AS l
+          )
 
       )
       AS
-      Variable [ Name=t2 ]
+      Variable [ Name=$t2 ]
 ,
       (
         SELECT ELEMENT [
@@ -103,7 +107,7 @@ FROM [  (
             LiteralExpr [STRING] [ps_suppkey]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_suppkey
             ]
           )
@@ -111,7 +115,7 @@ FROM [  (
             LiteralExpr [STRING] [ps_partkey]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_partkey
             ]
           )
@@ -119,7 +123,7 @@ FROM [  (
             LiteralExpr [STRING] [ps_availqty]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_availqty
             ]
           )
@@ -129,7 +133,7 @@ FROM [  (
             LiteralExpr [STRING] [Partsupp]
           ]
           AS
-          Variable [ Name=ps ]
+          Variable [ Name=$ps ]
 ,
           (
             SELECT ELEMENT [
@@ -138,7 +142,7 @@ FROM [  (
                 LiteralExpr [STRING] [p_partkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=p ]
+                  Variable [ Name=$p ]
                   Field=p_partkey
                 ]
               )
@@ -148,69 +152,69 @@ FROM [  (
                 LiteralExpr [STRING] [Part]
               ]
               AS
-              Variable [ Name=p ]
+              Variable [ Name=$p ]
             ]
           )
           AS
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_partkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=p_partkey
             ]
           ]
       )
       AS
-      Variable [ Name=pst1 ]
+      Variable [ Name=$pst1 ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=pst1 ]
+            Variable [ Name=$pst1 ]
             Field=ps_partkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=l_partkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=pst1 ]
+            Variable [ Name=$pst1 ]
             Field=ps_suppkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=l_suppkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=pst1 ]
+            Variable [ Name=$pst1 ]
             Field=ps_availqty
           ]
           >
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=sum_quantity
           ]
         ]
       ]
   )
   AS
-  Variable [ Name=t3 ]
+  Variable [ Name=$t3 ]
 ,
   (
     SELECT ELEMENT [
@@ -219,7 +223,7 @@ FROM [  (
         LiteralExpr [STRING] [s_name]
         :
         FieldAccessor [
-          Variable [ Name=s ]
+          Variable [ Name=$s ]
           Field=s_name
         ]
       )
@@ -227,7 +231,7 @@ FROM [  (
         LiteralExpr [STRING] [s_address]
         :
         FieldAccessor [
-          Variable [ Name=s ]
+          Variable [ Name=$s ]
           Field=s_address
         ]
       )
@@ -235,7 +239,7 @@ FROM [  (
         LiteralExpr [STRING] [s_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=s ]
+          Variable [ Name=$s ]
           Field=s_suppkey
         ]
       )
@@ -245,45 +249,45 @@ FROM [  (
         LiteralExpr [STRING] [Nation]
       ]
       AS
-      Variable [ Name=n ]
+      Variable [ Name=$n ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Supplier]
       ]
       AS
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=s ]
+          Variable [ Name=$s ]
           Field=s_nationkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=n ]
+          Variable [ Name=$n ]
           Field=n_nationkey
         ]
       ]
   )
   AS
-  Variable [ Name=t4 ]
+  Variable [ Name=$t4 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=t3 ]
+      Variable [ Name=$t3 ]
       Field=ps_suppkey
     ]
     =
     FieldAccessor [
-      Variable [ Name=t4 ]
+      Variable [ Name=$t4 ]
       Field=s_suppkey
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=t4 ]
+    Variable [ Name=$t4 ]
     Field=s_name
   ]
   ASC

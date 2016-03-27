@@ -61,7 +61,8 @@ public final class LangRewritingContext {
 
     public VarIdentifier newVariable() {
         int id = newId();
-        return new VarIdentifier("@@" + id, id);
+        // Prefixes system-generated variables with "#".
+        return new VarIdentifier("#" + id, id);
     }
 
     private int newId() {

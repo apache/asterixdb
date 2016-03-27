@@ -175,7 +175,7 @@ public class RTreeAccessMethod implements IAccessMethod {
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.dataset;
@@ -233,7 +233,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
             assignSearchKeys.getInputs().add(new MutableObject<ILogicalOperator>(
-                    OperatorManipulationUtil.deepCopyWithExcutionMode(dataSourceOp.getInputs().get(0).getValue())));
+                    OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.

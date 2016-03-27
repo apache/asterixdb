@@ -10,19 +10,19 @@ TypeDecl TestType [
 DatasetDecl testdst(TestType) partitioned by [[id]]
 Query:
 SELECT ELEMENT [
-Variable [ Name=emp ]
+Variable [ Name=$emp ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS
-  Variable [ Name=emp ]
+  Variable [ Name=$emp ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=emp ]
+        Variable [ Name=$emp ]
         Field=fname
       ]
       >
@@ -31,7 +31,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=emp ]
+        Variable [ Name=$emp ]
         Field=fname
       ]
       <

@@ -15,19 +15,19 @@ Set simfunction=jaccard
 Set simthreshold=0.8f
 Query:
 SELECT ELEMENT [
-Variable [ Name=o ]
+Variable [ Name=$o ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.gram-tokens@3[
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=title
       ]
       LiteralExpr [LONG] [3]

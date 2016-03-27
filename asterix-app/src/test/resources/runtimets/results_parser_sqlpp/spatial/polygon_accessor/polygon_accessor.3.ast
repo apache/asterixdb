@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-LetVariable [ Name=polygon ]
+Let Variable [ Name=$polygon ]
   :=
   FunctionCall test.create-polygon@1[
     OrderedListConstructor [
@@ -14,15 +14,15 @@ LetVariable [ Name=polygon ]
       LiteralExpr [DOUBLE] [4.0]
     ]
   ]
-LetVariable [ Name=polygon_list ]
+Let Variable [ Name=$polygon_list ]
   :=
   FunctionCall test.get-points@1[
-    Variable [ Name=polygon ]
+    Variable [ Name=$polygon ]
   ]
 SELECT ELEMENT [
-Variable [ Name=p ]
+Variable [ Name=$p ]
 ]
-FROM [  Variable [ Name=polygon_list ]
+FROM [  Variable [ Name=$polygon_list ]
   AS
-  Variable [ Name=p ]
+  Variable [ Name=$p ]
 ]

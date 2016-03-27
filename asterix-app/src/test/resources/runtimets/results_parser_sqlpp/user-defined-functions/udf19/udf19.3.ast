@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FunctionCall test.area@1[
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 ]
 FROM [  OrderedListConstructor [
@@ -14,12 +14,12 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [12]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.area@1[
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
     ]
     >
     LiteralExpr [LONG] [100]

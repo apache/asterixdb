@@ -30,18 +30,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
   (
     LiteralExpr [STRING] [jacc]
     :
     IndexAccessor [
-      Variable [ Name=jacc ]
+      Variable [ Name=$jacc ]
       Index:       LiteralExpr [LONG] [1]
     ]
   )
@@ -51,23 +51,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=interests
     ]
     FieldAccessor [
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       Field=interests
     ]
     LiteralExpr [FLOAT] [0.7]
@@ -75,18 +75,18 @@ LetVariable [ Name=jacc ]
 Where
   OperatorExpr [
     IndexAccessor [
-      Variable [ Name=jacc ]
+      Variable [ Name=$jacc ]
       Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=cid
       ]
       <
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=cid
       ]
     ]

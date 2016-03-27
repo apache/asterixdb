@@ -69,12 +69,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [partsupp]
     :
-    Variable [ Name=ps ]
+    Variable [ Name=$ps ]
   )
   (
     LiteralExpr [STRING] [li]
     :
-    Variable [ Name=items ]
+    Variable [ Name=$items ]
   )
 ]
 ]
@@ -82,54 +82,54 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [PartSupp]
   ]
   AS
-  Variable [ Name=ps ]
+  Variable [ Name=$ps ]
 ]
-LetVariable [ Name=items ]
+Let Variable [ Name=$items ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=li ]
+    Variable [ Name=$li ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [LineItems]
       ]
       AS
-      Variable [ Name=li ]
+      Variable [ Name=$li ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=li ]
+            Variable [ Name=$li ]
             Field=l_partkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=ps ]
+            Variable [ Name=$ps ]
             Field=ps_partkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=li ]
+            Variable [ Name=$li ]
             Field=l_suppkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=ps ]
+            Variable [ Name=$ps ]
             Field=ps_suppkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=li ]
+            Variable [ Name=$li ]
             Field=l_extendedprice
           ]
           =
           FieldAccessor [
-            Variable [ Name=ps ]
+            Variable [ Name=$ps ]
             Field=ps_supplycost
           ]
         ]

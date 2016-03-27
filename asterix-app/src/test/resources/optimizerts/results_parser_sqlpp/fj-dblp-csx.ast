@@ -26,12 +26,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [idDBLP]
     :
-    Variable [ Name=idDBLP ]
+    Variable [ Name=$idDBLP ]
   )
   (
     LiteralExpr [STRING] [idCSX]
     :
-    Variable [ Name=idCSX ]
+    Variable [ Name=$idCSX ]
   )
 ]
 ]
@@ -39,54 +39,54 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paperDBLP ]
+  Variable [ Name=$paperDBLP ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tokensDBLP]
   ]
   AS
-  Variable [ Name=prefixTokenDBLP ]
+  Variable [ Name=$prefixTokenDBLP ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS
-  Variable [ Name=paperCSX ]
+  Variable [ Name=$paperCSX ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tokensCSX]
   ]
   AS
-  Variable [ Name=prefixTokenCSX ]
+  Variable [ Name=$prefixTokenCSX ]
 ]
-LetVariable [ Name=idDBLP ]
+Let Variable [ Name=$idDBLP ]
   :=
   FieldAccessor [
-    Variable [ Name=paperDBLP ]
+    Variable [ Name=$paperDBLP ]
     Field=id
   ]
-LetVariable [ Name=unrankedTokensDBLP ]
+Let Variable [ Name=$unrankedTokensDBLP ]
   :=
   FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
     FieldAccessor [
-      Variable [ Name=paperDBLP ]
+      Variable [ Name=$paperDBLP ]
       Field=title
     ]
   ]
-LetVariable [ Name=tokensDBLP ]
+Let Variable [ Name=$tokensDBLP ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     ]
-    FROM [      Variable [ Name=unrankedTokensDBLP ]
+    FROM [      Variable [ Name=$unrankedTokensDBLP ]
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
           Field=title
         ]
         ]
@@ -94,53 +94,53 @@ LetVariable [ Name=tokensDBLP ]
             LiteralExpr [STRING] [DBLP]
           ]
           AS
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
         ]
       )
       AS
-      Variable [ Name=tokenRanked ]
+      Variable [ Name=$tokenRanked ]
       AT
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=token ]
+        Variable [ Name=$token ]
         =
-        Variable [ Name=tokenRanked ]
+        Variable [ Name=$tokenRanked ]
       ]
     Orderby
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       ASC
 
   )
-LetVariable [ Name=idCSX ]
+Let Variable [ Name=$idCSX ]
   :=
   FieldAccessor [
-    Variable [ Name=paperCSX ]
+    Variable [ Name=$paperCSX ]
     Field=id
   ]
-LetVariable [ Name=unrankedTokensCSX ]
+Let Variable [ Name=$unrankedTokensCSX ]
   :=
   FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
     FieldAccessor [
-      Variable [ Name=paperCSX ]
+      Variable [ Name=$paperCSX ]
       Field=title
     ]
   ]
-LetVariable [ Name=tokensCSX ]
+Let Variable [ Name=$tokensCSX ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     ]
-    FROM [      Variable [ Name=unrankedTokensCSX ]
+    FROM [      Variable [ Name=$unrankedTokensCSX ]
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
           Field=title
         ]
         ]
@@ -148,53 +148,66 @@ LetVariable [ Name=tokensCSX ]
             LiteralExpr [STRING] [DBLP]
           ]
           AS
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
         ]
       )
       AS
-      Variable [ Name=tokenRanked ]
+      Variable [ Name=$tokenRanked ]
       AT
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=token ]
+        Variable [ Name=$token ]
         =
-        Variable [ Name=tokenRanked ]
+        Variable [ Name=$tokenRanked ]
       ]
     Orderby
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       ASC
 
   )
 Where
   OperatorExpr [
-    Variable [ Name=prefixTokenDBLP ]
+    Variable [ Name=$prefixTokenDBLP ]
     =
-    Variable [ Name=prefixTokenCSX ]
+    Variable [ Name=$prefixTokenCSX ]
   ]
 Groupby
-  Variable [ Name=idDBLP ]
+  Variable [ Name=$idDBLP ]
   :=
-  Variable [ Name=idDBLP ]
-  Variable [ Name=idCSX ]
+  Variable [ Name=$idDBLP ]
+  Variable [ Name=$idCSX ]
   :=
-  Variable [ Name=idCSX ]
-  With
-  Variable [ Name=tokensCSX ]
-  Variable [ Name=unrankedTokensCSX ]
-  Variable [ Name=idCSX ]
-  Variable [ Name=tokensDBLP ]
-  Variable [ Name=unrankedTokensDBLP ]
-  Variable [ Name=idDBLP ]
-  Variable [ Name=paperDBLP ]
-  Variable [ Name=prefixTokenDBLP ]
-  Variable [ Name=prefixTokenCSX ]
-  Variable [ Name=paperCSX ]
+  Variable [ Name=$idCSX ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$tokensCSX ]
+   AS tokensCSX
+  Variable [ Name=$unrankedTokensCSX ]
+   AS unrankedTokensCSX
+  Variable [ Name=$idCSX ]
+   AS idCSX
+  Variable [ Name=$tokensDBLP ]
+   AS tokensDBLP
+  Variable [ Name=$unrankedTokensDBLP ]
+   AS unrankedTokensDBLP
+  Variable [ Name=$idDBLP ]
+   AS idDBLP
+  Variable [ Name=$prefixTokenCSX ]
+   AS prefixTokenCSX
+  Variable [ Name=$paperCSX ]
+   AS paperCSX
+  Variable [ Name=$prefixTokenDBLP ]
+   AS prefixTokenDBLP
+  Variable [ Name=$paperDBLP ]
+   AS paperDBLP
+  )
 
 Orderby
-  Variable [ Name=idDBLP ]
+  Variable [ Name=$idDBLP ]
   ASC
-  Variable [ Name=idCSX ]
+  Variable [ Name=$idCSX ]
   ASC
 

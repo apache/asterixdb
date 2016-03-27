@@ -1,11 +1,11 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-LetVariable [ Name=x ]
+Let Variable [ Name=$x ]
   :=
   OrderedListConstructor [
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [FALSE]
@@ -13,11 +13,11 @@ LetVariable [ Name=x ]
         ]
       ]
       Satifies [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [TRUE]
@@ -25,11 +25,11 @@ LetVariable [ Name=x ]
         ]
       ]
       Satifies [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [FALSE]
@@ -37,11 +37,11 @@ LetVariable [ Name=x ]
         ]
       ]
       Satifies [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [TRUE]
@@ -49,11 +49,11 @@ LetVariable [ Name=x ]
         ]
       ]
       Satifies [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [FALSE]
@@ -62,12 +62,12 @@ LetVariable [ Name=x ]
       ]
       Satifies [
         FunctionCall test.not@1[
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
         ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [TRUE]
@@ -76,12 +76,12 @@ LetVariable [ Name=x ]
       ]
       Satifies [
         FunctionCall test.not@1[
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
         ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [FALSE]
@@ -90,12 +90,12 @@ LetVariable [ Name=x ]
       ]
       Satifies [
         FunctionCall test.not@1[
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
         ]
       ]
     ]
     QuantifiedExpression EVERY [
-      [Variable [ Name=x ]
+      [Variable [ Name=$x ]
       In
         OrderedListConstructor [
           LiteralExpr [TRUE]
@@ -104,15 +104,15 @@ LetVariable [ Name=x ]
       ]
       Satifies [
         FunctionCall test.not@1[
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
         ]
       ]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=x ]
+FROM [  Variable [ Name=$x ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

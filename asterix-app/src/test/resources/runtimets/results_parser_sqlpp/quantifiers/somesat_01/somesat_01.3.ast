@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=x ]
+Variable [ Name=$x ]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [10]
@@ -10,11 +10,11 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [50]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]
 Where
   QuantifiedExpression SOME [
-    [Variable [ Name=y ]
+    [Variable [ Name=$y ]
     In
       OrderedListConstructor [
         NEGATIVE LiteralExpr [LONG] [20]
@@ -23,9 +23,9 @@ Where
     ]
     Satifies [
       OperatorExpr [
-        Variable [ Name=y ]
+        Variable [ Name=$y ]
         >
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
       ]
     ]
   ]

@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [subscription-id]
     :
     FieldAccessor [
-      Variable [ Name=sub ]
+      Variable [ Name=$sub ]
       Field=subscription-id
     ]
   )
@@ -40,7 +40,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [message-text]
     :
-    Variable [ Name=text ]
+    Variable [ Name=$text ]
   )
 ]
 ]
@@ -48,19 +48,19 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetHistorySubscriptions]
   ]
   AS
-  Variable [ Name=sub ]
+  Variable [ Name=$sub ]
 ,
   (
     SELECT ELEMENT [
-    Variable [ Name=tweet ]
+    Variable [ Name=$tweet ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [TweetMessages]
       ]
       AS
-      Variable [ Name=tweet ]
+      Variable [ Name=$tweet ]
     ]
-    LetVariable [ Name=circle ]
+    Let Variable [ Name=$circle ]
       :=
       FunctionCall twitter.create-circle@2[
         FunctionCall Metadata.dataset@1[
@@ -71,18 +71,18 @@ FROM [  FunctionCall Metadata.dataset@1[
     Where
       FunctionCall twitter.spatial-intersect@2[
         FieldAccessor [
-          Variable [ Name=tweet ]
+          Variable [ Name=$tweet ]
           Field=sender-location
         ]
-        Variable [ Name=circle ]
+        Variable [ Name=$circle ]
       ]
   )
   AS
-  Variable [ Name=text ]
+  Variable [ Name=$text ]
 ]
-LetVariable [ Name=location ]
+Let Variable [ Name=$location ]
   :=
   FieldAccessor [
-    Variable [ Name=sub ]
+    Variable [ Name=$sub ]
     Field=location
   ]

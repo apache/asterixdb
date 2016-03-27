@@ -26,25 +26,25 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_returnflag]
     :
-    Variable [ Name=l_returnflag ]
+    Variable [ Name=$l_returnflag ]
   )
   (
     LiteralExpr [STRING] [l_linestatus]
     :
-    Variable [ Name=l_linestatus ]
+    Variable [ Name=$l_linestatus ]
   )
   (
     LiteralExpr [STRING] [count_cheaps]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=cheap ]
+      Variable [ Name=$cheap ]
     ]
   )
   (
     LiteralExpr [STRING] [count_expensives]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=expensive ]
+      Variable [ Name=$expensive ]
     ]
   )
 ]
@@ -53,67 +53,71 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=l_shipdate
     ]
     <=
     LiteralExpr [STRING] [1998-09-02]
   ]
 Groupby
-  Variable [ Name=l_returnflag ]
+  Variable [ Name=$l_returnflag ]
   :=
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_returnflag
   ]
-  Variable [ Name=l_linestatus ]
+  Variable [ Name=$l_linestatus ]
   :=
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  With
-  Variable [ Name=l ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$l ]
+   AS l
+  )
 
-LetVariable [ Name=cheap ]
+Let Variable [ Name=$cheap ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=m ]
+    Variable [ Name=$m ]
     ]
-    FROM [      Variable [ Name=l ]
+    FROM [      Variable [ Name=$l ]
       AS
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=m ]
+          Variable [ Name=$m ]
           Field=l_discount
         ]
         >
         LiteralExpr [DOUBLE] [0.05]
       ]
   )
-LetVariable [ Name=expensive ]
+Let Variable [ Name=$expensive ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     ]
-    FROM [      Variable [ Name=l ]
+    FROM [      Variable [ Name=$l ]
       AS
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=l_discount
         ]
         <=
@@ -121,8 +125,8 @@ LetVariable [ Name=expensive ]
       ]
   )
 Orderby
-  Variable [ Name=l_returnflag ]
+  Variable [ Name=$l_returnflag ]
   ASC
-  Variable [ Name=l_linestatus ]
+  Variable [ Name=$l_linestatus ]
   ASC
 

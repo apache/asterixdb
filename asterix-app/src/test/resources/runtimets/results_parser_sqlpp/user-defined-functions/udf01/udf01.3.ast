@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FunctionCall test.echo@1[
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 ]
 FROM [  OrderedListConstructor [
@@ -18,5 +18,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [10]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]

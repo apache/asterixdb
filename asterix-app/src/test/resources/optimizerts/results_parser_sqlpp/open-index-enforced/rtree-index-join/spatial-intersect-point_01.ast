@@ -31,12 +31,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [a]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [b]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
 ]
 ]
@@ -44,22 +44,22 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [MyData1]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [MyData2]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   FunctionCall test.spatial-intersect@2[
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=point
     ]
     FieldAccessor [
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       Field=point
     ]
   ]

@@ -1,41 +1,71 @@
 DataverseUse TinySocial
 Query:
 SELECT [
-Variable [ Name=h ]
+Variable [ Name=$h ]
 hour
 FunctionCall TinySocial.count@1[
-  Variable [ Name=t ]
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#2 ]
+      Field=t
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS
+      Variable [ Name=#2 ]
+    ]
+  )
 ]
 count
 (
   SELECT [
-  Variable [ Name=min ]
+  Variable [ Name=$min ]
   minute
   FunctionCall TinySocial.count@1[
-    Variable [ Name=k ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#4 ]
+        Field=k
+      ]
+      ]
+      FROM [        Variable [ Name=#3 ]
+        AS
+        Variable [ Name=#4 ]
+      ]
+    )
   ]
   sum
   ]
-  FROM [    Variable [ Name=t ]
+  FROM [    Variable [ Name=$t ]
     AS
-    Variable [ Name=k ]
+    Variable [ Name=$k ]
   ]
   Groupby
-    Variable [ Name=min ]
+    Variable [ Name=$min ]
     :=
     FunctionCall TinySocial.get-minute@1[
       FieldAccessor [
-        Variable [ Name=k ]
+        Variable [ Name=$k ]
         Field=send-time
       ]
     ]
-    With
-    Variable [ Name=k ]
-    Variable [ Name=t ]
-    Variable [ Name=h ]
+    GROUP AS
+    Variable [ Name=#3 ]
+    (
+    Variable [ Name=$k ]
+     AS k
+    Variable [ Name=$t ]
+     AS t
+    Variable [ Name=$h ]
+     AS h
+    Variable [ Name=#1 ]
+     AS #1
+    )
 
   Orderby
-    Variable [ Name=min ]
+    Variable [ Name=$min ]
     ASC
 
 )
@@ -45,17 +75,21 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t ]
+  Variable [ Name=$t ]
 ]
 Groupby
-  Variable [ Name=h ]
+  Variable [ Name=$h ]
   :=
   FunctionCall TinySocial.get-hour@1[
     FieldAccessor [
-      Variable [ Name=t ]
+      Variable [ Name=$t ]
       Field=send-time
     ]
   ]
-  With
-  Variable [ Name=t ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$t ]
+   AS t
+  )
 

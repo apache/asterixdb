@@ -17,18 +17,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
   (
     LiteralExpr [STRING] [jacc]
     :
     IndexAccessor [
-      Variable [ Name=jacc ]
+      Variable [ Name=$jacc ]
       Index:       LiteralExpr [LONG] [1]
     ]
   )
@@ -38,20 +38,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FunctionCall test.gram-tokens@3[
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=title
       ]
       LiteralExpr [LONG] [3]
@@ -59,7 +59,7 @@ LetVariable [ Name=jacc ]
     ]
     FunctionCall test.gram-tokens@3[
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=title
       ]
       LiteralExpr [LONG] [3]
@@ -70,18 +70,18 @@ LetVariable [ Name=jacc ]
 Where
   OperatorExpr [
     IndexAccessor [
-      Variable [ Name=jacc ]
+      Variable [ Name=$jacc ]
       Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=id
       ]
       <
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=id
       ]
     ]

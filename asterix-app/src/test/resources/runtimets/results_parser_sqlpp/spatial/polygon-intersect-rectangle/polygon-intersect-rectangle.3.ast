@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=id
     ]
   )
@@ -16,22 +16,22 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [MyData]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   FunctionCall test.spatial-intersect@2[
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=poly1
     ]
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=rec
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=id
   ]
   ASC

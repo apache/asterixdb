@@ -5,14 +5,14 @@ RecordConstructor [
     LiteralExpr [STRING] [user_name]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=name
     ]
   )
   (
     LiteralExpr [STRING] [similar_users]
     :
-    Variable [ Name=similar_users ]
+    Variable [ Name=$similar_users ]
   )
 ]
 ]
@@ -20,9 +20,9 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ]
-LetVariable [ Name=similar_users ]
+Let Variable [ Name=$similar_users ]
   :=
   (
     SELECT ELEMENT [
@@ -31,14 +31,14 @@ LetVariable [ Name=similar_users ]
         LiteralExpr [STRING] [user_name]
         :
         FieldAccessor [
-          Variable [ Name=similar_user ]
+          Variable [ Name=$similar_user ]
           Field=name
         ]
       )
       (
         LiteralExpr [STRING] [similarity]
         :
-        Variable [ Name=similarity ]
+        Variable [ Name=$similarity ]
       )
     ]
     ]
@@ -46,36 +46,36 @@ LetVariable [ Name=similar_users ]
         LiteralExpr [STRING] [Users]
       ]
       AS
-      Variable [ Name=similar_user ]
+      Variable [ Name=$similar_user ]
     ]
-    LetVariable [ Name=similarity ]
+    Let Variable [ Name=$similarity ]
       :=
       FunctionCall null.jaccard_similarity@2[
         FieldAccessor [
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
           Field=interests
         ]
         FieldAccessor [
-          Variable [ Name=similar_user ]
+          Variable [ Name=$similar_user ]
           Field=interests
         ]
       ]
     Where
       OperatorExpr [
         OperatorExpr [
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
           !=
-          Variable [ Name=similar_user ]
+          Variable [ Name=$similar_user ]
         ]
         and
         OperatorExpr [
-          Variable [ Name=similarity ]
+          Variable [ Name=$similarity ]
           >=
           LiteralExpr [DOUBLE] [0.75]
         ]
       ]
     Orderby
-      Variable [ Name=similarity ]
+      Variable [ Name=$similarity ]
       DESC
 
     Limit

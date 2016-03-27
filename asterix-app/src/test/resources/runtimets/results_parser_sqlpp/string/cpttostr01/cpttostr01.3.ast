@@ -3,7 +3,7 @@ Query:
 SELECT ELEMENT [
 FunctionCall test.codepoint-to-string@1[
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=cpt
   ]
 ]
@@ -12,5 +12,5 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]

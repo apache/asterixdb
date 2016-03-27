@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.VariableCloneAndSubstitutionUtil;
@@ -83,14 +84,31 @@ public class CloneAndSubstituteVariablesVisitor extends
         List<GbyVariableExpressionPair> newDecorList = gc.hasDecorList() ? VariableCloneAndSubstitutionUtil
                 .substInVarExprPair(context, gc.getDecorPairList(), env, newSubs, this)
                 : new ArrayList<GbyVariableExpressionPair>();
+
+        VariableExpr newGroupVar = null;
+        if (gc.hasGroupVar()) {
+            newGroupVar = generateNewVariable(context, gc.getGroupVar());
+        }
         List<VariableExpr> wList = new LinkedList<VariableExpr>();
         if (gc.hasWithList()) {
             for (VariableExpr w : gc.getWithVarList()) {
                 VarIdentifier newVar = context.getRewrittenVar(w.getVar().getId());
-                wList.add(new VariableExpr(newVar));
+                if (newVar == null) {
+                    throw new AsterixException("Could not find a rewritten variable identifier for " + w);
+                }
+                VariableExpr newWithVar = new VariableExpr(newVar);
+                wList.add(newWithVar);
             }
         }
-        GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, wList, gc.hasHashGroupByHint());
+        List<Pair<Expression, Identifier>> newGroupFieldList = new ArrayList<>();
+        if (gc.hasGroupFieldList()) {
+            for (Pair<Expression, Identifier> varId : gc.getGroupFieldList()) {
+                Expression newExpr = (Expression) varId.first.accept(this, env).first;
+                newGroupFieldList.add(new Pair<Expression, Identifier>(newExpr, varId.second));
+            }
+        }
+        GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, wList, newGroupVar, newGroupFieldList,
+                gc.hasHashGroupByHint());
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newGroup, newSubs);
     }
 
@@ -103,7 +121,8 @@ public class CloneAndSubstituteVariablesVisitor extends
         for (QuantifiedPair t : oldPairs) {
             VariableExpr newVar = generateNewVariable(context, t.getVarExpr());
             newSubs = VariableCloneAndSubstitutionUtil.eliminateSubstFromList(newVar, newSubs);
-            Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = t.getExpr().accept(this, newSubs);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = visitUnnesBindingExpression(t.getExpr(),
+                    newSubs);
             QuantifiedPair t2 = new QuantifiedPair(newVar, (Expression) p1.first);
             newPairs.add(t2);
         }
@@ -276,7 +295,7 @@ public class CloneAndSubstituteVariablesVisitor extends
     }
 
     // Replace a variable expression if the variable is to-be substituted.
-    public Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
+    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
         if (env.constainsOldVar(expr)) {
             return env.findSubstituion(expr);
         } else {
@@ -303,6 +322,21 @@ public class CloneAndSubstituteVariablesVisitor extends
         VarIdentifier newVar = context.mapOldId(vi.getId(), vi.getValue());
         VariableExpr newVarExpr = new VariableExpr(newVar);
         return newVarExpr;
+    }
+
+    /**
+     * Visits an expression that is used for unnest binding.
+     *
+     * @param expr,
+     *            the expression to consider.
+     * @param env,
+     *            the variable substitution environment.
+     * @return a pair of an ILangExpression and a variable substitution environment.
+     * @throws AsterixException
+     */
+    protected Pair<ILangExpression, VariableSubstitutionEnvironment> visitUnnesBindingExpression(Expression expr,
+            VariableSubstitutionEnvironment env) throws AsterixException {
+        return expr.accept(this, env);
     }
 
 }

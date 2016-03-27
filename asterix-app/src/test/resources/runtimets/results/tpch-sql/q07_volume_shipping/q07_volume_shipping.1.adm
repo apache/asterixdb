@@ -1,0 +1,37 @@
+{ "supp_nation": "ARGENTINA", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 63089.1006d }
+{ "supp_nation": "ARGENTINA", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 64024.4532d }
+{ "supp_nation": "ARGENTINA", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 32719.877199999995d }
+{ "supp_nation": "ARGENTINA", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 63729.862400000005d }
+{ "supp_nation": "ARGENTINA", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 1801.8198d }
+{ "supp_nation": "ETHIOPIA", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 74693.317d }
+{ "supp_nation": "ETHIOPIA", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 13733.706600000001d }
+{ "supp_nation": "ETHIOPIA", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 83631.40359999999d }
+{ "supp_nation": "ETHIOPIA", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 69329.67199999999d }
+{ "supp_nation": "ETHIOPIA", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 42017.435999999994d }
+{ "supp_nation": "IRAN", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 38014.335399999996d }
+{ "supp_nation": "IRAN", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 252152.5927d }
+{ "supp_nation": "IRAN", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 9106.957199999999d }
+{ "supp_nation": "IRAQ", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 68040.7747d }
+{ "supp_nation": "IRAQ", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 3676.8004d }
+{ "supp_nation": "IRAQ", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 85948.85280000001d }
+{ "supp_nation": "IRAQ", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 66380.2488d }
+{ "supp_nation": "KENYA", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 77164.5422d }
+{ "supp_nation": "KENYA", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 63792.8736d }
+{ "supp_nation": "KENYA", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 74537.6256d }
+{ "supp_nation": "KENYA", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 37851.309d }
+{ "supp_nation": "KENYA", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 18467.316d }
+{ "supp_nation": "MOROCCO", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 89669.69080000001d }
+{ "supp_nation": "MOROCCO", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 173726.0087d }
+{ "supp_nation": "MOROCCO", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 37169.8497d }
+{ "supp_nation": "PERU", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 226624.7652d }
+{ "supp_nation": "PERU", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 58359.3076d }
+{ "supp_nation": "PERU", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 345376.29829999997d }
+{ "supp_nation": "PERU", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 52968.9424d }
+{ "supp_nation": "PERU", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 7960.72d }
+{ "supp_nation": "UNITED KINGDOM", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 100143.32139999999d }
+{ "supp_nation": "UNITED KINGDOM", "cust_nation": "GERMANY", "l_year": 1993, "revenue": 41582.5227d }
+{ "supp_nation": "UNITED KINGDOM", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 164740.32710000002d }
+{ "supp_nation": "UNITED KINGDOM", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 50909.551999999996d }
+{ "supp_nation": "UNITED STATES", "cust_nation": "GERMANY", "l_year": 1992, "revenue": 52480.9528d }
+{ "supp_nation": "UNITED STATES", "cust_nation": "GERMANY", "l_year": 1994, "revenue": 115566.8388d }
+{ "supp_nation": "UNITED STATES", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 80489.69949999999d }

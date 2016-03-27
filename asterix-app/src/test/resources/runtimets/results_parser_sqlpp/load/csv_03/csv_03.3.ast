@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [float]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=float
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [floatq]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=floatq
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [double]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=double
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [doubleq]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=doubleq
     ]
   )
@@ -46,7 +46,7 @@ RecordConstructor [
     LiteralExpr [STRING] [string]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=string
     ]
   )
@@ -54,7 +54,7 @@ RecordConstructor [
     LiteralExpr [STRING] [stringq]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=stringq
     ]
   )
@@ -64,11 +64,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=id
   ]
   ASC

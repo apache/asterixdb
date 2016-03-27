@@ -1,7 +1,7 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-LetVariable [ Name=v1 ]
+Let Variable [ Name=$v1 ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [query]
@@ -10,7 +10,7 @@ LetVariable [ Name=v1 ]
     LiteralExpr [STRING] [multidatabase]
     LiteralExpr [STRING] [systems]
   ]
-LetVariable [ Name=v2 ]
+Let Variable [ Name=$v2 ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [query]
@@ -21,7 +21,7 @@ LetVariable [ Name=v2 ]
     LiteralExpr [STRING] [database]
     LiteralExpr [STRING] [systems]
   ]
-LetVariable [ Name=v3 ]
+Let Variable [ Name=$v3 ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [dynamic]
@@ -35,7 +35,7 @@ LetVariable [ Name=v3 ]
     LiteralExpr [STRING] [systems]
     LiteralExpr [STRING] [1]
   ]
-LetVariable [ Name=v4 ]
+Let Variable [ Name=$v4 ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [transaction]
@@ -44,7 +44,7 @@ LetVariable [ Name=v4 ]
     LiteralExpr [STRING] [multidatabase]
     LiteralExpr [STRING] [systems]
   ]
-LetVariable [ Name=v5 ]
+Let Variable [ Name=$v5 ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [overview]
@@ -53,29 +53,29 @@ LetVariable [ Name=v5 ]
     LiteralExpr [STRING] [transaction]
     LiteralExpr [STRING] [management]
   ]
-LetVariable [ Name=results ]
+Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
     FunctionCall test.similarity-jaccard-check@3[
-      Variable [ Name=v1 ]
-      Variable [ Name=v2 ]
+      Variable [ Name=$v1 ]
+      Variable [ Name=$v2 ]
       LiteralExpr [FLOAT] [0.5]
     ]
     FunctionCall test.similarity-jaccard-check@3[
-      Variable [ Name=v1 ]
-      Variable [ Name=v3 ]
+      Variable [ Name=$v1 ]
+      Variable [ Name=$v3 ]
       LiteralExpr [FLOAT] [0.5]
     ]
     FunctionCall test.similarity-jaccard-check@3[
-      Variable [ Name=v4 ]
-      Variable [ Name=v5 ]
+      Variable [ Name=$v4 ]
+      Variable [ Name=$v5 ]
       LiteralExpr [FLOAT] [0.5]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=results ]
+FROM [  Variable [ Name=$results ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

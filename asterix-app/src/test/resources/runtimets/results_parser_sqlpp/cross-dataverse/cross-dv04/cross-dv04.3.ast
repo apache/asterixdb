@@ -1,18 +1,18 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=l ]
+Variable [ Name=$l ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Metadata.Dataset]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=DataverseName
       ]
       =
@@ -21,7 +21,7 @@ Where
     or
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=DataverseName
       ]
       =
@@ -30,7 +30,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=DatasetName
   ]
   ASC

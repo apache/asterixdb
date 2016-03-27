@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [o_custkey]
     :
-    Variable [ Name=ckey ]
+    Variable [ Name=$ckey ]
   )
   (
     LiteralExpr [STRING] [users]
@@ -16,13 +16,13 @@ RecordConstructor [
         (
           LiteralExpr [STRING] [num]
           :
-          Variable [ Name=ip ]
+          Variable [ Name=$ip ]
         )
         (
           LiteralExpr [STRING] [orderkey]
           :
           FieldAccessor [
-            Variable [ Name=f ]
+            Variable [ Name=$f ]
             Field=o_orderkey
           ]
         )
@@ -30,24 +30,24 @@ RecordConstructor [
       ]
       FROM [        (
           SELECT ELEMENT [
-          Variable [ Name=i1 ]
+          Variable [ Name=$i1 ]
           ]
-          FROM [            Variable [ Name=i ]
+          FROM [            Variable [ Name=$i ]
             AS
-            Variable [ Name=i1 ]
+            Variable [ Name=$i1 ]
           ]
           Orderby
             FieldAccessor [
-              Variable [ Name=i1 ]
+              Variable [ Name=$i1 ]
               Field=o_orderkey
             ]
             ASC
 
         )
         AS
-        Variable [ Name=f ]
+        Variable [ Name=$f ]
         AT
-        Variable [ Name=ip ]
+        Variable [ Name=$ip ]
       ]
     )
   )
@@ -55,30 +55,34 @@ RecordConstructor [
 ]
 FROM [  (
     SELECT ELEMENT [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
     ]
   )
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=ckey ]
+  Variable [ Name=$ckey ]
   :=
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=o_custkey
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 
 Orderby
-  Variable [ Name=ckey ]
+  Variable [ Name=$ckey ]
   ASC
 
 Limit

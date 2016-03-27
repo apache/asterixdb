@@ -6,14 +6,14 @@ RecordConstructor [
     LiteralExpr [STRING] [customerid]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=name
     ]
   )
   (
     LiteralExpr [STRING] [unorderedlist]
     :
-    Variable [ Name=n ]
+    Variable [ Name=$n ]
   )
 ]
 ]
@@ -21,39 +21,39 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=rec ]
+Let Variable [ Name=$rec ]
   :=
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=lastorder
   ]
-LetVariable [ Name=m ]
+Let Variable [ Name=$m ]
   :=
   OrderedListConstructor [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     FieldAccessor [
-      Variable [ Name=rec ]
+      Variable [ Name=$rec ]
       Field=oid
     ]
   ]
-LetVariable [ Name=n ]
+Let Variable [ Name=$n ]
   :=
   UnorderedListConstructor [
     IndexAccessor [
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
       Index: ANY
     ]
     IndexAccessor [
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
       Index:       LiteralExpr [LONG] [1]
     ]
     IndexAccessor [
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
       Index:       LiteralExpr [LONG] [4]
     ]
   ]

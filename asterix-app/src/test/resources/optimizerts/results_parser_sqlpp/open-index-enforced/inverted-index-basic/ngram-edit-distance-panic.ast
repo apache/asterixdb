@@ -11,19 +11,19 @@ DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 WriteOutputTo asterix_nc1:rttest/inverted-index-basic_ngram-edit-distance-panic.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=o ]
+Variable [ Name=$o ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.edit-distance@2[
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=authors
       ]
       LiteralExpr [STRING] [Amihay Motro]

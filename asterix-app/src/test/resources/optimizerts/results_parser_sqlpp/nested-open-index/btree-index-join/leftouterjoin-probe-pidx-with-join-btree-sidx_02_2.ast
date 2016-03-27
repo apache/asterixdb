@@ -35,7 +35,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=nested
       ]
       Field=tweetid
@@ -46,7 +46,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=nested
       ]
       Field=countA
@@ -63,7 +63,7 @@ RecordConstructor [
           :
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=nested
             ]
             Field=tweetid
@@ -74,7 +74,7 @@ RecordConstructor [
           :
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=nested
             ]
             Field=countB
@@ -86,14 +86,14 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
       ]
       Where
         OperatorExpr [
           OperatorExpr [
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t1 ]
+                Variable [ Name=$t1 ]
                 Field=nested
               ]
               Field=countA
@@ -101,7 +101,7 @@ RecordConstructor [
             =
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t2 ]
+                Variable [ Name=$t2 ]
                 Field=nested
               ]
               Field=countB
@@ -111,7 +111,7 @@ RecordConstructor [
           OperatorExpr [
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t1 ]
+                Variable [ Name=$t1 ]
                 Field=nested
               ]
               Field=tweetid
@@ -119,7 +119,7 @@ RecordConstructor [
             !=
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t2 ]
+                Variable [ Name=$t2 ]
                 Field=nested
               ]
               Field=tweetid
@@ -129,7 +129,7 @@ RecordConstructor [
       Orderby
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=nested
           ]
           Field=tweetid
@@ -144,13 +144,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=nested
       ]
       Field=tweetid
@@ -163,7 +163,7 @@ Where
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=nested
     ]
     Field=tweetid

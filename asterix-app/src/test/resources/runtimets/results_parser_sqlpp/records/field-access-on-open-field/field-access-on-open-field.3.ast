@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
   Field=zip
 ]
 ]
@@ -10,11 +10,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=address
   ]

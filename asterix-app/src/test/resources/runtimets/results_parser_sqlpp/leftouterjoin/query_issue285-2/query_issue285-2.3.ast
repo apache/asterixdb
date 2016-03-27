@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [aid]
     :
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=id
     ]
   )
@@ -16,7 +16,7 @@ RecordConstructor [
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=id
       ]
       ]
@@ -24,23 +24,23 @@ RecordConstructor [
           LiteralExpr [STRING] [CSX]
         ]
         AS
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
       ]
       Where
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=a ]
+            Variable [ Name=$a ]
             Field=authors
           ]
           =
           FieldAccessor [
-            Variable [ Name=b ]
+            Variable [ Name=$b ]
             Field=authors
           ]
         ]
       Orderby
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=id
         ]
         ASC
@@ -53,11 +53,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     Field=id
   ]
   ASC

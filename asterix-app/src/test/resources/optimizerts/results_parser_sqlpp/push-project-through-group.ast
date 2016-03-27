@@ -17,14 +17,14 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=paperDBLP ]
+      Variable [ Name=$paperDBLP ]
       Field=id
     ]
   )
   (
     LiteralExpr [STRING] [matches]
     :
-    Variable [ Name=matches ]
+    Variable [ Name=$matches ]
   )
 ]
 ]
@@ -32,14 +32,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paperDBLP ]
+  Variable [ Name=$paperDBLP ]
 ]
-LetVariable [ Name=matches ]
+Let Variable [ Name=$matches ]
   :=
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
       Field=title
     ]
     ]
@@ -47,17 +47,17 @@ LetVariable [ Name=matches ]
         LiteralExpr [STRING] [DBLP]
       ]
       AS
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
           Field=authors
         ]
         =
         FieldAccessor [
-          Variable [ Name=paperDBLP ]
+          Variable [ Name=$paperDBLP ]
           Field=authors
         ]
       ]

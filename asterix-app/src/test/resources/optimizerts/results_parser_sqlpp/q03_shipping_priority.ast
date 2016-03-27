@@ -54,22 +54,22 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_orderkey]
     :
-    Variable [ Name=l_orderkey ]
+    Variable [ Name=$l_orderkey ]
   )
   (
     LiteralExpr [STRING] [revenue]
     :
-    Variable [ Name=revenue ]
+    Variable [ Name=$revenue ]
   )
   (
     LiteralExpr [STRING] [o_orderdate]
     :
-    Variable [ Name=o_orderdate ]
+    Variable [ Name=$o_orderdate ]
   )
   (
     LiteralExpr [STRING] [o_shippriority]
     :
-    Variable [ Name=o_shippriority ]
+    Variable [ Name=$o_shippriority ]
   )
 ]
 ]
@@ -77,26 +77,26 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItems]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_mktsegment
         ]
         =
@@ -105,12 +105,12 @@ Where
       and
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_custkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_custkey
         ]
       ]
@@ -119,19 +119,19 @@ Where
     OperatorExpr [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_orderkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_orderkey
         ]
       ]
       and
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_orderdate
         ]
         <
@@ -140,7 +140,7 @@ Where
       and
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_shipdate
         ]
         >
@@ -149,37 +149,43 @@ Where
     ]
   ]
 Groupby
-  Variable [ Name=l_orderkey ]
+  Variable [ Name=$l_orderkey ]
   :=
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_orderkey
   ]
-  Variable [ Name=o_orderdate ]
+  Variable [ Name=$o_orderdate ]
   :=
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=o_orderdate
   ]
-  Variable [ Name=o_shippriority ]
+  Variable [ Name=$o_shippriority ]
   :=
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=o_shippriority
   ]
-  With
-  Variable [ Name=c ]
-  Variable [ Name=l ]
-  Variable [ Name=o ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$l ]
+   AS l
+  Variable [ Name=$o ]
+   AS o
+  Variable [ Name=$c ]
+   AS c
+  )
 
-LetVariable [ Name=revenue ]
+Let Variable [ Name=$revenue ]
   :=
   FunctionCall q3_shipping_priority.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         *
@@ -187,22 +193,22 @@ LetVariable [ Name=revenue ]
           LiteralExpr [LONG] [1]
           -
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_discount
           ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=l ]
+      FROM [        Variable [ Name=$l ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
 Orderby
-  Variable [ Name=revenue ]
+  Variable [ Name=$revenue ]
   DESC
-  Variable [ Name=o_orderdate ]
+  Variable [ Name=$o_orderdate ]
   ASC
 
 Limit

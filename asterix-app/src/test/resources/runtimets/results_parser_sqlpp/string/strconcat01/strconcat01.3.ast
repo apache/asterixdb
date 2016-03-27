@@ -8,11 +8,11 @@ RecordConstructor [
     FunctionCall test.string-concat@1[
       OrderedListConstructor [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=fname
         ]
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=lname
         ]
       ]
@@ -24,11 +24,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=id
   ]
   ASC

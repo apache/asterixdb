@@ -22,7 +22,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=nested
       ]
       Field=title
@@ -33,7 +33,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=nested
       ]
       Field=title
@@ -42,7 +42,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [jacc]
     :
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
   )
 ]
 ]
@@ -50,21 +50,21 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard@2[
     FunctionCall test.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=title
@@ -73,7 +73,7 @@ LetVariable [ Name=jacc ]
     FunctionCall test.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=title
@@ -83,7 +83,7 @@ LetVariable [ Name=jacc ]
 Where
   OperatorExpr [
     OperatorExpr [
-      Variable [ Name=jacc ]
+      Variable [ Name=$jacc ]
       >=
       LiteralExpr [FLOAT] [0.5]
     ]
@@ -91,7 +91,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=id
@@ -99,7 +99,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=id

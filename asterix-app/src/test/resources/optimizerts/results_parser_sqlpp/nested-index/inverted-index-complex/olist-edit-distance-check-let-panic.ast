@@ -32,20 +32,20 @@ DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
 WriteOutputTo asterix_nc1:rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance-check@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=nested
       ]
       Field=interests
@@ -59,13 +59,13 @@ LetVariable [ Name=ed ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
     Index:     LiteralExpr [LONG] [0]
   ]
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=nested
     ]
     Field=cid

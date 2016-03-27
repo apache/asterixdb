@@ -7,7 +7,7 @@ FunctionDecl tmp([]) {
         LiteralExpr [STRING] [p_brand]
         :
         FieldAccessor [
-          Variable [ Name=psp ]
+          Variable [ Name=$psp ]
           Field=p_brand
         ]
       )
@@ -15,7 +15,7 @@ FunctionDecl tmp([]) {
         LiteralExpr [STRING] [p_type]
         :
         FieldAccessor [
-          Variable [ Name=psp ]
+          Variable [ Name=$psp ]
           Field=p_type
         ]
       )
@@ -23,7 +23,7 @@ FunctionDecl tmp([]) {
         LiteralExpr [STRING] [p_size]
         :
         FieldAccessor [
-          Variable [ Name=psp ]
+          Variable [ Name=$psp ]
           Field=p_size
         ]
       )
@@ -31,7 +31,7 @@ FunctionDecl tmp([]) {
         LiteralExpr [STRING] [ps_suppkey]
         :
         FieldAccessor [
-          Variable [ Name=psp ]
+          Variable [ Name=$psp ]
           Field=ps_suppkey
         ]
       )
@@ -44,7 +44,7 @@ FunctionDecl tmp([]) {
             LiteralExpr [STRING] [p_brand]
             :
             FieldAccessor [
-              Variable [ Name=p ]
+              Variable [ Name=$p ]
               Field=p_brand
             ]
           )
@@ -52,7 +52,7 @@ FunctionDecl tmp([]) {
             LiteralExpr [STRING] [p_type]
             :
             FieldAccessor [
-              Variable [ Name=p ]
+              Variable [ Name=$p ]
               Field=p_type
             ]
           )
@@ -60,7 +60,7 @@ FunctionDecl tmp([]) {
             LiteralExpr [STRING] [p_size]
             :
             FieldAccessor [
-              Variable [ Name=p ]
+              Variable [ Name=$p ]
               Field=p_size
             ]
           )
@@ -68,37 +68,37 @@ FunctionDecl tmp([]) {
             LiteralExpr [STRING] [ps_suppkey]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_suppkey
             ]
           )
         ]
         ]
-        FROM [          Variable [ Name=Partsupp ]
+        FROM [          Variable [ Name=$Partsupp ]
           AS
-          Variable [ Name=ps ]
+          Variable [ Name=$ps ]
 ,
-          Variable [ Name=Part ]
+          Variable [ Name=$Part ]
           AS
-          Variable [ Name=p ]
+          Variable [ Name=$p ]
         ]
         Where
           OperatorExpr [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=p ]
+                Variable [ Name=$p ]
                 Field=p_partkey
               ]
               =
               FieldAccessor [
-                Variable [ Name=ps ]
+                Variable [ Name=$ps ]
                 Field=ps_partkey
               ]
             ]
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=p ]
+                Variable [ Name=$p ]
                 Field=p_brand
               ]
               !=
@@ -108,7 +108,7 @@ FunctionDecl tmp([]) {
             FunctionCall tpch.not@1[
               FunctionCall tpch.like@2[
                 FieldAccessor [
-                  Variable [ Name=p ]
+                  Variable [ Name=$p ]
                   Field=p_type
                 ]
                 LiteralExpr [STRING] [MEDIUM POLISHED%]
@@ -117,22 +117,22 @@ FunctionDecl tmp([]) {
           ]
       )
       AS
-      Variable [ Name=psp ]
+      Variable [ Name=$psp ]
 ,
-      Variable [ Name=Supplier ]
+      Variable [ Name=$Supplier ]
       AS
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=psp ]
+            Variable [ Name=$psp ]
             Field=ps_suppkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=s ]
+            Variable [ Name=$s ]
             Field=s_suppkey
           ]
         ]
@@ -140,7 +140,7 @@ FunctionDecl tmp([]) {
         FunctionCall tpch.not@1[
           FunctionCall tpch.like@2[
             FieldAccessor [
-              Variable [ Name=s ]
+              Variable [ Name=$s ]
               Field=s_comment
             ]
             LiteralExpr [STRING] [%Customer%Complaints%]
@@ -156,22 +156,22 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [p_brand]
     :
-    Variable [ Name=p_brand ]
+    Variable [ Name=$p_brand ]
   )
   (
     LiteralExpr [STRING] [p_type]
     :
-    Variable [ Name=p_type ]
+    Variable [ Name=$p_type ]
   )
   (
     LiteralExpr [STRING] [p_size]
     :
-    Variable [ Name=p_size ]
+    Variable [ Name=$p_size ]
   )
   (
     LiteralExpr [STRING] [supplier_cnt]
     :
-    Variable [ Name=supplier_cnt ]
+    Variable [ Name=$supplier_cnt ]
   )
 ]
 ]
@@ -181,35 +181,35 @@ FROM [  (
       (
         LiteralExpr [STRING] [p_brand]
         :
-        Variable [ Name=p_brand1 ]
+        Variable [ Name=$p_brand1 ]
       )
       (
         LiteralExpr [STRING] [p_type]
         :
-        Variable [ Name=p_type1 ]
+        Variable [ Name=$p_type1 ]
       )
       (
         LiteralExpr [STRING] [p_size]
         :
-        Variable [ Name=p_size1 ]
+        Variable [ Name=$p_size1 ]
       )
       (
         LiteralExpr [STRING] [ps_suppkey]
         :
-        Variable [ Name=ps_suppkey1 ]
+        Variable [ Name=$ps_suppkey1 ]
       )
     ]
     ]
     FROM [      FunctionCall tpch.tmp@0[
       ]
       AS
-      Variable [ Name=t ]
+      Variable [ Name=$t ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -218,7 +218,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -227,7 +227,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -236,7 +236,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -245,7 +245,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -254,7 +254,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -263,7 +263,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -272,7 +272,7 @@ FROM [  (
         or
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             Field=p_size
           ]
           =
@@ -280,82 +280,90 @@ FROM [  (
         ]
       ]
     Groupby
-      Variable [ Name=p_brand1 ]
+      Variable [ Name=$p_brand1 ]
       :=
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=p_brand
       ]
-      Variable [ Name=p_type1 ]
+      Variable [ Name=$p_type1 ]
       :=
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=p_type
       ]
-      Variable [ Name=p_size1 ]
+      Variable [ Name=$p_size1 ]
       :=
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=p_size
       ]
-      Variable [ Name=ps_suppkey1 ]
+      Variable [ Name=$ps_suppkey1 ]
       :=
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=ps_suppkey
       ]
-      With
-      Variable [ Name=t ]
+      GROUP AS
+      Variable [ Name=#1 ]
+      (
+      Variable [ Name=$t ]
+       AS t
+      )
 
   )
   AS
-  Variable [ Name=t2 ]
+  Variable [ Name=$t2 ]
 ]
 Groupby
-  Variable [ Name=p_brand ]
+  Variable [ Name=$p_brand ]
   :=
   FieldAccessor [
-    Variable [ Name=t2 ]
+    Variable [ Name=$t2 ]
     Field=p_brand
   ]
-  Variable [ Name=p_type ]
+  Variable [ Name=$p_type ]
   :=
   FieldAccessor [
-    Variable [ Name=t2 ]
+    Variable [ Name=$t2 ]
     Field=p_type
   ]
-  Variable [ Name=p_size ]
+  Variable [ Name=$p_size ]
   :=
   FieldAccessor [
-    Variable [ Name=t2 ]
+    Variable [ Name=$t2 ]
     Field=p_size
   ]
-  With
-  Variable [ Name=t2 ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$t2 ]
+   AS t2
+  )
 
-LetVariable [ Name=supplier_cnt ]
+Let Variable [ Name=$supplier_cnt ]
   :=
   FunctionCall tpch.count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
         Field=ps_suppkey
       ]
       ]
-      FROM [        Variable [ Name=t2 ]
+      FROM [        Variable [ Name=$t2 ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
 Orderby
-  Variable [ Name=supplier_cnt ]
+  Variable [ Name=$supplier_cnt ]
   DESC
-  Variable [ Name=p_brand ]
+  Variable [ Name=$p_brand ]
   ASC
-  Variable [ Name=p_type ]
+  Variable [ Name=$p_type ]
   ASC
-  Variable [ Name=p_size ]
+  Variable [ Name=$p_size ]
   ASC
 

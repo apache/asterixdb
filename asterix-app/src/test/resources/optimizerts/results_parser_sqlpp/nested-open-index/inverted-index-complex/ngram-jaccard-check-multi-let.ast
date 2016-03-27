@@ -21,12 +21,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [Paper]
     :
-    Variable [ Name=paper_tokens ]
+    Variable [ Name=$paper_tokens ]
   )
   (
     LiteralExpr [STRING] [Query]
     :
-    Variable [ Name=query_tokens ]
+    Variable [ Name=$query_tokens ]
   )
 ]
 ]
@@ -34,14 +34,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paper ]
+  Variable [ Name=$paper ]
 ]
-LetVariable [ Name=paper_tokens ]
+Let Variable [ Name=$paper_tokens ]
   :=
   FunctionCall test.gram-tokens@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=paper ]
+        Variable [ Name=$paper ]
         Field=nested
       ]
       Field=title
@@ -49,22 +49,22 @@ LetVariable [ Name=paper_tokens ]
     LiteralExpr [LONG] [3]
     LiteralExpr [FALSE]
   ]
-LetVariable [ Name=query_tokens ]
+Let Variable [ Name=$query_tokens ]
   :=
   FunctionCall test.gram-tokens@3[
     LiteralExpr [STRING] [Transactions for Cooperative Environments]
     LiteralExpr [LONG] [3]
     LiteralExpr [FALSE]
   ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
-    Variable [ Name=paper_tokens ]
-    Variable [ Name=query_tokens ]
+    Variable [ Name=$paper_tokens ]
+    Variable [ Name=$query_tokens ]
     LiteralExpr [FLOAT] [0.5]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     Index:     LiteralExpr [LONG] [0]
   ]

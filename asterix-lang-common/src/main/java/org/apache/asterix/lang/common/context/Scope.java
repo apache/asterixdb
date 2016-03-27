@@ -19,8 +19,10 @@
 package org.apache.asterix.lang.common.context;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -93,11 +95,11 @@ public final class Scope {
      *
      * @param ident
      */
-    public void removeSymbolExpressionMapping(VariableExpr ident) {
+    public Expression removeSymbolExpressionMapping(VariableExpr ident) {
         if (ident == null) {
-            return;
+            return null;
         }
-        varExprMap.remove(ident.getVar().getValue());
+        return varExprMap.remove(ident.getVar().getValue());
     }
 
     /**
@@ -151,6 +153,20 @@ public final class Scope {
     }
 
     /**
+     * Merge yet-another Scope instance into the current Scope instance.
+     *
+     * @param scope
+     *            the other Scope instance.
+     */
+    public void merge(Scope scope) {
+        symbols.putAll(scope.symbols);
+        if (functionSignatures != null && scope.functionSignatures != null) {
+            functionSignatures.addAll(scope.functionSignatures);
+        }
+        varExprMap.putAll(scope.varExprMap);
+    }
+
+    /**
      * Retrieve all the visible symbols in the current scope.
      *
      * @return an iterator of visible symbols.
@@ -195,5 +211,17 @@ public final class Scope {
             }
 
         };
+    }
+
+    public Set<VariableExpr> getLiveVariables() {
+        Set<VariableExpr> vars = new HashSet<VariableExpr>();
+        Iterator<Identifier> identifierIterator = liveSymbols();
+        while (identifierIterator.hasNext()) {
+            Identifier identifier = identifierIterator.next();
+            if (identifier instanceof VarIdentifier) {
+                vars.add(new VariableExpr((VarIdentifier) identifier));
+            }
+        }
+        return vars;
     }
 }

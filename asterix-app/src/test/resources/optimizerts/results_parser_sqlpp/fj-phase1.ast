@@ -25,14 +25,14 @@ RecordConstructor [
     LiteralExpr [STRING] [uid]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=uid
     ]
   )
   (
     LiteralExpr [STRING] [tokens]
     :
-    Variable [ Name=tokens ]
+    Variable [ Name=$tokens ]
   )
 ]
 ]
@@ -40,69 +40,85 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ]
-LetVariable [ Name=tokens ]
+Let Variable [ Name=$tokens ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     ]
     FROM [      FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=lottery_numbers
       ]
       AS
-      Variable [ Name=lottery_number ]
+      Variable [ Name=$lottery_number ]
 ,
       (
         SELECT ELEMENT [
-        Variable [ Name=item ]
+        Variable [ Name=$item ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Users]
           ]
           AS
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
 ,
           FieldAccessor [
-            Variable [ Name=user ]
+            Variable [ Name=$user ]
             Field=lottery_numbers
           ]
           AS
-          Variable [ Name=lottery_number ]
+          Variable [ Name=$lottery_number ]
         ]
         Groupby
-          Variable [ Name=item ]
+          Variable [ Name=$item ]
           :=
-          Variable [ Name=lottery_number ]
-          With
-          Variable [ Name=lottery_number ]
-          Variable [ Name=user ]
+          Variable [ Name=$lottery_number ]
+          GROUP AS
+          Variable [ Name=#1 ]
+          (
+          Variable [ Name=$lottery_number ]
+           AS lottery_number
+          Variable [ Name=$user ]
+           AS user
+          )
 
-        LetVariable [ Name=count ]
+        Let Variable [ Name=$count ]
           :=
           FunctionCall rares03.count@1[
-            Variable [ Name=user ]
+            (
+              SELECT ELEMENT [
+              FieldAccessor [
+                Variable [ Name=#2 ]
+                Field=user
+              ]
+              ]
+              FROM [                Variable [ Name=#1 ]
+                AS
+                Variable [ Name=#2 ]
+              ]
+            )
           ]
         Orderby
-          Variable [ Name=count ]
+          Variable [ Name=$count ]
           DESC
 
       )
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
       AT
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=lottery_number ]
+        Variable [ Name=$lottery_number ]
         =
-        Variable [ Name=token ]
+        Variable [ Name=$token ]
       ]
     Orderby
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
       ASC
 
   )

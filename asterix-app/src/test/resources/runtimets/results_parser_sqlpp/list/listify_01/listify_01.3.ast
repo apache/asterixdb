@@ -1,10 +1,10 @@
 DataverseUse test
 Query:
-LetVariable [ Name=token_list ]
+Let Variable [ Name=$token_list ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=token ]
+    Variable [ Name=$token ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [LONG] [1]
@@ -12,9 +12,9 @@ LetVariable [ Name=token_list ]
         LiteralExpr [LONG] [3]
       ]
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
     ]
   )
 SELECT ELEMENT [
-Variable [ Name=token_list ]
+Variable [ Name=$token_list ]
 ]

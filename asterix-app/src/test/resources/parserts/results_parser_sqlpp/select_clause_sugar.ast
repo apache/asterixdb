@@ -1,6 +1,6 @@
 Query:
 SELECT [
-Variable [ Name=x ]
+Variable [ Name=$x ]
 value
 ]
 FROM [  OrderedListConstructor [
@@ -11,11 +11,11 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [10]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]
 Where
   OperatorExpr [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     =
     LiteralExpr [LONG] [10]
   ]

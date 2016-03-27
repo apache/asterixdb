@@ -1,19 +1,19 @@
 Query:
 SELECT ELEMENT [
 QuantifiedExpression SOME [
-  [Variable [ Name=a1 ]
+  [Variable [ Name=$a1 ]
   In
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   ]
-  [Variable [ Name=b1 ]
+  [Variable [ Name=$b1 ]
   In
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   ]
   Satifies [
     OperatorExpr [
-      Variable [ Name=a1 ]
+      Variable [ Name=$a1 ]
       <
-      Variable [ Name=b1 ]
+      Variable [ Name=$b1 ]
     ]
   ]
 ]
@@ -30,7 +30,7 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   OrderedListConstructor [
     OrderedListConstructor [
@@ -44,5 +44,5 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]

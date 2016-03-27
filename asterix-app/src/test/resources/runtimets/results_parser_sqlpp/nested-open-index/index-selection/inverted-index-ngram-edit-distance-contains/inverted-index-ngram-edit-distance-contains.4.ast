@@ -7,7 +7,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=paper ]
+        Variable [ Name=$paper ]
         Field=nested
       ]
       Field=id
@@ -18,7 +18,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=paper ]
+        Variable [ Name=$paper ]
         Field=nested
       ]
       Field=title
@@ -30,14 +30,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paper ]
+  Variable [ Name=$paper ]
 ]
 Where
   IndexAccessor [
     FunctionCall test.edit-distance-contains@3[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
           Field=nested
         ]
         Field=title
@@ -50,7 +50,7 @@ Where
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
       Field=nested
     ]
     Field=id

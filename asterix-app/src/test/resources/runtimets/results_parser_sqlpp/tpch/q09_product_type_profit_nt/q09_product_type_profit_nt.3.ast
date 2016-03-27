@@ -5,12 +5,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [nation]
     :
-    Variable [ Name=nation ]
+    Variable [ Name=$nation ]
   )
   (
     LiteralExpr [STRING] [o_year]
     :
-    Variable [ Name=o_year ]
+    Variable [ Name=$o_year ]
   )
   (
     LiteralExpr [STRING] [sum_profit]
@@ -19,13 +19,13 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=pr ]
+          Variable [ Name=$pr ]
           Field=amount
         ]
         ]
-        FROM [          Variable [ Name=profit ]
+        FROM [          Variable [ Name=$profit ]
           AS
-          Variable [ Name=pr ]
+          Variable [ Name=$pr ]
         ]
       )
     ]
@@ -39,19 +39,19 @@ FROM [  (
         LiteralExpr [STRING] [nation]
         :
         FieldAccessor [
-          Variable [ Name=l3 ]
+          Variable [ Name=$l3 ]
           Field=n_name
         ]
       )
       (
         LiteralExpr [STRING] [o_year]
         :
-        Variable [ Name=o_year ]
+        Variable [ Name=$o_year ]
       )
       (
         LiteralExpr [STRING] [amount]
         :
-        Variable [ Name=amount ]
+        Variable [ Name=$amount ]
       )
     ]
     ]
@@ -59,7 +59,7 @@ FROM [  (
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
 ,
       (
         SELECT ELEMENT [
@@ -68,7 +68,7 @@ FROM [  (
             LiteralExpr [STRING] [l_extendedprice]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=l_extendedprice
             ]
           )
@@ -76,7 +76,7 @@ FROM [  (
             LiteralExpr [STRING] [l_discount]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=l_discount
             ]
           )
@@ -84,7 +84,7 @@ FROM [  (
             LiteralExpr [STRING] [l_quantity]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=l_quantity
             ]
           )
@@ -92,7 +92,7 @@ FROM [  (
             LiteralExpr [STRING] [l_orderkey]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=l_orderkey
             ]
           )
@@ -100,7 +100,7 @@ FROM [  (
             LiteralExpr [STRING] [n_name]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=n_name
             ]
           )
@@ -108,7 +108,7 @@ FROM [  (
             LiteralExpr [STRING] [ps_supplycost]
             :
             FieldAccessor [
-              Variable [ Name=l2 ]
+              Variable [ Name=$l2 ]
               Field=ps_supplycost
             ]
           )
@@ -118,7 +118,7 @@ FROM [  (
             LiteralExpr [STRING] [Part]
           ]
           AS
-          Variable [ Name=p ]
+          Variable [ Name=$p ]
           INNER JOIN
             (
               SELECT ELEMENT [
@@ -127,7 +127,7 @@ FROM [  (
                   LiteralExpr [STRING] [l_extendedprice]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=l_extendedprice
                   ]
                 )
@@ -135,7 +135,7 @@ FROM [  (
                   LiteralExpr [STRING] [l_discount]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=l_discount
                   ]
                 )
@@ -143,7 +143,7 @@ FROM [  (
                   LiteralExpr [STRING] [l_quantity]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=l_quantity
                   ]
                 )
@@ -151,7 +151,7 @@ FROM [  (
                   LiteralExpr [STRING] [l_partkey]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=l_partkey
                   ]
                 )
@@ -159,7 +159,7 @@ FROM [  (
                   LiteralExpr [STRING] [l_orderkey]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=l_orderkey
                   ]
                 )
@@ -167,7 +167,7 @@ FROM [  (
                   LiteralExpr [STRING] [n_name]
                   :
                   FieldAccessor [
-                    Variable [ Name=l1 ]
+                    Variable [ Name=$l1 ]
                     Field=n_name
                   ]
                 )
@@ -175,7 +175,7 @@ FROM [  (
                   LiteralExpr [STRING] [ps_supplycost]
                   :
                   FieldAccessor [
-                    Variable [ Name=ps ]
+                    Variable [ Name=$ps ]
                     Field=ps_supplycost
                   ]
                 )
@@ -185,7 +185,7 @@ FROM [  (
                   LiteralExpr [STRING] [Partsupp]
                 ]
                 AS
-                Variable [ Name=ps ]
+                Variable [ Name=$ps ]
                 INNER JOIN
                   (
                     SELECT ELEMENT [
@@ -194,7 +194,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_suppkey]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_suppkey
                         ]
                       )
@@ -202,7 +202,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_extendedprice]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_extendedprice
                         ]
                       )
@@ -210,7 +210,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_discount]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_discount
                         ]
                       )
@@ -218,7 +218,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_quantity]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_quantity
                         ]
                       )
@@ -226,7 +226,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_partkey]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_partkey
                         ]
                       )
@@ -234,7 +234,7 @@ FROM [  (
                         LiteralExpr [STRING] [l_orderkey]
                         :
                         FieldAccessor [
-                          Variable [ Name=l ]
+                          Variable [ Name=$l ]
                           Field=l_orderkey
                         ]
                       )
@@ -242,7 +242,7 @@ FROM [  (
                         LiteralExpr [STRING] [n_name]
                         :
                         FieldAccessor [
-                          Variable [ Name=s1 ]
+                          Variable [ Name=$s1 ]
                           Field=n_name
                         ]
                       )
@@ -255,7 +255,7 @@ FROM [  (
                             LiteralExpr [STRING] [s_suppkey]
                             :
                             FieldAccessor [
-                              Variable [ Name=s ]
+                              Variable [ Name=$s ]
                               Field=s_suppkey
                             ]
                           )
@@ -263,7 +263,7 @@ FROM [  (
                             LiteralExpr [STRING] [n_name]
                             :
                             FieldAccessor [
-                              Variable [ Name=n ]
+                              Variable [ Name=$n ]
                               Field=n_name
                             ]
                           )
@@ -273,73 +273,73 @@ FROM [  (
                             LiteralExpr [STRING] [Supplier]
                           ]
                           AS
-                          Variable [ Name=s ]
+                          Variable [ Name=$s ]
 ,
                           FunctionCall Metadata.dataset@1[
                             LiteralExpr [STRING] [Nation]
                           ]
                           AS
-                          Variable [ Name=n ]
+                          Variable [ Name=$n ]
                         ]
                         Where
                           OperatorExpr [
                             FieldAccessor [
-                              Variable [ Name=n ]
+                              Variable [ Name=$n ]
                               Field=n_nationkey
                             ]
                             =
                             FieldAccessor [
-                              Variable [ Name=s ]
+                              Variable [ Name=$s ]
                               Field=s_nationkey
                             ]
                           ]
                       )
                       AS
-                      Variable [ Name=s1 ]
+                      Variable [ Name=$s1 ]
                       INNER JOIN
                         FunctionCall Metadata.dataset@1[
                           LiteralExpr [STRING] [LineItem]
                         ]
                         AS
-                        Variable [ Name=l ]
+                        Variable [ Name=$l ]
                         ON
                         OperatorExpr [
                           FieldAccessor [
-                            Variable [ Name=s1 ]
+                            Variable [ Name=$s1 ]
                             Field=s_suppkey
                           ]
                           =
                           FieldAccessor [
-                            Variable [ Name=l ]
+                            Variable [ Name=$l ]
                             Field=l_suppkey
                           ]
                         ]
                     ]
                   )
                   AS
-                  Variable [ Name=l1 ]
+                  Variable [ Name=$l1 ]
                   ON
                   OperatorExpr [
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=ps ]
+                        Variable [ Name=$ps ]
                         Field=ps_suppkey
                       ]
                       =
                       FieldAccessor [
-                        Variable [ Name=l1 ]
+                        Variable [ Name=$l1 ]
                         Field=l_suppkey
                       ]
                     ]
                     and
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=ps ]
+                        Variable [ Name=$ps ]
                         Field=ps_partkey
                       ]
                       =
                       FieldAccessor [
-                        Variable [ Name=l1 ]
+                        Variable [ Name=$l1 ]
                         Field=l_partkey
                       ]
                     ]
@@ -347,12 +347,12 @@ FROM [  (
               ]
             )
             AS
-            Variable [ Name=l2 ]
+            Variable [ Name=$l2 ]
             ON
             OperatorExpr [
               FunctionCall tpch.contains@2[
                 FieldAccessor [
-                  Variable [ Name=p ]
+                  Variable [ Name=$p ]
                   Field=p_name
                 ]
                 LiteralExpr [STRING] [green]
@@ -360,12 +360,12 @@ FROM [  (
               and
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=p ]
+                  Variable [ Name=$p ]
                   Field=p_partkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=l2 ]
+                  Variable [ Name=$l2 ]
                   Field=l_partkey
                 ]
               ]
@@ -373,14 +373,14 @@ FROM [  (
         ]
       )
       AS
-      Variable [ Name=l3 ]
+      Variable [ Name=$l3 ]
     ]
-    LetVariable [ Name=amount ]
+    Let Variable [ Name=$amount ]
       :=
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l3 ]
+            Variable [ Name=$l3 ]
             Field=l_extendedprice
           ]
           *
@@ -388,7 +388,7 @@ FROM [  (
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=l3 ]
+              Variable [ Name=$l3 ]
               Field=l_discount
             ]
           ]
@@ -396,59 +396,63 @@ FROM [  (
         -
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l3 ]
+            Variable [ Name=$l3 ]
             Field=ps_supplycost
           ]
           *
           FieldAccessor [
-            Variable [ Name=l3 ]
+            Variable [ Name=$l3 ]
             Field=l_quantity
           ]
         ]
       ]
-    LetVariable [ Name=o_year ]
+    Let Variable [ Name=$o_year ]
       :=
       FunctionCall tpch.get-year@1[
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_orderdate
         ]
       ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_orderkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=l3 ]
+          Variable [ Name=$l3 ]
           Field=l_orderkey
         ]
       ]
   )
   AS
-  Variable [ Name=profit ]
+  Variable [ Name=$profit ]
 ]
 Groupby
-  Variable [ Name=nation ]
+  Variable [ Name=$nation ]
   :=
   FieldAccessor [
-    Variable [ Name=profit ]
+    Variable [ Name=$profit ]
     Field=nation
   ]
-  Variable [ Name=o_year ]
+  Variable [ Name=$o_year ]
   :=
   FieldAccessor [
-    Variable [ Name=profit ]
+    Variable [ Name=$profit ]
     Field=o_year
   ]
-  With
-  Variable [ Name=profit ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$profit ]
+   AS profit
+  )
 
 Orderby
-  Variable [ Name=nation ]
+  Variable [ Name=$nation ]
   ASC
-  Variable [ Name=o_year ]
+  Variable [ Name=$o_year ]
   DESC
 

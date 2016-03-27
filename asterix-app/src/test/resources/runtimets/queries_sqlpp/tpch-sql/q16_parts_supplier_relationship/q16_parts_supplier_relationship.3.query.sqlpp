@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+
+declare function tmp() {
+(
+    SELECT psp.p_brand p_brand, psp.p_type p_type, psp.p_size p_size, psp.ps_suppkey ps_suppkey
+    FROM  (
+            SELECT p.p_brand p_brand, p.p_type p_type, p.p_size p_size, ps.ps_suppkey ps_suppkey
+            FROM  Partsupp AS ps,
+                  Part AS p
+            WHERE p.p_partkey = ps.ps_partkey AND p.p_brand != 'Brand#45' AND
+              not(tpch.like(p.p_type,'MEDIUM POLISHED%'))
+           ) AS psp,
+           Supplier AS s
+    WHERE psp.ps_suppkey = s.s_suppkey AND not(like(s.s_comment,'%Customer%Complaints%'))
+)
+};
+
+SELECT p_brand p_brand, p_type p_type, p_size p_size, count(t2.ps_suppkey) supplier_cnt
+FROM  (
+    SELECT p_brand1 p_brand, p_type1 p_type, p_size1 p_size, ps_suppkey1 ps_suppkey
+    FROM  tpch.tmp() t
+    WHERE t.p_size = 49 OR t.p_size = 14 OR t.p_size = 23 OR t.p_size = 45 OR t.p_size = 19
+          OR t.p_size = 3 OR t.p_size = 36 OR t.p_size = 9
+    GROUP BY t.p_brand as p_brand1,t.p_type as p_type1,t.p_size as p_size1,t.ps_suppkey as ps_suppkey1
+) AS t2
+GROUP BY t2.p_brand p_brand,t2.p_type p_type,t2.p_size p_size
+ORDER BY supplier_cnt DESC,p_brand,p_type,p_size
+;

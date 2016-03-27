@@ -12,26 +12,26 @@ DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 WriteOutputTo asterix_nc1:rttest/similarity_edit-distance-let-to-edit-distance-check_05.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=ed ]
+Variable [ Name=$ed ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance@2[
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=authors
     ]
     LiteralExpr [STRING] [Michael J. Carey]
   ]
 Where
   OperatorExpr [
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
     >=
     LiteralExpr [LONG] [2]
   ]

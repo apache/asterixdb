@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+
+declare function tmp1() {
+(
+    SELECT l_orderkey AS l_orderkey,
+           count(l2.l_suppkey) AS count_suppkey,
+           max(l2.l_suppkey) AS max_suppkey
+    FROM  (
+        SELECT l_orderkey1 AS l_orderkey, l_suppkey1 AS l_suppkey
+        from  LineItem AS l
+        group by l.l_orderkey AS l_orderkey1,l.l_suppkey AS l_suppkey1
+    ) AS l2
+    GROUP BY l2.l_orderkey AS l_orderkey
+)
+};
+
+declare function tmp2() {
+(
+    SELECT l_orderkey AS l_orderkey,
+           count(l2.l_suppkey) AS count_suppkey,
+           max(l2.l_suppkey) AS max_suppkey
+    FROM  (
+        SELECT l_orderkey1 AS l_orderkey, l_suppkey1 AS l_suppkey
+        FROM LineItem AS l
+        WHERE l.l_receiptdate > l.l_commitdate
+        GROUP BY l.l_orderkey AS l_orderkey1,l.l_suppkey AS l_suppkey1
+    ) AS l2
+    GROUP BY l2.l_orderkey as l_orderkey
+)
+};
+
+SELECT s_name AS s_name, count(t4) AS numwait
+FROM  (
+    SELECT t3.s_name AS s_name,
+           t3.l_suppkey AS l_suppkey,
+           t2.l_orderkey AS l_orderkey,
+           t2.count_suppkey AS count_suppkey,
+           t2.max_suppkey AS max_suppkey
+    FROM  (
+            SELECT ns.s_name AS s_name,
+                   t1.l_orderkey AS l_orderkey,
+                   l.l_suppkey AS l_suppkey
+            FROM  LineItem AS l,
+                  (
+                        SELECT s.s_name AS s_name, s.s_suppkey AS s_suppkey
+                        FROM Nation AS n,
+                        Supplier AS s
+                        WHERE s.s_nationkey = n.n_nationkey
+                   ) AS ns,
+                   Orders AS o,
+                   tpch.tmp1() AS t1
+            WHERE ns.s_suppkey = l.l_suppkey AND l.l_receiptdate > l.l_commitdate
+                  AND o.o_orderkey = l.l_orderkey AND l.l_orderkey = t1.l_orderkey
+        ) AS t3,
+        tmp2() AS t2
+    WHERE t2.count_suppkey >= 0 AND t3.l_orderkey = t2.l_orderkey
+) AS t4
+GROUP BY t4.s_name AS s_name
+ORDER BY numwait DESC,s_name
+;

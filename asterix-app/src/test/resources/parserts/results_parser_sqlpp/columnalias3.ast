@@ -4,19 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    FunctionCall null.SQRT@1[
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=a
-        ]
-        *
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=b
-        ]
-      ]
-    ]
+    Variable [ Name=#1 ]
   )
 ]
 ]
@@ -24,59 +12,41 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tbl_name]
   ]
   AS
-  Variable [ Name=t ]
+  Variable [ Name=$t ]
 ]
 Groupby
-  FunctionCall null.SQRT@1[
-    OperatorExpr [
-      FieldAccessor [
-        Variable [ Name=t ]
-        Field=a
-      ]
-      *
-      FieldAccessor [
-        Variable [ Name=t ]
-        Field=b
-      ]
-    ]
-  ]
-  With
-  Variable [ Name=t ]
-
-LetVariable [ Name=u ]
+  Variable [ Name=#1 ]
   :=
   FunctionCall null.SQRT@1[
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=a
       ]
       *
       FieldAccessor [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         Field=b
       ]
     ]
   ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$t ]
+   AS t
+  )
+
+Let Variable [ Name=$u ]
+  :=
+  Variable [ Name=#1 ]
  HAVING
   OperatorExpr [
-    FunctionCall null.SQRT@1[
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=a
-        ]
-        *
-        FieldAccessor [
-          Variable [ Name=t ]
-          Field=b
-        ]
-      ]
-    ]
+    Variable [ Name=#1 ]
     >
     LiteralExpr [LONG] [0]
   ]
 Orderby
-  Variable [ Name=u ]
+  Variable [ Name=$u ]
   ASC
 

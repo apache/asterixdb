@@ -49,7 +49,7 @@ RecordConstructor [
     LiteralExpr [STRING] [customer]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=nested
     ]
   )
@@ -57,7 +57,7 @@ RecordConstructor [
     LiteralExpr [STRING] [order]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=nested
     ]
   )
@@ -67,20 +67,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=nested
         ]
         Field=cid
@@ -88,7 +88,7 @@ Where
       =
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=cid
@@ -98,7 +98,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=nested
         ]
         Field=name
@@ -106,7 +106,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=orderstatus
@@ -116,7 +116,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=nested
         ]
         Field=age
@@ -124,7 +124,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=cid

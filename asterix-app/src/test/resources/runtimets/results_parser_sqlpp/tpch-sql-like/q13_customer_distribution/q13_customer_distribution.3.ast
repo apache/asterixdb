@@ -6,12 +6,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c_count]
     :
-    Variable [ Name=c_count ]
+    Variable [ Name=$c_count ]
   )
   (
     LiteralExpr [STRING] [custdist]
     :
-    Variable [ Name=custdist ]
+    Variable [ Name=$custdist ]
   )
 ]
 ]
@@ -21,7 +21,7 @@ FROM [  (
       (
         LiteralExpr [STRING] [c_custkey]
         :
-        Variable [ Name=c_custkey ]
+        Variable [ Name=$c_custkey ]
       )
       (
         LiteralExpr [STRING] [c_count]
@@ -30,13 +30,13 @@ FROM [  (
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=o_orderkey_count
             ]
             ]
-            FROM [              Variable [ Name=co ]
+            FROM [              Variable [ Name=$co ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
@@ -50,7 +50,7 @@ FROM [  (
             LiteralExpr [STRING] [c_custkey]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_custkey
             ]
           )
@@ -61,7 +61,7 @@ FROM [  (
               (
                 SELECT ELEMENT [
                 FieldAccessor [
-                  Variable [ Name=o ]
+                  Variable [ Name=$o ]
                   Field=o_orderkey
                 ]
                 ]
@@ -69,18 +69,18 @@ FROM [  (
                     LiteralExpr [STRING] [Orders]
                   ]
                   AS
-                  Variable [ Name=o ]
+                  Variable [ Name=$o ]
                 ]
                 Where
                   OperatorExpr [
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=c ]
+                        Variable [ Name=$c ]
                         Field=c_custkey
                       ]
                       =
                       FieldAccessor [
-                        Variable [ Name=o ]
+                        Variable [ Name=$o ]
                         Field=o_custkey
                       ]
                     ]
@@ -88,7 +88,7 @@ FROM [  (
                     FunctionCall tpch.not@1[
                       FunctionCall tpch.like@2[
                         FieldAccessor [
-                          Variable [ Name=o ]
+                          Variable [ Name=$o ]
                           Field=o_comment
                         ]
                         LiteralExpr [STRING] [%special%requests%]
@@ -104,44 +104,63 @@ FROM [  (
             LiteralExpr [STRING] [Customer]
           ]
           AS
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
         ]
       )
       AS
-      Variable [ Name=co ]
+      Variable [ Name=$co ]
     ]
     Groupby
-      Variable [ Name=c_custkey ]
+      Variable [ Name=$c_custkey ]
       :=
       FieldAccessor [
-        Variable [ Name=co ]
+        Variable [ Name=$co ]
         Field=c_custkey
       ]
-      With
-      Variable [ Name=co ]
+      GROUP AS
+      Variable [ Name=#1 ]
+      (
+      Variable [ Name=$co ]
+       AS co
+      )
 
   )
   AS
-  Variable [ Name=gco ]
+  Variable [ Name=$gco ]
 ]
 Groupby
-  Variable [ Name=c_count ]
+  Variable [ Name=$c_count ]
   :=
   FieldAccessor [
-    Variable [ Name=gco ]
+    Variable [ Name=$gco ]
     Field=c_count
   ]
-  With
-  Variable [ Name=gco ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$gco ]
+   AS gco
+  )
 
-LetVariable [ Name=custdist ]
+Let Variable [ Name=$custdist ]
   :=
   FunctionCall tpch.count@1[
-    Variable [ Name=gco ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=gco
+      ]
+      ]
+      FROM [        Variable [ Name=#2 ]
+        AS
+        Variable [ Name=#3 ]
+      ]
+    )
   ]
 Orderby
-  Variable [ Name=custdist ]
+  Variable [ Name=$custdist ]
   DESC
-  Variable [ Name=c_count ]
+  Variable [ Name=$c_count ]
   DESC
 

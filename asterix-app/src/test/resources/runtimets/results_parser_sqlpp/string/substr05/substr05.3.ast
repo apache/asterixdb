@@ -3,14 +3,14 @@ Query:
 SELECT ELEMENT [
 FunctionCall test.substring@3[
   FieldAccessor [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     Field=name
   ]
   LiteralExpr [LONG] [4]
   OperatorExpr [
     FunctionCall test.string-length@1[
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=name
       ]
     ]
@@ -23,11 +23,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     Field=name
   ]
   ASC

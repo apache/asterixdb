@@ -10,7 +10,7 @@ RecordConstructor [
         LiteralExpr [STRING] [id]
         :
         FieldAccessor [
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
           Field=tweetid
         ]
       )
@@ -18,7 +18,7 @@ RecordConstructor [
         LiteralExpr [STRING] [topics]
         :
         FieldAccessor [
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
           Field=referred-topics
         ]
       )
@@ -34,7 +34,7 @@ RecordConstructor [
           LiteralExpr [STRING] [id]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=tweetid
           ]
         )
@@ -42,7 +42,7 @@ RecordConstructor [
           LiteralExpr [STRING] [topics]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=referred-topics
           ]
         )
@@ -52,17 +52,17 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
       ]
-      LetVariable [ Name=sim ]
+      Let Variable [ Name=$sim ]
         :=
         FunctionCall test.similarity-jaccard-check@3[
           FieldAccessor [
-            Variable [ Name=t1 ]
+            Variable [ Name=$t1 ]
             Field=referred-topics
           ]
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=referred-topics
           ]
           LiteralExpr [FLOAT] [0.5]
@@ -70,25 +70,25 @@ RecordConstructor [
       Where
         OperatorExpr [
           IndexAccessor [
-            Variable [ Name=sim ]
+            Variable [ Name=$sim ]
             Index:             LiteralExpr [LONG] [0]
           ]
           and
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=tweetid
             ]
             !=
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=tweetid
             ]
           ]
         ]
       Orderby
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=tweetid
         ]
         ASC
@@ -101,12 +101,12 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=tweetid
     ]
     >
@@ -116,7 +116,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=tweetid
   ]
   ASC

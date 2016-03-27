@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=a ]
+Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
     FunctionCall null.string-concat@1[
@@ -51,5 +51,5 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]

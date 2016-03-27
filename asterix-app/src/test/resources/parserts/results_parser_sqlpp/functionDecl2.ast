@@ -1,10 +1,10 @@
-FunctionDecl GT([a, b]) {
+FunctionDecl GT([$a, $b]) {
   IfExpr [
     Condition:
       OperatorExpr [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         >
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
       ]
     Then:
       LiteralExpr [TRUE]

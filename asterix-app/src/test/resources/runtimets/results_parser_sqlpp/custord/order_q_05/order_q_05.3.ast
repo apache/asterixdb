@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [orderid]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=oid
     ]
   )
@@ -14,25 +14,25 @@ RecordConstructor [
     LiteralExpr [STRING] [ordertot]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=total
     ]
   )
   (
     LiteralExpr [STRING] [emptyorderedlist]
     :
-    Variable [ Name=c1 ]
+    Variable [ Name=$c1 ]
   )
   (
     LiteralExpr [STRING] [emptyunorderedlist]
     :
-    Variable [ Name=c2 ]
+    Variable [ Name=$c2 ]
   )
   (
     LiteralExpr [STRING] [olist_item1]
     :
     IndexAccessor [
-      Variable [ Name=c1 ]
+      Variable [ Name=$c1 ]
       Index:       LiteralExpr [LONG] [0]
     ]
   )
@@ -40,7 +40,7 @@ RecordConstructor [
     LiteralExpr [STRING] [olist_item5]
     :
     IndexAccessor [
-      Variable [ Name=c1 ]
+      Variable [ Name=$c1 ]
       Index:       LiteralExpr [LONG] [4]
     ]
   )
@@ -48,7 +48,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ulist_item1]
     :
     IndexAccessor [
-      Variable [ Name=c2 ]
+      Variable [ Name=$c2 ]
       Index: ANY
     ]
   )
@@ -58,13 +58,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=c1 ]
+Let Variable [ Name=$c1 ]
   :=
   OrderedListConstructor [
   ]
-LetVariable [ Name=c2 ]
+Let Variable [ Name=$c2 ]
   :=
   UnorderedListConstructor [
   ]

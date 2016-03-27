@@ -1,0 +1,4 @@
+{ "l_returnflag": "A", "l_linestatus": "F", "count_cheaps": 680, "total_charges": 3.7101416222424E7d }
+{ "l_returnflag": "N", "l_linestatus": "F", "count_cheaps": 12, "total_charges": 1036450.80228d }
+{ "l_returnflag": "N", "l_linestatus": "O", "count_cheaps": 1345, "total_charges": 7.4498798133073E7d }
+{ "l_returnflag": "R", "l_linestatus": "F", "count_cheaps": 679, "total_charges": 3.616906011219301E7d }

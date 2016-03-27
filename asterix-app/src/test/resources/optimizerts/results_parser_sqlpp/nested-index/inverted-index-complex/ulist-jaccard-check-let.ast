@@ -32,20 +32,20 @@ DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
 WriteOutputTo asterix_nc1:rttest/inverted-index-complex_ulist-jaccard-check-let.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=nested
       ]
       Field=interests
@@ -59,6 +59,6 @@ LetVariable [ Name=jacc ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     Index:     LiteralExpr [LONG] [0]
   ]

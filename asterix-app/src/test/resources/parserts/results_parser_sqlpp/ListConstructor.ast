@@ -1,9 +1,9 @@
 Query:
 SELECT ELEMENT [
 OperatorExpr [
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
   +
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]
 ]
 FROM [  OrderedListConstructor [
@@ -12,7 +12,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [3]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ,
   UnorderedListConstructor [
     LiteralExpr [LONG] [4]
@@ -20,5 +20,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [6]
   ]
   AS
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]

@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [custname]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=name
     ]
   )
@@ -22,14 +22,14 @@ RecordConstructor [
     LiteralExpr [STRING] [age]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=age
     ]
   )
   (
     LiteralExpr [STRING] [MathcashBack]
     :
-    Variable [ Name=rec ]
+    Variable [ Name=$rec ]
   )
 ]
 ]
@@ -37,16 +37,16 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=rec ]
+Let Variable [ Name=$rec ]
   :=
   RecordConstructor [
     (
       LiteralExpr [STRING] [cashBack]
       :
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=cashBack
       ]
     )
@@ -55,7 +55,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=cashBack
         ]
         +
@@ -67,7 +67,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=cashBack
         ]
         -
@@ -79,7 +79,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=cashBack
         ]
         *
@@ -91,7 +91,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=cashBack
         ]
         /
@@ -102,7 +102,7 @@ LetVariable [ Name=rec ]
       LiteralExpr [STRING] [-cashBack]
       :
       NEGATIVE FieldAccessor [
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
   Field=cashBack
 ]
     )
@@ -110,7 +110,7 @@ LetVariable [ Name=rec ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     >=

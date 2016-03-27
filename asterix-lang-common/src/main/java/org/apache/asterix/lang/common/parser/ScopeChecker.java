@@ -95,6 +95,10 @@ public class ScopeChecker {
         scopeStack.push(scope);
     }
 
+    public final void pushExistingScope(Scope scope) {
+        scopeStack.push(scope);
+    }
+
     /**
      * Remove current scope
      *

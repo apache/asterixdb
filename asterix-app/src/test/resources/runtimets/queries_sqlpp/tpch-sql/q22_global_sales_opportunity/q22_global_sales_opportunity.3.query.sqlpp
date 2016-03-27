@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+declare function q22_customer_tmp() {
+(
+    SELECT c.c_acctbal AS c_acctbal, c.c_custkey AS c_custkey, substring(c.c_phone,1,2) AS cntrycode
+    FROM  Customer AS c
+)
+};
+
+WITH  avg AS avg((
+      SELECT ELEMENT c.c_acctbal
+      FROM  Customer AS c
+      WHERE c.c_acctbal > 0.0
+  ))
+SELECT  cntrycode AS cntrycode, count(ct) AS numcust, tpch.sum(ct.c_acctbal) AS totacctbal
+FROM  q22_customer_tmp() AS ct
+WHERE ct.c_acctbal > avg
+GROUP BY ct.cntrycode AS cntrycode
+ORDER BY cntrycode
+;

@@ -87,7 +87,7 @@ RecordConstructor [
     LiteralExpr [STRING] [nation_key]
     :
     FieldAccessor [
-      Variable [ Name=nation ]
+      Variable [ Name=$nation ]
       Field=n_nationkey
     ]
   )
@@ -95,7 +95,7 @@ RecordConstructor [
     LiteralExpr [STRING] [name]
     :
     FieldAccessor [
-      Variable [ Name=nation ]
+      Variable [ Name=$nation ]
       Field=n_name
     ]
   )
@@ -108,12 +108,12 @@ RecordConstructor [
         (
           LiteralExpr [STRING] [order_date]
           :
-          Variable [ Name=orderdate ]
+          Variable [ Name=$orderdate ]
         )
         (
           LiteralExpr [STRING] [sum_price]
           :
-          Variable [ Name=sum ]
+          Variable [ Name=$sum ]
         )
       ]
       ]
@@ -121,71 +121,78 @@ RecordConstructor [
           LiteralExpr [STRING] [Orders]
         ]
         AS
-        Variable [ Name=orders ]
+        Variable [ Name=$orders ]
 ,
         FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Customer]
         ]
         AS
-        Variable [ Name=customer ]
+        Variable [ Name=$customer ]
       ]
       Where
         OperatorExpr [
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=orders ]
+              Variable [ Name=$orders ]
               Field=o_custkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=customer ]
+              Variable [ Name=$customer ]
               Field=c_custkey
             ]
           ]
           and
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=customer ]
+              Variable [ Name=$customer ]
               Field=c_nationkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=nation ]
+              Variable [ Name=$nation ]
               Field=n_nationkey
             ]
           ]
         ]
       Groupby
-        Variable [ Name=orderdate ]
+        Variable [ Name=$orderdate ]
         :=
         FieldAccessor [
-          Variable [ Name=orders ]
+          Variable [ Name=$orders ]
           Field=o_orderdate
         ]
-        With
-        Variable [ Name=orders ]
-        Variable [ Name=customer ]
-        Variable [ Name=nation ]
-        Variable [ Name=sn ]
+        GROUP AS
+        Variable [ Name=#1 ]
+        (
+        Variable [ Name=$customer ]
+         AS customer
+        Variable [ Name=$orders ]
+         AS orders
+        Variable [ Name=$sn ]
+         AS sn
+        Variable [ Name=$nation ]
+         AS nation
+        )
 
-      LetVariable [ Name=sum ]
+      Let Variable [ Name=$sum ]
         :=
         FunctionCall tpch.sum@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
               Field=o_totalprice
             ]
             ]
-            FROM [              Variable [ Name=orders ]
+            FROM [              Variable [ Name=$orders ]
               AS
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
             ]
           )
         ]
       Orderby
-        Variable [ Name=sum ]
+        Variable [ Name=$sum ]
         ASC
 
       Limit
@@ -198,23 +205,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Nation]
   ]
   AS
-  Variable [ Name=nation ]
+  Variable [ Name=$nation ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [SelectedNation]
   ]
   AS
-  Variable [ Name=sn ]
+  Variable [ Name=$sn ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=nation ]
+      Variable [ Name=$nation ]
       Field=n_nationkey
     ]
     =
     FieldAccessor [
-      Variable [ Name=sn ]
+      Variable [ Name=$sn ]
       Field=n_nationkey
     ]
   ]

@@ -6,17 +6,17 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       ]
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [t1]
         ]
         AS
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
       ]
       Orderby
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=id
         ]
         ASC
@@ -28,17 +28,17 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
       ]
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [t2]
         ]
         AS
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
       ]
       Orderby
         FieldAccessor [
-          Variable [ Name=m ]
+          Variable [ Name=$m ]
           Field=id
         ]
         ASC

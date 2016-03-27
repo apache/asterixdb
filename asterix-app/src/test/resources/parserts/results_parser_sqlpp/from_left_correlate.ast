@@ -2,17 +2,17 @@ DataverseUse test_022
 Query:
 SELECT [
 FieldAccessor [
-  Variable [ Name=sl ]
+  Variable [ Name=$sl ]
   Field=location
 ]
 location
 FieldAccessor [
-  Variable [ Name=sr ]
+  Variable [ Name=$sr ]
   Field=gas
 ]
 gas
 FieldAccessor [
-  Variable [ Name=sr ]
+  Variable [ Name=$sr ]
   Field=readings
 ]
 readings
@@ -62,7 +62,7 @@ FROM [  UnorderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=sl ]
+  Variable [ Name=$sl ]
   LEFTOUTER UNNEST
     UnorderedListConstructor [
       RecordConstructor [
@@ -141,17 +141,17 @@ FROM [  UnorderedListConstructor [
       ]
     ]
      AS
-    Variable [ Name=sr ]
+    Variable [ Name=$sr ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=sl ]
+      Variable [ Name=$sl ]
       Field=sensor
     ]
     =
     FieldAccessor [
-      Variable [ Name=sr ]
+      Variable [ Name=$sr ]
       Field=sensor
     ]
   ]

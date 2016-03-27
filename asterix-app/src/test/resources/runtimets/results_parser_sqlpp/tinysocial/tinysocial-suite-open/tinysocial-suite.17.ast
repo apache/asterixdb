@@ -5,12 +5,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [user]
     :
-    Variable [ Name=uid ]
+    Variable [ Name=$uid ]
   )
   (
     LiteralExpr [STRING] [count]
     :
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
   )
 ]
 ]
@@ -18,30 +18,45 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t ]
+  Variable [ Name=$t ]
 ]
 Groupby
-  Variable [ Name=uid ]
+  Variable [ Name=$uid ]
   :=
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=t ]
+      Variable [ Name=$t ]
       Field=user
     ]
     Field=screen-name
   ]
-  With
-  Variable [ Name=t ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$t ]
+   AS t
+  )
 
-LetVariable [ Name=c ]
+Let Variable [ Name=$c ]
   :=
   FunctionCall TinySocial.count@1[
-    Variable [ Name=t ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#2 ]
+        Field=t
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS
+        Variable [ Name=#2 ]
+      ]
+    )
   ]
 Orderby
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
   ASC
-  Variable [ Name=uid ]
+  Variable [ Name=$uid ]
   DESC
 
 Limit

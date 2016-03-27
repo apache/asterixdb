@@ -13,18 +13,18 @@ Set simfunction=edit-distance
 Set simthreshold=1
 Query:
 SELECT ELEMENT [
-Variable [ Name=o ]
+Variable [ Name=$o ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=authors
     ]
     ~=

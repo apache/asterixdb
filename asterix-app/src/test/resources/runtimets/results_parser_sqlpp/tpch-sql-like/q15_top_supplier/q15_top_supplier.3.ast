@@ -6,7 +6,7 @@ FunctionDecl revenue([]) {
       (
         LiteralExpr [STRING] [supplier_no]
         :
-        Variable [ Name=l_suppkey ]
+        Variable [ Name=$l_suppkey ]
       )
       (
         LiteralExpr [STRING] [total_revenue]
@@ -16,7 +16,7 @@ FunctionDecl revenue([]) {
             SELECT ELEMENT [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=i ]
+                Variable [ Name=$i ]
                 Field=l_extendedprice
               ]
               *
@@ -24,30 +24,30 @@ FunctionDecl revenue([]) {
                 LiteralExpr [LONG] [1]
                 -
                 FieldAccessor [
-                  Variable [ Name=i ]
+                  Variable [ Name=$i ]
                   Field=l_discount
                 ]
               ]
             ]
             ]
-            FROM [              Variable [ Name=l ]
+            FROM [              Variable [ Name=$l ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
       )
     ]
     ]
-    FROM [      Variable [ Name=LineItem ]
+    FROM [      Variable [ Name=$LineItem ]
       AS
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_shipdate
           ]
           >=
@@ -56,7 +56,7 @@ FunctionDecl revenue([]) {
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_shipdate
           ]
           <
@@ -64,10 +64,10 @@ FunctionDecl revenue([]) {
         ]
       ]
     Groupby
-      Variable [ Name=l_suppkey ]
+      Variable [ Name=$l_suppkey ]
       :=
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_suppkey
       ]
 
@@ -75,20 +75,20 @@ FunctionDecl revenue([]) {
 }
 
 Query:
-LetVariable [ Name=m ]
+Let Variable [ Name=$m ]
   :=
   FunctionCall tpch.max@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=r2 ]
+        Variable [ Name=$r2 ]
         Field=total_revenue
       ]
       ]
       FROM [        FunctionCall tpch.revenue@0[
         ]
         AS
-        Variable [ Name=r2 ]
+        Variable [ Name=$r2 ]
       ]
     )
   ]
@@ -98,7 +98,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_suppkey]
     :
     FieldAccessor [
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
       Field=s_suppkey
     ]
   )
@@ -106,7 +106,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_name]
     :
     FieldAccessor [
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
       Field=s_name
     ]
   )
@@ -114,7 +114,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_address]
     :
     FieldAccessor [
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
       Field=s_address
     ]
   )
@@ -122,7 +122,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_phone]
     :
     FieldAccessor [
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
       Field=s_phone
     ]
   )
@@ -130,7 +130,7 @@ RecordConstructor [
     LiteralExpr [STRING] [total_revenue]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=total_revenue
     ]
   )
@@ -140,35 +140,35 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Supplier]
   ]
   AS
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
 ,
   FunctionCall tpch.revenue@0[
   ]
   AS
-  Variable [ Name=r ]
+  Variable [ Name=$r ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=s ]
+        Variable [ Name=$s ]
         Field=s_suppkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=r ]
+        Variable [ Name=$r ]
         Field=supplier_no
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=r ]
+        Variable [ Name=$r ]
         Field=total_revenue
       ]
       <
       OperatorExpr [
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
         +
         LiteralExpr [DOUBLE] [1.0E-9]
       ]
@@ -176,12 +176,12 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=r ]
+        Variable [ Name=$r ]
         Field=total_revenue
       ]
       >
       OperatorExpr [
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
         -
         LiteralExpr [DOUBLE] [1.0E-9]
       ]

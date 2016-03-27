@@ -5,13 +5,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [timebin]
     :
-    Variable [ Name=bin ]
+    Variable [ Name=$bin ]
   )
   (
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=i2 ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=i2
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
   (
@@ -23,18 +34,18 @@ RecordConstructor [
         FunctionCall test.ms-from-day-time-duration@1[
           FunctionCall test.duration-from-interval@1[
             FunctionCall test.get-overlapping-interval@2[
-              Variable [ Name=bin ]
+              Variable [ Name=$bin ]
               FieldAccessor [
-                Variable [ Name=i3 ]
+                Variable [ Name=$i3 ]
                 Field=interval
               ]
             ]
           ]
         ]
         ]
-        FROM [          Variable [ Name=i2 ]
+        FROM [          Variable [ Name=$i2 ]
           AS
-          Variable [ Name=i3 ]
+          Variable [ Name=$i3 ]
         ]
       )
     ]
@@ -49,11 +60,11 @@ FROM [  (
         :
         FunctionCall test.interval-start-from-time@2[
           FieldAccessor [
-            Variable [ Name=i1 ]
+            Variable [ Name=$i1 ]
             Field=time
           ]
           FieldAccessor [
-            Variable [ Name=i1 ]
+            Variable [ Name=$i1 ]
             Field=duration
           ]
         ]
@@ -64,22 +75,22 @@ FROM [  (
         LiteralExpr [STRING] [tsdata]
       ]
       AS
-      Variable [ Name=i1 ]
+      Variable [ Name=$i1 ]
     ]
     Orderby
       FieldAccessor [
-        Variable [ Name=i1 ]
+        Variable [ Name=$i1 ]
         Field=time
       ]
       ASC
 
   )
   AS
-  Variable [ Name=i2 ]
+  Variable [ Name=$i2 ]
 ,
   FunctionCall test.overlap-bins@3[
     FieldAccessor [
-      Variable [ Name=i2 ]
+      Variable [ Name=$i2 ]
       Field=interval
     ]
     FunctionCall test.time@1[
@@ -90,19 +101,24 @@ FROM [  (
     ]
   ]
   AS
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]
 Groupby
-  Variable [ Name=bin ]
+  Variable [ Name=$bin ]
   :=
-  Variable [ Name=j ]
-  With
-  Variable [ Name=i2 ]
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$j ]
+   AS j
+  Variable [ Name=$i2 ]
+   AS i2
+  )
 
 Orderby
   FunctionCall test.get-interval-start@1[
-    Variable [ Name=bin ]
+    Variable [ Name=$bin ]
   ]
   ASC
 

@@ -9,7 +9,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=name
         ]
         ]
@@ -17,7 +17,7 @@ RecordConstructor [
             LiteralExpr [STRING] [t1]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
       )
     ]
@@ -29,7 +29,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=name
         ]
         ]
@@ -37,7 +37,7 @@ RecordConstructor [
             LiteralExpr [STRING] [t1]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
       )
     ]

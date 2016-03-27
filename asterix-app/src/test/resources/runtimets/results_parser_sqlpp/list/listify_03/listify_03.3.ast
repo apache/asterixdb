@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FunctionCall test.min@1[
-  Variable [ Name=y ]
+  Variable [ Name=$y ]
 ]
 ]
 FROM [  OrderedListConstructor [
@@ -10,14 +10,14 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [2]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]
-LetVariable [ Name=y ]
+Let Variable [ Name=$y ]
   :=
   (
     SELECT ELEMENT [
     FunctionCall test.min@1[
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
     ]
     FROM [      OrderedListConstructor [
@@ -38,6 +38,6 @@ LetVariable [ Name=y ]
         ]
       ]
       AS
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
   )

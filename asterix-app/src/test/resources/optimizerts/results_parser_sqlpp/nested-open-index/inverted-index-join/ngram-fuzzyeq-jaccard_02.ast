@@ -38,12 +38,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
 ]
 ]
@@ -51,13 +51,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
@@ -65,7 +65,7 @@ Where
       FunctionCall test.gram-tokens@3[
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=a ]
+            Variable [ Name=$a ]
             Field=nested
           ]
           Field=title
@@ -77,7 +77,7 @@ Where
       FunctionCall test.gram-tokens@3[
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=b ]
+            Variable [ Name=$b ]
             Field=nested
           ]
           Field=title
@@ -90,7 +90,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=id
@@ -98,7 +98,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=id

@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [l_returnflag]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=l_returnflag
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [l_linestatus]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=l_linestatus
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [l_shipmode]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=l_shipmode
     ]
   )
@@ -32,21 +32,21 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_returnflag
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_linestatus
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_shipmode
   ]
   ASC

@@ -9,13 +9,13 @@ RecordConstructor [
       OperatorExpr [
         FunctionCall test.print-binary@2[
           FunctionCall test.parse-binary@2[
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             LiteralExpr [STRING] [hex]
           ]
           LiteralExpr [STRING] [hex]
         ]
         =
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
       ]
       FROM [        OrderedListConstructor [
@@ -25,7 +25,7 @@ RecordConstructor [
           LiteralExpr [STRING] []
         ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   )
@@ -37,13 +37,13 @@ RecordConstructor [
       OperatorExpr [
         FunctionCall test.print-binary@2[
           FunctionCall test.parse-binary@2[
-            Variable [ Name=j ]
+            Variable [ Name=$j ]
             LiteralExpr [STRING] [base64]
           ]
           LiteralExpr [STRING] [base64]
         ]
         =
-        Variable [ Name=j ]
+        Variable [ Name=$j ]
       ]
       ]
       FROM [        OrderedListConstructor [
@@ -53,7 +53,7 @@ RecordConstructor [
           LiteralExpr [STRING] [QXN0ZXJpeAE8]
         ]
         AS
-        Variable [ Name=j ]
+        Variable [ Name=$j ]
       ]
     )
   )

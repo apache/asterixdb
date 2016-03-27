@@ -41,7 +41,7 @@ RecordConstructor [
         :
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=t1 ]
+            Variable [ Name=$t1 ]
             Field=nested
           ]
           Field=tweetid
@@ -52,7 +52,7 @@ RecordConstructor [
         :
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=t1 ]
+            Variable [ Name=$t1 ]
             Field=nested
           ]
           Field=message-text
@@ -71,7 +71,7 @@ RecordConstructor [
           :
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=nested
             ]
             Field=tweetid
@@ -82,7 +82,7 @@ RecordConstructor [
           :
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=nested
             ]
             Field=message-text
@@ -94,21 +94,21 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
       ]
-      LetVariable [ Name=sim ]
+      Let Variable [ Name=$sim ]
         :=
         FunctionCall test.edit-distance-check@3[
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t1 ]
+              Variable [ Name=$t1 ]
               Field=nested
             ]
             Field=message-text
           ]
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=t2 ]
+              Variable [ Name=$t2 ]
               Field=nested
             ]
             Field=message-text
@@ -118,14 +118,14 @@ RecordConstructor [
       Where
         OperatorExpr [
           IndexAccessor [
-            Variable [ Name=sim ]
+            Variable [ Name=$sim ]
             Index:             LiteralExpr [LONG] [0]
           ]
           and
           OperatorExpr [
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t2 ]
+                Variable [ Name=$t2 ]
                 Field=nested
               ]
               Field=tweetid
@@ -133,7 +133,7 @@ RecordConstructor [
             !=
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=t1 ]
+                Variable [ Name=$t1 ]
                 Field=nested
               ]
               Field=tweetid
@@ -143,7 +143,7 @@ RecordConstructor [
       Orderby
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=nested
           ]
           Field=tweetid
@@ -158,13 +158,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=nested
       ]
       Field=tweetid
@@ -177,7 +177,7 @@ Where
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=nested
     ]
     Field=tweetid

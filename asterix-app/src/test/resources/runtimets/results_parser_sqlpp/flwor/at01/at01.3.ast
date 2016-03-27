@@ -5,13 +5,13 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [num]
     :
-    Variable [ Name=p ]
+    Variable [ Name=$p ]
   )
   (
     LiteralExpr [STRING] [name]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=name
     ]
   )
@@ -19,7 +19,7 @@ RecordConstructor [
     LiteralExpr [STRING] [user-since]
     :
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=user-since
     ]
   )
@@ -27,24 +27,24 @@ RecordConstructor [
 ]
 FROM [  (
     SELECT ELEMENT [
-    Variable [ Name=fb ]
+    Variable [ Name=$fb ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS
-      Variable [ Name=fb ]
+      Variable [ Name=$fb ]
     ]
     Orderby
       FieldAccessor [
-        Variable [ Name=fb ]
+        Variable [ Name=$fb ]
         Field=name
       ]
       ASC
 
   )
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
   AT
-  Variable [ Name=p ]
+  Variable [ Name=$p ]
 ]

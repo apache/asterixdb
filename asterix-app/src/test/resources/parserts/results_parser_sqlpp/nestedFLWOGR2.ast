@@ -2,26 +2,26 @@ Query:
 SELECT ELEMENT [
 (
   SELECT ELEMENT [
-  Variable [ Name=k ]
+  Variable [ Name=$k ]
   ]
   FROM [    IfExpr [
       Condition:
         OperatorExpr [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           >
-          Variable [ Name=j ]
+          Variable [ Name=$j ]
         ]
       Then:
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       Else:
-        Variable [ Name=j ]
+        Variable [ Name=$j ]
     ]
     AS
-    Variable [ Name=k ]
+    Variable [ Name=$k ]
   ]
   Where
     OperatorExpr [
-      Variable [ Name=k ]
+      Variable [ Name=$k ]
       <
       LiteralExpr [LONG] [10]
     ]
@@ -33,18 +33,18 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [30]
     (
       SELECT ELEMENT [
-      Variable [ Name=tmp ]
+      Variable [ Name=$tmp ]
       ]
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [number]
         ]
         AS
-        Variable [ Name=tmp ]
+        Variable [ Name=$tmp ]
       ]
     )
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ,
   UnorderedListConstructor [
     LiteralExpr [LONG] [4]
@@ -52,5 +52,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [6]
   ]
   AS
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]

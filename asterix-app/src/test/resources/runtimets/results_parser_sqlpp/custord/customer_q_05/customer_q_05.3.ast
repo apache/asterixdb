@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [custname]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=name
     ]
   )
@@ -14,14 +14,14 @@ RecordConstructor [
     LiteralExpr [STRING] [age]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=age
     ]
   )
   (
     LiteralExpr [STRING] [MathAge]
     :
-    Variable [ Name=rec ]
+    Variable [ Name=$rec ]
   )
 ]
 ]
@@ -29,16 +29,16 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=rec ]
+Let Variable [ Name=$rec ]
   :=
   RecordConstructor [
     (
       LiteralExpr [STRING] [age]
       :
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=age
       ]
     )
@@ -47,7 +47,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=age
         ]
         +
@@ -59,7 +59,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=age
         ]
         -
@@ -71,7 +71,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=age
         ]
         *
@@ -83,7 +83,7 @@ LetVariable [ Name=rec ]
       :
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=age
         ]
         /
@@ -94,7 +94,7 @@ LetVariable [ Name=rec ]
       LiteralExpr [STRING] [-age]
       :
       NEGATIVE FieldAccessor [
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
   Field=age
 ]
     )
@@ -102,7 +102,7 @@ LetVariable [ Name=rec ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     >=

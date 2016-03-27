@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FunctionCall test.sql-count@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [LONG] [1]
@@ -12,7 +12,7 @@ FunctionCall test.sql-count@1[
         LiteralExpr [LONG] [3]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
   )
 ]

@@ -7,7 +7,7 @@ FunctionDecl q22_customer_tmp([]) {
         LiteralExpr [STRING] [c_acctbal]
         :
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_acctbal
         ]
       )
@@ -15,7 +15,7 @@ FunctionDecl q22_customer_tmp([]) {
         LiteralExpr [STRING] [c_custkey]
         :
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_custkey
         ]
       )
@@ -24,7 +24,7 @@ FunctionDecl q22_customer_tmp([]) {
         :
         FunctionCall tpch.substring@3[
           FieldAccessor [
-            Variable [ Name=c ]
+            Variable [ Name=$c ]
             Field=c_phone
           ]
           LiteralExpr [LONG] [1]
@@ -33,21 +33,21 @@ FunctionDecl q22_customer_tmp([]) {
       )
     ]
     ]
-    FROM [      Variable [ Name=Customer ]
+    FROM [      Variable [ Name=$Customer ]
       AS
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
     ]
   )
 }
 
 Query:
-LetVariable [ Name=avg ]
+Let Variable [ Name=$avg ]
   :=
   FunctionCall tpch.avg@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_acctbal
       ]
       ]
@@ -55,12 +55,12 @@ LetVariable [ Name=avg ]
           LiteralExpr [STRING] [Customer]
         ]
         AS
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
       ]
       Where
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=c ]
+            Variable [ Name=$c ]
             Field=c_acctbal
           ]
           >
@@ -73,13 +73,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cntrycode]
     :
-    Variable [ Name=cntrycode ]
+    Variable [ Name=$cntrycode ]
   )
   (
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=ct ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=ct
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
   (
@@ -89,13 +100,13 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=c_acctbal
         ]
         ]
-        FROM [          Variable [ Name=ct ]
+        FROM [          Variable [ Name=$ct ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -105,29 +116,34 @@ RecordConstructor [
 FROM [  FunctionCall tpch.q22_customer_tmp@0[
   ]
   AS
-  Variable [ Name=ct ]
+  Variable [ Name=$ct ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=ct ]
+      Variable [ Name=$ct ]
       Field=c_acctbal
     ]
     >
-    Variable [ Name=avg ]
+    Variable [ Name=$avg ]
   ]
 Groupby
-  Variable [ Name=cntrycode ]
+  Variable [ Name=$cntrycode ]
   :=
   FieldAccessor [
-    Variable [ Name=ct ]
+    Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  With
-  Variable [ Name=ct ]
-  Variable [ Name=avg ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$ct ]
+   AS ct
+  Variable [ Name=$avg ]
+   AS avg
+  )
 
 Orderby
-  Variable [ Name=cntrycode ]
+  Variable [ Name=$cntrycode ]
   ASC
 

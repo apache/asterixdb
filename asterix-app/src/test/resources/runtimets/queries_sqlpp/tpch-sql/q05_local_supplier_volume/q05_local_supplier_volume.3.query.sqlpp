@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SELECT  n_name AS n_name,
+        sum(o1.l_extendedprice * (1 - o1.l_discount)) AS revenue
+FROM
+  Customer c JOIN
+    ( SELECT l1.n_name AS n_name,
+             l1.l_extendedprice AS l_extendedprice,
+             l1.l_discount AS l_discount,
+             l1.s_nationkey AS s_nationkey,
+             o.o_custkey AS o_custkey
+      FROM Orders o JOIN
+      ( SELECT s1.n_name AS n_name,
+               l.l_extendedprice AS l_extendedprice,
+               l.l_discount AS l_discount,
+               l.l_orderkey AS l_orderkey,
+               s1.s_nationkey AS s_nationkey
+        FROM LineItem l JOIN
+            (   SELECT  n1.n_name AS n_name,
+                        s.s_suppkey AS s_suppkey,
+                        s.s_nationkey AS s_nationkey
+                FROM Supplier s JOIN
+                (   SELECT n.n_name AS n_name, n.n_nationkey AS n_nationkey
+                    FROM Nation n JOIN Region r
+                    ON n.n_regionkey = r.r_regionkey
+                ) n1 ON s.s_nationkey = n1.n_nationkey
+            ) s1
+        ON l.l_suppkey = s1.s_suppkey
+      ) l1 ON l1.l_orderkey = o.o_orderkey AND o.o_orderdate >= '1990-01-01'
+              AND o.o_orderdate < '1995-01-01'
+   ) o1
+ON c.c_nationkey = o1.s_nationkey AND c.c_custkey = o1.o_custkey
+GROUP BY o1.n_name AS n_name
+ORDER BY revenue DESC;

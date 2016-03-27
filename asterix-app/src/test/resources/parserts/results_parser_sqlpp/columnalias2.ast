@@ -23,32 +23,38 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tbl_name]
   ]
   AS
-  Variable [ Name=root ]
+  Variable [ Name=$root ]
 ]
 Groupby
-  FieldAccessor [
-    Variable [ Name=root ]
-    Field=id
-  ]
-  With
-  Variable [ Name=root ]
-
-LetVariable [ Name=u ]
+  Variable [ Name=#1 ]
   :=
   FieldAccessor [
-    Variable [ Name=root ]
+    Variable [ Name=$root ]
+    Field=id
+  ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$root ]
+   AS root
+  )
+
+Let Variable [ Name=$u ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$root ]
     Field=time
   ]
  HAVING
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=root ]
+      Variable [ Name=$root ]
       Field=orders
     ]
     >
     LiteralExpr [LONG] [0]
   ]
 Orderby
-  Variable [ Name=u ]
+  Variable [ Name=$u ]
   ASC
 

@@ -51,7 +51,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=nested
       ]
       Field=id
@@ -62,7 +62,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=nested
       ]
       Field=author-id
@@ -73,7 +73,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=nested
       ]
       Field=name
@@ -84,7 +84,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=nested
       ]
       Field=message
@@ -96,20 +96,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS
-  Variable [ Name=message ]
+  Variable [ Name=$message ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
           Field=nested
         ]
         Field=id
@@ -117,7 +117,7 @@ Where
       =
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=message ]
+          Variable [ Name=$message ]
           Field=nested
         ]
         Field=author-id-copy
@@ -127,7 +127,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
           Field=nested
         ]
         Field=id
@@ -139,7 +139,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=user ]
+          Variable [ Name=$user ]
           Field=nested
         ]
         Field=id

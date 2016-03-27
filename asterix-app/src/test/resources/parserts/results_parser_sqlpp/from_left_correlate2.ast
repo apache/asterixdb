@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=r ]
+Variable [ Name=$r ]
 ]
 FROM [  UnorderedListConstructor [
     RecordConstructor [
@@ -48,12 +48,12 @@ FROM [  UnorderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
   LEFTOUTER UNNEST
     FieldAccessor [
-      Variable [ Name=s ]
+      Variable [ Name=$s ]
       Field=readings
     ]
      AS
-    Variable [ Name=r ]
+    Variable [ Name=$r ]
 ]

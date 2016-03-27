@@ -40,6 +40,10 @@ public class FunctionSignatures {
         }
     }
 
+    public void addAll(FunctionSignatures functionSignatures) {
+        functionMap.putAll(functionSignatures.functionMap);
+    }
+
     public void put(FunctionSignature fd, boolean varargs) {
         FunctionExpressionMap func = functionMap.get(fd);
         if (func == null) {

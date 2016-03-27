@@ -15,7 +15,7 @@ DatasetDecl testdst(TestType) partitioned by [[nested, fname], [nested, lname]]
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=emp ]
+  Variable [ Name=$emp ]
   Field=nested
 ]
 ]
@@ -23,14 +23,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS
-  Variable [ Name=emp ]
+  Variable [ Name=$emp ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=emp ]
+          Variable [ Name=$emp ]
           Field=nested
         ]
         Field=fname
@@ -42,7 +42,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=emp ]
+          Variable [ Name=$emp ]
           Field=nested
         ]
         Field=lname

@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [dblpid]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=dblpid
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [title]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=title
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [authors]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=authors
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [misc]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=misc
     ]
   )
@@ -48,14 +48,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLPOpen]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FunctionCall test.word-tokens@1[
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=title
       ]
     ]
@@ -66,6 +66,6 @@ LetVariable [ Name=jacc ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     Index:     LiteralExpr [LONG] [0]
   ]

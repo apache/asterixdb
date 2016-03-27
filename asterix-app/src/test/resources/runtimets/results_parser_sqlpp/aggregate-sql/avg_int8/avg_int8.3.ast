@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FunctionCall test.sql-avg@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         FunctionCall test.int8@1[
@@ -18,7 +18,7 @@ FunctionCall test.sql-avg@1[
         ]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
   )
 ]

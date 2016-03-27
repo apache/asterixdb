@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [dblpid]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=dblpid
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [title]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=title
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [authors]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=authors
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [misc]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=misc
     ]
   )
@@ -48,13 +48,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLPOpen]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance-check@3[
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=authors
     ]
     LiteralExpr [STRING] [Amihay Motro]
@@ -62,6 +62,6 @@ LetVariable [ Name=ed ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
     Index:     LiteralExpr [LONG] [0]
   ]

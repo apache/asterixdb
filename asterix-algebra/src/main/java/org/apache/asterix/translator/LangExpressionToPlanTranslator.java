@@ -61,8 +61,10 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -556,7 +558,7 @@ class LangExpressionToPlanTranslator
             }
             default: {
                 v = context.newVar(lc.getVarExpr());
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(lc.getBindingExpr(),
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(lc.getBindingExpr(),
                         tupSource);
                 returnedOp = new AssignOperator(v, new MutableObject<ILogicalExpression>(eo.first));
                 returnedOp.getInputs().add(eo.second);
@@ -569,7 +571,7 @@ class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(FieldAccessor fa, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(fa.getExpr(), tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(fa.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression fldAccess = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME));
@@ -585,7 +587,7 @@ class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(IndexAccessor ia, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(ia.getExpr(), tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(ia.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression f;
         if (ia.isAny()) {
@@ -593,7 +595,7 @@ class LangExpressionToPlanTranslator
                     FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
         } else {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = aqlExprToAlgExpression(ia.getIndexExpr(),
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = langExprToAlgExpression(ia.getIndexExpr(),
                     tupSource);
             f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
@@ -626,7 +628,7 @@ class LangExpressionToPlanTranslator
                     break;
                 }
                 default: {
-                    Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(expr, topOp);
+                    Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, topOp);
                     AbstractLogicalOperator o1 = (AbstractLogicalOperator) eo.second.getValue();
                     args.add(new MutableObject<ILogicalExpression>(eo.first));
                     if (o1 != null && !(o1.getOperatorTag() == LogicalOperatorTag.ASSIGN && hasOnlyChild(o1, topOp))) {
@@ -733,7 +735,7 @@ class LangExpressionToPlanTranslator
             } else {
                 v = context.newVar();
             }
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(ve.getExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
             gOp.addGbyExpression(v, eo.first);
             topOp = eo.second;
         }
@@ -745,12 +747,31 @@ class LangExpressionToPlanTranslator
             } else {
                 v = context.newVar();
             }
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(ve.getExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
             gOp.addDecorExpression(v, eo.first);
             topOp = eo.second;
         }
-        gOp.getInputs().add(topOp);
 
+        if (gc.hasGroupVar()) {
+            List<Pair<Expression, Identifier>> groupFieldList = gc.getGroupFieldList();
+            List<Mutable<ILogicalExpression>> groupRecordConstructorArgList = new ArrayList<>();
+            for (Pair<Expression, Identifier> groupField : groupFieldList) {
+                ILogicalExpression groupFieldNameExpr = langExprToAlgExpression(
+                        new LiteralExpr(new StringLiteral(groupField.second.getValue())), topOp).first;
+                groupRecordConstructorArgList.add(new MutableObject<ILogicalExpression>(groupFieldNameExpr));
+                ILogicalExpression groupFieldExpr = langExprToAlgExpression(groupField.first, topOp).first;
+                groupRecordConstructorArgList.add(new MutableObject<ILogicalExpression>(groupFieldExpr));
+            }
+            LogicalVariable groupVar = context.newVar(gc.getGroupVar());
+            AssignOperator groupVarAssignOp = new AssignOperator(groupVar,
+                    new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
+                            groupRecordConstructorArgList)));
+            groupVarAssignOp.getInputs().add(topOp);
+            topOp = new MutableObject<ILogicalOperator>(groupVarAssignOp);
+        }
+
+        gOp.getInputs().add(topOp);
         for (VariableExpr var : gc.getWithVarList()) {
             LogicalVariable aggVar = context.newVar();
             LogicalVariable oldVar = context.getVar(var);
@@ -858,7 +879,7 @@ class LangExpressionToPlanTranslator
         ILogicalExpression currExpr = null;
         for (int i = 0; i <= nOps; i++) {
 
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(exprs.get(i), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(exprs.get(i), topOp);
             topOp = p.second;
             ILogicalExpression e = p.first;
             // now look at the operator
@@ -934,7 +955,7 @@ class LangExpressionToPlanTranslator
         Iterator<OrderModifier> modifIter = oc.getModifierList().iterator();
         Mutable<ILogicalOperator> topOp = tupSource;
         for (Expression e : oc.getOrderbyList()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(e, topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(e, topOp);
             OrderModifier m = modifIter.next();
             OrderOperator.IOrder comp = (m == OrderModifier.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
             ord.getOrderExpressions().add(new Pair<IOrder, Mutable<ILogicalExpression>>(comp,
@@ -966,7 +987,7 @@ class LangExpressionToPlanTranslator
         Mutable<ILogicalOperator> lastOp = null;
 
         for (QuantifiedPair qt : qe.getQuantifiedList()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = aqlExprToAlgExpression(qt.getExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = langExprToAlgExpression(qt.getExpr(), topOp);
             topOp = eo1.second;
             LogicalVariable uVar = context.newVar(qt.getVarExpr());
             ILogicalOperator u = new UnnestOperator(uVar,
@@ -986,7 +1007,7 @@ class LangExpressionToPlanTranslator
         firstOp.getInputs().add(topOp);
         topOp = lastOp;
 
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = aqlExprToAlgExpression(qe.getSatisfiesExpr(), topOp);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = langExprToAlgExpression(qe.getSatisfiesExpr(), topOp);
 
         AggregateFunctionCallExpression fAgg;
         SelectOperator s;
@@ -1026,10 +1047,10 @@ class LangExpressionToPlanTranslator
         AssignOperator a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(f));
         Mutable<ILogicalOperator> topOp = tupSource;
         for (FieldBinding fb : rc.getFbList()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = aqlExprToAlgExpression(fb.getLeftExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = langExprToAlgExpression(fb.getLeftExpr(), topOp);
             f.getArguments().add(new MutableObject<ILogicalExpression>(eo1.first));
             topOp = eo1.second;
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = aqlExprToAlgExpression(fb.getRightExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = langExprToAlgExpression(fb.getRightExpr(), topOp);
             f.getArguments().add(new MutableObject<ILogicalExpression>(eo2.first));
             topOp = eo2.second;
         }
@@ -1047,7 +1068,7 @@ class LangExpressionToPlanTranslator
         AssignOperator a = new AssignOperator(v1, new MutableObject<ILogicalExpression>(f));
         Mutable<ILogicalOperator> topOp = tupSource;
         for (Expression expr : lc.getExprList()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(expr, topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, topOp);
             f.getArguments().add(new MutableObject<ILogicalExpression>(eo.first));
             topOp = eo.second;
         }
@@ -1059,7 +1080,7 @@ class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(UnaryExpr u, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         Expression expr = u.getExpr();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(expr, tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, tupSource);
         LogicalVariable v1 = context.newVar();
         AssignOperator a;
         if (u.getSign() == Sign.POSITIVE) {
@@ -1088,7 +1109,7 @@ class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(WhereClause w, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(w.getWhereExpr(), tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(w.getWhereExpr(), tupSource);
         SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first), false, null);
         s.getInputs().add(p.second);
         return new Pair<ILogicalOperator, LogicalVariable>(s, null);
@@ -1097,11 +1118,11 @@ class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(LimitClause lc, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = aqlExprToAlgExpression(lc.getLimitExpr(), tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
         LimitOperator opLim;
         Expression offset = lc.getOffset();
         if (offset != null) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = aqlExprToAlgExpression(offset, p1.second);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = langExprToAlgExpression(offset, p1.second);
             opLim = new LimitOperator(p1.first, p2.first);
             opLim.getInputs().add(p2.second);
         } else {
@@ -1204,7 +1225,7 @@ class LangExpressionToPlanTranslator
         return inp.get(0) == childCandidate;
     }
 
-    protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> aqlExprToAlgExpression(Expression expr,
+    protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> langExprToAlgExpression(Expression expr,
             Mutable<ILogicalOperator> topOpRef) throws AsterixException {
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION: {
@@ -1283,7 +1304,7 @@ class LangExpressionToPlanTranslator
         AbstractFunctionCallExpression f = createFunctionCallExpressionForBuiltinOperator(opLogical);
 
         for (int i = 0; i <= nOps; i++) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(exprs.get(i), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(exprs.get(i), topOp);
             topOp = p.second;
             // now look at the operator
             if (i < nOps) {

@@ -5,13 +5,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [word]
     :
-    Variable [ Name=tok ]
+    Variable [ Name=$tok ]
   )
   (
     LiteralExpr [STRING] [count]
     :
     FunctionCall twitter.count@1[
-      Variable [ Name=token ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=token
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
 ]
@@ -20,30 +31,46 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterData]
   ]
   AS
-  Variable [ Name=t ]
+  Variable [ Name=$t ]
 ,
   FunctionCall twitter.word-tokens@1[
     FieldAccessor [
-      Variable [ Name=t ]
+      Variable [ Name=$t ]
       Field=text
     ]
   ]
   AS
-  Variable [ Name=token ]
+  Variable [ Name=$token ]
 ]
 Groupby
-  Variable [ Name=tok ]
+  Variable [ Name=$tok ]
   :=
-  Variable [ Name=token ]
-  With
-  Variable [ Name=t ]
-  Variable [ Name=token ]
+  Variable [ Name=$token ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$token ]
+   AS token
+  Variable [ Name=$t ]
+   AS t
+  )
 
 Orderby
   FunctionCall twitter.count@1[
-    Variable [ Name=token ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=token
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS
+        Variable [ Name=#3 ]
+      ]
+    )
   ]
   DESC
-  Variable [ Name=tok ]
+  Variable [ Name=$tok ]
   ASC
 

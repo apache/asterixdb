@@ -1,27 +1,27 @@
 DataverseUse test
 Query:
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   LiteralExpr [STRING] [Nalini Venkatasubramanian]
-LetVariable [ Name=b ]
+Let Variable [ Name=$b ]
   :=
   LiteralExpr [STRING] [Nalini Wekatasupramanian]
-LetVariable [ Name=results ]
+Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
     FunctionCall test.edit-distance@2[
-      Variable [ Name=a ]
-      Variable [ Name=b ]
+      Variable [ Name=$a ]
+      Variable [ Name=$b ]
     ]
     FunctionCall test.edit-distance@2[
-      Variable [ Name=b ]
-      Variable [ Name=a ]
+      Variable [ Name=$b ]
+      Variable [ Name=$a ]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=results ]
+FROM [  Variable [ Name=$results ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

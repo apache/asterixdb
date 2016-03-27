@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [cust_name]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=name
     ]
   )
@@ -14,25 +14,25 @@ RecordConstructor [
     LiteralExpr [STRING] [order_total]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=total
     ]
   )
   (
     LiteralExpr [STRING] [orderedlist]
     :
-    Variable [ Name=ol ]
+    Variable [ Name=$ol ]
   )
   (
     LiteralExpr [STRING] [unorderedlist]
     :
-    Variable [ Name=ul ]
+    Variable [ Name=$ul ]
   )
   (
     LiteralExpr [STRING] [ol_item1]
     :
     IndexAccessor [
-      Variable [ Name=ol ]
+      Variable [ Name=$ol ]
       Index:       LiteralExpr [LONG] [0]
     ]
   )
@@ -40,7 +40,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ol_item2]
     :
     IndexAccessor [
-      Variable [ Name=ol ]
+      Variable [ Name=$ol ]
       Index:       LiteralExpr [LONG] [1]
     ]
   )
@@ -48,7 +48,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ol_item5]
     :
     IndexAccessor [
-      Variable [ Name=ol ]
+      Variable [ Name=$ol ]
       Index:       LiteralExpr [LONG] [4]
     ]
   )
@@ -56,7 +56,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ul_item1]
     :
     IndexAccessor [
-      Variable [ Name=ul ]
+      Variable [ Name=$ul ]
       Index: ANY
     ]
   )
@@ -66,72 +66,72 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=rec ]
+Let Variable [ Name=$rec ]
   :=
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=lastorder
   ]
-LetVariable [ Name=ol ]
+Let Variable [ Name=$ol ]
   :=
   OrderedListConstructor [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=oid
     ]
     FieldAccessor [
-      Variable [ Name=rec ]
+      Variable [ Name=$rec ]
       Field=oid
     ]
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
   ]
-LetVariable [ Name=ul ]
+Let Variable [ Name=$ul ]
   :=
   UnorderedListConstructor [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=oid
     ]
     FieldAccessor [
-      Variable [ Name=rec ]
+      Variable [ Name=$rec ]
       Field=oid
     ]
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
   ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     =
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=name
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=total
   ]
   ASC

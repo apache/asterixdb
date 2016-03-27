@@ -1,20 +1,20 @@
 DataverseUse TinySocial
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=user
         ]
         Field=name
@@ -26,7 +26,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=user
         ]
         Field=statuses_count
@@ -37,7 +37,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=tweetid
   ]
   ASC

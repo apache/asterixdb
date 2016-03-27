@@ -9,12 +9,12 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_extendedprice
           ]
           *
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_discount
           ]
         ]
@@ -23,13 +23,13 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
         Where
           OperatorExpr [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_shipdate
               ]
               >=
@@ -38,7 +38,7 @@ RecordConstructor [
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_shipdate
               ]
               <
@@ -47,7 +47,7 @@ RecordConstructor [
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_discount
               ]
               >=
@@ -56,7 +56,7 @@ RecordConstructor [
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_discount
               ]
               <=
@@ -65,7 +65,7 @@ RecordConstructor [
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=l ]
+                Variable [ Name=$l ]
                 Field=l_quantity
               ]
               <

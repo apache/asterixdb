@@ -7,7 +7,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=nested
       ]
       Field=o_orderkey
@@ -18,7 +18,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=nested
       ]
       Field=o_custkey
@@ -29,7 +29,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=nested
       ]
       Field=o_orderstatus
@@ -40,7 +40,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=nested
       ]
       Field=o_orderkey
@@ -51,7 +51,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=nested
       ]
       Field=o_custkey
@@ -62,7 +62,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o2 ]
+        Variable [ Name=$o2 ]
         Field=nested
       ]
       Field=o_orderstatus
@@ -74,20 +74,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o2 ]
+  Variable [ Name=$o2 ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=o_custkey
@@ -99,7 +99,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o2 ]
+          Variable [ Name=$o2 ]
           Field=nested
         ]
         Field=o_custkey
@@ -111,7 +111,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=o_orderstatus
@@ -119,7 +119,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o2 ]
+          Variable [ Name=$o2 ]
           Field=nested
         ]
         Field=o_orderstatus
@@ -129,7 +129,7 @@ Where
 Orderby
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=nested
     ]
     Field=o_orderkey
@@ -137,7 +137,7 @@ Orderby
   ASC
   FieldAccessor [
     FieldAccessor [
-      Variable [ Name=o2 ]
+      Variable [ Name=$o2 ]
       Field=nested
     ]
     Field=o_orderkey

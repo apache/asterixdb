@@ -3,14 +3,14 @@ SELECT ELEMENT [
 IfExpr [
   Condition:
     OperatorExpr [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       >
-      Variable [ Name=j ]
+      Variable [ Name=$j ]
     ]
   Then:
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
   Else:
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
 ]
 ]
 FROM [  OrderedListConstructor [
@@ -20,7 +20,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [40]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ,
   UnorderedListConstructor [
     LiteralExpr [LONG] [4]
@@ -28,5 +28,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [6]
   ]
   AS
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]

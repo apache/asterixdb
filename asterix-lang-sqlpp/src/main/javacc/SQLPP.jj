@@ -141,6 +141,7 @@ import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -757,14 +758,12 @@ List<VarIdentifier> ParameterList() throws ParseException:
 {
   <LEFTPAREN> (<IDENTIFIER>
     {
-      var = new VarIdentifier();
-      var.setValue(token.image);
+      var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
       paramList.add(var);
     }
   (<COMMA> <IDENTIFIER>
     {
-      var = new VarIdentifier();
-      var.setValue(token.image);
+      var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
       paramList.add(var);
     }
   )*)? <RIGHTPAREN>
@@ -1598,7 +1597,7 @@ Expression OperatorExpr()throws ParseException:
           op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+      op.addOperator(token.image.toLowerCase());
     }
 
     operand = AndExpr()
@@ -1629,7 +1628,7 @@ Expression AndExpr()throws ParseException:
           op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+      op.addOperator(token.image.toLowerCase());
     }
 
     operand = RelExpr()
@@ -1925,17 +1924,18 @@ VariableExpr VariableRef() throws ParseException:
     { String id = null; }
     (<IDENTIFIER> { id = token.image; } | id = QuotedString())
     {
+     id = SqlppVariableUtil.toInternalVariableName(id); // Prefix user-defined variables with "$"
      Identifier ident = lookupSymbol(id);
      if (isInForbiddenScopes(id)) {
        throw new ParseException("Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
      }
      if(ident != null) { // exist such ident
-       varExp.setIsNewVar(false);
        varExp.setVar((VarIdentifier)ident);
      } else {
        varExp.setVar(var);
+       varExp.setIsNewVar(false);
+       var.setValue(id);
      }
-     var.setValue(id);
      return varExp;
     }
 }
@@ -1950,6 +1950,7 @@ VariableExpr Variable() throws ParseException:
     { String id = null; }
     (<IDENTIFIER> { id = token.image; } | id = QuotedString())
     {
+     id = SqlppVariableUtil.toInternalVariableName(id); // prefix user-defined variables with "$".
      Identifier ident = lookupSymbol(id);
      if(ident != null) { // exist such ident
        varExp.setIsNewVar(false);
@@ -2498,6 +2499,9 @@ GroupbyClause GroupbyClause()throws ParseException :
     Expression expr = null;
     VariableExpr decorVar = null;
     Expression decorExpr = null;
+
+    VariableExpr groupVar = null;
+    List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<Pair<Expression, Identifier>>();
 }
 {
       {
@@ -2531,10 +2535,32 @@ GroupbyClause GroupbyClause()throws ParseException :
          }
         )*
     )
+    (<GROUP> <AS> groupVar = Variable()
+      ( LOOKAHEAD(1)
+        {
+            VariableExpr fieldVarExpr = null;
+            String fieldIdentifierStr = null;
+        }
+        <LEFTPAREN>
+               fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
+               {
+                   groupFieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
+               }
+        (<COMMA>
+               fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
+               {
+                   groupFieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
+               }
+        )*
+        <RIGHTPAREN>
+      )?
+    )?
     {
       gbc.setGbyPairList(vePairList);
       gbc.setDecorPairList(new ArrayList<GbyVariableExpressionPair>());
       gbc.setWithVarList(new ArrayList<VariableExpr>());
+      gbc.setGroupVar(groupVar);
+      gbc.setGroupFieldList(groupFieldList);
       replaceCurrentScope(newScope);
       return gbc;
     }

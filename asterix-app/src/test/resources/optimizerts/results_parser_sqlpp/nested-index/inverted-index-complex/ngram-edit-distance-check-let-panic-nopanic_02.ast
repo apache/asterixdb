@@ -17,20 +17,20 @@ DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
 WriteOutputTo asterix_nc1:rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=o ]
+Variable [ Name=$o ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=edb ]
+Let Variable [ Name=$edb ]
   :=
   FunctionCall test.edit-distance-check@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=nested
       ]
       Field=authors
@@ -38,12 +38,12 @@ LetVariable [ Name=edb ]
     LiteralExpr [STRING] [Amihay Motro]
     LiteralExpr [LONG] [5]
   ]
-LetVariable [ Name=eda ]
+Let Variable [ Name=$eda ]
   :=
   FunctionCall test.edit-distance-check@3[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=nested
       ]
       Field=authors
@@ -54,12 +54,12 @@ LetVariable [ Name=eda ]
 Where
   OperatorExpr [
     IndexAccessor [
-      Variable [ Name=edb ]
+      Variable [ Name=$edb ]
       Index:       LiteralExpr [LONG] [0]
     ]
     and
     IndexAccessor [
-      Variable [ Name=eda ]
+      Variable [ Name=$eda ]
       Index:       LiteralExpr [LONG] [0]
     ]
   ]

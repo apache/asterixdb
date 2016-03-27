@@ -12,7 +12,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [gid]
     :
-    Variable [ Name=aid ]
+    Variable [ Name=$aid ]
   )
   (
     LiteralExpr [STRING] [avg]
@@ -21,19 +21,19 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=j ]
+          Variable [ Name=$j ]
           Field=value
         ]
         ]
-        FROM [          Variable [ Name=i ]
+        FROM [          Variable [ Name=$i ]
           AS
-          Variable [ Name=j ]
+          Variable [ Name=$j ]
         ]
         Where
           FunctionCall test.not@1[
             FunctionCall test.is-null@1[
               FieldAccessor [
-                Variable [ Name=j ]
+                Variable [ Name=$j ]
                 Field=value
               ]
             ]
@@ -47,15 +47,19 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [test]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=aid ]
+  Variable [ Name=$aid ]
   :=
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=key1
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 

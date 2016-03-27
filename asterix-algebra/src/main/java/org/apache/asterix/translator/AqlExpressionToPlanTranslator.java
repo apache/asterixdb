@@ -77,7 +77,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             throws AsterixException {
         LogicalVariable v = context.newVar(fc.getVarExpr());
         Expression inExpr = fc.getInExpr();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(inExpr, tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(inExpr, tupSource);
         ILogicalOperator returnedOp;
 
         if (fc.getPosVarExpr() == null) {
@@ -152,7 +152,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
         List<Mutable<ILogicalExpression>> exprList = new ArrayList<Mutable<ILogicalExpression>>();
         Mutable<ILogicalOperator> input = null;
         for (Expression expr : dc.getDistinctByExpr()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(expr, tupSource);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(expr, tupSource);
             exprList.add(new MutableObject<ILogicalExpression>(p.first));
             input = p.second;
         }

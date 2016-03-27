@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [DOUBLE] [0.8]
@@ -10,11 +10,11 @@ FROM [  OrderedListConstructor [
     LiteralExpr [DOUBLE] [0.901]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Where
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     >=
     LiteralExpr [DOUBLE] [0.9]
   ]

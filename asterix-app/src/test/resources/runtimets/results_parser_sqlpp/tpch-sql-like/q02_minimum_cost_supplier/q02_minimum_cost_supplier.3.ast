@@ -7,7 +7,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [s_acctbal]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=s_acctbal
         ]
       )
@@ -15,7 +15,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [s_name]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=s_name
         ]
       )
@@ -23,7 +23,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [n_name]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=n_name
         ]
       )
@@ -31,7 +31,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [p_partkey]
         :
         FieldAccessor [
-          Variable [ Name=p ]
+          Variable [ Name=$p ]
           Field=p_partkey
         ]
       )
@@ -39,7 +39,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [ps_supplycost]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=ps_supplycost
         ]
       )
@@ -47,7 +47,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [p_mfgr]
         :
         FieldAccessor [
-          Variable [ Name=p ]
+          Variable [ Name=$p ]
           Field=p_mfgr
         ]
       )
@@ -55,7 +55,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [s_address]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=s_address
         ]
       )
@@ -63,7 +63,7 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [s_phone]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=s_phone
         ]
       )
@@ -71,15 +71,15 @@ FunctionDecl tmp1([]) {
         LiteralExpr [STRING] [s_comment]
         :
         FieldAccessor [
-          Variable [ Name=pssrn ]
+          Variable [ Name=$pssrn ]
           Field=s_comment
         ]
       )
     ]
     ]
-    FROM [      Variable [ Name=Part ]
+    FROM [      Variable [ Name=$Part ]
       AS
-      Variable [ Name=p ]
+      Variable [ Name=$p ]
 ,
       (
         SELECT ELEMENT [
@@ -88,7 +88,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [n_name]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=n_name
             ]
           )
@@ -96,7 +96,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [p_partkey]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_partkey
             ]
           )
@@ -104,7 +104,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [ps_supplycost]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_supplycost
             ]
           )
@@ -112,7 +112,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [s_name]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_name
             ]
           )
@@ -120,7 +120,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [s_acctbal]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_acctbal
             ]
           )
@@ -128,7 +128,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [s_address]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_address
             ]
           )
@@ -136,7 +136,7 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [s_phone]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_phone
             ]
           )
@@ -144,15 +144,15 @@ FunctionDecl tmp1([]) {
             LiteralExpr [STRING] [s_comment]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_comment
             ]
           )
         ]
         ]
-        FROM [          Variable [ Name=Partsupp ]
+        FROM [          Variable [ Name=$Partsupp ]
           AS
-          Variable [ Name=ps ]
+          Variable [ Name=$ps ]
 ,
           (
             SELECT ELEMENT [
@@ -161,7 +161,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_suppkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_suppkey
                 ]
               )
@@ -169,7 +169,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [n_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=rn ]
+                  Variable [ Name=$rn ]
                   Field=n_name
                 ]
               )
@@ -177,7 +177,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_name
                 ]
               )
@@ -185,7 +185,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_acctbal]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_acctbal
                 ]
               )
@@ -193,7 +193,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_address]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_address
                 ]
               )
@@ -201,7 +201,7 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_phone]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_phone
                 ]
               )
@@ -209,15 +209,15 @@ FunctionDecl tmp1([]) {
                 LiteralExpr [STRING] [s_comment]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_comment
                 ]
               )
             ]
             ]
-            FROM [              Variable [ Name=Supplier ]
+            FROM [              Variable [ Name=$Supplier ]
               AS
-              Variable [ Name=s ]
+              Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -226,7 +226,7 @@ FunctionDecl tmp1([]) {
                     LiteralExpr [STRING] [n_nationkey]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_nationkey
                     ]
                   )
@@ -234,37 +234,37 @@ FunctionDecl tmp1([]) {
                     LiteralExpr [STRING] [n_name]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_name
                     ]
                   )
                 ]
                 ]
-                FROM [                  Variable [ Name=Region ]
+                FROM [                  Variable [ Name=$Region ]
                   AS
-                  Variable [ Name=r ]
+                  Variable [ Name=$r ]
 ,
-                  Variable [ Name=Nation ]
+                  Variable [ Name=$Nation ]
                   AS
-                  Variable [ Name=n ]
+                  Variable [ Name=$n ]
                 ]
                 Where
                   OperatorExpr [
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=n ]
+                        Variable [ Name=$n ]
                         Field=n_regionkey
                       ]
                       =
                       FieldAccessor [
-                        Variable [ Name=r ]
+                        Variable [ Name=$r ]
                         Field=r_regionkey
                       ]
                     ]
                     and
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=r ]
+                        Variable [ Name=$r ]
                         Field=r_name
                       ]
                       =
@@ -273,57 +273,57 @@ FunctionDecl tmp1([]) {
                   ]
               )
               AS
-              Variable [ Name=rn ]
+              Variable [ Name=$rn ]
             ]
             Where
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_nationkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=rn ]
+                  Variable [ Name=$rn ]
                   Field=n_nationkey
                 ]
               ]
           )
           AS
-          Variable [ Name=srn ]
+          Variable [ Name=$srn ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_suppkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_suppkey
             ]
           ]
       )
       AS
-      Variable [ Name=pssrn ]
+      Variable [ Name=$pssrn ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=p ]
+            Variable [ Name=$p ]
             Field=p_partkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=pssrn ]
+            Variable [ Name=$pssrn ]
             Field=p_partkey
           ]
         ]
         and
         FunctionCall tpch.like@2[
           FieldAccessor [
-            Variable [ Name=p ]
+            Variable [ Name=$p ]
             Field=p_type
           ]
           LiteralExpr [STRING] [%BRASS]
@@ -339,7 +339,7 @@ FunctionDecl tmp2([]) {
       (
         LiteralExpr [STRING] [p_partkey]
         :
-        Variable [ Name=p_partkey ]
+        Variable [ Name=$p_partkey ]
       )
       (
         LiteralExpr [STRING] [ps_min_supplycost]
@@ -348,22 +348,22 @@ FunctionDecl tmp2([]) {
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=ps_supplycost
             ]
             ]
-            FROM [              Variable [ Name=pssrn ]
+            FROM [              Variable [ Name=$pssrn ]
               AS
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
             ]
           )
         ]
       )
     ]
     ]
-    FROM [      Variable [ Name=Part ]
+    FROM [      Variable [ Name=$Part ]
       AS
-      Variable [ Name=p ]
+      Variable [ Name=$p ]
 ,
       (
         SELECT ELEMENT [
@@ -372,7 +372,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [n_name]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=n_name
             ]
           )
@@ -380,7 +380,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [p_partkey]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_partkey
             ]
           )
@@ -388,7 +388,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [ps_supplycost]
             :
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_supplycost
             ]
           )
@@ -396,7 +396,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [s_name]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_name
             ]
           )
@@ -404,7 +404,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [s_acctbal]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_acctbal
             ]
           )
@@ -412,7 +412,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [s_address]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_address
             ]
           )
@@ -420,7 +420,7 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [s_phone]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_phone
             ]
           )
@@ -428,15 +428,15 @@ FunctionDecl tmp2([]) {
             LiteralExpr [STRING] [s_comment]
             :
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_comment
             ]
           )
         ]
         ]
-        FROM [          Variable [ Name=Partsupp ]
+        FROM [          Variable [ Name=$Partsupp ]
           AS
-          Variable [ Name=ps ]
+          Variable [ Name=$ps ]
 ,
           (
             SELECT ELEMENT [
@@ -445,7 +445,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_suppkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_suppkey
                 ]
               )
@@ -453,7 +453,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [n_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=rn ]
+                  Variable [ Name=$rn ]
                   Field=n_name
                 ]
               )
@@ -461,7 +461,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_name
                 ]
               )
@@ -469,7 +469,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_acctbal]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_acctbal
                 ]
               )
@@ -477,7 +477,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_address]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_address
                 ]
               )
@@ -485,7 +485,7 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_phone]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_phone
                 ]
               )
@@ -493,15 +493,15 @@ FunctionDecl tmp2([]) {
                 LiteralExpr [STRING] [s_comment]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_comment
                 ]
               )
             ]
             ]
-            FROM [              Variable [ Name=Supplier ]
+            FROM [              Variable [ Name=$Supplier ]
               AS
-              Variable [ Name=s ]
+              Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -510,7 +510,7 @@ FunctionDecl tmp2([]) {
                     LiteralExpr [STRING] [n_nationkey]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_nationkey
                     ]
                   )
@@ -518,37 +518,37 @@ FunctionDecl tmp2([]) {
                     LiteralExpr [STRING] [n_name]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_name
                     ]
                   )
                 ]
                 ]
-                FROM [                  Variable [ Name=Region ]
+                FROM [                  Variable [ Name=$Region ]
                   AS
-                  Variable [ Name=r ]
+                  Variable [ Name=$r ]
 ,
-                  Variable [ Name=Nation ]
+                  Variable [ Name=$Nation ]
                   AS
-                  Variable [ Name=n ]
+                  Variable [ Name=$n ]
                 ]
                 Where
                   OperatorExpr [
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=n ]
+                        Variable [ Name=$n ]
                         Field=n_regionkey
                       ]
                       =
                       FieldAccessor [
-                        Variable [ Name=r ]
+                        Variable [ Name=$r ]
                         Field=r_regionkey
                       ]
                     ]
                     and
                     OperatorExpr [
                       FieldAccessor [
-                        Variable [ Name=r ]
+                        Variable [ Name=$r ]
                         Field=r_name
                       ]
                       =
@@ -557,67 +557,67 @@ FunctionDecl tmp2([]) {
                   ]
               )
               AS
-              Variable [ Name=rn ]
+              Variable [ Name=$rn ]
             ]
             Where
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_nationkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=rn ]
+                  Variable [ Name=$rn ]
                   Field=n_nationkey
                 ]
               ]
           )
           AS
-          Variable [ Name=srn ]
+          Variable [ Name=$srn ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=srn ]
+              Variable [ Name=$srn ]
               Field=s_suppkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
               Field=ps_suppkey
             ]
           ]
       )
       AS
-      Variable [ Name=pssrn ]
+      Variable [ Name=$pssrn ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=p ]
+            Variable [ Name=$p ]
             Field=p_partkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=pssrn ]
+            Variable [ Name=$pssrn ]
             Field=p_partkey
           ]
         ]
         and
         FunctionCall tpch.like@2[
           FieldAccessor [
-            Variable [ Name=p ]
+            Variable [ Name=$p ]
             Field=p_type
           ]
           LiteralExpr [STRING] [%BRASS]
         ]
       ]
     Groupby
-      Variable [ Name=p_partkey ]
+      Variable [ Name=$p_partkey ]
       :=
       FieldAccessor [
-        Variable [ Name=pssrn ]
+        Variable [ Name=$pssrn ]
         Field=p_partkey
       ]
 
@@ -631,7 +631,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_acctbal]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=s_acctbal
     ]
   )
@@ -639,7 +639,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_name]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=s_name
     ]
   )
@@ -647,7 +647,7 @@ RecordConstructor [
     LiteralExpr [STRING] [n_name]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=n_name
     ]
   )
@@ -655,7 +655,7 @@ RecordConstructor [
     LiteralExpr [STRING] [p_partkey]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=p_partkey
     ]
   )
@@ -663,7 +663,7 @@ RecordConstructor [
     LiteralExpr [STRING] [p_mfgr]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=p_mfgr
     ]
   )
@@ -671,7 +671,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_address]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=s_address
     ]
   )
@@ -679,7 +679,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_phone]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=s_phone
     ]
   )
@@ -687,7 +687,7 @@ RecordConstructor [
     LiteralExpr [STRING] [s_comment]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=s_comment
     ]
   )
@@ -696,57 +696,57 @@ RecordConstructor [
 FROM [  FunctionCall tpch.tmp2@0[
   ]
   AS
-  Variable [ Name=t2 ]
+  Variable [ Name=$t2 ]
 ,
   FunctionCall tpch.tmp1@0[
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=p_partkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
         Field=p_partkey
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=ps_supplycost
       ]
       =
       FieldAccessor [
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
         Field=ps_min_supplycost
       ]
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=s_acctbal
   ]
   DESC
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=n_name
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=s_name
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=p_partkey
   ]
   ASC

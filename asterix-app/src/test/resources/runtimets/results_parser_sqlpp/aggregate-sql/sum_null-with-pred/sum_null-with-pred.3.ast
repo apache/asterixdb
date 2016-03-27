@@ -6,7 +6,7 @@ FunctionCall test.sql-sum@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=sal
     ]
     ]
@@ -14,13 +14,13 @@ FunctionCall test.sql-sum@1[
         LiteralExpr [STRING] [tdst]
       ]
       AS
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
     ]
     Where
       FunctionCall test.not@1[
         FunctionCall test.is-null@1[
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=sal
           ]
         ]

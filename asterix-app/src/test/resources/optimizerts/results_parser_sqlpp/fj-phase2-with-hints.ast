@@ -17,14 +17,14 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=paperDBLP ]
+      Variable [ Name=$paperDBLP ]
       Field=id
     ]
   )
   (
     LiteralExpr [STRING] [tokens]
     :
-    Variable [ Name=tokensDBLP ]
+    Variable [ Name=$tokensDBLP ]
   )
 ]
 ]
@@ -32,83 +32,101 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
   ]
   AS
-  Variable [ Name=paperDBLP ]
+  Variable [ Name=$paperDBLP ]
 ]
-LetVariable [ Name=unrankedTokensDBLP ]
+Let Variable [ Name=$unrankedTokensDBLP ]
   :=
   FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
     FieldAccessor [
-      Variable [ Name=paperDBLP ]
+      Variable [ Name=$paperDBLP ]
       Field=title
     ]
   ]
-LetVariable [ Name=tokensDBLP ]
+Let Variable [ Name=$tokensDBLP ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     ]
-    FROM [      Variable [ Name=unrankedTokensDBLP ]
+    FROM [      Variable [ Name=$unrankedTokensDBLP ]
       AS
-      Variable [ Name=token ]
+      Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
-        Variable [ Name=tokenGroupped ]
+        Variable [ Name=$tokenGroupped ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
           ]
           AS
-          Variable [ Name=paper ]
+          Variable [ Name=$paper ]
 ,
           FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
             FieldAccessor [
-              Variable [ Name=paper ]
+              Variable [ Name=$paper ]
               Field=title
             ]
           ]
           AS
-          Variable [ Name=token ]
+          Variable [ Name=$token ]
         ]
         Groupby
-          Variable [ Name=tokenGroupped ]
+          Variable [ Name=$tokenGroupped ]
           :=
-          Variable [ Name=token ]
-          With
-          Variable [ Name=paper ]
-          Variable [ Name=token ]
-          Variable [ Name=unrankedTokensDBLP ]
-          Variable [ Name=paperDBLP ]
+          Variable [ Name=$token ]
+          GROUP AS
+          Variable [ Name=#1 ]
+          (
+          Variable [ Name=$token ]
+           AS token
+          Variable [ Name=$paper ]
+           AS paper
+          Variable [ Name=$unrankedTokensDBLP ]
+           AS unrankedTokensDBLP
+          Variable [ Name=$paperDBLP ]
+           AS paperDBLP
+          )
 
         Orderby
           FunctionCall fuzzyjoin_078.count@1[
-            Variable [ Name=paper ]
+            (
+              SELECT ELEMENT [
+              FieldAccessor [
+                Variable [ Name=#2 ]
+                Field=paper
+              ]
+              ]
+              FROM [                Variable [ Name=#1 ]
+                AS
+                Variable [ Name=#2 ]
+              ]
+            )
           ]
           ASC
-          Variable [ Name=tokenGroupped ]
+          Variable [ Name=$tokenGroupped ]
           ASC
 
       )
       AS
-      Variable [ Name=tokenRanked ]
+      Variable [ Name=$tokenRanked ]
       AT
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=token ]
+        Variable [ Name=$token ]
         =
-        Variable [ Name=tokenRanked ]
+        Variable [ Name=$tokenRanked ]
       ]
     Orderby
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       ASC
 
   )
 Orderby
   FieldAccessor [
-    Variable [ Name=paperDBLP ]
+    Variable [ Name=$paperDBLP ]
     Field=id
   ]
   ASC

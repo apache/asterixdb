@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-LetVariable [ Name=grid ]
+Let Variable [ Name=$grid ]
   :=
   (
     SELECT ELEMENT [
@@ -8,12 +8,12 @@ LetVariable [ Name=grid ]
       (
         LiteralExpr [STRING] [cell]
         :
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
       )
       (
         LiteralExpr [STRING] [count]
         :
-        Variable [ Name=num ]
+        Variable [ Name=$num ]
       )
     ]
     ]
@@ -21,14 +21,14 @@ LetVariable [ Name=grid ]
         LiteralExpr [STRING] [MyData]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
     ]
     Groupby
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       :=
       FunctionCall test.spatial-cell@4[
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=loc
         ]
         FunctionCall test.create-point@2[
@@ -38,23 +38,38 @@ LetVariable [ Name=grid ]
         LiteralExpr [DOUBLE] [5.0]
         LiteralExpr [DOUBLE] [5.0]
       ]
-      With
-      Variable [ Name=o ]
+      GROUP AS
+      Variable [ Name=#1 ]
+      (
+      Variable [ Name=$o ]
+       AS o
+      )
 
-    LetVariable [ Name=num ]
+    Let Variable [ Name=$num ]
       :=
       FunctionCall test.count@1[
-        Variable [ Name=o ]
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            Variable [ Name=#2 ]
+            Field=o
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS
+            Variable [ Name=#2 ]
+          ]
+        )
       ]
     Orderby
-      Variable [ Name=num ]
+      Variable [ Name=$num ]
       ASC
 
   )
 SELECT ELEMENT [
-Variable [ Name=g ]
+Variable [ Name=$g ]
 ]
-FROM [  Variable [ Name=grid ]
+FROM [  Variable [ Name=$grid ]
   AS
-  Variable [ Name=g ]
+  Variable [ Name=$g ]
 ]

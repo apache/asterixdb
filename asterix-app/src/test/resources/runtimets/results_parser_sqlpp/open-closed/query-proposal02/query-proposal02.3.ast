@@ -5,13 +5,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [topic]
     :
-    Variable [ Name=topic ]
+    Variable [ Name=$topic ]
   )
   (
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=tweet ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=tweet
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
 ]
@@ -20,40 +31,45 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=tweet ]
+  Variable [ Name=$tweet ]
 ,
   FieldAccessor [
-    Variable [ Name=tweet ]
+    Variable [ Name=$tweet ]
     Field=referred-topics
   ]
   AS
-  Variable [ Name=reftopic ]
+  Variable [ Name=$reftopic ]
 ]
 Where
   QuantifiedExpression SOME [
-    [Variable [ Name=reftopic ]
+    [Variable [ Name=$reftopic ]
     In
       FieldAccessor [
-        Variable [ Name=tweet ]
+        Variable [ Name=$tweet ]
         Field=referred-topics
       ]
     ]
     Satifies [
       FunctionCall test.contains@2[
-        Variable [ Name=reftopic ]
+        Variable [ Name=$reftopic ]
         LiteralExpr [STRING] [verizon]
       ]
     ]
   ]
 Groupby
-  Variable [ Name=topic ]
+  Variable [ Name=$topic ]
   :=
-  Variable [ Name=reftopic ]
-  With
-  Variable [ Name=tweet ]
-  Variable [ Name=reftopic ]
+  Variable [ Name=$reftopic ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$reftopic ]
+   AS reftopic
+  Variable [ Name=$tweet ]
+   AS tweet
+  )
 
 Orderby
-  Variable [ Name=topic ]
+  Variable [ Name=$topic ]
   ASC
 

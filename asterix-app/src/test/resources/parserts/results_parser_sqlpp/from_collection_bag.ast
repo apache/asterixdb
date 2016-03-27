@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=x ]
+Variable [ Name=$x ]
 ]
 FROM [  UnorderedListConstructor [
     LiteralExpr [LONG] [10]
@@ -8,5 +8,5 @@ FROM [  UnorderedListConstructor [
     LiteralExpr [LONG] [30]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]

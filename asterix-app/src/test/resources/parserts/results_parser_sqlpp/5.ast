@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [collocated_evnets]
     :
-    Variable [ Name=collocated_events ]
+    Variable [ Name=$collocated_events ]
   )
 ]
 ]
@@ -12,9 +12,9 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Event]
   ]
   AS
-  Variable [ Name=event ]
+  Variable [ Name=$event ]
 ]
-LetVariable [ Name=collocated_events ]
+Let Variable [ Name=$collocated_events ]
   :=
   (
     SELECT ELEMENT [
@@ -23,7 +23,7 @@ LetVariable [ Name=collocated_events ]
         LiteralExpr [STRING] [event_name]
         :
         FieldAccessor [
-          Variable [ Name=collocated_event ]
+          Variable [ Name=$collocated_event ]
           Field=name
         ]
       )
@@ -33,14 +33,14 @@ LetVariable [ Name=collocated_events ]
         LiteralExpr [STRING] [Events]
       ]
       AS
-      Variable [ Name=collocated_event ]
+      Variable [ Name=$collocated_event ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=collocated_event ]
+              Variable [ Name=$collocated_event ]
               Field=location
             ]
             Field=street
@@ -48,7 +48,7 @@ LetVariable [ Name=collocated_events ]
           ~=
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=event ]
+              Variable [ Name=$event ]
               Field=location
             ]
             Field=street
@@ -58,7 +58,7 @@ LetVariable [ Name=collocated_events ]
         OperatorExpr [
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=collocated_event ]
+              Variable [ Name=$collocated_event ]
               Field=location
             ]
             Field=city
@@ -66,7 +66,7 @@ LetVariable [ Name=collocated_events ]
           =
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=event ]
+              Variable [ Name=$event ]
               Field=location
             ]
             Field=city
@@ -76,7 +76,7 @@ LetVariable [ Name=collocated_events ]
         OperatorExpr [
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=collocated_event ]
+              Variable [ Name=$collocated_event ]
               Field=location
             ]
             Field=state
@@ -84,7 +84,7 @@ LetVariable [ Name=collocated_events ]
           =
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=event ]
+              Variable [ Name=$event ]
               Field=location
             ]
             Field=state
@@ -94,7 +94,7 @@ LetVariable [ Name=collocated_events ]
         OperatorExpr [
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=collocated_event ]
+              Variable [ Name=$collocated_event ]
               Field=location
             ]
             Field=zip
@@ -102,7 +102,7 @@ LetVariable [ Name=collocated_events ]
           =
           FieldAccessor [
             FieldAccessor [
-              Variable [ Name=event ]
+              Variable [ Name=$event ]
               Field=location
             ]
             Field=zip
@@ -113,7 +113,7 @@ LetVariable [ Name=collocated_events ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=event ]
+      Variable [ Name=$event ]
       Field=name
     ]
     =

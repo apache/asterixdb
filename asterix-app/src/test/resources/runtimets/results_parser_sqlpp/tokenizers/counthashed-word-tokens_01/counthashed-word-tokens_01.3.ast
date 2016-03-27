@@ -1,18 +1,18 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-LetVariable [ Name=txt ]
+Let Variable [ Name=$txt ]
   :=
   LiteralExpr [STRING] [Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.]
-LetVariable [ Name=tokens ]
+Let Variable [ Name=$tokens ]
   :=
   FunctionCall test.counthashed-word-tokens@1[
-    Variable [ Name=txt ]
+    Variable [ Name=$txt ]
   ]
 SELECT ELEMENT [
-Variable [ Name=token ]
+Variable [ Name=$token ]
 ]
-FROM [  Variable [ Name=tokens ]
+FROM [  Variable [ Name=$tokens ]
   AS
-  Variable [ Name=token ]
+  Variable [ Name=$token ]
 ]

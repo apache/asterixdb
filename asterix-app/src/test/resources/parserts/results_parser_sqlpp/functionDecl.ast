@@ -1,16 +1,16 @@
-FunctionDecl add([a, b]) {
+FunctionDecl add([$a, $b]) {
   OperatorExpr [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     +
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   ]
 }
 
-FunctionDecl minus([a, b]) {
+FunctionDecl minus([$a, $b]) {
   OperatorExpr [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     -
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   ]
 }
 

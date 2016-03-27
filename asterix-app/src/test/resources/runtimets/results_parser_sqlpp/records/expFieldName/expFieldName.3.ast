@@ -3,7 +3,7 @@ Query:
 SELECT ELEMENT [
 RecordConstructor [
   (
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     :
     LiteralExpr [LONG] [1]
   )
@@ -14,5 +14,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [field2]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]

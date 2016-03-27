@@ -3,7 +3,7 @@ SELECT ELEMENT [
 FunctionCall null.count@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [LONG] [1]
@@ -11,11 +11,11 @@ FunctionCall null.count@1[
         LiteralExpr [LONG] [3]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=x ]
+        Variable [ Name=$x ]
         >
         LiteralExpr [LONG] [10]
       ]

@@ -35,12 +35,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
 ]
 ]
@@ -48,20 +48,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=title
@@ -69,7 +69,7 @@ Where
       =
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=title
@@ -79,7 +79,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=authors
@@ -87,7 +87,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=authors
@@ -97,7 +97,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=misc
@@ -105,7 +105,7 @@ Where
       >
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=misc

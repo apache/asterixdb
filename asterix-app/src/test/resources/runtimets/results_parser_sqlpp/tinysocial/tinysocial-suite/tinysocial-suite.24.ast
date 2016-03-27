@@ -2,18 +2,18 @@ DataverseUse TinySocial
 Query:
 SELECT [
 FieldAccessor [
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
   Field=name
 ]
 uname
 FieldAccessor [
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
   Field=alias
 ]
 alias
 FunctionCall TinySocial.substring@2[
   FieldAccessor [
-    Variable [ Name=message ]
+    Variable [ Name=$message ]
     Field=message
   ]
   LiteralExpr [LONG] [30]
@@ -24,31 +24,31 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS
-  Variable [ Name=message ]
+  Variable [ Name=$message ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=author-id
       ]
       =
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=id
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=in-response-to
       ]
       >=
@@ -57,7 +57,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=in-response-to
       ]
       <
@@ -66,18 +66,18 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=user ]
+    Variable [ Name=$user ]
     Field=name
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=user ]
+    Variable [ Name=$user ]
     Field=alias
   ]
   ASC
   FunctionCall TinySocial.substring@2[
     FieldAccessor [
-      Variable [ Name=message ]
+      Variable [ Name=$message ]
       Field=message
     ]
     LiteralExpr [LONG] [30]

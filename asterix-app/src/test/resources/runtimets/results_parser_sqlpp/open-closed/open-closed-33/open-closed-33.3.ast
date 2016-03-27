@@ -2,7 +2,7 @@ DataverseUse testdv2
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=d ]
+  Variable [ Name=$d ]
   Field=interests
 ]
 ]
@@ -10,20 +10,20 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds01]
   ]
   AS
-  Variable [ Name=d ]
+  Variable [ Name=$d ]
 ]
 Where
   QuantifiedExpression SOME [
-    [Variable [ Name=h ]
+    [Variable [ Name=$h ]
     In
       FieldAccessor [
-        Variable [ Name=d ]
+        Variable [ Name=$d ]
         Field=interests
       ]
     ]
     Satifies [
       OperatorExpr [
-        Variable [ Name=h ]
+        Variable [ Name=$h ]
         =
         LiteralExpr [STRING] [biking]
       ]
@@ -31,7 +31,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=d ]
+    Variable [ Name=$d ]
     Field=id
   ]
   ASC

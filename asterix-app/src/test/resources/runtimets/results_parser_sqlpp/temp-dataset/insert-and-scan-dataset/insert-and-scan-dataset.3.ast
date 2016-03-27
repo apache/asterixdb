@@ -1,17 +1,17 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [myData]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=id
   ]
   ASC

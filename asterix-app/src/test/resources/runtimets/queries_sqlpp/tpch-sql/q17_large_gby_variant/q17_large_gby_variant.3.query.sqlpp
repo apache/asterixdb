@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+SELECT l_partkey t_partkey,
+       count(l) t_count,
+       0.2 * avg(l.l_quantity) t_avg_quantity,
+       max(l.l_suppkey) t_max_suppkey,
+       max(l.l_linenumber) t_max_linenumber,
+       avg(l.l_extendedprice) t_avg_extendedprice,
+       avg(l.l_discount) t_avg_discount,
+       avg(l.l_tax) t_avg_tax,
+       max(l.l_shipdate) t_max_shipdate,
+       min(l.l_commitdate) t_min_commitdate,
+       min(l.l_receiptdate) t_min_receiptdate,
+       max(l.l_comment) t_max_comment
+FROM  LineItem AS l
+GROUP BY l.l_partkey AS l_partkey
+ORDER BY l_partkey
+;

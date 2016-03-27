@@ -21,7 +21,11 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import java.io.PrintWriter;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -39,6 +43,7 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
 
@@ -234,6 +239,32 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(HavingClause havingClause, Integer step) throws AsterixException {
         out.println(skip(step) + " HAVING");
         havingClause.getFilterExpression().accept(this, step + 1);
+        return null;
+    }
+
+    @Override
+    public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+        out.println(skip(step) + "Groupby");
+        for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
+            if (pair.getVar() != null) {
+                pair.getVar().accept(this, step + 1);
+                out.println(skip(step + 1) + ":=");
+            }
+            pair.getExpr().accept(this, step + 1);
+        }
+        if (gc.hasGroupVar()) {
+            out.println(skip(step + 1) + "GROUP AS");
+            gc.getGroupVar().accept(this, step + 1);
+            if (gc.hasGroupFieldList()) {
+                out.println(skip(step + 1) + "(");
+                for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
+                    field.first.accept(this, step + 1);
+                    out.println(skip(step + 1) + " AS " + field.second);
+                }
+                out.println(skip(step + 1) + ")");
+            }
+        }
+        out.println();
         return null;
     }
 

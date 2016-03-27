@@ -4,7 +4,7 @@ SELECT ELEMENT [
 RecordConstructor [
   (
     FieldAccessor [
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
       Field=fname
     ]
     :
@@ -23,5 +23,5 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]

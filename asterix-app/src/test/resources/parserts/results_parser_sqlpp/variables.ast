@@ -1,14 +1,14 @@
 Query:
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   LiteralExpr [LONG] [1]
-LetVariable [ Name=b ]
+Let Variable [ Name=$b ]
   :=
   LiteralExpr [LONG] [1]
 SELECT ELEMENT [
 OperatorExpr [
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
   -
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 ]

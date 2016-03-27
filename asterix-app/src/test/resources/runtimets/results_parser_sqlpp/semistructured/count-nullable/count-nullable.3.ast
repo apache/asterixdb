@@ -5,13 +5,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [custage]
     :
-    Variable [ Name=age ]
+    Variable [ Name=$age ]
   )
   (
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=c ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=c
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
 ]
@@ -20,19 +31,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Groupby
-  Variable [ Name=age ]
+  Variable [ Name=$age ]
   :=
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=age
   ]
-  With
-  Variable [ Name=c ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$c ]
+   AS c
+  )
 
 Orderby
-  Variable [ Name=age ]
+  Variable [ Name=$age ]
   ASC
 

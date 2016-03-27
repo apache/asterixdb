@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [a]
     :
     FieldAccessor [
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       Field=name
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [b]
     :
     FieldAccessor [
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       Field=name
     ]
   )
@@ -24,24 +24,24 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers2]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FunctionCall test.edit-distance@2[
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=name
         ]
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=name
         ]
       ]
@@ -51,24 +51,24 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=cid
       ]
       <
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=cid
       ]
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     Field=cid
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
     Field=cid
   ]
   ASC

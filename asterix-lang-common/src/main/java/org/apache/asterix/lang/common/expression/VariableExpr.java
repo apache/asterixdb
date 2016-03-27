@@ -74,11 +74,21 @@ public class VariableExpr implements Expression {
     }
 
     @Override
+    public int hashCode() {
+        return var.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof VariableExpr)) {
             return false;
         }
         VariableExpr expr = (VariableExpr) obj;
         return var.equals(expr.getVar());
+    }
+
+    @Override
+    public String toString() {
+        return var.getValue();
     }
 }

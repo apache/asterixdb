@@ -7,7 +7,7 @@ FunctionDecl q22_customer_tmp([]) {
         LiteralExpr [STRING] [c_acctbal]
         :
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_acctbal
         ]
       )
@@ -15,26 +15,26 @@ FunctionDecl q22_customer_tmp([]) {
         LiteralExpr [STRING] [c_custkey]
         :
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_custkey
         ]
       )
       (
         LiteralExpr [STRING] [cntrycode]
         :
-        Variable [ Name=phone_substr ]
+        Variable [ Name=$phone_substr ]
       )
     ]
     ]
-    FROM [      Variable [ Name=Customer ]
+    FROM [      Variable [ Name=$Customer ]
       AS
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
     ]
-    LetVariable [ Name=phone_substr ]
+    Let Variable [ Name=$phone_substr ]
       :=
       FunctionCall tpch.substring@3[
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_phone
         ]
         LiteralExpr [LONG] [1]
@@ -43,43 +43,43 @@ FunctionDecl q22_customer_tmp([]) {
     Where
       OperatorExpr [
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [13]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [31]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [23]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [29]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [30]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [18]
         ]
         or
         OperatorExpr [
-          Variable [ Name=phone_substr ]
+          Variable [ Name=$phone_substr ]
           =
           LiteralExpr [STRING] [17]
         ]
@@ -88,13 +88,13 @@ FunctionDecl q22_customer_tmp([]) {
 }
 
 Query:
-LetVariable [ Name=avg ]
+Let Variable [ Name=$avg ]
   :=
   FunctionCall tpch.avg@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_acctbal
       ]
       ]
@@ -102,13 +102,13 @@ LetVariable [ Name=avg ]
           LiteralExpr [STRING] [Customer]
         ]
         AS
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
       ]
-      LetVariable [ Name=phone_substr ]
+      Let Variable [ Name=$phone_substr ]
         :=
         FunctionCall tpch.substring@3[
           FieldAccessor [
-            Variable [ Name=c ]
+            Variable [ Name=$c ]
             Field=c_phone
           ]
           LiteralExpr [LONG] [1]
@@ -118,7 +118,7 @@ LetVariable [ Name=avg ]
         OperatorExpr [
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_acctbal
             ]
             >
@@ -127,43 +127,43 @@ LetVariable [ Name=avg ]
           and
           OperatorExpr [
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [13]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [31]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [23]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [29]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [30]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [18]
             ]
             or
             OperatorExpr [
-              Variable [ Name=phone_substr ]
+              Variable [ Name=$phone_substr ]
               =
               LiteralExpr [STRING] [17]
             ]
@@ -176,13 +176,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cntrycode]
     :
-    Variable [ Name=cntrycode ]
+    Variable [ Name=$cntrycode ]
   )
   (
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=ct ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=ct
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
   (
@@ -192,13 +203,13 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=c_acctbal
         ]
         ]
-        FROM [          Variable [ Name=ct ]
+        FROM [          Variable [ Name=$ct ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -208,30 +219,30 @@ RecordConstructor [
 FROM [  FunctionCall tpch.q22_customer_tmp@0[
   ]
   AS
-  Variable [ Name=ct ]
+  Variable [ Name=$ct ]
 ]
 Where
   OperatorExpr [
     FunctionCall tpch.count@1[
       (
         SELECT ELEMENT [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
           AS
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=ct ]
+              Variable [ Name=$ct ]
               Field=c_custkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
               Field=o_custkey
             ]
           ]
@@ -241,17 +252,22 @@ Where
     LiteralExpr [LONG] [0]
   ]
 Groupby
-  Variable [ Name=cntrycode ]
+  Variable [ Name=$cntrycode ]
   :=
   FieldAccessor [
-    Variable [ Name=ct ]
+    Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  With
-  Variable [ Name=ct ]
-  Variable [ Name=avg ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$ct ]
+   AS ct
+  Variable [ Name=$avg ]
+   AS avg
+  )
 
 Orderby
-  Variable [ Name=cntrycode ]
+  Variable [ Name=$cntrycode ]
   ASC
 

@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=x ]
+Variable [ Name=$x ]
 ]
 FROM [  OrderedListConstructor [
     OrderedListConstructor [
@@ -22,5 +22,5 @@ FROM [  OrderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ]

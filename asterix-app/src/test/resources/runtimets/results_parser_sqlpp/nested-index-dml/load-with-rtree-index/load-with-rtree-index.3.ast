@@ -1,19 +1,19 @@
 DataverseUse TinySocial
 Query:
 SELECT ELEMENT [
-Variable [ Name=c ]
+Variable [ Name=$c ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Where
   FunctionCall TinySocial.spatial-intersect@2[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=user
       ]
       Field=sender-location
@@ -31,7 +31,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=tweetid
   ]
   ASC

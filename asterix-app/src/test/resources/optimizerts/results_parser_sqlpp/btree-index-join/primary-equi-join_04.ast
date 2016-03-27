@@ -38,12 +38,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [customer]
     :
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
   )
   (
     LiteralExpr [STRING] [order]
     :
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
   )
 ]
 ]
@@ -51,23 +51,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
     =
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
   ]

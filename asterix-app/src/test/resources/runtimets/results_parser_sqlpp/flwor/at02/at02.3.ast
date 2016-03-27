@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [group]
     :
-    Variable [ Name=g ]
+    Variable [ Name=$g ]
   )
   (
     LiteralExpr [STRING] [item]
@@ -16,13 +16,13 @@ RecordConstructor [
         (
           LiteralExpr [STRING] [num]
           :
-          Variable [ Name=p ]
+          Variable [ Name=$p ]
         )
         (
           LiteralExpr [STRING] [mid]
           :
           FieldAccessor [
-            Variable [ Name=a ]
+            Variable [ Name=$a ]
             Field=message-id
           ]
         )
@@ -30,24 +30,24 @@ RecordConstructor [
       ]
       FROM [        (
           SELECT ELEMENT [
-          Variable [ Name=ii ]
+          Variable [ Name=$ii ]
           ]
-          FROM [            Variable [ Name=m ]
+          FROM [            Variable [ Name=$m ]
             AS
-            Variable [ Name=ii ]
+            Variable [ Name=$ii ]
           ]
           Orderby
             FieldAccessor [
-              Variable [ Name=ii ]
+              Variable [ Name=$ii ]
               Field=message-id
             ]
             ASC
 
         )
         AS
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         AT
-        Variable [ Name=p ]
+        Variable [ Name=$p ]
       ]
     )
   )
@@ -57,38 +57,43 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=u ]
+  Variable [ Name=$u ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS
-  Variable [ Name=m ]
+  Variable [ Name=$m ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=u ]
+      Variable [ Name=$u ]
       Field=id
     ]
     =
     FieldAccessor [
-      Variable [ Name=m ]
+      Variable [ Name=$m ]
       Field=author-id
     ]
   ]
 Groupby
-  Variable [ Name=g ]
+  Variable [ Name=$g ]
   :=
   FieldAccessor [
-    Variable [ Name=u ]
+    Variable [ Name=$u ]
     Field=id
   ]
-  With
-  Variable [ Name=u ]
-  Variable [ Name=m ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$m ]
+   AS m
+  Variable [ Name=$u ]
+   AS u
+  )
 
 Orderby
-  Variable [ Name=g ]
+  Variable [ Name=$g ]
   ASC
 

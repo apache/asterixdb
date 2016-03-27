@@ -1,0 +1,2 @@
+{ "job_category_details": [ { "category": "Cook", "bonus": 1000 } ], "deptId": "K55" }
+{ "job_category_details": [ { "category": "Teach", "bonus": 2000 } ], "deptId": "K54" }

@@ -3,7 +3,7 @@ SELECT ELEMENT [
 FunctionCall null.sql-min@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         FunctionCall null.float@1[
@@ -16,7 +16,7 @@ FunctionCall null.sql-min@1[
         ]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
   )
 ]

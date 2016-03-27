@@ -1,19 +1,19 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=m ]
+Variable [ Name=$m ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS
-  Variable [ Name=m ]
+  Variable [ Name=$m ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.contains@2[
       FieldAccessor [
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
         Field=message
       ]
       LiteralExpr [STRING] [love]
@@ -21,7 +21,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
         Field=send-time
       ]
       <
@@ -32,7 +32,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=m ]
+    Variable [ Name=$m ]
     Field=send-time
   ]
   ASC

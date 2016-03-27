@@ -8,7 +8,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=fbu ]
+      Variable [ Name=$fbu ]
       Field=id
     ]
   )
@@ -16,7 +16,7 @@ RecordConstructor [
     LiteralExpr [STRING] [name]
     :
     FieldAccessor [
-      Variable [ Name=fbu ]
+      Variable [ Name=$fbu ]
       Field=name
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
           LiteralExpr [STRING] [twitter-screenname]
           :
           FieldAccessor [
-            Variable [ Name=tu ]
+            Variable [ Name=$tu ]
             Field=screen-name
           ]
         )
@@ -38,7 +38,7 @@ RecordConstructor [
           LiteralExpr [STRING] [twitter-name]
           :
           FieldAccessor [
-            Variable [ Name=tu ]
+            Variable [ Name=$tu ]
             Field=name
           ]
         )
@@ -48,23 +48,23 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
       ]
-      LetVariable [ Name=tu ]
+      Let Variable [ Name=$tu ]
         :=
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=user
         ]
       Where
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=tu ]
+            Variable [ Name=$tu ]
             Field=name
           ]
           ~=
           FieldAccessor [
-            Variable [ Name=fbu ]
+            Variable [ Name=$fbu ]
             Field=name
           ]
         ]
@@ -76,11 +76,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=fbu ]
+  Variable [ Name=$fbu ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=fbu ]
+    Variable [ Name=$fbu ]
     Field=id
   ]
   ASC

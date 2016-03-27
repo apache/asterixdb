@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [uname]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=name
     ]
   )
@@ -16,7 +16,7 @@ RecordConstructor [
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
         Field=message
       ]
       ]
@@ -24,23 +24,23 @@ RecordConstructor [
           LiteralExpr [STRING] [FacebookMessages]
         ]
         AS
-        Variable [ Name=message ]
+        Variable [ Name=$message ]
       ]
       Where
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=message ]
+            Variable [ Name=$message ]
             Field=author-id
           ]
           =
           FieldAccessor [
-            Variable [ Name=user ]
+            Variable [ Name=$user ]
             Field=id
           ]
         ]
       Orderby
         FieldAccessor [
-          Variable [ Name=message ]
+          Variable [ Name=$message ]
           Field=message-id
         ]
         ASC
@@ -53,11 +53,11 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ]
 Orderby
   FieldAccessor [
-    Variable [ Name=user ]
+    Variable [ Name=$user ]
     Field=name
   ]
   ASC

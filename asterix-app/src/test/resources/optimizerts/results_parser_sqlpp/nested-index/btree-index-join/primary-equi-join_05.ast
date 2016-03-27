@@ -33,7 +33,7 @@ RecordConstructor [
     LiteralExpr [STRING] [customer1]
     :
     FieldAccessor [
-      Variable [ Name=c1 ]
+      Variable [ Name=$c1 ]
       Field=nested
     ]
   )
@@ -41,7 +41,7 @@ RecordConstructor [
     LiteralExpr [STRING] [customer2]
     :
     FieldAccessor [
-      Variable [ Name=c2 ]
+      Variable [ Name=$c2 ]
       Field=nested
     ]
   )
@@ -51,19 +51,19 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c1 ]
+  Variable [ Name=$c1 ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c2 ]
+  Variable [ Name=$c2 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c1 ]
+        Variable [ Name=$c1 ]
         Field=nested
       ]
       Field=cid
@@ -71,7 +71,7 @@ Where
     =
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=c2 ]
+        Variable [ Name=$c2 ]
         Field=nested
       ]
       Field=cid

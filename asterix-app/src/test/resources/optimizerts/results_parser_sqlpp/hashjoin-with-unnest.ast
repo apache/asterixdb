@@ -14,12 +14,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [t1]
     :
-    Variable [ Name=m ]
+    Variable [ Name=$m ]
   )
   (
     LiteralExpr [STRING] [t2]
     :
-    Variable [ Name=n ]
+    Variable [ Name=$n ]
   )
 ]
 ]
@@ -27,31 +27,31 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [t1]
   ]
   AS
-  Variable [ Name=m ]
+  Variable [ Name=$m ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [t2]
   ]
   AS
-  Variable [ Name=n ]
+  Variable [ Name=$n ]
 ,
   FieldAccessor [
-    Variable [ Name=m ]
+    Variable [ Name=$m ]
     Field=hobbies
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FieldAccessor [
-    Variable [ Name=n ]
+    Variable [ Name=$n ]
     Field=hobbies
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
     =
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   ]

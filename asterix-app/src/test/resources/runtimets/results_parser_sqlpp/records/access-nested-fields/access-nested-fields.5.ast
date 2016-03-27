@@ -1,15 +1,15 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-Variable [ Name=result ]
+Variable [ Name=$result ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Animals]
   ]
   AS
-  Variable [ Name=test ]
+  Variable [ Name=$test ]
 ]
-LetVariable [ Name=result ]
+Let Variable [ Name=$result ]
   :=
   FieldAccessor [
     FieldAccessor [
@@ -18,7 +18,7 @@ LetVariable [ Name=result ]
           FieldAccessor [
             FieldAccessor [
               FieldAccessor [
-                Variable [ Name=test ]
+                Variable [ Name=$test ]
                 Field=class
               ]
               Field=fullClassification
@@ -35,7 +35,7 @@ LetVariable [ Name=result ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=result ]
+    Variable [ Name=$result ]
     Field=id
   ]
   ASC

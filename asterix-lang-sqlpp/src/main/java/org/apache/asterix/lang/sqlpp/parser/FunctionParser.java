@@ -20,7 +20,6 @@
 package org.apache.asterix.lang.sqlpp.parser;
 
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -29,6 +28,7 @@ import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.metadata.entities.Function;
 
 public class FunctionParser {
@@ -42,16 +42,14 @@ public class FunctionParser {
     public FunctionDecl getFunctionDecl(Function function) throws AsterixException {
         String functionBody = function.getFunctionBody();
         List<String> params = function.getParams();
-        List<VarIdentifier> varIdentifiers = new ArrayList<VarIdentifier>();
 
         StringBuilder builder = new StringBuilder();
         builder.append(" use " + function.getDataverseName() + ";");
         builder.append(" declare function " + function.getName().split("@")[0]);
         builder.append("(");
         for (String param : params) {
-            VarIdentifier varId = new VarIdentifier(param);
-            varIdentifiers.add(varId);
-            builder.append(param);
+            VarIdentifier varId = SqlppVariableUtil.toUserDefinedVariableName(param);
+            builder.append(varId);
             builder.append(",");
         }
         if (params.size() > 0) {

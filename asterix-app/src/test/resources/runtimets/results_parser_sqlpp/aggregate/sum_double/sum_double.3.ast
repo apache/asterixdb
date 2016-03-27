@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FunctionCall test.sum@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
         LiteralExpr [DOUBLE] [1.0]
@@ -12,7 +12,7 @@ FunctionCall test.sum@1[
         LiteralExpr [DOUBLE] [3.0]
       ]
       AS
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
     ]
   )
 ]

@@ -5,19 +5,19 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [id]
     :
-    Variable [ Name=id ]
+    Variable [ Name=$id ]
   )
   (
     LiteralExpr [STRING] [length]
     :
     FunctionCall test.string-length@1[
-      Variable [ Name=comment ]
+      Variable [ Name=$comment ]
     ]
   )
   (
     LiteralExpr [STRING] [comment]
     :
-    Variable [ Name=comment ]
+    Variable [ Name=$comment ]
   )
 ]
 ]
@@ -25,31 +25,35 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Line]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=comment ]
+  Variable [ Name=$comment ]
   :=
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=l_comment
   ]
-  Variable [ Name=id ]
+  Variable [ Name=$id ]
   :=
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=l_orderkey
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 
 Orderby
-  Variable [ Name=id ]
+  Variable [ Name=$id ]
   ASC
   FunctionCall test.string-length@1[
-    Variable [ Name=comment ]
+    Variable [ Name=$comment ]
   ]
   ASC
-  Variable [ Name=comment ]
+  Variable [ Name=$comment ]
   ASC
 

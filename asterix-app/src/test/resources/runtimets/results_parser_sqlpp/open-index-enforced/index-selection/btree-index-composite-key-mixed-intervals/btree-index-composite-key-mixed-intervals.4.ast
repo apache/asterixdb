@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [fname]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=fname
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [lname]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=lname
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [age]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=age
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [dept]
     :
     FieldAccessor [
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
       Field=dept
     ]
   )
@@ -48,13 +48,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [employeeOpen]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=fname
       ]
       >
@@ -63,7 +63,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=lname
       ]
       >
@@ -72,7 +72,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=fname
       ]
       <=
@@ -81,7 +81,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=lname
       ]
       <
@@ -90,7 +90,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=id
   ]
   ASC

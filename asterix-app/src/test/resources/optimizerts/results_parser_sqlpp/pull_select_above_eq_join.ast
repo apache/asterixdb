@@ -27,7 +27,7 @@ RecordConstructor [
     LiteralExpr [STRING] [uid]
     :
     FieldAccessor [
-      Variable [ Name=user ]
+      Variable [ Name=$user ]
       Field=uid
     ]
   )
@@ -35,7 +35,7 @@ RecordConstructor [
     LiteralExpr [STRING] [vid]
     :
     FieldAccessor [
-      Variable [ Name=visitor ]
+      Variable [ Name=$visitor ]
       Field=vid
     ]
   )
@@ -45,36 +45,36 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Visitors]
   ]
   AS
-  Variable [ Name=visitor ]
+  Variable [ Name=$visitor ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=name
       ]
       =
       FieldAccessor [
-        Variable [ Name=visitor ]
+        Variable [ Name=$visitor ]
         Field=name
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=city
       ]
       !=
       FieldAccessor [
-        Variable [ Name=visitor ]
+        Variable [ Name=$visitor ]
         Field=city
       ]
     ]

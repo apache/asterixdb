@@ -8,7 +8,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=valplus
         ]
         ]
@@ -16,7 +16,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]
@@ -28,7 +28,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=valplus
         ]
         ]
@@ -36,7 +36,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]
@@ -48,7 +48,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=valplus
         ]
         ]
@@ -56,7 +56,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]
@@ -68,7 +68,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=valplus
         ]
         ]
@@ -76,7 +76,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]
@@ -88,7 +88,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
           Field=valplus
         ]
         ]
@@ -96,7 +96,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]

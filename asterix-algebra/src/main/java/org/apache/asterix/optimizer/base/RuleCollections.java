@@ -222,6 +222,7 @@ public final class RuleCollections {
         fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new RemoveRedundantSelectRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
+        fieldLoads.add(new NestedSubplanToJoinRule());
         fieldLoads.add(new InlineSubplanInputForNestedTupleSourceRule());
         return fieldLoads;
     }

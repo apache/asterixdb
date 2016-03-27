@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [user-since]
     :
-    Variable [ Name=fus ]
+    Variable [ Name=$fus ]
   )
   (
     LiteralExpr [STRING] [users]
@@ -16,13 +16,13 @@ RecordConstructor [
         (
           LiteralExpr [STRING] [num]
           :
-          Variable [ Name=ip ]
+          Variable [ Name=$ip ]
         )
         (
           LiteralExpr [STRING] [name]
           :
           FieldAccessor [
-            Variable [ Name=f ]
+            Variable [ Name=$f ]
             Field=name
           ]
         )
@@ -30,24 +30,24 @@ RecordConstructor [
       ]
       FROM [        (
           SELECT ELEMENT [
-          Variable [ Name=i1 ]
+          Variable [ Name=$i1 ]
           ]
-          FROM [            Variable [ Name=i ]
+          FROM [            Variable [ Name=$i ]
             AS
-            Variable [ Name=i1 ]
+            Variable [ Name=$i1 ]
           ]
           Orderby
             FieldAccessor [
-              Variable [ Name=i1 ]
+              Variable [ Name=$i1 ]
               Field=name
             ]
             ASC
 
         )
         AS
-        Variable [ Name=f ]
+        Variable [ Name=$f ]
         AT
-        Variable [ Name=ip ]
+        Variable [ Name=$ip ]
       ]
     )
   )
@@ -55,31 +55,35 @@ RecordConstructor [
 ]
 FROM [  (
     SELECT ELEMENT [
-    Variable [ Name=fb ]
+    Variable [ Name=$fb ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS
-      Variable [ Name=fb ]
+      Variable [ Name=$fb ]
     ]
   )
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=fus ]
+  Variable [ Name=$fus ]
   :=
   FunctionCall test.get-year@1[
     FieldAccessor [
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
       Field=user-since
     ]
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 
 Orderby
-  Variable [ Name=fus ]
+  Variable [ Name=$fus ]
   ASC
 

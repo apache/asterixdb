@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [date]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=dateField
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [time]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=timeField
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [datetime]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=datetimeField
     ]
   )
@@ -30,7 +30,7 @@ RecordConstructor [
     LiteralExpr [STRING] [duration]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=durationField
     ]
   )
@@ -38,7 +38,7 @@ RecordConstructor [
     LiteralExpr [STRING] [interval]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=intervalField
     ]
   )
@@ -46,7 +46,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ymduration]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=yearMonthDurationField
     ]
   )
@@ -54,7 +54,7 @@ RecordConstructor [
     LiteralExpr [STRING] [dtduration]
     :
     FieldAccessor [
-      Variable [ Name=r ]
+      Variable [ Name=$r ]
       Field=dayTimeDurationField
     ]
   )
@@ -64,5 +64,5 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS
-  Variable [ Name=r ]
+  Variable [ Name=$r ]
 ]

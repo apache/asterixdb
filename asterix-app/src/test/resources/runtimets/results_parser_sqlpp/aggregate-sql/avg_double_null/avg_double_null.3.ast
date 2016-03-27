@@ -8,7 +8,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
           Field=doubleField
         ]
         ]
@@ -16,7 +16,7 @@ RecordConstructor [
             LiteralExpr [STRING] [Numeric]
           ]
           AS
-          Variable [ Name=x ]
+          Variable [ Name=$x ]
         ]
       )
     ]

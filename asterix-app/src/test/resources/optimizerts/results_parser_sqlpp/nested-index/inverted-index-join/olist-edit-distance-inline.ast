@@ -38,7 +38,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=nested
       ]
       Field=interests
@@ -49,7 +49,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=nested
       ]
       Field=interests
@@ -58,7 +58,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ed]
     :
-    Variable [ Name=ed ]
+    Variable [ Name=$ed ]
   )
 ]
 ]
@@ -66,27 +66,27 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
-LetVariable [ Name=ed ]
+Let Variable [ Name=$ed ]
   :=
   FunctionCall test.edit-distance@2[
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=a ]
+        Variable [ Name=$a ]
         Field=nested
       ]
       Field=interests
     ]
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=b ]
+        Variable [ Name=$b ]
         Field=nested
       ]
       Field=interests
@@ -95,7 +95,7 @@ LetVariable [ Name=ed ]
 Where
   OperatorExpr [
     OperatorExpr [
-      Variable [ Name=ed ]
+      Variable [ Name=$ed ]
       <=
       LiteralExpr [LONG] [2]
     ]
@@ -103,7 +103,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=cid
@@ -111,7 +111,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=cid

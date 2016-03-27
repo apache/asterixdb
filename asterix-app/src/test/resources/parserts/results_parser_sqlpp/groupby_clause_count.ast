@@ -1,7 +1,18 @@
 Query:
 SELECT ELEMENT [
 FunctionCall null.count@1[
-  Variable [ Name=r ]
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#2 ]
+      Field=r
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS
+      Variable [ Name=#2 ]
+    ]
+  )
 ]
 ]
 FROM [  UnorderedListConstructor [
@@ -79,15 +90,19 @@ FROM [  UnorderedListConstructor [
     ]
   ]
   AS
-  Variable [ Name=r ]
+  Variable [ Name=$r ]
 ]
 Groupby
-  Variable [ Name=g ]
+  Variable [ Name=$g ]
   :=
   FieldAccessor [
-    Variable [ Name=r ]
+    Variable [ Name=$r ]
     Field=gas
   ]
-  With
-  Variable [ Name=r ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$r ]
+   AS r
+  )
 

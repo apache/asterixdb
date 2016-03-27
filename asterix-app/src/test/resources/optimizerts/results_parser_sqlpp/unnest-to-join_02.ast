@@ -3,7 +3,7 @@ WriteOutputTo asterix_nc1:rttest/unnest-to-join_02.adm
 Query:
 SELECT ELEMENT [
 QuantifiedExpression SOME [
-  [Variable [ Name=x ]
+  [Variable [ Name=$x ]
   In
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -14,7 +14,7 @@ QuantifiedExpression SOME [
       LiteralExpr [LONG] [6]
     ]
   ]
-  [Variable [ Name=y ]
+  [Variable [ Name=$y ]
   In
     OrderedListConstructor [
       LiteralExpr [LONG] [4]
@@ -27,9 +27,9 @@ QuantifiedExpression SOME [
   ]
   Satifies [
     OperatorExpr [
-      Variable [ Name=x ]
+      Variable [ Name=$x ]
       =
-      Variable [ Name=y ]
+      Variable [ Name=$y ]
     ]
   ]
 ]

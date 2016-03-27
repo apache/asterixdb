@@ -6,12 +6,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [dblp]
     :
-    Variable [ Name=dblp ]
+    Variable [ Name=$dblp ]
   )
   (
     LiteralExpr [STRING] [csx]
     :
-    Variable [ Name=csx ]
+    Variable [ Name=$csx ]
   )
 ]
 ]
@@ -19,38 +19,38 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=dblp ]
+  Variable [ Name=$dblp ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS
-  Variable [ Name=csx ]
+  Variable [ Name=$csx ]
 ]
 Where
   OperatorExpr [
     FunctionCall fuzzyjoin.word-tokens@1[
       FieldAccessor [
-        Variable [ Name=csx ]
+        Variable [ Name=$csx ]
         Field=title
       ]
     ]
     ~=
     FunctionCall fuzzyjoin.word-tokens@1[
       FieldAccessor [
-        Variable [ Name=dblp ]
+        Variable [ Name=$dblp ]
         Field=title
       ]
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=dblp ]
+    Variable [ Name=$dblp ]
     Field=id
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=csx ]
+    Variable [ Name=$csx ]
     Field=id
   ]
   ASC

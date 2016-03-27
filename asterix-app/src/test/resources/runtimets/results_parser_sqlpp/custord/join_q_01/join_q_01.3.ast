@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [cust_name]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=name
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [cust_age]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=age
     ]
   )
@@ -22,7 +22,7 @@ RecordConstructor [
     LiteralExpr [STRING] [order_total]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=total
     ]
   )
@@ -31,11 +31,11 @@ RecordConstructor [
     :
     OrderedListConstructor [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=oid
       ]
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=cid
       ]
     ]
@@ -46,34 +46,34 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     =
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=name
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
     Field=total
   ]
   ASC

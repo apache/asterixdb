@@ -19,7 +19,10 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -44,11 +47,11 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
-import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -65,11 +68,17 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 
 public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisitor<Void, Boolean> {
 
     private final ScopeChecker scopeChecker = new ScopeChecker();
+    private final LangRewritingContext context;
+
+    public InlineColumnAliasVisitor(LangRewritingContext context) {
+        this.context = context;
+    }
 
     @Override
     public Void visit(WhereClause whereClause, Boolean arg) throws AsterixException {
@@ -126,8 +135,16 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     @Override
     public Void visit(Projection projection, Boolean arg) throws AsterixException {
         projection.getExpression().accept(this, arg);
-        scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(
-                new VariableExpr(new VarIdentifier(projection.getName())), projection.getExpression());
+        VariableExpr columnAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));
+        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
+        Expression gbyKey = env.findSubstituion(columnAlias);
+        if (arg) {
+            scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias, projection.getExpression());
+        } else {
+            if (gbyKey != null) {
+                projection.setExpression(gbyKey);
+            }
+        }
         return null;
     }
 
@@ -135,7 +152,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     public Void visit(SelectBlock selectBlock, Boolean arg) throws AsterixException {
         // Traverses the select block in the order of "select", "group-by",
         // "group-by" lets and "having".
-        selectBlock.getSelectClause().accept(this, arg);
+        selectBlock.getSelectClause().accept(this, true);
 
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, arg);
@@ -156,6 +173,9 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         if (selectBlock.hasHavingClause()) {
             selectBlock.getHavingClause().accept(this, arg);
         }
+
+        // Visit select clause again to overwrite projection expressions if the group-by clause is rewritten.
+        selectBlock.getSelectClause().accept(this, false);
         return null;
     }
 
@@ -172,7 +192,12 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
 
     @Override
     public Void visit(SelectElement selectElement, Boolean arg) throws AsterixException {
-        selectElement.getExpression().accept(this, true);
+        Expression expr = selectElement.getExpression();
+        expr.accept(this, arg);
+        if (expr.getKind() == Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
+            // To be consistent with SelectRegular.
+            mapForRecordConstructor(arg, (RecordConstructor) expr);
+        }
         return null;
     }
 
@@ -251,15 +276,28 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     @Override
     public Void visit(GroupbyClause gc, Boolean arg) throws AsterixException {
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
+        Map<VariableExpr, VariableExpr> oldGbyExprsToNewGbyVarMap = new HashMap<>();
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            Expression newExpr = (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(gbyVarExpr.getExpr(),
+            Expression oldGbyExpr = gbyVarExpr.getExpr();
+            Expression newExpr = (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(oldGbyExpr,
                     env);
             newExpr.accept(this, arg);
             gbyVarExpr.setExpr(newExpr);
+            if (gbyVarExpr.getVar() == null) {
+                gbyVarExpr.setVar(new VariableExpr(context.newVariable()));
+            }
+            if (oldGbyExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
+                VariableExpr oldGbyVarExpr = (VariableExpr) oldGbyExpr;
+                if (env.findSubstituion(oldGbyVarExpr) != null) {
+                    // Re-mapping that needs to be added.
+                    oldGbyExprsToNewGbyVarMap.put(oldGbyVarExpr, gbyVarExpr.getVar());
+                }
+            }
         }
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            // A group-by variable will override the alias to substitute.
-            scopeChecker.getCurrentScope().removeSymbolExpressionMapping(gbyVarExpr.getVar());
+        for (Entry<VariableExpr, VariableExpr> entry : oldGbyExprsToNewGbyVarMap.entrySet()) {
+            // The group-by key variable will override the alias to substitute.
+            scopeChecker.getCurrentScope().removeSymbolExpressionMapping(entry.getKey());
+            scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(entry.getKey(), entry.getValue());
         }
         return null;
     }
@@ -310,19 +348,34 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     @Override
     public Void visit(RecordConstructor rc, Boolean rewrite) throws AsterixException {
         for (FieldBinding binding : rc.getFbList()) {
-            Expression leftExpr = binding.getLeftExpr();
-            leftExpr.accept(this, false);
+            binding.getLeftExpr().accept(this, false);
             binding.getRightExpr().accept(this, false);
-            if (rewrite && leftExpr.getKind() == Kind.LITERAL_EXPRESSION) {
+        }
+        return null;
+    }
+
+    private void mapForRecordConstructor(Boolean initPhase, RecordConstructor rc) {
+        for (FieldBinding binding : rc.getFbList()) {
+            Expression leftExpr = binding.getLeftExpr();
+            if (leftExpr.getKind() == Kind.LITERAL_EXPRESSION) {
                 LiteralExpr literalExpr = (LiteralExpr) leftExpr;
                 if (literalExpr.getValue().getLiteralType() == Literal.Type.STRING) {
                     String fieldName = literalExpr.getValue().getStringValue();
-                    scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(
-                            new VariableExpr(new VarIdentifier(fieldName)), binding.getRightExpr());
+                    VariableExpr columnAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(fieldName));
+                    VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope()
+                            .getVarSubstitutionEnvironment();
+                    if (initPhase) {
+                        scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias,
+                                binding.getRightExpr());
+                    } else {
+                        Expression gbyKey = env.findSubstituion(columnAlias);
+                        if (gbyKey != null) {
+                            binding.setRightExpr(gbyKey);
+                        }
+                    }
                 }
             }
         }
-        return null;
     }
 
     @Override

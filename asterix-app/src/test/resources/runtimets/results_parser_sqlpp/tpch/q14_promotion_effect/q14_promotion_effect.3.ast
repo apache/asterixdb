@@ -10,7 +10,7 @@ OperatorExpr [
       FunctionCall tpch.switch-case@5[
         FunctionCall tpch.like@2[
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=p_type
           ]
           LiteralExpr [STRING] [PROMO%]
@@ -18,7 +18,7 @@ OperatorExpr [
         LiteralExpr [TRUE]
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_extendedprice
           ]
           *
@@ -26,7 +26,7 @@ OperatorExpr [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_discount
             ]
           ]
@@ -35,9 +35,9 @@ OperatorExpr [
         LiteralExpr [DOUBLE] [0.0]
       ]
       ]
-      FROM [        Variable [ Name=l ]
+      FROM [        Variable [ Name=$lp ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
@@ -47,7 +47,7 @@ OperatorExpr [
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         *
@@ -55,15 +55,15 @@ OperatorExpr [
           LiteralExpr [LONG] [1]
           -
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_discount
           ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=l ]
+      FROM [        Variable [ Name=$lp ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
@@ -73,31 +73,59 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Part]
   ]
   AS
-  Variable [ Name=p ]
+  Variable [ Name=$p ]
 ]
+Let Variable [ Name=$lp ]
+  :=
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [p_type]
+      :
+      FieldAccessor [
+        Variable [ Name=$p ]
+        Field=p_type
+      ]
+    )
+    (
+      LiteralExpr [STRING] [l_extendedprice]
+      :
+      FieldAccessor [
+        Variable [ Name=$l ]
+        Field=l_extendedprice
+      ]
+    )
+    (
+      LiteralExpr [STRING] [l_discount]
+      :
+      FieldAccessor [
+        Variable [ Name=$l ]
+        Field=l_discount
+      ]
+    )
+  ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_partkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=p ]
+        Variable [ Name=$p ]
         Field=p_partkey
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_shipdate
       ]
       >=
@@ -106,7 +134,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_shipdate
       ]
       <
@@ -114,10 +142,17 @@ Where
     ]
   ]
 Groupby
-  Variable [ Name=t ]
+  Variable [ Name=$t ]
   :=
   LiteralExpr [LONG] [1]
-  With
-  Variable [ Name=p ]
-  Variable [ Name=l ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$lp ]
+   AS lp
+  Variable [ Name=$p ]
+   AS p
+  Variable [ Name=$l ]
+   AS l
+  )
 

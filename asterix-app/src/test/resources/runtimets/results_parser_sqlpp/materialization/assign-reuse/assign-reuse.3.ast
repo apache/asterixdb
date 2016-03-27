@@ -1,22 +1,22 @@
 DataverseUse TinySocial
 Query:
-LetVariable [ Name=lonelyusers ]
+Let Variable [ Name=$lonelyusers ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=d ]
+    Variable [ Name=$d ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS
-      Variable [ Name=d ]
+      Variable [ Name=$d ]
     ]
     Where
       OperatorExpr [
         FunctionCall TinySocial.count@1[
           FieldAccessor [
-            Variable [ Name=d ]
+            Variable [ Name=$d ]
             Field=friend-ids
           ]
         ]
@@ -24,23 +24,23 @@ LetVariable [ Name=lonelyusers ]
         LiteralExpr [LONG] [2]
       ]
   )
-LetVariable [ Name=lonelyusers2 ]
+Let Variable [ Name=$lonelyusers2 ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=d ]
+    Variable [ Name=$d ]
     ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS
-      Variable [ Name=d ]
+      Variable [ Name=$d ]
     ]
     Where
       OperatorExpr [
         FunctionCall TinySocial.count@1[
           FieldAccessor [
-            Variable [ Name=d ]
+            Variable [ Name=$d ]
             Field=friend-ids
           ]
         ]
@@ -58,7 +58,7 @@ RecordConstructor [
         LiteralExpr [STRING] [id]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=id
         ]
       )
@@ -66,7 +66,7 @@ RecordConstructor [
         LiteralExpr [STRING] [name]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=name
         ]
       )
@@ -80,7 +80,7 @@ RecordConstructor [
         LiteralExpr [STRING] [id]
         :
         FieldAccessor [
-          Variable [ Name=l2 ]
+          Variable [ Name=$l2 ]
           Field=id
         ]
       )
@@ -88,7 +88,7 @@ RecordConstructor [
         LiteralExpr [STRING] [name]
         :
         FieldAccessor [
-          Variable [ Name=l2 ]
+          Variable [ Name=$l2 ]
           Field=name
         ]
       )
@@ -96,34 +96,34 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  Variable [ Name=lonelyusers ]
+FROM [  Variable [ Name=$lonelyusers ]
   AS
-  Variable [ Name=l1 ]
+  Variable [ Name=$l1 ]
 ,
-  Variable [ Name=lonelyusers2 ]
+  Variable [ Name=$lonelyusers2 ]
   AS
-  Variable [ Name=l2 ]
+  Variable [ Name=$l2 ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=l1 ]
+      Variable [ Name=$l1 ]
       Field=id
     ]
     <
     FieldAccessor [
-      Variable [ Name=l2 ]
+      Variable [ Name=$l2 ]
       Field=id
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=l1 ]
+    Variable [ Name=$l1 ]
     Field=id
   ]
   ASC
   FieldAccessor [
-    Variable [ Name=l2 ]
+    Variable [ Name=$l2 ]
     Field=id
   ]
   ASC

@@ -7,13 +7,13 @@ RecordConstructor [
     FunctionCall test.sql-count@1[
       (
         SELECT ELEMENT [
-        Variable [ Name=t ]
+        Variable [ Name=$t ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
           AS
-          Variable [ Name=t ]
+          Variable [ Name=$t ]
         ]
       )
     ]
@@ -25,23 +25,23 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=val
         ]
         ]
         FROM [          (
             SELECT ELEMENT [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Test]
               ]
               AS
-              Variable [ Name=t ]
+              Variable [ Name=$t ]
             ]
           )
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -53,23 +53,23 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=val
         ]
         ]
         FROM [          (
             SELECT ELEMENT [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Test]
               ]
               AS
-              Variable [ Name=t ]
+              Variable [ Name=$t ]
             ]
           )
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -81,23 +81,23 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=valplus
         ]
         ]
         FROM [          (
             SELECT ELEMENT [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Test]
               ]
               AS
-              Variable [ Name=t ]
+              Variable [ Name=$t ]
             ]
           )
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -109,23 +109,23 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=valplus
         ]
         ]
         FROM [          (
             SELECT ELEMENT [
-            Variable [ Name=t ]
+            Variable [ Name=$t ]
             ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Test]
               ]
               AS
-              Variable [ Name=t ]
+              Variable [ Name=$t ]
             ]
           )
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]

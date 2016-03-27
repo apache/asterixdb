@@ -8,7 +8,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_quantity
         ]
         ]
@@ -16,7 +16,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
       )
     ]
@@ -27,12 +27,12 @@ RecordConstructor [
     FunctionCall tpch.sum@1[
       (
         SELECT ELEMENT [
-        Variable [ Name=e ]
+        Variable [ Name=$e ]
         ]
         FROM [          (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_extendedprice
             ]
             ]
@@ -40,11 +40,11 @@ RecordConstructor [
                 LiteralExpr [STRING] [LineItem]
               ]
               AS
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
             ]
           )
           AS
-          Variable [ Name=e ]
+          Variable [ Name=$e ]
         ]
       )
     ]

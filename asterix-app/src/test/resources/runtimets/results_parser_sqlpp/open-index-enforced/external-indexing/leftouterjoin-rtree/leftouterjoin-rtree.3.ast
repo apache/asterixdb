@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [tweetid1]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=tweetid
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [loc1]
     :
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=sender-location
     ]
   )
@@ -28,7 +28,7 @@ RecordConstructor [
           LiteralExpr [STRING] [tweetid2]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=tweetid
           ]
         )
@@ -36,7 +36,7 @@ RecordConstructor [
           LiteralExpr [STRING] [loc2]
           :
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=sender-location
           ]
         )
@@ -46,19 +46,19 @@ RecordConstructor [
           LiteralExpr [STRING] [TweetMessages]
         ]
         AS
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
       ]
       Where
         FunctionCall test.spatial-intersect@2[
           FieldAccessor [
-            Variable [ Name=t2 ]
+            Variable [ Name=$t2 ]
             Field=sender-location
           ]
-          Variable [ Name=n ]
+          Variable [ Name=$n ]
         ]
       Orderby
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=tweetid
         ]
         ASC
@@ -71,13 +71,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ]
-LetVariable [ Name=n ]
+Let Variable [ Name=$n ]
   :=
   FunctionCall test.create-circle@2[
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=sender-location
     ]
     LiteralExpr [DOUBLE] [0.5]
@@ -85,7 +85,7 @@ LetVariable [ Name=n ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=t1 ]
+      Variable [ Name=$t1 ]
       Field=tweetid
     ]
     <
@@ -95,7 +95,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=t1 ]
+    Variable [ Name=$t1 ]
     Field=tweetid
   ]
   ASC

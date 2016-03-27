@@ -3,11 +3,11 @@ Query:
 SELECT ELEMENT [
 OrderedListConstructor [
   FunctionCall test.contains@2[
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     LiteralExpr [STRING] [ofo]
   ]
   FunctionCall test.contains@2[
-    Variable [ Name=y ]
+    Variable [ Name=$y ]
     LiteralExpr [STRING] [ofo]
   ]
 ]
@@ -16,11 +16,11 @@ FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [foofoo]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ,
   OrderedListConstructor [
     LiteralExpr [STRING] [barbar]
   ]
   AS
-  Variable [ Name=y ]
+  Variable [ Name=$y ]
 ]

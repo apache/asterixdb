@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-LetVariable [ Name=i8 ]
+Let Variable [ Name=$i8 ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -16,7 +16,7 @@ LetVariable [ Name=i8 ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=i16 ]
+Let Variable [ Name=$i16 ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -32,7 +32,7 @@ LetVariable [ Name=i16 ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=i32 ]
+Let Variable [ Name=$i32 ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -48,7 +48,7 @@ LetVariable [ Name=i32 ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=i64 ]
+Let Variable [ Name=$i64 ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -64,7 +64,7 @@ LetVariable [ Name=i64 ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=f ]
+Let Variable [ Name=$f ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -80,7 +80,7 @@ LetVariable [ Name=f ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=d ]
+Let Variable [ Name=$d ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -96,7 +96,7 @@ LetVariable [ Name=d ]
       LiteralExpr [NULL]
     ]
   ]
-LetVariable [ Name=s ]
+Let Variable [ Name=$s ]
   :=
   FunctionCall test.sql-count@1[
     OrderedListConstructor [
@@ -107,17 +107,17 @@ LetVariable [ Name=s ]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
 FROM [  OrderedListConstructor [
-    Variable [ Name=i8 ]
-    Variable [ Name=i16 ]
-    Variable [ Name=i32 ]
-    Variable [ Name=i64 ]
-    Variable [ Name=f ]
-    Variable [ Name=d ]
-    Variable [ Name=s ]
+    Variable [ Name=$i8 ]
+    Variable [ Name=$i16 ]
+    Variable [ Name=$i32 ]
+    Variable [ Name=$i64 ]
+    Variable [ Name=$f ]
+    Variable [ Name=$d ]
+    Variable [ Name=$s ]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

@@ -54,12 +54,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cust]
     :
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
   )
   (
     LiteralExpr [STRING] [orders]
     :
-    Variable [ Name=orders ]
+    Variable [ Name=$orders ]
   )
 ]
 ]
@@ -67,9 +67,9 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=orders ]
+Let Variable [ Name=$orders ]
   :=
   (
     SELECT ELEMENT [
@@ -77,12 +77,12 @@ LetVariable [ Name=orders ]
       (
         LiteralExpr [STRING] [order]
         :
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
       )
       (
         LiteralExpr [STRING] [items]
         :
-        Variable [ Name=items ]
+        Variable [ Name=$items ]
       )
     ]
     ]
@@ -90,29 +90,29 @@ LetVariable [ Name=orders ]
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
     ]
-    LetVariable [ Name=items ]
+    Let Variable [ Name=$items ]
       :=
       (
         SELECT ELEMENT [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItems]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_orderkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
               Field=o_orderkey
             ]
           ]
@@ -120,12 +120,12 @@ LetVariable [ Name=orders ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_custkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_custkey
         ]
       ]

@@ -1,11 +1,11 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   OrderedListConstructor [
   ]
-LetVariable [ Name=b ]
+Let Variable [ Name=$b ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [abc]
@@ -14,7 +14,7 @@ LetVariable [ Name=b ]
     LiteralExpr [STRING] [def]
     LiteralExpr [STRING] [efg]
   ]
-LetVariable [ Name=c ]
+Let Variable [ Name=$c ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [abc]
@@ -25,7 +25,7 @@ LetVariable [ Name=c ]
     LiteralExpr [STRING] [hij]
     LiteralExpr [STRING] [ijk]
   ]
-LetVariable [ Name=d ]
+Let Variable [ Name=$d ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [abc]
@@ -39,7 +39,7 @@ LetVariable [ Name=d ]
     LiteralExpr [STRING] [ijk]
     LiteralExpr [STRING] [jkl]
   ]
-LetVariable [ Name=e ]
+Let Variable [ Name=$e ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [Abc]
@@ -50,7 +50,7 @@ LetVariable [ Name=e ]
     LiteralExpr [STRING] [HiJ]
     LiteralExpr [STRING] [IJK]
   ]
-LetVariable [ Name=f ]
+Let Variable [ Name=$f ]
   :=
   OrderedListConstructor [
     LiteralExpr [STRING] [abc]
@@ -64,74 +64,74 @@ LetVariable [ Name=f ]
     LiteralExpr [STRING] [ijk]
     LiteralExpr [STRING] [jkl]
   ]
-LetVariable [ Name=results ]
+Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=a ]
-      Variable [ Name=b ]
+      Variable [ Name=$a ]
+      Variable [ Name=$b ]
       LiteralExpr [FLOAT] [0.0]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=b ]
-      Variable [ Name=a ]
+      Variable [ Name=$b ]
+      Variable [ Name=$a ]
       LiteralExpr [FLOAT] [0.0]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=a ]
-      Variable [ Name=b ]
+      Variable [ Name=$a ]
+      Variable [ Name=$b ]
       LiteralExpr [FLOAT] [0.1]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=b ]
-      Variable [ Name=a ]
+      Variable [ Name=$b ]
+      Variable [ Name=$a ]
       LiteralExpr [FLOAT] [0.1]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=c ]
-      Variable [ Name=d ]
+      Variable [ Name=$c ]
+      Variable [ Name=$d ]
       LiteralExpr [FLOAT] [0.6]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=d ]
-      Variable [ Name=c ]
+      Variable [ Name=$d ]
+      Variable [ Name=$c ]
       LiteralExpr [FLOAT] [0.6]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=c ]
-      Variable [ Name=d ]
+      Variable [ Name=$c ]
+      Variable [ Name=$d ]
       LiteralExpr [FLOAT] [0.8]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=d ]
-      Variable [ Name=c ]
+      Variable [ Name=$d ]
+      Variable [ Name=$c ]
       LiteralExpr [FLOAT] [0.8]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=e ]
-      Variable [ Name=f ]
+      Variable [ Name=$e ]
+      Variable [ Name=$f ]
       LiteralExpr [FLOAT] [0.6]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=f ]
-      Variable [ Name=e ]
+      Variable [ Name=$f ]
+      Variable [ Name=$e ]
       LiteralExpr [FLOAT] [0.6]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=e ]
-      Variable [ Name=f ]
+      Variable [ Name=$e ]
+      Variable [ Name=$f ]
       LiteralExpr [FLOAT] [0.8]
     ]
     FunctionCall test.similarity-jaccard-sorted-check@3[
-      Variable [ Name=f ]
-      Variable [ Name=e ]
+      Variable [ Name=$f ]
+      Variable [ Name=$e ]
       LiteralExpr [FLOAT] [0.8]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=results ]
+FROM [  Variable [ Name=$results ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

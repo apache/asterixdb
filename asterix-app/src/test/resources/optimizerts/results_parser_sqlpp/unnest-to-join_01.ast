@@ -2,7 +2,7 @@ DataverseUse test
 WriteOutputTo asterix_nc1:rttest/unnest-to-join_01.adm
 Query:
 SELECT ELEMENT [
-Variable [ Name=y ]
+Variable [ Name=$y ]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]
@@ -13,7 +13,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [6]
   ]
   AS
-  Variable [ Name=x ]
+  Variable [ Name=$x ]
 ,
   OrderedListConstructor [
     LiteralExpr [LONG] [4]
@@ -24,11 +24,11 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [9]
   ]
   AS
-  Variable [ Name=y ]
+  Variable [ Name=$y ]
 ]
 Where
   OperatorExpr [
-    Variable [ Name=x ]
+    Variable [ Name=$x ]
     =
-    Variable [ Name=y ]
+    Variable [ Name=$y ]
   ]

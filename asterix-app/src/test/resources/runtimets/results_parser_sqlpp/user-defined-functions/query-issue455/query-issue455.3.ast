@@ -1,0 +1,6 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.printName@0[
+]
+]

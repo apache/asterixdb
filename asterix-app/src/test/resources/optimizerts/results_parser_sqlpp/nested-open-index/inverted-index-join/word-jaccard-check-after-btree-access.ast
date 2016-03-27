@@ -36,7 +36,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t1 ]
+        Variable [ Name=$t1 ]
         Field=nested
       ]
       Field=tweetid
@@ -47,7 +47,7 @@ RecordConstructor [
     :
     FieldAccessor [
       FieldAccessor [
-        Variable [ Name=t2 ]
+        Variable [ Name=$t2 ]
         Field=nested
       ]
       Field=tweetid
@@ -57,7 +57,7 @@ RecordConstructor [
     LiteralExpr [STRING] [sim]
     :
     IndexAccessor [
-      Variable [ Name=sim ]
+      Variable [ Name=$sim ]
       Index:       LiteralExpr [LONG] [1]
     ]
   )
@@ -67,21 +67,21 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t1 ]
+  Variable [ Name=$t1 ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS
-  Variable [ Name=t2 ]
+  Variable [ Name=$t2 ]
 ]
-LetVariable [ Name=sim ]
+Let Variable [ Name=$sim ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FunctionCall test.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
           Field=nested
         ]
         Field=message-text
@@ -90,7 +90,7 @@ LetVariable [ Name=sim ]
     FunctionCall test.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=nested
         ]
         Field=message-text
@@ -101,14 +101,14 @@ LetVariable [ Name=sim ]
 Where
   OperatorExpr [
     IndexAccessor [
-      Variable [ Name=sim ]
+      Variable [ Name=$sim ]
       Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
           Field=nested
         ]
         Field=tweetid
@@ -122,7 +122,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=t2 ]
+          Variable [ Name=$t2 ]
           Field=nested
         ]
         Field=tweetid
@@ -130,7 +130,7 @@ Where
       !=
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=t1 ]
+          Variable [ Name=$t1 ]
           Field=nested
         ]
         Field=tweetid

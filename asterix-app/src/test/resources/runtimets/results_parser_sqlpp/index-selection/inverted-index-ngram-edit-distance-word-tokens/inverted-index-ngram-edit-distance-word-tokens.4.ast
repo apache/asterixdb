@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [id]
     :
     FieldAccessor [
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [title]
     :
     FieldAccessor [
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
       Field=title
     ]
   )
@@ -24,21 +24,21 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=paper ]
+  Variable [ Name=$paper ]
 ,
   FunctionCall test.word-tokens@1[
     FieldAccessor [
-      Variable [ Name=paper ]
+      Variable [ Name=$paper ]
       Field=title
     ]
   ]
   AS
-  Variable [ Name=word ]
+  Variable [ Name=$word ]
 ]
 Where
   IndexAccessor [
     FunctionCall test.edit-distance-check@3[
-      Variable [ Name=word ]
+      Variable [ Name=$word ]
       LiteralExpr [STRING] [Multmedia]
       LiteralExpr [LONG] [1]
     ]
@@ -46,7 +46,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=paper ]
+    Variable [ Name=$paper ]
     Field=id
   ]
   ASC

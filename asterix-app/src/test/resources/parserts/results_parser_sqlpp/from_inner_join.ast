@@ -2,17 +2,17 @@ DataverseUse test
 Query:
 SELECT [
 FieldAccessor [
-  Variable [ Name=m ]
+  Variable [ Name=$m ]
   Field=sensor
 ]
 sensor
 FieldAccessor [
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
   Field=readings
 ]
 readings
 FieldAccessor [
-  Variable [ Name=m ]
+  Variable [ Name=$m ]
   Field=location
 ]
 location
@@ -21,22 +21,22 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [sensors]
   ]
   AS
-  Variable [ Name=s ]
+  Variable [ Name=$s ]
   INNER JOIN
     FunctionCall Metadata.dataset@1[
       LiteralExpr [STRING] [sensorMeta]
     ]
     AS
-    Variable [ Name=m ]
+    Variable [ Name=$m ]
     ON
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=s ]
+        Variable [ Name=$s ]
         Field=sensor
       ]
       =
       FieldAccessor [
-        Variable [ Name=m ]
+        Variable [ Name=$m ]
         Field=sensor
       ]
     ]

@@ -1,19 +1,19 @@
 DataverseUse TinySocial
 Query:
 SELECT ELEMENT [
-Variable [ Name=user ]
+Variable [ Name=$user ]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS
-  Variable [ Name=user ]
+  Variable [ Name=$user ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=user-since
       ]
       >=
@@ -24,7 +24,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=user ]
+        Variable [ Name=$user ]
         Field=user-since
       ]
       <=
@@ -35,7 +35,7 @@ Where
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=user ]
+    Variable [ Name=$user ]
     Field=id
   ]
   ASC

@@ -5,12 +5,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [partkey]
     :
-    Variable [ Name=partkey ]
+    Variable [ Name=$partkey ]
   )
   (
     LiteralExpr [STRING] [lines]
     :
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
   )
 ]
 ]
@@ -18,19 +18,23 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Line]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=partkey ]
+  Variable [ Name=$partkey ]
   :=
   FieldAccessor [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     Field=l_partkey
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 
 Orderby
-  Variable [ Name=partkey ]
+  Variable [ Name=$partkey ]
   ASC
 

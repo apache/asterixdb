@@ -3,7 +3,7 @@ Set import-private-functions=true
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
   Field=nested
 ]
 ]
@@ -11,15 +11,15 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
-LetVariable [ Name=jacc ]
+Let Variable [ Name=$jacc ]
   :=
   FunctionCall test.similarity-jaccard-check@3[
     FunctionCall test.gram-tokens@3[
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=nested
         ]
         Field=title
@@ -36,6 +36,6 @@ LetVariable [ Name=jacc ]
   ]
 Where
   IndexAccessor [
-    Variable [ Name=jacc ]
+    Variable [ Name=$jacc ]
     Index:     LiteralExpr [LONG] [0]
   ]

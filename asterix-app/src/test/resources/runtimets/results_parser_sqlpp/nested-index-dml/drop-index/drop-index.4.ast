@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 FieldAccessor [
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
   Field=nested
 ]
 ]
@@ -10,14 +10,14 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [t1]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=unique1
@@ -29,7 +29,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=stringu1

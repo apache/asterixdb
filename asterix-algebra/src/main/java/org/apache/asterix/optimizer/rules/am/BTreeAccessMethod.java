@@ -475,7 +475,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             AssignOperator assignConstantSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
             assignConstantSearchKeys.getInputs().add(new MutableObject<ILogicalOperator>(
-                    OperatorManipulationUtil.deepCopyWithExcutionMode(dataSourceOp.getInputs().get(0).getValue())));
+                    OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignConstantSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
             inputOp = assignConstantSearchKeys;
         } else {

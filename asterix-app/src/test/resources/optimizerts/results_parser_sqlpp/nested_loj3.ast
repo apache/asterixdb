@@ -64,12 +64,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cust]
     :
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
   )
   (
     LiteralExpr [STRING] [orders]
     :
-    Variable [ Name=orders ]
+    Variable [ Name=$orders ]
   )
 ]
 ]
@@ -77,9 +77,9 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ]
-LetVariable [ Name=orders ]
+Let Variable [ Name=$orders ]
   :=
   (
     SELECT ELEMENT [
@@ -87,12 +87,12 @@ LetVariable [ Name=orders ]
       (
         LiteralExpr [STRING] [order]
         :
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
       )
       (
         LiteralExpr [STRING] [items]
         :
-        Variable [ Name=items ]
+        Variable [ Name=$items ]
       )
     ]
     ]
@@ -100,9 +100,9 @@ LetVariable [ Name=orders ]
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
     ]
-    LetVariable [ Name=items ]
+    Let Variable [ Name=$items ]
       :=
       (
         SELECT ELEMENT [
@@ -110,12 +110,12 @@ LetVariable [ Name=orders ]
           (
             LiteralExpr [STRING] [item]
             :
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
           )
           (
             LiteralExpr [STRING] [part_supplier]
             :
-            Variable [ Name=partsupp ]
+            Variable [ Name=$partsupp ]
           )
         ]
         ]
@@ -123,42 +123,42 @@ LetVariable [ Name=orders ]
             LiteralExpr [STRING] [LineItems]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
-        LetVariable [ Name=partsupp ]
+        Let Variable [ Name=$partsupp ]
           :=
           (
             SELECT ELEMENT [
-            Variable [ Name=ps ]
+            Variable [ Name=$ps ]
             ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [PartSupp]
               ]
               AS
-              Variable [ Name=ps ]
+              Variable [ Name=$ps ]
             ]
             Where
               OperatorExpr [
                 OperatorExpr [
                   FieldAccessor [
-                    Variable [ Name=ps ]
+                    Variable [ Name=$ps ]
                     Field=ps_partkey
                   ]
                   =
                   FieldAccessor [
-                    Variable [ Name=l ]
+                    Variable [ Name=$l ]
                     Field=l_partkey
                   ]
                 ]
                 and
                 OperatorExpr [
                   FieldAccessor [
-                    Variable [ Name=ps ]
+                    Variable [ Name=$ps ]
                     Field=ps_suppkey
                   ]
                   =
                   FieldAccessor [
-                    Variable [ Name=l ]
+                    Variable [ Name=$l ]
                     Field=l_suppkey
                   ]
                 ]
@@ -167,12 +167,12 @@ LetVariable [ Name=orders ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_orderkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
               Field=o_orderkey
             ]
           ]
@@ -180,12 +180,12 @@ LetVariable [ Name=orders ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_custkey
         ]
         =
         FieldAccessor [
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
           Field=c_custkey
         ]
       ]

@@ -27,18 +27,29 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_returnflag]
     :
-    Variable [ Name=l_returnflag ]
+    Variable [ Name=$l_returnflag ]
   )
   (
     LiteralExpr [STRING] [l_linestatus]
     :
-    Variable [ Name=l_linestatus ]
+    Variable [ Name=$l_linestatus ]
   )
   (
     LiteralExpr [STRING] [count_suppkey]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=g ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#3 ]
+          Field=g
+        ]
+        ]
+        FROM [          Variable [ Name=#2 ]
+          AS
+          Variable [ Name=#3 ]
+        ]
+      )
     ]
   )
 ]
@@ -49,17 +60,17 @@ FROM [  (
       (
         LiteralExpr [STRING] [l_returnflag]
         :
-        Variable [ Name=l_returnflag ]
+        Variable [ Name=$l_returnflag ]
       )
       (
         LiteralExpr [STRING] [l_linestatus]
         :
-        Variable [ Name=l_linestatus ]
+        Variable [ Name=$l_linestatus ]
       )
       (
         LiteralExpr [STRING] [l_suppkey]
         :
-        Variable [ Name=l_suppkey ]
+        Variable [ Name=$l_suppkey ]
       )
     ]
     ]
@@ -67,62 +78,70 @@ FROM [  (
         LiteralExpr [STRING] [LineItems_q1]
       ]
       AS
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_shipdate
         ]
         <=
         LiteralExpr [STRING] [1998-09-02]
       ]
     Groupby
-      Variable [ Name=l_returnflag ]
+      Variable [ Name=$l_returnflag ]
       :=
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_returnflag
       ]
-      Variable [ Name=l_linestatus ]
+      Variable [ Name=$l_linestatus ]
       :=
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_linestatus
       ]
-      Variable [ Name=l_suppkey ]
+      Variable [ Name=$l_suppkey ]
       :=
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_suppkey
       ]
-      With
-      Variable [ Name=l ]
+      GROUP AS
+      Variable [ Name=#1 ]
+      (
+      Variable [ Name=$l ]
+       AS l
+      )
 
   )
   AS
-  Variable [ Name=g ]
+  Variable [ Name=$g ]
 ]
 Groupby
-  Variable [ Name=l_returnflag ]
+  Variable [ Name=$l_returnflag ]
   :=
   FieldAccessor [
-    Variable [ Name=g ]
+    Variable [ Name=$g ]
     Field=l_returnflag
   ]
-  Variable [ Name=l_linestatus ]
+  Variable [ Name=$l_linestatus ]
   :=
   FieldAccessor [
-    Variable [ Name=g ]
+    Variable [ Name=$g ]
     Field=l_linestatus
   ]
-  With
-  Variable [ Name=g ]
+  GROUP AS
+  Variable [ Name=#2 ]
+  (
+  Variable [ Name=$g ]
+   AS g
+  )
 
 Orderby
-  Variable [ Name=l_returnflag ]
+  Variable [ Name=$l_returnflag ]
   ASC
-  Variable [ Name=l_linestatus ]
+  Variable [ Name=$l_linestatus ]
   ASC
 

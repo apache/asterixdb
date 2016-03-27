@@ -36,12 +36,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [arec]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [brec]
     :
-    Variable [ Name=b ]
+    Variable [ Name=$b ]
   )
 ]
 ]
@@ -49,13 +49,13 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers2]
   ]
   AS
-  Variable [ Name=b ]
+  Variable [ Name=$b ]
 ]
 Where
   OperatorExpr [
@@ -63,14 +63,14 @@ Where
       FunctionCall test.similarity-jaccard@2[
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=a ]
+            Variable [ Name=$a ]
             Field=nested
           ]
           Field=interests
         ]
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=b ]
+            Variable [ Name=$b ]
             Field=nested
           ]
           Field=interests
@@ -83,7 +83,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=a ]
+          Variable [ Name=$a ]
           Field=nested
         ]
         Field=cid
@@ -91,7 +91,7 @@ Where
       <
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=b ]
+          Variable [ Name=$b ]
           Field=nested
         ]
         Field=cid

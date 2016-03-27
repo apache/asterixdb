@@ -1,11 +1,11 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   OrderedListConstructor [
   ]
-LetVariable [ Name=b ]
+Let Variable [ Name=$b ]
   :=
   OrderedListConstructor [
     LiteralExpr [LONG] [1]
@@ -19,38 +19,38 @@ LetVariable [ Name=b ]
     LiteralExpr [LONG] [9]
     LiteralExpr [LONG] [10]
   ]
-LetVariable [ Name=results ]
+Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       LiteralExpr [LONG] [0]
     ]
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
       LiteralExpr [LONG] [3]
     ]
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       LiteralExpr [LONG] [0]
     ]
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       LiteralExpr [LONG] [3]
     ]
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       LiteralExpr [LONG] [8]
     ]
     FunctionCall test.edit-distance-list-is-filterable@2[
-      Variable [ Name=b ]
+      Variable [ Name=$b ]
       LiteralExpr [LONG] [11]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=results ]
+FROM [  Variable [ Name=$results ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

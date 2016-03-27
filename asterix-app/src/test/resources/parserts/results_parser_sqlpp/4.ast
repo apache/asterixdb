@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [similar_sigs]
     :
-    Variable [ Name=similar_sigs ]
+    Variable [ Name=$similar_sigs ]
   )
 ]
 ]
@@ -12,9 +12,9 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [SIGroup]
   ]
   AS
-  Variable [ Name=sig ]
+  Variable [ Name=$sig ]
 ]
-LetVariable [ Name=similar_sigs ]
+Let Variable [ Name=$similar_sigs ]
   :=
   (
     SELECT ELEMENT [
@@ -23,7 +23,7 @@ LetVariable [ Name=similar_sigs ]
         LiteralExpr [STRING] [sig_name]
         :
         FieldAccessor [
-          Variable [ Name=similar_sig ]
+          Variable [ Name=$similar_sig ]
           Field=name
         ]
       )
@@ -33,24 +33,24 @@ LetVariable [ Name=similar_sigs ]
         LiteralExpr [STRING] [SIGroup]
       ]
       AS
-      Variable [ Name=similar_sig ]
+      Variable [ Name=$similar_sig ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
-          Variable [ Name=similar_sig ]
+          Variable [ Name=$similar_sig ]
           !=
-          Variable [ Name=sig ]
+          Variable [ Name=$sig ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=similar_sig ]
+            Variable [ Name=$similar_sig ]
             Field=interests
           ]
           ~=
           FieldAccessor [
-            Variable [ Name=sig ]
+            Variable [ Name=$sig ]
             Field=interests
           ]
         ]
@@ -59,7 +59,7 @@ LetVariable [ Name=similar_sigs ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=sig ]
+      Variable [ Name=$sig ]
       Field=name
     ]
     =

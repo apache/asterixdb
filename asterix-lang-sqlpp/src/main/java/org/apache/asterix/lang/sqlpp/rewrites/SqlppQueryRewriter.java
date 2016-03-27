@@ -50,6 +50,7 @@ import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.InlineColumnAliasVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.VariableCheckAndRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -85,6 +86,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines column aliases.
         inlineColumnAlias();
 
+        // Group-by core/sugar rewrites.
+        rewriteGroupBys();
+
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite(true);
 
@@ -103,7 +107,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inline column aliases.
-        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor();
+        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor(context);
         inlineColumnAliasVisitor.visit(topExpr, false);
     }
 
@@ -112,8 +116,16 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         VariableCheckAndRewriteVisitor variableCheckAndRewriteVisitor = new VariableCheckAndRewriteVisitor(context,
-                overwrite);
+                overwrite, metadataProvider);
         variableCheckAndRewriteVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteGroupBys() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context, metadataProvider);
+        groupByVisitor.visit(topExpr, null);
     }
 
     protected void inlineDeclaredUdfs() throws AsterixException {

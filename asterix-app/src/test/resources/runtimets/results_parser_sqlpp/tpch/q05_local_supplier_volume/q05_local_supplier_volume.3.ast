@@ -5,12 +5,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [n_name]
     :
-    Variable [ Name=n_name ]
+    Variable [ Name=$n_name ]
   )
   (
     LiteralExpr [STRING] [revenue]
     :
-    Variable [ Name=revenue ]
+    Variable [ Name=$revenue ]
   )
 ]
 ]
@@ -18,7 +18,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   (
     SELECT ELEMENT [
@@ -27,7 +27,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [n_name]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=n_name
         ]
       )
@@ -35,7 +35,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [l_extendedprice]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=l_extendedprice
         ]
       )
@@ -43,7 +43,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [l_discount]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=l_discount
         ]
       )
@@ -51,7 +51,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [s_nationkey]
         :
         FieldAccessor [
-          Variable [ Name=l1 ]
+          Variable [ Name=$l1 ]
           Field=s_nationkey
         ]
       )
@@ -59,7 +59,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [o_custkey]
         :
         FieldAccessor [
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
           Field=o_custkey
         ]
       )
@@ -69,7 +69,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
       AS
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
 ,
       (
         SELECT ELEMENT [
@@ -78,7 +78,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [n_name]
             :
             FieldAccessor [
-              Variable [ Name=s1 ]
+              Variable [ Name=$s1 ]
               Field=n_name
             ]
           )
@@ -86,7 +86,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [l_extendedprice]
             :
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_extendedprice
             ]
           )
@@ -94,7 +94,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [l_discount]
             :
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_discount
             ]
           )
@@ -102,7 +102,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [l_orderkey]
             :
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_orderkey
             ]
           )
@@ -110,7 +110,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [s_nationkey]
             :
             FieldAccessor [
-              Variable [ Name=s1 ]
+              Variable [ Name=$s1 ]
               Field=s_nationkey
             ]
           )
@@ -120,7 +120,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
 ,
           (
             SELECT ELEMENT [
@@ -129,7 +129,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [n_name]
                 :
                 FieldAccessor [
-                  Variable [ Name=n1 ]
+                  Variable [ Name=$n1 ]
                   Field=n_name
                 ]
               )
@@ -137,7 +137,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [s_suppkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_suppkey
                 ]
               )
@@ -145,7 +145,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [s_nationkey]
                 :
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_nationkey
                 ]
               )
@@ -155,7 +155,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Supplier]
               ]
               AS
-              Variable [ Name=s ]
+              Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -164,7 +164,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [n_name]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_name
                     ]
                   )
@@ -172,7 +172,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [n_nationkey]
                     :
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_nationkey
                     ]
                   )
@@ -182,79 +182,79 @@ FROM [  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [Nation]
                   ]
                   AS
-                  Variable [ Name=n ]
+                  Variable [ Name=$n ]
 ,
                   FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [Region]
                   ]
                   AS
-                  Variable [ Name=r ]
+                  Variable [ Name=$r ]
                 ]
                 Where
                   OperatorExpr [
                     FieldAccessor [
-                      Variable [ Name=n ]
+                      Variable [ Name=$n ]
                       Field=n_regionkey
                     ]
                     =
                     FieldAccessor [
-                      Variable [ Name=r ]
+                      Variable [ Name=$r ]
                       Field=r_regionkey
                     ]
                   ]
               )
               AS
-              Variable [ Name=n1 ]
+              Variable [ Name=$n1 ]
             ]
             Where
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=s ]
+                  Variable [ Name=$s ]
                   Field=s_nationkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=n1 ]
+                  Variable [ Name=$n1 ]
                   Field=n_nationkey
                 ]
               ]
           )
           AS
-          Variable [ Name=s1 ]
+          Variable [ Name=$s1 ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=l ]
+              Variable [ Name=$l ]
               Field=l_suppkey
             ]
             =
             FieldAccessor [
-              Variable [ Name=s1 ]
+              Variable [ Name=$s1 ]
               Field=s_suppkey
             ]
           ]
       )
       AS
-      Variable [ Name=l1 ]
+      Variable [ Name=$l1 ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l1 ]
+            Variable [ Name=$l1 ]
             Field=l_orderkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=o ]
+            Variable [ Name=$o ]
             Field=o_orderkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=o ]
+            Variable [ Name=$o ]
             Field=o_orderdate
           ]
           >=
@@ -263,7 +263,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=o ]
+            Variable [ Name=$o ]
             Field=o_orderdate
           ]
           <
@@ -272,53 +272,58 @@ FROM [  FunctionCall Metadata.dataset@1[
       ]
   )
   AS
-  Variable [ Name=o1 ]
+  Variable [ Name=$o1 ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_nationkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=o1 ]
+        Variable [ Name=$o1 ]
         Field=s_nationkey
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=c ]
+        Variable [ Name=$c ]
         Field=c_custkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=o1 ]
+        Variable [ Name=$o1 ]
         Field=o_custkey
       ]
     ]
   ]
 Groupby
-  Variable [ Name=n_name ]
+  Variable [ Name=$n_name ]
   :=
   FieldAccessor [
-    Variable [ Name=o1 ]
+    Variable [ Name=$o1 ]
     Field=n_name
   ]
-  With
-  Variable [ Name=o1 ]
-  Variable [ Name=c ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$o1 ]
+   AS o1
+  Variable [ Name=$c ]
+   AS c
+  )
 
-LetVariable [ Name=revenue ]
+Let Variable [ Name=$revenue ]
   :=
   FunctionCall tpch.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         *
@@ -326,19 +331,19 @@ LetVariable [ Name=revenue ]
           LiteralExpr [LONG] [1]
           -
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_discount
           ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=o1 ]
+      FROM [        Variable [ Name=$o1 ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
 Orderby
-  Variable [ Name=revenue ]
+  Variable [ Name=$revenue ]
   DESC
 

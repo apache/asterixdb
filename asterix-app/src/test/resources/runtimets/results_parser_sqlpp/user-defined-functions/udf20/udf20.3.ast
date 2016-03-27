@@ -5,13 +5,13 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [radius]
     :
-    Variable [ Name=a ]
+    Variable [ Name=$a ]
   )
   (
     LiteralExpr [STRING] [area]
     :
     FunctionCall test.area@1[
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
     ]
   )
 ]
@@ -25,12 +25,12 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [12]
   ]
   AS
-  Variable [ Name=a ]
+  Variable [ Name=$a ]
 ]
 Where
   OperatorExpr [
     FunctionCall test.area@1[
-      Variable [ Name=a ]
+      Variable [ Name=$a ]
     ]
     >
     LiteralExpr [LONG] [100]

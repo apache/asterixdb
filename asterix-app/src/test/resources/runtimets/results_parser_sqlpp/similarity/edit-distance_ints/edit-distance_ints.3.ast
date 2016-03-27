@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-LetVariable [ Name=a ]
+Let Variable [ Name=$a ]
   :=
   OrderedListConstructor [
     LiteralExpr [LONG] [1]
@@ -11,7 +11,7 @@ LetVariable [ Name=a ]
     LiteralExpr [LONG] [6]
     LiteralExpr [LONG] [7]
   ]
-LetVariable [ Name=b ]
+Let Variable [ Name=$b ]
   :=
   OrderedListConstructor [
     LiteralExpr [LONG] [1]
@@ -21,22 +21,22 @@ LetVariable [ Name=b ]
     LiteralExpr [LONG] [7]
     LiteralExpr [LONG] [8]
   ]
-LetVariable [ Name=results ]
+Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
     FunctionCall test.edit-distance@2[
-      Variable [ Name=a ]
-      Variable [ Name=b ]
+      Variable [ Name=$a ]
+      Variable [ Name=$b ]
     ]
     FunctionCall test.edit-distance@2[
-      Variable [ Name=b ]
-      Variable [ Name=a ]
+      Variable [ Name=$b ]
+      Variable [ Name=$a ]
     ]
   ]
 SELECT ELEMENT [
-Variable [ Name=i ]
+Variable [ Name=$i ]
 ]
-FROM [  Variable [ Name=results ]
+FROM [  Variable [ Name=$results ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]

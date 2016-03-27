@@ -8,7 +8,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_quantity
         ]
         ]
@@ -16,12 +16,12 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_shipdate
             ]
             <=
@@ -37,7 +37,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         ]
@@ -45,7 +45,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -58,7 +58,7 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_extendedprice
           ]
           *
@@ -66,7 +66,7 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_discount
             ]
           ]
@@ -76,7 +76,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -89,7 +89,7 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_extendedprice
           ]
           *
@@ -97,7 +97,7 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_discount
             ]
           ]
@@ -106,7 +106,7 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             +
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_tax
             ]
           ]
@@ -116,7 +116,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -128,7 +128,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_quantity
         ]
         ]
@@ -136,12 +136,12 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
         Where
           OperatorExpr [
             FieldAccessor [
-              Variable [ Name=i ]
+              Variable [ Name=$i ]
               Field=l_shipdate
             ]
             <=
@@ -157,7 +157,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         ]
@@ -165,7 +165,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -177,7 +177,7 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_discount
         ]
         ]
@@ -185,7 +185,7 @@ RecordConstructor [
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -196,13 +196,13 @@ RecordConstructor [
     FunctionCall tpch.count@1[
       (
         SELECT ELEMENT [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
           AS
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
         ]
       )
     ]

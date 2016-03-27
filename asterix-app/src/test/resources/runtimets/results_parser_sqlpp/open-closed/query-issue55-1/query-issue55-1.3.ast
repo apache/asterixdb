@@ -1,5 +1,5 @@
 Query:
-LetVariable [ Name=l ]
+Let Variable [ Name=$l ]
   :=
   OrderedListConstructor [
     LiteralExpr [FLOAT] [1.1]
@@ -12,45 +12,45 @@ LetVariable [ Name=l ]
   ]
 SELECT ELEMENT [
 OrderedListConstructor [
-  Variable [ Name=i ]
-  Variable [ Name=j ]
+  Variable [ Name=$i ]
+  Variable [ Name=$j ]
   LiteralExpr [STRING] [=]
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     =
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
   ]
   LiteralExpr [STRING] [<]
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     <
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
   ]
   LiteralExpr [STRING] [<=]
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     <=
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
   ]
   LiteralExpr [STRING] [>]
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     >
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
   ]
   LiteralExpr [STRING] [>=]
   OperatorExpr [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     >=
-    Variable [ Name=j ]
+    Variable [ Name=$j ]
   ]
 ]
 ]
-FROM [  Variable [ Name=l ]
+FROM [  Variable [ Name=$l ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ,
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
   AS
-  Variable [ Name=j ]
+  Variable [ Name=$j ]
 ]

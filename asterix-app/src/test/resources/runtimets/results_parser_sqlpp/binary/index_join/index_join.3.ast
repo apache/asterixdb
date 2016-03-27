@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [cid]
     :
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=id
     ]
   )
@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [oid]
     :
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=id
     ]
   )
@@ -24,29 +24,29 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [User]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [UserCopy]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=md5
     ]
     =
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=md5
     ]
   ]
 Orderby
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=id
   ]
   ASC

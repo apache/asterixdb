@@ -2,7 +2,7 @@ Query:
 FunctionCall null.count@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=i ]
+    Variable [ Name=$i ]
     ]
     FROM [      OrderedListConstructor [
         OrderedListConstructor [
@@ -20,7 +20,7 @@ FunctionCall null.count@1[
         ]
       ]
       AS
-      Variable [ Name=i ]
+      Variable [ Name=$i ]
     ]
   )
 ]

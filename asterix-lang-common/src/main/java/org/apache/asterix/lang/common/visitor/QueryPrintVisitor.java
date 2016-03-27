@@ -204,7 +204,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
 
     @Override
     public Void visit(LetClause lc, Integer step) throws AsterixException {
-        out.print(skip(step) + "Let");
+        out.print(skip(step) + "Let ");
         lc.getVarExpr().accept(this, 0);
         out.println(skip(step + 1) + ":=");
         lc.getBindingExpr().accept(this, step + 1);

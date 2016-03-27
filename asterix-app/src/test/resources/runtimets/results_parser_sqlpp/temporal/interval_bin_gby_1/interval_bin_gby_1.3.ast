@@ -5,13 +5,24 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [tbin]
     :
-    Variable [ Name=d ]
+    Variable [ Name=$d ]
   )
   (
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=i ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=i
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
 ]
@@ -20,15 +31,15 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tsdata]
   ]
   AS
-  Variable [ Name=i ]
+  Variable [ Name=$i ]
 ]
 Groupby
-  Variable [ Name=d ]
+  Variable [ Name=$d ]
   :=
   FunctionCall test.interval-bin@3[
     FunctionCall test.get-time-from-datetime@1[
       FieldAccessor [
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
         Field=timestamp
       ]
     ]
@@ -39,12 +50,16 @@ Groupby
       LiteralExpr [STRING] [PT10M]
     ]
   ]
-  With
-  Variable [ Name=i ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$i ]
+   AS i
+  )
 
 Orderby
   FunctionCall test.get-interval-start@1[
-    Variable [ Name=d ]
+    Variable [ Name=$d ]
   ]
   ASC
 

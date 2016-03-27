@@ -112,7 +112,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             return queryBody.accept(this, tupSource);
         } else {
             LogicalVariable var = context.newVar();
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(queryBody, tupSource);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(queryBody, tupSource);
             AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
             assignOp.getInputs().add(eo.second);
             ProjectOperator projectOp = new ProjectOperator(var);
@@ -214,7 +214,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             throws AsterixException {
         LogicalVariable fromVar = context.newVar(fromTerm.getLeftVariable());
         Expression fromExpr = fromTerm.getLeftExpression();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(fromExpr, tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(fromExpr, tupSource);
         ILogicalOperator unnestOp;
         if (fromTerm.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVar(fromTerm.getPositionalVariable());
@@ -259,7 +259,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             Mutable<ILogicalOperator> joinOpRef = new MutableObject<ILogicalOperator>(joinOperator);
 
             // Add an additional filter operator.
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = aqlExprToAlgExpression(
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = langExprToAlgExpression(
                     joinClause.getConditionExpression(), joinOpRef);
             SelectOperator filter = new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first),
                     false, null);
@@ -281,7 +281,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             UnnestOperator rightUnnestOp = (UnnestOperator) rightBranch.first;
 
             // Adds an additional filter operator for the join condition.
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = aqlExprToAlgExpression(
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = langExprToAlgExpression(
                     joinClause.getConditionExpression(), new MutableObject<ILogicalOperator>(rightUnnestOp));
             SelectOperator filter = new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first),
                     false, null);
@@ -405,7 +405,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(HavingClause havingClause, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(
                 havingClause.getFilterExpression(), tupSource);
         SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first), false, null);
         s.getInputs().add(p.second);
@@ -417,7 +417,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
                     throws AsterixException {
         LogicalVariable rightVar = context.newVar(binaryCorrelate.getRightVariable());
         Expression rightExpr = binaryCorrelate.getRightExpression();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(rightExpr, inputOpRef);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(rightExpr, inputOpRef);
         ILogicalOperator unnestOp;
         if (binaryCorrelate.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVar(binaryCorrelate.getPositionalVariable());
@@ -448,7 +448,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             }
             returnExpr = new RecordConstructor(fieldBindings);
         }
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(returnExpr, tupSrc);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(returnExpr, tupSrc);
         LogicalVariable returnVar;
         ILogicalOperator returnOperator;
         if (returnExpr.getKind() == Kind.VARIABLE_EXPRESSION) {

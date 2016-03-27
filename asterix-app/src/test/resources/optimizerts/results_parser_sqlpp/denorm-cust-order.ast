@@ -38,7 +38,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cid]
     :
-    Variable [ Name=cid ]
+    Variable [ Name=$cid ]
   )
   (
     LiteralExpr [STRING] [cust]
@@ -51,13 +51,24 @@ RecordConstructor [
     LiteralExpr [STRING] [cnt-orders]
     :
     FunctionCall custorder.count@1[
-      Variable [ Name=o ]
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=o
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS
+          Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
   (
     LiteralExpr [STRING] [orders]
     :
-    Variable [ Name=o ]
+    Variable [ Name=$o ]
   )
 ]
 ]
@@ -65,34 +76,39 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS
-  Variable [ Name=c ]
+  Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=c ]
+      Variable [ Name=$c ]
       Field=cid
     ]
     =
     FieldAccessor [
-      Variable [ Name=o ]
+      Variable [ Name=$o ]
       Field=cid
     ]
   ]
 Groupby
-  Variable [ Name=cid ]
+  Variable [ Name=$cid ]
   :=
   FieldAccessor [
-    Variable [ Name=c ]
+    Variable [ Name=$c ]
     Field=cid
   ]
-  With
-  Variable [ Name=c ]
-  Variable [ Name=o ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$o ]
+   AS o
+  Variable [ Name=$c ]
+   AS c
+  )
 

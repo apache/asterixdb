@@ -142,7 +142,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GET_ITEM) {
             return false;
         }
@@ -396,7 +396,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             inputOp = new AssignOperator(keyVarList, keyExprList);
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
             inputOp.getInputs().add(new MutableObject<>(
-                    OperatorManipulationUtil.deepCopyWithExcutionMode(dataSourceScan.getInputs().get(0).getValue())));
+                    OperatorManipulationUtil.deepCopy(dataSourceScan.getInputs().get(0).getValue())));
             inputOp.setExecutionMode(dataSourceScan.getExecutionMode());
         } else {
             // We are optimizing a join. Add the input variable to the secondaryIndexFuncArgs.
@@ -836,7 +836,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private void addKeyVarsAndExprs(IOptimizableFuncExpr optFuncExpr, ArrayList<LogicalVariable> keyVarList,
             ArrayList<Mutable<ILogicalExpression>> keyExprList, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         // For now we are assuming a single secondary index key.
         // Add a variable and its expr to the lists which will be passed into an assign op.
         LogicalVariable keyVar = context.newVar();

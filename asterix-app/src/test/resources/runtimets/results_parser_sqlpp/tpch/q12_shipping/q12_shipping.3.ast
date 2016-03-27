@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_shipmode]
     :
-    Variable [ Name=l_shipmode ]
+    Variable [ Name=$l_shipmode ]
   )
   (
     LiteralExpr [STRING] [high_line_count]
@@ -17,7 +17,7 @@ RecordConstructor [
           OperatorExpr [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=i ]
+                Variable [ Name=$i ]
                 Field=o_orderpriority
               ]
               =
@@ -26,7 +26,7 @@ RecordConstructor [
             or
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=i ]
+                Variable [ Name=$i ]
                 Field=o_orderpriority
               ]
               =
@@ -39,9 +39,9 @@ RecordConstructor [
           LiteralExpr [LONG] [0]
         ]
         ]
-        FROM [          Variable [ Name=o ]
+        FROM [          Variable [ Name=$o ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -56,7 +56,7 @@ RecordConstructor [
           OperatorExpr [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=i ]
+                Variable [ Name=$i ]
                 Field=o_orderpriority
               ]
               =
@@ -65,7 +65,7 @@ RecordConstructor [
             or
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=i ]
+                Variable [ Name=$i ]
                 Field=o_orderpriority
               ]
               =
@@ -78,9 +78,9 @@ RecordConstructor [
           LiteralExpr [LONG] [1]
         ]
         ]
-        FROM [          Variable [ Name=o ]
+        FROM [          Variable [ Name=$o ]
           AS
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
         ]
       )
     ]
@@ -91,55 +91,55 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS
-  Variable [ Name=l ]
+  Variable [ Name=$l ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS
-  Variable [ Name=o ]
+  Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=o ]
+        Variable [ Name=$o ]
         Field=o_orderkey
       ]
       =
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_orderkey
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_commitdate
       ]
       <
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_receiptdate
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_shipdate
       ]
       <
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_commitdate
       ]
     ]
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_receiptdate
       ]
       >=
@@ -148,7 +148,7 @@ Where
     and
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=l ]
+        Variable [ Name=$l ]
         Field=l_receiptdate
       ]
       <
@@ -158,7 +158,7 @@ Where
     OperatorExpr [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_shipmode
         ]
         =
@@ -167,7 +167,7 @@ Where
       or
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_shipmode
         ]
         =
@@ -176,17 +176,22 @@ Where
     ]
   ]
 Groupby
-  Variable [ Name=l_shipmode ]
+  Variable [ Name=$l_shipmode ]
   :=
   FieldAccessor [
-    Variable [ Name=l ]
+    Variable [ Name=$l ]
     Field=l_shipmode
   ]
-  With
-  Variable [ Name=l ]
-  Variable [ Name=o ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$o ]
+   AS o
+  Variable [ Name=$l ]
+   AS l
+  )
 
 Orderby
-  Variable [ Name=l_shipmode ]
+  Variable [ Name=$l_shipmode ]
   ASC
 

@@ -1,5 +1,5 @@
 Query:
-LetVariable [ Name=bla ]
+Let Variable [ Name=$bla ]
   :=
   RecordConstructor [
     (
@@ -11,12 +11,12 @@ LetVariable [ Name=bla ]
 SELECT ELEMENT [
 OperatorExpr [
   FieldAccessor [
-    Variable [ Name=bla ]
+    Variable [ Name=$bla ]
     Field=name
   ]
   =
   FieldAccessor [
-    Variable [ Name=bla ]
+    Variable [ Name=$bla ]
     Field=name
   ]
 ]

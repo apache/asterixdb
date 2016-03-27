@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-LetVariable [ Name=rectangle ]
+Let Variable [ Name=$rectangle ]
   :=
   FunctionCall test.create-rectangle@2[
     FunctionCall test.create-point@2[
@@ -12,15 +12,15 @@ LetVariable [ Name=rectangle ]
       LiteralExpr [DOUBLE] [111.1]
     ]
   ]
-LetVariable [ Name=rectangle_list ]
+Let Variable [ Name=$rectangle_list ]
   :=
   FunctionCall test.get-points@1[
-    Variable [ Name=rectangle ]
+    Variable [ Name=$rectangle ]
   ]
 SELECT ELEMENT [
-Variable [ Name=p ]
+Variable [ Name=$p ]
 ]
-FROM [  Variable [ Name=rectangle_list ]
+FROM [  Variable [ Name=$rectangle_list ]
   AS
-  Variable [ Name=p ]
+  Variable [ Name=$p ]
 ]

@@ -4,17 +4,17 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sig_name]
     :
-    Variable [ Name=sig_name ]
+    Variable [ Name=$sig_name ]
   )
   (
     LiteralExpr [STRING] [total_count]
     :
-    Variable [ Name=sig_sponsorship_count ]
+    Variable [ Name=$sig_sponsorship_count ]
   )
   (
     LiteralExpr [STRING] [chapter_breakdown]
     :
-    Variable [ Name=by_chapter ]
+    Variable [ Name=$by_chapter ]
   )
 ]
 ]
@@ -22,47 +22,64 @@ FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Event]
   ]
   AS
-  Variable [ Name=event ]
+  Variable [ Name=$event ]
 ,
   FieldAccessor [
-    Variable [ Name=event ]
+    Variable [ Name=$event ]
     Field=sponsoring_sigs
   ]
   AS
-  Variable [ Name=sponsor ]
+  Variable [ Name=$sponsor ]
 ]
-LetVariable [ Name=es ]
+Let Variable [ Name=$es ]
   :=
   RecordConstructor [
     (
       LiteralExpr [STRING] [event]
       :
-      Variable [ Name=event ]
+      Variable [ Name=$event ]
     )
     (
       LiteralExpr [STRING] [sponsor]
       :
-      Variable [ Name=sponsor ]
+      Variable [ Name=$sponsor ]
     )
   ]
 Groupby
-  Variable [ Name=sig_name ]
+  Variable [ Name=$sig_name ]
   :=
   FieldAccessor [
-    Variable [ Name=sponsor ]
+    Variable [ Name=$sponsor ]
     Field=sig_name
   ]
-  With
-  Variable [ Name=es ]
-  Variable [ Name=sponsor ]
-  Variable [ Name=event ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$es ]
+   AS es
+  Variable [ Name=$sponsor ]
+   AS sponsor
+  Variable [ Name=$event ]
+   AS event
+  )
 
-LetVariable [ Name=sig_sponsorship_count ]
+Let Variable [ Name=$sig_sponsorship_count ]
   :=
   FunctionCall null.count@1[
-    Variable [ Name=es ]
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=#2 ]
+        Field=es
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS
+        Variable [ Name=#2 ]
+      ]
+    )
   ]
-LetVariable [ Name=by_chapter ]
+Let Variable [ Name=$by_chapter ]
   :=
   (
     SELECT ELEMENT [
@@ -70,42 +87,64 @@ LetVariable [ Name=by_chapter ]
       (
         LiteralExpr [STRING] [chapter_name]
         :
-        Variable [ Name=chapter_name ]
+        Variable [ Name=$chapter_name ]
       )
       (
         LiteralExpr [STRING] [escount]
         :
         FunctionCall null.count@1[
-          Variable [ Name=es ]
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=#3 ]
+              Field=es
+            ]
+            ]
+            FROM [              Variable [ Name=#1 ]
+              AS
+              Variable [ Name=#3 ]
+            ]
+          )
         ]
       )
     ]
     ]
-    FROM [      Variable [ Name=es ]
+    FROM [      Variable [ Name=$es ]
       AS
-      Variable [ Name=e ]
+      Variable [ Name=$e ]
     ]
     Groupby
-      Variable [ Name=chapter_name ]
+      Variable [ Name=$chapter_name ]
       :=
       FieldAccessor [
         FieldAccessor [
-          Variable [ Name=e ]
+          Variable [ Name=$e ]
           Field=sponsor
         ]
         Field=chapter_name
       ]
-      With
-      Variable [ Name=e ]
-      Variable [ Name=sig_sponsorship_count ]
-      Variable [ Name=sponsor ]
-      Variable [ Name=event ]
-      Variable [ Name=es ]
-      Variable [ Name=sig_name ]
+      GROUP AS
+      Variable [ Name=#4 ]
+      (
+      Variable [ Name=$e ]
+       AS e
+      Variable [ Name=$sig_sponsorship_count ]
+       AS sig_sponsorship_count
+      Variable [ Name=$es ]
+       AS es
+      Variable [ Name=$event ]
+       AS event
+      Variable [ Name=$sponsor ]
+       AS sponsor
+      Variable [ Name=$sig_name ]
+       AS sig_name
+      Variable [ Name=#1 ]
+       AS #1
+      )
 
   )
 Orderby
-  Variable [ Name=sig_sponsorship_count ]
+  Variable [ Name=$sig_sponsorship_count ]
   DESC
 
 Limit

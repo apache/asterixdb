@@ -5,42 +5,42 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c_custkey]
     :
-    Variable [ Name=c_custkey ]
+    Variable [ Name=$c_custkey ]
   )
   (
     LiteralExpr [STRING] [c_name]
     :
-    Variable [ Name=c_name ]
+    Variable [ Name=$c_name ]
   )
   (
     LiteralExpr [STRING] [revenue]
     :
-    Variable [ Name=revenue ]
+    Variable [ Name=$revenue ]
   )
   (
     LiteralExpr [STRING] [c_acctbal]
     :
-    Variable [ Name=c_acctbal ]
+    Variable [ Name=$c_acctbal ]
   )
   (
     LiteralExpr [STRING] [n_name]
     :
-    Variable [ Name=n_name ]
+    Variable [ Name=$n_name ]
   )
   (
     LiteralExpr [STRING] [c_address]
     :
-    Variable [ Name=c_address ]
+    Variable [ Name=$c_address ]
   )
   (
     LiteralExpr [STRING] [c_phone]
     :
-    Variable [ Name=c_phone ]
+    Variable [ Name=$c_phone ]
   )
   (
     LiteralExpr [STRING] [c_comment]
     :
-    Variable [ Name=c_comment ]
+    Variable [ Name=$c_comment ]
   )
 ]
 ]
@@ -51,7 +51,7 @@ FROM [  (
         LiteralExpr [STRING] [c_custkey]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_custkey
         ]
       )
@@ -59,7 +59,7 @@ FROM [  (
         LiteralExpr [STRING] [c_name]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_name
         ]
       )
@@ -67,7 +67,7 @@ FROM [  (
         LiteralExpr [STRING] [c_acctbal]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_acctbal
         ]
       )
@@ -75,7 +75,7 @@ FROM [  (
         LiteralExpr [STRING] [n_name]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=n_name
         ]
       )
@@ -83,7 +83,7 @@ FROM [  (
         LiteralExpr [STRING] [c_address]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_address
         ]
       )
@@ -91,7 +91,7 @@ FROM [  (
         LiteralExpr [STRING] [c_phone]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_phone
         ]
       )
@@ -99,7 +99,7 @@ FROM [  (
         LiteralExpr [STRING] [c_comment]
         :
         FieldAccessor [
-          Variable [ Name=ocn ]
+          Variable [ Name=$ocn ]
           Field=c_comment
         ]
       )
@@ -107,7 +107,7 @@ FROM [  (
         LiteralExpr [STRING] [l_extendedprice]
         :
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_extendedprice
         ]
       )
@@ -115,7 +115,7 @@ FROM [  (
         LiteralExpr [STRING] [l_discount]
         :
         FieldAccessor [
-          Variable [ Name=l ]
+          Variable [ Name=$l ]
           Field=l_discount
         ]
       )
@@ -125,7 +125,7 @@ FROM [  (
         LiteralExpr [STRING] [LineItem]
       ]
       AS
-      Variable [ Name=l ]
+      Variable [ Name=$l ]
 ,
       (
         SELECT ELEMENT [
@@ -134,7 +134,7 @@ FROM [  (
             LiteralExpr [STRING] [c_custkey]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_custkey
             ]
           )
@@ -142,7 +142,7 @@ FROM [  (
             LiteralExpr [STRING] [c_name]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_name
             ]
           )
@@ -150,7 +150,7 @@ FROM [  (
             LiteralExpr [STRING] [c_acctbal]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_acctbal
             ]
           )
@@ -158,7 +158,7 @@ FROM [  (
             LiteralExpr [STRING] [n_name]
             :
             FieldAccessor [
-              Variable [ Name=n ]
+              Variable [ Name=$n ]
               Field=n_name
             ]
           )
@@ -166,7 +166,7 @@ FROM [  (
             LiteralExpr [STRING] [c_address]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_address
             ]
           )
@@ -174,7 +174,7 @@ FROM [  (
             LiteralExpr [STRING] [c_phone]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_phone
             ]
           )
@@ -182,7 +182,7 @@ FROM [  (
             LiteralExpr [STRING] [c_comment]
             :
             FieldAccessor [
-              Variable [ Name=c ]
+              Variable [ Name=$c ]
               Field=c_comment
             ]
           )
@@ -190,7 +190,7 @@ FROM [  (
             LiteralExpr [STRING] [o_orderkey]
             :
             FieldAccessor [
-              Variable [ Name=o ]
+              Variable [ Name=$o ]
               Field=o_orderkey
             ]
           )
@@ -200,38 +200,38 @@ FROM [  (
             LiteralExpr [STRING] [Orders]
           ]
           AS
-          Variable [ Name=o ]
+          Variable [ Name=$o ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Customer]
           ]
           AS
-          Variable [ Name=c ]
+          Variable [ Name=$c ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Nation]
           ]
           AS
-          Variable [ Name=n ]
+          Variable [ Name=$n ]
         ]
         Where
           OperatorExpr [
             OperatorExpr [
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=c ]
+                  Variable [ Name=$c ]
                   Field=c_custkey
                 ]
                 =
                 FieldAccessor [
-                  Variable [ Name=o ]
+                  Variable [ Name=$o ]
                   Field=o_custkey
                 ]
               ]
               and
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=o ]
+                  Variable [ Name=$o ]
                   Field=o_orderdate
                 ]
                 >=
@@ -240,7 +240,7 @@ FROM [  (
               and
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=o ]
+                  Variable [ Name=$o ]
                   Field=o_orderdate
                 ]
                 <
@@ -250,37 +250,37 @@ FROM [  (
             and
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=c ]
+                Variable [ Name=$c ]
                 Field=c_nationkey
               ]
               =
               FieldAccessor [
-                Variable [ Name=n ]
+                Variable [ Name=$n ]
                 Field=n_nationkey
               ]
             ]
           ]
       )
       AS
-      Variable [ Name=ocn ]
+      Variable [ Name=$ocn ]
     ]
     Where
       OperatorExpr [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_orderkey
           ]
           =
           FieldAccessor [
-            Variable [ Name=ocn ]
+            Variable [ Name=$ocn ]
             Field=o_orderkey
           ]
         ]
         and
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=l ]
+            Variable [ Name=$l ]
             Field=l_selectflag
           ]
           =
@@ -289,62 +289,66 @@ FROM [  (
       ]
   )
   AS
-  Variable [ Name=locn ]
+  Variable [ Name=$locn ]
 ]
 Groupby
-  Variable [ Name=c_custkey ]
+  Variable [ Name=$c_custkey ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_custkey
   ]
-  Variable [ Name=c_name ]
+  Variable [ Name=$c_name ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_name
   ]
-  Variable [ Name=c_acctbal ]
+  Variable [ Name=$c_acctbal ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_acctbal
   ]
-  Variable [ Name=c_phone ]
+  Variable [ Name=$c_phone ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_phone
   ]
-  Variable [ Name=n_name ]
+  Variable [ Name=$n_name ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=n_name
   ]
-  Variable [ Name=c_address ]
+  Variable [ Name=$c_address ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_address
   ]
-  Variable [ Name=c_comment ]
+  Variable [ Name=$c_comment ]
   :=
   FieldAccessor [
-    Variable [ Name=locn ]
+    Variable [ Name=$locn ]
     Field=c_comment
   ]
-  With
-  Variable [ Name=locn ]
+  GROUP AS
+  Variable [ Name=#1 ]
+  (
+  Variable [ Name=$locn ]
+   AS locn
+  )
 
-LetVariable [ Name=revenue ]
+Let Variable [ Name=$revenue ]
   :=
   FunctionCall tpch.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=i ]
+          Variable [ Name=$i ]
           Field=l_extendedprice
         ]
         *
@@ -352,20 +356,20 @@ LetVariable [ Name=revenue ]
           LiteralExpr [LONG] [1]
           -
           FieldAccessor [
-            Variable [ Name=i ]
+            Variable [ Name=$i ]
             Field=l_discount
           ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=locn ]
+      FROM [        Variable [ Name=$locn ]
         AS
-        Variable [ Name=i ]
+        Variable [ Name=$i ]
       ]
     )
   ]
 Orderby
-  Variable [ Name=revenue ]
+  Variable [ Name=$revenue ]
   DESC
 
 Limit

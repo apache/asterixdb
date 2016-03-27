@@ -85,7 +85,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         VariableExpr newLeftVar = generateNewVariable(context, leftVar);
         VariableExpr newLeftPosVar = fromTerm.hasPositionalVariable()
                 ? generateNewVariable(context, fromTerm.getPositionalVariable()) : null;
-        Expression newLeftExpr = (Expression) fromTerm.getLeftExpression().accept(this, env).first;
+        Expression newLeftExpr = (Expression) visitUnnesBindingExpression(fromTerm.getLeftExpression(), env).first;
         List<AbstractBinaryCorrelateClause> newCorrelateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -120,7 +120,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 ? generateNewVariable(context, joinClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
-        Expression newRightExpr = (Expression) joinClause.getRightExpression().accept(this, env).first;
+        Expression newRightExpr = (Expression) visitUnnesBindingExpression(joinClause.getRightExpression(), env).first;
 
         // Visits the condition.
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -170,7 +170,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 ? generateNewVariable(context, unnestClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
-        Expression rightExpr = (Expression) unnestClause.getRightExpression().accept(this, env).first;
+        Expression rightExpr = (Expression) visitUnnesBindingExpression(unnestClause.getRightExpression(), env).first;
 
         // Visits the condition.
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -187,7 +187,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Projection projection,
             VariableSubstitutionEnvironment env) throws AsterixException {
-        Projection newProjection = (Projection) projection.getExpression().accept(this, env).first;
+        Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
+                projection.getName(), projection.star(), projection.exprStar());
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newProjection, env);
     }
 
