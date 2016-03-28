@@ -66,7 +66,7 @@ public class AIntervalPrinter implements IPrinter {
                 timeInstancePrinter = ADateTimePrinter.INSTANCE;
                 break;
             default:
-                throw new HyracksDataException("Unsupport internal time types in interval: " + typetag);
+                throw new HyracksDataException("Unsupported internal time types in interval: " + typetag);
         }
 
         timeInstancePrinter.print(b, startOffset, startSize, ps);
