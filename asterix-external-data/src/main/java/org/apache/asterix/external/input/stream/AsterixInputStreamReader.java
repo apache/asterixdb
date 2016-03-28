@@ -115,6 +115,6 @@ public class AsterixInputStreamReader extends Reader {
 
     @Override
     public void reset() throws IOException {
-        byteBuffer.clear();
+        byteBuffer.limit(0);
     }
 }

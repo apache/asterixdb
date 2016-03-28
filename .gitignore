@@ -14,6 +14,7 @@ asterix-app/rttest/
 asterix-app/mdtest/
 asterix-app/opttest/
 asterix-app/parserts/
+asterix-app/library/
 asterix-app/opt_parserts/
 asterix-app/runtime_parserts/
 asterix-app/data/csv/beer.csv
