@@ -151,8 +151,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     state.joiner = new MergeJoiner(ctx, memSize, partition, state.status, locks, mjc, leftRD);
                     ctx.setStateObject(state);
                     locks.getRight(partition).signal();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -167,8 +165,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 try {
                     state.joiner.setLeftFrame(buffer);
                     state.joiner.processMergeUsingLeftTuple(writer);
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -178,8 +174,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 locks.getLock(partition).lock();
                 try {
                     state.failed = true;
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -197,8 +191,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                         writer.close();
                     }
                     state.status.closeLeft();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -257,8 +249,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     state.status.openRight();
                 } catch (InterruptedException e) {
                     throw new HyracksDataException("RightOperator interrupted exceptrion", e);
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -280,8 +270,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
                     throw new HyracksDataException("RightOperator interrupted exceptrion", e);
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -293,8 +281,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 try {
                     state.failed = true;
                     locks.getLeft(partition).signal();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -306,8 +292,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 try {
                     state.status.closeRight();
                     locks.getLeft(partition).signal();
-                } catch (Exception e) {
-                    throw new HyracksDataException(e);
                 } finally {
                     locks.getLock(partition).unlock();
                 }

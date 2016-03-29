@@ -274,6 +274,7 @@ public class MergeJoiner {
     }
 
     public void setLeftFrame(ByteBuffer buffer) {
+        leftBuffer.clear();
         if (leftBuffer.capacity() < buffer.capacity()) {
             leftBuffer.limit(buffer.capacity());
         }
@@ -283,6 +284,7 @@ public class MergeJoiner {
     }
 
     public void setRightFrame(ByteBuffer buffer) {
+        rightBuffer.clear();
         if (rightBuffer.capacity() < buffer.capacity()) {
             rightBuffer.limit(buffer.capacity());
         }
