@@ -19,8 +19,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache</groupId>
-  <artifactId>experimental</artifactId>
-  <version>0.0.1</version>
+  <artifactId>apache-asterixdb-fullstack</artifactId>
+  <version>0.8.9</version>
   <packaging>pom</packaging>
   <name>hyracks-asterix</name>
 
@@ -34,7 +34,7 @@
   </licenses>
 
   <modules>
-    <module>hyracks</module>
+    <module>hyracks-fullstack</module>
     <module>asterixdb</module>
   </modules>
 </project>
