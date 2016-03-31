@@ -1,0 +1,41 @@
+Apache AsterixDB Hyracks B-Tree Example Client
+Copyright 2016 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
+
+ - lib/mockito-all-2.0.2-beta.jar
+
+    Mockito license - MIT.
+
+    Libraries used:
+
+    Cglib - Apache License 2.0
+    ASM - BSD license
+
+    Mockito all distribution:
+
+    Objenesis - MIT license
+    Hamcrest - BSD license
+
+ - lib/httpclient-4.3.jar
+
+    Apache HttpClient
+    Copyright 1999-2013 The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/).
+
+- lib/httpcore-4.3.jar
+
+    Apache HttpCore
+    Copyright 2005-2013 The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (http://www.apache.org/).
+
+
+    This project contains annotations derived from JCIP-ANNOTATIONS
+    Copyright (c) 2005 Brian Goetz and Tim Peierls. See http://www.jcip.net

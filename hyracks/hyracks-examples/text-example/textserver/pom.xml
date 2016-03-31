@@ -1,0 +1,187 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.hyracks.examples.text</groupId>
+  <artifactId>textserver</artifactId>
+  <name>textserver</name>
+
+  <parent>
+    <groupId>org.apache.hyracks</groupId>
+    <artifactId>text-example</artifactId>
+    <version>0.2.18-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+      <root.dir>${basedir}/../../../..</root.dir>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.3</version>
+        <executions>
+          <execution>
+            <configuration>
+              <programs>
+                <program>
+                  <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
+                  <name>hyrackscc</name>
+                </program>
+                <program>
+                  <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
+                  <name>hyracksnc</name>
+                </program>
+              </programs>
+              <repositoryLayout>flat</repositoryLayout>
+              <repositoryName>lib</repositoryName>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>assemble</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2-beta-5</version>
+        <executions>
+          <execution>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>attached</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+      	<groupId>org.apache.hyracks</groupId>
+      	<artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
+      	<version>0.2.18-SNAPSHOT</version>
+        <configuration>
+          <hyracksServerHome>${basedir}/target/textserver-${project.version}-binary-assembly</hyracksServerHome>
+          <jvmOptions>${jvm.extraargs}</jvmOptions>
+        </configuration>
+        <executions>
+          <execution>
+            <id>hyracks-cc-start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start-cc</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>hyracks-nc1-start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start-nc</goal>
+            </goals>
+            <configuration>
+              <nodeId>NC1</nodeId>
+              <dataIpAddress>127.0.0.1</dataIpAddress>
+              <ccHost>localhost</ccHost>
+            </configuration>
+          </execution>
+          <execution>
+            <id>hyracks-nc2-start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start-nc</goal>
+            </goals>
+            <configuration>
+              <nodeId>NC2</nodeId>
+              <dataIpAddress>127.0.0.1</dataIpAddress>
+              <ccHost>localhost</ccHost>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop-services</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop-services</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+      	<groupId>org.apache.maven.plugins</groupId>
+      	<artifactId>maven-failsafe-plugin</artifactId>
+      	<version>2.8.1</version>
+      	<executions>
+      	  <execution>
+      	    <id>it</id>
+      	    <phase>integration-test</phase>
+      	    <goals>
+      	      <goal>integration-test</goal>
+      	    </goals>
+      	  </execution>
+      	</executions>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <configuration>
+              <skip>true</skip>
+          </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>texthelper</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-control-cc</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-control-nc</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>textclient</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

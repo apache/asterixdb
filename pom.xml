@@ -1,0 +1,427 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.hyracks</groupId>
+  <artifactId>apache-asterixdb-hyracks</artifactId>
+  <version>0.2.18-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>hyracks-ecosystem-full-stack</name>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>LATEST</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.8</jdk.version>
+        <jvm.extraargs/>
+        <!-- Definition of tests in various categories which may be excluded -->
+        <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
+        <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
+        <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
+        <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}
+        </global.test.excludes>
+        <!-- Versions under dependencymanagement or used in many projects via properties -->
+        <hadoop.version>2.2.0</hadoop.version>
+        <junit.version>4.8.1</junit.version>
+        <commons.io.version>2.4</commons.io.version>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-client</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-minicluster</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons.io.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>1.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.11</version>
+        <executions>
+            <execution>
+                <phase>validate</phase>
+                <goals>
+                    <goal>check</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+          <licenses>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>The MIT License</licenseFamilyName>
+              <notes>For JQuery MIT/GPL2 Dual License</notes>
+              <patterns>
+                <pattern>Dual licensed under the MIT or GPL Version 2 licenses.</pattern>
+                <pattern>Dual licensed under the MIT and GPL2 licenses.</pattern>
+                <pattern>http://jquery.org/license</pattern>
+                <pattern>Dual licensed under the MIT</pattern>
+                <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
+              </patterns>
+            </license>
+          </licenses>
+          <licenseFamilies>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>The MIT License</familyName>
+            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>Apache License Version 2.0</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+          <excludeSubProjects>false</excludeSubProjects>
+          <excludes>
+           <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
+           <exclude>**/javascript/flot/*.js</exclude>
+           <exclude>**/javascript/jsplumb/*.js</exclude>
+           <exclude>**/javascript/jquery/*.js</exclude>
+           <exclude>**/javascript/adminconsole/*.js</exclude>
+           <exclude>**/stylesheet/jquery-ui/**</exclude>
+           <exclude>**/hyracks-dist/src/main/resources/conf/**</exclude>
+           <exclude>**/src/test/resources/data/**</exclude>
+           <exclude>**/src/test/resources/results/**</exclude>
+           <exclude>**/src/test/resources/expected/**</exclude>
+           <exclude>**/testcases/*.piglet</exclude>
+           <exclude>**/data/**/*.tbl</exclude>
+           <exclude>**/data/**/*.ddl</exclude>
+           <exclude>**/data/**/*.tsv</exclude>
+           <exclude>**/actual/conf.xml</exclude>
+           <exclude>**/actual/customer_result/part-*</exclude>
+           <exclude>**/src/main/resources/conf/*</exclude>
+           <exclude>**/data/dfs/**</exclude>
+           <exclude>**/invIndex*/**</exclude>
+           <exclude>**/*.job</exclude>
+           <exclude>**/*.conf</exclude>
+           <exclude>**/src/main/resources/*.cleaned</exclude>
+           <exclude>**/ClusterControllerService/**</exclude>
+           <exclude>**/target/**</exclude>
+           <exclude>**/output/**</exclude>
+           <exclude>**/target/**</exclude>
+           <exclude>**/*.iml</exclude>
+           <exclude>**/*.prefs</exclude>
+           <exclude>**/data/*.txt</exclude>
+           <exclude>**/data/**/*.txt</exclude>
+           <exclude>**/.classpath</exclude>
+           <exclude>**/.project</exclude>
+           <exclude>**/target/**</exclude>
+           <exclude>**/*.iml</exclude>
+           <exclude>**/.classpath</exclude>
+           <exclude>**/.project</exclude>
+           <exclude>**/.settings/**</exclude>
+           <exclude>algebricks/algebricks-examples/piglet-example/testcases/*.piglet</exclude>
+           <exclude>algebricks/algebricks-tests/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>algebricks/algebricks-tests/data/simple/*.tbl</exclude>
+           <exclude>algebricks/algebricks-tests/data/tpch0.001/*.tbl</exclude>
+           <exclude>algebricks/algebricks-tests/data/tpch0.001/tpch.ddl</exclude>
+           <exclude>algebricks/algebricks-tests/src/test/resources/results/scanMicroSortWrite.out</exclude>
+           <exclude>ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-client/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/flot/*.js</exclude>
+           <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jsplumb/jquery.jsPlumb-1.3.5-all-min.js</exclude>
+           <exclude>hyracks/hyracks-dist/src/main/resources/conf/master</exclude>
+           <exclude>hyracks/hyracks-dist/src/main/resources/conf/slaves</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/*.txt</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/*.tbl</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/tpch.ddl</exclude>
+           <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/wordcount.tsv</exclude>
+           <exclude>hyracks/hyracks-examples/text-example/textserver/data/*.txt</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/conf.xml</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/customer_result/part-0</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/build/test/data/dfs/**</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/ClusterControllerService/logs/jobs/*.log</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/data/customer.tbl</exclude>
+           <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/expected/part-0</exclude>
+           <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.first.cleaned</exclude>
+           <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.last.cleaned</exclude>
+      </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+	<groupId>org.apache.maven.plugins</groupId>
+	<artifactId>maven-surefire-plugin</artifactId>
+	<version>2.16</version>
+	<configuration>
+	  <failIfNoTests>false</failIfNoTests>
+	  <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+	  <argLine>-enableassertions -Xmx2048m
+	  -Dfile.encoding=UTF-8
+	  -Djava.util.logging.config.file=${user.home}/logging.properties
+	  -Xdebug
+	  -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
+	  <includes>
+	    <include>${global.test.includes},${test.includes}</include>
+	  </includes>
+          <excludes>
+            <exclude>${global.test.excludes},${test.excludes}</exclude>
+          </excludes>
+   </configuration>
+   </plugin>
+   <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <!-- We override the configuration plugin to override the descriptor to use for building
+            the source release zip. Specifically, we would like to control the inclusions/exclusions.
+            For example, we exclude the KEYS file from the zip -->
+          <executions>
+              <execution>
+                  <!-- Use this id to match the id mentioned in the assembly plugin configuration in
+                    the apache parent POM under the apache-release profile -->
+                  <id>source-release-assembly</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+                  <!-- combine.self should be override to replace the configuration in the parent POM -->
+                  <configuration combine.self="override">
+                      <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                      <descriptors>
+                          <descriptor>src/main/assembly/source.xml</descriptor>
+                      </descriptors>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
+            <configuration>
+               <source>${jdk.version}</source>
+               <target>${jdk.version}</target>
+               <compilerArgument>-Xlint:all</compilerArgument>
+            </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${root.dir}/src/main/appended-resources</directory>
+                  <!-- <filtering>true</filtering> -->
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-remote-resources-plugin</artifactId>
+          <executions>
+              <execution>
+                  <goals>
+                      <goal>process</goal>
+                  </goals>
+                  <configuration>
+                      <resourceBundles combine.children="append">
+                          <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                          <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
+                      </resourceBundles>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+           <plugins>
+               <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+               <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                              <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.rat</groupId>
+                                        <artifactId>apache-rat-plugin</artifactId>
+                                        <versionRange>[0.11,)</versionRange>
+                                        <goals>
+                                            <goal>check</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+      </pluginManagement>
+  </build>
+
+  <scm>
+    <connection>scm:git:https://github.com/apache/incubator-asterixdb-hyracks</connection>
+    <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
+    <url>https://github.com/apache/incubator-asterixdb-hyracks</url>
+    <tag>HEAD</tag>
+  </scm>
+
+
+  <profiles>
+    <profile>
+      <id>hanging-pregelix-tests</id>
+      <properties>
+        <hanging.pregelix.tests />
+      </properties>
+    </profile>
+    <profile>
+      <id>asterix-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <!-- We override the configuration plugin to override the descriptor to use for building
+            the source release zip. Specifically, we would like to control the inclusions/exclusions.
+            For example, we exclude the KEYS file from the zip -->
+            <executions>
+              <execution>
+                <!-- Use this id to match the id mentioned in the assembly plugin configuration in
+                the apache parent POM under the apache-release profile -->
+                <id>source-release-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <!-- combine.self should be override to replace the configuration in the parent POM -->
+                <configuration combine.self="override">
+                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                  <descriptors>
+                    <descriptor>src/main/assembly/source.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+        <id>java8</id>
+        <activation>
+            <jdk>1.8</jdk>
+        </activation>
+         <properties>
+            <jdk.version>1.8</jdk.version>
+         </properties>
+    </profile>
+  </profiles>
+
+  <repositories>
+    <repository>
+      <id>maven-central</id>
+      <url>http://repo1.maven.org/maven2/</url>
+    </repository>
+    <repository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+    </repository>
+    <repository>
+      <id>jboss-public</id>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <modules>
+    <module>hyracks</module>
+    <module>algebricks</module>
+  </modules>
+</project>

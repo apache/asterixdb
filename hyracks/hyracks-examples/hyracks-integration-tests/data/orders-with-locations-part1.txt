@@ -1,0 +1,557 @@
+1|37|O|131251.81|1996-01-02|5-LOW|Clerk#000000951|0|nstructions sleep furiously among |42.3631|-71.065|42.3631|-71.065|
+2|79|O|40183.29|1996-12-01|1-URGENT|Clerk#000000880|0| foxes. pending accounts at the pending, silent asymptot|42.1091|-70.696|42.1091|-70.696|
+3|124|F|160882.76|1993-10-14|5-LOW|Clerk#000000955|0|sly final accounts boost. carefully regular ideas cajole carefully. depos|40.8151|-73.0452|40.8151|-73.0452|
+4|137|O|31084.79|1995-10-11|5-LOW|Clerk#000000124|0|sits. slyly regular warthogs cajole. regular, regular theodolites acro|40.8151|-73.0452|40.8151|-73.0452|
+5|46|F|86615.25|1994-07-30|5-LOW|Clerk#000000925|0|quickly. bold deposits sleep slyly. packages use slyly|42.2481|-71.174|42.2481|-71.174|
+6|56|F|36468.55|1992-02-21|4-NOT SPECIFIED|Clerk#000000058|0|ggle. special, final requests are against the furiously specia|61.1201|-149.89|61.1201|-149.89|
+7|40|O|171488.73|1996-01-10|2-HIGH|Clerk#000000470|0|ly special requests |61.1501|-149.926|61.1501|-149.926|
+32|131|O|116923.00|1995-07-16|2-HIGH|Clerk#000000616|0|ise blithely bold, regular requests. quickly unusual dep|61.181|-149.814|61.181|-149.814|
+33|67|F|99798.76|1993-10-27|3-MEDIUM|Clerk#000000409|0|uriously. furiously final request|61.1517|-149.86|61.1517|-149.86|
+34|62|O|41670.02|1998-07-21|3-MEDIUM|Clerk#000000223|0|ly final packages. fluffily final deposits wake blithely ideas. spe|61.1806|-149.814|61.1806|-149.814|
+35|128|O|148789.52|1995-10-23|4-NOT SPECIFIED|Clerk#000000259|0|zzle. carefully enticing deposits nag furio|61.1806|-149.775|61.1806|-149.775|
+36|116|O|38988.98|1995-11-03|1-URGENT|Clerk#000000358|0| quick packages are blithely. slyly silent accounts wake qu|61.1806|-149.775|61.1806|-149.775|
+37|88|F|113701.89|1992-06-03|3-MEDIUM|Clerk#000000456|0|kly regular pinto beans. carefully unusual waters cajole never|61.1806|-149.775|61.1806|-149.775|
+38|125|O|46366.56|1996-08-21|4-NOT SPECIFIED|Clerk#000000604|0|haggle blithely. furiously express ideas haggle blithely furiously regular re|61.2113|-149.824|61.2113|-149.824|
+39|82|O|219707.84|1996-09-20|3-MEDIUM|Clerk#000000659|0|ole express, ironic requests: ir|61.1967|-149.877|61.1967|-149.877|
+64|34|F|20065.73|1994-07-16|3-MEDIUM|Clerk#000000661|0|wake fluffily. sometimes ironic pinto beans about the dolphin|61.2164|-149.892|61.2164|-149.892|
+65|17|P|65883.92|1995-03-18|1-URGENT|Clerk#000000632|0|ular requests are blithely pending orbits-- even requests against the deposit|61.1571|-149.883|61.1571|-149.883|
+66|130|F|79258.24|1994-01-20|5-LOW|Clerk#000000743|0|y pending requests integrate|61.2048|-149.834|61.2048|-149.834|
+67|58|O|116227.05|1996-12-19|4-NOT SPECIFIED|Clerk#000000547|0|symptotes haggle slyly around the furiously iron|61.0956|-149.843|61.0956|-149.843|
+68|29|O|215135.72|1998-04-18|3-MEDIUM|Clerk#000000440|0| pinto beans sleep carefully. blithely ironic deposits haggle furiously acro|61.1491|-149.809|61.1491|-149.809|
+69|85|F|162176.23|1994-06-04|4-NOT SPECIFIED|Clerk#000000330|0| depths atop the slyly thin deposits detect among the furiously silent accou|61.1981|-149.871|61.1981|-149.871|
+70|65|F|84651.80|1993-12-18|5-LOW|Clerk#000000322|0| carefully ironic request|61.1982|-149.876|61.1982|-149.876|
+71|4|O|178821.73|1998-01-24|4-NOT SPECIFIED|Clerk#000000271|0| express deposits along the blithely regul|61.1924|-149.909|61.1924|-149.909|
+96|109|F|55090.67|1994-04-17|2-HIGH|Clerk#000000395|0|oost furiously. pinto|61.2204|-149.728|61.2204|-149.728|
+97|22|F|68908.31|1993-01-29|3-MEDIUM|Clerk#000000547|0|hang blithely along the regular accounts. furiously even ideas after the|61.196|-149.864|61.196|-149.864|
+98|106|F|51004.44|1994-09-25|1-URGENT|Clerk#000000448|0|c asymptotes. quickly regular packages should have to nag re|61.1987|-149.889|61.1987|-149.889|
+99|89|F|92326.79|1994-03-13|4-NOT SPECIFIED|Clerk#000000973|0|e carefully ironic packages. pending|61.1984|-149.897|61.1984|-149.897|
+100|148|O|141311.01|1998-02-28|4-NOT SPECIFIED|Clerk#000000577|0|heodolites detect slyly alongside of the ent|61.1897|-149.898|61.1897|-149.898|
+101|28|O|95591.40|1996-03-17|3-MEDIUM|Clerk#000000419|0|ding accounts above the slyly final asymptote|61.1228|-149.81|61.1228|-149.81|
+102|1|O|113954.89|1997-05-09|2-HIGH|Clerk#000000596|0| slyly according to the asymptotes. carefully final packages integrate furious|61.1649|-149.881|61.1649|-149.881|
+103|31|O|95563.95|1996-06-20|4-NOT SPECIFIED|Clerk#000000090|0|ges. carefully unusual instructions haggle quickly regular f|61.1934|-149.887|61.1934|-149.887|
+128|74|F|36333.34|1992-06-15|1-URGENT|Clerk#000000385|0|ns integrate fluffily. ironic asymptotes after the regular excuses nag around |61.2164|-149.892|61.2164|-149.892|
+129|73|F|188124.55|1992-11-19|5-LOW|Clerk#000000859|0|ing tithes. carefully pending deposits boost about the silently express |61.1932|-149.886|61.1932|-149.886|
+130|37|F|115717.37|1992-05-08|2-HIGH|Clerk#000000036|0|le slyly unusual, regular packages? express deposits det|61.2072|-149.888|61.2072|-149.888|
+131|94|F|96596.81|1994-06-08|3-MEDIUM|Clerk#000000625|0|after the fluffily special foxes integrate s|61.2125|-149.904|61.2125|-149.904|
+132|28|F|118802.62|1993-06-11|3-MEDIUM|Clerk#000000488|0|sits are daringly accounts. carefully regular foxes sleep slyly about the|61.2142|-149.806|61.2142|-149.806|
+133|44|O|80437.72|1997-11-29|1-URGENT|Clerk#000000738|0|usly final asymptotes |61.1866|-149.923|61.1866|-149.923|
+134|7|F|154260.84|1992-05-01|4-NOT SPECIFIED|Clerk#000000711|0|lar theodolites boos|61.1089|-149.857|61.1089|-149.857|
+135|61|O|174569.88|1995-10-21|4-NOT SPECIFIED|Clerk#000000804|0|l platelets use according t|61.1024|-149.853|61.1024|-149.853|
+160|83|O|86076.86|1996-12-19|4-NOT SPECIFIED|Clerk#000000342|0|thely special sauternes wake slyly of t|61.1891|-149.906|61.1891|-149.906|
+161|17|F|19056.99|1994-08-31|2-HIGH|Clerk#000000322|0|carefully! special instructions sin|61.1891|-149.906|61.1891|-149.906|
+162|16|O|2158.13|1995-05-08|3-MEDIUM|Clerk#000000378|0|nts hinder fluffily ironic instructions. express, express excuses |61.1891|-149.906|61.1891|-149.906|
+163|88|O|125170.86|1997-09-05|3-MEDIUM|Clerk#000000379|0|y final packages. final foxes since the quickly even|61.1891|-149.906|61.1891|-149.906|
+164|1|F|202660.52|1992-10-21|5-LOW|Clerk#000000209|0|cajole ironic courts. slyly final ideas are slyly. blithely final Tiresias sub|61.1891|-149.906|61.1891|-149.906|
+165|28|F|141824.23|1993-01-30|4-NOT SPECIFIED|Clerk#000000292|0|across the blithely regular accounts. bold|61.1891|-149.906|61.1891|-149.906|
+166|109|O|93335.60|1995-09-12|2-HIGH|Clerk#000000440|0|lets. ironic, bold asymptotes kindle|61.1891|-149.906|61.1891|-149.906|
+167|121|F|52982.23|1993-01-04|4-NOT SPECIFIED|Clerk#000000731|0|s nag furiously bold excuses. fluffily iron|61.1891|-149.906|61.1891|-149.906|
+192|83|O|133002.55|1997-11-25|5-LOW|Clerk#000000483|0|y unusual platelets among the final instructions integrate rut|61.1891|-149.906|61.1891|-149.906|
+193|80|F|48053.18|1993-08-08|1-URGENT|Clerk#000000025|0|the furiously final pin|61.1891|-149.906|61.1891|-149.906|
+194|62|F|114097.63|1992-04-05|3-MEDIUM|Clerk#000000352|0|egular requests haggle slyly regular, regular pinto beans. asymptote|61.1891|-149.906|61.1891|-149.906|
+195|136|F|120053.52|1993-12-28|3-MEDIUM|Clerk#000000216|0|old forges are furiously sheaves. slyly fi|61.1891|-149.906|61.1891|-149.906|
+196|65|F|33248.04|1993-03-17|2-HIGH|Clerk#000000988|0|beans boost at the foxes. silent foxes|61.1891|-149.906|61.1891|-149.906|
+197|34|P|100290.07|1995-04-07|2-HIGH|Clerk#000000969|0|solve quickly about the even braids. carefully express deposits affix care|61.1891|-149.906|61.1891|-149.906|
+198|112|O|125792.83|1998-01-02|4-NOT SPECIFIED|Clerk#000000331|0|its. carefully ironic requests sleep. furiously express fox|61.1891|-149.906|61.1891|-149.906|
+199|53|O|80592.44|1996-03-07|2-HIGH|Clerk#000000489|0|g theodolites. special packag|61.1891|-149.906|61.1891|-149.906|
+224|4|F|155680.60|1994-06-18|4-NOT SPECIFIED|Clerk#000000642|0|r the quickly thin courts. carefully|61.1891|-149.906|61.1891|-149.906|
+225|34|P|165890.47|1995-05-25|1-URGENT|Clerk#000000177|0|s. blithely ironic accounts wake quickly fluffily special acc|61.1891|-149.906|61.1891|-149.906|
+226|128|F|180119.22|1993-03-10|2-HIGH|Clerk#000000756|0|s are carefully at the blithely ironic acc|61.1891|-149.906|61.1891|-149.906|
+227|10|O|46076.46|1995-11-10|5-LOW|Clerk#000000919|0| express instructions. slyly regul|61.1891|-149.906|61.1891|-149.906|
+228|46|F|2638.98|1993-02-25|1-URGENT|Clerk#000000562|0|es was slyly among the regular foxes. blithely regular dependenci|61.1891|-149.906|61.1891|-149.906|
+229|112|F|142290.77|1993-12-29|1-URGENT|Clerk#000000628|0|he fluffily even instructions. furiously i|61.1891|-149.906|61.1891|-149.906|
+230|103|F|107231.60|1993-10-27|1-URGENT|Clerk#000000520|0|odolites. carefully quick requ|61.1891|-149.906|61.1891|-149.906|
+231|91|F|141554.06|1994-09-29|2-HIGH|Clerk#000000446|0| packages haggle slyly after the carefully ironic instruct|61.1891|-149.906|61.1891|-149.906|
+256|125|F|106315.25|1993-10-19|4-NOT SPECIFIED|Clerk#000000834|0|he fluffily final ideas might are final accounts. carefully f|61.1891|-149.906|61.1891|-149.906|
+257|124|O|7102.74|1998-03-28|3-MEDIUM|Clerk#000000680|0|ts against the sly warhorses cajole slyly accounts|61.1891|-149.906|61.1891|-149.906|
+258|43|F|186669.10|1993-12-29|1-URGENT|Clerk#000000167|0|dencies. blithely quick packages cajole. ruthlessly final accounts|61.1891|-149.906|61.1891|-149.906|
+259|44|F|75661.70|1993-09-29|4-NOT SPECIFIED|Clerk#000000601|0|ages doubt blithely against the final foxes. carefully express deposits dazzle|61.1891|-149.906|61.1891|-149.906|
+260|106|O|179292.14|1996-12-10|3-MEDIUM|Clerk#000000960|0|lently regular pinto beans sleep after the slyly e|61.1891|-149.906|61.1891|-149.906|
+261|47|F|201003.12|1993-06-29|3-MEDIUM|Clerk#000000310|0|ully fluffily brave instructions. furiousl|61.1891|-149.906|61.1891|-149.906|
+262|31|O|108443.84|1995-11-25|4-NOT SPECIFIED|Clerk#000000551|0|l packages. blithely final pinto beans use carefu|61.1891|-149.906|61.1891|-149.906|
+263|118|F|79782.56|1994-05-17|2-HIGH|Clerk#000000088|0| pending instructions. blithely un|61.1891|-149.906|61.1891|-149.906|
+288|8|O|163794.53|1997-02-21|1-URGENT|Clerk#000000109|0|uriously final requests. even, final ideas det|61.1891|-149.906|61.1891|-149.906|
+289|104|O|131092.67|1997-02-10|3-MEDIUM|Clerk#000000103|0|sily. slyly special excuse|61.1891|-149.906|61.1891|-149.906|
+290|118|F|62814.89|1994-01-01|4-NOT SPECIFIED|Clerk#000000735|0|efully dogged deposits. furiou|61.1891|-149.906|61.1891|-149.906|
+291|142|F|66817.05|1994-03-13|1-URGENT|Clerk#000000923|0|dolites. carefully regular pinto beans cajol|64.8541|-147.813|64.8541|-147.813|
+292|23|F|30783.05|1992-01-13|2-HIGH|Clerk#000000193|0|g pinto beans will have to sleep f|64.8414|-147.606|64.8414|-147.606|
+293|31|F|37248.78|1992-10-02|2-HIGH|Clerk#000000629|0|re bold, ironic deposits. platelets c|64.8371|-147.746|64.8371|-147.746|
+294|52|F|30059.47|1993-07-16|3-MEDIUM|Clerk#000000499|0|kly according to the frays. final dolphins affix quickly |64.8151|-147.707|64.8151|-147.707|
+295|19|F|89345.99|1994-09-29|2-HIGH|Clerk#000000155|0| unusual pinto beans play. regular ideas haggle|64.8371|-147.746|64.8371|-147.746|
+320|1|O|39835.54|1997-11-21|2-HIGH|Clerk#000000573|0|ar foxes nag blithely|64.849|-147.813|64.849|-147.813|
+321|124|F|62251.15|1993-03-21|3-MEDIUM|Clerk#000000289|0|equests run. blithely final dependencies after the deposits wake caref|64.8425|-147.724|64.8425|-147.724|
+322|134|F|127068.89|1992-03-19|1-URGENT|Clerk#000000158|0|fully across the slyly bold packages. packages against the quickly regular i|64.8425|-147.724|64.8425|-147.724|
+323|40|F|79683.42|1994-03-26|1-URGENT|Clerk#000000959|0|arefully pending foxes sleep blithely. slyly express accoun|64.849|-147.826|64.849|-147.826|
+324|106|F|26868.85|1992-03-20|1-URGENT|Clerk#000000352|0| about the ironic, regular deposits run blithely against the excuses|64.815|-147.882|64.815|-147.882|
+325|41|F|71543.41|1993-10-17|5-LOW|Clerk#000000844|0|ly sometimes pending pa|64.8906|-147.628|64.8906|-147.628|
+326|76|O|229165.17|1995-06-04|2-HIGH|Clerk#000000466|0| requests. furiously ironic asymptotes mold carefully alongside of the blit|64.8276|-147.639|64.8276|-147.639|
+327|145|P|24468.16|1995-04-17|5-LOW|Clerk#000000992|0|ng the slyly final courts. slyly even escapades eat |64.8461|-147.813|64.8461|-147.813|
+352|107|F|16003.86|1994-03-08|2-HIGH|Clerk#000000932|0|ke slyly bold pinto beans. blithely regular accounts against the spe|64.8281|-147.812|64.8281|-147.812|
+353|2|F|179984.42|1993-12-31|5-LOW|Clerk#000000449|0| quiet ideas sleep. even instructions cajole slyly. silently spe|64.8377|-147.718|64.8377|-147.718|
+354|139|O|157062.70|1996-03-14|2-HIGH|Clerk#000000511|0|ly regular ideas wake across the slyly silent ideas. final deposits eat b|64.8417|-147.718|64.8417|-147.718|
+355|71|F|69447.25|1994-06-14|5-LOW|Clerk#000000532|0|s. sometimes regular requests cajole. regular, pending accounts a|64.8145|-147.772|64.8145|-147.772|
+356|148|F|162786.67|1994-06-30|4-NOT SPECIFIED|Clerk#000000944|0|as wake along the bold accounts. even, |64.8541|-147.813|64.8541|-147.813|
+357|61|O|98723.11|1996-10-09|2-HIGH|Clerk#000000301|0|e blithely about the express, final accounts. quickl|64.8169|-147.779|64.8169|-147.779|
+358|4|F|226806.66|1993-09-20|2-HIGH|Clerk#000000392|0|l, silent instructions are slyly. silently even de|64.8378|-147.71|64.8378|-147.71|
+359|79|F|142891.22|1994-12-19|3-MEDIUM|Clerk#000000934|0|n dolphins. special courts above the carefully ironic requests use|64.8436|-147.722|64.8436|-147.722|
+384|115|F|122785.82|1992-03-03|5-LOW|Clerk#000000206|0|, even accounts use furiously packages. slyly ironic pla|64.9401|-147.402|64.9401|-147.402|
+385|34|O|50724.06|1996-03-22|5-LOW|Clerk#000000600|0|hless accounts unwind bold pain|64.8426|-147.719|64.8426|-147.719|
+386|61|F|90380.40|1995-01-25|2-HIGH|Clerk#000000648|0| haggle quickly. stealthily bold asymptotes haggle among the furiously even re|64.8534|-147.811|64.8534|-147.811|
+387|4|O|130647.18|1997-01-26|4-NOT SPECIFIED|Clerk#000000768|0| are carefully among the quickly even deposits. furiously silent req|64.9341|-147.928|64.9341|-147.928|
+388|46|F|120533.46|1992-12-16|4-NOT SPECIFIED|Clerk#000000356|0|ar foxes above the furiously ironic deposits nag slyly final reque|64.8393|-147.72|64.8393|-147.72|
+389|127|F|1984.14|1994-02-17|2-HIGH|Clerk#000000062|0|ing to the regular asymptotes. final, pending foxes about the blithely sil|64.8406|-147.731|64.8406|-147.731|
+390|103|O|168562.27|1998-04-07|5-LOW|Clerk#000000404|0|xpress asymptotes use among the regular, final pinto b|64.9281|-147.865|64.9281|-147.865|
+391|112|F|13282.23|1994-11-17|2-HIGH|Clerk#000000256|0|orges thrash fluffil|64.8371|-147.716|64.8371|-147.716|
+416|41|F|71362.50|1993-09-27|5-LOW|Clerk#000000294|0| the accounts. fluffily bold depo|64.9414|-147.841|64.9414|-147.841|
+417|55|F|91982.29|1994-02-06|3-MEDIUM|Clerk#000000468|0|ironic, even packages. thinly unusual accounts sleep along the slyly unusual |64.8363|-147.79|64.8363|-147.79|
+418|95|P|33124.96|1995-04-13|4-NOT SPECIFIED|Clerk#000000643|0|. furiously ironic instruc|64.8371|-147.716|64.8371|-147.716|
+419|118|O|111597.96|1996-10-01|3-MEDIUM|Clerk#000000376|0|osits. blithely pending theodolites boost carefully|64.8591|-147.917|64.8591|-147.917|
+420|91|O|198039.23|1995-10-31|4-NOT SPECIFIED|Clerk#000000756|0|leep carefully final excuses. fluffily pending requests unwind carefully above|64.8363|-147.79|64.8363|-147.79|
+421|40|F|1084.38|1992-02-22|5-LOW|Clerk#000000405|0|egular, even packages according to the final, un|55.3801|-131.682|55.3801|-131.682|
+422|74|O|106045.89|1997-05-31|4-NOT SPECIFIED|Clerk#000000049|0|aggle carefully across the accounts. regular accounts eat fluffi|55.3073|-131.528|55.3073|-131.528|
+423|104|O|26981.31|1996-06-01|1-URGENT|Clerk#000000674|0|quests. deposits cajole quickly. furiously bold accounts haggle q|55.3801|-131.682|55.3801|-131.682|
+448|149|O|114978.03|1995-08-21|3-MEDIUM|Clerk#000000597|0| regular, express foxes use blithely. quic|55.3601|-131.681|55.3601|-131.681|
+449|97|O|41605.63|1995-07-20|2-HIGH|Clerk#000000841|0|. furiously regular theodolites affix blithely |55.3279|-131.613|55.3279|-131.613|
+450|49|P|153386.61|1995-03-05|4-NOT SPECIFIED|Clerk#000000293|0|d theodolites. boldly bold foxes since the pack|55.3129|-131.588|55.3129|-131.588|
+451|100|O|104664.40|1998-05-25|5-LOW|Clerk#000000048|0|nic pinto beans. theodolites poach carefully; |55.3801|-131.682|55.3801|-131.682|
+452|61|O|2007.48|1997-10-14|1-URGENT|Clerk#000000498|0|t, unusual instructions above the blithely bold pint|55.3801|-131.682|55.3801|-131.682|
+453|46|O|216826.73|1997-05-26|5-LOW|Clerk#000000504|0|ss foxes. furiously regular ideas sleep according to t|55.4299|-131.789|55.4299|-131.789|
+454|49|O|23198.24|1995-12-27|5-LOW|Clerk#000000890|0|dolites sleep carefully blithely regular deposits. quickly regul|55.3801|-131.682|55.3801|-131.682|
+455|13|O|138010.76|1996-12-04|1-URGENT|Clerk#000000796|0| about the final platelets. dependen|55.3507|-131.671|55.3507|-131.671|
+480|73|F|20530.97|1993-05-08|5-LOW|Clerk#000000004|0|ealthy pinto beans. fluffily regular requests along the special sheaves wake |55.3801|-131.682|55.3801|-131.682|
+481|31|F|117827.18|1992-10-08|2-HIGH|Clerk#000000230|0|ly final ideas. packages haggle fluffily|55.3394|-131.636|55.3394|-131.636|
+482|127|O|136634.34|1996-03-26|1-URGENT|Clerk#000000295|0|ts. deposits wake: final acco|55.3801|-131.682|55.3801|-131.682|
+483|35|O|39793.05|1995-07-11|2-HIGH|Clerk#000000025|0|cross the carefully final e|55.3103|-131.582|55.3103|-131.582|
+484|55|O|219920.62|1997-01-03|3-MEDIUM|Clerk#000000545|0|grouches use. furiously bold accounts maintain. bold, regular deposits|55.3801|-131.682|55.3801|-131.682|
+485|101|O|110432.76|1997-03-26|2-HIGH|Clerk#000000105|0| regular ideas nag thinly furiously s|55.3801|-131.682|55.3801|-131.682|
+486|52|O|185968.15|1996-03-11|4-NOT SPECIFIED|Clerk#000000803|0|riously dolphins. fluffily ironic requ|55.3801|-131.682|55.3801|-131.682|
+487|109|F|48502.79|1992-08-18|1-URGENT|Clerk#000000086|0|ithely unusual courts eat accordi|55.3801|-131.682|55.3801|-131.682|
+512|64|P|124661.48|1995-05-20|5-LOW|Clerk#000000814|0|ding requests. carefully express theodolites was quickly. furious|55.3801|-131.682|55.3801|-131.682|
+513|61|O|63703.92|1995-05-01|2-HIGH|Clerk#000000522|0|regular packages. pinto beans cajole carefully against the even|55.3424|-131.634|55.3424|-131.634|
+514|76|O|104585.77|1996-04-04|2-HIGH|Clerk#000000094|0| cajole furiously. slyly final excuses cajole. slyly special instructions |55.4097|-131.729|55.4097|-131.729|
+515|142|F|153720.22|1993-08-29|4-NOT SPECIFIED|Clerk#000000700|0|eposits are furiously furiously silent pinto beans. pending pack|55.3801|-131.682|55.3801|-131.682|
+516|44|O|10677.86|1998-04-21|2-HIGH|Clerk#000000305|0|lar, unusual platelets are carefully. even courts sleep bold, final pinto bea|55.3801|-131.682|55.3801|-131.682|
+517|10|O|82197.79|1997-04-07|5-LOW|Clerk#000000359|0|slyly pending deposits cajole quickly packages. furiou|55.3462|-131.658|55.3462|-131.658|
+518|145|O|223537.09|1998-02-08|2-HIGH|Clerk#000000768|0| the carefully bold accounts. quickly regular excuses are|55.3801|-131.682|55.3801|-131.682|
+519|64|O|95731.50|1997-10-31|1-URGENT|Clerk#000000985|0|ains doze furiously against the f|55.3801|-131.682|55.3801|-131.682|
+544|94|F|47627.89|1993-02-17|2-HIGH|Clerk#000000145|0|the special, final accounts. dogged dolphins|55.3801|-131.682|55.3801|-131.682|
+545|64|O|23476.12|1995-11-07|2-HIGH|Clerk#000000537|0|as. blithely final hockey players about th|55.3801|-131.682|55.3801|-131.682|
+546|145|O|14790.37|1996-11-01|2-HIGH|Clerk#000000041|0|osits sleep. slyly special dolphins about the q|55.3801|-131.682|55.3801|-131.682|
+547|100|O|96855.29|1996-06-22|3-MEDIUM|Clerk#000000976|0|ing accounts eat. carefully regular packa|55.3801|-131.682|55.3801|-131.682|
+548|124|F|99088.75|1994-09-21|1-URGENT|Clerk#000000435|0|arefully express instru|55.3801|-131.682|55.3801|-131.682|
+549|110|F|141679.41|1992-07-13|1-URGENT|Clerk#000000196|0|ideas alongside of |55.3801|-131.682|55.3801|-131.682|
+550|25|O|33123.28|1995-08-02|1-URGENT|Clerk#000000204|0|t requests. blithely |61.5856|-149.316|61.5856|-149.316|
+551|91|O|46355.83|1995-05-30|1-URGENT|Clerk#000000179|0|xpress accounts boost quic|61.5781|-149.429|61.5781|-149.429|
+576|31|O|18307.45|1997-05-13|3-MEDIUM|Clerk#000000955|0|l requests affix regular requests. final account|61.6141|-149.457|61.6141|-149.457|
+577|56|F|34768.68|1994-12-19|5-LOW|Clerk#000000154|0| deposits engage stealthil|61.5801|-149.461|61.5801|-149.461|
+578|94|O|70392.02|1997-01-10|5-LOW|Clerk#000000281|0|e blithely even packages. slyly pending platelets bes|61.9071|-150.067|61.9071|-150.067|
+579|68|O|120828.12|1998-03-11|2-HIGH|Clerk#000000862|0| regular instructions. blithely even p|61.5928|-149.392|61.5928|-149.392|
+580|61|O|88219.12|1997-07-05|2-HIGH|Clerk#000000314|0|tegrate fluffily regular accou|61.6141|-149.457|61.6141|-149.457|
+581|70|O|126066.00|1997-02-23|4-NOT SPECIFIED|Clerk#000000239|0| requests. even requests use slyly. blithely ironic |61.5792|-149.36|61.5792|-149.36|
+582|50|O|129004.81|1997-10-21|1-URGENT|Clerk#000000378|0|n pinto beans print a|61.6049|-149.463|61.6049|-149.463|
+583|49|O|127817.38|1997-03-19|3-MEDIUM|Clerk#000000792|0|efully express requests. a|61.6099|-149.328|61.6099|-149.328|
+608|26|O|62567.99|1996-02-28|3-MEDIUM|Clerk#000000995|0|nic waters wake slyly slyly expre|61.5531|-149.651|61.5531|-149.651|
+609|127|F|21088.59|1994-06-01|3-MEDIUM|Clerk#000000348|0|- ironic gifts believe furiously ca|61.6141|-149.457|61.6141|-149.457|
+610|52|O|175142.28|1995-08-02|1-URGENT|Clerk#000000610|0|totes. ironic, unusual packag|61.6141|-149.457|61.6141|-149.457|
+611|106|F|73907.63|1993-01-27|1-URGENT|Clerk#000000401|0|ounts detect furiously ac|61.5531|-149.651|61.5531|-149.651|
+612|82|F|145695.42|1992-10-21|3-MEDIUM|Clerk#000000759|0|boost quickly quickly final excuses. final foxes use bravely afte|61.6141|-149.457|61.6141|-149.457|
+613|139|O|33396.35|1995-06-18|2-HIGH|Clerk#000000172|0|ts hinder among the deposits. fluffily ironic depos|61.7321|-150.12|61.7321|-150.12|
+614|134|F|218116.21|1992-12-01|2-HIGH|Clerk#000000388|0| deposits! even, daring theodol|61.6141|-149.457|61.6141|-149.457|
+615|67|F|32890.89|1992-05-09|5-LOW|Clerk#000000388|0|t to promise asymptotes. packages haggle alongside of the fluffil|61.582|-149.441|61.582|-149.441|
+640|97|F|145495.62|1993-01-23|2-HIGH|Clerk#000000433|0|r, unusual accounts boost carefully final ideas. slyly silent theod|61.5818|-149.44|61.5818|-149.44|
+641|133|F|120626.49|1993-08-30|5-LOW|Clerk#000000175|0|ents cajole furiously about the quickly silent pac|61.6141|-149.457|61.6141|-149.457|
+642|40|F|22994.51|1993-12-16|3-MEDIUM|Clerk#000000357|0| among the requests wake slyly alongside of th|61.7321|-150.12|61.7321|-150.12|
+643|58|P|180396.95|1995-03-25|2-HIGH|Clerk#000000354|0|g dependencies. regular accounts |61.6308|-149.415|61.6308|-149.415|
+644|8|F|201268.06|1992-05-01|1-URGENT|Clerk#000000550|0| blithely unusual platelets haggle ironic, special excuses. excuses unwi|61.5801|-149.461|61.5801|-149.461|
+645|115|F|234763.73|1994-12-03|2-HIGH|Clerk#000000090|0|quickly daring theodolites across the regu|61.5811|-149.444|61.5811|-149.444|
+646|52|F|142070.65|1994-11-22|2-HIGH|Clerk#000000203|0|carefully even foxes. fina|61.6521|-149.92|61.6521|-149.92|
+647|143|O|56449.23|1997-08-07|1-URGENT|Clerk#000000270|0|egular pearls. carefully express asymptotes are. even account|61.6141|-149.307|61.6141|-149.307|
+672|109|F|89877.09|1994-04-14|5-LOW|Clerk#000000106|0|egular requests are furiously according to |61.6168|-149.328|61.6168|-149.328|
+673|80|F|21137.08|1994-03-10|1-URGENT|Clerk#000000448|0| special pinto beans use quickly furiously even depende|61.5714|-149.381|61.5714|-149.381|
+674|34|F|27204.60|1992-08-29|5-LOW|Clerk#000000448|0|ully special deposits. furiously final warhorses affix carefully. fluffily f|61.6521|-149.92|61.6521|-149.92|
+675|13|O|125188.72|1997-07-31|2-HIGH|Clerk#000000168|0|ffily between the careful|61.5858|-149.376|61.5858|-149.376|
+676|38|O|163966.67|1996-12-13|2-HIGH|Clerk#000000248|0|the final deposits. special, pending|61.5822|-149.463|61.5822|-149.463|
+677|124|F|147915.68|1993-11-24|3-MEDIUM|Clerk#000000824|0|uriously special pinto beans cajole carefully. fi|61.5861|-149.303|61.5861|-149.303|
+678|131|F|135761.05|1993-02-27|5-LOW|Clerk#000000530|0|. blithely final somas about the|61.5821|-149.438|61.5821|-149.438|
+679|49|O|8945.03|1995-12-15|2-HIGH|Clerk#000000853|0|tealthy, final pinto beans haggle slyly. pending platelets about the special, |61.6281|-149.338|61.6281|-149.338|
+704|85|O|56210.26|1996-11-21|3-MEDIUM|Clerk#000000682|0|blithely pending platelets wake alongside of the final, iron|61.5771|-149.335|61.5771|-149.335|
+705|43|O|83773.49|1997-02-13|4-NOT SPECIFIED|Clerk#000000294|0|ithely regular dependencies. express, even packages sleep slyly pending t|61.5917|-149.464|61.5917|-149.464|
+706|148|O|23973.60|1995-09-09|1-URGENT|Clerk#000000448|0|g the packages. deposits caj|61.1927|-149.86|61.1927|-149.86|
+707|118|F|58218.35|1994-11-20|3-MEDIUM|Clerk#000000199|0| ideas about the silent, bold deposits nag dolphins|61.1879|-149.85|61.1879|-149.85|
+708|32|O|100445.59|1998-07-03|3-MEDIUM|Clerk#000000101|0|lphins cajole about t|61.1814|-149.849|61.1814|-149.849|
+709|37|O|72055.87|1998-04-21|1-URGENT|Clerk#000000461|0|ons alongside of the carefully bold pinto bea|61.2104|-149.892|61.2104|-149.892|
+710|133|F|208974.42|1993-01-02|5-LOW|Clerk#000000026|0| regular, regular requests boost. fluffily re|61.2093|-149.903|61.2093|-149.903|
+711|64|F|92484.70|1993-09-23|4-NOT SPECIFIED|Clerk#000000856|0|its. fluffily regular gifts are furi|61.1481|-149.829|61.1481|-149.829|
+736|47|O|130204.17|1998-06-21|5-LOW|Clerk#000000881|0|refully of the final pi|61.2161|-149.876|61.2161|-149.876|
+737|121|F|12984.85|1992-04-26|5-LOW|Clerk#000000233|0|ake blithely express, ironic theodolites. blithely special accounts wa|61.1972|-149.75|61.1972|-149.75|
+738|22|F|114145.18|1993-03-02|4-NOT SPECIFIED|Clerk#000000669|0|ly even foxes. furiously regular accounts cajole ca|61.2066|-149.887|61.2066|-149.887|
+739|1|O|159171.69|1998-05-31|5-LOW|Clerk#000000900|0| against the slyly ironic packages nag slyly ironic|61.2161|-149.876|61.2161|-149.876|
+740|44|O|83490.99|1995-07-16|3-MEDIUM|Clerk#000000583|0|courts haggle furiously across the final, regul|61.195|-149.834|61.195|-149.834|
+741|106|O|47985.98|1998-07-07|2-HIGH|Clerk#000000295|0|ic instructions. slyly express instructions solv|61.2038|-149.808|61.2038|-149.808|
+742|103|F|207632.55|1994-12-23|5-LOW|Clerk#000000543|0|equests? slyly ironic dolphins boost carefully above the blithely|61.1228|-149.862|61.1228|-149.862|
+743|79|O|23614.89|1996-10-04|4-NOT SPECIFIED|Clerk#000000933|0|eans. furiously ironic deposits sleep carefully carefully qui|61.2005|-149.785|61.2005|-149.785|
+768|98|O|220636.82|1996-08-20|3-MEDIUM|Clerk#000000411|0|jole slyly ironic packages. slyly even idea|61.181|-149.825|61.181|-149.825|
+769|80|F|43092.76|1993-06-02|3-MEDIUM|Clerk#000000172|0|ggle furiously. ironic packages haggle slyly. bold platelets affix s|61.1867|-149.919|61.1867|-149.919|
+770|32|O|64271.75|1998-05-23|5-LOW|Clerk#000000572|0|heodolites. furiously special pinto beans cajole pac|61.1955|-149.911|61.1955|-149.911|
+771|46|O|105302.05|1995-06-17|1-URGENT|Clerk#000000105|0|s. furiously final instructions across the deposit|61.1089|-149.858|61.1089|-149.858|
+772|97|F|128234.96|1993-04-17|2-HIGH|Clerk#000000430|0|s boost blithely fluffily idle ideas? fluffily even pin|61.1805|-149.889|61.1805|-149.889|
+773|133|F|146862.27|1993-09-26|3-MEDIUM|Clerk#000000307|0|tions are quickly accounts. accounts use bold, even pinto beans. gifts ag|61.1534|-149.985|61.1534|-149.985|
+774|80|O|145857.60|1995-12-04|1-URGENT|Clerk#000000883|0|tealthily even depths|61.1901|-149.911|61.1901|-149.911|
+775|134|F|59455.61|1995-03-18|1-URGENT|Clerk#000000191|0|kly express requests. fluffily silent accounts poach furiously|61.2122|-149.734|61.2122|-149.734|
+800|56|O|87892.38|1998-07-14|2-HIGH|Clerk#000000213|0|y alongside of the pending packages? final platelets nag fluffily carefu|61.1951|-149.906|61.1951|-149.906|
+801|118|F|127717.72|1992-02-18|1-URGENT|Clerk#000000186|0|iously from the furiously enticing reques|61.2043|-149.869|61.2043|-149.869|
+802|137|F|156381.95|1995-01-05|1-URGENT|Clerk#000000516|0|posits. ironic, pending requests cajole. even theodol|61.2036|-149.869|61.2036|-149.869|
+803|16|O|27629.66|1997-04-29|5-LOW|Clerk#000000260|0|ic instructions. even deposits haggle furiously at the deposits-- regular de|61.1883|-149.886|61.1883|-149.886|
+804|50|F|94400.43|1993-03-12|3-MEDIUM|Clerk#000000931|0|s. blithely final foxes are about the packag|61.2141|-149.864|61.2141|-149.864|
+805|127|O|90042.41|1995-07-05|4-NOT SPECIFIED|Clerk#000000856|0|y according to the fluffily |61.1955|-149.782|61.1955|-149.782|
+806|131|O|26839.16|1996-06-20|2-HIGH|Clerk#000000240|0| the ironic packages wake carefully fina|61.2183|-149.894|61.2183|-149.894|
+807|145|F|222392.53|1993-11-24|3-MEDIUM|Clerk#000000012|0|refully special tithes. blithely regular accoun|61.1417|-149.864|61.1417|-149.864|
+832|29|F|68494.08|1992-04-19|5-LOW|Clerk#000000495|0|xes. bravely regular packages sleep up the furiously bold accou|61.1883|-149.883|61.1883|-149.883|
+833|56|F|49033.69|1994-02-13|3-MEDIUM|Clerk#000000437|0|ts haggle quickly across the slyl|61.2161|-149.876|61.2161|-149.876|
+834|43|F|46459.92|1994-05-23|3-MEDIUM|Clerk#000000805|0| sleep. quickly even foxes are boldly. slyly express requests use slyly|61.2193|-149.869|61.2193|-149.869|
+835|65|O|62430.67|1995-10-08|4-NOT SPECIFIED|Clerk#000000416|0|s about the carefully special foxes haggle quickly about the|61.2191|-149.888|61.2191|-149.888|
+836|70|O|72843.48|1996-11-25|4-NOT SPECIFIED|Clerk#000000729|0|ely bold excuses sleep regular ideas. furiously unusual ideas wake furiou|61.2191|-149.888|61.2191|-149.888|
+837|116|F|60918.41|1994-06-15|4-NOT SPECIFIED|Clerk#000000563|0|kages sleep slyly above the ironic, final orbits|61.2191|-149.888|61.2191|-149.888|
+838|17|O|82918.36|1998-01-29|5-LOW|Clerk#000000213|0| slyly around the slyly even|61.2191|-149.888|61.2191|-149.888|
+839|28|O|70182.63|1995-08-08|1-URGENT|Clerk#000000951|0|the carefully even platelets. furiously unusual fo|61.2191|-149.888|61.2191|-149.888|
+864|139|O|74710.74|1997-08-17|1-URGENT|Clerk#000000036|0|ly after the slyly regular deposits. express, regular asymptotes nag ca|61.2191|-149.888|61.2191|-149.888|
+865|4|F|70430.54|1993-05-04|3-MEDIUM|Clerk#000000337|0|. special packages wake after the carefully final accounts. express pinto be|61.2191|-149.888|61.2191|-149.888|
+866|40|F|4766.19|1992-11-28|3-MEDIUM|Clerk#000000718|0|ins after the even, even accounts nod blithel|61.2191|-149.888|61.2191|-149.888|
+867|26|F|7471.75|1993-11-16|3-MEDIUM|Clerk#000000877|0|pades nag quickly final, |61.2191|-149.888|61.2191|-149.888|
+868|104|F|127345.45|1992-06-09|4-NOT SPECIFIED|Clerk#000000782|0|onic theodolites print carefully. blithely dogge|61.2191|-149.888|61.2191|-149.888|
+869|136|O|58932.19|1997-01-12|2-HIGH|Clerk#000000245|0|ar sheaves are slowly. slyly even attainments boost theodolites. furiously|61.2191|-149.888|61.2191|-149.888|
+870|34|F|40492.37|1993-06-20|4-NOT SPECIFIED|Clerk#000000123|0|blithely ironic ideas nod. sly, r|61.2191|-149.888|61.2191|-149.888|
+871|16|O|172861.58|1995-11-15|5-LOW|Clerk#000000882|0|oss the ironic theodolites.|61.1891|-149.906|61.1891|-149.906|
+896|2|F|169847.63|1993-03-09|1-URGENT|Clerk#000000187|0|inal packages eat blithely according to the warhorses. furiously quiet de|61.2191|-149.888|61.2191|-149.888|
+897|49|P|57697.44|1995-03-20|1-URGENT|Clerk#000000316|0| wake quickly against |61.2191|-149.888|61.2191|-149.888|
+898|55|F|101020.75|1993-06-03|2-HIGH|Clerk#000000611|0|. unusual pinto beans haggle quickly across |61.1101|-149.857|61.1101|-149.857|
+899|109|O|125562.09|1998-04-08|5-LOW|Clerk#000000575|0|rts engage carefully final theodolites.|61.1101|-149.857|61.1101|-149.857|
+900|46|F|120073.51|1994-10-01|4-NOT SPECIFIED|Clerk#000000060|0| fluffily express deposits nag furiousl|61.1101|-149.857|61.1101|-149.857|
+901|13|O|81826.12|1998-07-21|4-NOT SPECIFIED|Clerk#000000929|0|lyly even foxes are furious, silent requests. requests about the quickly |61.1101|-149.857|61.1101|-149.857|
+902|10|F|37348.62|1994-07-27|4-NOT SPECIFIED|Clerk#000000811|0|yly final requests over the furiously regula|61.1101|-149.857|61.1101|-149.857|
+903|11|O|109351.87|1995-07-07|4-NOT SPECIFIED|Clerk#000000793|0|e slyly about the final pl|61.1101|-149.857|61.1101|-149.857|
+928|67|F|228136.49|1995-03-02|5-LOW|Clerk#000000450|0|ithely express pinto beans. |61.1101|-149.857|61.1101|-149.857|
+929|83|F|109301.02|1992-10-02|2-HIGH|Clerk#000000160|0|its. furiously even foxes affix carefully finally silent accounts. express req|61.1101|-149.857|61.1101|-149.857|
+930|131|F|199102.23|1994-12-17|1-URGENT|Clerk#000000004|0| accounts nag slyly. ironic, ironic accounts wake blithel|61.1101|-149.857|61.1101|-149.857|
+931|103|F|117909.23|1992-12-07|1-URGENT|Clerk#000000881|0|ss packages haggle furiously express, regular deposits. even, e|61.1101|-149.857|61.1101|-149.857|
+932|41|O|40234.50|1997-05-16|2-HIGH|Clerk#000000218|0|ly express instructions boost furiously reg|61.1101|-149.857|61.1101|-149.857|
+933|97|F|71349.30|1992-08-05|4-NOT SPECIFIED|Clerk#000000752|0|ial courts wake permanently against the furiously regular ideas. unusual |61.1101|-149.857|61.1101|-149.857|
+934|52|O|17213.59|1996-07-03|1-URGENT|Clerk#000000229|0|ts integrate carefully. sly, regular deposits af|61.1101|-149.857|61.1101|-149.857|
+935|50|O|97733.87|1997-09-24|5-LOW|Clerk#000000180|0|iously final deposits cajole. blithely even packages |61.1101|-149.857|61.1101|-149.857|
+960|35|F|63537.13|1994-09-21|3-MEDIUM|Clerk#000000120|0|regular accounts. requests|61.1101|-149.857|61.1101|-149.857|
+961|56|P|158893.16|1995-06-04|4-NOT SPECIFIED|Clerk#000000720|0|ons nag furiously among the quickl|61.1101|-149.857|61.1101|-149.857|
+962|37|F|98258.73|1994-05-06|5-LOW|Clerk#000000463|0|ments nag deposits. fluffily ironic a|61.1101|-149.857|61.1101|-149.857|
+963|26|F|53287.25|1994-05-26|3-MEDIUM|Clerk#000000497|0|uses haggle carefully. slyly even dependencies after the packages ha|61.1101|-149.857|61.1101|-149.857|
+964|76|O|131146.47|1995-05-20|3-MEDIUM|Clerk#000000657|0|print blithely ironic, careful theodolit|61.1101|-149.857|61.1101|-149.857|
+965|70|P|41758.44|1995-05-15|5-LOW|Clerk#000000218|0|iously special packages. slyly pending requests are carefully |64.8591|-147.917|64.8591|-147.917|
+966|14|O|120516.93|1998-04-30|2-HIGH|Clerk#000000239|0|special deposits. furious|64.8273|-147.715|64.8273|-147.715|
+967|110|F|179287.95|1992-06-21|3-MEDIUM|Clerk#000000167|0|excuses engage quickly bold dep|64.8281|-147.715|64.8281|-147.715|
+992|55|O|133665.12|1997-11-11|3-MEDIUM|Clerk#000000875|0|ts. regular pinto beans thrash carefully sl|64.8552|-147.763|64.8552|-147.763|
+993|80|O|198238.65|1995-09-10|3-MEDIUM|Clerk#000000894|0|quickly express accounts among the furiously bol|64.8481|-147.684|64.8481|-147.684|
+994|2|F|41433.48|1994-04-20|5-LOW|Clerk#000000497|0|ole. slyly bold excuses nag caref|64.8522|-147.773|64.8522|-147.773|
+995|116|P|135157.92|1995-05-31|3-MEDIUM|Clerk#000000439|0|deas. blithely final deposits play. express accounts wake blithely caref|64.8467|-147.703|64.8467|-147.703|
+996|71|O|47447.63|1997-12-29|1-URGENT|Clerk#000000497|0|arefully final packages into the slyly final requests affix blit|64.8963|-147.662|64.8963|-147.662|
+997|109|O|27561.82|1997-05-19|2-HIGH|Clerk#000000651|0|ly express depths. furiously final requests haggle furiously. carefu|64.8372|-147.796|64.8372|-147.796|
+998|32|F|65269.38|1994-11-26|4-NOT SPECIFIED|Clerk#000000956|0|ronic dolphins. ironic, bold ideas haggle furiously furious|64.8312|-147.716|64.8312|-147.716|
+999|61|F|145249.13|1993-09-05|5-LOW|Clerk#000000464|0|pitaphs sleep. regular accounts use. f|64.811|-147.71|64.811|-147.71|
+1024|4|O|176084.63|1997-12-23|5-LOW|Clerk#000000903|0| blithely. even, express theodolites cajole slyly across|64.8971|-147.663|64.8971|-147.663|
+1025|103|F|82034.03|1995-05-05|2-HIGH|Clerk#000000376|0|ross the slyly final pa|64.85|-147.699|64.85|-147.699|
+1026|73|O|36464.76|1997-06-04|5-LOW|Clerk#000000223|0|s wake blithely. special acco|64.8389|-147.743|64.8389|-147.743|
+1027|128|F|112770.89|1992-06-03|3-MEDIUM|Clerk#000000241|0|equests cajole. slyly final pinto bean|64.781|-148|64.781|-148|
+1028|70|F|153864.67|1994-01-01|2-HIGH|Clerk#000000131|0|ts are. final, silent deposits are among the fl|64.8377|-147.718|64.8377|-147.718|
+1029|130|F|47440.91|1994-06-21|2-HIGH|Clerk#000000700|0|quests sleep. slyly even foxes wake quickly final theodolites. clo|64.8248|-147.886|64.8248|-147.886|
+1030|134|F|16346.94|1994-06-15|5-LOW|Clerk#000000422|0|ully ironic accounts sleep carefully. requests are carefully alongside of the |64.818|-147.679|64.818|-147.679|
+1031|4|F|128024.71|1994-09-01|3-MEDIUM|Clerk#000000448|0|s; ironic theodolites along the carefully ex|64.8271|-147.79|64.8271|-147.79|
+1056|28|F|38446.39|1995-02-11|1-URGENT|Clerk#000000125|0|t, even deposits hang about the slyly special i|64.8451|-147.812|64.8451|-147.812|
+1057|76|F|108107.42|1992-02-20|1-URGENT|Clerk#000000124|0|cuses dazzle carefully careful, ironic pinto beans. carefully even theod|64.8311|-147.729|64.8311|-147.729|
+1058|53|F|89359.11|1993-04-26|3-MEDIUM|Clerk#000000373|0|kly pending courts haggle. blithely regular sheaves integrate carefully fi|64.8454|-147.855|64.8454|-147.855|
+1059|127|F|198360.22|1994-02-27|1-URGENT|Clerk#000000104|0|en accounts. carefully bold packages cajole daringly special depende|64.8302|-147.744|64.8302|-147.744|
+1060|140|F|121994.04|1993-02-21|3-MEDIUM|Clerk#000000989|0|l platelets sleep quickly slyly special requests. furiously |64.8113|-147.91|64.8113|-147.91|
+1061|103|O|166947.75|1998-05-15|5-LOW|Clerk#000000576|0|uests sleep at the packages. fur|64.8271|-147.789|64.8271|-147.789|
+1062|106|O|39805.04|1997-01-15|1-URGENT|Clerk#000000152|0|eposits use blithely |64.8451|-147.698|64.8451|-147.698|
+1063|37|F|41392.31|1994-04-02|2-HIGH|Clerk#000000024|0|deposits nag quickly regular deposits. quickl|64.8586|-147.69|64.8586|-147.69|
+1088|148|F|47120.41|1992-05-21|5-LOW|Clerk#000000347|0|counts are blithely. platelets print. carefully |64.8507|-147.702|64.8507|-147.702|
+1089|49|O|103192.74|1996-05-04|4-NOT SPECIFIED|Clerk#000000226|0|ns haggle ruthlessly. even requests are quickly abov|64.8371|-147.716|64.8371|-147.716|
+1090|19|O|32929.30|1997-11-15|2-HIGH|Clerk#000000300|0| furiously regular platelets haggle along the slyly unusual foxes! |64.8449|-147.743|64.8449|-147.743|
+1091|83|O|35795.22|1996-08-27|1-URGENT|Clerk#000000549|0| even pinto beans haggle quickly alongside of the eve|64.8475|-147.706|64.8475|-147.706|
+1092|124|P|85552.21|1995-03-04|3-MEDIUM|Clerk#000000006|0|re quickly along the blithe|64.8452|-147.714|64.8452|-147.714|
+1093|101|O|79189.58|1997-07-31|4-NOT SPECIFIED|Clerk#000000159|0| after the carefully ironic requests. carefully ironic packages wake fluffil|64.8125|-147.787|64.8125|-147.787|
+1094|145|O|9006.25|1997-12-24|3-MEDIUM|Clerk#000000570|0|beans affix furiously about the pending, even deposits. finally pendi|55.3801|-131.682|55.3801|-131.682|
+1095|145|O|178491.24|1995-08-22|3-MEDIUM|Clerk#000000709|0|sly bold requests cajole carefully according to|55.3801|-131.682|55.3801|-131.682|
+1120|140|O|107958.62|1997-11-07|3-MEDIUM|Clerk#000000319|0|lly special requests. slyly pending platelets are quickly pending requ|55.3801|-131.682|55.3801|-131.682|
+1121|29|O|241837.88|1997-01-13|3-MEDIUM|Clerk#000000541|0|r escapades. deposits above the fluffily bold requests hag|55.3801|-131.682|55.3801|-131.682|
+1122|121|O|179747.47|1997-01-10|1-URGENT|Clerk#000000083|0|uffily carefully final theodolites. furiously express packages affix|55.3801|-131.682|55.3801|-131.682|
+1123|73|O|93259.93|1996-08-03|3-MEDIUM|Clerk#000000929|0|uriously pending requests. slyly regular instruction|55.3801|-131.682|55.3801|-131.682|
+1124|80|O|141858.97|1998-07-30|5-LOW|Clerk#000000326|0|regular pinto beans along the fluffily silent packages|55.3599|-131.687|55.3599|-131.687|
+1125|25|F|80438.38|1994-10-27|2-HIGH|Clerk#000000510|0|ithely final requests. i|55.4381|-131.803|55.4381|-131.803|
+1126|145|O|59982.31|1998-01-28|4-NOT SPECIFIED|Clerk#000000928|0|d slyly regular ideas: special ideas believe slyly. slyly ironic sheaves w|55.3751|-131.718|55.3751|-131.718|
+1127|58|O|103320.91|1995-09-19|4-NOT SPECIFIED|Clerk#000000397|0|usly silent, regular pinto beans. blithely express requests boos|55.3421|-131.641|55.3421|-131.641|
+1152|49|F|51775.54|1994-08-14|4-NOT SPECIFIED|Clerk#000000496|0|equests. deposits ab|55.3408|-131.64|55.3408|-131.64|
+1153|121|O|220727.97|1996-04-18|5-LOW|Clerk#000000059|0| across the pending deposi|55.2978|-131.534|55.2978|-131.534|
+1154|37|F|192417.85|1992-02-15|1-URGENT|Clerk#000000268|0|old asymptotes are special requests. blithely even deposits sleep furiously|55.3801|-131.682|55.3801|-131.682|
+1155|149|O|126902.81|1997-10-06|2-HIGH|Clerk#000000164|0|c deposits haggle among the ironic, even requests. carefully ironic sheaves n|55.3801|-131.682|55.3801|-131.682|
+1156|133|O|217682.81|1996-10-19|1-URGENT|Clerk#000000200|0| blithely ironic dolphins. furiously pendi|55.3421|-131.622|55.3421|-131.622|
+1157|97|O|85394.06|1998-01-14|4-NOT SPECIFIED|Clerk#000000207|0|out the regular excuses boost carefully against the furio|55.3801|-131.682|55.3801|-131.682|
+1158|142|O|31075.51|1996-06-30|2-HIGH|Clerk#000000549|0|integrate slyly furiously ironic deposit|55.3801|-131.682|55.3801|-131.682|
+1159|70|F|55553.68|1992-09-18|3-MEDIUM|Clerk#000000992|0|ts may sleep. requests according to the|55.3801|-131.682|55.3801|-131.682|
+1184|89|O|39700.29|1997-10-26|5-LOW|Clerk#000000777|0|iously even packages haggle fluffily care|55.3267|-131.523|55.3267|-131.523|
+1185|74|F|47033.21|1992-08-24|5-LOW|Clerk#000000344|0| even escapades are. package|55.3522|-131.685|55.3522|-131.685|
+1186|59|O|82026.18|1996-08-15|4-NOT SPECIFIED|Clerk#000000798|0|ingly regular pinto beans: instructi|55.5351|-133.014|55.5351|-133.014|
+1187|134|F|85948.02|1992-11-20|3-MEDIUM|Clerk#000000047|0|s after the furiously final deposits boost slyly under the|55.5351|-133.014|55.5351|-133.014|
+1188|20|O|54655.07|1996-04-11|2-HIGH|Clerk#000000256|0|ully ironic deposits. slyl|55.5351|-133.014|55.5351|-133.014|
+1189|46|F|71017.99|1994-04-09|1-URGENT|Clerk#000000243|0|f the even accounts. courts print blithely ironic accounts. sile|55.5351|-133.014|55.5351|-133.014|
+1190|13|O|31043.39|1997-03-16|5-LOW|Clerk#000000575|0|ccounts above the foxes integrate carefully after the |55.5351|-133.014|55.5351|-133.014|
+1191|112|O|28623.04|1995-11-07|3-MEDIUM|Clerk#000000011|0|uests nag furiously. carefully even requests|55.4691|-132.855|55.4691|-132.855|
+1216|122|F|68056.57|1992-12-07|5-LOW|Clerk#000000918|0|nal foxes around the e|55.5511|-133.081|55.5511|-133.081|
+1217|7|F|40982.08|1992-04-26|4-NOT SPECIFIED|Clerk#000000538|0| foxes nag quickly. ironic excuses nod. blithely pending|55.5351|-133.014|55.5351|-133.014|
+1218|10|F|99834.47|1994-06-20|4-NOT SPECIFIED|Clerk#000000994|0|s cajole. special, silent deposits about the theo|55.5531|-133.097|55.5531|-133.097|
+1219|28|O|10163.56|1995-10-05|3-MEDIUM|Clerk#000000800|0|od carefully. slyly final dependencies across the even fray|55.5351|-133.014|55.5351|-133.014|
+1220|49|O|122157.14|1996-08-29|1-URGENT|Clerk#000000712|0|inal theodolites wake. fluffily ironic asymptotes cajol|55.4726|-131.793|55.4726|-131.793|
+1221|14|F|117397.16|1992-04-19|4-NOT SPECIFIED|Clerk#000000852|0| detect against the silent, even deposits. carefully ironic|55.3801|-131.682|55.3801|-131.682|
+1222|10|F|47623.94|1993-02-05|3-MEDIUM|Clerk#000000811|0|theodolites use quickly even accounts. carefully final asympto|55.3801|-131.682|55.3801|-131.682|
+1223|10|O|26714.67|1996-05-25|4-NOT SPECIFIED|Clerk#000000238|0|posits was blithely fr|55.3801|-131.682|55.3801|-131.682|
+1248|49|F|210713.88|1992-01-02|1-URGENT|Clerk#000000890|0|t the carefully regular dugouts. s|61.5745|-149.562|61.5745|-149.562|
+1249|149|F|45889.09|1994-01-05|1-URGENT|Clerk#000000095|0|al ideas sleep above the pending pin|61.7321|-150.12|61.7321|-150.12|
+1250|37|F|12907.62|1992-09-29|4-NOT SPECIFIED|Clerk#000000652|0|ts after the fluffily pending instructions use slyly about the s|61.5421|-149.419|61.5421|-149.419|
+1251|38|O|109536.55|1997-10-30|1-URGENT|Clerk#000000276|0|, brave sauternes. deposits boost fluffily.|61.5722|-149.702|61.5722|-149.702|
+1252|149|O|93403.05|1997-08-04|5-LOW|Clerk#000000348|0|ng the slyly regular excuses. special courts nag furiously blithely e|61.5743|-149.405|61.5743|-149.405|
+1253|115|F|92730.74|1993-01-26|1-URGENT|Clerk#000000775|0| requests sleep furiously even foxes. ruthless packag|61.578|-149.441|61.578|-149.441|
+1254|70|O|94649.25|1995-12-22|1-URGENT|Clerk#000000607|0| pinto beans. carefully regular request|61.5826|-149.427|61.5826|-149.427|
+1255|122|F|62518.31|1994-05-30|4-NOT SPECIFIED|Clerk#000000798|0|ct slyly regular accounts. quick|61.5586|-149.351|61.5586|-149.351|
+1280|97|F|91664.85|1993-01-11|5-LOW|Clerk#000000160|0|posits thrash quickly after the theodolites. furiously iro|61.5844|-149.442|61.5844|-149.442|
+1281|62|F|165454.51|1994-12-11|1-URGENT|Clerk#000000430|0|counts. carefully pending accounts eat |61.5817|-149.472|61.5817|-149.472|
+1282|116|F|61297.42|1992-02-29|4-NOT SPECIFIED|Clerk#000000168|0|he quickly special packages. furiously final re|61.6141|-149.457|61.6141|-149.457|
+1283|118|O|202623.92|1996-08-30|4-NOT SPECIFIED|Clerk#000000260|0| pinto beans boost slyly ac|61.5761|-149.602|61.5761|-149.602|
+1284|134|O|106122.38|1996-01-07|2-HIGH|Clerk#000000492|0|s. blithely silent deposits s|61.6141|-149.457|61.6141|-149.457|
+1285|11|F|139124.72|1992-06-01|1-URGENT|Clerk#000000423|0|cial deposits cajole after the ironic requests. p|61.58|-149.434|61.58|-149.434|
+1286|109|F|207291.83|1993-05-14|4-NOT SPECIFIED|Clerk#000000939|0| deposits use carefully from the excuses. slyly bold p|61.6002|-149.429|61.6002|-149.429|
+1287|19|F|131432.42|1994-07-05|2-HIGH|Clerk#000000288|0|ly ironic dolphins integrate furiously among the final packages. st|61.569|-149.347|61.569|-149.347|
+1312|112|F|58111.00|1994-05-19|3-MEDIUM|Clerk#000000538|0|n, express accounts across the ironic|61.5812|-149.448|61.5812|-149.448|
+1313|148|F|46598.65|1994-09-13|1-URGENT|Clerk#000000774|0|ld accounts. regular deposits cajole. ironically pending theodolites use car|61.6141|-149.457|61.6141|-149.457|
+1314|143|F|56207.66|1994-05-13|3-MEDIUM|Clerk#000000485|0|ickly blithe packages nod ideas. furiously bold braids boost around the car|61.6141|-149.457|61.6141|-149.457|
+1315|22|O|121935.23|1998-03-22|5-LOW|Clerk#000000840|0|final theodolites alongside of the carefu|61.6141|-149.457|61.6141|-149.457|
+1316|16|F|163746.47|1993-12-03|1-URGENT|Clerk#000000857|0|ully bold theodolites? pending, bold pin|61.5969|-149.367|61.5969|-149.367|
+1317|100|P|139714.71|1995-05-19|2-HIGH|Clerk#000000373|0|sts. furiously special deposits lose fur|61.58|-149.4|61.58|-149.4|
+1318|128|O|81663.65|1998-06-27|3-MEDIUM|Clerk#000000581|0|s hang bold requests. pending, re|61.5848|-149.445|61.5848|-149.445|
+1319|32|O|31103.83|1996-09-27|2-HIGH|Clerk#000000257|0|y across the ruthlessly ironic accounts. unusu|61.5811|-149.444|61.5811|-149.444|
+1344|17|F|43809.37|1992-04-16|5-LOW|Clerk#000000178|0|omise close, silent requests. pending theodolites boost pending |61.5733|-149.389|61.5733|-149.389|
+1345|95|F|111207.93|1992-10-28|5-LOW|Clerk#000000447|0| regular tithes. quickly fluffy de|61.6141|-149.457|61.6141|-149.457|
+1346|76|F|171975.62|1992-06-18|2-HIGH|Clerk#000000374|0|ges sleep quickly-- even pint|61.5952|-149.436|61.5952|-149.436|
+1347|41|O|173444.60|1997-06-20|5-LOW|Clerk#000000977|0|he furiously even foxes use carefully express req|61.5421|-149.419|61.5421|-149.419|
+1348|19|O|94135.77|1998-04-18|5-LOW|Clerk#000000206|0|tly. quickly even deposi|61.5783|-149.362|61.5783|-149.362|
+1349|64|O|46376.09|1997-10-26|1-URGENT|Clerk#000000543|0|yly! blithely special theodolites cajole. unusual, reg|61.7321|-150.12|61.7321|-150.12|
+1350|52|F|49305.98|1993-08-24|1-URGENT|Clerk#000000635|0|iously about the blithely special a|61.5691|-149.328|61.5691|-149.328|
+1351|106|O|24637.96|1998-04-20|1-URGENT|Clerk#000000012|0| cajole. regular, special re|61.6141|-149.457|61.6141|-149.457|
+1376|47|O|23984.88|1997-05-04|4-NOT SPECIFIED|Clerk#000000730|0|der furiously final, final frets. carefull|61.5819|-149.3|61.5819|-149.3|
+1377|20|O|108334.30|1998-04-24|4-NOT SPECIFIED|Clerk#000000625|0|lly across the blithely express accounts. ironic excuses promise carefully de|61.6431|-149.289|61.6431|-149.289|
+1378|20|O|118495.12|1996-03-09|4-NOT SPECIFIED|Clerk#000000705|0| furiously even tithes cajole slyly among the quick|61.6431|-149.292|61.6431|-149.292|
+1379|65|O|84627.76|1998-05-25|5-LOW|Clerk#000000861|0|y deposits are caref|61.6228|-149.313|61.6228|-149.313|
+1380|137|O|94969.41|1996-07-07|3-MEDIUM|Clerk#000000969|0|inal deposits wake slyly daringly even requests. bold, even foxe|61.2125|-149.894|61.2125|-149.894|
+1381|127|O|58212.22|1998-05-25|3-MEDIUM|Clerk#000000107|0|even requests breach after the bold, ironic instructions. slyly even|61.1879|-149.886|61.1879|-149.886|
+1382|133|F|173522.71|1993-08-17|5-LOW|Clerk#000000241|0|fully final packages sl|61.1594|-149.835|61.1594|-149.835|
+1383|121|F|34797.72|1993-04-27|2-HIGH|Clerk#000000785|0|ts. express requests sleep blithel|61.2123|-149.854|61.2123|-149.854|
+1408|55|O|183965.61|1997-12-26|4-NOT SPECIFIED|Clerk#000000942|0|t the quickly final asymptotes. unusual|61.1951|-149.945|61.1951|-149.945|
+1409|143|F|72440.52|1992-12-31|4-NOT SPECIFIED|Clerk#000000065|0|ructions. furiously unusual excuses are regular, unusual theodolites. fin|61.2138|-149.856|61.2138|-149.856|
+1410|113|O|114879.19|1997-04-12|5-LOW|Clerk#000000123|0|iously along the bravely regular dolphins. pinto beans cajole furiously sp|61.1255|-149.864|61.1255|-149.864|
+1411|95|F|164462.61|1994-12-21|2-HIGH|Clerk#000000566|0|s. furiously special excuses across the pending pinto beans haggle sp|61.2066|-149.808|61.2066|-149.808|
+1412|53|F|78676.54|1993-03-13|4-NOT SPECIFIED|Clerk#000000083|0|uffily daring theodolit|61.2138|-149.896|61.2138|-149.896|
+1413|91|O|75733.58|1997-06-14|3-MEDIUM|Clerk#000000342|0|, ironic instructions. carefully even packages dazzle|61.2161|-149.876|61.2161|-149.876|
+1414|77|O|38057.81|1995-08-16|1-URGENT|Clerk#000000883|0|ccounts. ironic foxes haggle car|61.1594|-149.888|61.1594|-149.888|
+1415|79|F|24654.79|1994-05-29|4-NOT SPECIFIED|Clerk#000000601|0|rays. blithely final ideas affix quickl|61.1806|-149.775|61.1806|-149.775|
+1440|98|O|50201.16|1995-08-10|5-LOW|Clerk#000000956|0| pending requests. closely s|61.1101|-149.857|61.1101|-149.857|
+1441|122|O|156477.94|1997-03-06|4-NOT SPECIFIED|Clerk#000000156|0|ter the excuses. ironic dependencies m|61.1541|-149.958|61.1541|-149.958|
+1442|112|F|7108.12|1994-07-05|4-NOT SPECIFIED|Clerk#000000935|0|nal pinto beans. slyly ironic ideas cajol|61.1268|-149.947|61.1268|-149.947|
+1443|44|O|44672.03|1996-12-16|5-LOW|Clerk#000000185|0|x blithely against the carefully final somas. even asymptotes are. quickly spe|61.0931|-149.785|61.0931|-149.785|
+1444|134|F|207907.60|1994-12-06|3-MEDIUM|Clerk#000000783|0|ove the bold accounts cajole fluffily about|61.1901|-149.892|61.1901|-149.892|
+1445|115|F|154653.32|1995-01-10|3-MEDIUM|Clerk#000000211|0|even packages wake fluffily |61.2183|-149.889|61.2183|-149.889|
+1446|41|O|27663.16|1998-02-16|5-LOW|Clerk#000000274|0|lly regular notornis above the requests sleep final accounts! |61.2164|-149.882|61.2164|-149.882|
+1447|91|F|108171.38|1992-10-15|2-HIGH|Clerk#000000880|0|inly against the blithely pending excuses. regular, pe|61.2161|-149.876|61.2161|-149.876|
+1472|149|O|65331.05|1996-10-06|5-LOW|Clerk#000000303|0|y special dolphins around the final dependencies wake quick|61.219|-149.792|61.219|-149.792|
+1473|94|O|80624.38|1997-03-17|3-MEDIUM|Clerk#000000960|0|furiously close accoun|61.2188|-149.892|61.2188|-149.892|
+1474|70|F|51697.18|1995-01-09|1-URGENT|Clerk#000000438|0|detect quickly above the carefully even |61.2143|-149.837|61.2143|-149.837|
+1475|5|O|185496.66|1997-11-12|2-HIGH|Clerk#000000972|0|cally final packages boost. blithely ironic packa|61.1608|-149.835|61.1608|-149.835|
+1476|145|O|18795.62|1996-06-27|2-HIGH|Clerk#000000673|0|ding accounts hinder alongside of the quickly pending requests. fluf|61.1886|-149.944|61.1886|-149.944|
+1477|76|O|231831.35|1997-08-24|5-LOW|Clerk#000000612|0|ly bold foxes. final ideas would cajo|61.1201|-149.89|61.1201|-149.89|
+1478|50|O|20791.50|1997-08-03|2-HIGH|Clerk#000000827|0|lessly. carefully express|61.1201|-149.89|61.1201|-149.89|
+1479|16|O|31471.04|1995-12-16|4-NOT SPECIFIED|Clerk#000000697|0|he furiously even foxes. thinly bold deposits|61.1585|-149.872|61.1585|-149.872|
+1504|2|F|89399.40|1992-08-28|3-MEDIUM|Clerk#000000381|0|, brave deposits. bold de|61.195|-149.892|61.195|-149.892|
+1505|37|F|55892.35|1992-08-21|2-HIGH|Clerk#000000544|0|s. slyly ironic packages cajole. carefully regular packages haggle |61.0895|-149.694|61.0895|-149.694|
+1506|148|F|195844.84|1992-09-21|3-MEDIUM|Clerk#000000620|0| dependencies. accounts affix blithely slowly unusual deposits. slyly regular |61.2201|-149.831|61.2201|-149.831|
+1507|121|F|96166.92|1993-10-14|3-MEDIUM|Clerk#000000305|0|stealthy, ironic de|61.1663|-149.867|61.1663|-149.867|
+1508|103|O|151282.65|1998-04-10|5-LOW|Clerk#000000117|0| after the furiously regular pinto beans hang slyly quickly ironi|61.2138|-149.906|61.2138|-149.906|
+1509|64|F|180455.98|1993-07-08|5-LOW|Clerk#000000770|0|the regular ideas. regul|61.2193|-149.902|61.2193|-149.902|
+1510|53|O|154590.05|1996-09-17|5-LOW|Clerk#000000128|0|ld carefully. furiously final asymptotes haggle furiously|61.1201|-149.89|61.1201|-149.89|
+1511|79|O|59651.38|1996-12-22|4-NOT SPECIFIED|Clerk#000000386|0|ts above the depend|61.1601|-149.984|61.1601|-149.984|
+1536|94|O|5184.26|1997-01-26|3-MEDIUM|Clerk#000000117|0|ges are! furiously final deposits cajole iron|61.1101|-149.857|61.1101|-149.857|
+1537|109|F|108317.51|1992-02-15|4-NOT SPECIFIED|Clerk#000000862|0|g to the even deposits. ironic, final packages |61.1101|-149.857|61.1101|-149.857|
+1538|29|O|179554.41|1995-06-18|4-NOT SPECIFIED|Clerk#000000258|0| instructions. regular theod|61.1101|-149.857|61.1101|-149.857|
+1539|112|F|39612.63|1995-03-10|5-LOW|Clerk#000000840|0|nstructions boost pa|61.1101|-149.857|61.1101|-149.857|
+1540|16|F|128014.15|1992-08-05|2-HIGH|Clerk#000000927|0|r ideas hinder blithe|61.1101|-149.857|61.1101|-149.857|
+1541|94|P|47286.32|1995-05-18|1-URGENT|Clerk#000000906|0|y. slyly ironic warhorses around the furiously regul|61.1101|-149.857|61.1101|-149.857|
+1542|143|F|132972.24|1993-09-15|3-MEDIUM|Clerk#000000435|0|t the furiously close deposits do was f|61.1101|-149.857|61.1101|-149.857|
+1543|52|O|139047.22|1997-02-20|1-URGENT|Clerk#000000398|0|unts. furiously pend|61.1101|-149.857|61.1101|-149.857|
+1568|17|O|76119.72|1997-01-30|4-NOT SPECIFIED|Clerk#000000554|0|d notornis. carefully |61.1101|-149.857|61.1101|-149.857|
+1569|104|O|87803.55|1998-04-02|5-LOW|Clerk#000000786|0|orbits. fluffily even decoys serve blithely. furiously furious realms nag acro|61.1101|-149.857|61.1101|-149.857|
+1570|124|O|35589.57|1998-03-16|1-URGENT|Clerk#000000745|0|pinto beans haggle furiousl|61.1101|-149.857|61.1101|-149.857|
+1571|103|F|151404.78|1992-12-05|2-HIGH|Clerk#000000565|0|ously furiously bold warthogs. slyly ironic instructions are quickly a|61.1101|-149.857|61.1101|-149.857|
+1572|11|O|47232.79|1996-02-24|2-HIGH|Clerk#000000994|0|fluffily ironic accounts haggle blithely final platelets! slyly regular foxes|61.1101|-149.857|61.1101|-149.857|
+1573|148|F|86918.57|1992-12-28|2-HIGH|Clerk#000000940|0|ess, ironic deposits use along the carefu|61.1101|-149.857|61.1101|-149.857|
+1574|134|O|179923.54|1996-12-12|3-MEDIUM|Clerk#000000809|0| ideas hinder after the carefully unusual |61.1101|-149.857|61.1101|-149.857|
+1575|145|O|197031.52|1995-09-13|3-MEDIUM|Clerk#000000497|0|. furiously regular dep|61.1101|-149.857|61.1101|-149.857|
+1600|94|F|130515.61|1993-03-03|3-MEDIUM|Clerk#000000627|0|tions cajole quietly above the regular, silent requests. slyly fin|61.1101|-149.857|61.1101|-149.857|
+1601|53|F|73962.95|1994-08-27|5-LOW|Clerk#000000469|0|ent deposits are ca|61.1101|-149.857|61.1101|-149.857|
+1602|1|F|4225.26|1993-08-05|5-LOW|Clerk#000000660|0|deposits. busily silent instructions haggle furiously. fin|61.1101|-149.857|61.1101|-149.857|
+1603|2|F|29305.47|1993-07-31|4-NOT SPECIFIED|Clerk#000000869|0|s. slyly silent deposits boo|61.1101|-149.857|61.1101|-149.857|
+1604|113|F|107139.29|1993-07-17|5-LOW|Clerk#000000512|0|lithely silent waters. blithely unusual packages alongside |61.1101|-149.857|61.1101|-149.857|
+1605|58|O|130687.64|1998-04-24|4-NOT SPECIFIED|Clerk#000000616|0|sleep furiously? ruthless, even pinto beans |61.1101|-149.857|61.1101|-149.857|
+1606|53|O|115877.40|1997-04-17|4-NOT SPECIFIED|Clerk#000000550|0|r requests. quickly even platelets breach before the ironically|61.1101|-149.857|61.1101|-149.857|
+1607|149|O|166335.03|1995-12-16|2-HIGH|Clerk#000000498|0| bold, pending foxes haggle. slyly silent |61.1101|-149.857|61.1101|-149.857|
+1632|67|O|183286.33|1997-01-08|3-MEDIUM|Clerk#000000351|0|onic requests are accounts. bold a|61.1101|-149.857|61.1101|-149.857|
+1633|16|O|52359.51|1995-10-14|2-HIGH|Clerk#000000666|0|y silent accounts sl|61.1101|-149.857|61.1101|-149.857|
+1634|70|O|145898.47|1996-09-10|1-URGENT|Clerk#000000360|0|arefully blithely ironic requests. slyly unusual instructions alongside|61.1101|-149.857|61.1101|-149.857|
+1635|4|O|70232.26|1997-02-13|3-MEDIUM|Clerk#000000958|0|s. slyly ironic requests affix slyly |61.1101|-149.857|61.1101|-149.857|
+1636|79|O|172021.87|1997-06-17|3-MEDIUM|Clerk#000000457|0|ding requests. slyly ironic courts wake quickl|61.1101|-149.857|61.1101|-149.857|
+1637|73|F|180912.15|1995-02-08|4-NOT SPECIFIED|Clerk#000000189|0| final accounts. blithely silent ideas cajole bravely. carefully express |61.1101|-149.857|61.1101|-149.857|
+1638|139|O|172436.30|1997-08-13|2-HIGH|Clerk#000000643|0|he fluffily regular asymp|61.1101|-149.857|61.1101|-149.857|
+1639|5|O|104166.56|1995-08-20|4-NOT SPECIFIED|Clerk#000000939|0|haggle furiously. final requests detect furious|61.1101|-149.857|61.1101|-149.857|
+1664|64|O|178060.22|1996-03-03|1-URGENT|Clerk#000000090|0|y quickly even asymptotes. furiously regular packages haggle quickly fin|61.1101|-149.857|61.1101|-149.857|
+1665|76|F|4819.91|1994-05-08|2-HIGH|Clerk#000000920|0|ly regular packages are fluffily even ideas. fluffily final|61.1101|-149.857|61.1101|-149.857|
+1666|95|O|128367.97|1995-10-18|1-URGENT|Clerk#000000849|0|ffily pending dependencies wake fluffily. pending, final accounts |61.1101|-149.857|61.1101|-149.857|
+1667|5|O|125030.37|1997-10-10|2-HIGH|Clerk#000000103|0|e accounts. slyly express accounts must are a|64.8459|-147.759|64.8459|-147.759|
+1668|142|O|137576.19|1997-07-12|4-NOT SPECIFIED|Clerk#000000148|0|eodolites. carefully dogged dolphins haggle q|64.8426|-147.725|64.8426|-147.725|
+1669|2|O|24362.39|1997-06-09|3-MEDIUM|Clerk#000000663|0|er ironic requests detect furiously blithely sp|64.9401|-147.402|64.9401|-147.402|
+1670|25|O|89999.72|1997-05-24|2-HIGH|Clerk#000000320|0|unusual dependencies. furiously special platelets main|64.9401|-147.402|64.9401|-147.402|
+1671|35|O|104391.11|1996-07-27|4-NOT SPECIFIED|Clerk#000000275|0|ly. slyly pending requests was above the |64.8331|-147.647|64.8331|-147.647|
+1696|4|O|102665.03|1998-01-08|4-NOT SPECIFIED|Clerk#000000041|0|bravely bold accounts above the quickly bold|64.8371|-147.716|64.8371|-147.716|
+1697|76|O|122621.31|1996-10-07|1-URGENT|Clerk#000000815|0|o x-ray blithely. pl|64.8574|-147.759|64.8574|-147.759|
+1698|40|O|141118.87|1997-04-23|2-HIGH|Clerk#000000432|0|slyly. carefully express deposit|64.836|-147.727|64.836|-147.727|
+1699|85|F|66408.29|1993-12-30|1-URGENT|Clerk#000000125|0|jole blithely. furiously un|64.8132|-147.76|64.8132|-147.76|
+1700|65|O|89143.36|1996-06-15|3-MEDIUM|Clerk#000000328|0|ely final dolphins wake sometimes above the quietly regular deposits. fur|64.8451|-147.96|64.8451|-147.96|
+1701|130|F|72835.95|1992-05-19|2-HIGH|Clerk#000000395|0|furiously. regular, close theodoli|64.8891|-147.851|64.8891|-147.851|
+1702|67|P|194119.31|1995-05-07|2-HIGH|Clerk#000000300|0|around the carefully final deposits cajole carefully according to the b|64.8151|-147.707|64.8151|-147.707|
+1703|134|F|121220.59|1993-01-28|3-MEDIUM|Clerk#000000463|0| pinto beans poach. bold courts boost. regular, express deposits at|64.8363|-147.803|64.8363|-147.803|
+1728|64|O|131604.34|1996-05-22|2-HIGH|Clerk#000000711|0|beans. slyly regular instructions sleep! slyly final packages|64.8298|-147.611|64.8298|-147.611|
+1729|133|F|12137.76|1992-05-19|2-HIGH|Clerk#000000158|0|pending foxes wake. accounts|64.8989|-147.701|64.8989|-147.701|
+1730|124|O|150886.49|1998-07-24|5-LOW|Clerk#000000794|0| fluffily pending deposits serve. furiously even requests wake furiou|64.8371|-147.716|64.8371|-147.716|
+1731|128|O|190490.78|1996-01-06|1-URGENT|Clerk#000000268|0|lithely regular, final instructions. ironic, express packages are above|64.8147|-147.706|64.8147|-147.706|
+1732|146|F|179854.51|1993-11-29|5-LOW|Clerk#000000903|0|inal requests integrate dolph|64.8451|-147.812|64.8451|-147.812|
+1733|148|O|165489.52|1996-05-12|2-HIGH|Clerk#000000789|0|e carefully according to the accounts. furiously pending instructions sleep|64.8386|-147.788|64.8386|-147.788|
+1734|7|F|44002.53|1994-06-11|2-HIGH|Clerk#000000722|0| final ideas haggle. blithely quick foxes sleep busily bold ideas. i|64.8372|-147.768|64.8372|-147.768|
+1735|22|F|98541.95|1992-12-27|1-URGENT|Clerk#000000458|0|ully idle requests wake qu|64.8151|-147.707|64.8151|-147.707|
+1760|115|O|82151.12|1996-05-17|5-LOW|Clerk#000000917|0| deposits. busily regular deposits wake blithely along the furiously even re|64.843|-147.722|64.843|-147.722|
+1761|106|F|211925.95|1993-12-24|2-HIGH|Clerk#000000817|0|efully slyly bold frets. packages boost b|64.8426|-147.725|64.8426|-147.725|
+1762|77|F|202227.17|1994-08-20|4-NOT SPECIFIED|Clerk#000000653|0|ly ironic packages. furi|64.8615|-147.723|64.8615|-147.723|
+1763|121|O|140685.01|1996-10-29|2-HIGH|Clerk#000000321|0|es. bold dependencies haggle furiously along |64.8694|-147.067|64.8694|-147.067|
+1764|29|F|47384.71|1992-03-25|1-URGENT|Clerk#000000182|0|. slyly final packages integrate carefully acro|64.8404|-147.724|64.8404|-147.724|
+1765|73|O|36551.43|1995-12-03|4-NOT SPECIFIED|Clerk#000000490|0| regular excuses wake slyly|64.9686|-147.577|64.9686|-147.577|
+1766|139|O|41032.81|1996-10-12|2-HIGH|Clerk#000000983|0|unusual deposits affix quickly beyond the carefully s|64.8497|-147.732|64.8497|-147.732|
+1767|25|P|136582.60|1995-03-14|2-HIGH|Clerk#000000327|0|eposits use carefully carefully regular platelets. quickly regular packages al|64.8861|-147.587|64.8861|-147.587|
+1792|49|F|107919.86|1993-11-09|5-LOW|Clerk#000000102|0|ructions haggle along the pending packages. carefully speci|64.8508|-147.703|64.8508|-147.703|
+1793|19|F|82504.56|1992-07-12|4-NOT SPECIFIED|Clerk#000000291|0|regular packages cajole. blithely special packages according to the final d|64.841|-147.72|64.841|-147.72|
+1794|140|O|179462.21|1997-09-28|1-URGENT|Clerk#000000686|0|ally silent pinto beans. regular package|64.8375|-147.721|64.8375|-147.721|
+1795|94|F|146849.33|1994-03-19|2-HIGH|Clerk#000000815|0| quickly final packages! blithely dogged accounts c|64.849|-147.813|64.849|-147.813|
+1796|47|F|33755.47|1992-11-21|2-HIGH|Clerk#000000245|0|eans use furiously around th|55.3801|-131.682|55.3801|-131.682|
+1797|125|O|51494.47|1996-05-07|3-MEDIUM|Clerk#000000508|0|quiet platelets haggle since the quickly ironic instructi|55.3801|-131.682|55.3801|-131.682|
+1798|52|O|46393.97|1997-07-28|1-URGENT|Clerk#000000741|0|al foxes are blithe|55.3603|-131.702|55.3603|-131.702|
+1799|61|F|46815.93|1994-03-07|4-NOT SPECIFIED|Clerk#000000339|0|ns sleep furiously final waters. blithely regular instructions h|55.7511|-132.865|55.7511|-132.865|
+1824|49|F|81351.53|1994-05-05|1-URGENT|Clerk#000000972|0|e blithely fluffily|55.7511|-132.865|55.7511|-132.865|
+1825|148|F|150582.77|1993-12-05|3-MEDIUM|Clerk#000000345|0|ironic, final accou|60.3311|-151.284|60.3311|-151.284|
+1826|82|F|124719.97|1992-04-16|4-NOT SPECIFIED|Clerk#000000718|0|the even asymptotes dazzle fluffily slyly regular asymptotes. final, unu|60.3311|-151.284|60.3311|-151.284|
+1827|106|O|210113.88|1996-06-22|4-NOT SPECIFIED|Clerk#000000369|0|luffily even requests haggle sly|60.3311|-151.284|60.3311|-151.284|
+1828|32|F|137369.50|1994-04-18|3-MEDIUM|Clerk#000000840|0|y quickly bold packag|60.4341|-151.283|60.4341|-151.283|
+1829|112|F|127532.20|1994-05-08|2-HIGH|Clerk#000000537|0| accounts wake above the furiously unusual requests. pending package|60.3311|-151.284|60.3311|-151.284|
+1830|133|F|85122.24|1995-02-23|1-URGENT|Clerk#000000045|0|according to the even,|60.3311|-151.284|60.3311|-151.284|
+1831|71|F|58032.77|1993-12-02|1-URGENT|Clerk#000000854|0| accounts. carefully even accounts boost furiously. regular ideas engage. |60.3311|-151.284|60.3311|-151.284|
+1856|106|F|189361.42|1992-03-20|4-NOT SPECIFIED|Clerk#000000952|0|. special pinto beans run acr|60.3311|-151.284|60.3311|-151.284|
+1857|133|F|102793.59|1993-01-13|2-HIGH|Clerk#000000083|0|hely final ideas slee|60.3311|-151.284|60.3311|-151.284|
+1858|143|O|30457.91|1997-12-13|1-URGENT|Clerk#000000389|0|thely. slyly final deposits sleep|60.4311|-151.286|60.4311|-151.286|
+1859|61|O|105094.09|1997-04-11|4-NOT SPECIFIED|Clerk#000000949|0| the foxes. bravely special excuses nag carefully special r|60.3311|-151.284|60.3311|-151.284|
+1860|10|O|9103.40|1996-04-04|3-MEDIUM|Clerk#000000556|0|osits. quickly bold deposits according to |60.3311|-151.284|60.3311|-151.284|
+1861|70|F|95063.41|1994-01-03|3-MEDIUM|Clerk#000000847|0|r the fluffily close sauternes. furio|60.3311|-151.284|60.3311|-151.284|
+1862|34|O|97981.06|1998-02-24|5-LOW|Clerk#000000348|0|ts snooze ironically abou|60.3311|-151.284|60.3311|-151.284|
+1863|74|F|96359.65|1993-09-23|4-NOT SPECIFIED|Clerk#000000658|0|old sentiments. careful, |60.3191|-151.296|60.3191|-151.296|
+1888|121|F|224724.11|1993-10-31|4-NOT SPECIFIED|Clerk#000000659|0|olites. pinto beans cajole. regular deposits affix. slyly regular|60.3311|-151.284|60.3311|-151.284|
+1889|25|O|96431.77|1997-03-16|1-URGENT|Clerk#000000854|0|p around the regular notornis. unusual deposits|60.3311|-151.284|60.3311|-151.284|
+1890|10|O|202364.58|1996-12-18|4-NOT SPECIFIED|Clerk#000000627|0|romise final, regular deposits. regular fox|60.3311|-151.284|60.3311|-151.284|
+1891|61|F|76848.96|1994-12-15|5-LOW|Clerk#000000495|0|unusual foxes sleep regular deposits. requests wake special pac|60.5563|-151.241|60.5563|-151.241|
+1892|25|F|133273.64|1994-03-26|5-LOW|Clerk#000000733|0|sts. slyly regular dependencies use slyly. ironic, spec|60.6331|-151.163|60.6331|-151.163|
+1893|125|O|116792.13|1997-10-30|2-HIGH|Clerk#000000111|0|olites. silent, special deposits eat slyly quickly express packages; hockey p|60.6331|-151.163|60.6331|-151.163|
+1894|76|F|44387.23|1992-03-30|1-URGENT|Clerk#000000626|0|e furiously. furiously even accounts are slyly final accounts. closely speci|60.6331|-151.163|60.6331|-151.163|
+1895|7|F|44429.81|1994-05-30|3-MEDIUM|Clerk#000000878|0|ress accounts. bold accounts cajole. slyly final pinto beans poach regul|60.6331|-151.163|60.6331|-151.163|
+1920|110|O|119605.91|1998-06-24|5-LOW|Clerk#000000018|0|hely; furiously regular excuses|60.5551|-151.245|60.5551|-151.245|
+1921|88|F|57584.12|1994-01-18|3-MEDIUM|Clerk#000000293|0|counts. slyly quiet requests along the ruthlessly regular accounts are |60.6331|-151.163|60.6331|-151.163|
+1922|56|O|11575.77|1996-07-13|3-MEDIUM|Clerk#000000984|0|side of the blithely final re|60.5506|-151.141|60.5506|-151.141|
+1923|136|O|171128.10|1997-07-07|1-URGENT|Clerk#000000471|0| express dolphins. |60.5681|-151.281|60.5681|-151.281|
+1924|76|O|169756.19|1996-09-07|4-NOT SPECIFIED|Clerk#000000823|0| of the ironic accounts. instructions near the final instr|60.5465|-151.147|60.5465|-151.147|
+1925|17|F|146382.71|1992-03-05|1-URGENT|Clerk#000000986|0|e slyly regular deposits. furiously |60.6331|-151.163|60.6331|-151.163|
+1926|94|O|100035.03|1996-01-31|2-HIGH|Clerk#000000568|0|cajole. even warhorses sleep carefully. |60.5578|-151.116|60.5578|-151.116|
+1927|140|O|23327.88|1995-09-30|3-MEDIUM|Clerk#000000616|0|riously special packages. permanent pearls wake furiously. even packages alo|61.6182|-149.385|61.6182|-149.385|
+1952|67|F|12896.25|1994-03-16|2-HIGH|Clerk#000000254|0| silent accounts boost |61.6141|-149.457|61.6141|-149.457|
+1953|149|F|57213.18|1993-11-30|3-MEDIUM|Clerk#000000891|0| fluffily along the quickly even packages. |61.5765|-149.407|61.5765|-149.407|
+1954|56|O|158853.63|1997-05-31|4-NOT SPECIFIED|Clerk#000000104|0| unusual excuses cajole according to the blithely regular theodolites.|61.6091|-149.77|61.6091|-149.77|
+1955|13|F|103085.13|1992-04-20|1-URGENT|Clerk#000000792|0|ly special ideas. sometimes final |61.5821|-149.438|61.5821|-149.438|
+1956|127|F|88704.26|1992-09-20|4-NOT SPECIFIED|Clerk#000000600|0|ironic ideas are silent ideas. furiously final deposits sleep slyly carefu|61.6183|-149.373|61.6183|-149.373|
+1957|31|O|77482.87|1998-07-21|2-HIGH|Clerk#000000639|0|nding excuses about the |61.6131|-149.403|61.6131|-149.403|
+1958|53|O|176294.34|1995-09-22|5-LOW|Clerk#000000343|0| haggle blithely. flu|61.6352|-149.265|61.6352|-149.265|
+1959|43|O|62277.18|1997-01-13|4-NOT SPECIFIED|Clerk#000000631|0| cajole about the blithely express requests. even excuses mold bl|61.5751|-149.645|61.5751|-149.645|
+1984|52|O|79230.47|1998-04-01|1-URGENT|Clerk#000000416|0| slyly special instructions. unusual foxes use packages. carefully regular req|61.6168|-149.374|61.6168|-149.374|
+1985|7|F|171522.54|1994-09-02|4-NOT SPECIFIED|Clerk#000000741|0|slyly slyly even pains. slyly reg|61.5939|-149.43|61.5939|-149.43|
+1986|149|F|34269.96|1994-05-05|2-HIGH|Clerk#000000609|0|across the theodolites. quick|61.5792|-149.495|61.5792|-149.495|
+1987|100|F|6406.29|1994-04-30|2-HIGH|Clerk#000000652|0|gular platelets alongside |61.6141|-149.457|61.6141|-149.457|
+1988|109|O|117132.72|1995-10-06|4-NOT SPECIFIED|Clerk#000000011|0|ly ironic dolphins serve quickly busy accounts. bu|61.5829|-149.448|61.5829|-149.448|
+1989|118|F|39263.28|1994-03-16|4-NOT SPECIFIED|Clerk#000000747|0|ely bold pinto beans ha|61.5938|-149.387|61.5938|-149.387|
+1990|119|F|48781.39|1994-12-16|2-HIGH|Clerk#000000114|0|e bold patterns. always regul|61.5849|-149.38|61.5849|-149.38|
+1991|19|F|139854.41|1992-09-07|4-NOT SPECIFIED|Clerk#000000854|0|ing accounts can haggle at the carefully final Tiresias-- pending, regular|61.5729|-149.389|61.5729|-149.389|
+2016|8|O|24347.36|1996-08-16|3-MEDIUM|Clerk#000000641|0|the carefully ironic foxes. requests nag bold, r|61.5823|-149.462|61.5823|-149.462|
+2017|101|O|70529.27|1998-05-13|3-MEDIUM|Clerk#000000427|0|nusual requests. blit|61.57|-149.331|61.57|-149.331|
+2018|19|P|25007.95|1995-04-05|4-NOT SPECIFIED|Clerk#000000920|0|gular accounts wake fur|61.5821|-149.438|61.5821|-149.438|
+2019|136|F|43789.14|1992-10-23|1-URGENT|Clerk#000000565|0| furiously bold packages. fluffily fi|61.6141|-149.457|61.6141|-149.457|
+2020|73|F|136162.13|1993-06-21|3-MEDIUM|Clerk#000000192|0|es. furiously regular packages above the furiously special theodolites are a|61.6115|-149.331|61.6115|-149.331|
+2021|70|O|27016.74|1995-07-15|1-URGENT|Clerk#000000155|0|ong the furiously regular requests. unusual deposits wake fluffily inside|61.6091|-149.77|61.6091|-149.77|
+2022|62|F|206742.11|1992-03-15|1-URGENT|Clerk#000000268|0| dependencies sleep fluffily even, ironic deposits. express, silen|61.6141|-149.457|61.6141|-149.457|
+2023|118|F|144123.37|1992-05-06|5-LOW|Clerk#000000137|0|ular courts engage according to the|61.5826|-149.427|61.5826|-149.427|
+2048|17|F|33401.77|1993-11-15|1-URGENT|Clerk#000000934|0|s cajole after the blithely final accounts. f|61.5976|-149.366|61.5976|-149.366|
+2049|31|O|153048.74|1995-12-07|2-HIGH|Clerk#000000859|0|ly regular requests thrash blithely about the fluffily even theodolites. r|61.5976|-149.366|61.5976|-149.366|
+2050|28|F|208517.98|1994-06-02|4-NOT SPECIFIED|Clerk#000000821|0|d accounts against the furiously regular packages use bli|61.5531|-149.651|61.5531|-149.651|
+2051|40|O|87988.34|1996-03-18|4-NOT SPECIFIED|Clerk#000000333|0|ctions sleep blithely. blithely regu|61.5531|-149.651|61.5531|-149.651|
+2052|91|F|141822.19|1992-04-13|2-HIGH|Clerk#000000767|0| requests sleep around the even, even courts. ironic theodolites affix furious|61.5883|-149.456|61.5883|-149.456|
+2053|142|F|125125.57|1995-02-07|1-URGENT|Clerk#000000717|0|ar requests: blithely sly accounts boost carefully across t|61.6249|-149.435|61.6249|-149.435|
+2054|41|F|144335.16|1992-06-08|4-NOT SPECIFIED|Clerk#000000103|0|l requests affix carefully about the furiously special|61.6141|-149.457|61.6141|-149.457|
+2055|97|F|57092.26|1993-09-04|1-URGENT|Clerk#000000067|0|. warhorses affix slyly blithely express instructions? fur|61.5709|-149.452|61.5709|-149.452|
+2080|95|F|45767.69|1993-06-18|5-LOW|Clerk#000000190|0|ironic, pending theodolites are carefully about the quickly regular theodolite|61.6651|-149.465|61.6651|-149.465|
+2081|121|O|145654.97|1997-07-05|2-HIGH|Clerk#000000136|0|ong the regular theo|61.5841|-149.441|61.5841|-149.441|
+2082|49|F|46753.63|1995-01-10|2-HIGH|Clerk#000000354|0|cial accounts. ironic, express dolphins nod slyly sometimes final reques|61.1571|-149.883|61.1571|-149.883|
+2083|101|F|31795.52|1993-07-14|3-MEDIUM|Clerk#000000361|0|al patterns. bold, final foxes nag bravely about the furiously express|61.2198|-149.733|61.2198|-149.733|
+2084|80|F|190652.53|1993-03-17|2-HIGH|Clerk#000000048|0|zle furiously final, careful packages. slyly ironic ideas amo|61.1863|-149.976|61.1863|-149.976|
+2085|49|F|45311.07|1993-11-21|3-MEDIUM|Clerk#000000818|0|ress, express ideas haggle|61.2161|-149.876|61.2161|-149.876|
+2086|142|F|188985.18|1994-10-19|1-URGENT|Clerk#000000046|0| permanently regular|61.2031|-149.749|61.2031|-149.749|
+2087|50|O|53581.41|1998-01-31|2-HIGH|Clerk#000000626|0|e always regular packages nod against the furiously spec|61.1644|-149.897|61.1644|-149.897|
+2112|64|O|17986.15|1997-02-05|2-HIGH|Clerk#000000351|0|against the slyly even id|61.1834|-149.866|61.1834|-149.866|
+2113|32|O|65678.21|1997-11-08|2-HIGH|Clerk#000000527|0|slyly regular instruct|61.1731|-149.889|61.1731|-149.889|
+2114|79|F|106446.02|1995-01-16|5-LOW|Clerk#000000751|0|r, unusual accounts haggle across the busy platelets. carefully |61.1089|-149.854|61.1089|-149.854|
+2115|106|O|134814.65|1998-05-23|4-NOT SPECIFIED|Clerk#000000101|0|odolites boost. carefully regular excuses cajole. quickly ironic pinto be|61.1951|-149.916|61.1951|-149.916|
+2116|23|F|60887.90|1994-08-26|1-URGENT|Clerk#000000197|0|efully after the asymptotes. furiously sp|61.2157|-149.821|61.2157|-149.821|
+2117|22|O|145713.03|1997-04-26|2-HIGH|Clerk#000000887|0|ely even dependencies. regular foxes use blithely.|61.1372|-149.954|61.1372|-149.954|
+2118|134|O|38974.67|1996-10-09|1-URGENT|Clerk#000000196|0|ial requests wake carefully special packages. f|61.1955|-149.737|61.1955|-149.737|
+2119|64|O|34632.57|1996-08-20|2-HIGH|Clerk#000000434|0|uickly pending escapades. fluffily ir|61.1444|-149.867|61.1444|-149.867|
+2144|136|F|119917.28|1994-03-29|3-MEDIUM|Clerk#000000546|0|t. carefully quick requests across the deposits wake regu|61.2178|-149.882|61.2178|-149.882|
+2145|134|F|18885.35|1992-10-03|1-URGENT|Clerk#000000886|0|sts would snooze blithely alongside of th|61.1824|-149.849|61.1824|-149.849|
+2146|118|F|179686.07|1992-09-14|4-NOT SPECIFIED|Clerk#000000476|0|ven packages. dependencies wake slyl|61.2161|-149.876|61.2161|-149.876|
+2147|100|F|91513.79|1992-09-06|4-NOT SPECIFIED|Clerk#000000424|0| haggle carefully furiously final foxes. pending escapades thrash. bold theod|61.2022|-149.84|61.2022|-149.84|
+2148|130|F|19612.03|1995-04-19|4-NOT SPECIFIED|Clerk#000000517|0|ross the furiously unusual theodolites. always expre|61.2099|-149.762|61.2099|-149.762|
+2149|101|F|105145.40|1993-03-13|5-LOW|Clerk#000000555|0|nusual accounts nag furiously special reques|61.1951|-149.84|61.1951|-149.84|
+2150|82|F|166961.06|1994-06-03|3-MEDIUM|Clerk#000000154|0|ect slyly against the even, final packages. quickly regular pinto beans wake c|61.1069|-149.859|61.1069|-149.859|
+2151|58|O|124608.69|1996-11-11|3-MEDIUM|Clerk#000000996|0|c requests. ironic platelets cajole across the quickly fluffy deposits.|61.1635|-149.881|61.1635|-149.881|
+2176|104|F|87248.17|1992-11-10|1-URGENT|Clerk#000000195|0|s haggle regularly accor|61.1201|-149.89|61.1201|-149.89|
+2177|136|O|183493.42|1997-01-20|3-MEDIUM|Clerk#000000161|0|ove the blithely unusual packages cajole carefully fluffily special request|61.1902|-149.908|61.1902|-149.908|
+2178|8|O|79594.68|1996-12-12|3-MEDIUM|Clerk#000000656|0|thely according to the instructions. furious|61.2104|-149.857|61.2104|-149.857|
+2179|41|O|77487.09|1996-09-07|2-HIGH|Clerk#000000935|0|ounts alongside of the furiously unusual braids cajol|61.1771|-149.97|61.1771|-149.97|
+2180|76|O|208481.57|1996-09-14|4-NOT SPECIFIED|Clerk#000000650|0|xpress, unusual pains. furiously ironic excu|61.1859|-149.976|61.1859|-149.976|
+2181|76|O|100954.64|1995-09-13|3-MEDIUM|Clerk#000000814|0|y against the ironic, even|61.2171|-149.9|61.2171|-149.9|
+2182|23|F|116003.11|1994-04-05|2-HIGH|Clerk#000000071|0|ccounts. quickly bold deposits across the excuses sl|61.1162|-149.755|61.1162|-149.755|
+2183|113|O|49841.12|1996-06-22|1-URGENT|Clerk#000000287|0| among the express, ironic packages. slyly ironic platelets integrat|61.1381|-149.844|61.1381|-149.844|
+2208|68|P|245388.06|1995-05-01|4-NOT SPECIFIED|Clerk#000000900|0|symptotes wake slyly blithely unusual packages.|61.1775|-149.941|61.1775|-149.941|
+2209|91|F|129086.93|1992-07-10|2-HIGH|Clerk#000000056|0|er above the slyly silent requests. furiously reg|61.1938|-149.878|61.1938|-149.878|
+2210|32|F|31689.46|1992-01-16|2-HIGH|Clerk#000000941|0| believe carefully quickly express pinto beans. deposi|61.1571|-149.883|61.1571|-149.883|
+2211|92|F|140031.23|1994-06-30|2-HIGH|Clerk#000000464|0|ffily bold courts e|61.1541|-149.958|61.1541|-149.958|
+2212|118|F|17231.05|1994-03-23|3-MEDIUM|Clerk#000000954|0|structions above the unusual requests use fur|61.135|-149.88|61.135|-149.88|
+2213|122|F|146136.10|1993-01-15|4-NOT SPECIFIED|Clerk#000000598|0|osits are carefully reg|61.1101|-149.857|61.1101|-149.857|

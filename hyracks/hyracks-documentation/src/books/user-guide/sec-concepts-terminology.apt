@@ -1,0 +1,32 @@
+ ~~ Licensed to the Apache Software Foundation (ASF) under one
+ ~~ or more contributor license agreements.  See the NOTICE file
+ ~~ distributed with this work for additional information
+ ~~ regarding copyright ownership.  The ASF licenses this file
+ ~~ to you under the Apache License, Version 2.0 (the
+ ~~ "License"); you may not use this file except in compliance
+ ~~ with the License.  You may obtain a copy of the License at
+ ~~
+ ~~   http://www.apache.org/licenses/LICENSE-2.0
+ ~~
+ ~~ Unless required by applicable law or agreed to in writing,
+ ~~ software distributed under the License is distributed on an
+ ~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~~ KIND, either express or implied.  See the License for the
+ ~~ specific language governing permissions and limitations
+ ~~ under the License.
+
+Terminology
+
+  [Operator Descriptor] An Operator Descriptor is a node in a Hyracks Job DAG. An Operator Descriptor has zero or more inputs and produces zero or more outputs.
+
+  [Connector Descriptor] A Connector Descriptor is an edge in a Hyracks Job DAG that connects one Operator Descriptor's output to another's input.
+
+  [Operator Activity] An Operator Activity is a phase of an operator. An operator contains one or more activities. For example, an operator that sorts its input using a bounded amount of memory, does so usually in two distinct phases. The first phase produces sorted runs of its input. Once the runs are generated, the runs are merged to produce the sorted output. Such a sort operator would comprise of two activities -- the Run Generation Activity and the Run Merging Activity.
+
+  [Operator Activity Clone] At runtime, each Operator Activity creates a number of clones that are executed in parallel on partitions of the activity's inputs to produce partitions of its output.
+
+  [Connector Partitioner] At runtime, each Connector Descriptor creates as many partitioners as the number of its data producing activity clones. Each partitioner implements the logic to decide how data produced by the producing activity clone is re-partitioned to the clones of the consuming activity. For example, a hash-partitioning connector's partitioner uses a hash function to determine how each data item is re-distributed to the consuming activity clones.
+
+  [Connector Receiver] A Connector Descriptor's receiving activity's clones receives its input from a Connector Receiver. A Connector Receiver encapsulates the logic to merge data arriving from each of the Connector Partitioners belonging to the same Connector Descriptor.
+
+  [Job Specification] A Hyracks job is represented by an instance of a Job Specification.
