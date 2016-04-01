@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.sqlpp.visitor;
+package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,6 +67,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -135,9 +136,10 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     @Override
     public Void visit(Projection projection, Boolean arg) throws AsterixException {
         projection.getExpression().accept(this, arg);
-        VariableExpr columnAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));
+        VariableExpr columnAlias = new VariableExpr(
+                SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        Expression gbyKey = env.findSubstituion(columnAlias);
+        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(columnAlias));
         if (arg) {
             scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias, projection.getExpression());
         } else {
@@ -354,21 +356,22 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         return null;
     }
 
-    private void mapForRecordConstructor(Boolean initPhase, RecordConstructor rc) {
+    private void mapForRecordConstructor(Boolean initPhase, RecordConstructor rc) throws AsterixException {
         for (FieldBinding binding : rc.getFbList()) {
             Expression leftExpr = binding.getLeftExpr();
             if (leftExpr.getKind() == Kind.LITERAL_EXPRESSION) {
                 LiteralExpr literalExpr = (LiteralExpr) leftExpr;
                 if (literalExpr.getValue().getLiteralType() == Literal.Type.STRING) {
                     String fieldName = literalExpr.getValue().getStringValue();
-                    VariableExpr columnAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(fieldName));
+                    VariableExpr columnAlias = new VariableExpr(
+                            SqlppVariableUtil.toInternalVariableIdentifier(fieldName));
                     VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope()
                             .getVarSubstitutionEnvironment();
                     if (initPhase) {
                         scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias,
                                 binding.getRightExpr());
                     } else {
-                        Expression gbyKey = env.findSubstituion(columnAlias);
+                        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(columnAlias));
                         if (gbyKey != null) {
                             binding.setRightExpr(gbyKey);
                         }

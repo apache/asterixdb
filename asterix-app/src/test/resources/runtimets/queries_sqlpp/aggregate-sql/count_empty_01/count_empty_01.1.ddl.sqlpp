@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that sql-count aggregation correctly returns 0 for an empty stream,
+ * Description    : Tests that coll_sql-count aggregation correctly returns 0 for an empty stream,
  *                  without an aggregate combiner.
  * Success        : Yes
  */

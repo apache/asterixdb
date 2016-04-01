@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-min with an empty list.
+ * Description    : Tests the scalar version of coll_sql-min with an empty list.
  * Success        : Yes
  */
 

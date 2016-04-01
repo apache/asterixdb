@@ -24,4 +24,4 @@
 use test;
 
 
-select element test.sum([]);
+select element test.coll_sum([]);

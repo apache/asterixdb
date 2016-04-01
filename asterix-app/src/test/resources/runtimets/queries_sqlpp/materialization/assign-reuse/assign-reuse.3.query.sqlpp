@@ -23,12 +23,12 @@ use TinySocial;
 with  lonelyusers as (
       select element d
       from  FacebookUsers as d
-      where (TinySocial.count(d."friend-ids") < 2)
+      where (TinySocial.coll_count(d."friend-ids") < 2)
   ),
       lonelyusers2 as (
       select element d
       from  FacebookUsers as d
-      where (TinySocial.count(d."friend-ids") < 2)
+      where (TinySocial.coll_count(d."friend-ids") < 2)
   )
 select element {'user1':{'id':l1.id,'name':l1.name},'user2':{'id':l2.id,'name':l2.name}}
 from  lonelyusers as l1,

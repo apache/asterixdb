@@ -17,12 +17,12 @@
  * under the License.
  */
 /*
-* Description  : Run sql-avg over an ordered list with mixed types
+* Description  : Run coll_sql-avg over an ordered list with mixed types
 * Expected Res : Failure
 * Date         : Feb 7th 2014
 */
 
-select element "sql-avg"((
+select element "coll_sql-avg"((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
 ));

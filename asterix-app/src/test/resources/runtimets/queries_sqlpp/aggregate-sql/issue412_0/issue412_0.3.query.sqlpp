@@ -17,4 +17,4 @@
  * under the License.
  */
 
-"sql-count"(['ASTERIX','Hyracks',null]);
+"coll_sql-count"(['ASTERIX','Hyracks',null]);

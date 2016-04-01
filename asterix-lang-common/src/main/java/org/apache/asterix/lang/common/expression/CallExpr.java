@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CallExpr extends AbstractExpression {
-    private final FunctionSignature functionSignature;
+    private FunctionSignature functionSignature;
     private List<Expression> exprList;
     private boolean isBuiltin;
 
@@ -51,6 +51,10 @@ public class CallExpr extends AbstractExpression {
     @Override
     public Kind getKind() {
         return Kind.CALL_EXPRESSION;
+    }
+
+    public void setFunctionSignature(FunctionSignature functionSignature) {
+        this.functionSignature = functionSignature;
     }
 
     public void setExprList(List<Expression> exprList) {

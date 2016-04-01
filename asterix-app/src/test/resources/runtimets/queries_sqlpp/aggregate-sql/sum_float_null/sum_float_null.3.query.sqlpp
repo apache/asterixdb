@@ -20,7 +20,7 @@
 use test;
 
 
-select element test."sql-sum"((
+select element test."coll_sql-sum"((
     select element x.floatField
     from  Numeric as x
 ));

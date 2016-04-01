@@ -38,6 +38,7 @@ public class GroupbyClause implements Clause {
     private VariableExpr groupVar;
     private List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<Pair<Expression, Identifier>>();
     private boolean hashGroupByHint;
+    private boolean groupAll;
 
     public GroupbyClause() {
     }
@@ -45,6 +46,12 @@ public class GroupbyClause implements Clause {
     public GroupbyClause(List<GbyVariableExpressionPair> gbyPairList, List<GbyVariableExpressionPair> decorPairList,
             List<VariableExpr> withVarList, VariableExpr groupVarExpr,
             List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint) {
+        this(gbyPairList, decorPairList, withVarList, groupVarExpr, groupFieldList, hashGroupByHint, false);
+    }
+
+    public GroupbyClause(List<GbyVariableExpressionPair> gbyPairList, List<GbyVariableExpressionPair> decorPairList,
+            List<VariableExpr> withVarList, VariableExpr groupVarExpr,
+            List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint, boolean groupAll) {
         this.gbyPairList = gbyPairList;
         this.decorPairList = decorPairList;
         this.withVarList = withVarList;
@@ -53,6 +60,7 @@ public class GroupbyClause implements Clause {
             this.groupFieldList = groupFieldList;
         }
         this.hashGroupByHint = hashGroupByHint;
+        this.groupAll = groupAll;
     }
 
     public List<GbyVariableExpressionPair> getGbyPairList() {
@@ -127,5 +135,9 @@ public class GroupbyClause implements Clause {
 
     public boolean hasGroupFieldList() {
         return groupFieldList != null && groupFieldList.size() > 0;
+    }
+
+    public boolean isGroupAll() {
+        return groupAll;
     }
 }

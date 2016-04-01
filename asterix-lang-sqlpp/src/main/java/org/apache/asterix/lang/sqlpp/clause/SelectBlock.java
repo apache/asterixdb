@@ -112,4 +112,8 @@ public class SelectBlock implements Clause {
     public boolean hasHavingClause() {
         return havingClause != null;
     }
+
+    public void setGroupbyClause(GroupbyClause groupbyClause) {
+        this.groupbyClause = groupbyClause;
+    }
 }

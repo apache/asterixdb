@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.sqlpp.visitor;
+package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,17 +38,17 @@ import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * A pre-processor that adds the group variable as well as its group field
  * list into the AST. It will also invoke SQL group-by aggregation sugar rewritings.
  */
-public class SqlppGroupByVisitor extends VariableCheckAndRewriteVisitor {
+public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
 
-    public SqlppGroupByVisitor(LangRewritingContext context, AqlMetadataProvider metadataProvider) {
-        super(context, false, metadataProvider);
+    public SqlppGroupByVisitor(LangRewritingContext context) {
+        super(context);
     }
 
     @Override
@@ -71,8 +71,6 @@ public class SqlppGroupByVisitor extends VariableCheckAndRewriteVisitor {
             selectBlock.getGroupbyClause().accept(this, arg);
             Set<VariableExpr> withVarSet = new HashSet<>(selectBlock.getGroupbyClause().getWithVarList());
             withVarSet.remove(selectBlock.getGroupbyClause().getGroupVar());
-            //selectBlock.getGroupbyClause().getWithVarList()
-            //        .retainAll(Collections.singleton(selectBlock.getGroupbyClause().getGroupVar()));
             if (selectBlock.hasLetClausesAfterGroupby()) {
                 List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
                 for (LetClause letClauseAfterGby : letListAfterGby) {

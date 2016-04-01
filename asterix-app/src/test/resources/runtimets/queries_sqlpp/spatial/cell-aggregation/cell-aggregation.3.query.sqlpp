@@ -24,7 +24,7 @@ with  grid as (
       select element {'cell':c,'count':num}
       from  MyData as o
       group by test."spatial-cell"(o.loc,test."create-point"(0.0,0.0),5.0,5.0) as c
-      with  num as test.count(o)
+      with  num as test.coll_count(o)
       order by num
   )
 select element g

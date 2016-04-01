@@ -20,7 +20,7 @@
 use tpch;
 
 
-with  sum as tpch.sum((
+with  sum as COLL_SUM((
       select element (ps.ps_supplycost * ps.ps_availqty)
       from  Partsupp as ps,
             (
@@ -33,7 +33,7 @@ with  sum as tpch.sum((
   ))
 select element {'partkey':t1.ps_partkey,'part_value':t1.part_value}
 from  (
-    select element {'ps_partkey':ps_partkey,'part_value':tpch.sum((
+    select element {'ps_partkey':ps_partkey,'part_value':COLL_SUM((
             select element (i.ps_supplycost * i.ps_availqty)
             from  ps as i
         ))}

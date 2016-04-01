@@ -24,7 +24,7 @@
  * Date             : 5th July 2012
  */
 
-with  a as [some x in ['foo','foobar','foot','fox'] satisfies ("string-length"(x) = 3),some x in [[5,4,3,2],[1,2,3,4,5,6,7,8],[4,2,3,4]] satisfies (count(x) = 8),some x in [1,2] satisfies ((x = 1) or (x = 2)),some x in [1,2] satisfies ((x = 1) and ((x + 1) = 2)),some x in ['A','B','C'] satisfies (x = 'A'),some x in [1,2,3],
+with  a as [some x in ['foo','foobar','foot','fox'] satisfies ("string-length"(x) = 3),some x in [[5,4,3,2],[1,2,3,4,5,6,7,8],[4,2,3,4]] satisfies (coll_count(x) = 8),some x in [1,2] satisfies ((x = 1) or (x = 2)),some x in [1,2] satisfies ((x = 1) and ((x + 1) = 2)),some x in ['A','B','C'] satisfies (x = 'A'),some x in [1,2,3],
 y in [4,5,6] satisfies ((x + y) = 5),some x in [1,2,3],
 y in [4,5,6] satisfies ((x - y) = 5),some x in [1,2,3],
 y in [4,5,6] satisfies ((x * y) = 10),some x in [1,2,3],

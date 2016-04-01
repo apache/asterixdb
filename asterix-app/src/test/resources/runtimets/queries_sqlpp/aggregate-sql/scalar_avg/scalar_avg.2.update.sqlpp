@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-avg without nulls.
+ * Description    : Tests the scalar version of coll_sql-avg without nulls.
  * Success        : Yes
  */
 

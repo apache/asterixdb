@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-max without nulls.
+ * Description    : Tests the scalar version of coll_sql-max without nulls.
  * Success        : Yes
  */
 

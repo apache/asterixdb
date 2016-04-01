@@ -27,8 +27,9 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
-import org.apache.asterix.lang.sqlpp.visitor.SqlppGroupBySugarVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.UsedVariableVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupBySugarVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.DeepCopyVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 
 public class SqlppRewriteUtil {
 
@@ -36,15 +37,23 @@ public class SqlppRewriteUtil {
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
             Collection<VariableExpr> targetVarList, ILangExpression expr, LangRewritingContext context)
                     throws AsterixException {
-        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, null, groupVar, targetVarList);
+        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, targetVarList);
         return expr.accept(visitor, null);
     }
 
-    public static Set<VariableExpr> getUsedVariable(Expression expr) throws AsterixException {
+    public static Set<VariableExpr> getFreeVariable(Expression expr) throws AsterixException {
         Set<VariableExpr> vars = new HashSet<>();
-        UsedVariableVisitor visitor = new UsedVariableVisitor();
+        FreeVariableVisitor visitor = new FreeVariableVisitor();
         expr.accept(visitor, vars);
         return vars;
+    }
+
+    public static ILangExpression deepCopy(ILangExpression expr) throws AsterixException {
+        if (expr == null) {
+            return expr;
+        }
+        DeepCopyVisitor visitor = new DeepCopyVisitor();
+        return expr.accept(visitor, null);
     }
 
 }

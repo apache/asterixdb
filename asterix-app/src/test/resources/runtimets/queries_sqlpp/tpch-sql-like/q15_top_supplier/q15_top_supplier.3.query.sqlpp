@@ -22,7 +22,7 @@ use tpch;
 
 declare function revenue() {
 (
-    select element {'supplier_no':l_suppkey,'total_revenue':tpch.sum((
+    select element {'supplier_no':l_suppkey,'total_revenue':COLL_SUM((
             select element (i.l_extendedprice * (1 - i.l_discount))
             from  l as i
         ))}
@@ -31,7 +31,7 @@ declare function revenue() {
     group by l.l_suppkey as l_suppkey
 )
 };
-with  m as tpch.max((
+with  m as COLL_MAX((
       select element r2.total_revenue
       from  tpch.revenue() as r2
   ))

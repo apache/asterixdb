@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'sql-count':"sql-count"([1,60,null]),'average':"sql-avg"([1,60,null]),'sql-sum':"sql-sum"([1,60,null]),'sql-min':"sql-min"([1,60,null]),'sql-max':"sql-max"([1,60,null])};
+{'sql-count':"coll_sql-count"([1,60,null]),'average':"coll_sql-avg"([1,60,null]),'sql-sum':"coll_sql-sum"([1,60,null]),'sql-min':"coll_sql-min"([1,60,null]),'sql-max':"coll_sql-max"([1,60,null])};

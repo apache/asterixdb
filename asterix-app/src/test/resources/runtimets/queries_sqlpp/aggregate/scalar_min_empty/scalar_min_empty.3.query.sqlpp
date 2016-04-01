@@ -24,4 +24,4 @@
 use test;
 
 
-select element test.min([]);
+select element test.coll_min([]);

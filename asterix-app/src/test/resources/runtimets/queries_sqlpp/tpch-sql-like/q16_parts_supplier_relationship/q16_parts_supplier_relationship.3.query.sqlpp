@@ -27,10 +27,10 @@ declare function tmp() {
         select element {'p_brand':p.p_brand,'p_type':p.p_type,'p_size':p.p_size,'ps_suppkey':ps.ps_suppkey}
         from  Partsupp as ps,
               Part as p
-        where ((p.p_partkey = ps.ps_partkey) and (p.p_brand != 'Brand#45') and tpch.not(tpch.like(p.p_type,'MEDIUM POLISHED%')))
+        where ((p.p_partkey = ps.ps_partkey) and (p.p_brand != 'Brand#45') and NOT(tpch.like(p.p_type,'MEDIUM POLISHED%')))
     ) as psp,
           Supplier as s
-    where ((psp.ps_suppkey = s.s_suppkey) and tpch.not(tpch.like(s.s_comment,'%Customer%Complaints%')))
+    where ((psp.ps_suppkey = s.s_suppkey) and tpch.not(LIKE(s.s_comment,'%Customer%Complaints%')))
 )
 };
 select element {'p_brand':p_brand,'p_type':p_type,'p_size':p_size,'supplier_cnt':supplier_cnt}
@@ -41,7 +41,7 @@ from  (
     group by t.p_brand as p_brand1,t.p_type as p_type1,t.p_size as p_size1,t.ps_suppkey as ps_suppkey1
 ) as t2
 group by t2.p_brand as p_brand,t2.p_type as p_type,t2.p_size as p_size
-with  supplier_cnt as tpch.count((
+with  supplier_cnt as COLL_COUNT((
       select element i.ps_suppkey
       from  t2 as i
   ))

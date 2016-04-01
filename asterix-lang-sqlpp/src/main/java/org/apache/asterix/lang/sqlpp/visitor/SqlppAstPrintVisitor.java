@@ -21,9 +21,11 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import java.io.PrintWriter;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
@@ -42,7 +44,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -243,7 +247,27 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
+    public Void visit(CallExpr pf, Integer step) throws AsterixException {
+        FunctionSignature functionSignature = pf.getFunctionSignature();
+        FunctionSignature normalizedFunctionSignature = FunctionMapUtil
+                .normalizeBuiltinFunctionSignature(functionSignature, false);
+        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
+            functionSignature = normalizedFunctionSignature;
+        }
+        out.println(skip(step) + "FunctionCall " + functionSignature.toString() + "[");
+        for (Expression expr : pf.getExprList()) {
+            expr.accept(this, step + 1);
+        }
+        out.println(skip(step) + "]");
+        return null;
+    }
+
+    @Override
     public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+        if (gc.isGroupAll()) {
+            out.println(skip(step) + "Group All");
+            return null;
+        }
         out.println(skip(step) + "Groupby");
         for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
             if (pair.getVar() != null) {

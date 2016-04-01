@@ -22,10 +22,10 @@ use tpch;
 
 declare function tmp1() {
 (
-    select element {'l_orderkey':l_orderkey,'count_suppkey':tpch.count((
+    select element {'l_orderkey':l_orderkey,'count_suppkey':coll_count((
             select element i.l_suppkey
             from  l2 as i
-        )),'max_suppkey':tpch.max((
+        )),'max_suppkey':tpch.coll_max((
             select element i.l_suppkey
             from  l2 as i
         ))}
@@ -39,10 +39,10 @@ declare function tmp1() {
 };
 declare function tmp2() {
 (
-    select element {'l_orderkey':l_orderkey,'count_suppkey':tpch.count((
+    select element {'l_orderkey':l_orderkey,'count_suppkey':coll_count((
             select element i.l_suppkey
             from  l2 as i
-        )),'max_suppkey':tpch.max((
+        )),'max_suppkey':tpch.coll_max((
             select element i.l_suppkey
             from  l2 as i
         ))}

@@ -25,28 +25,28 @@
 use test;
 
 
-{'count':test.count((
+{'count':test.coll_count((
     select element t
     from  Test as t
-)),'average':test.avg((
+)),'average':test.coll_avg((
     select element i.val
     from  (
         select element t
         from  Test as t
     ) as i
-)),'sum':test.sum((
+)),'sum':test.coll_sum((
     select element i.val
     from  (
         select element t
         from  Test as t
     ) as i
-)),'min':test.min((
+)),'min':test.coll_min((
     select element i.valplus
     from  (
         select element t
         from  Test as t
     ) as i
-)),'max':test.max((
+)),'max':test.coll_max((
     select element i.valplus
     from  (
         select element t

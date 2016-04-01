@@ -17,9 +17,9 @@
  * under the License.
  */
 /**
- * issue531_string_sql-min_sql-max
+ * issue531_string_coll_sql-min_coll_sql-max
  *
- * Purpose: test the support of string values for sql-min and sql-max aggregation function
+ * Purpose: test the support of string values for coll_sql-min and coll_sql-max aggregation function
  * Result: success
  *
  */

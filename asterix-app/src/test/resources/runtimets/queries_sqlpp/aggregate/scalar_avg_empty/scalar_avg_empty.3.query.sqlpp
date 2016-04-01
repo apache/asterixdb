@@ -21,4 +21,4 @@
  * Success        : Yes
  */
 
-select element avg([]);
+select element coll_avg([]);

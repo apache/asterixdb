@@ -33,6 +33,18 @@ public class Query implements Statement {
     private List<String> dataverses = new ArrayList<String>();
     private List<String> datasets = new ArrayList<String>();
 
+    public Query() {
+
+    }
+
+    public Query(boolean topLevel, Expression body, int varCounter, List<String> dataverses, List<String> datasets) {
+        this.topLevel = topLevel;
+        this.body = body;
+        this.varCounter = varCounter;
+        this.dataverses.addAll(dataverses);
+        this.datasets.addAll(datasets);
+    }
+
     public Expression getBody() {
         return body;
     }

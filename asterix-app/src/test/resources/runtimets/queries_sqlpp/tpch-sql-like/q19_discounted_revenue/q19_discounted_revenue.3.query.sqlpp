@@ -22,7 +22,7 @@ use tpch;
 
 set "import-private-functions" "true";
 
-select element tpch.sum((
+select element COLL_SUM((
     select element (l.l_extendedprice * (1 - l.l_discount))
     from  LineItem as l,
           Part as p

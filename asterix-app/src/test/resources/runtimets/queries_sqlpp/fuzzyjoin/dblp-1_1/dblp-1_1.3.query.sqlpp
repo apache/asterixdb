@@ -26,5 +26,5 @@ select element tokenGroupped
 from  DBLP as paper,
       fuzzyjoin."counthashed-word-tokens"(paper.title) as token
 group by token as tokenGroupped
-order by fuzzyjoin.count(paper),tokenGroupped
+order by count(paper),tokenGroupped
 ;

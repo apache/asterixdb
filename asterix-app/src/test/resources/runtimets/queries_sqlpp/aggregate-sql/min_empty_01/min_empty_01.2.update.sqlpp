@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that sql-min aggregation correctly returns null for an empty stream,
+ * Description    : Tests that coll_sql-min aggregation correctly returns null for an empty stream,
  *                  without an aggregate combiner.
  * Success        : Yes
  */

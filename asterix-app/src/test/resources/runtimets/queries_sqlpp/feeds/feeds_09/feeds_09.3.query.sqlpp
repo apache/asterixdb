@@ -22,7 +22,7 @@
 use feeds_09;
 
 
-if ((feeds_09.count((
+if ((feeds_09.coll_count((
       select element x
       from  SyntheticTweets as x
   )) > 0))

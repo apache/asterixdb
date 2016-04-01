@@ -51,6 +51,10 @@ public class LimitClause implements Clause {
         this.offset = offset;
     }
 
+    public boolean hasOffset() {
+        return offset != null;
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.LIMIT_CLAUSE;

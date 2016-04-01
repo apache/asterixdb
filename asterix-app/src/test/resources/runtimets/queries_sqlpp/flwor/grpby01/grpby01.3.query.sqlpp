@@ -22,7 +22,7 @@
  * Date             :  31st July 2012
  */
 
-select element {'store-number':strNum,'total-qty':sum((
+select element {'store-number':strNum,'total-qty':coll_sum((
         select element l.qty
         from  sales as l
     ))}

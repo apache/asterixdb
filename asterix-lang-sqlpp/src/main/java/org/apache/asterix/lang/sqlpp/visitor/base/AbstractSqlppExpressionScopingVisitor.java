@@ -16,35 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.sqlpp.visitor;
+package org.apache.asterix.lang.sqlpp.visitor.base;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
-import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.context.Scope;
-import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.FieldAccessor;
-import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.IfExpr;
-import org.apache.asterix.lang.common.expression.IndexAccessor;
-import org.apache.asterix.lang.common.expression.ListConstructor;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
-import org.apache.asterix.lang.common.expression.RecordConstructor;
-import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -55,44 +37,26 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
-import org.apache.asterix.lang.sqlpp.clause.HavingClause;
 import org.apache.asterix.lang.sqlpp.clause.JoinClause;
 import org.apache.asterix.lang.sqlpp.clause.NestClause;
-import org.apache.asterix.lang.sqlpp.clause.Projection;
-import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
-import org.apache.asterix.lang.sqlpp.clause.SelectClause;
-import org.apache.asterix.lang.sqlpp.clause.SelectElement;
-import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
-public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpressionVisitor<Expression, Expression> {
+public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     protected final ScopeChecker scopeChecker = new ScopeChecker();
     protected final LangRewritingContext context;
-    protected final boolean overwrite;
-    protected final AqlMetadataProvider metadataProvider;
 
     /**
      * @param context,
      *            manages ids of variables and guarantees uniqueness of variables.
-     * @param overwrite,
-     *            whether rewrite unbounded variables to dataset function calls.
-     *            This flag can only be true for rewriting a top-level query.
-     *            It should be false for rewriting the body expression of a user-defined function.
      */
-    public VariableCheckAndRewriteVisitor(LangRewritingContext context, boolean overwrite,
-            AqlMetadataProvider metadataProvider) {
+    public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context) {
         this.context = context;
-        scopeChecker.setVarCounter(new Counter(context.getVarCounter()));
-        this.overwrite = overwrite;
-        this.metadataProvider = metadataProvider;
+        this.scopeChecker.setVarCounter(new Counter(context.getVarCounter()));
     }
 
     @Override
@@ -197,82 +161,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     }
 
     @Override
-    public Expression visit(Projection projection, Expression arg) throws AsterixException {
-        projection.setExpression(projection.getExpression().accept(this, arg));
-        return null;
-    }
-
-    @Override
-    public Expression visit(SelectBlock selectBlock, Expression arg) throws AsterixException {
-        // Traverses the select block in the order of "from", "let"s, "where",
-        // "group by", "let"s, "having" and "select".
-        if (selectBlock.hasFromClause()) {
-            selectBlock.getFromClause().accept(this, arg);
-        }
-        if (selectBlock.hasLetClauses()) {
-            List<LetClause> letList = selectBlock.getLetList();
-            for (LetClause letClause : letList) {
-                letClause.accept(this, arg);
-            }
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, arg);
-        }
-        if (selectBlock.hasGroupbyClause()) {
-            selectBlock.getGroupbyClause().accept(this, arg);
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
-                for (LetClause letClauseAfterGby : letListAfterGby) {
-                    letClauseAfterGby.accept(this, arg);
-                }
-            }
-            if (selectBlock.hasHavingClause()) {
-                // Rewrites the having clause.
-                selectBlock.getHavingClause().accept(this, arg);
-            }
-        }
-        selectBlock.getSelectClause().accept(this, arg);
-        return null;
-    }
-
-    @Override
-    public Expression visit(SelectClause selectClause, Expression arg) throws AsterixException {
-        if (selectClause.selectElement()) {
-            selectClause.getSelectElement().accept(this, arg);
-        }
-        if (selectClause.selectRegular()) {
-            selectClause.getSelectRegular().accept(this, arg);
-        }
-        return null;
-    }
-
-    @Override
-    public Expression visit(SelectElement selectElement, Expression arg) throws AsterixException {
-        selectElement.setExpression(selectElement.getExpression().accept(this, arg));
-        return null;
-    }
-
-    @Override
-    public Expression visit(SelectRegular selectRegular, Expression arg) throws AsterixException {
-        for (Projection projection : selectRegular.getProjections()) {
-            projection.accept(this, arg);
-        }
-        return null;
-    }
-
-    @Override
     public Expression visit(SelectSetOperation selectSetOperation, Expression arg) throws AsterixException {
         selectSetOperation.getLeftInput().accept(this, arg);
         for (SetOperationRight right : selectSetOperation.getRightInputs()) {
             scopeChecker.createNewScope();
             right.getSetOperationRightInput().accept(this, arg);
         }
-        return null;
-    }
-
-    @Override
-    public Expression visit(HavingClause havingClause, Expression arg) throws AsterixException {
-        havingClause.setFilterExpression(havingClause.getFilterExpression().accept(this, arg));
         return null;
     }
 
@@ -289,22 +183,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
         scopeChecker.createNewScope();
         fd.setFuncBody(fd.getFuncBody().accept(this, arg));
         scopeChecker.removeCurrentScope();
-        return null;
-    }
-
-    @Override
-    public Expression visit(WhereClause whereClause, Expression arg) throws AsterixException {
-        whereClause.setWhereExpr(whereClause.getWhereExpr().accept(this, arg));
-        return null;
-    }
-
-    @Override
-    public Expression visit(OrderbyClause oc, Expression arg) throws AsterixException {
-        List<Expression> newOrderbyList = new ArrayList<Expression>();
-        for (Expression orderExpr : oc.getOrderbyList()) {
-            newOrderbyList.add(orderExpr.accept(this, arg));
-        }
-        oc.setOrderbyList(newOrderbyList);
         return null;
     }
 
@@ -375,48 +253,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     }
 
     @Override
-    public Expression visit(LiteralExpr l, Expression arg) throws AsterixException {
-        return l;
-    }
-
-    @Override
-    public Expression visit(ListConstructor lc, Expression arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<Expression>();
-        for (Expression expr : lc.getExprList()) {
-            newExprList.add(expr.accept(this, arg));
-        }
-        lc.setExprList(newExprList);
-        return lc;
-    }
-
-    @Override
-    public Expression visit(RecordConstructor rc, Expression arg) throws AsterixException {
-        for (FieldBinding binding : rc.getFbList()) {
-            binding.setLeftExpr(binding.getLeftExpr().accept(this, arg));
-            binding.setRightExpr(binding.getRightExpr().accept(this, arg));
-        }
-        return rc;
-    }
-
-    @Override
-    public Expression visit(OperatorExpr operatorExpr, Expression arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<Expression>();
-        for (Expression expr : operatorExpr.getExprList()) {
-            newExprList.add(expr.accept(this, arg));
-        }
-        operatorExpr.setExprList(newExprList);
-        return operatorExpr;
-    }
-
-    @Override
-    public Expression visit(IfExpr ifExpr, Expression arg) throws AsterixException {
-        ifExpr.setCondExpr(ifExpr.getCondExpr().accept(this, arg));
-        ifExpr.setThenExpr(ifExpr.getThenExpr().accept(this, arg));
-        ifExpr.setElseExpr(ifExpr.getElseExpr().accept(this, arg));
-        return ifExpr;
-    }
-
-    @Override
     public Expression visit(QuantifiedExpression qe, Expression arg) throws AsterixException {
         scopeChecker.createNewScope();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
@@ -429,77 +265,20 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppQueryExpression
     }
 
     @Override
-    public Expression visit(CallExpr callExpr, Expression arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<Expression>();
-        for (Expression expr : callExpr.getExprList()) {
-            newExprList.add(expr.accept(this, arg));
-        }
-        callExpr.setExprList(newExprList);
-        return callExpr;
-    }
-
-    @Override
     public Expression visit(VariableExpr varExpr, Expression arg) throws AsterixException {
         String varName = varExpr.getVar().getValue();
         if (scopeChecker.isInForbiddenScopes(varName)) {
             throw new AsterixException(
                     "Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
         }
-        if (rewriteNeeded(varExpr)) {
-            return datasetRewrite(varExpr);
-        } else {
-            return varExpr;
-        }
-    }
-
-    @Override
-    public Expression visit(UnaryExpr u, Expression arg) throws AsterixException {
-        u.setExpr(u.getExpr().accept(this, arg));
-        return u;
-    }
-
-    @Override
-    public Expression visit(FieldAccessor fa, Expression arg) throws AsterixException {
-        fa.setExpr(fa.getExpr().accept(this, arg));
-        return fa;
-    }
-
-    @Override
-    public Expression visit(IndexAccessor ia, Expression arg) throws AsterixException {
-        ia.setExpr(ia.getExpr().accept(this, arg));
-        if (ia.getIndexExpr() != null) {
-            ia.setIndexExpr(ia.getIndexExpr());
-        }
-        return ia;
-    }
-
-    // Whether a rewrite is needed for a variable reference expression.
-    private boolean rewriteNeeded(VariableExpr varExpr) throws AsterixException {
-        String varName = varExpr.getVar().getValue();
         Identifier ident = scopeChecker.lookupSymbol(varName);
         if (ident != null) {
-            // Exists such an identifier
+            // Exists such an identifier, then this is a variable reference instead of a variable
+            // definition.
             varExpr.setIsNewVar(false);
             varExpr.setVar((VarIdentifier) ident);
-            return false;
-        } else {
-            // Meets a undefined variable
-            return true;
         }
+        return varExpr;
     }
 
-    // Rewrites for global variable (e.g., dataset) references.
-    private Expression datasetRewrite(VariableExpr expr) throws AsterixException {
-        if (!overwrite) {
-            return expr;
-        }
-        String funcName = "dataset";
-        String dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
-        FunctionSignature signature = new FunctionSignature(dataverse, funcName, 1);
-        List<Expression> argList = new ArrayList<Expression>();
-        //Ignore the parser-generated prefix "$" for a dataset.
-        String dataset = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar()).getValue();
-        argList.add(new LiteralExpr(new StringLiteral(dataset)));
-        return new CallExpr(signature, argList);
-    }
 }

@@ -24,6 +24,6 @@ select element {'clerk':clerk,'ordercount':count}
 from  CustomerOrders as c,
       c.orders as o
 group by o.clerk as clerk
-with  count as test.count(o)
+with  count as count(o)
 order by count,clerk desc
 ;

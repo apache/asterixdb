@@ -37,7 +37,7 @@ with  idDBLP as paperDBLP.id,
           with  id as paper.id
           /* +hash */
           group by token as tokenGrouped
-          order by fuzzyjoin.count(id),tokenGrouped
+          order by count(id),tokenGrouped
       ) as tokenRanked at i
       where (tokenUnranked = tokenRanked)
       order by i

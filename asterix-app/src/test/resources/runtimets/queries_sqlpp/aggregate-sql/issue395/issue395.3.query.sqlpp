@@ -20,7 +20,7 @@
 use test;
 
 
-select element test."sql-count"((
+select element test."coll_sql-count"((
     select element l.name
     from  Employee as l
 ));

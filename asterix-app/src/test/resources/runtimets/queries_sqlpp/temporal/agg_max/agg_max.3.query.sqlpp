@@ -20,19 +20,19 @@
 use test;
 
 
-{'m0':test.max((
+{'m0':test.coll_max((
     select element i.time
     from  tsdata as i
-)),'m1':test.max((
+)),'m1':test.coll_max((
     select element i.date
     from  tsdata as i
-)),'m2':test.max((
+)),'m2':test.coll_max((
     select element i.datetime
     from  tsdata as i
-)),'m3':test.max((
+)),'m3':test.coll_max((
     select element i.dtduration
     from  tsdata as i
-)),'m4':test.max((
+)),'m4':test.coll_max((
     select element i.ymduration
     from  tsdata as i
 ))};

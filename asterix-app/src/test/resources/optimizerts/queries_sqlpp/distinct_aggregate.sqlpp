@@ -43,14 +43,14 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
 create  table LineItems_q1(LineItemType) primary key l_orderkey,l_linenumber on group1;
 
 write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
-select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_suppkey':tpch.count(g)}
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_suppkey':count(g)}
 from  (
     select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'l_suppkey':l_suppkey}
     from  LineItems_q1 as l

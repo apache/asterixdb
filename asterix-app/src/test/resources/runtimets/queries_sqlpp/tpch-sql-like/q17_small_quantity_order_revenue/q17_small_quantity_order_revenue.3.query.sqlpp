@@ -22,7 +22,7 @@ use tpch;
 
 declare function tmp() {
 (
-    select element {'t_partkey':l_partkey,'t_avg_quantity':(0.2 * tpch.avg((
+    select element {'t_partkey':l_partkey,'t_avg_quantity':(0.2 * COLL_AVG((
               select element i.l_quantity
               from  l as i
           )))}
@@ -31,7 +31,7 @@ declare function tmp() {
 )
 };
 
-select element (tpch.sum((
+select element (COLL_SUM((
       select element l.l_extendedprice
       from  LineItem as l,
             Part as p,

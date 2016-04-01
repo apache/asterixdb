@@ -22,25 +22,25 @@ use tpch;
 
 set "import-private-functions" "true";
 
-select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.sum((
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.coll_sum((
         select element i.l_quantity
         from  l as i
-    )),'sum_base_price':tpch.sum((
+    )),'sum_base_price':tpch.coll_sum((
         select element i.l_extendedprice
         from  l as i
-    )),'sum_disc_price':tpch.sum((
+    )),'sum_disc_price':tpch.coll_sum((
         select element (i.l_extendedprice * (1 - i.l_discount))
         from  l as i
-    )),'sum_charge':tpch.sum((
+    )),'sum_charge':tpch.coll_sum((
         select element (i.l_extendedprice * (1 - i.l_discount) * (1 + i.l_tax))
         from  l as i
-    )),'ave_qty':tpch.avg((
+    )),'ave_qty':tpch.coll_avg((
         select element i.l_quantity
         from  l as i
-    )),'ave_price':tpch.avg((
+    )),'ave_price':tpch.coll_avg((
         select element i.l_extendedprice
         from  l as i
-    )),'ave_disc':tpch.avg((
+    )),'ave_disc':tpch.coll_avg((
         select element i.l_discount
         from  l as i
     )),'count_order':tpch.count(l)}

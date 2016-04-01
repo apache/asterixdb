@@ -25,7 +25,7 @@ SELECT ELEMENT {
             GROUP BY c.tire_size AS tire_size GROUP AS g(c AS c, t AS t)
             SELECT ELEMENT {
                 'tire_size': tire_size,
-                'avg_total_price': avg(
+                'avg_total_price': coll_avg(
                                          (  FROM g AS g
                                             SELECT ELEMENT g.c.price + 4 * g.t.price
                                           )

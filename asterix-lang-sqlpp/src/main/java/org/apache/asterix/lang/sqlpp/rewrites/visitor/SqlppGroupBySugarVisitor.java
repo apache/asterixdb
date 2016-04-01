@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.sqlpp.visitor;
+package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -36,7 +35,6 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
@@ -45,25 +43,23 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
+import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
 /**
  * An AST pre-processor to rewrite group-by sugar queries.
  */
-public class SqlppGroupBySugarVisitor extends VariableCheckAndRewriteVisitor {
+public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     private final Expression groupVar;
     private final Collection<VariableExpr> targetVars;
 
-    public SqlppGroupBySugarVisitor(LangRewritingContext context, AqlMetadataProvider metadataProvider,
-            Expression groupVar, Collection<VariableExpr> targetVars) {
-        super(context, false, metadataProvider);
+    public SqlppGroupBySugarVisitor(LangRewritingContext context, Expression groupVar,
+            Collection<VariableExpr> targetVars) {
+        super(context);
         this.groupVar = groupVar;
         this.targetVars = targetVars;
     }
@@ -71,22 +67,21 @@ public class SqlppGroupBySugarVisitor extends VariableCheckAndRewriteVisitor {
     @Override
     public Expression visit(CallExpr callExpr, Expression arg) throws AsterixException {
         List<Expression> newExprList = new ArrayList<Expression>();
-        boolean aggregate = isAggregateFunction(callExpr.getFunctionSignature());
+        FunctionSignature signature = callExpr.getFunctionSignature();
+        boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature)
+                || FunctionMapUtil.isCoreAggregateFunction(signature);
+        boolean rewritten = false;
         for (Expression expr : callExpr.getExprList()) {
             Expression newExpr = aggregate ? wrapAggregationArgument(expr) : expr;
+            rewritten |= newExpr != expr;
             newExprList.add(newExpr.accept(this, arg));
+        }
+        if (rewritten) {
+            // Rewrites the SQL-92 function name to core functions.
+            callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
         }
         callExpr.setExprList(newExprList);
         return callExpr;
-    }
-
-    private boolean isAggregateFunction(FunctionSignature signature) throws AsterixException {
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(
-                new FunctionIdentifier(FunctionConstants.ASTERIX_NS, signature.getName(), signature.getArity()));
-        if (finfo == null) {
-            return false;
-        }
-        return AsterixBuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
     }
 
     private Expression wrapAggregationArgument(Expression expr) throws AsterixException {
@@ -96,10 +91,11 @@ public class SqlppGroupBySugarVisitor extends VariableCheckAndRewriteVisitor {
         Set<VariableExpr> definedVars = scopeChecker.getCurrentScope().getLiveVariables();
         Set<VariableExpr> vars = new HashSet<>(targetVars);
         vars.remove(definedVars); // Exclude re-defined local variables.
-        Set<VariableExpr> usedVars = SqlppRewriteUtil.getUsedVariable(expr);
-        if (!vars.containsAll(usedVars)) {
+        Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
+        if (!vars.containsAll(freeVars)) {
             return expr;
         }
+
         VariableExpr var = new VariableExpr(context.newVariable());
         FromTerm fromTerm = new FromTerm(groupVar, var, null, null);
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
@@ -116,7 +112,7 @@ public class SqlppGroupBySugarVisitor extends VariableCheckAndRewriteVisitor {
 
         // replace variable expressions with field access
         Map<VariableExpr, Expression> varExprMap = new HashMap<>();
-        for (VariableExpr usedVar : usedVars) {
+        for (VariableExpr usedVar : freeVars) {
             varExprMap.put(usedVar,
                     new FieldAccessor(var, SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar())));
         }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-select element "sql-avg"((
+select element "coll_sql-avg"((
     select element x
     from  [1.0,2.0,double('3.0')] as x
 ));

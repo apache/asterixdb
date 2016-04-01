@@ -20,7 +20,7 @@
 use test;
 
 
-{'average':test.avg((
+{'average':test.coll_avg((
     select element x.int64Field
     from  Numeric as x
 ))};

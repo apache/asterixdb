@@ -37,6 +37,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Inlines column aliases.
         inlineColumnAlias();
 
+        // Rewrites SQL-92 global aggregations.
+        rewriteGlobalAggregations();
+
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
 

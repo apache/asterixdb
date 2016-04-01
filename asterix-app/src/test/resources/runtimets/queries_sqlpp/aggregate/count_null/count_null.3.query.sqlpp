@@ -20,7 +20,7 @@
 use test;
 
 
-{'count':test.count((
+{'count':test.coll_count((
     select element x.doubleField
     from  Numeric as x
 ))};

@@ -56,7 +56,7 @@ with  tokens as (
           from  Users as user,
                 user.lottery_numbers as lottery_number
           group by lottery_number as item
-          with  count as rares03.count(user)
+          with  count as count(user)
           order by count desc
       ) as token at i
       where (lottery_number = token)

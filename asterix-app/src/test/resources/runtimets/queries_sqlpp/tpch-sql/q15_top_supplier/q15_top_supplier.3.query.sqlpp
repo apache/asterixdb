@@ -30,10 +30,11 @@ declare function revenue() {
 )
 };
 
-WITH  m AS max((
-      SELECT ELEMENT r2.total_revenue
+WITH  m AS (
+      SELECT ELEMENT max(r2.total_revenue)
       FROM revenue() r2
-))
+)[0]
+
 SELECT s.s_suppkey s_suppkey,
        s.s_name s_name,
        s.s_address s_address,
