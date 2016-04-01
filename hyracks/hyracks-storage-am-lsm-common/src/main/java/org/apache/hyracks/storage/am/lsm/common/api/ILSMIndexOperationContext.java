@@ -41,4 +41,11 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public ISearchPredicate getSearchPredicate();
 
     public List<ILSMComponent> getComponentsToBeReplicated();
+
+    /**
+     * @return true if this operation entered the components. Otherwise false.
+     */
+    public boolean isAccessingComponents();
+
+    public void setAccessingComponents(boolean accessingComponents);
 }

@@ -31,9 +31,9 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 
-public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContext {
+public class ExternalBTreeWithBuddyOpContext extends AbstractLSMIndexOperationContext {
     private IndexOperation op;
     private MultiComparator bTreeCmp;
     private MultiComparator buddyBTreeCmp;
@@ -74,6 +74,7 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
 
     @Override
     public void reset() {
+        super.reset();
         componentHolder.clear();
         componentsToBeMerged.clear();
         componentsToBeReplicated.clear();
