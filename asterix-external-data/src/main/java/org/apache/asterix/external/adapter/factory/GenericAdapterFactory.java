@@ -120,9 +120,14 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         this.metaType = metaType;
         this.configuration = configuration;
         dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(configuration);
-
         dataParserFactory = ParserFactoryProvider.getDataParserFactory(configuration);
-        prepare();
+        if (dataSourceFactory.isIndexible() && (files != null)) {
+            ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
+        }
+        dataSourceFactory.configure(configuration);
+        dataParserFactory.setRecordType(recordType);
+        dataParserFactory.setMetaType(metaType);
+        dataParserFactory.configure(configuration);
         ExternalDataCompatibilityUtils.validateCompatibility(dataSourceFactory, dataParserFactory);
         configureFeedLogManager();
         nullifyExternalObjects();
@@ -143,16 +148,6 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         if (ExternalDataUtils.isExternal(configuration.get(ExternalDataConstants.KEY_PARSER))) {
             dataParserFactory = null;
         }
-    }
-
-    private void prepare() throws AsterixException {
-        if (dataSourceFactory.isIndexible() && (files != null)) {
-            ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
-        }
-        dataSourceFactory.configure(configuration);
-        dataParserFactory.setRecordType(recordType);
-        dataParserFactory.setMetaType(metaType);
-        dataParserFactory.configure(configuration);
     }
 
     @Override

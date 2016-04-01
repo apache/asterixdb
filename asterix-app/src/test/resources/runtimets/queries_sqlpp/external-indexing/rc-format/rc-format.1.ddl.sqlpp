@@ -37,7 +37,13 @@ create type test.EmployeeType as
   age : int64
 }
 
-create external  table EmployeeDataset(EmployeeType) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/external-indexing-test.rc"),("input-format"="rc-input-format"),("format"="binary"),("parser"="hive-parser"),("hive-serde"="org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"));
+create external  table EmployeeDataset(EmployeeType) using "hdfs"(
+("hdfs"="hdfs://127.0.0.1:31888"),
+("path"="/asterix/external-indexing-test.rc"),
+("input-format"="rc-input-format"),
+("format"="hdfs-writable"),
+("parser"="hive-parser"),
+("hive-serde"="org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"));
 
 create  index EmployeeAgeIdx  on EmployeeDataset (age) type btree;
 

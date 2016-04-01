@@ -28,7 +28,6 @@ import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.reader.hdfs.EmptyRecordReader;
-import org.apache.asterix.external.provider.ExternalIndexerProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -63,8 +62,8 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
 
     @SuppressWarnings("unchecked")
     public HDFSInputStream(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, Map<String, String> configuration, List<ExternalFile> snapshot)
-                    throws IOException, AsterixException {
+            JobConf conf, Map<String, String> configuration, List<ExternalFile> snapshot, IExternalIndexer indexer)
+            throws IOException, AsterixException {
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
@@ -74,15 +73,13 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
         this.reader = new EmptyRecordReader<Object, Text>();
         this.snapshot = snapshot;
         this.hdfs = FileSystem.get(conf);
+        this.indexer = indexer;
         nextInputSplit();
         this.value = new Text();
         if (snapshot != null) {
-            this.indexer = ExternalIndexerProvider.getIndexer(configuration);
             if (currentSplitIndex < snapshot.size()) {
                 indexer.reset(this);
             }
-        } else {
-            this.indexer = null;
         }
     }
 

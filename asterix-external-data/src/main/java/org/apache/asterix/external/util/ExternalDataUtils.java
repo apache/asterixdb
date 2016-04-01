@@ -84,9 +84,9 @@ public class ExternalDataUtils {
         if (reader == null) {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER + " must be specified.");
         }
-        String parser = configuration.get(ExternalDataConstants.KEY_PARSER);
+        String parser = configuration.get(ExternalDataConstants.KEY_FORMAT);
         if (parser == null) {
-            throw new AsterixException("The parameter " + ExternalDataConstants.KEY_PARSER + " must be specified.");
+            throw new AsterixException("The parameter " + ExternalDataConstants.KEY_FORMAT + " must be specified.");
         }
     }
 
@@ -198,22 +198,6 @@ public class ExternalDataUtils {
             return Boolean.valueOf(value);
         }
         return false;
-    }
-
-    public static boolean isPull(Map<String, String> configuration) {
-        String pull = configuration.get(ExternalDataConstants.KEY_PULL);
-        if (pull == null) {
-            return false;
-        }
-        return Boolean.parseBoolean(pull);
-    }
-
-    public static boolean isPush(Map<String, String> configuration) {
-        String push = configuration.get(ExternalDataConstants.KEY_PUSH);
-        if (push == null) {
-            return false;
-        }
-        return Boolean.parseBoolean(push);
     }
 
     public static IRecordReaderFactory<?> createExternalRecordReaderFactory(Map<String, String> configuration)

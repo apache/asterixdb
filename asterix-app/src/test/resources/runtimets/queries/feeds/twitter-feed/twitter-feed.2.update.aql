@@ -17,29 +17,9 @@
  * under the License.
  */
 /*
-* Description  : Create an external dataset that contains a very large record
-                 stored with text hdfs file format.
-                 Perform a query over the dataset.
-* Expected Res : Success
-* Date         : 3rd Jan 2016
-*/
-drop dataverse test if exists;
-create dataverse test;
+ * Description  : Create a twitter feed with missing parameters
+ * Expected Res : Failure
+ */
 
-use dataverse test;
-
-create type EmployeeType as closed {
- id: int64,
- name: string,
- age: int64
-};
-
-create external dataset EmployeeDataset(EmployeeType)
-using adapter
-(("reader"="hdfs"),
-("format"="delimited-text"),
-("hdfs"="hdfs://127.0.0.1:31888"),
-("path"="/asterix/large-record.txt"),
-("input-format"="text-input-format"),
-("delimiter"="|"));
-
+use dataverse feeds;
+connect feed TwitterFeed to dataset Tweets;

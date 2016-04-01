@@ -36,7 +36,11 @@ create type EmployeeType as closed {
 
 create external dataset EmployeeDataset(EmployeeType)
 using hdfs
-(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/external-indexing-test.txt"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+(("hdfs"="hdfs://127.0.0.1:31888"),
+("path"="/asterix/external-indexing-test.txt"),
+("input-format"="text-input-format"),
+("format"="delimited-text"),
+("delimiter"="|"));
 
 create index EmployeeAgeIdx on EmployeeDataset(age);
 

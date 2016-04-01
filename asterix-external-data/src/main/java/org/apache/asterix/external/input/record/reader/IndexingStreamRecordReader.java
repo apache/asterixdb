@@ -16,53 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.stream;
+package org.apache.asterix.external.input.record.reader;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.input.record.CharArrayRecord;
-import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
-import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordReader;
 
-public abstract class AbstractStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
-    protected final AsterixInputStreamReader reader;
-    protected CharArrayRecord record;
-    protected char[] inputBuffer;
-    protected int bufferLength = 0;
-    protected int bufferPosn = 0;
-    protected final IExternalIndexer indexer;
-    protected boolean done = false;
-    protected FeedLogManager feedLogManager;
+public class IndexingStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
 
-    public AbstractStreamRecordReader(AsterixInputStream inputStream, IExternalIndexer indexer) {
-        this.reader = new AsterixInputStreamReader(inputStream);
+    private StreamRecordReader reader;
+    private IExternalIndexer indexer;
+
+    public IndexingStreamRecordReader(StreamRecordReader reader, IExternalIndexer indexer) {
+        this.reader = reader;
         this.indexer = indexer;
-        record = new CharArrayRecord();
-        inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-    }
-
-    @Override
-    public IRawRecord<char[]> next() throws IOException {
-        return record;
     }
 
     @Override
     public void close() throws IOException {
-        if (!done) {
-            reader.close();
-        }
-        done = true;
+        reader.close();
     }
 
     @Override
@@ -71,14 +53,18 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     }
 
     @Override
+    public boolean hasNext() throws Exception {
+        return reader.hasNext();
+    }
+
+    @Override
+    public IRawRecord<char[]> next() throws IOException, InterruptedException {
+        return reader.next();
+    }
+
+    @Override
     public boolean stop() {
-        try {
-            reader.stop();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return reader.stop();
     }
 
     @Override
@@ -88,17 +74,9 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
 
     @Override
     public void setFeedLogManager(FeedLogManager feedLogManager) {
-        this.feedLogManager = feedLogManager;
         reader.setFeedLogManager(feedLogManager);
     }
 
-    @Override
-    public boolean handleException(Throwable th) {
-        return reader.handleException(th);
-    }
-
-    //TODO: Fix the following method since they don't fit
-    //Already the fix is in another local branch
     @Override
     public List<ExternalFile> getSnapshot() {
         return null;
@@ -110,7 +88,13 @@ public abstract class AbstractStreamRecordReader implements IRecordReader<char[]
     }
 
     @Override
-    public RecordReader<?, Writable> getReader() {
+    public RecordReader<?, ? extends Writable> getReader() {
         return null;
     }
+
+    @Override
+    public boolean handleException(Throwable th) {
+        return reader.handleException(th);
+    }
+
 }

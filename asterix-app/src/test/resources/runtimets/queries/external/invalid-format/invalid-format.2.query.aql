@@ -16,30 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Create an external dataset that contains a very large record
-                 stored with text hdfs file format.
-                 Perform a query over the dataset.
-* Expected Res : Success
-* Date         : 3rd Jan 2016
-*/
-drop dataverse test if exists;
-create dataverse test;
+/**
+ * Testing an external dataset with invalid adapter format parameter value
+ * Expected result: fail - Unknown data format.
+ */
 
-use dataverse test;
+use dataverse temp;
 
-create type EmployeeType as closed {
- id: int64,
- name: string,
- age: int64
-};
-
-create external dataset EmployeeDataset(EmployeeType)
-using adapter
-(("reader"="hdfs"),
-("format"="delimited-text"),
-("hdfs"="hdfs://127.0.0.1:31888"),
-("path"="/asterix/large-record.txt"),
-("input-format"="text-input-format"),
-("delimiter"="|"));
-
+for $i in dataset testds
+return $i;

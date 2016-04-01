@@ -25,15 +25,20 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
-import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
+import org.apache.asterix.external.input.record.reader.IndexingStreamRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
+import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.provider.ExternalIndexerProvider;
+import org.apache.asterix.external.provider.StreamRecordReaderProvider;
+import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.io.Writable;
@@ -48,8 +53,7 @@ import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
-public class HDFSDataSourceFactory
-        implements IInputStreamFactory, IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
+public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
 
     protected static final long serialVersionUID = 1L;
     protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
@@ -69,6 +73,7 @@ public class HDFSDataSourceFactory
     private JobConf conf;
     private InputSplit[] inputSplits;
     private String nodeName;
+    private Format format;
 
     @Override
     public void configure(Map<String, String> configuration) throws AsterixException {
@@ -94,10 +99,14 @@ public class HDFSDataSourceFactory
             inputSplitsFactory = new InputSplitsFactory(inputSplits);
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
-            if (!ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM)) {
+            String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
+            if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)) {
                 RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
                 reader.close();
+            } else {
+                format = StreamRecordReaderProvider.getReaderFormat(configuration);
+                this.recordClass = char[].class;
             }
         } catch (IOException e) {
             throw new AsterixException(e);
@@ -117,8 +126,8 @@ public class HDFSDataSourceFactory
      * 1. when target files are not null, it generates a file aware input stream that validate
      * against the files
      * 2. if the data is binary, it returns a generic reader */
-    @Override
-    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition, IExternalIndexer indexer)
+            throws HyracksDataException {
         try {
             if (!configured) {
                 conf = confFactory.getConf();
@@ -126,7 +135,7 @@ public class HDFSDataSourceFactory
                 nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
                 configured = true;
             }
-            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, files);
+            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, files, indexer);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -170,15 +179,34 @@ public class HDFSDataSourceFactory
         return ExternalDataUtils.getDataSourceType(configuration);
     }
 
+    /**
+     * HDFS Datasource is a special case in two ways:
+     * 1. It supports indexing.
+     * 2. It returns input as a set of writable object that we sometimes internally transform into a byte stream
+     * Hence, it can produce:
+     * 1. StreamRecordReader: When we transform the input into a byte stream.
+     * 2. Indexing Stream Record Reader: When we transform the input into a byte stream and perform indexing.
+     * 3. HDFS Record Reader: When we simply pass the Writable object as it is to the parser.
+     */
     @Override
-    public IRecordReader<? extends Writable> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public IRecordReader<? extends Object> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
+            IExternalIndexer indexer = files == null ? null : ExternalIndexerProvider.getIndexer(configuration);
+            if (format != null) {
+                StreamRecordReader streamReader = StreamRecordReaderProvider.createRecordReader(format,
+                        createInputStream(ctx, partition, indexer), configuration);
+                if (indexer != null) {
+                    return new IndexingStreamRecordReader(streamReader, indexer);
+                } else {
+                    return streamReader;
+                }
+            }
             JobConf conf = confFactory.getConf();
             InputSplit[] inputSplits = inputSplitsFactory.getSplits();
             String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
             return new HDFSRecordReader<Object, Writable>(read, inputSplits, readSchedule, nodeName, conf, files,
-                    files == null ? null : ExternalIndexerProvider.getIndexer(configuration));
+                    indexer);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

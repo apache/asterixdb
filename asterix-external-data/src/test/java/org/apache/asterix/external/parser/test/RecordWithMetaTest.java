@@ -86,7 +86,7 @@ public class RecordWithMetaTest {
                     null, null, 0, null, false);
 
             // create reader record reader
-            QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream, null,
+            QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream,
                     ExternalDataConstants.DEFAULT_QUOTE);
             // create csv with json record reader
             CSVToRecordWithMetadataAndPKConverter recordConverter = new CSVToRecordWithMetadataAndPKConverter(

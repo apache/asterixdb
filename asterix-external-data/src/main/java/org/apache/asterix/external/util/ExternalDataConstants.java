@@ -72,8 +72,6 @@ public class ExternalDataConstants {
     public static final String KEY_HIVE_SERDE = "hive-serde";
     public static final String KEY_RSS_URL = "url";
     public static final String KEY_INTERVAL = "interval";
-    public static final String KEY_PULL = "pull";
-    public static final String KEY_PUSH = "push";
     public static final String KEY_IS_FEED = "is-feed";
     public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
     public static final String KEY_FEED_NAME = "feed";
@@ -123,8 +121,10 @@ public class ExternalDataConstants {
      */
     public static final String READER_HDFS = "hdfs";
     public static final String READER_KV = "key-value";
-    public static final String READER_TWITTER_PUSH = "twitter-push";
-    public static final String READER_TWITTER_PULL = "twitter-pull";
+    public static final String READER_TWITTER_PUSH = "twitter_push";
+    public static final String READER_PUSH_TWITTER = "push_twitter";
+    public static final String READER_TWITTER_PULL = "twitter_pull";
+    public static final String READER_PULL_TWITTER = "pull_twitter";
 
     public static final String CLUSTER_LOCATIONS = "cluster-locations";
     public static final String SCHEDULER = "hdfs-scheduler";
@@ -156,7 +156,7 @@ public class ExternalDataConstants {
      */
     public static final String STREAM_HDFS = "hdfs";
     public static final String STREAM_LOCAL_FILESYSTEM = "localfs";
-    public static final String STREAM_SOCKET = "socket";
+    public static final String SOCKET = "socket";
     public static final String STREAM_SOCKET_CLIENT = "socket-client";
 
     /**

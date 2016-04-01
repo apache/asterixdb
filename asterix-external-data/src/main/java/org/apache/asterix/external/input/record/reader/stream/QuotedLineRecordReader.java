@@ -32,9 +32,9 @@ public class QuotedLineRecordReader extends LineRecordReader {
     private boolean prevCharEscape;
     private boolean inQuote;
 
-    public QuotedLineRecordReader(final boolean hasHeader, final AsterixInputStream stream,
-            final IExternalIndexer indexer, final String quoteString) throws HyracksDataException {
-        super(hasHeader, stream, indexer);
+    public QuotedLineRecordReader(final boolean hasHeader, final AsterixInputStream stream, final String quoteString)
+            throws HyracksDataException {
+        super(hasHeader, stream);
         if ((quoteString == null) || (quoteString.length() != 1)) {
             throw new HyracksDataException(ExternalDataExceptionUtils.incorrectParameterMessage(
                     ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));

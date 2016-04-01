@@ -73,7 +73,7 @@ public class ClassAdToADMTest extends TestCase {
                         new FileSplit[] { new FileSplit("",
                                 new FileReference(Paths.get(getClass().getResource(path).toURI()).toFile())) },
                         null, null, 0, null, false);
-                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, null, "[", "]");
+                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
                 Value val = new Value(objectPool);
                 while (recordReader.hasNext()) {
                     val.reset();

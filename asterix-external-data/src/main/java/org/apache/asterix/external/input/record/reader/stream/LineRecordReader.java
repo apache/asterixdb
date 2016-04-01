@@ -21,19 +21,17 @@ package org.apache.asterix.external.input.record.reader.stream;
 import java.io.IOException;
 
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class LineRecordReader extends AbstractStreamRecordReader {
+public class LineRecordReader extends StreamRecordReader {
 
     protected boolean prevCharCR;
     protected int newlineLength;
     protected int recordNumber = 0;
 
-    public LineRecordReader(final boolean hasHeader, final AsterixInputStream stream, final IExternalIndexer indexer)
-            throws HyracksDataException {
-        super(stream, indexer);
+    public LineRecordReader(final boolean hasHeader, final AsterixInputStream stream) throws HyracksDataException {
+        super(stream);
         try {
             if (hasHeader) {
                 if (hasNext()) {

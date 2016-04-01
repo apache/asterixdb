@@ -27,7 +27,6 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
@@ -71,10 +70,10 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
             builder.append(AuthenticationConstants.OAUTH_CONSUMER_KEY + "\n");
             builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
             builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
-            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
+            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET);
             throw new AsterixException(builder.toString());
         }
-        if (ExternalDataUtils.isPull(configuration)) {
+        if (TwitterRecordReaderFactory.isTwitterPull(configuration)) {
             pull = true;
             if (configuration.get(SearchAPIConstants.QUERY) == null) {
                 throw new AsterixException(
@@ -95,12 +94,18 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
                             + DEFAULT_INTERVAL + ")");
                 }
             }
-        } else if (ExternalDataUtils.isPush(configuration)) {
-            pull = false;
         } else {
-            throw new AsterixException("One of boolean parameters " + ExternalDataConstants.KEY_PULL + " and "
-                    + ExternalDataConstants.KEY_PUSH + " must be specified as part of adaptor configuration");
+            pull = false;
         }
+    }
+
+    public static boolean isTwitterPull(Map<String, String> configuration) {
+        String reader = configuration.get(ExternalDataConstants.KEY_READER);
+        if (reader.equals(ExternalDataConstants.READER_TWITTER_PULL)
+                || reader.equals(ExternalDataConstants.READER_PULL_TWITTER)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
