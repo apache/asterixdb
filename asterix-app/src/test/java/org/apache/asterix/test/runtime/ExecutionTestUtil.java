@@ -43,7 +43,7 @@ public class ExecutionTestUtil {
 
     protected static TestGroup FailedGroup;
 
-    public static void setUp() throws Exception {
+    public static void setUp(boolean cleanup) throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
@@ -53,7 +53,7 @@ public class ExecutionTestUtil {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
         }
-        AsterixHyracksIntegrationUtil.init(true);
+        AsterixHyracksIntegrationUtil.init(cleanup);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing HDFS");
@@ -81,9 +81,9 @@ public class ExecutionTestUtil {
         }
     }
 
-    public static void tearDown() throws Exception {
+    public static void tearDown(boolean cleanup) throws Exception {
         // validateBufferCacheState(); <-- Commented out until bug is fixed -->
-        AsterixHyracksIntegrationUtil.deinit(true);
+        AsterixHyracksIntegrationUtil.deinit(cleanup);
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {

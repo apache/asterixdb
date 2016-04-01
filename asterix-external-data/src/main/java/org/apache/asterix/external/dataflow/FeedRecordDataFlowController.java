@@ -85,6 +85,9 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 }
                 tupleForwarder.addTuple(tb);
             }
+        } catch (InterruptedException e) {
+            //TODO: Find out what could cause an interrupted exception beside termination of a job/feed
+            LOGGER.warn("Feed has been interrupted. Closing the feed");
         } catch (Exception e) {
             failed = true;
             tupleForwarder.flush();
