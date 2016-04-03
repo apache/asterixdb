@@ -338,12 +338,17 @@ public class NodeControllerService implements IControllerService {
             }
             partitionManager.close();
             datasetPartitionManager.close();
-            heartbeatTask.cancel();
             netManager.stop();
             datasetNetworkManager.stop();
             queue.stop();
-            if (ncAppEntryPoint != null)
+            if (ncAppEntryPoint != null) {
                 ncAppEntryPoint.stop();
+            }
+            /**
+             * Stop heartbeat after NC has stopped to avoid false node failure detection
+             * on CC if an NC takes a long time to stop.
+             */
+            heartbeatTask.cancel();
             LOGGER.log(Level.INFO, "Stopped NodeControllerService");
             shuttedDown = true;
         }

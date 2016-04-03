@@ -63,7 +63,8 @@ public class LSMHarness implements ILSMHarness {
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
         fullMergeIsRequested = new AtomicBoolean();
-        this.replicationEnabled = replicationEnabled;
+        //only durable indexes are replicated
+        this.replicationEnabled = replicationEnabled && lsmIndex.isDurable();
         if (replicationEnabled) {
             this.componentsToBeReplicated = new ArrayList<ILSMComponent>();
         }
