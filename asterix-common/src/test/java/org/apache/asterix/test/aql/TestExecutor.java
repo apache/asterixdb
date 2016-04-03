@@ -473,8 +473,7 @@ public class TestExecutor {
     public void executeTest(TestCaseContext testCaseCtx, TestFileContext ctx, String statement,
             boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
             List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath) throws Exception {
-        File qbcFile = null;
-        File qarFile;
+        File qbcFile;
         boolean failed = false;
         File expectedResultFile;
         switch (ctx.getType()) {
@@ -552,20 +551,19 @@ public class TestExecutor {
             case "txnqbc": // qbc represents query before crash
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
                         "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
-                qbcFile = new File(actualPath + File.separator
-                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
-                        + "_qbc.adm");
+                qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 qbcFile.getParentFile().mkdirs();
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
                         "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
-                qarFile = new File(actualPath + File.separator
+                File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
                 qarFile.getParentFile().mkdirs();
                 writeOutputToFile(qarFile, resultStream);
+                qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
                 break;
             case "txneu": // eu represents erroneous update
@@ -652,7 +650,7 @@ public class TestExecutor {
                 }
                 break;
             case "server": // (start <test server name> <port>
-                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -700,7 +698,7 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                            // <library-directory>
+                        // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
                 lines = statement.split("\n");
@@ -793,5 +791,12 @@ public class TestExecutor {
                 }
             }
         }
+    }
+
+    private static File getTestCaseQueryBeforeCrashFile(String actualPath, TestCaseContext testCaseCtx,
+            CompilationUnit cUnit) {
+        return new File(
+                actualPath + File.separator + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                        + cUnit.getName() + "_qbc.adm");
     }
 }
