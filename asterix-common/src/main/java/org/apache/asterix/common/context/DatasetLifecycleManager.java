@@ -65,8 +65,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private final int numPartitions;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
-                                   ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID,
-                                   ILogManager logManager, int numPartitions) {
+            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID, ILogManager logManager,
+            int numPartitions) {
         this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
@@ -111,6 +111,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         if (!dsInfo.isRegistered) {
             dsInfo.isExternal = !index.hasMemoryComponents();
             dsInfo.isRegistered = true;
+            dsInfo.durable = ((ILSMIndex) index).isDurable();
         }
 
         if (dsInfo.indexes.containsKey(resourceID)) {
@@ -338,6 +339,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             return dvbcs;
         }
     }
+
     @Override
     public ILSMOperationTracker getOperationTracker(int datasetID) {
         synchronized (datasetOpTrackers) {
@@ -400,6 +402,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         private boolean isExternal;
         private boolean isRegistered;
         private boolean memoryAllocated;
+        private boolean durable;
 
         public DatasetInfo(int datasetID) {
             this.indexes = new HashMap<Long, IndexInfo>();
@@ -480,7 +483,11 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         public String toString() {
             return "DatasetID: " + datasetID + ", isOpen: " + isOpen + ", refCount: " + referenceCount
                     + ", lastAccess: " + lastAccess + ", isRegistered: " + isRegistered + ", memoryAllocated: "
-                    + memoryAllocated;
+                    + memoryAllocated + ", isDurable: " + durable;
+        }
+
+        public boolean isDurable() {
+            return durable;
         }
     }
 
@@ -536,7 +543,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
      * This method can only be called asynchronously safely if we're sure no modify operation will take place until the flush is scheduled
      */
     private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
-        if (!dsInfo.isExternal) {
+        if (!dsInfo.isExternal && dsInfo.durable) {
             synchronized (logRecord) {
                 TransactionUtil.formFlushLogRecord(logRecord, dsInfo.datasetID, null, logManager.getNodeId(),
                         dsInfo.indexes.size());
@@ -731,8 +738,10 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             List<IVirtualBufferCache> vbcs = new ArrayList<>();
             for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
                 MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
-                        new VirtualBufferCache(new ResourceHeapBufferAllocator(DatasetLifecycleManager.this,
-                                Integer.toString(datasetID)), storageProperties.getMemoryComponentPageSize(),
+                        new VirtualBufferCache(
+                                new ResourceHeapBufferAllocator(DatasetLifecycleManager.this,
+                                        Integer.toString(datasetID)),
+                                storageProperties.getMemoryComponentPageSize(),
                                 numPages / storageProperties.getMemoryComponentsNum() / numPartitions));
                 vbcs.add(vbc);
             }

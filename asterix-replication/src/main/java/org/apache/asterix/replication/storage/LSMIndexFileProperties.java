@@ -69,7 +69,7 @@ public class LSMIndexFileProperties {
         this.fileName = tokens[arraySize - 1];
         this.idxName = tokens[arraySize - 2];
         this.dataverse = tokens[arraySize - 3];
-        this.partition = StoragePathUtil.getPartitonNumFromName(tokens[arraySize - 4]);
+        this.partition = StoragePathUtil.getPartitionNumFromName(tokens[arraySize - 4]);
     }
 
     public void serialize(OutputStream out) throws IOException {

@@ -121,13 +121,15 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                     }
                 }
             }
-            LogRecord logRecord = new LogRecord();
-            TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
-                    dsInfo.getDatasetIndexes().size());
-            try {
-                logManager.log(logRecord);
-            } catch (ACIDException e) {
-                throw new HyracksDataException("could not write flush log", e);
+            if (dsInfo.isDurable()) {
+                LogRecord logRecord = new LogRecord();
+                TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
+                        dsInfo.getDatasetIndexes().size());
+                try {
+                    logManager.log(logRecord);
+                } catch (ACIDException e) {
+                    throw new HyracksDataException("could not write flush log", e);
+                }
             }
 
             flushLogCreated = true;

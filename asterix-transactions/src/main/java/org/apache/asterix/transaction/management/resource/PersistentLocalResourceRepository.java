@@ -337,14 +337,25 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private void createReplicationJob(ReplicationOperation operation, String filePath) throws HyracksDataException {
-        filesToBeReplicated.clear();
-        filesToBeReplicated.add(filePath);
-        AsterixReplicationJob job = new AsterixReplicationJob(ReplicationJobType.METADATA, operation,
-                ReplicationExecutionType.SYNC, filesToBeReplicated);
-        try {
-            replicationManager.submitJob(job);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
+        /**
+         * Durable resources path format:
+         * /partition/dataverse/idx/fileName
+         * Temporary resources path format:
+         * /partition/TEMP_DATASETS_STORAGE_FOLDER/dataverse/idx/fileName
+         */
+        String[] fileNameTokens = filePath.split(File.separator);
+        String partitionDir = fileNameTokens[fileNameTokens.length - 4];
+        //exclude temporary datasets resources
+        if (!partitionDir.equals(StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)) {
+            filesToBeReplicated.clear();
+            filesToBeReplicated.add(filePath);
+            AsterixReplicationJob job = new AsterixReplicationJob(ReplicationJobType.METADATA, operation,
+                    ReplicationExecutionType.SYNC, filesToBeReplicated);
+            try {
+                replicationManager.submitJob(job);
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 
@@ -454,14 +465,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      */
     public static String getResourceRelativePath(String resourceAbsolutePath) {
         String[] tokens = resourceAbsolutePath.split(File.separator);
-        //partiton/dataverse/idx/fileName
+        //partition/dataverse/idx/fileName
         return tokens[tokens.length - 4] + File.separator + tokens[tokens.length - 3] + File.separator
                 + tokens[tokens.length - 2] + File.separator + tokens[tokens.length - 1];
     }
 
     public static int getResourcePartition(String resourceAbsolutePath) {
         String[] tokens = resourceAbsolutePath.split(File.separator);
-        //partiton/dataverse/idx/fileName
-        return StoragePathUtil.getPartitonNumFromName(tokens[tokens.length - 4]);
+        //partition/dataverse/idx/fileName
+        return StoragePathUtil.getPartitionNumFromName(tokens[tokens.length - 4]);
     }
 }

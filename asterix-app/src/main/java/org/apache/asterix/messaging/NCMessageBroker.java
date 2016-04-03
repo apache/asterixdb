@@ -124,14 +124,17 @@ public class NCMessageBroker implements INCMessageBroker {
 
     private void handleTakeoverPartitons(IMessage message) throws Exception {
         TakeoverPartitionsRequestMessage msg = (TakeoverPartitionsRequestMessage) message;
-        try {
-            IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
-            remoteRecoeryManager.takeoverPartitons(msg.getPartitions());
-        } finally {
-            //send response after takeover is completed
-            TakeoverPartitionsResponseMessage reponse = new TakeoverPartitionsResponseMessage(msg.getRequestId(),
-                    appContext.getTransactionSubsystem().getId(), msg.getPartitions());
-            sendMessage(reponse, null);
+        //if the NC is shutting down, it should ignore takeover partitions request
+        if (!appContext.isShuttingdown()) {
+            try {
+                IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
+                remoteRecoeryManager.takeoverPartitons(msg.getPartitions());
+            } finally {
+                //send response after takeover is completed
+                TakeoverPartitionsResponseMessage reponse = new TakeoverPartitionsResponseMessage(msg.getRequestId(),
+                        appContext.getTransactionSubsystem().getId(), msg.getPartitions());
+                sendMessage(reponse, null);
+            }
         }
     }
 
