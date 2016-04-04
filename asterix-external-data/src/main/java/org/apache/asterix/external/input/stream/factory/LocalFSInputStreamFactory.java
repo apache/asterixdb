@@ -22,12 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -38,7 +38,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.external.util.NodeResolverFactory;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -128,19 +127,10 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     }
 
     private void configurePartitionConstraint() throws AsterixException {
-        Map<String, ClusterPartition[]> partitions = AsterixAppContextInfo.getInstance().getMetadataProperties()
-                .getNodePartitions();
-        List<String> locs = new ArrayList<>();
+        Set<String> locs = new TreeSet<>();
         for (int i = 0; i < inputFileSplits.length; i++) {
             String location = inputFileSplits[i].getNodeName();
-            if (!locs.contains(location)) {
-                int numOfPartitions = partitions.get(location).length;
-                int j = 0;
-                while (j < numOfPartitions) {
-                    locs.add(location);
-                    j++;
-                }
-            }
+            locs.add(location);
         }
         constraints = new AlgebricksAbsolutePartitionConstraint(locs.toArray(new String[locs.size()]));
     }
