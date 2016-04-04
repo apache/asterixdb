@@ -31,6 +31,7 @@ import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IndexingStreamRecordReader implements IRecordReader<char[]>, IIndexingDatasource {
 
@@ -73,7 +74,7 @@ public class IndexingStreamRecordReader implements IRecordReader<char[]>, IIndex
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
         reader.setFeedLogManager(feedLogManager);
     }
 

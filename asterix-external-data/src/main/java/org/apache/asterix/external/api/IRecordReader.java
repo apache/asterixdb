@@ -23,9 +23,11 @@ import java.io.IOException;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This interface represents a record reader that reads data from external source as a set of records
+ *
  * @param <T>
  */
 public interface IRecordReader<T> extends Closeable {
@@ -33,7 +35,7 @@ public interface IRecordReader<T> extends Closeable {
     /**
      * @return true if the reader has more records remaining, false, otherwise.
      * @throws Exception
-     *         if an error takes place
+     *             if an error takes place
      */
     public boolean hasNext() throws Exception;
 
@@ -46,6 +48,7 @@ public interface IRecordReader<T> extends Closeable {
 
     /**
      * used to stop reader from producing more records.
+     *
      * @return true if the connection to the external source has been suspended, false otherwise.
      */
     public boolean stop();
@@ -61,8 +64,10 @@ public interface IRecordReader<T> extends Closeable {
     /**
      * set a pointer to the log manager of the feed. the log manager can be used to log
      * progress and errors
+     *
+     * @throws HyracksDataException
      */
-    public void setFeedLogManager(FeedLogManager feedLogManager);
+    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException;
 
     /**
      * gives the record reader a chance to recover from IO errors during feed intake

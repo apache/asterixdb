@@ -29,6 +29,7 @@ import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixInputStreamReader extends Reader {
     private AsterixInputStream in;
@@ -56,7 +57,7 @@ public class AsterixInputStreamReader extends Reader {
         in.setController(controller);
     }
 
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
         in.setFeedLogManager(feedLogManager);
     }
 

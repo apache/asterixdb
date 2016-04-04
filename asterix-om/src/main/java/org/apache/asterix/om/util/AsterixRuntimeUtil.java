@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.control.cc.ClusterControllerService;
+
 /**
  * Utility class for obtaining information on the set of Hyracks NodeController
  * processes that are running on a given host.
@@ -54,6 +56,8 @@ public class AsterixRuntimeUtil {
     }
 
     public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) throws Exception {
-        AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+        ClusterControllerService ccs = (ClusterControllerService) AsterixAppContextInfo.getInstance()
+                .getCCApplicationContext().getControllerService();
+        map.putAll(ccs.getIpAddressNodeNameMap());
     }
 }

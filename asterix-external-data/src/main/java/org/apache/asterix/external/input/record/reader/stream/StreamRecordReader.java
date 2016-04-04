@@ -23,13 +23,16 @@ import java.io.IOException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.api.IStreamNotificationHandler;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class StreamRecordReader implements IRecordReader<char[]> {
+public abstract class StreamRecordReader implements IRecordReader<char[]>, IStreamNotificationHandler {
     protected final AsterixInputStreamReader reader;
     protected CharArrayRecord record;
     protected char[] inputBuffer;
@@ -37,6 +40,7 @@ public abstract class StreamRecordReader implements IRecordReader<char[]> {
     protected int bufferPosn = 0;
     protected boolean done = false;
     protected FeedLogManager feedLogManager;
+    protected MutableBoolean newFile = new MutableBoolean(false);
 
     public StreamRecordReader(AsterixInputStream inputStream) {
         this.reader = new AsterixInputStreamReader(inputStream);
@@ -72,7 +76,8 @@ public abstract class StreamRecordReader implements IRecordReader<char[]> {
     public abstract boolean hasNext() throws IOException;
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
+        this.feedLogManager = feedLogManager;
         reader.setFeedLogManager(feedLogManager);
     }
 
@@ -84,5 +89,10 @@ public abstract class StreamRecordReader implements IRecordReader<char[]> {
     @Override
     public boolean handleException(Throwable th) {
         return reader.handleException(th);
+    }
+
+    @Override
+    public void notifyNewSource() {
+        throw new UnsupportedOperationException();
     }
 }

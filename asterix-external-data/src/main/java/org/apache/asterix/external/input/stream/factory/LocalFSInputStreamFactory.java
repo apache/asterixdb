@@ -20,10 +20,14 @@ package org.apache.asterix.external.input.stream.factory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -32,8 +36,9 @@ import org.apache.asterix.external.api.INodeResolverFactory;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.FeedUtils;
+import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.external.util.NodeResolverFactory;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -49,16 +54,27 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
     protected FileSplit[] inputFileSplits;
-    protected FileSplit[] feedLogFileSplits; // paths where instances of this feed can use as log storage
     protected boolean isFeed;
     protected String expression;
     // transient fields (They don't need to be serialized and transferred)
     private transient AlgebricksAbsolutePartitionConstraint constraints;
+    private transient FileSystemWatcher watcher;
 
     @Override
-    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+    public synchronized AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
+        if (watcher == null) {
+            String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            ArrayList<Path> inputResources = new ArrayList<>();
+            for (int i = 0; i < inputFileSplits.length; i++) {
+                if (inputFileSplits[i].getNodeName().equals(nodeName)) {
+                    inputResources.add(inputFileSplits[i].getLocalFile().getFile().toPath());
+                }
+            }
+            watcher = new FileSystemWatcher(inputResources, expression, isFeed);
+        }
         try {
-            return new LocalFSInputStream(inputFileSplits, ctx, configuration, partition, expression, isFeed);
+            return new LocalFSInputStream(watcher);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -81,10 +97,6 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
         configureFileSplits(splits);
         configurePartitionConstraint();
         this.isFeed = ExternalDataUtils.isFeed(configuration) && ExternalDataUtils.keepDataSourceOpen(configuration);
-        if (isFeed) {
-            feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
-                    ExternalDataUtils.getFeedName(configuration), constraints);
-        }
         this.expression = configuration.get(ExternalDataConstants.KEY_EXPRESSION);
     }
 
@@ -94,6 +106,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     }
 
     private void configureFileSplits(String[] splits) throws AsterixException {
+        INodeResolver resolver = getNodeResolver();
         if (inputFileSplits == null) {
             inputFileSplits = new FileSplit[splits.length];
             String nodeName;
@@ -106,7 +119,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
                     throw new AsterixException(
                             "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
                 }
-                nodeName = trimmedValue.split(":")[0];
+                nodeName = resolver.resolveNode(trimmedValue.split(":")[0]);
                 nodeLocalPath = trimmedValue.split("://")[1];
                 FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
                 inputFileSplits[count++] = fileSplit;
@@ -115,13 +128,21 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     }
 
     private void configurePartitionConstraint() throws AsterixException {
-        String[] locs = new String[inputFileSplits.length];
-        String location;
+        Map<String, ClusterPartition[]> partitions = AsterixAppContextInfo.getInstance().getMetadataProperties()
+                .getNodePartitions();
+        List<String> locs = new ArrayList<>();
         for (int i = 0; i < inputFileSplits.length; i++) {
-            location = getNodeResolver().resolveNode(inputFileSplits[i].getNodeName());
-            locs[i] = location;
+            String location = inputFileSplits[i].getNodeName();
+            if (!locs.contains(location)) {
+                int numOfPartitions = partitions.get(location).length;
+                int j = 0;
+                while (j < numOfPartitions) {
+                    locs.add(location);
+                    j++;
+                }
+            }
         }
-        constraints = new AlgebricksAbsolutePartitionConstraint(locs);
+        constraints = new AlgebricksAbsolutePartitionConstraint(locs.toArray(new String[locs.size()]));
     }
 
     protected INodeResolver getNodeResolver() {

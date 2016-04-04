@@ -25,13 +25,15 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class ChangeFeedWithMetaDataFlowController<T, O> extends FeedWithMetaDataFlowController<T, O> {
 
     public ChangeFeedWithMetaDataFlowController(final IHyracksTaskContext ctx, final FeedTupleForwarder tupleForwarder,
             final FeedLogManager feedLogManager, final int numOfOutputFields,
-            final RecordWithMetadataParser<T, O> dataParser, final IRecordReader<T> recordReader) {
+            final RecordWithMetadataParser<T, O> dataParser, final IRecordReader<T> recordReader)
+            throws HyracksDataException {
         super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
     }
 

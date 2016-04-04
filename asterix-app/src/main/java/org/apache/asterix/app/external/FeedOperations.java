@@ -20,6 +20,8 @@ package org.apache.asterix.app.external;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -64,6 +66,7 @@ public class FeedOperations {
 
     /**
      * Builds the job spec for ingesting a (primary) feed from its external source via the feed adaptor.
+     *
      * @param primaryFeed
      * @param metadataProvider
      * @return JobSpecification the Hyracks job specification for receiving data from external source
@@ -251,12 +254,18 @@ public class FeedOperations {
 
     public static JobSpecification buildRemoveFeedStorageJob(Feed feed) throws Exception {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        AlgebricksAbsolutePartitionConstraint locations = AsterixClusterProperties.INSTANCE.getClusterLocations();
+        AlgebricksAbsolutePartitionConstraint allCluster = AsterixClusterProperties.INSTANCE.getClusterLocations();
+        Set<String> nodes = new TreeSet<>();
+        for (String node : allCluster.getLocations()) {
+            nodes.add(node);
+        }
+        AlgebricksAbsolutePartitionConstraint locations = new AlgebricksAbsolutePartitionConstraint(
+                nodes.toArray(new String[nodes.size()]));
         FileSplit[] feedLogFileSplits = FeedUtils.splitsForAdapter(feed.getDataverseName(), feed.getFeedName(),
                 locations);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = StoragePathUtil
                 .splitProviderAndPartitionConstraints(feedLogFileSplits);
-        FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(spec, splitsAndConstraint.first);
+        FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(spec, splitsAndConstraint.first, true);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, frod, splitsAndConstraint.second);
         spec.addRoot(frod);
         return spec;

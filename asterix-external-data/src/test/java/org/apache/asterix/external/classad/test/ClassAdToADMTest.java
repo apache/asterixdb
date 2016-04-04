@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.external.classad.test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -32,8 +35,7 @@ import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReader;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.library.ClassAdParser;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.asterix.external.util.FileSystemWatcher;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -69,10 +71,10 @@ public class ClassAdToADMTest extends TestCase {
             ClassAdParser parser = new ClassAdParser(objectPool);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {
-                LocalFSInputStream in = new LocalFSInputStream(
-                        new FileSplit[] { new FileSplit("",
-                                new FileReference(Paths.get(getClass().getResource(path).toURI()).toFile())) },
-                        null, null, 0, null, false);
+                List<Path> paths = new ArrayList<>();
+                paths.add(Paths.get(getClass().getResource(path).toURI()));
+                FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
+                LocalFSInputStream in = new LocalFSInputStream(watcher);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
                 Value val = new Value(objectPool);
                 while (recordReader.hasNext()) {

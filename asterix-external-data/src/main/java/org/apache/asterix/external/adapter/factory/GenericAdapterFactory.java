@@ -39,6 +39,7 @@ import org.apache.asterix.external.provider.ParserFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -58,6 +59,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     private boolean isFeed;
     private FileSplit[] feedLogFileSplits;
     private ARecordType metaType;
+    private FeedLogManager feedLogManager = null;
 
     @Override
     public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
@@ -86,8 +88,14 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         } catch (AsterixException e) {
             throw new HyracksDataException(e);
         }
+        if (isFeed) {
+            if (feedLogManager == null) {
+                feedLogManager = FeedUtils.getFeedLogManager(ctx, partition, feedLogFileSplits);
+            }
+            feedLogManager.touch();
+        }
         IDataFlowController controller = DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
-                dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogFileSplits);
+                dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogManager);
         if (isFeed) {
             return new FeedAdapter((AbstractFeedDataFlowController) controller);
         } else {
