@@ -46,6 +46,15 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
         this.quietly = quietly;
     }
 
+    /**
+     *
+     * @deprecated use {@link #FileRemoveOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvder, boolean quietly)} instead.
+     */
+    @Deprecated
+    public FileRemoveOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvder) {
+        this(spec, fileSplitProvder, false);
+    }
+
     private static final long serialVersionUID = 1L;
 
     @Override
