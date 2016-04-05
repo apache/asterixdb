@@ -73,7 +73,7 @@ public class RangeMap implements IRangeMap, Serializable {
     }
 
     private int getFieldIndex(int columnIndex, int splitIndex) {
-        return splitIndex * fields + columnIndex;
+        return columnIndex + splitIndex * fields;
     }
 
     private int getFieldTag(int index) {

@@ -19,6 +19,7 @@
 package org.apache.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.FixedSizeFrame;
@@ -93,7 +94,7 @@ public class MergeJoiner {
         rightBuffer = ctx.allocateFrame();
 
         // Memory (right buffer)
-        framePool = new DeallocatableFramePool(ctx, (memorySize - 1) * ctx.getInitialFrameSize());
+        framePool = new DeallocatableFramePool(ctx, (memorySize - 2) * ctx.getInitialFrameSize());
         tp = new TuplePointer();
 
         // Run File and frame cache (left buffer)
@@ -113,6 +114,11 @@ public class MergeJoiner {
             return true;
         }
         return false;
+    }
+
+    private void removeFromMemory() throws HyracksDataException {
+        memoryAccessor.getTuplePointer(tp);
+        bufferManager.deleteTuple(tp);
     }
 
     private void addToResult(ITupleAccessor accessor1, ITupleAccessor accessor2, IFrameWriter writer)
@@ -233,6 +239,9 @@ public class MergeJoiner {
                     if (!addToMemory(accessorRight)) {
                         // go to log saving state
                         status.runFileStatus = RunFileStatus.WRITING;
+                        if (LOGGER.isLoggable(Level.FINE)) {
+                            LOGGER.fine("MergeJoiner memory is full with " + bufferManager.getNumTuples() + " tuples.");
+                        }
                         continue;
                     }
                 }
@@ -257,8 +266,7 @@ public class MergeJoiner {
                         }
                         if (mjc.checkToRemoveInMemory(accessorLeft, memoryAccessor)) {
                             // remove from memory
-                            memoryAccessor.getTuplePointer(tp);
-                            bufferManager.deleteTuple(tp);
+                            removeFromMemory();
                         }
                     }
                 }
@@ -267,6 +275,9 @@ public class MergeJoiner {
                 if (!memoryHasTuples() && status.runFileStatus == RunFileStatus.WRITING) {
                     openRunFile();
                     flushMemory();
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("MergeJoiner memory is new empty. Continuing with right branch.");
+                    }
                 }
                 accessorLeft.next();
             }

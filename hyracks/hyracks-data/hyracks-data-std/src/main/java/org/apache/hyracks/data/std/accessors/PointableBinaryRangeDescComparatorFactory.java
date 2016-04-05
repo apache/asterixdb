@@ -19,26 +19,26 @@
 package org.apache.hyracks.data.std.accessors;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
-public class PointableBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class PointableBinaryRangeDescComparatorFactory implements IBinaryRangeComparatorFactory {
     private static final long serialVersionUID = 1L;
 
     protected final IPointableFactory pf;
 
-    public static PointableBinaryComparatorFactory of(IPointableFactory pf) {
-        return new PointableBinaryComparatorFactory(pf);
+    public static PointableBinaryRangeDescComparatorFactory of(IPointableFactory pf) {
+        return new PointableBinaryRangeDescComparatorFactory(pf);
     }
 
-    public PointableBinaryComparatorFactory(IPointableFactory pf) {
+    public PointableBinaryRangeDescComparatorFactory(IPointableFactory pf) {
         this.pf = pf;
     }
 
     @Override
-    public IBinaryComparator createBinaryComparator() {
+    public IBinaryComparator createMinBinaryComparator() {
         final IPointable p = pf.createPointable();
         return new IBinaryComparator() {
             @Override
@@ -48,8 +48,13 @@ public class PointableBinaryComparatorFactory implements IBinaryComparatorFactor
                 if (l1 != 0 && l2 == 0)
                     return 1;
                 p.set(b1, s1, l1);
-                return ((IComparable) p).compareTo(b2, s2, l2);
+                return -((IComparable) p).compareTo(b2, s2, l2);
             }
         };
+    }
+
+    @Override
+    public IBinaryComparator createMaxBinaryComparator() {
+        return createMinBinaryComparator();
     }
 }

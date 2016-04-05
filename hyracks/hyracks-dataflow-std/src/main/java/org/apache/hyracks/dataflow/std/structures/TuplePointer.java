@@ -62,4 +62,8 @@ public class TuplePointer implements IResetable<TuplePointer> {
         this.tupleIndex = tupleId;
     }
 
+    public String toString() {
+        return "TuplePointer(" + frameIndex + ", " + tupleIndex + ")";
+    }
+
 }

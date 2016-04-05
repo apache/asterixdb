@@ -52,7 +52,6 @@ import org.apache.hyracks.dataflow.std.join.MergeJoinOperatorDescriptor;
 
 public class MergeJoinPOperator extends AbstractJoinPOperator {
 
-
     private final int memSizeInFrames;
     protected final List<LogicalVariable> keysLeftBranch;
     protected final List<LogicalVariable> keysRightBranch;
@@ -136,7 +135,7 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
 

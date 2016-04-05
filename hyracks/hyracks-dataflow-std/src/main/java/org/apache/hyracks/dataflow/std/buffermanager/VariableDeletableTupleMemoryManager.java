@@ -251,7 +251,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
                 int id = tId;
                 while (id + 1 < getTupleCount()) {
                     ++id;
-                    if (getTupleEndOffset(id) >= 0) {
+                    if (getTupleEndOffset(id) > 0) {
                         return id;
                     }
                 }

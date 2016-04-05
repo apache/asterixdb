@@ -25,6 +25,10 @@ public interface IRangePartitionType {
          */
         PROJECT,
         /**
+         * Partitioning is determined by finding the range partition where the last data point lies.
+         */
+        PROJECT_END,
+        /**
          * Partitioning is determined by finding all the range partitions where the data has a point.
          */
         SPLIT,

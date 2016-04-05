@@ -46,29 +46,21 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractMToNConnec
     private final int[] sortFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory nkcFactory;
-    private final boolean stable;
 
     public MToNRangePartitioningConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ITupleRangePartitionComputerFactory trpcf, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
             INormalizedKeyComputerFactory nkcFactory) {
-        this(spec, trpcf, sortFields, comparatorFactories, nkcFactory, false);
-    }
-
-    public MToNRangePartitioningConnectorDescriptor(IConnectorDescriptorRegistry spec,
-            ITupleRangePartitionComputerFactory trpcf, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
-            INormalizedKeyComputerFactory nkcFactory, boolean stable) {
         super(spec);
         this.trpcf = trpcf;
         this.sortFields = sortFields;
         this.comparatorFactories = comparatorFactories;
         this.nkcFactory = nkcFactory;
-        this.stable = stable;
     }
 
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         final PartitionRangeDataWriter rangeWriter = new PartitionRangeDataWriter(ctx, nConsumerPartitions, edwFactory,
                 recordDesc, trpcf.createPartitioner());
         return rangeWriter;
