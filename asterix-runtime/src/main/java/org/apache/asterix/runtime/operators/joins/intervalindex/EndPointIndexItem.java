@@ -64,8 +64,7 @@ public class EndPointIndexItem implements Serializable {
     }
 
     public String toString() {
-        return "EndPointIndexItem tuple(" + tp.frameIndex + ", " + tp.tupleIndex + ") "
-                + (start == START_POINT ? "start" : "end") + ": " + point;
+        return "EndPointIndexItem " + tp + " " + (start == START_POINT ? "start" : "end") + ": " + point;
     }
 
     public static Comparator<EndPointIndexItem> EndPointAscComparator = new Comparator<EndPointIndexItem>() {

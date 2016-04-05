@@ -16,58 +16,67 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>apache-asterixdb</artifactId>
-		<groupId>org.apache.asterix</groupId>
-		<version>0.8.9-SNAPSHOT</version>
-	</parent>
-	<artifactId>asterix-om</artifactId>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>apache-asterixdb</artifactId>
+        <groupId>org.apache.asterix</groupId>
+        <version>0.8.9-SNAPSHOT</version>
+    </parent>
+    <artifactId>asterix-om</artifactId>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
 
     <properties>
         <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
     </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.asterix</groupId>
-			<artifactId>asterix-common</artifactId>
-			<version>0.8.9-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.asterix</groupId>
-			<artifactId>asterix-transactions</artifactId>
-			<version>0.8.9-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hyracks</groupId>
-			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
-		</dependency>
+    <dependencies>
         <dependency>
-			<groupId>org.apache.hyracks</groupId>
-			<artifactId>algebricks-compiler</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hyracks</groupId>
-			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
-		</dependency>
-		<dependency>
-        <groupId>org.reflections</groupId>
+            <groupId>org.apache.asterix</groupId>
+            <artifactId>asterix-common</artifactId>
+            <version>0.8.9-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.asterix</groupId>
+            <artifactId>asterix-transactions</artifactId>
+            <version>0.8.9-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>algebricks-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-storage-am-lsm-rtree</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-test-support</artifactId>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.9.10</version>
             <scope>test</scope>
         </dependency>
-	</dependencies>
+    </dependencies>
 </project>

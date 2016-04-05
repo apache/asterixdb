@@ -16,20 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
 
-public class MetByIntervalMergeJoinCheckerFactory extends AbstractIntervalInverseMergeJoinCheckerFactory {
+public class AObjectDescRangeBinaryComparatorFactory implements IBinaryRangeComparatorFactory {
+
     private static final long serialVersionUID = 1L;
 
-    @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
-        return new MetByIntervalMergeJoinChecker(keys0, keys1);
+    public static final AObjectDescRangeBinaryComparatorFactory INSTANCE = new AObjectDescRangeBinaryComparatorFactory();
+
+    private AObjectDescRangeBinaryComparatorFactory() {
     }
 
     @Override
-    public RangePartitioningType getRightPartitioningType() {
-        return RangePartitioningType.PROJECT_END;
+    public IBinaryComparator createMinBinaryComparator() {
+        return AObjectDescBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     }
+
+    @Override
+    public IBinaryComparator createMaxBinaryComparator() {
+        return AObjectDescBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    }
+
 }

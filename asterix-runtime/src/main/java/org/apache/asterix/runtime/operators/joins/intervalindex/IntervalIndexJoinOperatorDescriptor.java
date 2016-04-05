@@ -101,8 +101,8 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
         ActivityId rightAid = new ActivityId(odId, BUILD_RIGHT_ACTIVITY_ID);
         ActivityId joinAid = new ActivityId(odId, JOIN_ACTIVITY_ID);
 
-        IActivity phaseBuildLeft = new BuildIndexActivityNode(leftAid, leftKey);
-        IActivity phaseBuildRight = new BuildIndexActivityNode(rightAid, rightKey);
+        IActivity phaseBuildLeft = new BuildIndexActivityNode(leftAid, leftKey, leftCountInFrames);
+        IActivity phaseBuildRight = new BuildIndexActivityNode(rightAid, rightKey, rightCountInFrames);
         IActivity phaseJoin = new JoinActivityNode(joinAid, leftAid, rightAid);
 
         builder.addActivity(this, phaseBuildLeft);
@@ -149,10 +149,12 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
         private static final long serialVersionUID = 1L;
 
         private final int key;
+        private final int size;
 
-        public BuildIndexActivityNode(ActivityId id, int key) {
+        public BuildIndexActivityNode(ActivityId id, int key, int size) {
             super(id);
             this.key = key;
+            this.size = size;
         }
 
         @Override
@@ -164,6 +166,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private IndexTaskState state;
+                private boolean memoryIsFull = false;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -190,17 +193,27 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    accessor.reset(buffer);
-                    int tupleCount = accessor.getTupleCount();
-                    for (int i = 0; i < tupleCount; ++i) {
-                        TuplePointer tuplePointer = new TuplePointer();
-                        if (state.bufferManager.insertTuple(accessor, i, tuplePointer)) {
-                            EndPointIndexItem s = new EndPointIndexItem(tuplePointer, EndPointIndexItem.START_POINT,
-                                    IntervalJoinUtil.getIntervalStart(accessor, i, key));
-                            state.indexQueue.add(s);
-                            EndPointIndexItem e = new EndPointIndexItem(tuplePointer, EndPointIndexItem.END_POINT,
-                                    IntervalJoinUtil.getIntervalEnd(accessor, i, key));
-                            state.indexQueue.add(e);
+                    if (!memoryIsFull) {
+                        accessor.reset(buffer);
+                        int tupleCount = accessor.getTupleCount();
+                        for (int i = 0; i < tupleCount; ++i) {
+                            TuplePointer tuplePointer = new TuplePointer();
+                            if (state.bufferManager.insertTuple(accessor, i, tuplePointer)) {
+                                EndPointIndexItem s = new EndPointIndexItem(tuplePointer, EndPointIndexItem.START_POINT,
+                                        IntervalJoinUtil.getIntervalStart(accessor, i, key));
+                                state.indexQueue.add(s);
+                                EndPointIndexItem e = new EndPointIndexItem(tuplePointer, EndPointIndexItem.END_POINT,
+                                        IntervalJoinUtil.getIntervalEnd(accessor, i, key));
+                                state.indexQueue.add(e);
+                            } else {
+                                if (LOGGER.isLoggable(Level.FINE)) {
+                                    LOGGER.fine("IntervalPartitionJoin has run out of memory with "
+                                            + state.bufferManager.getNumTuples() + " tuples in " + state.memoryForJoin
+                                            + " frames (needed " + size + " frames).");
+                                }
+                                memoryIsFull = true;
+                                return;
+                            }
                         }
                     }
                 }

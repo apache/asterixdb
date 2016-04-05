@@ -20,12 +20,24 @@ package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
 public class MetByIntervalMergeJoinChecker extends AbstractIntervalInverseMergeJoinChecker {
     private static final long serialVersionUID = 1L;
 
     public MetByIntervalMergeJoinChecker(int[] keysLeft, int[] keysRight) {
         super(keysLeft[0], keysRight[0]);
+    }
+
+    @Override
+    public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
+            throws HyracksDataException {
+        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, idLeft);
+        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, idLeft);
+        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, idRight);
+        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, idRight);
+        return (start1 <= end0);
     }
 
     public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {

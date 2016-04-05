@@ -36,9 +36,9 @@ public class RangeIntervalAscReplicateBinaryComparatorFactory implements IBinary
     /*
      * The comparator uses the interval (1st argument) to compare with the range map split value (2nd argument).
      *
-     * -1: split point is less than the interval start point.
+     * -1: never happens
      * 0: split point is equal to or greater than the interval start point
-     * 1: never happens
+     * 1: split point is less than the interval start point.
      */
     @Override
     public IBinaryComparator createBinaryComparator() {

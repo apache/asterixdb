@@ -162,13 +162,13 @@ Let Variable [ Name=$blnOverlapped2 ]
     Variable [ Name=$itv8 ]
     Variable [ Name=$itv9 ]
   ]
-LetVariable [ Name=$blnOverlapping1 ]
+Let Variable [ Name=$blnOverlapping1 ]
   :=
   FunctionCall test.interval-overlapping@2[
     Variable [ Name=$itv9 ]
     Variable [ Name=$itv7 ]
   ]
-LetVariable [ Name=$blnOverlapping2 ]
+Let Variable [ Name=$blnOverlapping2 ]
   :=
   FunctionCall test.interval-overlapping@2[
     Variable [ Name=$itv9 ]
