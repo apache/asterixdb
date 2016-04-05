@@ -19,5 +19,5 @@
 
 USE TinySocial;
 
-SELECT u.name name, COUNT(u.friend_ids) count
+SELECT u.name name, COUNT(u."friend-ids") count
 FROM FacebookUsers u;
