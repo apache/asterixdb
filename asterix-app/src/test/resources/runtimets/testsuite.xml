@@ -7038,5 +7038,10 @@
                 <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="temp-dataset">
+            <compilation-unit name="temp_primary_plus_ngram_flush">
+                <output-dir compare="Text">temp_primary_plus_ngram_flush</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
 </test-suite>
