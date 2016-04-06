@@ -93,6 +93,10 @@ public class FileSystemWatcher {
                         register(dirPath);
                     }
                     resume();
+                } else {
+                    if (files.isEmpty()) {
+                        throw new HyracksDataException(path + ": no files found");
+                    }
                 }
             }
         } catch (IOException e) {

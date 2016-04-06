@@ -19,7 +19,6 @@
 package org.apache.asterix.external.input.stream.factory;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
@@ -72,11 +71,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
             }
             watcher = new FileSystemWatcher(inputResources, expression, isFeed);
         }
-        try {
-            return new LocalFSInputStream(watcher);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new LocalFSInputStream(watcher);
     }
 
     @Override

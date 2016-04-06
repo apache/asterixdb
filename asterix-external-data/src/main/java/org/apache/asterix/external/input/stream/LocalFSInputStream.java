@@ -38,7 +38,7 @@ public class LocalFSInputStream extends AsterixInputStream {
     private byte lastByte;
     private File currentFile;
 
-    public LocalFSInputStream(FileSystemWatcher watcher) throws IOException {
+    public LocalFSInputStream(FileSystemWatcher watcher) {
         this.watcher = watcher;
     }
 
