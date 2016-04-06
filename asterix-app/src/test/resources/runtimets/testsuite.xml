@@ -75,13 +75,13 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">
-            <compilation-unit name="classad-parser">
-                <output-dir compare="Text">classad-parser</output-dir>
+            <compilation-unit name="classad-parser-new">
+                <output-dir compare="Text">classad-parser-new</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">
-            <compilation-unit name="classad-parser2">
-                <output-dir compare="Text">classad-parser2</output-dir>
+            <compilation-unit name="classad-parser-old">
+                <output-dir compare="Text">classad-parser-old</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">

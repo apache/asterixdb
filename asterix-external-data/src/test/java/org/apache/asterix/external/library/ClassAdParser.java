@@ -195,12 +195,14 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
             if ((!evaluateExpr || keepBoth) && isExpr && positionBefore >= 0) {
                 // we will store a string representation of the expression
-                int len = lexer.getLexSource().getPosition() - positionBefore;
+                int len = lexer.getLexSource().getPosition() - positionBefore - 2;
                 // add it as it is to the classAd
                 Literal lit = objectPool.literalPool.get();
                 Value exprVal = objectPool.valuePool.get();
-                exprVal.setStringValue(exprPrefix
-                        + String.valueOf(lexer.getLexSource().getBuffer(), positionBefore, len) + exprSuffix);
+
+                exprVal.setStringValue((exprPrefix == null ? "" : exprPrefix)
+                        + String.valueOf(lexer.getLexSource().getBuffer(), positionBefore, len)
+                        + (exprSuffix == null ? "" : exprSuffix));
                 Literal.createLiteral(lit, exprVal, NumberFactor.NO_FACTOR);
                 if (!evaluateExpr) {
                     ad.insert(tv.getStrValue().toString(), lit);
@@ -318,9 +320,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     throw new HyracksDataException("This record is closed, you can not add extra fields !!");
                 } else if (fieldId < 0 && recType.isOpen()) {
                     aStringFieldName.setValue(fldName);
-                    if (aStringFieldName.getStringValue().contains("org.apache.asterix.external.classad.TokenValue")) {
-                        System.err.println("we have a problem");
-                    }
                     stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
                     openRecordField = true;
                     fieldType = null;
@@ -362,7 +361,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         recBuilder.write(out, true);
     }
 
-    // The only method left
     private void writeFieldValueToBuffer(IAType fieldType, DataOutput out, String name, ExprTree tree, ClassAd pAd)
             throws IOException, AsterixException {
         Value val;
@@ -375,7 +373,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case OP_NODE:
                 val = objectPool.valuePool.get();
                 if (pAd.evaluateAttr(name, val)) {
-
                 } else {
                     // just write the expr
                     val = ((Literal) pAd.getAttrList().get(name + "Expr")).getValue();
@@ -423,8 +420,36 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 break;
             case INTEGER_VALUE:
                 if (checkType(ATypeTag.INT64, fieldType)) {
-                    aInt64.setValue(val.getLongVal());
-                    int64Serde.serialize(aInt64, out);
+                    if (fieldType == null || fieldType.getTypeTag() == ATypeTag.INT64) {
+                        aInt64.setValue(val.getLongVal());
+                        int64Serde.serialize(aInt64, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT32) {
+                        aInt32.setValue((int) val.getLongVal());
+                        int32Serde.serialize(aInt32, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.DOUBLE) {
+                        aDouble.setValue(val.getLongVal());
+                        doubleSerde.serialize(aDouble, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT16) {
+                        aInt16.setValue((short) val.getLongVal());
+                        int16Serde.serialize(aInt16, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT8) {
+                        aInt8.setValue((byte) val.getLongVal());
+                        int8Serde.serialize(aInt8, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.FLOAT) {
+                        aFloat.setValue(val.getLongVal());
+                        floatSerde.serialize(aFloat, out);
+                    }
+                } else if (checkType(ATypeTag.DATETIME, fieldType)) {
+                    // Classad uses Linux Timestamps (s instead of ms)
+                    aDateTime.setValue(val.getLongVal() * 1000);
+                    datetimeSerde.serialize(aDateTime, out);
+                } else if (checkType(ATypeTag.DURATION, fieldType)) {
+                    // Classad uses Linux Timestamps (s instead of ms)
+                    aDuration.setValue(0, val.getLongVal() * 1000);
+                    durationSerde.serialize(aDuration, out);
+                } else if (checkType(ATypeTag.INT32, fieldType)) {
+                    aInt32.setValue((int) val.getLongVal());
+                    int32Serde.serialize(aInt32, out);
                 } else if (checkType(ATypeTag.DOUBLE, fieldType)) {
                     aDouble.setValue(val.getLongVal());
                     doubleSerde.serialize(aDouble, out);
@@ -447,14 +472,39 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 break;
             case REAL_VALUE:
                 if (checkType(ATypeTag.DOUBLE, fieldType)) {
-                    aDouble.setValue(val.getDoubleVal());
-                    doubleSerde.serialize(aDouble, out);
+                    if (fieldType == null || fieldType.getTypeTag() == ATypeTag.DOUBLE) {
+                        aDouble.setValue(val.getDoubleVal());
+                        doubleSerde.serialize(aDouble, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT32) {
+                        aInt32.setValue((int) val.getDoubleVal());
+                        int32Serde.serialize(aInt32, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT64) {
+                        aInt64.setValue((long) val.getDoubleVal());
+                        int64Serde.serialize(aInt64, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT16) {
+                        aInt16.setValue((short) val.getDoubleVal());
+                        int16Serde.serialize(aInt16, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.INT8) {
+                        aInt8.setValue((byte) val.getDoubleVal());
+                        int8Serde.serialize(aInt8, out);
+                    } else if (fieldType.getTypeTag() == ATypeTag.FLOAT) {
+                        aFloat.setValue((float) val.getDoubleVal());
+                        floatSerde.serialize(aFloat, out);
+                    }
                 } else if (checkType(ATypeTag.INT32, fieldType)) {
                     aInt32.setValue((int) val.getDoubleVal());
                     int32Serde.serialize(aInt32, out);
                 } else if (checkType(ATypeTag.INT64, fieldType)) {
                     aInt64.setValue((long) val.getDoubleVal());
                     int64Serde.serialize(aInt64, out);
+                } else if (checkType(ATypeTag.DATETIME, fieldType)) {
+                    // Classad uses Linux Timestamps (s instead of ms)
+                    aDateTime.setValue(val.getLongVal() * 1000);
+                    datetimeSerde.serialize(aDateTime, out);
+                } else if (checkType(ATypeTag.DURATION, fieldType)) {
+                    // Classad uses Linux Timestamps (s instead of ms)
+                    aDuration.setValue(0, (long) (val.getDoubleVal() * 1000.0));
+                    durationSerde.serialize(aDuration, out);
                 } else {
                     throw new HyracksDataException(mismatchErrorMessage + fieldType.getTypeTag());
                 }
