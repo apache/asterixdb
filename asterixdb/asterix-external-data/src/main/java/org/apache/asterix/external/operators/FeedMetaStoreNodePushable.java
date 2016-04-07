@@ -191,12 +191,16 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void close() throws HyracksDataException {
-        System.out.println("CLOSE CALLED FOR " + this.feedRuntime.getRuntimeId());
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("CLOSE CALLED FOR " + this.feedRuntime.getRuntimeId());
+        }
         boolean stalled = inputSideHandler.getMode().equals(Mode.STALL);
         try {
             if (!stalled) {
-                System.out.println("SIGNALLING END OF DATA for " + this.feedRuntime.getRuntimeId() + " mode is "
-                        + inputSideHandler.getMode() + " WAITING ON " + coreOperator);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("SIGNALLING END OF DATA for " + this.feedRuntime.getRuntimeId() + " mode is "
+                            + inputSideHandler.getMode() + " WAITING ON " + coreOperator);
+                }
                 inputSideHandler.nextFrame(null); // signal end of data
                 while (!inputSideHandler.isFinished()) {
                     synchronized (coreOperator) {
@@ -206,7 +210,9 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
                         coreOperator.wait();
                     }
                 }
-                System.out.println("ABOUT TO CLOSE OPERATOR  " + coreOperator);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("ABOUT TO CLOSE OPERATOR  " + coreOperator);
+                }
             }
             coreOperator.close();
         } catch (Exception e) {
@@ -214,9 +220,13 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         } finally {
             if (!stalled) {
                 deregister();
-                System.out.println("DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                }
             } else {
-                System.out.println("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                }
             }
             inputSideHandler.close();
             if (LOGGER.isLoggable(Level.INFO)) {

@@ -206,15 +206,21 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
                 inputSideHandler.setFinished(true);
             }
             coreOperator.close();
-            System.out.println("CLOSED " + coreOperator + " STALLED ?" + stalled + " ENDED " + end);
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("CLOSED " + coreOperator + " STALLED ?" + stalled + " ENDED " + end);
+            }
         } catch (InterruptedException e) {
             throw new HyracksDataException(e);
         } finally {
             if (!stalled) {
                 deregister();
-                System.out.println("DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                }
             } else {
-                System.out.println("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
+                }
             }
             inputSideHandler.close();
             if (LOGGER.isLoggable(Level.INFO)) {

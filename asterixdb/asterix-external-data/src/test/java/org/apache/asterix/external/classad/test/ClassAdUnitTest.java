@@ -49,7 +49,7 @@ public class ClassAdUnitTest extends TestCase {
      * Rigourous Test :-)
      */
     public void test() {
-        String[] args = { "", "-d", "-vv", "-all" };
+        String[] args = { "", "-d", "-all" };
         try {
             ClassAdUnitTester.test(args.length, args, new ClassAdObjectPool());
         } catch (Throwable e) {
