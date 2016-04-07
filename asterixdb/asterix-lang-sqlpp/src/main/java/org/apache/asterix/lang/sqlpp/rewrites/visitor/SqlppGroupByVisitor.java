@@ -45,6 +45,38 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  * A pre-processor that adds the group variable as well as its group field
  * list into the AST. It will also invoke SQL group-by aggregation sugar rewritings.
  */
+// This visitor rewrites non-core SQL++ group-by queries into their SQL++ core version
+// queries. For example, for the non-core query in
+// asterix-app/src/test/resources/runtimets/queries_sqlpp/group-by/sugar-01/sugar-01.3.query.sqlpp,
+//
+// FROM Employee e
+// JOIN Incentive i ON e.job_category = i.job_category
+// JOIN SuperStars s ON e.id = s.id
+// GROUP BY e.department_id AS deptId
+// SELECT deptId as deptId, SUM(e.salary + i.bonus) AS star_cost;
+//
+// this visitor transforms it into the core version in
+// asterix-app/src/test/resources/runtimets/queries_sqlpp/group-by/sugar-01/sugar-01.3.query.sqlpp,
+//
+// FROM Employee e
+// JOIN Incentive i ON e.job_category = i.job_category
+// JOIN SuperStars s ON e.id = s.id
+// GROUP BY e.department_id AS deptId
+// GROUP AS eis(e AS e, i AS i, s AS s)
+// SELECT ELEMENT {
+//  'deptId': deptId,
+//  'star_cost': coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
+// };
+/**
+ * The transformation include three things:
+ * 1. Add a group variable as well as its definition, e.g., GROUP AS eis(e AS e, i AS i, s AS s);
+ * 2. Rewrite the argument expression of an aggregation function into a subquery if the argument
+ * expression is not a subquery;
+ * 3. Turn a SQL-92 aggregate function into a SQL++ core aggregate function when performing 2, e.g.,
+ * SUM(e.salary + i.bonus) becomes
+ * coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
+ */
+
 public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     public SqlppGroupByVisitor(LangRewritingContext context) {

@@ -50,8 +50,35 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
 /**
- * An AST pre-processor to rewrite group-by sugar queries.
+ * An AST pre-processor to rewrite group-by sugar queries, which does the following transformations:
+ * 1. Rewrite the argument expression of an aggregation function into a subquery if the argument
+ * expression is not a subquery;
+ * 2. Turn a SQL-92 aggregate function into a SQL++ core aggregate function when performing 1.
  */
+
+// For example, this visitor turns the following query
+//
+// FROM Employee e
+// JOIN Incentive i ON e.job_category = i.job_category
+// JOIN SuperStars s ON e.id = s.id
+// GROUP BY e.department_id AS deptId
+// GROUP AS eis(e AS e, i AS i, s AS s)
+// SELECT deptId as deptId, SUM(e.salary + i.bonus) AS star_cost;
+//
+// into the following core-version query:
+//
+// FROM Employee e
+// JOIN Incentive i ON e.job_category = i.job_category
+// JOIN SuperStars s ON e.id = s.id
+// GROUP BY e.department_id AS deptId
+// GROUP AS eis(e AS e, i AS i, s AS s)
+// SELECT ELEMENT {
+//          'deptId': deptId,
+//          'star_cost': coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
+// };
+//
+// where SUM(e.salary + i.bonus) is turned into coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
+
 public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     private final Expression groupVar;
@@ -77,7 +104,8 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
             newExprList.add(newExpr.accept(this, arg));
         }
         if (rewritten) {
-            // Rewrites the SQL-92 function name to core functions.
+            // Rewrites the SQL-92 function name to core functions,
+            // e.g., SUM --> coll_sum
             callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
         }
         callExpr.setExprList(newExprList);
