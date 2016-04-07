@@ -32,10 +32,10 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
-public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
+public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext {
 
     private static final int NUM_DOCUMENT_FIELDS = 1;
 
@@ -109,6 +109,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
     @Override
     public void reset() {
+        super.reset();
         componentHolder.clear();
         componentsToBeMerged.clear();
         componentsToBeReplicated.clear();

@@ -141,7 +141,9 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     @Override
     public void close() throws HyracksDataException {
         try {
-            outputPriorityQueue.clear();
+            if (outputPriorityQueue != null) {
+                outputPriorityQueue.clear();
+            }
             for (int i = 0; i < rangeCursors.length; i++) {
                 rangeCursors[i].close();
             }

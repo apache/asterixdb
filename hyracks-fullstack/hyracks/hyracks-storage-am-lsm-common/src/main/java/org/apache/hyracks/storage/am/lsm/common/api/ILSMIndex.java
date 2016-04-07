@@ -39,6 +39,7 @@ public interface ILSMIndex extends IIndex {
 
     public void deactivate(boolean flushOnExit) throws HyracksDataException;
 
+    @Override
     public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException;
 
@@ -51,4 +52,9 @@ public interface ILSMIndex extends IIndex {
     public List<ILSMComponent> getImmutableComponents();
 
     public boolean isPrimaryIndex();
+
+    /**
+     * @return true if the index is durable. Otherwise false.
+     */
+    public boolean isDurable();
 }

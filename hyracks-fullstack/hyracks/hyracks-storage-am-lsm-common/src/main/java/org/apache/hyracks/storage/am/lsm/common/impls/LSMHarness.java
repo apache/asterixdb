@@ -63,7 +63,8 @@ public class LSMHarness implements ILSMHarness {
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
         fullMergeIsRequested = new AtomicBoolean();
-        this.replicationEnabled = replicationEnabled;
+        //only durable indexes are replicated
+        this.replicationEnabled = replicationEnabled && lsmIndex.isDurable();
         if (replicationEnabled) {
             this.componentsToBeReplicated = new ArrayList<ILSMComponent>();
         }
@@ -71,6 +72,7 @@ public class LSMHarness implements ILSMHarness {
 
     protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType,
             boolean isTryOperation) throws HyracksDataException {
+        validateOperationEnterComponentsState(ctx);
         synchronized (opTracker) {
             while (true) {
                 lsmIndex.getOperationalComponents(ctx);
@@ -132,6 +134,7 @@ public class LSMHarness implements ILSMHarness {
 
     protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType)
             throws HyracksDataException {
+        validateOperationEnterComponentsState(ctx);
         List<ILSMComponent> components = ctx.getComponentHolder();
         int numEntered = 0;
         boolean entranceSuccessful = false;
@@ -161,6 +164,7 @@ public class LSMHarness implements ILSMHarness {
                 }
                 return false;
             }
+            ctx.setAccessingComponents(true);
         }
         // Check if there is any action that is needed to be taken based on the operation type
         switch (opType) {
@@ -184,6 +188,13 @@ public class LSMHarness implements ILSMHarness {
 
     private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMComponent newComponent,
             boolean failedOperation) throws HyracksDataException, IndexException {
+        /**
+         * FLUSH and MERGE operations should always exit the components
+         * to notify waiting threads.
+         */
+        if (!ctx.isAccessingComponents() && opType != LSMOperationType.FLUSH && opType != LSMOperationType.MERGE) {
+            return;
+        }
         List<ILSMComponent> inactiveDiskComponents = null;
         List<ILSMComponent> inactiveDiskComponentsToBeDeleted = null;
         try {
@@ -224,6 +235,7 @@ public class LSMHarness implements ILSMHarness {
                         }
                         i++;
                     }
+                    ctx.setAccessingComponents(false);
                     // Then, perform any action that is needed to be taken based on the operation type.
                     switch (opType) {
                         case FLUSH:
@@ -503,6 +515,12 @@ public class LSMHarness implements ILSMHarness {
             exitComponents(ctx, LSMOperationType.REPLICATE, null, false);
         } catch (IndexException e) {
             throw new HyracksDataException(e);
+        }
+    }
+
+    protected void validateOperationEnterComponentsState(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        if (ctx.isAccessingComponents()) {
+            throw new HyracksDataException("Opeartion already has access to components of index " + lsmIndex);
         }
     }
 }
