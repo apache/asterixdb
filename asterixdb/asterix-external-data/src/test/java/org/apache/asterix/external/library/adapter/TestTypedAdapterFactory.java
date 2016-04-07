@@ -80,16 +80,16 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 IAsterixPropertiesProvider propertiesProvider = (IAsterixPropertiesProvider) ((NodeControllerService) ctx
                         .getJobletContext().getApplicationContext().getControllerService()).getApplicationContext()
                                 .getApplicationObject();
-                ClusterPartition[] nodePartitions = propertiesProvider.getMetadataProperties().getNodePartitions()
-                        .get(nodeId);
+                ClusterPartition nodePartition = propertiesProvider.getMetadataProperties().getNodePartitions()
+                        .get(nodeId)[0];
                 try {
                     parser = new ADMDataParser(outputType, true);
                     forwarder = DataflowUtils
                             .getTupleForwarder(configuration,
                                     FeedUtils.getFeedLogManager(ctx,
                                             FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
-                                                    ExternalDataUtils.getFeedName(configuration), partition,
-                                                    nodePartitions)));
+                                                    ExternalDataUtils.getFeedName(configuration), nodeId,
+                                                    nodePartition)));
                     tb = new ArrayTupleBuilder(1);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

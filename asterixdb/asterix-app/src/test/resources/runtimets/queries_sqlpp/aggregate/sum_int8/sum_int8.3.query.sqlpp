@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.sum((
+select element test.coll_sum((
     select element x
     from  [test.int8('1'),test.int8('2'),test.int8('3')] as x
 ));

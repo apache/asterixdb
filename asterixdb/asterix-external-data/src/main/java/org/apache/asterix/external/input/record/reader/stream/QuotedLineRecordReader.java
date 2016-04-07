@@ -32,9 +32,9 @@ public class QuotedLineRecordReader extends LineRecordReader {
     private boolean prevCharEscape;
     private boolean inQuote;
 
-    public QuotedLineRecordReader(final boolean hasHeader, final AsterixInputStream stream,
-            final IExternalIndexer indexer, final String quoteString) throws HyracksDataException {
-        super(hasHeader, stream, indexer);
+    public QuotedLineRecordReader(final boolean hasHeader, final AsterixInputStream stream, final String quoteString)
+            throws HyracksDataException {
+        super(hasHeader, stream);
         if ((quoteString == null) || (quoteString.length() != 1)) {
             throw new HyracksDataException(ExternalDataExceptionUtils.incorrectParameterMessage(
                     ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
@@ -44,76 +44,82 @@ public class QuotedLineRecordReader extends LineRecordReader {
 
     @Override
     public boolean hasNext() throws IOException {
-        if (done) {
-            return false;
-        }
-        newlineLength = 0;
-        prevCharCR = false;
-        prevCharEscape = false;
-        record.reset();
-        int readLength = 0;
-        inQuote = false;
-        do {
-            int startPosn = bufferPosn;
-            if (bufferPosn >= bufferLength) {
-                startPosn = bufferPosn = 0;
-                bufferLength = reader.read(inputBuffer);
-                if (bufferLength <= 0) {
-                    {
-                        if (readLength > 0) {
-                            if (inQuote) {
-                                throw new IOException("malformed input record ended inside quote");
+        while (true) {
+            if (done) {
+                return false;
+            }
+            newlineLength = 0;
+            prevCharCR = false;
+            prevCharEscape = false;
+            record.reset();
+            int readLength = 0;
+            inQuote = false;
+            do {
+                int startPosn = bufferPosn;
+                if (bufferPosn >= bufferLength) {
+                    startPosn = bufferPosn = 0;
+                    bufferLength = reader.read(inputBuffer);
+                    if (bufferLength <= 0) {
+                        {
+                            if (readLength > 0) {
+                                if (inQuote) {
+                                    throw new IOException("malformed input record ended inside quote");
+                                }
+                                record.endRecord();
+                                recordNumber++;
+                                return true;
                             }
-                            record.endRecord();
-                            recordNumber++;
-                            return true;
+                            close();
+                            return false;
                         }
-                        close();
-                        return false;
                     }
                 }
-            }
-            for (; bufferPosn < bufferLength; ++bufferPosn) {
-                if (!inQuote) {
-                    if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
-                        newlineLength = (prevCharCR) ? 2 : 1;
-                        ++bufferPosn;
-                        break;
-                    }
-                    if (prevCharCR) {
-                        newlineLength = 1;
-                        break;
-                    }
-                    prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
-                    if (inputBuffer[bufferPosn] == quote) {
-                        if (!prevCharEscape) {
-                            inQuote = true;
+                for (; bufferPosn < bufferLength; ++bufferPosn) {
+                    if (!inQuote) {
+                        if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
+                            newlineLength = (prevCharCR) ? 2 : 1;
+                            ++bufferPosn;
+                            break;
                         }
-                    }
-                    if (prevCharEscape) {
-                        prevCharEscape = false;
+                        if (prevCharCR) {
+                            newlineLength = 1;
+                            break;
+                        }
+                        prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
+                        if (inputBuffer[bufferPosn] == quote) {
+                            if (!prevCharEscape) {
+                                inQuote = true;
+                            }
+                        }
+                        if (prevCharEscape) {
+                            prevCharEscape = false;
+                        } else {
+                            prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
+                        }
                     } else {
+                        // only look for next quote
+                        if (inputBuffer[bufferPosn] == quote) {
+                            if (!prevCharEscape) {
+                                inQuote = false;
+                            }
+                        }
                         prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
                     }
-                } else {
-                    // only look for next quote
-                    if (inputBuffer[bufferPosn] == quote) {
-                        if (!prevCharEscape) {
-                            inQuote = false;
-                        }
-                    }
-                    prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
                 }
+                readLength = bufferPosn - startPosn;
+                if (prevCharCR && newlineLength == 0) {
+                    --readLength;
+                }
+                if (readLength > 0) {
+                    record.append(inputBuffer, startPosn, readLength);
+                }
+            } while (newlineLength == 0);
+            if (nextIsHeader) {
+                nextIsHeader = false;
+                continue;
             }
-            readLength = bufferPosn - startPosn;
-            if (prevCharCR && newlineLength == 0) {
-                --readLength;
-            }
-            if (readLength > 0) {
-                record.append(inputBuffer, startPosn, readLength);
-            }
-        } while (newlineLength == 0);
-        recordNumber++;
-        return true;
+            recordNumber++;
+            return true;
+        }
     }
 }

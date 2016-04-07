@@ -2253,6 +2253,51 @@
             </compilation-unit>
         </test-case>
     </test-group> -->
+    <test-group name="global-aggregate">
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q01">
+                <output-dir compare="Text">q01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q02">
+                <output-dir compare="Text">q02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q03">
+                <output-dir compare="Text">q01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q04">
+                <output-dir compare="Text">q01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q05_error">
+                <output-dir compare="Text">q01</output-dir>
+                <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unsupported type</expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q06_error">
+                <output-dir compare="Text">q01</output-dir>
+                <expected-error>Caused by: org.apache.asterix.common.exceptions.AsterixException: Unsupported type: STRING</expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q07_error">
+                <output-dir compare="Text">q01</output-dir>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException: COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="global-aggregate">
+            <compilation-unit name="q08">
+                <output-dir compare="Text">q08</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="group-by">
         <test-case FilePath="group-by">
             <compilation-unit name="core-01">
@@ -6233,13 +6278,13 @@
         <test-case FilePath="load">
             <compilation-unit name="issue14_query">
                 <output-dir compare="Text">issue14_query</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
+                <expected-error>The parameter format must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="issue315_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
+                <expected-error>The parameter format must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">

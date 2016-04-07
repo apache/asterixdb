@@ -48,11 +48,14 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.visitor.InlineColumnAliasVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.SqlppGroupByVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.SqlppInlineUdfsVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.VariableCheckAndRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -86,6 +89,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines column aliases.
         inlineColumnAlias();
 
+        // Rewrites SQL-92 global aggregations.
+        rewriteGlobalAggregations();
+
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
 
@@ -95,11 +101,32 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines functions.
         inlineDeclaredUdfs();
 
+        // Rewrites function names.
+        // This should be done after inlineDeclaredUdfs() because user-defined function
+        // names could be case sensitive.
+        rewriteFunctionNames();
+
         // Replace global variable access with the dataset function for inlined expressions.
         variableCheckAndRewrite(true);
 
         // Sets the var counter of the query.
         topExpr.setVarCounter(context.getVarCounter());
+    }
+
+    protected void rewriteGlobalAggregations() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
+        globalAggregationVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteFunctionNames() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        SqlppBuiltinFunctionRewriteVisitor functionNameMapVisitor = new SqlppBuiltinFunctionRewriteVisitor();
+        functionNameMapVisitor.visit(topExpr, null);
     }
 
     protected void inlineColumnAlias() throws AsterixException {
@@ -124,7 +151,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         if (topExpr == null) {
             return;
         }
-        SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context, metadataProvider);
+        SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context);
         groupByVisitor.visit(topExpr, null);
     }
 
@@ -167,7 +194,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
             Function function = lookupUserDefinedFunctionDecl(signature);
             if (function == null) {
-                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
+                FunctionSignature normalizedSignature = FunctionMapUtil.normalizeBuiltinFunctionSignature(signature,
+                        false);
+                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(normalizedSignature, includePrivateFunctions)) {
                     continue;
                 }
                 StringBuilder messageBuilder = new StringBuilder();

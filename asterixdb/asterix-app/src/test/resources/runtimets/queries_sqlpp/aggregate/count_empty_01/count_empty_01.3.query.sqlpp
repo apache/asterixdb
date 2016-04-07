@@ -22,7 +22,7 @@
  * Success        : Yes
  */
 
-select element count((
+select element coll_count((
     select element x
     from  [1,2,3] as x
     where (x > 10)

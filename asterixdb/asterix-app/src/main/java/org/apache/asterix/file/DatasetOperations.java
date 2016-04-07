@@ -69,7 +69,7 @@ public class DatasetOperations {
 
     public static JobSpecification createDropDatasetJobSpec(CompiledDatasetDropStatement datasetDropStmt,
             AqlMetadataProvider metadataProvider)
-                    throws AlgebricksException, HyracksDataException, RemoteException, ACIDException, AsterixException {
+            throws AlgebricksException, HyracksDataException, RemoteException, ACIDException, AsterixException {
 
         String dataverseName = null;
         if (datasetDropStmt.getDataverseName() != null) {
@@ -222,26 +222,22 @@ public class DatasetOperations {
             throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         boolean temp = dataset.getDatasetDetails().isTemp();
-
         ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeDataverseName(),
                 dataset.getItemTypeName());
+        ARecordType metaItemType = DatasetUtils.getMetaType(metadata, dataset);
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());
-        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
         int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
-
         ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
         IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());
         int[] filterFields = DatasetUtils.createFilterFields(dataset);
         int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
-
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName, temp);
-
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadata.getMetadataTxnContext());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,

@@ -27,11 +27,11 @@ declare function q22_customer_tmp() {
 )
 };
 
-WITH  avg AS avg((
-      SELECT ELEMENT c.c_acctbal
+WITH  avg AS (
+      SELECT ELEMENT AVG(c.c_acctbal)
       FROM  Customer AS c
       WHERE c.c_acctbal > 0.0
-  ))
+  )[0]
 SELECT  cntrycode AS cntrycode, count(ct) AS numcust, tpch.sum(ct.c_acctbal) AS totacctbal
 FROM  q22_customer_tmp() AS ct
 WHERE ct.c_acctbal > avg

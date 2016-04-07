@@ -20,9 +20,8 @@
 use tpch;
 
 
-WITH sum as sum(
-     (
-      SELECT ELEMENT ps.ps_supplycost * ps.ps_availqty
+WITH sum as (
+      SELECT ELEMENT SUM(ps.ps_supplycost * ps.ps_availqty)
       FROM  Partsupp AS ps,
             (
                 SELECT s.s_suppkey s_suppkey
@@ -31,8 +30,7 @@ WITH sum as sum(
                 WHERE s.s_nationkey = n.n_nationkey
             ) AS sn
       WHERE ps.ps_suppkey = sn.s_suppkey
-     )
-)
+)[0]
 
 SELECT t1.ps_partkey AS partkey,
        t1.part_value AS part_value

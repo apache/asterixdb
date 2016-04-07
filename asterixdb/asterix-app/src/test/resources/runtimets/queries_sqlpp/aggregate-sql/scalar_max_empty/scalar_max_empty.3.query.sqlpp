@@ -17,11 +17,11 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-max with an empty list.
+ * Description    : Tests the scalar version of coll_sql-max with an empty list.
  * Success        : Yes
  */
 
 use test;
 
 
-select element test."sql-max"([]);
+select element test."coll_sql-max"([]);

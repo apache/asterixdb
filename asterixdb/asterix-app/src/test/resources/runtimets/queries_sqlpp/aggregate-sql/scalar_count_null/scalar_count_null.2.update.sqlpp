@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-count with nulls.
+ * Description    : Tests the scalar version of coll_sql-count with nulls.
  * Success        : Yes
  */
 

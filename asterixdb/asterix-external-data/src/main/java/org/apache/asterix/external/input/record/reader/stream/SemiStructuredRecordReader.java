@@ -20,13 +20,13 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataExceptionUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
+public class SemiStructuredRecordReader extends StreamRecordReader {
 
     private int depth;
     private boolean prevCharEscape;
@@ -35,13 +35,13 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
     private char recordEnd;
     private int recordNumber = 0;
 
-    public SemiStructuredRecordReader(AsterixInputStream stream, IExternalIndexer indexer, String recStartString,
-            String recEndString) throws AsterixException {
-        super(stream, indexer);
+    public SemiStructuredRecordReader(AsterixInputStream stream, String recStartString, String recEndString)
+            throws HyracksDataException {
+        super(stream);
         // set record opening char
         if (recStartString != null) {
             if (recStartString.length() != 1) {
-                throw new AsterixException(
+                throw new HyracksDataException(
                         ExternalDataExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_START,
                                 ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recStartString));
             }
@@ -52,7 +52,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
         // set record ending char
         if (recEndString != null) {
             if (recEndString.length() != 1) {
-                throw new AsterixException(
+                throw new HyracksDataException(
                         ExternalDataExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_END,
                                 ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recEndString));
             }
@@ -67,7 +67,7 @@ public class SemiStructuredRecordReader extends AbstractStreamRecordReader {
     }
 
     @Override
-    public boolean hasNext() throws Exception {
+    public boolean hasNext() throws IOException {
         if (done) {
             return false;
         }

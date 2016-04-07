@@ -26,12 +26,12 @@ declare function q22_customer_tmp() {
     from  Customer as c
 )
 };
-with  avg as tpch.avg((
+with  avg as tpch.coll_avg((
       select element c.c_acctbal
       from  Customer as c
       where (c.c_acctbal > 0.0)
   ))
-select element {'cntrycode':cntrycode,'numcust':tpch.count(ct),'totacctbal':tpch.sum((
+select element {'cntrycode':cntrycode,'numcust':tpch.count(ct),'totacctbal':tpch.coll_sum((
         select element i.c_acctbal
         from  ct as i
     ))}

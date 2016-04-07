@@ -19,6 +19,7 @@
 package org.apache.asterix.api.common;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -138,11 +139,31 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void deinit(boolean deleteOldInstanceData) throws Exception {
+        //stop NCs
+        ArrayList<Thread> stopNCThreads = new ArrayList<>();
         for (int n = 0; n < ncs.length; ++n) {
-            if (ncs[n] != null)
-                ncs[n].stop();
-
+            NodeControllerService nodeControllerService = ncs[n];
+            if (nodeControllerService != null) {
+                Thread ncStopThread = new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            nodeControllerService.stop();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                stopNCThreads.add(ncStopThread);
+                ncStopThread.start();
+            }
         }
+
+        //make sure all NCs stopped
+        for (Thread stopNcTheard : stopNCThreads) {
+            stopNcTheard.join();
+        }
+
         if (cc != null) {
             cc.stop();
         }

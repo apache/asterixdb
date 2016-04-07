@@ -67,7 +67,7 @@ public class StoragePathUtil {
         return (datasetName + DATASET_INDEX_NAME_SEPARATOR + idxName);
     }
 
-    public static int getPartitonNumFromName(String name) {
+    public static int getPartitionNumFromName(String name) {
         return Integer.parseInt(name.substring(PARTITION_DIR_PREFIX.length()));
     }
 }

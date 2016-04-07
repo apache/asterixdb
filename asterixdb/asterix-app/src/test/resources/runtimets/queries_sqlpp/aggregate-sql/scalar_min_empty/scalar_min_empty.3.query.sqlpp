@@ -17,11 +17,11 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of sql-min with an empty list.
+ * Description    : Tests the scalar version of coll_sql-min with an empty list.
  * Success        : Yes
  */
 
 use test;
 
 
-select element test."sql-min"([]);
+select element test."coll_sql-min"([]);

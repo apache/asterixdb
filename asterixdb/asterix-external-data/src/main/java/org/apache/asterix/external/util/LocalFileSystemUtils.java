@@ -29,19 +29,20 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class LocalFileSystemUtils {
 
-    //TODO: replace this method by FileUtils.iterateFilesAndDirs(.)
     public static void traverse(final LinkedList<File> files, File root, final String expression,
             final LinkedList<Path> dirs) throws IOException {
-        if (!Files.exists(root.toPath())) {
-            return;
+        final Path path = root.toPath();
+        if (!Files.exists(path)) {
+            throw new HyracksDataException(path + ": path not found");
         }
-        if (!Files.isDirectory(root.toPath())) {
-            validateAndAdd(root.toPath(), expression, files);
+        if (!Files.isDirectory(path)) {
+            validateAndAdd(path, expression, files);
         }
-        //FileUtils.iterateFilesAndDirs(directory, fileFilter, dirFilter)
-        Files.walkFileTree(root.toPath(), new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) throws IOException {
                 if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {

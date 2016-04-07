@@ -22,4 +22,4 @@
 * Date         : Feb 7th 2014
 */
 
-{'sql-count1':"sql-count"([null]),'average1':"sql-avg"([null]),'sql-sum1':"sql-sum"([null]),'sql-min1':"sql-min"([null]),'sql-max1':"sql-max"([null]),'sql-count2':"sql-count"({{null,null}}),'average2':"sql-avg"({{null,null}}),'sql-sum2':"sql-sum"({{null,null}}),'sql-min2':"sql-min"({{null,null}}),'sql-max2':"sql-max"({{null,null}})};
+{'sql-count1':"coll_sql-count"([null]),'average1':"coll_sql-avg"([null]),'sql-sum1':"coll_sql-sum"([null]),'sql-min1':"coll_sql-min"([null]),'sql-max1':"coll_sql-max"([null]),'sql-count2':"coll_sql-count"({{null,null}}),'average2':"coll_sql-avg"({{null,null}}),'sql-sum2':"coll_sql-sum"({{null,null}}),'sql-min2':"coll_sql-min"({{null,null}}),'sql-max2':"coll_sql-max"({{null,null}})};

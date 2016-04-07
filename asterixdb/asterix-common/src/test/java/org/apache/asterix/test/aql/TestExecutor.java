@@ -59,6 +59,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -469,20 +470,277 @@ public class TestExecutor {
         executeTest(actualPath, testCaseCtx, pb, isDmlRecoveryTest, null);
     }
 
+    public void executeTest(TestCaseContext testCaseCtx, TestFileContext ctx, String statement,
+            boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
+            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath) throws Exception {
+        File qbcFile;
+        boolean failed = false;
+        File expectedResultFile;
+        switch (ctx.getType()) {
+            case "ddl":
+                if (ctx.getFile().getName().endsWith("aql")) {
+                    executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
+                } else {
+                    executeDDL(statement, "http://" + host + ":" + port + Servlets.SQLPP_DDL.getPath());
+                }
+                break;
+            case "update":
+                // isDmlRecoveryTest: set IP address
+                if (isDmlRecoveryTest && statement.contains("nc1://")) {
+                    statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
+                }
+                if (ctx.getFile().getName().endsWith("aql")) {
+                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
+                } else {
+                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.SQLPP_UPDATE.getPath());
+                }
+                break;
+            case "query":
+            case "async":
+            case "asyncdefer":
+                // isDmlRecoveryTest: insert Crash and Recovery
+                if (isDmlRecoveryTest) {
+                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
+                            + File.separator + "kill_cc_and_nc.sh");
+                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
+                            + File.separator + "stop_and_start.sh");
+                }
+                InputStream resultStream = null;
+                OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
+                if (ctx.getFile().getName().endsWith("aql")) {
+                    if (ctx.getType().equalsIgnoreCase("query")) {
+                        resultStream = executeQuery(statement, fmt,
+                                "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                    } else if (ctx.getType().equalsIgnoreCase("async")) {
+                        resultStream = executeAnyAQLAsync(statement, false, fmt,
+                                "http://" + host + ":" + port + Servlets.AQL.getPath());
+                    } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
+                        resultStream = executeAnyAQLAsync(statement, true, fmt,
+                                "http://" + host + ":" + port + Servlets.AQL.getPath());
+                    }
+                } else {
+                    if (ctx.getType().equalsIgnoreCase("query")) {
+                        resultStream = executeQuery(statement, fmt,
+                                "http://" + host + ":" + port + Servlets.SQLPP_QUERY.getPath(), cUnit.getParameter());
+                    } else if (ctx.getType().equalsIgnoreCase("async")) {
+                        resultStream = executeAnyAQLAsync(statement, false, fmt,
+                                "http://" + host + ":" + port + Servlets.SQLPP.getPath());
+                    } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
+                        resultStream = executeAnyAQLAsync(statement, true, fmt,
+                                "http://" + host + ":" + port + Servlets.SQLPP.getPath());
+                    }
+                }
+
+                if (queryCount.intValue() >= expectedResultFileCtxs.size()) {
+                    throw new IllegalStateException("no result file for " + testFile.toString() + "; queryCount: "
+                            + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
+                }
+                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+
+                File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                actualResultFile.getParentFile().mkdirs();
+                writeOutputToFile(actualResultFile, resultStream);
+
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                        actualResultFile);
+                queryCount.increment();
+                break;
+            case "mgx":
+                executeManagixCommand(statement);
+                break;
+            case "txnqbc": // qbc represents query before crash
+                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
+                        "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
+                qbcFile.getParentFile().mkdirs();
+                writeOutputToFile(qbcFile, resultStream);
+                break;
+            case "txnqar": // qar represents query after recovery
+                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
+                        "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                File qarFile = new File(actualPath + File.separator
+                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
+                        + "_qar.adm");
+                qarFile.getParentFile().mkdirs();
+                writeOutputToFile(qarFile, resultStream);
+                qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
+                break;
+            case "txneu": // eu represents erroneous update
+                try {
+                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
+                } catch (Exception e) {
+                    // An exception is expected.
+                    failed = true;
+                    e.printStackTrace();
+                }
+                if (!failed) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception" + "is expected.");
+                }
+                System.err.println("...but that was expected.");
+                break;
+            case "script":
+                try {
+                    String output = executeScript(pb, getScriptPath(testFile.getAbsolutePath(),
+                            pb.environment().get("SCRIPT_HOME"), statement.trim()));
+                    if (output.contains("ERROR")) {
+                        throw new Exception(output);
+                    }
+                } catch (Exception e) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                }
+                break;
+            case "sleep":
+                String[] lines = statement.split("\n");
+                Thread.sleep(Long.parseLong(lines[lines.length - 1].trim()));
+                break;
+            case "errddl": // a ddlquery that expects error
+                try {
+                    executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
+                } catch (Exception e) {
+                    // expected error happens
+                    failed = true;
+                    e.printStackTrace();
+                }
+                if (!failed) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
+                }
+                System.err.println("...but that was expected.");
+                break;
+            case "vscript": // a script that will be executed on a vagrant virtual node
+                try {
+                    String[] command = statement.trim().split(" ");
+                    if (command.length != 2) {
+                        throw new Exception("invalid vagrant script format");
+                    }
+                    String nodeId = command[0];
+                    String scriptName = command[1];
+                    String output = executeVagrantScript(pb, nodeId, scriptName);
+                    if (output.contains("ERROR")) {
+                        throw new Exception(output);
+                    }
+                } catch (Exception e) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                }
+                break;
+            case "vmgx": // a managix command that will be executed on vagrant cc node
+                try {
+                    String output = executeVagrantManagix(pb, statement);
+                    if (output.contains("ERROR")) {
+                        throw new Exception(output);
+                    }
+                } catch (Exception e) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                }
+                break;
+            case "cstate": // cluster state query
+                try {
+                    fmt = OutputFormat.forCompilationUnit(cUnit);
+                    resultStream = executeClusterStateQuery(fmt,
+                            "http://" + host + ":" + port + Servlets.CLUSTER_STATE.getPath());
+                    expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+                    actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                    actualResultFile.getParentFile().mkdirs();
+                    writeOutputToFile(actualResultFile, resultStream);
+                    runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                            actualResultFile);
+                    queryCount.increment();
+                } catch (Exception e) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                }
+                break;
+            case "server": // (start <test server name> <port>
+                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                try {
+                    lines = statement.trim().split("\n");
+                    String[] command = lines[lines.length - 1].trim().split(" ");
+                    if (command.length < 2) {
+                        throw new Exception("invalid server command format. expected format ="
+                                + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]"
+                                + "...|stop (<port>|all))");
+                    }
+                    String action = command[0];
+                    if (action.equals("start")) {
+                        if (command.length < 3) {
+                            throw new Exception("invalid server start command. expected format ="
+                                    + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]...");
+                        }
+                        String name = command[1];
+                        Integer port = new Integer(command[2]);
+                        if (runningTestServers.containsKey(port)) {
+                            throw new Exception("server with port " + port + " is already running");
+                        }
+                        ITestServer server = TestServerProvider.createTestServer(name, port);
+                        server.configure(Arrays.copyOfRange(command, 3, command.length));
+                        server.start();
+                        runningTestServers.put(port, server);
+                    } else if (action.equals("stop")) {
+                        String target = command[1];
+                        if (target.equals("all")) {
+                            for (ITestServer server : runningTestServers.values()) {
+                                server.stop();
+                            }
+                            runningTestServers.clear();
+                        } else {
+                            Integer port = new Integer(command[1]);
+                            ITestServer server = runningTestServers.get(port);
+                            if (server == null) {
+                                throw new Exception("no server is listening to port " + port);
+                            }
+                            server.stop();
+                            runningTestServers.remove(port);
+                        }
+                    } else {
+                        throw new Exception("unknown server action");
+                    }
+                } catch (Exception e) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                }
+                break;
+            case "lib": // expected format <dataverse-name> <library-name>
+                        // <library-directory>
+                        // TODO: make this case work well with entity names containing spaces by
+                        // looking for \"
+                lines = statement.split("\n");
+                String lastLine = lines[lines.length - 1];
+                String[] command = lastLine.trim().split(" ");
+                if (command.length < 3) {
+                    throw new Exception("invalid library format");
+                }
+                String dataverse = command[1];
+                String library = command[2];
+                switch (command[0]) {
+                    case "install":
+                        if (command.length != 4) {
+                            throw new Exception("invalid library format");
+                        }
+                        String libPath = command[3];
+                        librarian.install(dataverse, library, libPath);
+                        break;
+                    case "uninstall":
+                        if (command.length != 3) {
+                            throw new Exception("invalid library format");
+                        }
+                        librarian.uninstall(dataverse, library);
+                        break;
+                    default:
+                        throw new Exception("invalid library format");
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("No statements of type " + ctx.getType());
+        }
+    }
+
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
             boolean isDmlRecoveryTest, TestGroup failedGroup) throws Exception {
-
         File testFile;
-        File expectedResultFile;
         String statement;
         List<TestFileContext> expectedResultFileCtxs;
         List<TestFileContext> testFileCtxs;
-        File qbcFile = null;
-        File qarFile = null;
-        int queryCount = 0;
+        MutableInt queryCount = new MutableInt(0);
         int numOfErrors = 0;
         int numOfFiles = 0;
-
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             LOGGER.info(
@@ -493,270 +751,9 @@ public class TestExecutor {
                 numOfFiles++;
                 testFile = ctx.getFile();
                 statement = readTestFile(testFile);
-                boolean failed = false;
                 try {
-                    switch (ctx.getType()) {
-                        case "ddl":
-                            if (ctx.getFile().getName().endsWith("aql")) {
-                                executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
-                            } else {
-                                executeDDL(statement, "http://" + host + ":" + port + Servlets.SQLPP_DDL.getPath());
-                            }
-                            break;
-                        case "update":
-                            // isDmlRecoveryTest: set IP address
-                            if (isDmlRecoveryTest && statement.contains("nc1://")) {
-                                statement = statement.replaceAll("nc1://",
-                                        "127.0.0.1://../../../../../../asterix-app/");
-                            }
-                            if (ctx.getFile().getName().endsWith("aql")) {
-                                executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
-                            } else {
-                                executeUpdate(statement,
-                                        "http://" + host + ":" + port + Servlets.SQLPP_UPDATE.getPath());
-                            }
-                            break;
-                        case "query":
-                        case "async":
-                        case "asyncdefer":
-                            // isDmlRecoveryTest: insert Crash and Recovery
-                            if (isDmlRecoveryTest) {
-                                executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
-                                        + File.separator + "kill_cc_and_nc.sh");
-                                executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
-                                        + File.separator + "stop_and_start.sh");
-                            }
-                            InputStream resultStream = null;
-                            OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
-                            if (ctx.getFile().getName().endsWith("aql")) {
-                                if (ctx.getType().equalsIgnoreCase("query")) {
-                                    resultStream = executeQuery(statement, fmt,
-                                            "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(),
-                                            cUnit.getParameter());
-                                } else if (ctx.getType().equalsIgnoreCase("async")) {
-                                    resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://" + host + ":" + port + Servlets.AQL.getPath());
-                                } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                                    resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://" + host + ":" + port + Servlets.AQL.getPath());
-                                }
-                            } else {
-                                if (ctx.getType().equalsIgnoreCase("query")) {
-                                    resultStream = executeQuery(statement, fmt,
-                                            "http://" + host + ":" + port + Servlets.SQLPP_QUERY.getPath(),
-                                            cUnit.getParameter());
-                                } else if (ctx.getType().equalsIgnoreCase("async")) {
-                                    resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                            "http://" + host + ":" + port + Servlets.SQLPP.getPath());
-                                } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                                    resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                            "http://" + host + ":" + port + Servlets.SQLPP.getPath());
-                                }
-                            }
-
-                            if (queryCount >= expectedResultFileCtxs.size()) {
-                                throw new IllegalStateException(
-                                        "no result file for " + testFile.toString() + "; queryCount: " + queryCount
-                                                + ", filectxs.size: " + expectedResultFileCtxs.size());
-                            }
-                            expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-
-                            File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
-                            actualResultFile.getParentFile().mkdirs();
-                            writeOutputToFile(actualResultFile, resultStream);
-
-                            runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                                    actualResultFile);
-                            queryCount++;
-                            break;
-                        case "mgx":
-                            executeManagixCommand(statement);
-                            break;
-                        case "txnqbc": // qbc represents query before crash
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
-                            qbcFile = new File(actualPath + File.separator
-                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                    + cUnit.getName() + "_qbc.adm");
-                            qbcFile.getParentFile().mkdirs();
-                            writeOutputToFile(qbcFile, resultStream);
-                            break;
-                        case "txnqar": // qar represents query after recovery
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                                    "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
-                            qarFile = new File(actualPath + File.separator
-                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                    + cUnit.getName() + "_qar.adm");
-                            qarFile.getParentFile().mkdirs();
-                            writeOutputToFile(qarFile, resultStream);
-                            runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
-                            break;
-                        case "txneu": // eu represents erroneous update
-                            try {
-                                executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
-                            } catch (Exception e) {
-                                // An exception is expected.
-                                failed = true;
-                                e.printStackTrace();
-                            }
-                            if (!failed) {
-                                throw new Exception(
-                                        "Test \"" + testFile + "\" FAILED!\n  An exception" + "is expected.");
-                            }
-                            System.err.println("...but that was expected.");
-                            break;
-                        case "script":
-                            try {
-                                String output = executeScript(pb, getScriptPath(testFile.getAbsolutePath(),
-                                        pb.environment().get("SCRIPT_HOME"), statement.trim()));
-                                if (output.contains("ERROR")) {
-                                    throw new Exception(output);
-                                }
-                            } catch (Exception e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                            }
-                            break;
-                        case "sleep":
-                            String[] lines = statement.split("\n");
-                            Thread.sleep(Long.parseLong(lines[lines.length - 1].trim()));
-                            break;
-                        case "errddl": // a ddlquery that expects error
-                            try {
-                                executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
-                            } catch (Exception e) {
-                                // expected error happens
-                                failed = true;
-                                e.printStackTrace();
-                            }
-                            if (!failed) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
-                            }
-                            System.err.println("...but that was expected.");
-                            break;
-                        case "vscript": // a script that will be executed on a vagrant virtual node
-                            try {
-                                String[] command = statement.trim().split(" ");
-                                if (command.length != 2) {
-                                    throw new Exception("invalid vagrant script format");
-                                }
-                                String nodeId = command[0];
-                                String scriptName = command[1];
-                                String output = executeVagrantScript(pb, nodeId, scriptName);
-                                if (output.contains("ERROR")) {
-                                    throw new Exception(output);
-                                }
-                            } catch (Exception e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                            }
-                            break;
-                        case "vmgx": // a managix command that will be executed on vagrant cc node
-                            try {
-                                String output = executeVagrantManagix(pb, statement);
-                                if (output.contains("ERROR")) {
-                                    throw new Exception(output);
-                                }
-                            } catch (Exception e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                            }
-                            break;
-                        case "cstate": // cluster state query
-                            try {
-                                fmt = OutputFormat.forCompilationUnit(cUnit);
-                                resultStream = executeClusterStateQuery(fmt,
-                                        "http://" + host + ":" + port + Servlets.CLUSTER_STATE.getPath());
-                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-                                actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
-                                actualResultFile.getParentFile().mkdirs();
-                                writeOutputToFile(actualResultFile, resultStream);
-                                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                                        actualResultFile);
-                                queryCount++;
-                            } catch (Exception e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                            }
-                            break;
-                        case "server": // (start <test server name> <port>
-                                       // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
-                            try {
-                                lines = statement.trim().split("\n");
-                                String[] command = lines[lines.length - 1].trim().split(" ");
-                                if (command.length < 2) {
-                                    throw new Exception("invalid server command format. expected format ="
-                                            + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]"
-                                            + "...|stop (<port>|all))");
-                                }
-                                String action = command[0];
-                                if (action.equals("start")) {
-                                    if (command.length < 3) {
-                                        throw new Exception("invalid server start command. expected format ="
-                                                + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]...");
-                                    }
-                                    String name = command[1];
-                                    Integer port = new Integer(command[2]);
-                                    if (runningTestServers.containsKey(port)) {
-                                        throw new Exception("server with port " + port + " is already running");
-                                    }
-                                    ITestServer server = TestServerProvider.createTestServer(name, port);
-                                    server.configure(Arrays.copyOfRange(command, 3, command.length));
-                                    server.start();
-                                    runningTestServers.put(port, server);
-                                } else if (action.equals("stop")) {
-                                    String target = command[1];
-                                    if (target.equals("all")) {
-                                        for (ITestServer server : runningTestServers.values()) {
-                                            server.stop();
-                                        }
-                                        runningTestServers.clear();
-                                    } else {
-                                        Integer port = new Integer(command[1]);
-                                        ITestServer server = runningTestServers.get(port);
-                                        if (server == null) {
-                                            throw new Exception("no server is listening to port " + port);
-                                        }
-                                        server.stop();
-                                        runningTestServers.remove(port);
-                                    }
-                                } else {
-                                    throw new Exception("unknown server action");
-                                }
-                            } catch (Exception e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                            }
-                            break;
-                        case "lib": // expected format <dataverse-name> <library-name>
-                                    // <library-directory>
-                                    // TODO: make this case work well with entity names containing spaces by
-                                    // looking for \"
-                            lines = statement.split("\n");
-                            String lastLine = lines[lines.length - 1];
-                            String[] command = lastLine.trim().split(" ");
-                            if (command.length < 3) {
-                                throw new Exception("invalid library format");
-                            }
-                            String dataverse = command[1];
-                            String library = command[2];
-                            switch (command[0]) {
-                                case "install":
-                                    if (command.length != 4) {
-                                        throw new Exception("invalid library format");
-                                    }
-                                    String libPath = command[3];
-                                    librarian.install(dataverse, library, libPath);
-                                    break;
-                                case "uninstall":
-                                    if (command.length != 3) {
-                                        throw new Exception("invalid library format");
-                                    }
-                                    librarian.uninstall(dataverse, library);
-                                    break;
-                                default:
-                                    throw new Exception("invalid library format");
-                            }
-                            break;
-                        default:
-                            throw new IllegalArgumentException("No statements of type " + ctx.getType());
-                    }
-
+                    executeTest(testCaseCtx, ctx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
+                            expectedResultFileCtxs, testFile, actualPath);
                 } catch (Exception e) {
                     System.err.println("testFile " + testFile.toString() + " raised an exception:");
                     boolean unExpectedFailure = false;
@@ -794,5 +791,12 @@ public class TestExecutor {
                 }
             }
         }
+    }
+
+    private static File getTestCaseQueryBeforeCrashFile(String actualPath, TestCaseContext testCaseCtx,
+            CompilationUnit cUnit) {
+        return new File(
+                actualPath + File.separator + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                        + cUnit.getName() + "_qbc.adm");
     }
 }

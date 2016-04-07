@@ -51,7 +51,7 @@ create type tpch.LineItemType as
 
 create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
-select element {'l_linenumber':l_linenumber,'count_order':tpch.count(l)}
+select element {'l_linenumber':l_linenumber,'count_order':count(l)}
 from  LineItem as l
 group by l.l_linenumber as l_linenumber
 ;

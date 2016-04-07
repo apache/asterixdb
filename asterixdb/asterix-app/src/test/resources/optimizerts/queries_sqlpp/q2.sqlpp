@@ -62,9 +62,9 @@ from  Event as event,
       event.sponsoring_sigs as sponsor
 with  es as {'event':event,'sponsor':sponsor}
 group by sponsor.sig_name as sig_name
-with  sig_sponsorship_count as events.count(es),
+with  sig_sponsorship_count as count(es),
       by_chapter as (
-      select element {'chapter_name':chapter_name,'escount':events.count(e)}
+      select element {'chapter_name':chapter_name,'escount':count(e)}
       from  es as e
       group by e.sponsor.chapter_name as chapter_name
   )

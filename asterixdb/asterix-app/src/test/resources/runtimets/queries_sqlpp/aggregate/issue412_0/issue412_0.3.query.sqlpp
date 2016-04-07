@@ -17,4 +17,4 @@
  * under the License.
  */
 
-count(['ASTERIX','Hyracks',null]);
+coll_count(['ASTERIX','Hyracks',null]);

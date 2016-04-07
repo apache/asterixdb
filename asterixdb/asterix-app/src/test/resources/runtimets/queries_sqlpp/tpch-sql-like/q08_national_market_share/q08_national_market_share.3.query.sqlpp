@@ -20,10 +20,10 @@
 use tpch;
 
 
-select element {'year':year,'mkt_share':(tpch.sum((
+select element {'year':year,'mkt_share':(tpch.coll_sum((
           select element tpch."switch-case"((i.s_name = 'BRAZIL'),true,i.revenue,false,0.0)
           from  t as i
-      )) / tpch.sum((
+      )) / tpch.coll_sum((
           select element i.revenue
           from  t as i
       )))}

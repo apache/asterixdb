@@ -28,6 +28,46 @@
         ResultOffsetPath="results"
         QueryOffsetPath="queries"
         QueryFileExtension=".aql">
+    <test-group name="external">
+        <test-case FilePath="external">
+            <compilation-unit name="invalid-format">
+                <output-dir compare="Text">invalid-format</output-dir>
+                <expected-error>Unknown format</expected-error>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="external-indexing">
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="text-format">
+                <output-dir compare="Text">text-format</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="sequence-format">
+                <output-dir compare="Text">sequence-format</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="rc-format">
+                <output-dir compare="Text">rc-format</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="rtree-index">
+                <output-dir compare="Text">rtree-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="leftouterjoin">
+                <output-dir compare="Text">leftouterjoin</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="external-indexing">
+            <compilation-unit name="leftouterjoin-rtree">
+                <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="external-library">
         <test-case FilePath="external-library">
             <compilation-unit name="typed_adapter">
@@ -35,13 +75,13 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">
-            <compilation-unit name="classad-parser">
-                <output-dir compare="Text">classad-parser</output-dir>
+            <compilation-unit name="classad-parser-new">
+                <output-dir compare="Text">classad-parser-new</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">
-            <compilation-unit name="classad-parser2">
-                <output-dir compare="Text">classad-parser2</output-dir>
+            <compilation-unit name="classad-parser-old">
+                <output-dir compare="Text">classad-parser-old</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="external-library">
@@ -51,6 +91,12 @@
         </test-case>
     </test-group>
     <test-group name="feeds">
+        <test-case FilePath="feeds">
+            <compilation-unit name="twitter-feed">
+                <output-dir compare="Text">twitter-feed</output-dir>
+                <expected-error>One or more parameters are missing from adapter configuration</expected-error>
+            </compilation-unit>
+        </test-case>
         <test-case FilePath="feeds">
             <compilation-unit name="feed-with-external-parser">
                 <output-dir compare="Text">feed-with-external-parser</output-dir>
@@ -6256,13 +6302,13 @@
         <test-case FilePath="load">
             <compilation-unit name="issue14_query">
                 <output-dir compare="Text">issue14_query</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
+                <expected-error>The parameter format must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="issue315_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>org.apache.asterix.common.exceptions.AsterixException: The parameter parser must be specified</expected-error>
+                <expected-error>The parameter format must be specified</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
@@ -6295,6 +6341,12 @@
             <compilation-unit name="escapes-err-1"><!-- Exception is never thrown!!!. needs to be investigated -->
                 <output-dir compare="Text">none</output-dir>
                 <!-- <expected-error>org.apache.hyracks.api.exceptions.HyracksException</expected-error> -->
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="load">
+            <compilation-unit name="file-not-found">
+              <output-dir compare="Text">none</output-dir>
+              <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException: bla: path not found</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -6387,38 +6439,6 @@
         <test-case FilePath="big-object">
             <compilation-unit name="big_object_load">
                 <output-dir compare="Text">big_object_load</output-dir>
-            </compilation-unit>
-        </test-case>
-    </test-group>
-    <test-group name="external-indexing">
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="text-format">
-                <output-dir compare="Text">text-format</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="sequence-format">
-                <output-dir compare="Text">sequence-format</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="rc-format">
-                <output-dir compare="Text">rc-format</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="rtree-index">
-                <output-dir compare="Text">rtree-index</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="leftouterjoin">
-                <output-dir compare="Text">leftouterjoin</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="external-indexing">
-            <compilation-unit name="leftouterjoin-rtree">
-                <output-dir compare="Text">leftouterjoin-rtree</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -7022,6 +7042,11 @@
         <test-case FilePath="temp-dataset">
             <compilation-unit name="insert-and-scan-dataset-with-index">
                 <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="temp-dataset">
+            <compilation-unit name="temp_primary_plus_ngram_flush">
+                <output-dir compare="Text">temp_primary_plus_ngram_flush</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

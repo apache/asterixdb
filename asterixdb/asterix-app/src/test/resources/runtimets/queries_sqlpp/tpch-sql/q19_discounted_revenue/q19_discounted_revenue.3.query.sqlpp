@@ -21,12 +21,10 @@ USE tpch;
 
 set "import-private-functions" "true";
 
-sum(
-(
-  SELECT ELEMENT l.l_extendedprice * (1 - l.l_discount)
-  FROM LineItem l
-  JOIN Part p
-  ON p.p_partkey = l.l_partkey
+SELECT ELEMENT SUM(l.l_extendedprice * (1 - l.l_discount))
+FROM LineItem l
+JOIN Part p
+ON p.p_partkey = l.l_partkey
   WHERE
   (
     p.p_brand = 'Brand#12'
@@ -54,5 +52,4 @@ sum(
     AND "reg-exp"(l.l_shipmode, 'AIR||AIR REG')
     AND l.l_shipinstruct = 'DELIVER IN PERSON'
   )
- )
-);
+;

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that sql-max aggregation correctly returns null for an empty stream,
+ * Description    : Tests that coll_sql-max aggregation correctly returns null for an empty stream,
  *                  with an aggregate combiner.
  * Success        : Yes
  */

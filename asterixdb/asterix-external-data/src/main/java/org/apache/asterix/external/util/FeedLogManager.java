@@ -38,8 +38,7 @@ public class FeedLogManager {
         START, // partition start
         END, // partition end
         COMMIT, // a record commit within a partition
-        SNAPSHOT // an identifier that partitions with identifiers before this one should be
-                 // ignored
+        SNAPSHOT // an identifier that partitions with identifiers before this one should be ignored
     }
 
     public static final String PROGRESS_LOG_FILE_NAME = "progress.log";
@@ -55,6 +54,7 @@ public class FeedLogManager {
     private BufferedWriter errorLogger;
     private BufferedWriter recordLogger;
     private final StringBuilder stringBuilder = new StringBuilder();
+    private int count = 0;
 
     public FeedLogManager(File file) throws HyracksDataException {
         try {
@@ -69,18 +69,22 @@ public class FeedLogManager {
         }
     }
 
-    public void endPartition() throws IOException {
+    public synchronized void touch() {
+        count++;
+    }
+
+    public synchronized void endPartition() throws IOException {
         logProgress(END_PREFIX + currentPartition);
         completed.add(currentPartition);
     }
 
-    public void endPartition(String partition) throws IOException {
+    public synchronized void endPartition(String partition) throws IOException {
         currentPartition = partition;
         logProgress(END_PREFIX + currentPartition);
         completed.add(currentPartition);
     }
 
-    public void startPartition(String partition) throws IOException {
+    public synchronized void startPartition(String partition) throws IOException {
         currentPartition = partition;
         logProgress(START_PREFIX + currentPartition);
     }
@@ -89,7 +93,7 @@ public class FeedLogManager {
         return Files.exists(dir);
     }
 
-    public void open() throws IOException {
+    public synchronized void open() throws IOException {
         // read content of logs.
         BufferedReader reader = Files.newBufferedReader(
                 Paths.get(dir.toAbsolutePath().toString() + File.separator + PROGRESS_LOG_FILE_NAME));
@@ -113,13 +117,17 @@ public class FeedLogManager {
                 StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
+        count--;
+        if (count > 0) {
+            return;
+        }
         progressLogger.close();
         errorLogger.close();
         recordLogger.close();
     }
 
-    public boolean create() throws IOException {
+    public synchronized boolean create() throws IOException {
         File f = dir.toFile();
         f.mkdirs();
         new File(f, PROGRESS_LOG_FILE_NAME).createNewFile();
@@ -128,13 +136,13 @@ public class FeedLogManager {
         return true;
     }
 
-    public boolean destroy() throws IOException {
+    public synchronized boolean destroy() throws IOException {
         File f = dir.toFile();
         FileUtils.deleteDirectory(f);
         return true;
     }
 
-    public void logProgress(String log) throws IOException {
+    public synchronized void logProgress(String log) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(log);
         stringBuilder.append(ExternalDataConstants.LF);
@@ -142,7 +150,7 @@ public class FeedLogManager {
         progressLogger.flush();
     }
 
-    public void logError(String error, Throwable th) throws IOException {
+    public synchronized void logError(String error, Throwable th) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(error);
         stringBuilder.append(ExternalDataConstants.LF);
@@ -152,7 +160,7 @@ public class FeedLogManager {
         errorLogger.flush();
     }
 
-    public void logRecord(String record, String errorMessage) throws IOException {
+    public synchronized void logRecord(String record, String errorMessage) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(record);
         stringBuilder.append(ExternalDataConstants.LF);
@@ -166,7 +174,7 @@ public class FeedLogManager {
         return log.substring(PREFIX_SIZE);
     }
 
-    public boolean isSplitRead(String split) {
+    public synchronized boolean isSplitRead(String split) {
         return completed.contains(split);
     }
 }

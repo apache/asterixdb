@@ -21,13 +21,12 @@ package org.apache.asterix.external.input.record.reader.stream;
 import java.io.IOException;
 
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
 
-public class EmptyLineSeparatedRecordReader extends AbstractStreamRecordReader {
+public class EmptyLineSeparatedRecordReader extends StreamRecordReader {
 
-    public EmptyLineSeparatedRecordReader(AsterixInputStream inputStream, IExternalIndexer indexer) {
-        super(inputStream, indexer);
+    public EmptyLineSeparatedRecordReader(AsterixInputStream inputStream) {
+        super(inputStream);
     }
 
     private boolean prevCharCR;

@@ -20,7 +20,7 @@
 use test;
 
 
-select element test."sql-sum"((
+select element test."coll_sql-sum"((
     select element x
     from  [test.float('1'),test.float('2'),test.float('3')] as x
 ));

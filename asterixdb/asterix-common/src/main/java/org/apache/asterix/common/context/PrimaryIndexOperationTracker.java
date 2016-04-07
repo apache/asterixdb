@@ -122,16 +122,24 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 }
             }
             LogRecord logRecord = new LogRecord();
-            TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
-                    dsInfo.getDatasetIndexes().size());
-            try {
-                logManager.log(logRecord);
-            } catch (ACIDException e) {
-                throw new HyracksDataException("could not write flush log", e);
-            }
-
-            flushLogCreated = true;
             flushOnExit = false;
+            if (dsInfo.isDurable()) {
+                /**
+                 * Generate a FLUSH log.
+                 * Flush will be triggered when the log is written to disk by LogFlusher.
+                 */
+                TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
+                        dsInfo.getDatasetIndexes().size());
+                try {
+                    logManager.log(logRecord);
+                } catch (ACIDException e) {
+                    throw new HyracksDataException("could not write flush log", e);
+                }
+                flushLogCreated = true;
+            } else {
+                //trigger flush for temporary indexes without generating a FLUSH log.
+                triggerScheduleFlush(logRecord);
+            }
         }
     }
 

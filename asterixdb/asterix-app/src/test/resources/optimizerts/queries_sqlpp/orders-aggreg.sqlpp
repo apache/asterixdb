@@ -33,17 +33,17 @@ create type "orders-aggreg".OrderType as
   total : float
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
 create  table Orders(OrderType) primary key oid on group1;
 
 write output to asterix_nc1:"/tmp/orders-aggreg.adm"
-select element {'cid':cid,'ordpercust':"orders-aggreg".count(o),'totalcust':"orders-aggreg".sum((
+select element {'cid':cid,'ordpercust':"orders-aggreg".coll_count(o),'totalcust':"orders-aggreg".coll_sum((
         select element i.total
         from  o as i
-    )),'avgcust':"orders-aggreg".avg((
+    )),'avgcust':"orders-aggreg".coll_avg((
         select element i.total
         from  o as i
     ))}

@@ -137,7 +137,7 @@ from  Customers as c,
 where ((c.c_nationkey = o1.s_nationkey) and (c.c_custkey = o1.o_custkey))
 /* +hash */
 group by o1.n_name as n_name
-with  revenue as q5_local_supplier.sum((
+with  revenue as q5_local_supplier.coll_sum((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from  o1 as i
   ))

@@ -45,7 +45,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             @Nonnull FeedLogManager feedLogManager, int numOfOutputFields, @Nonnull IRecordDataParser<T> dataParser,
-            @Nonnull IRecordReader<T> recordReader) {
+            @Nonnull IRecordReader<T> recordReader) throws HyracksDataException {
         super(ctx, tupleForwarder, feedLogManager, numOfOutputFields);
         this.dataParser = dataParser;
         this.recordReader = recordReader;
@@ -85,6 +85,9 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 }
                 tupleForwarder.addTuple(tb);
             }
+        } catch (InterruptedException e) {
+            //TODO: Find out what could cause an interrupted exception beside termination of a job/feed
+            LOGGER.warn("Feed has been interrupted. Closing the feed");
         } catch (Exception e) {
             failed = true;
             tupleForwarder.flush();

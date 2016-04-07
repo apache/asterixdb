@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.count((
+select element test.coll_count((
     select element l.name
     from  Employee as l
 ));

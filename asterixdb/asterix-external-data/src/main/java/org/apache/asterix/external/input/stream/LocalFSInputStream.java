@@ -21,47 +21,37 @@ package org.apache.asterix.external.input.stream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.log4j.Logger;
 
 public class LocalFSInputStream extends AsterixInputStream {
 
     private static final Logger LOGGER = Logger.getLogger(LocalFSInputStream.class.getName());
-    private final Path path;
     private final FileSystemWatcher watcher;
     private FileInputStream in;
     private byte lastByte;
     private File currentFile;
 
-    public LocalFSInputStream(final FileSplit[] fileSplits, final IHyracksTaskContext ctx,
-            final Map<String, String> configuration, final int partition, final String expression, final boolean isFeed)
-            throws IOException {
-        this.path = fileSplits[partition].getLocalFile().getFile().toPath();
-        this.watcher = new FileSystemWatcher(path, expression, isFeed);
-        this.watcher.init();
-    }
-
-    @Override
-    public void setFeedLogManager(FeedLogManager logManager) {
-        super.setFeedLogManager(logManager);
-        watcher.setFeedLogManager(logManager);
+    public LocalFSInputStream(FileSystemWatcher watcher) {
+        this.watcher = watcher;
     }
 
     @Override
     public void setController(AbstractFeedDataFlowController controller) {
         super.setController(controller);
-        watcher.setController(controller);
     }
+
+    @Override
+    public void setFeedLogManager(FeedLogManager logManager) throws HyracksDataException {
+        super.setFeedLogManager(logManager);
+        watcher.setFeedLogManager(logManager);
+    };
 
     @Override
     public void close() throws IOException {
@@ -86,6 +76,9 @@ public class LocalFSInputStream extends AsterixInputStream {
 
     private void closeFile() throws IOException {
         if (in != null) {
+            if (logManager != null) {
+                logManager.endPartition(currentFile.getAbsolutePath());
+            }
             try {
                 in.close();
             } finally {
@@ -100,9 +93,18 @@ public class LocalFSInputStream extends AsterixInputStream {
      */
     private boolean advance() throws IOException {
         closeFile();
-        if (watcher.hasNext()) {
-            currentFile = watcher.next();
+        currentFile = watcher.poll();
+        if (currentFile == null) {
+            if (controller != null) {
+                controller.flush();
+            }
+            currentFile = watcher.take();
+        }
+        if (currentFile != null) {
             in = new FileInputStream(currentFile);
+            if (notificationHandler != null) {
+                notificationHandler.notifyNewSource();
+            }
             return true;
         }
         return false;
@@ -141,6 +143,7 @@ public class LocalFSInputStream extends AsterixInputStream {
 
     @Override
     public boolean stop() throws Exception {
+        closeFile();
         watcher.close();
         return true;
     }
@@ -165,18 +168,11 @@ public class LocalFSInputStream extends AsterixInputStream {
                     advance();
                     return true;
                 } catch (Exception e) {
-                    return false;
-                }
-            } else {
-                try {
-                    watcher.init();
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to initialize watcher during failure recovery", e);
-                    return false;
+                    LOGGER.warn("An exception was thrown while trying to skip a file", e);
                 }
             }
-            return true;
         }
+        LOGGER.warn("Failed to recover from failure", th);
         return false;
     }
 }

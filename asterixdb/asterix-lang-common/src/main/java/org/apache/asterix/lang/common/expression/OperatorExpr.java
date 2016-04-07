@@ -40,10 +40,12 @@ public class OperatorExpr extends AbstractExpression {
         opList = new ArrayList<OperatorType>();
     }
 
-    public OperatorExpr(List<Expression> exprList, List<Integer> exprBroadcastIdx, List<OperatorType> opList) {
+    public OperatorExpr(List<Expression> exprList, List<Integer> exprBroadcastIdx, List<OperatorType> opList,
+            boolean currentop) {
         this.exprList = exprList;
         this.exprBroadcastIdx = exprBroadcastIdx;
         this.opList = opList;
+        this.currentop = currentop;
     }
 
     public boolean isCurrentop() {
@@ -87,40 +89,41 @@ public class OperatorExpr extends AbstractExpression {
     }
 
     public void addOperator(String strOp) {
-        if ("or".equals(strOp))
+        if ("or".equals(strOp)) {
             opList.add(OperatorType.OR);
-        else if ("and".equals(strOp))
+        } else if ("and".equals(strOp)) {
             opList.add(OperatorType.AND);
-        else if ("<".equals(strOp))
+        } else if ("<".equals(strOp)) {
             opList.add(OperatorType.LT);
-        else if (">".equals(strOp))
+        } else if (">".equals(strOp)) {
             opList.add(OperatorType.GT);
-        else if ("<=".equals(strOp))
+        } else if ("<=".equals(strOp)) {
             opList.add(OperatorType.LE);
-        else if ("<=".equals(strOp))
+        } else if ("<=".equals(strOp)) {
             opList.add(OperatorType.LE);
-        else if (">=".equals(strOp))
+        } else if (">=".equals(strOp)) {
             opList.add(OperatorType.GE);
-        else if ("=".equals(strOp))
+        } else if ("=".equals(strOp)) {
             opList.add(OperatorType.EQ);
-        else if ("!=".equals(strOp))
+        } else if ("!=".equals(strOp)) {
             opList.add(OperatorType.NEQ);
-        else if ("+".equals(strOp))
+        } else if ("+".equals(strOp)) {
             opList.add(OperatorType.PLUS);
-        else if ("-".equals(strOp))
+        } else if ("-".equals(strOp)) {
             opList.add(OperatorType.MINUS);
-        else if ("*".equals(strOp))
+        } else if ("*".equals(strOp)) {
             opList.add(OperatorType.MUL);
-        else if ("/".equals(strOp))
+        } else if ("/".equals(strOp)) {
             opList.add(OperatorType.DIV);
-        else if ("%".equals(strOp))
+        } else if ("%".equals(strOp)) {
             opList.add(OperatorType.MOD);
-        else if ("^".equals(strOp))
+        } else if ("^".equals(strOp)) {
             opList.add(OperatorType.CARET);
-        else if ("idiv".equals(strOp))
+        } else if ("idiv".equals(strOp)) {
             opList.add(OperatorType.IDIV);
-        else if ("~=".equals(strOp))
+        } else if ("~=".equals(strOp)) {
             opList.add(OperatorType.FUZZY_EQ);
+        }
     }
 
     @Override

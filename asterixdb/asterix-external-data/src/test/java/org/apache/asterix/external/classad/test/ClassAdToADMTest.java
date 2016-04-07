@@ -18,7 +18,13 @@
  */
 package org.apache.asterix.external.classad.test;
 
+import java.io.File;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -32,8 +38,19 @@ import org.apache.asterix.external.classad.object.pool.ClassAdObjectPool;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReader;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.library.ClassAdParser;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.asterix.external.util.FileSystemWatcher;
+import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.junit.Assert;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -57,23 +74,85 @@ public class ClassAdToADMTest extends TestCase {
         return new TestSuite(ClassAdToADMTest.class);
     }
 
+    private void printTuple(ArrayTupleBuilder tb, IPrinter[] printers, PrintStream printStream)
+            throws HyracksDataException {
+        int[] offsets = tb.getFieldEndOffsets();
+        for (int i = 0; i < printers.length; i++) {
+            int offset = i == 0 ? 0 : offsets[i - 1];
+            int length = i == 0 ? offsets[0] : offsets[i] - offsets[i - 1];
+            printers[i].print(tb.getByteArray(), offset, length, printStream);
+            printStream.println();
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void testSchemaful() {
+        try {
+            File file = new File("target/classad-wtih-temporals.adm");
+            File expected = new File(getClass().getResource("/results/classad-with-temporals.adm").toURI().getPath());
+            FileUtils.deleteQuietly(file);
+            PrintStream printStream = new PrintStream(Files.newOutputStream(Paths.get(file.toURI())));
+            String[] recordFieldNames = { "GlobalJobId", "Owner", "ClusterId", "ProcId", "RemoteWallClockTime",
+                    "CompletionDate", "QDate", "JobCurrentStartDate", "JobStartDate", "JobCurrentStartExecutingDate" };
+            IAType[] recordFieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
+                    BuiltinType.AINT32, BuiltinType.ADURATION, BuiltinType.ADATETIME, BuiltinType.ADATETIME,
+                    BuiltinType.ADATETIME, BuiltinType.ADATETIME, BuiltinType.ADATETIME };
+            ARecordType recordType = new ARecordType("value", recordFieldNames, recordFieldTypes, true);
+            int numOfTupleFields = 1;
+            ISerializerDeserializer[] serdes = new ISerializerDeserializer[1];
+            serdes[0] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
+            IPrinterFactory[] printerFactories = new IPrinterFactory[1];
+            printerFactories[0] = AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
+            // create output descriptor
+            IPrinter[] printers = new IPrinter[printerFactories.length];
+            for (int i = 0; i < printerFactories.length; i++) {
+                printers[i] = printerFactories[i].createPrinter();
+            }
+            ClassAdObjectPool objectPool = new ClassAdObjectPool();
+            String[] files = new String[] { "/classad-with-temporals.classads" };
+            ClassAdParser parser = new ClassAdParser(recordType, false, false, false, null, null, null, objectPool);
+            ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);
+            for (String path : files) {
+                List<Path> paths = new ArrayList<>();
+                paths.add(Paths.get(getClass().getResource(path).toURI()));
+                FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
+                LocalFSInputStream in = new LocalFSInputStream(watcher);
+                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
+                while (recordReader.hasNext()) {
+                    tb.reset();
+                    IRawRecord<char[]> record = recordReader.next();
+                    parser.parse(record, tb.getDataOutput());
+                    tb.addFieldEndOffset();
+                    printTuple(tb, printers, printStream);
+                }
+                recordReader.close();
+                printStream.close();
+                Assert.assertTrue(FileUtils.contentEquals(file, expected));
+            }
+        } catch (Throwable th) {
+            System.err.println("TEST FAILED");
+            th.printStackTrace();
+            Assert.assertTrue(false);
+        }
+        System.err.println("TEST PASSED");
+    }
+
     /**
      *
      */
-    public void test() {
+    public void testSchemaless() {
         try {
-            // test here
             ClassAdObjectPool objectPool = new ClassAdObjectPool();
             ClassAd pAd = new ClassAd(objectPool);
             String[] files = new String[] { "/jobads.txt" };
             ClassAdParser parser = new ClassAdParser(objectPool);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {
-                LocalFSInputStream in = new LocalFSInputStream(
-                        new FileSplit[] { new FileSplit("",
-                                new FileReference(Paths.get(getClass().getResource(path).toURI()).toFile())) },
-                        null, null, 0, null, false);
-                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, null, "[", "]");
+                List<Path> paths = new ArrayList<>();
+                paths.add(Paths.get(getClass().getResource(path).toURI()));
+                FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
+                LocalFSInputStream in = new LocalFSInputStream(watcher);
+                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
                 Value val = new Value(objectPool);
                 while (recordReader.hasNext()) {
                     val.reset();

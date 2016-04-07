@@ -51,7 +51,9 @@ public class SqlppExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     protected static AsterixTransactionProperties txnProperties;
-    private final static TestExecutor testExecutor = new TestExecutor();
+    private static final TestExecutor testExecutor = new TestExecutor();
+    private static final boolean cleanupOnStart = true;
+    private static final boolean cleanupOnStop = true;
 
     protected static TestGroup FailedGroup;
 
@@ -59,12 +61,12 @@ public class SqlppExecutionTest {
     public static void setUp() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        ExecutionTestUtil.setUp();
+        ExecutionTestUtil.setUp(cleanupOnStart);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        ExecutionTestUtil.tearDown();
+        ExecutionTestUtil.tearDown(cleanupOnStop);
         AsterixHyracksIntegrationUtil.removeTestStorageFiles();
     }
 

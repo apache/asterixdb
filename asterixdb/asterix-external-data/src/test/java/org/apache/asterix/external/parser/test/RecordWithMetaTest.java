@@ -21,6 +21,7 @@ package org.apache.asterix.external.parser.test;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.types.ARecordType;
@@ -42,9 +44,7 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -79,14 +79,13 @@ public class RecordWithMetaTest {
             int[] pkIndexes = { 0 };
             int[] pkIndicators = { 1 };
 
+            List<Path> paths = new ArrayList<>();
+            paths.add(Paths.get(getClass().getResource("/beer.csv").toURI()));
+            FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
             // create input stream
-            LocalFSInputStream inputStream = new LocalFSInputStream(
-                    new FileSplit[] { new FileSplit(null,
-                            new FileReference(Paths.get(getClass().getResource("/beer.csv").toURI()).toFile())) },
-                    null, null, 0, null, false);
-
+            LocalFSInputStream inputStream = new LocalFSInputStream(watcher);
             // create reader record reader
-            QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream, null,
+            QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream,
                     ExternalDataConstants.DEFAULT_QUOTE);
             // create csv with json record reader
             CSVToRecordWithMetadataAndPKConverter recordConverter = new CSVToRecordWithMetadataAndPKConverter(

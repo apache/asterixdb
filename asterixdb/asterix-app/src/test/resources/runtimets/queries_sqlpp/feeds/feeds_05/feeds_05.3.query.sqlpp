@@ -22,7 +22,7 @@
 use feeds;
 
 
-if ((feeds.count((
+if ((feeds.coll_count((
       select element x
       from  SyntheticTweets as x
   )) > 0))

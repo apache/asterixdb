@@ -18,10 +18,12 @@
  */
 package org.apache.asterix.lang.sqlpp.visitor;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 
 public class SqlppSubstituteVariablesVisitor extends SqlppCloneAndSubstituteVariablesVisitor {
 
@@ -30,9 +32,10 @@ public class SqlppSubstituteVariablesVisitor extends SqlppCloneAndSubstituteVari
     }
 
     @Override
-    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
+    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env)
+            throws AsterixException {
         if (env.constainsOldVar(expr)) {
-            return env.findSubstituion(expr);
+            return (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(expr));
         }
         return expr;
     }

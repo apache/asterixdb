@@ -17,9 +17,9 @@
  * under the License.
  */
 /**
- * issue531_string_sql-min_sql-max
+ * issue531_string_coll_sql-min_coll_sql-max
  *
- * Purpose: test the support of string values for sql-min and sql-max aggregation function
+ * Purpose: test the support of string values for coll_sql-min and coll_sql-max aggregation function
  * Result: success
  *
  */
@@ -27,10 +27,10 @@
 use test;
 
 
-select element {'sql-min':test."sql-min"((
+select element {'sql-min':test."coll_sql-min"((
         select element l.name
         from  t1 as l
-    )),'sql-max':test."sql-max"((
+    )),'sql-max':test."coll_sql-max"((
         select element l.name
         from  t1 as l
     ))};

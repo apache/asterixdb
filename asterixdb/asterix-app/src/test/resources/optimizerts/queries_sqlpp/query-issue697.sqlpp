@@ -37,7 +37,7 @@ create type test.TestType as
 
 create  table test(TestType) primary key key1;
 
-select element {'gid':aid,'avg':test.avg((
+select element {'gid':aid,'avg':test.coll_avg((
         select element j."value"
         from  i as j
         where test.not(test."is-null"(j."value"))

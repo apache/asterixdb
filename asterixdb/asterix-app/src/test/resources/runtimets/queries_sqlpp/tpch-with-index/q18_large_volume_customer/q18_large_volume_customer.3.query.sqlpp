@@ -20,14 +20,14 @@
 use tpch;
 
 
-select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':tpch.sum((
+select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':tpch.coll_sum((
         select element j.l_quantity
         from  l as j
     ))}
 from  Customer as c,
       Orders as o,
       (
-    select element {'l_orderkey':l_orderkey,'t_sum_quantity':tpch.sum((
+    select element {'l_orderkey':l_orderkey,'t_sum_quantity':tpch.coll_sum((
             select element i.l_quantity
             from  l as i
         ))}

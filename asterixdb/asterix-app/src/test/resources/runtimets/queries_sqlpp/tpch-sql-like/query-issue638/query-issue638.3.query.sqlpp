@@ -26,7 +26,7 @@
 use tpch;
 
 
-select element {'nation':nation,'o_year':o_year,'sum_profit':tpch.sum((
+select element {'nation':nation,'o_year':o_year,'sum_profit':COLL_SUM((
         select element pr.amount
         from  profit as pr
     ))}
@@ -52,7 +52,7 @@ from  (
             ) as l1
             where ((ps.ps_suppkey = l1.l_suppkey) and (ps.ps_partkey = l1.l_partkey))
         ) as l2
-        where (tpch.contains(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
+        where (CONTAINS(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
     ) as l3
     with  amount as ((l3.l_extendedprice * (1 - l3.l_discount)) - (l3.ps_supplycost * l3.l_quantity)),
           o_year as tpch."get-year"(o.o_orderdate)

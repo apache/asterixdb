@@ -28,7 +28,7 @@ use tpch;
 
 SELECT l_returnflag AS l_returnflag,
        l_linestatus AS l_linestatus,
-       count(cheaps) AS count_cheaps,
+       coll_count(cheaps) AS count_cheaps,
        total_charges AS total_charges
 FROM  LineItem as l
 WHERE l.l_shipdate <= '1998-09-02'

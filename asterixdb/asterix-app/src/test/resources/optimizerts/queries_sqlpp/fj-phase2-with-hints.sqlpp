@@ -51,7 +51,7 @@ with  unrankedTokensDBLP as fuzzyjoin_078."counthashed-word-tokens"(paperDBLP.ti
                 fuzzyjoin_078."counthashed-word-tokens"(paper.title) as token
           /* +hash */
           group by token as tokenGroupped
-          order by fuzzyjoin_078.count(paper),tokenGroupped
+          order by count(paper),tokenGroupped
       ) as tokenRanked at i
       where (token = tokenRanked)
       order by i

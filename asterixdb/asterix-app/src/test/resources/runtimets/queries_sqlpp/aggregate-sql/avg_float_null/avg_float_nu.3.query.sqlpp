@@ -20,7 +20,7 @@
 use test;
 
 
-{'average':test."sql-avg"((
+{'average':test."coll_sql-avg"((
     select element x.floatField
     from  Numeric as x
 ))};

@@ -34,7 +34,7 @@ from  (
     where ((l.l_orderkey = ocn.o_orderkey) and (l.l_returnflag = 'R'))
 ) as locn
 group by locn.c_custkey as c_custkey,locn.c_name as c_name,locn.c_acctbal as c_acctbal,locn.c_phone as c_phone,locn.n_name as n_name,locn.c_address as c_address,locn.c_comment as c_comment
-with  revenue as tpch.sum((
+with  revenue as tpch.coll_sum((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from  locn as i
   ))

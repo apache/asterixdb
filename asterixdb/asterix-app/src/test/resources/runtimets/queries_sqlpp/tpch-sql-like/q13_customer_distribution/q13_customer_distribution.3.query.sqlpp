@@ -24,12 +24,12 @@ set "import-private-functions" "true";
 
 select element {'c_count':c_count,'custdist':custdist}
 from  (
-    select element {'c_custkey':c_custkey,'c_count':tpch.sum((
+    select element {'c_custkey':c_custkey,'c_count':tpch.coll_sum((
             select element i.o_orderkey_count
             from  co as i
         ))}
     from  (
-        select element {'c_custkey':c.c_custkey,'o_orderkey_count':tpch.count((
+        select element {'c_custkey':c.c_custkey,'o_orderkey_count':coll_count((
                 select element o.o_orderkey
                 from  Orders as o
                 where ((c.c_custkey = o.o_custkey) and tpch.not(tpch.like(o.o_comment,'%special%requests%')))

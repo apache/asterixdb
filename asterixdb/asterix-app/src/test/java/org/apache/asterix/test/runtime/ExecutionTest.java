@@ -48,9 +48,10 @@ public class ExecutionTest {
             File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
-
     protected static AsterixTransactionProperties txnProperties;
-    private final static TestExecutor testExecutor = new TestExecutor();
+    private static final TestExecutor testExecutor = new TestExecutor();
+    private static final boolean cleanupOnStart = true;
+    private static final boolean cleanupOnStop = true;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -60,7 +61,7 @@ public class ExecutionTest {
             // remove library directory
             TestLibrarian.removeLibraryDir();
             testExecutor.setLibrarian(new TestLibrarian());
-            ExecutionTestUtil.setUp();
+            ExecutionTestUtil.setUp(cleanupOnStart);
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
@@ -71,7 +72,7 @@ public class ExecutionTest {
     public static void tearDown() throws Exception {
         // remove library directory
         TestLibrarian.removeLibraryDir();
-        ExecutionTestUtil.tearDown();
+        ExecutionTestUtil.tearDown(cleanupOnStop);
     }
 
     @Parameters(name = "ExecutionTest {index}: {0}")

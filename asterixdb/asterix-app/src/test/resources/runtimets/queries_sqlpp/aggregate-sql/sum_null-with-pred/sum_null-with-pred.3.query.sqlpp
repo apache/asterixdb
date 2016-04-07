@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description      :   sql-sum() aggregate function must return the numeric sql-sum, when non null values are given as input to sql-sum().
- *                  :   Get the sql-sum for those tuples which are non null for salary fields.
+ * Description      :   sql-coll_sum() aggregate function must return the numeric coll_sql-sum, when non null values are given as input to sql-coll_sum().
+ *                  :   Get the coll_sql-sum for those tuples which are non null for salary fields.
  * Expected result  :   Success
  * Date             :   July 20th 2012
  */
@@ -28,7 +28,7 @@ use test;
 
 set "import-private-functions" "true";
 
-select element test."sql-sum"((
+select element test."coll_sql-sum"((
     select element l.sal
     from  tdst as l
     where test.not(test."is-null"(l.sal))

@@ -52,7 +52,6 @@ import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class DataflowControllerProvider {
 
@@ -60,13 +59,9 @@ public class DataflowControllerProvider {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static IDataFlowController getDataflowController(ARecordType recordType, IHyracksTaskContext ctx,
             int partition, IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory,
-            Map<String, String> configuration, boolean indexingOp, boolean isFeed, FileSplit[] feedLogFileSplits)
-                    throws HyracksDataException {
+            Map<String, String> configuration, boolean indexingOp, boolean isFeed, FeedLogManager feedLogManager)
+            throws HyracksDataException {
         try {
-            FeedLogManager feedLogManager = null;
-            if (isFeed) {
-                feedLogManager = FeedUtils.getFeedLogManager(ctx, partition, feedLogFileSplits);
-            }
             switch (dataSourceFactory.getDataSourceType()) {
                 case RECORDS:
                     IRecordReaderFactory<?> recordReaderFactory = (IRecordReaderFactory<?>) dataSourceFactory;

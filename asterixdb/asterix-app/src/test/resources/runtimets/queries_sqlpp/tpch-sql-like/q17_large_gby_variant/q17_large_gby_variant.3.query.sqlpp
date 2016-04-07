@@ -20,34 +20,34 @@
 use tpch;
 
 
-select element {'t_partkey':l_partkey,'t_count':tpch.count(l),'t_avg_quantity':(0.2 * tpch.avg((
+select element {'t_partkey':l_partkey,'t_count':tpch.count(l),'t_avg_quantity':(0.2 * tpch.coll_avg((
           select element i.l_quantity
           from  l as i
-      ))),'t_max_suppkey':tpch.max((
+      ))),'t_max_suppkey':tpch.coll_max((
         select element i.l_suppkey
         from  l as i
-    )),'t_max_linenumber':tpch.max((
+    )),'t_max_linenumber':tpch.coll_max((
         select element i.l_linenumber
         from  l as i
-    )),'t_avg_extendedprice':tpch.avg((
+    )),'t_avg_extendedprice':tpch.coll_avg((
         select element i.l_extendedprice
         from  l as i
-    )),'t_avg_discount':tpch.avg((
+    )),'t_avg_discount':tpch.coll_avg((
         select element i.l_discount
         from  l as i
-    )),'t_avg_tax':tpch.avg((
+    )),'t_avg_tax':tpch.coll_avg((
         select element i.l_tax
         from  l as i
-    )),'t_max_shipdate':tpch.max((
+    )),'t_max_shipdate':tpch.coll_max((
         select element i.l_shipdate
         from  l as i
-    )),'t_min_commitdate':tpch.min((
+    )),'t_min_commitdate':tpch.coll_min((
         select element i.l_commitdate
         from  l as i
-    )),'t_min_receiptdate':tpch.min((
+    )),'t_min_receiptdate':tpch.coll_min((
         select element i.l_receiptdate
         from  l as i
-    )),'t_max_comment':tpch.max((
+    )),'t_max_comment':tpch.coll_max((
         select element i.l_comment
         from  l as i
     ))}

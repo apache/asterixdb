@@ -35,6 +35,7 @@ import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
@@ -105,11 +106,6 @@ public class DatasetUtils {
         return bhffs;
     }
 
-    public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType)
-            throws AlgebricksException {
-        return computeTupleTypeTraits(dataset, itemType, null);
-    }
-
     public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType, ARecordType metaItemType)
             throws AlgebricksException {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
@@ -156,7 +152,7 @@ public class DatasetUtils {
 
     public static IBinaryComparatorFactory[] computeFilterBinaryComparatorFactories(Dataset dataset,
             ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return null;
         }
@@ -273,5 +269,14 @@ public class DatasetUtils {
         propertyRecordBuilder.addField(1, fieldValue);
 
         propertyRecordBuilder.write(out, true);
+    }
+
+    public static ARecordType getMetaType(AqlMetadataProvider metadataProvider, Dataset dataset)
+            throws AlgebricksException {
+        if (dataset.hasMetaPart()) {
+            return (ARecordType) metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
+                    dataset.getMetaItemTypeName());
+        }
+        return null;
     }
 }

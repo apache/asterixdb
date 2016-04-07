@@ -37,7 +37,7 @@ create type EmployeeType as closed {
 create external dataset EmployeeDataset(EmployeeType)
 using adapter
 (("reader"="hdfs"),
-("parser"="delimited-text"),
+("format"="delimited-text"),
 ("hdfs"="hdfs://127.0.0.1:31888"),
 ("path"="/asterix/large-record.txt"),
 ("input-format"="text-input-format"),

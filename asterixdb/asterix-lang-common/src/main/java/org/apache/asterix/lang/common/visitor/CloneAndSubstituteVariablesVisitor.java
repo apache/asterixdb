@@ -108,7 +108,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             }
         }
         GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, wList, newGroupVar, newGroupFieldList,
-                gc.hasHashGroupByHint());
+                gc.hasHashGroupByHint(), gc.isGroupAll());
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newGroup, newSubs);
     }
 
@@ -217,8 +217,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(this, env);
             exprs.add((Expression) p1.first);
         }
-        OperatorExpr oe = new OperatorExpr(exprs, op.getExprBroadcastIdx(), op.getOpList());
-        oe.setCurrentop(op.isCurrentop());
+        OperatorExpr oe = new OperatorExpr(exprs, op.getExprBroadcastIdx(), op.getOpList(), op.isCurrentop());
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(oe, env);
     }
 
@@ -295,7 +294,8 @@ public class CloneAndSubstituteVariablesVisitor extends
     }
 
     // Replace a variable expression if the variable is to-be substituted.
-    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env) {
+    protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env)
+            throws AsterixException {
         if (env.constainsOldVar(expr)) {
             return env.findSubstituion(expr);
         } else {

@@ -45,17 +45,16 @@ public class FeedUtils {
         return dataverseName + File.separator + feedName;
     }
 
-    public static FileSplit splitsForAdapter(String dataverseName, String feedName, int partition,
-            ClusterPartition[] nodePartitions) {
+    public static FileSplit splitsForAdapter(String dataverseName, String feedName, String nodeName,
+            ClusterPartition partition) {
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
-        ClusterPartition nodePartition = nodePartitions[0];
         String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                nodePartition.getPartitionId());
-        // format: 'storage dir name'/partition_#/dataverse/feed/adapter_#
-        File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator
-                + StoragePathUtil.ADAPTER_INSTANCE_PREFIX + partition);
-        return StoragePathUtil.getFileSplitForClusterPartition(nodePartition, f);
+                partition.getPartitionId());
+        // Note: feed adapter instances in a single node share the feed logger
+        // format: 'storage dir name'/partition_#/dataverse/feed/node
+        File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator + nodeName);
+        return StoragePathUtil.getFileSplitForClusterPartition(partition, f);
     }
 
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
@@ -63,22 +62,11 @@ public class FeedUtils {
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             throw new AsterixException("Can't create file splits for adapter with count partitioning constraints");
         }
-        File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
-        String[] locations = null;
-        locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
+        String[] locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         List<FileSplit> splits = new ArrayList<FileSplit>();
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
-        int i = 0;
         for (String nd : locations) {
-            // Always get the first partition
-            ClusterPartition nodePartition = AsterixClusterProperties.INSTANCE.getNodePartitions(nd)[0];
-            String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                    nodePartition.getPartitionId());
-            // format: 'storage dir name'/partition_#/dataverse/feed/adapter_#
-            File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator
-                    + StoragePathUtil.ADAPTER_INSTANCE_PREFIX + i);
-            splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartition, f));
-            i++;
+            splits.add(splitsForAdapter(dataverseName, feedName, nd,
+                    AsterixClusterProperties.INSTANCE.getNodePartitions(nd)[0]));
         }
         return splits.toArray(new FileSplit[] {});
     }

@@ -33,8 +33,9 @@ import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -48,44 +49,55 @@ public class FileSystemWatcher {
     private Iterator<File> it;
     private final String expression;
     private FeedLogManager logManager;
-    private final Path path;
+    private final List<Path> paths;
     private final boolean isFeed;
     private boolean done;
-    private File current;
-    private AbstractFeedDataFlowController controller;
     private final LinkedList<Path> dirs;
+    private final ReentrantLock lock = new ReentrantLock();
 
-    public FileSystemWatcher(Path inputResource, String expression, boolean isFeed) {
+    public FileSystemWatcher(List<Path> inputResources, String expression, boolean isFeed) throws HyracksDataException {
+        this.isFeed = isFeed;
         this.keys = isFeed ? new HashMap<WatchKey, Path>() : null;
         this.expression = expression;
-        this.path = inputResource;
-        this.isFeed = isFeed;
+        this.paths = inputResources;
         this.dirs = new LinkedList<Path>();
+        if (!isFeed) {
+            init();
+        }
     }
 
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
-        this.logManager = feedLogManager;
+    public synchronized void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
+        if (logManager == null) {
+            this.logManager = feedLogManager;
+            init();
+        }
     }
 
-    public void init() throws HyracksDataException {
+    public synchronized void init() throws HyracksDataException {
         try {
             dirs.clear();
-            LocalFileSystemUtils.traverse(files, path.toFile(), expression, dirs);
-            it = files.iterator();
-            if (isFeed) {
-                keys.clear();
-                if (watcher != null) {
-                    try {
-                        watcher.close();
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed to close watcher service", e);
+            for (Path path : paths) {
+                LocalFileSystemUtils.traverse(files, path.toFile(), expression, dirs);
+                it = files.iterator();
+                if (isFeed) {
+                    keys.clear();
+                    if (watcher != null) {
+                        try {
+                            watcher.close();
+                        } catch (IOException e) {
+                            LOGGER.warn("Failed to close watcher service", e);
+                        }
+                    }
+                    watcher = FileSystems.getDefault().newWatchService();
+                    for (Path dirPath : dirs) {
+                        register(dirPath);
+                    }
+                    resume();
+                } else {
+                    if (files.isEmpty()) {
+                        throw new HyracksDataException(path + ": no files found");
                     }
                 }
-                watcher = FileSystems.getDefault().newWatchService();
-                for (Path path : dirs) {
-                    register(path);
-                }
-                resume();
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);
@@ -102,7 +114,7 @@ public class FileSystemWatcher {
         keys.put(key, dir);
     }
 
-    private void resume() throws IOException {
+    private synchronized void resume() throws IOException {
         if (logManager == null) {
             return;
         }
@@ -142,14 +154,12 @@ public class FileSystemWatcher {
         }
         for (WatchEvent<?> event : key.pollEvents()) {
             Kind<?> kind = event.kind();
-            // TODO: Do something about overflow events
             // An overflow event means that some events were dropped
             if (kind == StandardWatchEventKinds.OVERFLOW) {
                 if (LOGGER.isEnabledFor(Level.WARN)) {
                     LOGGER.warn("Overflow event. Some events might have been missed");
                 }
                 // need to read and validate all files.
-                //TODO: use btrees for all logs
                 init();
                 return;
             }
@@ -174,33 +184,90 @@ public class FileSystemWatcher {
                 }
             }
         }
+        it = files.iterator();
     }
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (!done) {
             if (watcher != null) {
                 watcher.close();
                 watcher = null;
             }
-            if (logManager != null) {
-                if (current != null) {
-                    logManager.startPartition(current.getAbsolutePath());
-                    logManager.endPartition();
-                }
-                logManager.close();
-                current = null;
-            }
             done = true;
         }
     }
 
-    public File next() throws IOException {
-        if ((current != null) && (logManager != null)) {
-            logManager.startPartition(current.getAbsolutePath());
-            logManager.endPartition();
+    // poll is not blocking
+    public synchronized File poll() throws IOException {
+        if (it.hasNext()) {
+            return it.next();
         }
-        current = it.next();
-        return current;
+        if (done || !isFeed) {
+            return null;
+        }
+        files.clear();
+        it = files.iterator();
+        if (keys.isEmpty()) {
+            close();
+            return null;
+        }
+        // Read new Events (Polling first to add all available files)
+        WatchKey key;
+        key = watcher.poll();
+        while (key != null) {
+            handleEvents(key);
+            if (endOfEvents(key)) {
+                close();
+                return null;
+            }
+            key = watcher.poll();
+        }
+        return null;
+    }
+
+    // take is blocking
+    public synchronized File take() throws IOException {
+        File next = poll();
+        if (next != null) {
+            return next;
+        }
+        if (done || !isFeed) {
+            return null;
+        }
+        // No file was found, wait for the filesystem to push events
+        WatchKey key = null;
+        lock.lock();
+        try {
+            while (!it.hasNext()) {
+                try {
+                    key = watcher.take();
+                } catch (InterruptedException x) {
+                    if (LOGGER.isEnabledFor(Level.WARN)) {
+                        LOGGER.warn("Feed Closed");
+                    }
+                    if (watcher == null) {
+                        return null;
+                    }
+                    continue;
+                } catch (ClosedWatchServiceException e) {
+                    if (LOGGER.isEnabledFor(Level.WARN)) {
+                        LOGGER.warn("The watcher has exited");
+                    }
+                    if (watcher == null) {
+                        return null;
+                    }
+                    continue;
+                }
+                handleEvents(key);
+                if (endOfEvents(key)) {
+                    return null;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        // files were found, re-create the iterator and move it one step
+        return it.next();
     }
 
     private boolean endOfEvents(WatchKey key) {
@@ -212,65 +279,5 @@ public class FileSystemWatcher {
             }
         }
         return false;
-    }
-
-    public boolean hasNext() throws IOException {
-        if (it.hasNext()) {
-            return true;
-        }
-        if (done || !isFeed) {
-            return false;
-        }
-        files.clear();
-        if (keys.isEmpty()) {
-            return false;
-        }
-        // Read new Events (Polling first to add all available files)
-        WatchKey key;
-        key = watcher.poll();
-        while (key != null) {
-            handleEvents(key);
-            if (endOfEvents(key)) {
-                close();
-                return false;
-            }
-            key = watcher.poll();
-        }
-        // No file was found, wait for the filesystem to push events
-        if (controller != null) {
-            controller.flush();
-        }
-        while (files.isEmpty()) {
-            try {
-                key = watcher.take();
-            } catch (InterruptedException x) {
-                if (LOGGER.isEnabledFor(Level.WARN)) {
-                    LOGGER.warn("Feed Closed");
-                }
-                if (watcher == null) {
-                    return false;
-                }
-                continue;
-            } catch (ClosedWatchServiceException e) {
-                if (LOGGER.isEnabledFor(Level.WARN)) {
-                    LOGGER.warn("The watcher has exited");
-                }
-                if (watcher == null) {
-                    return false;
-                }
-                continue;
-            }
-            handleEvents(key);
-            if (endOfEvents(key)) {
-                return false;
-            }
-        }
-        // files were found, re-create the iterator and move it one step
-        it = files.iterator();
-        return it.hasNext();
-    }
-
-    public void setController(AbstractFeedDataFlowController controller) {
-        this.controller = controller;
     }
 }

@@ -70,7 +70,7 @@ public class ParserFactoryProvider {
             case ExternalDataConstants.TEST_RECORD_WITH_PK:
                 return new TestRecordWithPKParserFactory();
             default:
-                throw new AsterixException("Unknown parser " + parser);
+                throw new AsterixException("Unknown format: " + parser);
         }
     }
 }
