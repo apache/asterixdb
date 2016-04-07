@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 
-import org.apache.asterix.runtime.operators.joins.EqualsIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -135,19 +134,22 @@ public class IntervalPartitionUtil {
 
     public static long getStartOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {
         int fieldIndex = 0;
-        long partitionStart = Long.MIN_VALUE;
+        long partitionStart = LongPointable.getLong(rangeMap.getMinByteArray(fieldIndex),
+                rangeMap.getMinStartOffset(fieldIndex) + 1);
         if (partition != 0 && partition <= rangeMap.getSplitCount()) {
             partitionStart = LongPointable.getLong(rangeMap.getByteArray(fieldIndex, partition - 1),
                     rangeMap.getStartOffset(fieldIndex, partition - 1) + 1);
         } else if (partition > rangeMap.getSplitCount()) {
-            partitionStart = Long.MAX_VALUE;
+            partitionStart = LongPointable.getLong(rangeMap.getMaxByteArray(fieldIndex),
+                    rangeMap.getMaxStartOffset(fieldIndex) + 1);
         }
         return partitionStart;
     }
 
     public static long getEndOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {
         int fieldIndex = 0;
-        long partitionEnd = Long.MAX_VALUE;
+        long partitionEnd = LongPointable.getLong(rangeMap.getMaxByteArray(fieldIndex),
+                rangeMap.getMaxStartOffset(fieldIndex) + 1);
         if (partition < rangeMap.getSplitCount()) {
             partitionEnd = LongPointable.getLong(rangeMap.getByteArray(fieldIndex, partition),
                     rangeMap.getStartOffset(fieldIndex, partition) + 1);

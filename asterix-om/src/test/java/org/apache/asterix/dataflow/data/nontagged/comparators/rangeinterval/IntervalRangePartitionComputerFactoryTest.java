@@ -57,6 +57,7 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     private final ISerializerDeserializer<AInterval> intervalSerde = AIntervalSerializerDeserializer.INSTANCE;
     private final Integer64SerializerDeserializer int64Serde = Integer64SerializerDeserializer.INSTANCE;
+    @SuppressWarnings("rawtypes")
     private final ISerializerDeserializer[] SerDers = new ISerializerDeserializer[] {
             AIntervalSerializerDeserializer.INSTANCE };
     private final RecordDescriptor RecordDesc = new RecordDescriptor(SerDers);
@@ -66,22 +67,27 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
     IBinaryRangeComparatorFactory[] BINARY_DESC_COMPARATOR_FACTORIES = new IBinaryRangeComparatorFactory[] {
             IntervalDescRangeBinaryComparatorFactory.INSTANCE };
     /*
-     * The following points (X) will be tested for these 4 partitions.
+     * The following three intervals (+++) will be tested for these 4 partitions.
      *
-     * X-------X----XXX----X----XXX----X----XXX----X-------X
+     *    ----------+++++++++++++++++++++++++++----------
+     *    -----------+++++++++++++++++++++++++-----------
+     *    ------------+++++++++++++++++++++++------------
      *    -----------|-----------|-----------|-----------
-     *
-     * The following points (X) will be tested for these 16 partitions.
-     *
-     * X-------X----XXX----X----XXX----X----XXX----X-------X
+     *     or 16 partitions.
      *    --|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--
      */
+
     private final int FRAME_SIZE = 320;
     private final int INTEGER_LENGTH = Long.BYTES;
 
     private final AInterval[] INTERVALS = new AInterval[] { new AInterval(99, 301, (byte) 16),
             new AInterval(100, 300, (byte) 16), new AInterval(101, 299, (byte) 16) };
     private final int INTERVAL_LENGTH = Byte.BYTES + Long.BYTES + Long.BYTES;
+
+    //map          { 0l, 25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l, 400l };
+    //partitions   {    0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15     };
+    private final Long[] MAP_POINTS = new Long[] { 0l, 25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l,
+            300l, 325l, 350l, 375l, 400l };
 
     @SuppressWarnings("unused")
     private byte[] getIntervalBytes(AInterval[] intervals) throws HyracksDataException {
@@ -97,9 +103,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
             throw new HyracksDataException(e);
         }
     }
-
-    private final Long[] MAP_POINTS = new Long[] { 25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l,
-            325l, 350l, 375l };
 
     private byte[] getIntegerBytes(Long[] integers) throws HyracksDataException {
         try {
@@ -205,12 +208,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionAscProject16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3 };
         results[1] = new int[] { 4 };
@@ -224,12 +221,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionDescProject16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3 };
         results[1] = new int[] { 4 };
@@ -245,12 +236,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionAscProjectEnd16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 12 };
         results[1] = new int[] { 12 };
@@ -264,12 +249,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionDescProjectEnd16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 12 };
         results[1] = new int[] { 12 };
@@ -285,12 +264,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionAscSplit16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
         results[1] = new int[] { 4, 5, 6, 7, 8, 9, 10, 11, 12 };
@@ -304,12 +277,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionDescSplit16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
         results[1] = new int[] { 4, 5, 6, 7, 8, 9, 10, 11, 12 };
@@ -325,12 +292,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionAscReplicate16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
         results[1] = new int[] { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -344,12 +305,6 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
 
     @Test
     public void testFieldRangePartitionDescReplicate16Partitions() throws HyracksDataException {
-
-        //{   0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14 };
-        //{ -25l, 50l, 99l, 100l, 101l, 150l, 199l, 200l, 201l, 250l, 299l, 300l, 301l, 350l, 425l };
-        //{  25l, 50l, 75l, 100l, 125l, 150l, 175l, 200l, 225l, 250l, 275l, 300l, 325l, 350l, 375l };
-        //{ 0,   1,   2,   3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,  15 };
-
         int[][] results = new int[3][];
         results[0] = new int[] { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
         results[1] = new int[] { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
