@@ -45,6 +45,6 @@ public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterE
 
     public List<String> getCollectLocations(FeedConnectionId feedConnectionId);
 
-    boolean isFeedConnectionActive(FeedConnectionId connectionId);
+    boolean isFeedConnectionActive(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber eventSubscriber);
 
 }

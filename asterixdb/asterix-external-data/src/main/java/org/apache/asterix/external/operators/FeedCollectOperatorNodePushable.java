@@ -34,6 +34,7 @@ import org.apache.asterix.external.feed.dataflow.FeedFrameCollector.State;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.message.FeedPartitionStartMessage;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.CollectionRuntime;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
@@ -85,6 +86,10 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
             switch (((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getFeedRuntimeType()) {
                 case INTAKE:
                     handleCompleteConnection();
+                    // Notify CC that Collection started
+                    ctx.sendApplicationMessageToCC(
+                            new FeedPartitionStartMessage(connectionId.getFeedId(), ctx.getJobletContext().getJobId()),
+                            null);
                     break;
                 case COMPUTE:
                     handlePartialConnection();
@@ -93,7 +98,6 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     throw new IllegalStateException("Invalid source type "
                             + ((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getFeedRuntimeType());
             }
-
             State state = collectRuntime.waitTillCollectionOver();
             if (state.equals(State.FINISHED)) {
                 feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId,

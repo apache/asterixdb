@@ -37,7 +37,7 @@ import org.apache.asterix.common.messaging.TakeoverMetadataNodeResponseMessage;
 import org.apache.asterix.common.messaging.TakeoverPartitionsResponseMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
-import org.apache.asterix.external.feed.message.FeedProviderReadyMessage;
+import org.apache.asterix.external.feed.message.FeedPartitionStartMessage;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
@@ -91,8 +91,8 @@ public class CCMessageBroker implements ICCMessageBroker {
     }
 
     private void handleFeedProviderReady(IMessage message) {
-        FeedProviderReadyMessage msg = (FeedProviderReadyMessage) message;
-        FeedLifecycleListener.INSTANCE.notifyProviderReady(msg.getFeedId(), msg.getJobId());
+        FeedPartitionStartMessage msg = (FeedPartitionStartMessage) message;
+        FeedLifecycleListener.INSTANCE.notifyPartitionStart(msg.getFeedId(), msg.getJobId());
     }
 
     private synchronized void handleResourceIdRequest(IMessage message, String nodeId) throws Exception {

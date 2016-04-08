@@ -36,6 +36,7 @@ public class FeedConnectJobInfo extends FeedJobInfo {
     private List<String> collectLocations;
     private List<String> computeLocations;
     private List<String> storageLocations;
+    private int partitionStarts = 0;
 
     public FeedConnectJobInfo(JobId jobId, FeedJobState state, FeedConnectionId connectionId,
             IFeedJoint sourceFeedJoint, IFeedJoint computeFeedJoint, JobSpecification spec,
@@ -89,6 +90,14 @@ public class FeedConnectJobInfo extends FeedJobInfo {
 
     public void setComputeFeedJoint(IFeedJoint computeFeedJoint) {
         this.computeFeedJoint = computeFeedJoint;
+    }
+
+    public void partitionStart() {
+        partitionStarts++;
+    }
+
+    public boolean collectionStarted() {
+        return partitionStarts == collectLocations.size();
     }
 
 }

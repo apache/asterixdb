@@ -27,7 +27,8 @@ public interface IFeedLifecycleEventSubscriber {
         FEED_COLLECT_STARTED,
         FEED_INTAKE_FAILURE,
         FEED_COLLECT_FAILURE,
-        FEED_ENDED
+        FEED_INTAKE_ENDED,
+        FEED_COLLECT_ENDED
     }
 
     public void assertEvent(FeedLifecycleEvent event) throws AsterixException, InterruptedException;

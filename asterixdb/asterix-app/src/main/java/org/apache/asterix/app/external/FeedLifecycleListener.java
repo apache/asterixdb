@@ -112,14 +112,14 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     }
 
     @Override
-    public void notifyJobStart(JobId jobId) throws HyracksException {
+    public synchronized void notifyJobStart(JobId jobId) throws HyracksException {
         if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
             jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.JOB_START));
         }
     }
 
     @Override
-    public void notifyJobFinish(JobId jobId) throws HyracksException {
+    public synchronized void notifyJobFinish(JobId jobId) throws HyracksException {
         if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
             jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.JOB_FINISH));
         } else {
@@ -185,7 +185,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         public enum EventKind {
             JOB_START,
             JOB_FINISH,
-            PROVIDER_READY
+            PARTITION_START
         }
 
         public EventKind eventKind;
@@ -446,12 +446,12 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     }
 
     @Override
-    public boolean isFeedConnectionActive(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.isFeedConnectionActive(connectionId);
+    public synchronized boolean isFeedConnectionActive(FeedConnectionId connectionId,
+            IFeedLifecycleEventSubscriber eventSubscriber) {
+        return feedJobNotificationHandler.isFeedConnectionActive(connectionId, eventSubscriber);
     }
 
     public void reportPartialDisconnection(FeedConnectionId connectionId) {
-        feedJobNotificationHandler.removeFeedJointsPostPipelineTermination(connectionId);
     }
 
     public void registerFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
@@ -503,8 +503,8 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.getFeedCollectJobId(connectionId);
     }
 
-    public void notifyProviderReady(FeedId feedId, JobId jobId) {
-        jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.PROVIDER_READY, feedId));
+    public synchronized void notifyPartitionStart(FeedId feedId, JobId jobId) {
+        jobEventInbox.add(new FeedEvent(jobId, FeedEvent.EventKind.PARTITION_START, feedId));
     }
 
 }

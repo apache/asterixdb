@@ -22,29 +22,19 @@ import org.apache.asterix.external.feed.watch.FeedJobInfo;
 
 public class FeedOperationCounter {
     private FeedJobInfo feedJobInfo;
-    private int providersCount;
-    private int jobsCount;
+    private int partitionCount;
     private boolean failedIngestion = false;
 
-    public FeedOperationCounter(int providersCount, int jobsCount) {
-        this.providersCount = providersCount;
-        this.jobsCount = jobsCount;
+    public FeedOperationCounter(int partitionCount) {
+        this.partitionCount = partitionCount;
     }
 
-    public int getProvidersCount() {
-        return providersCount;
+    public int getPartitionCount() {
+        return partitionCount;
     }
 
-    public void setProvidersCount(int providersCount) {
-        this.providersCount = providersCount;
-    }
-
-    public int getJobsCount() {
-        return jobsCount;
-    }
-
-    public void setJobsCount(int jobsCount) {
-        this.jobsCount = jobsCount;
+    public void setPartitionCount(int partitionCount) {
+        this.partitionCount = partitionCount;
     }
 
     public boolean isFailedIngestion() {

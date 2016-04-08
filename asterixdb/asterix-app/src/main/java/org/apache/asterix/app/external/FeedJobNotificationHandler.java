@@ -81,7 +81,6 @@ public class FeedJobNotificationHandler implements Runnable {
 
     private final LinkedBlockingQueue<FeedEvent> inbox;
     private final Map<FeedConnectionId, List<IFeedLifecycleEventSubscriber>> eventSubscribers;
-
     private final Map<JobId, FeedJobInfo> jobInfos;
     private final Map<FeedId, FeedIntakeInfo> intakeJobInfos;
     private final Map<FeedConnectionId, FeedConnectJobInfo> connectJobInfos;
@@ -100,7 +99,8 @@ public class FeedJobNotificationHandler implements Runnable {
 
     @Override
     public void run() {
-        FeedEvent event;
+        FeedEvent event = null;
+        Thread.currentThread().setName("FeedJobNotificationHandler");
         while (true) {
             try {
                 event = inbox.take();
@@ -111,8 +111,8 @@ public class FeedJobNotificationHandler implements Runnable {
                     case JOB_FINISH:
                         handleJobFinishEvent(event);
                         break;
-                    case PROVIDER_READY:
-                        handleProviderReady(event);
+                    case PARTITION_START:
+                        handlePartitionStart(event);
                         break;
                     default:
                         LOGGER.log(Level.WARNING, "Unknown Feed Event");
@@ -121,7 +121,6 @@ public class FeedJobNotificationHandler implements Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -162,12 +161,11 @@ public class FeedJobNotificationHandler implements Runnable {
 
         if (feedJointsOnPipeline == null) {
             feedJointsOnPipeline = new Pair<FeedOperationCounter, List<IFeedJoint>>(
-                    new FeedOperationCounter(numOfPrividers, 1), new ArrayList<IFeedJoint>());
+                    new FeedOperationCounter(numOfPrividers), new ArrayList<IFeedJoint>());
             feedPipeline.put(feedJoint.getOwnerFeedId(), feedJointsOnPipeline);
             feedJointsOnPipeline.second.add(feedJoint);
         } else {
             if (!feedJointsOnPipeline.second.contains(feedJoint)) {
-                feedJointsOnPipeline.first.setJobsCount(feedJointsOnPipeline.first.getJobsCount() + 1);
                 feedJointsOnPipeline.second.add(feedJoint);
             } else {
                 throw new IllegalArgumentException("Feed joint " + feedJoint + " already registered");
@@ -175,7 +173,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    public void registerFeedIntakeJob(FeedId feedId, JobId jobId, JobSpecification jobSpec)
+    public synchronized void registerFeedIntakeJob(FeedId feedId, JobId jobId, JobSpecification jobSpec)
             throws HyracksDataException {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Feed job already registered");
@@ -207,7 +205,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    public void registerFeedCollectionJob(FeedId sourceFeedId, FeedConnectionId connectionId, JobId jobId,
+    public synchronized void registerFeedCollectionJob(FeedId sourceFeedId, FeedConnectionId connectionId, JobId jobId,
             JobSpecification jobSpec, Map<String, String> feedPolicy) {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Feed job already registered");
@@ -242,7 +240,7 @@ public class FeedJobNotificationHandler implements Runnable {
 
     }
 
-    public void deregisterFeedIntakeJob(JobId jobId) {
+    public synchronized void deregisterFeedIntakeJob(JobId jobId) {
         if (jobInfos.get(jobId) == null) {
             throw new IllegalStateException(" Feed Intake job not registered ");
         }
@@ -266,7 +264,7 @@ public class FeedJobNotificationHandler implements Runnable {
 
     }
 
-    private void handleJobStartEvent(FeedEvent message) throws Exception {
+    private synchronized void handleJobStartEvent(FeedEvent message) throws Exception {
         FeedJobInfo jobInfo = jobInfos.get(message.jobId);
         switch (jobInfo.getJobType()) {
             case INTAKE:
@@ -279,7 +277,7 @@ public class FeedJobNotificationHandler implements Runnable {
 
     }
 
-    private void handleJobFinishEvent(FeedEvent message) throws Exception {
+    private synchronized void handleJobFinishEvent(FeedEvent message) throws Exception {
         FeedJobInfo jobInfo = jobInfos.get(message.jobId);
         switch (jobInfo.getJobType()) {
             case INTAKE:
@@ -297,14 +295,27 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    private void handleProviderReady(FeedEvent message) {
-        FeedIntakeInfo jobInfo = (FeedIntakeInfo) jobInfos.get(message.jobId);
-        Pair<FeedOperationCounter, List<IFeedJoint>> feedCounter = feedPipeline.get(message.feedId);
-        feedCounter.first.setProvidersCount(feedCounter.first.getProvidersCount() - 1);;
-        if (feedCounter.first.getProvidersCount() == 0) {
-            jobInfo.getIntakeFeedJoint().setState(State.ACTIVE);
-            jobInfo.setState(FeedJobState.ACTIVE);
-            notifyFeedEventSubscribers(jobInfo, FeedLifecycleEvent.FEED_INTAKE_STARTED);
+    private synchronized void handlePartitionStart(FeedEvent message) {
+        FeedJobInfo jobInfo = jobInfos.get(message.jobId);
+        switch (jobInfo.getJobType()) {
+            case FEED_CONNECT:
+                ((FeedConnectJobInfo) jobInfo).partitionStart();
+                if (((FeedConnectJobInfo) jobInfo).collectionStarted()) {
+                    notifyFeedEventSubscribers(jobInfo, FeedLifecycleEvent.FEED_COLLECT_STARTED);
+                }
+                break;
+            case INTAKE:
+                Pair<FeedOperationCounter, List<IFeedJoint>> feedCounter = feedPipeline.get(message.feedId);
+                feedCounter.first.setPartitionCount(feedCounter.first.getPartitionCount() - 1);;
+                if (feedCounter.first.getPartitionCount() == 0) {
+                    ((FeedIntakeInfo) jobInfo).getIntakeFeedJoint().setState(State.ACTIVE);
+                    jobInfo.setState(FeedJobState.ACTIVE);
+                    notifyFeedEventSubscribers(jobInfo, FeedLifecycleEvent.FEED_INTAKE_STARTED);
+                }
+                break;
+            default:
+                break;
+
         }
     }
 
@@ -335,9 +346,7 @@ public class FeedJobNotificationHandler implements Runnable {
     private void handleCollectJobStartMessage(FeedConnectJobInfo cInfo) throws RemoteException, ACIDException {
         // set locations of feed sub-operations (intake, compute, store)
         setLocations(cInfo);
-
         Pair<FeedOperationCounter, List<IFeedJoint>> pair = feedPipeline.get(cInfo.getConnectionId().getFeedId());
-        pair.first.setJobsCount(pair.first.getJobsCount() + 1);
         // activate joints
         List<IFeedJoint> joints = pair.second;
         for (IFeedJoint joint : joints) {
@@ -351,8 +360,6 @@ public class FeedJobNotificationHandler implements Runnable {
         cInfo.setState(FeedJobState.ACTIVE);
         // register activity in metadata
         registerFeedActivity(cInfo);
-        // notify event listeners
-        notifyFeedEventSubscribers(cInfo, FeedLifecycleEvent.FEED_COLLECT_STARTED);
     }
 
     private void notifyFeedEventSubscribers(FeedJobInfo jobInfo, FeedLifecycleEvent event) {
@@ -375,6 +382,9 @@ public class FeedJobNotificationHandler implements Runnable {
                 for (IFeedLifecycleEventSubscriber subscriber : subscribers) {
                     subscriber.handleFeedEvent(event);
                 }
+            }
+            if (event == FeedLifecycleEvent.FEED_COLLECT_ENDED) {
+                eventSubscribers.remove(connId);
             }
         }
     }
@@ -416,12 +426,17 @@ public class FeedJobNotificationHandler implements Runnable {
         return activeConnections;
     }
 
-    public boolean isFeedConnectionActive(FeedConnectionId connectionId) {
+    public synchronized boolean isFeedConnectionActive(FeedConnectionId connectionId,
+            IFeedLifecycleEventSubscriber eventSubscriber) {
+        boolean active = false;
         FeedConnectJobInfo cInfo = connectJobInfos.get(connectionId);
         if (cInfo != null) {
-            return cInfo.getState().equals(FeedJobState.ACTIVE);
+            active = cInfo.getState().equals(FeedJobState.ACTIVE);
         }
-        return false;
+        if (active) {
+            registerFeedEventSubscriber(connectionId, eventSubscriber);
+        }
+        return active;
     }
 
     public void setJobState(FeedConnectionId connectionId, FeedJobState jobState) {
@@ -433,28 +448,26 @@ public class FeedJobNotificationHandler implements Runnable {
         return connectJobInfos.get(connectionId).getState();
     }
 
-    private void handleFeedIntakeJobFinishMessage(FeedIntakeInfo intakeInfo, FeedEvent message) throws Exception {
+    private synchronized void handleFeedIntakeJobFinishMessage(FeedIntakeInfo intakeInfo, FeedEvent message)
+            throws Exception {
         IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
         JobInfo info = hcc.getJobInfo(message.jobId);
         JobStatus status = info.getStatus();
         FeedId feedId = intakeInfo.getFeedId();
         Pair<FeedOperationCounter, List<IFeedJoint>> pair = feedPipeline.get(feedId);
-        pair.first.setJobsCount(pair.first.getJobsCount() - 1);
         if (status.equals(JobStatus.FAILURE)) {
             pair.first.setFailedIngestion(true);
         }
         // remove feed joints
         deregisterFeedIntakeJob(message.jobId);
-
         // notify event listeners
-        if (pair.first.getJobsCount() == 0) {
-            feedPipeline.remove(feedId);
-            notifyFeedEventSubscribers(intakeInfo, pair.first.isFailedIngestion()
-                    ? FeedLifecycleEvent.FEED_INTAKE_FAILURE : FeedLifecycleEvent.FEED_ENDED);
-        }
+        feedPipeline.remove(feedId);
+        intakeJobInfos.remove(feedId);
+        notifyFeedEventSubscribers(intakeInfo, pair.first.isFailedIngestion() ? FeedLifecycleEvent.FEED_INTAKE_FAILURE
+                : FeedLifecycleEvent.FEED_INTAKE_ENDED);
     }
 
-    private void handleFeedCollectJobFinishMessage(FeedConnectJobInfo cInfo) throws Exception {
+    private synchronized void handleFeedCollectJobFinishMessage(FeedConnectJobInfo cInfo) throws Exception {
         FeedConnectionId connectionId = cInfo.getConnectionId();
 
         IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
@@ -462,8 +475,6 @@ public class FeedJobNotificationHandler implements Runnable {
         JobStatus status = info.getStatus();
         boolean failure = status != null && status.equals(JobStatus.FAILURE);
         FeedPolicyAccessor fpa = new FeedPolicyAccessor(cInfo.getFeedPolicy());
-
-        boolean removeJobHistory = !failure;
         boolean retainSubsription = cInfo.getState().equals(FeedJobState.UNDER_RECOVERY)
                 || (failure && fpa.continueOnHardwareFailure());
 
@@ -474,27 +485,15 @@ public class FeedJobNotificationHandler implements Runnable {
                 LOGGER.info(
                         "Subscription " + cInfo.getConnectionId() + " completed successfully. Removed subscription");
             }
-            removeFeedJointsPostPipelineTermination(cInfo.getConnectionId());
         }
 
-        if (removeJobHistory) {
-            connectJobInfos.remove(connectionId);
-            jobInfos.remove(cInfo.getJobId());
-            feedIntakeProgressTrackers.remove(cInfo.getConnectionId());
-        }
+        connectJobInfos.remove(connectionId);
+        jobInfos.remove(cInfo.getJobId());
+        feedIntakeProgressTrackers.remove(cInfo.getConnectionId());
         deregisterFeedActivity(cInfo);
-
-        Pair<FeedOperationCounter, List<IFeedJoint>> pair = feedPipeline
-                .get(cInfo.getSourceFeedJoint().getFeedJointKey().getFeedId());
-        pair.first.setJobsCount(pair.first.getJobsCount() - 1);
-        if (pair.first.getJobsCount() == 0) {
-            notifyFeedEventSubscribers(pair.first.getFeedJobInfo(), pair.first.isFailedIngestion()
-                    ? FeedLifecycleEvent.FEED_INTAKE_FAILURE : FeedLifecycleEvent.FEED_ENDED);
-            feedPipeline.remove(cInfo.getSourceFeedJoint().getFeedJointKey().getFeedId());
-        }
-
         // notify event listeners
-        FeedLifecycleEvent event = failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE : FeedLifecycleEvent.FEED_ENDED;
+        FeedLifecycleEvent event = failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE
+                : FeedLifecycleEvent.FEED_COLLECT_ENDED;
         notifyFeedEventSubscribers(cInfo, event);
     }
 
@@ -547,23 +546,6 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    public void removeFeedJointsPostPipelineTermination(FeedConnectionId connectionId) {
-        FeedConnectJobInfo cInfo = connectJobInfos.get(connectionId);
-        List<IFeedJoint> feedJoints = feedPipeline.get(connectionId.getFeedId()).second;
-
-        IFeedJoint sourceJoint = cInfo.getSourceFeedJoint();
-        List<FeedConnectionId> all = sourceJoint.getReceivers();
-        boolean removeSourceJoint = all.size() < 2;
-        if (removeSourceJoint) {
-            feedJoints.remove(sourceJoint);
-        }
-
-        IFeedJoint computeJoint = cInfo.getComputeFeedJoint();
-        if (computeJoint != null && computeJoint.getReceivers().size() < 2) {
-            feedJoints.remove(computeJoint);
-        }
-    }
-
     public boolean isRegisteredFeedJob(JobId jobId) {
         return jobInfos.get(jobId) != null;
     }
@@ -594,7 +576,8 @@ public class FeedJobNotificationHandler implements Runnable {
         return connectJobInfos.get(connectionId).getJobId();
     }
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
+    public synchronized void registerFeedEventSubscriber(FeedConnectionId connectionId,
+            IFeedLifecycleEventSubscriber subscriber) {
         List<IFeedLifecycleEventSubscriber> subscribers = eventSubscribers.get(connectionId);
         if (subscribers == null) {
             subscribers = new ArrayList<IFeedLifecycleEventSubscriber>();
@@ -610,7 +593,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    //============================
+    // ============================
 
     public boolean isFeedPointAvailable(FeedJointKey feedJointKey) {
         List<IFeedJoint> joints = feedPipeline.containsKey(feedJointKey.getFeedId())
