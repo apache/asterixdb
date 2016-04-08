@@ -385,6 +385,11 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 throw new HyracksDataException("Unknown Expression type detected: " + tree.getKind());
         }
 
+        if (fieldType != null) {
+            if (NonTaggedFormatUtil.isOptional(fieldType)) {
+                fieldType = ((AUnionType) fieldType).getNullableType();
+            }
+        }
         switch (val.getValueType()) {
             case ABSOLUTE_TIME_VALUE:
                 if (checkType(ATypeTag.DATETIME, fieldType)) {
