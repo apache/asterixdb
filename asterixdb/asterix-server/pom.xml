@@ -50,6 +50,7 @@
             ${project.build.directory}/appassembler
           </assembleDirectory>
           <repositoryLayout>flat</repositoryLayout>
+          <useWildcardClassPath>true</useWildcardClassPath>
           <programs>
             <program>
               <platforms>
@@ -128,6 +129,24 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>opt-modules</id>
+      <activation>
+        <file>
+          <exists>../asterix-opt/pom.xml</exists>
+        </file>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.asterix</groupId>
+          <artifactId>asterix-opt-bom</artifactId>
+          <version>0.1-SNAPSHOT</version>
+          <type>pom</type>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
   <dependencies>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>

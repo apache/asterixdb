@@ -290,6 +290,17 @@
 
     <profiles>
         <profile>
+            <id>opt-modules</id>
+            <activation>
+              <file>
+                <exists>asterix-opt/pom.xml</exists>
+              </file>
+            </activation>
+            <modules>
+                <module>asterix-opt</module>
+            </modules>
+        </profile>
+        <profile>
             <id>slow-aql-tests</id>
             <properties>
                 <runSlowAQLTests>true</runSlowAQLTests>

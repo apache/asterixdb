@@ -55,3 +55,6 @@ tmp
 dist
 *.iml
 .idea/
+asterixdb/asterix-opt
+*~
+
