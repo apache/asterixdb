@@ -26,7 +26,7 @@ use dataverse TinyCollege;
 
 for $f in dataset Staff
 for $d in dataset Students
-where /*+ interval-merge-join [11000, 12000, 14000] */ interval-meets($f.employment, $d.attendance)
+where /*+ interval-merge-join [10000, 11000, 12000, 14000, 15000] */ interval-meets($f.employment, $d.attendance)
 /*+ range ["F", "L", "R"] */
 order by $f.name, $d.name
 return { "staff" : $f.name, "student" : $d.name }
