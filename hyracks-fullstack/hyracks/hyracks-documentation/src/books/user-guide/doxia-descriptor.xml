@@ -1,0 +1,75 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+
+<book xmlns="http://maven.apache.org/BOOK/1.0.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://maven.apache.org/BOOK/1.0.0 ../../../doxia/doxia-book/target/generated-site/xsd/book-1.0.0.xsd">
+  <id>user-guide</id>
+  <title>Hyracks User Guide</title>
+  <chapters>
+    <chapter>
+      <id>introduction</id>
+      <title>Introduction</title>
+      <sections>
+        <section>
+          <id>sec-introduction-whatis</id>
+          <title>What is Hyracks?</title>
+          <file>sec-introduction-whatis.apt</file>
+        </section>
+        <section>
+          <id>sec-introduction-overview</id>
+          <title>Hyracks Overview</title>
+          <file>sec-introduction-overview.apt</file>
+        </section>
+      </sections>
+    </chapter>
+    <chapter>
+      <id>concepts</id>
+      <title>Hyracks Concepts</title>
+      <sections>
+        <section>
+          <id>sec-concepts-terminology</id>
+          <title>Terminology</title>
+          <file>sec-concepts-terminology.apt</file>
+        </section>
+        <section>
+          <id>sec-concepts-applications</id>
+          <title>Hyracks Applications</title>
+          <file>sec-concepts-applications.apt</file>
+        </section>
+      </sections>
+    </chapter>
+    <chapter>
+      <id>hyrackscli</id>
+      <title>Hyracks Command Line Interface</title>
+      <sections>
+        <section>
+          <id>sec-hyrackscli-running</id>
+          <title>Running the Hyracks CLI</title>
+          <file>sec-hyrackscli-running.apt</file>
+        </section>
+        <section>
+          <id>sec-hyrackscli-commands</id>
+          <title>Hyracks CLI Commands</title>
+          <file>sec-hyrackscli-commands.apt</file>
+        </section>
+      </sections>
+    </chapter>
+  </chapters>
+</book>

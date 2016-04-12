@@ -46,22 +46,13 @@ Additionally to run all the integration tests you should be running `sshd` local
 
 Instructions for building the master:
 
-* Checkout Hyracks master:
-
-        $git clone https://github.com/apache/incubator-asterixdb-hyracks.git
-
 * Checkout AsterixDB master:
 
         $git clone https://github.com/apache/incubator-asterixdb.git
 
-* Build and install Hyracks master to maven local repo:
-
-        $cd hyracks
-        $mvn clean install -DskipTests
-
 * Build AsterixDB master:
 
-        $cd ../asterixdb
+        $cd incubator-asterixdb
         $mvn clean package -DskipTests
 
 
@@ -74,7 +65,7 @@ Here are steps to get AsterixDB running on your machine:
 
 * Copy AsterixDB binary artifact into the installer directory and unzip it:
 
-        $cp asterix-installer/target/asterix-installer-*-binary-assembly.zip ~/managix/
+        $cp asterixdb/asterix-installer/target/asterix-installer-*-binary-assembly.zip ~/managix/
         $cd ~/managix
         $unzip asterix-installer-*-binary-assembly.zip
 

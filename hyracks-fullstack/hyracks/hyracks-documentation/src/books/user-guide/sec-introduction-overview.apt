@@ -1,0 +1,29 @@
+ ~~ Licensed to the Apache Software Foundation (ASF) under one
+ ~~ or more contributor license agreements.  See the NOTICE file
+ ~~ distributed with this work for additional information
+ ~~ regarding copyright ownership.  The ASF licenses this file
+ ~~ to you under the Apache License, Version 2.0 (the
+ ~~ "License"); you may not use this file except in compliance
+ ~~ with the License.  You may obtain a copy of the License at
+ ~~
+ ~~   http://www.apache.org/licenses/LICENSE-2.0
+ ~~
+ ~~ Unless required by applicable law or agreed to in writing,
+ ~~ software distributed under the License is distributed on an
+ ~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~~ KIND, either express or implied.  See the License for the
+ ~~ specific language governing permissions and limitations
+ ~~ under the License.
+
+Hyracks Overview
+
+  Hyracks employs a client-server architecture. On the server side, the software module that is responsible for interacting with clients, keeping track of and dispatching work
+  to other machines in the cluster is called the Hyracks Cluster Controller (CC). There is one CC per logical Hyracks cluster. The module that executes on the worker machine
+  and interacts with the CC to receive work and act on it, is called the Hyracks Node Controller (NC). Every NC in a single Hyracks cluster has a unique logical name. When an
+  NC is started, it is provided the address of the CC whose cluster it must join. Although it is sufficient to run one instance of the NC on a physical machine, it is possible
+  to run multiple instances of NCs (ofcourse each NC has a different logical name) on the same physical machine -- often used for simulating a cluster on a single machine
+  to facilitate testing.
+
+  Hyracks clients interact solely with the CC when submitting their jobs. A Hyracks Job is the unit of work that a client can execute on the Hyracks cluster. A job is expressed
+  as a directed acyclic graph (DAG) of Operators connected to each other by means of Connectors. A more detailed description of jobs, operators, and connectors follows in
+  chapter "Hyracks Concepts".
