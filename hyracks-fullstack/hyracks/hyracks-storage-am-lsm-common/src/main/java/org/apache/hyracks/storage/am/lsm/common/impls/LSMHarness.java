@@ -200,6 +200,25 @@ public class LSMHarness implements ILSMHarness {
         try {
             synchronized (opTracker) {
                 try {
+
+                    /**
+                     * [flow control]
+                     * If merge operations are lagged according to the merge policy,
+                     * flushing in-memory components are hold until the merge operation catches up.
+                     * See PrefixMergePolicy.isMergeLagging() for more details.
+                     */
+                    if (opType == LSMOperationType.FLUSH) {
+                        while (mergePolicy.isMergeLagging(lsmIndex)) {
+                            try {
+                                opTracker.wait();
+                            } catch (InterruptedException e) {
+                                //ignore
+                            }
+                        }
+                    } else if (opType == LSMOperationType.MERGE) {
+                        opTracker.notifyAll();
+                    }
+
                     int i = 0;
                     // First check if there is any action that is needed to be taken based on the state of each component.
                     for (ILSMComponent c : ctx.getComponentHolder()) {

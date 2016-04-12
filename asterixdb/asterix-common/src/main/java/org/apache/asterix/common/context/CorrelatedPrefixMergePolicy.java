@@ -46,13 +46,13 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
     private final int datasetID;
 
     public CorrelatedPrefixMergePolicy(IIndexLifecycleManager datasetLifecycleManager, int datasetID) {
-        this.datasetLifecycleManager = (DatasetLifecycleManager)datasetLifecycleManager;
+        this.datasetLifecycleManager = (DatasetLifecycleManager) datasetLifecycleManager;
         this.datasetID = datasetID;
     }
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
-            IndexException {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested)
+            throws HyracksDataException, IndexException {
         // This merge policy will only look at primary indexes in order to evaluate if a merge operation is needed. If it decides that
         // a merge operation is needed, then it will merge *all* the indexes that belong to the dataset. The criteria to decide if a merge
         // is needed is the same as the one that is used in the prefix merge policy:
@@ -113,8 +113,8 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
                     // Reverse the components order back to its original order
                     Collections.reverse(mergableComponents);
 
-                    ILSMIndexAccessor accessor = lsmIndex.createAccessor(
-                            NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                    ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                            NoOpOperationCallback.INSTANCE);
                     accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
                 }
                 break;
@@ -126,5 +126,11 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
     public void configure(Map<String, String> properties) {
         maxMergableComponentSize = Long.parseLong(properties.get("max-mergable-component-size"));
         maxToleranceComponentCount = Integer.parseInt(properties.get("max-tolerance-component-count"));
+    }
+
+    @Override
+    public boolean isMergeLagging(ILSMIndex index) {
+        //TODO implement properly according to the merge policy
+        return false;
     }
 }

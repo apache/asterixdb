@@ -28,13 +28,18 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 public class NoMergePolicy implements ILSMMergePolicy {
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
-            IndexException {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested)
+            throws HyracksDataException, IndexException {
         // Do nothing
     }
 
     @Override
     public void configure(Map<String, String> properties) {
         // Do nothing
+    }
+
+    @Override
+    public boolean isMergeLagging(ILSMIndex index) {
+        return false;
     }
 }
