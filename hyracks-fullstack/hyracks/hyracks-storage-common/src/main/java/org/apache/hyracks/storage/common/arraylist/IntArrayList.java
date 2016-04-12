@@ -17,16 +17,18 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.common.ophelpers;
+package org.apache.hyracks.storage.common.arraylist;
 
-public class DoubleArrayList {
-    private double[] data;
+import org.apache.hyracks.api.storage.IGrowableIntArray;
+
+public class IntArrayList implements IGrowableIntArray {
+    private int[] data;
     private int size;
     private int first;
     private final int growth;
 
-    public DoubleArrayList(int initialCapacity, int growth) {
-        data = new double[initialCapacity];
+    public IntArrayList(int initialCapacity, int growth) {
+        data = new int[initialCapacity];
         size = 0;
         first = 0;
         this.growth = growth;
@@ -40,9 +42,9 @@ public class DoubleArrayList {
         return first;
     }
 
-    public void add(double i) {
+    public void add(int i) {
         if (size == data.length) {
-            double[] newData = new double[data.length + growth];
+            int[] newData = new int[data.length + growth];
             System.arraycopy(data, 0, newData, 0, data.length);
             data = newData;
         }
@@ -50,8 +52,8 @@ public class DoubleArrayList {
         data[size++] = i;
     }
 
-    public void addFirst(double i) {
-        double[] newData = new double[data.length + 1];
+    public void addFirst(int i) {
+        int[] newData = new int[data.length + 1];
         System.arraycopy(data, 0, newData, 0, first);
         System.arraycopy(data, first, newData, first + 1, size - first);
         data = newData;
@@ -65,11 +67,11 @@ public class DoubleArrayList {
     }
 
     // WARNING: caller is responsible for checking size > 0
-    public double getLast() {
+    public int getLast() {
         return data[size - 1];
     }
 
-    public double get(int i) {
+    public int get(int i) {
         return data[i];
     }
 
@@ -79,7 +81,7 @@ public class DoubleArrayList {
 
     }
 
-    public double getFirst() {
+    public int getFirst() {
         return data[first];
     }
 

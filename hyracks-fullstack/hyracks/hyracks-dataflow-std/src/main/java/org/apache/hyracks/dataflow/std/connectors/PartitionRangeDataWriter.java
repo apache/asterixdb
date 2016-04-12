@@ -35,7 +35,7 @@ public class PartitionRangeDataWriter extends AbstractPartitionDataWriter {
 
     public PartitionRangeDataWriter(IHyracksTaskContext ctx, int consumerPartitionCount,
             IPartitionWriterFactory pwFactory, RecordDescriptor recordDescriptor, ITupleRangePartitionComputer tpc)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         super(ctx, consumerPartitionCount, pwFactory, recordDescriptor);
         this.tpc = tpc;
         this.map = new IntArrayList(8, 8);

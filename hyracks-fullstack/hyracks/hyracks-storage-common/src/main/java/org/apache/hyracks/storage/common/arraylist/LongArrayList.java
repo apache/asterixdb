@@ -17,16 +17,16 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.common.ophelpers;
+package org.apache.hyracks.storage.common.arraylist;
 
-public class IntArrayList {
-    private int[] data;
+public class LongArrayList {
+    private long[] data;
     private int size;
     private int first;
     private final int growth;
 
-    public IntArrayList(int initialCapacity, int growth) {
-        data = new int[initialCapacity];
+    public LongArrayList(int initialCapacity, int growth) {
+        data = new long[initialCapacity];
         size = 0;
         first = 0;
         this.growth = growth;
@@ -40,23 +40,23 @@ public class IntArrayList {
         return first;
     }
 
-    public void add(int i) {
-        if (size == data.length) {
-            int[] newData = new int[data.length + growth];
-            System.arraycopy(data, 0, newData, 0, data.length);
-            data = newData;
-        }
-
-        data[size++] = i;
-    }
-
-    public void addFirst(int i) {
-        int[] newData = new int[data.length + 1];
+    public void addFirst(long i) {
+        long[] newData = new long[data.length + 1];
         System.arraycopy(data, 0, newData, 0, first);
         System.arraycopy(data, first, newData, first + 1, size - first);
         data = newData;
         data[first] = i;
         size++;
+    }
+
+    public void add(long i) {
+        if (size == data.length) {
+            long[] newData = new long[data.length + growth];
+            System.arraycopy(data, 0, newData, 0, data.length);
+            data = newData;
+        }
+
+        data[size++] = i;
     }
 
     public void removeLast() {
@@ -65,21 +65,21 @@ public class IntArrayList {
     }
 
     // WARNING: caller is responsible for checking size > 0
-    public int getLast() {
+    public long getLast() {
         return data[size - 1];
     }
 
-    public int get(int i) {
+    public long get(int i) {
         return data[i];
     }
 
     // WARNING: caller is responsible for checking i < size
-    public void set(int i, int value) {
+    public void set(int i, long value) {
         data[i] = value;
 
     }
 
-    public int getFirst() {
+    public long getFirst() {
         return data[first];
     }
 
