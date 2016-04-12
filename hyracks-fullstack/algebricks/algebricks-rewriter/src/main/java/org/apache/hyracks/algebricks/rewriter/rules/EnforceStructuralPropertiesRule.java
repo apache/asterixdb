@@ -51,7 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
@@ -59,9 +59,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemorySta
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
@@ -83,12 +83,14 @@ import org.apache.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
@@ -496,6 +498,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
         op.getInputs().set(i, topOp);
         OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) topOp.getValue(), context);
+        OperatorManipulationUtil.setOperatorMode(op);
         printOp((AbstractLogicalOperator) topOp.getValue());
     }
 
@@ -540,7 +543,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                         if (op.getAnnotations().containsKey(OperatorAnnotations.USE_RANGE_CONNECTOR)) {
                             IRangeMap rangeMap = (IRangeMap) op.getAnnotations()
                                     .get(OperatorAnnotations.USE_RANGE_CONNECTOR);
-                            pop = new RangePartitionMergePOperator(ordCols, domain, rangeMap);
+                            pop = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeMap,
+                                    RangePartitioningType.PROJECT);
                         } else {
                             OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
                             sortColumns = ordCols.toArray(sortColumns);
@@ -573,18 +577,37 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     break;
                 }
                 case ORDERED_PARTITIONED: {
-                    pop = new RangePartitionPOperator(((OrderedPartitionedProperty) pp).getOrderColumns(), domain,
-                            null);
+                    OrderedPartitionedProperty opp = (OrderedPartitionedProperty) pp;
+                    List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
+                    List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
+                    boolean propWasSet = false;
+                    pop = null;
+                    if (reqdLocals != null && cldLocals != null && allAreOrderProps(cldLocals)) {
+                        AbstractLogicalOperator c = (AbstractLogicalOperator) op.getInputs().get(i).getValue();
+                        Map<LogicalVariable, EquivalenceClass> ecs = context.getEquivalenceClassMap(c);
+                        List<FunctionalDependency> fds = context.getFDList(c);
+                        if (PropertiesUtil.matchLocalProperties(reqdLocals, cldLocals, ecs, fds)) {
+                            List<OrderColumn> orderColumns = getOrderColumnsFromGroupingProperties(reqdLocals,
+                                    cldLocals);
+                            pop = new RangePartitionMergeExchangePOperator(orderColumns, domain, opp.getRangeMap(),
+                                    opp.getRangePartitioningType());
+                            propWasSet = true;
+                        }
+                    }
+                    if (!propWasSet) {
+                        pop = new RangePartitionExchangePOperator(opp.getOrderColumns(), domain, opp.getRangeMap(),
+                                opp.getRangePartitioningType());
+                    }
                     break;
                 }
                 case BROADCAST: {
-                    pop = new BroadcastPOperator(domain);
+                    pop = new BroadcastExchangePOperator(domain);
                     break;
                 }
                 case RANDOM: {
                     RandomPartitioningProperty rpp = (RandomPartitioningProperty) pp;
                     INodeDomain nd = rpp.getNodeDomain();
-                    pop = new RandomPartitionPOperator(nd);
+                    pop = new RandomPartitionExchangePOperator(nd);
                     break;
                 }
                 default: {

@@ -18,10 +18,7 @@
  */
 package org.apache.hyracks.dataflow.common.data.partition.range;
 
-import org.apache.hyracks.data.std.api.IPointable;
-
 public interface IRangeMap {
-    public IPointable getFieldSplit(int columnIndex, int splitIndex);
 
     public int getSplitCount();
 
@@ -32,4 +29,22 @@ public interface IRangeMap {
     public int getLength(int columnIndex, int splitIndex);
 
     public int getTag(int columnIndex, int splitIndex);
+
+    // Min value functions
+    public byte[] getMinByteArray(int columnIndex);
+
+    public int getMinStartOffset(int columnIndex);
+
+    public int getMinLength(int columnIndex);
+
+    public int getMinTag(int columnIndex);
+
+    // Max value functions
+    public byte[] getMaxByteArray(int columnIndex);
+
+    public int getMaxStartOffset(int columnIndex);
+
+    public int getMaxLength(int columnIndex);
+
+    public int getMaxTag(int columnIndex);
 }

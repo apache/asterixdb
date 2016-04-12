@@ -20,8 +20,13 @@ package org.apache.hyracks.algebricks.data;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
+import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public interface IBinaryComparatorFactoryProvider {
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending)
             throws AlgebricksException;
+
+    public IBinaryRangeComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
+            RangePartitioningType rangeType) throws AlgebricksException;
 }

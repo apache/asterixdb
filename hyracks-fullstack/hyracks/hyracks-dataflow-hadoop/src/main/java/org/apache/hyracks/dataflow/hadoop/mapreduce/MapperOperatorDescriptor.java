@@ -157,7 +157,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                             }
                             tb.addFieldEndOffset();
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                appender.flush(writer, true);
+                                appender.write(writer, true);
                                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                                     throw new IllegalStateException();
                                 }
@@ -167,7 +167,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
 
                     @Override
                     public void close() throws HyracksDataException {
-                        appender.flush(writer, true);
+                        appender.write(writer, true);
                     }
 
                     @Override
@@ -198,7 +198,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                             value.write(dos);
                             tb.addFieldEndOffset();
                             if (!fta.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                fta.flush(outputWriter, true);
+                                fta.write(outputWriter, true);
                                 if (!fta.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                                     throw new IllegalStateException();
                                 }
@@ -207,7 +207,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
 
                         @Override
                         public void close(TaskAttemptContext context) throws IOException, InterruptedException {
-                            fta.flush(outputWriter, true);
+                            fta.write(outputWriter, true);
                         }
                     };
                     delegatingWriter = new ReduceWriter<K2, V2, K2, V2>(ctx, helper,

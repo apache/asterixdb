@@ -110,10 +110,10 @@ public class FrameSorterMergeSort extends AbstractFrameSorter {
     }
 
     private void copy(int src, int dest) {
-        tPointersTemp[dest * 4] = tPointers[src * 4];
-        tPointersTemp[dest * 4 + 1] = tPointers[src * 4 + 1];
-        tPointersTemp[dest * 4 + 2] = tPointers[src * 4 + 2];
-        tPointersTemp[dest * 4 + 3] = tPointers[src * 4 + 3];
+        tPointersTemp[dest * 4 + ID_FRAMEID] = tPointers[src * 4 + ID_FRAMEID];
+        tPointersTemp[dest * 4 + ID_TUPLE_START] = tPointers[src * 4 + ID_TUPLE_START];
+        tPointersTemp[dest * 4 + ID_TUPLE_END] = tPointers[src * 4 + ID_TUPLE_END];
+        tPointersTemp[dest * 4 + ID_NORMAL_KEY] = tPointers[src * 4 + ID_NORMAL_KEY];
     }
 
 }
