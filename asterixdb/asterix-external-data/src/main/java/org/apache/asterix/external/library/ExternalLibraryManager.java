@@ -18,8 +18,13 @@
  */
 package org.apache.asterix.external.library;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class ExternalLibraryManager {
 
@@ -34,17 +39,27 @@ public class ExternalLibraryManager {
     public static void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
-            if (libraryClassLoaders.get(dataverseName) != null) {
+            if (libraryClassLoaders.get(key) != null) {
                 throw new IllegalStateException("Library class loader already registered!");
             }
             libraryClassLoaders.put(key, classLoader);
         }
     }
 
+    public static List<Pair<String, String>> getAllLibraries() {
+        ArrayList<Pair<String, String>> libs = new ArrayList<>();
+        synchronized (libraryClassLoaders) {
+            for (Entry<String, ClassLoader> entry : libraryClassLoaders.entrySet()) {
+                libs.add(getDataverseAndLibararyName(entry.getKey()));;
+            }
+        }
+        return libs;
+    }
+
     public static void deregisterLibraryClassLoader(String dataverseName, String libraryName) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
-            if (libraryClassLoaders.get(dataverseName) != null) {
+            if (libraryClassLoaders.get(key) != null) {
                 libraryClassLoaders.remove(key);
             }
         }
@@ -52,13 +67,18 @@ public class ExternalLibraryManager {
 
     public static ClassLoader getLibraryClassLoader(String dataverseName, String libraryName) {
         String key = getKey(dataverseName, libraryName);
-        synchronized (libraryClassLoaders) {
-            return libraryClassLoaders.get(key);
-        }
+        return libraryClassLoaders.get(key);
     }
 
     private static String getKey(String dataverseName, String libraryName) {
         return dataverseName + "." + libraryName;
+    }
+
+    private static Pair<String, String> getDataverseAndLibararyName(String key) {
+        int index = key.indexOf(".");
+        String dataverse = key.substring(0, index);
+        String library = key.substring(index + 1);
+        return new Pair<String, String>(dataverse, library);
     }
 
 }

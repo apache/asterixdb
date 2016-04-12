@@ -102,6 +102,7 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
+        TestLibrarian.cleanup();
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
     }
 }

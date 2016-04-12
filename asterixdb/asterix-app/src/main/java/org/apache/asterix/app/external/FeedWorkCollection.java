@@ -99,7 +99,6 @@ public class FeedWorkCollection {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
                         LOGGER.severe("Exception in executing " + request);
                     }
-                    throw new RuntimeException(e);
                 }
             }
         }

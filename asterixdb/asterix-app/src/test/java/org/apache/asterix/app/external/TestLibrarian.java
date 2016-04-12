@@ -22,12 +22,15 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.test.aql.ITestLibrarian;
 import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TestLibrarian implements ITestLibrarian {
@@ -64,6 +67,7 @@ public class TestLibrarian implements ITestLibrarian {
     @Override
     public void uninstall(String dvName, String libName) throws RemoteException, AsterixException, ACIDException {
         ExternalLibraryUtils.uninstallLibrary(dvName, libName);
+        ExternalLibraryManager.deregisterLibraryClassLoader(dvName, libName);
     }
 
     public static void removeLibraryDir() throws IOException {
@@ -72,5 +76,13 @@ public class TestLibrarian implements ITestLibrarian {
             throw new HyracksDataException("Invalid library directory");
         }
         FileUtils.deleteQuietly(installLibDir);
+    }
+
+    public static void cleanup() throws AsterixException, RemoteException, ACIDException {
+        List<Pair<String, String>> libs = ExternalLibraryManager.getAllLibraries();
+        for (Pair<String, String> dvAndLib : libs) {
+            ExternalLibraryUtils.uninstallLibrary(dvAndLib.first, dvAndLib.second);
+            ExternalLibraryManager.deregisterLibraryClassLoader(dvAndLib.first, dvAndLib.second);
+        }
     }
 }
