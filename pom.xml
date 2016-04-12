@@ -33,7 +33,6 @@
     </license>
   </licenses>
 
-           <exclude>**/.settings/*</exclude>
   <modules>
     <module>hyracks-fullstack</module>
     <module>asterixdb</module>
