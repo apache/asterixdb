@@ -76,4 +76,9 @@ public class Projection implements Clause {
     public boolean exprStar() {
         return exprStar;
     }
+
+    @Override
+    public String toString() {
+        return star ? "*" : (String.valueOf(expr) + (exprStar ? ".*" : (hasName() ? " as " + getName() : "")));
+    }
 }

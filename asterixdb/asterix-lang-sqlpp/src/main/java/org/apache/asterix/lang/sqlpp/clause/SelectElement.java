@@ -50,4 +50,9 @@ public class SelectElement implements Clause {
     public void setExpression(Expression expr) {
         this.expr = expr;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(expr);
+    }
 }
