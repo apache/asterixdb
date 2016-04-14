@@ -31,6 +31,9 @@ import java.lang.reflect.Proxy;
 
 public class JavaSerializationUtils {
     public static byte[] serialize(Serializable jobSpec) throws IOException {
+        if (jobSpec instanceof byte[]) {
+            return (byte[]) jobSpec;
+        }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(jobSpec);
