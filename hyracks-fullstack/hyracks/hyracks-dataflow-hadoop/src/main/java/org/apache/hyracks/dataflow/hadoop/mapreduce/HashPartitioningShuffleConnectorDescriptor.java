@@ -41,7 +41,8 @@ public class HashPartitioningShuffleConnectorDescriptor extends AbstractMToNConn
 
     private final MarshalledWritable<Configuration> mConfig;
 
-    public HashPartitioningShuffleConnectorDescriptor(IConnectorDescriptorRegistry spec, MarshalledWritable<Configuration> mConfig) {
+    public HashPartitioningShuffleConnectorDescriptor(IConnectorDescriptorRegistry spec,
+            MarshalledWritable<Configuration> mConfig) {
         super(spec);
         this.mConfig = mConfig;
     }
@@ -52,7 +53,8 @@ public class HashPartitioningShuffleConnectorDescriptor extends AbstractMToNConn
             throws HyracksDataException {
         HadoopHelper helper = new HadoopHelper(mConfig);
         ITuplePartitionComputerFactory tpcf = helper.getTuplePartitionComputer();
-        return new PartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc, tpcf.createPartitioner());
+        return new PartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc, tpcf.createPartitioner(ctx,
+                index));
     }
 
     @Override

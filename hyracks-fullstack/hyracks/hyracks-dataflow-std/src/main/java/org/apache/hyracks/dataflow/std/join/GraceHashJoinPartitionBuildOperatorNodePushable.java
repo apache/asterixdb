@@ -36,8 +36,7 @@ import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionCompu
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
-class GraceHashJoinPartitionBuildOperatorNodePushable extends
-        AbstractUnaryInputSinkOperatorNodePushable {
+class GraceHashJoinPartitionBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final IHyracksTaskContext ctx;
     private final Object stateId;
     private final int numPartitions;
@@ -56,7 +55,7 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
         this.numPartitions = numPartitions;
         accessor0 = new FrameTupleAccessor(inRecordDescriptor);
         appender = new FrameTupleAppender();
-        hpc = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories).createPartitioner();
+        hpc = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories).createPartitioner(ctx, -1);
         comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();

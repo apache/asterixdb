@@ -94,9 +94,9 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(numPartitions,
-                new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)).createPartitioner();
+                new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)).createPartitioner(ctx, -1);
         ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(numPartitions,
-                new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)).createPartitioner();
+                new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)).createPartitioner(ctx, -1);
 
         final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories.length] : null;
         if (isLeftOuter) {

@@ -70,7 +70,7 @@ public class MToNPartitioningMergingConnectorDescriptor extends AbstractMToNConn
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         final PartitionDataWriter hashWriter = new PartitionDataWriter(ctx, nConsumerPartitions, edwFactory,
-                recordDesc, tpcf.createPartitioner());
+                recordDesc, tpcf.createPartitioner(ctx, index));
         return hashWriter;
     }
 

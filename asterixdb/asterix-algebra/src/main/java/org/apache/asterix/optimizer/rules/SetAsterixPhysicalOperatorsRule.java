@@ -29,6 +29,7 @@ import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -44,12 +45,14 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
+import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -193,6 +196,43 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 }
             }
         }
+
+        if (null != op.getPhysicalOperator()
+                && op.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.NESTED_LOOP) {
+            AbstractBinaryJoinOperator jop = (AbstractBinaryJoinOperator) op;
+            List<LogicalVariable> sideLeft = new ArrayList<LogicalVariable>();
+            List<LogicalVariable> sideRight = new ArrayList<LogicalVariable>();
+            List<Pair<ILogicalExpression, ILogicalExpression>> bandRange = new ArrayList<Pair<ILogicalExpression, ILogicalExpression>>();
+            List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();
+            List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
+            switch (AnalysisUtil.getSortMergeJoinable(op, varsLeft, varsRight, sideLeft, sideRight, bandRange)) {
+                case BAND: {
+                    /*op.setPhysicalOperator(new BandSortMergeJoinPOperator(jop.getJoinKind(),
+                            JoinPartitioningType.PAIRWISE, sideLeft, sideRight, bandRange.get(0),
+                            bandRange.get(0).first, context.getPhysicalOptimizationConfig().getMaxFramesHybridHash(),
+                            context.getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(), 40, context
+                                    .getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), context
+                                    .getPhysicalOptimizationConfig().getFudgeFactor()));*/
+                    break;
+                }
+                case THETA: {
+                    break;
+                }
+                case METRIC: {
+                    break;
+                }
+                case SKYLINE: {
+                    break;
+                }
+                case NESTLOOP: {
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
         if (op.getPhysicalOperator() == null) {
             switch (op.getOperatorTag()) {
                 case INNERJOIN: {

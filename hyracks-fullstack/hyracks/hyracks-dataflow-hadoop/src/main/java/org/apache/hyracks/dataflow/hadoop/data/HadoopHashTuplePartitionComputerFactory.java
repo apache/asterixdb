@@ -21,8 +21,8 @@ package org.apache.hyracks.dataflow.hadoop.data;
 import java.io.DataInputStream;
 
 import org.apache.hadoop.io.Writable;
-
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
@@ -38,7 +38,7 @@ public class HadoopHashTuplePartitionComputerFactory<K extends Writable> impleme
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner() {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext ctx, int partition) {
         return new ITuplePartitionComputer() {
             private final ByteBufferInputStream bbis = new ByteBufferInputStream();
             private final DataInputStream dis = new DataInputStream(bbis);
