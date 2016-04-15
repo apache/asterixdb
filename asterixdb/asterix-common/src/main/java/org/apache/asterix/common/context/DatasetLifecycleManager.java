@@ -168,10 +168,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
         }
 
-        // Flush and wait for it to finish, it is separated from the above wait so they don't deadlock each other.
-        // TODO: Find a better way to do this.
-        flushAndWaitForIO(dsInfo, iInfo);
-
         if (iInfo.isOpen) {
             ILSMOperationTracker indexOpTracker = iInfo.index.getOperationTracker();
             synchronized (indexOpTracker) {
