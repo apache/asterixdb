@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +44,6 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
-import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,11 +74,9 @@ public class ResultUtils {
         return s;
     }
 
-    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf)
-            throws AsterixException {
+    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf) throws AsterixException {
         if (recordType == null) {
-            throw new AsterixException(
-               "Cannot output CSV with header without specifying output-record-type");
+            throw new AsterixException("Cannot output CSV with header without specifying output-record-type");
         }
         // If HTML-ifying, we have to output this here before the header -
         // pretty ugly
@@ -105,12 +103,6 @@ public class ResultUtils {
 
     public static void displayResults(ResultReader resultReader, SessionConfig conf, Stats stats)
             throws HyracksDataException {
-        IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
-
-        IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
-        int bytesRead = resultReader.read(frame);
-        ByteBufferInputStream bbis = new ByteBufferInputStream();
-
         // Whether we are wrapping the output sequence in an array
         boolean wrap_array = false;
         // Whether this is the first instance being output
@@ -143,49 +135,41 @@ public class ResultUtils {
         }
 
         final boolean indentJSON = conf.is(SessionConfig.INDENT_JSON);
-        if (bytesRead > 0) {
-            do {
-                try {
-                    fta.reset(frame.getBuffer());
-                    int last = fta.getTupleCount();
-                    String result;
-                    for (int tIndex = 0; tIndex < last; tIndex++) {
-                        int start = fta.getTupleStartOffset(tIndex);
-                        int length = fta.getTupleEndOffset(tIndex) - start;
-                        bbis.setByteBuffer(frame.getBuffer(), start);
-                        byte[] recordBytes = new byte[length];
-                        int numread = bbis.read(recordBytes, 0, length);
-                        if (conf.fmt() == OutputFormat.CSV) {
-                            if ((numread > 0) && (recordBytes[numread - 1] == '\n')) {
-                                numread--;
-                            }
-                        }
-                        result = new String(recordBytes, 0, numread, UTF_8);
-                        if (wrap_array && notfirst) {
-                            conf.out().print(", ");
-                        }
-                        notfirst = true;
-                        if (indentJSON) {
-                            // TODO(tillw): this is inefficient - do this during result generation
-                            result = JSONUtil.indent(result, 2);
-                        }
-                        conf.out().print(result);
-                        if (conf.fmt() == OutputFormat.CSV) {
-                            conf.out().print("\r\n");
-                        }
-                        ++stats.count;
-                        // TODO(tillw) fix this approximation
-                        stats.size += result.length();
-                    }
-                    frame.getBuffer().clear();
-                } finally {
-                    try {
-                        bbis.close();
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
+
+        final IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
+        final IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
+
+        while (resultReader.read(frame) > 0) {
+            final ByteBuffer frameBuffer = frame.getBuffer();
+            final byte[] frameBytes = frameBuffer.array();
+            fta.reset(frameBuffer);
+            final int last = fta.getTupleCount();
+            for (int tIndex = 0; tIndex < last; tIndex++) {
+                final int start = fta.getTupleStartOffset(tIndex);
+                int length = fta.getTupleEndOffset(tIndex) - start;
+                if (conf.fmt() == OutputFormat.CSV) {
+                    if ((length > 0) && (frameBytes[start + length - 1] == '\n')) {
+                        length--;
                     }
                 }
-            } while (resultReader.read(frame) > 0);
+                String result = new String(frameBytes, start, length, UTF_8);
+                if (wrap_array && notfirst) {
+                    conf.out().print(", ");
+                }
+                notfirst = true;
+                if (indentJSON) {
+                    // TODO(tillw): this is inefficient - do this during result generation
+                    result = JSONUtil.indent(result, 2);
+                }
+                conf.out().print(result);
+                if (conf.fmt() == OutputFormat.CSV) {
+                    conf.out().print("\r\n");
+                }
+                ++stats.count;
+                // TODO(tillw) fix this approximation
+                stats.size += result.length();
+            }
+            frameBuffer.clear();
         }
 
         conf.out().flush();
@@ -209,7 +193,7 @@ public class ResultUtils {
         errorArray.put(errorMessage);
         try {
             errorResp.put("error-code", errorArray);
-            if (errorSummary != "") {
+            if (! "".equals(errorSummary)) {
                 errorResp.put("summary", errorSummary);
             } else {
                 //parse exception
