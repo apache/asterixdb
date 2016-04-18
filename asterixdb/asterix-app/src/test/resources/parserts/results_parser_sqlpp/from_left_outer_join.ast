@@ -61,8 +61,7 @@ FROM [  UnorderedListConstructor [
       )
     ]
   ]
-  AS
-  Variable [ Name=$sl ]
+  AS Variable [ Name=$sl ]
   LEFTOUTER JOIN
     UnorderedListConstructor [
       RecordConstructor [
@@ -140,8 +139,7 @@ FROM [  UnorderedListConstructor [
         )
       ]
     ]
-    AS
-    Variable [ Name=$sr ]
+    AS Variable [ Name=$sr ]
     ON
     OperatorExpr [
       FieldAccessor [

@@ -27,20 +27,17 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
@@ -118,15 +115,11 @@ Groupby
     Variable [ Name=$o ]
     Field=o_shippriority
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$l ]
-   AS l
-  Variable [ Name=$o ]
-   AS o
-  Variable [ Name=$c ]
-   AS c
+    l:=Variable [ Name=$l ]
+    o:=Variable [ Name=$o ]
+    c:=Variable [ Name=$c ]
   )
 
 Let Variable [ Name=$revenue ]
@@ -151,8 +144,7 @@ Let Variable [ Name=$revenue ]
       ]
       ]
       FROM [        Variable [ Name=$l ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]

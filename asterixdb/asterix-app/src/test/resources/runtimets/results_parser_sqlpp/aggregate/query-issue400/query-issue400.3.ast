@@ -19,8 +19,7 @@ FunctionCall null.count@1[
           LiteralExpr [LONG] [9]
         ]
       ]
-      AS
-      Variable [ Name=$i ]
+      AS Variable [ Name=$i ]
     ]
   )
 ]

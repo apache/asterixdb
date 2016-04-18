@@ -22,6 +22,5 @@ FROM [  OrderedListConstructor [
       LiteralExpr [STRING] [~!@#$%^&*()_+{}:?<>/.,';`][\]
     ]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]

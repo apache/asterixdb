@@ -20,8 +20,7 @@ FunctionDecl tmp1([]) {
             ]
             ]
             FROM [              Variable [ Name=$l2 ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -38,8 +37,7 @@ FunctionDecl tmp1([]) {
             ]
             ]
             FROM [              Variable [ Name=$l2 ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -62,8 +60,7 @@ FunctionDecl tmp1([]) {
         ]
         ]
         FROM [          Variable [ Name=$LineItem ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
         Groupby
           Variable [ Name=$l_orderkey1 ]
@@ -80,8 +77,7 @@ FunctionDecl tmp1([]) {
           ]
 
       )
-      AS
-      Variable [ Name=$l2 ]
+      AS Variable [ Name=$l2 ]
     ]
     Groupby
       Variable [ Name=$l_orderkey ]
@@ -115,8 +111,7 @@ FunctionDecl tmp2([]) {
             ]
             ]
             FROM [              Variable [ Name=$l2 ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -133,8 +128,7 @@ FunctionDecl tmp2([]) {
             ]
             ]
             FROM [              Variable [ Name=$l2 ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -157,8 +151,7 @@ FunctionDecl tmp2([]) {
         ]
         ]
         FROM [          Variable [ Name=$LineItem ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
         Where
           OperatorExpr [
@@ -187,8 +180,7 @@ FunctionDecl tmp2([]) {
           ]
 
       )
-      AS
-      Variable [ Name=$l2 ]
+      AS Variable [ Name=$l2 ]
     ]
     Groupby
       Variable [ Name=$l_orderkey ]
@@ -293,8 +285,7 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
 ,
           (
             SELECT ELEMENT [
@@ -320,14 +311,12 @@ FROM [  (
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Nation]
               ]
-              AS
-              Variable [ Name=$n ]
+              AS Variable [ Name=$n ]
 ,
               FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Supplier]
               ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
             ]
             Where
               OperatorExpr [
@@ -342,19 +331,16 @@ FROM [  (
                 ]
               ]
           )
-          AS
-          Variable [ Name=$ns ]
+          AS Variable [ Name=$ns ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
-          AS
-          Variable [ Name=$o ]
+          AS Variable [ Name=$o ]
 ,
           FunctionCall tpch.tmp1@0[
           ]
-          AS
-          Variable [ Name=$t1 ]
+          AS Variable [ Name=$t1 ]
         ]
         Where
           OperatorExpr [
@@ -409,13 +395,11 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$t3 ]
+      AS Variable [ Name=$t3 ]
 ,
       FunctionCall tpch.tmp2@0[
       ]
-      AS
-      Variable [ Name=$t2 ]
+      AS Variable [ Name=$t2 ]
     ]
     Where
       OperatorExpr [
@@ -441,8 +425,7 @@ FROM [  (
         ]
       ]
   )
-  AS
-  Variable [ Name=$t4 ]
+  AS Variable [ Name=$t4 ]
 ]
 Groupby
   Variable [ Name=$s_name ]
@@ -451,11 +434,9 @@ Groupby
     Variable [ Name=$t4 ]
     Field=s_name
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$t4 ]
-   AS t4
+    t4:=Variable [ Name=$t4 ]
   )
 
 Let Variable [ Name=$numwait ]
@@ -469,8 +450,7 @@ Let Variable [ Name=$numwait ]
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS
-        Variable [ Name=#2 ]
+        AS Variable [ Name=#2 ]
       ]
     )
   ]

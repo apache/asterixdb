@@ -8,8 +8,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [3]
     LiteralExpr [LONG] [2]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Where
   OperatorExpr [

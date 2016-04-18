@@ -38,12 +38,10 @@ FunctionDecl q7_volume_shipping_tmp([]) {
     ]
     ]
     FROM [      Variable [ Name=$Nation ]
-      AS
-      Variable [ Name=$n1 ]
+      AS Variable [ Name=$n1 ]
 ,
       Variable [ Name=$Nation ]
-      AS
-      Variable [ Name=$n2 ]
+      AS Variable [ Name=$n2 ]
     ]
     Where
       OperatorExpr [
@@ -231,14 +229,12 @@ FROM [  (
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [LineItem]
               ]
-              AS
-              Variable [ Name=$l ]
+              AS Variable [ Name=$l ]
 ,
               FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Orders]
               ]
-              AS
-              Variable [ Name=$o ]
+              AS Variable [ Name=$o ]
             ]
             Where
               OperatorExpr [
@@ -273,14 +269,12 @@ FROM [  (
                 ]
               ]
           )
-          AS
-          Variable [ Name=$lo ]
+          AS Variable [ Name=$lo ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Customer]
           ]
-          AS
-          Variable [ Name=$c ]
+          AS Variable [ Name=$c ]
         ]
         Where
           OperatorExpr [
@@ -295,14 +289,12 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$loc ]
+      AS Variable [ Name=$loc ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Supplier]
       ]
-      AS
-      Variable [ Name=$s ]
+      AS Variable [ Name=$s ]
     ]
     Where
       OperatorExpr [
@@ -317,13 +309,11 @@ FROM [  (
         ]
       ]
   )
-  AS
-  Variable [ Name=$locs ]
+  AS Variable [ Name=$locs ]
 ,
   FunctionCall tpch.q7_volume_shipping_tmp@0[
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Let Variable [ Name=$l_year0 ]
   :=
@@ -375,15 +365,11 @@ Groupby
   Variable [ Name=$l_year ]
   :=
   Variable [ Name=$l_year0 ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$l_year0 ]
-   AS l_year0
-  Variable [ Name=$t ]
-   AS t
-  Variable [ Name=$locs ]
-   AS locs
+    l_year0:=Variable [ Name=$l_year0 ]
+    t:=Variable [ Name=$t ]
+    locs:=Variable [ Name=$locs ]
   )
 
 Let Variable [ Name=$revenue ]
@@ -408,8 +394,7 @@ Let Variable [ Name=$revenue ]
       ]
       ]
       FROM [        Variable [ Name=$locs ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]

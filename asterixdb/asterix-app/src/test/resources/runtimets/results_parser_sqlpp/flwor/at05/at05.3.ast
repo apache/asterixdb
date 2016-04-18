@@ -26,8 +26,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
     Where
       OperatorExpr [
@@ -45,11 +44,9 @@ FROM [  (
         Variable [ Name=$x ]
         Field=o_custkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$x ]
-       AS x
+        x:=Variable [ Name=$x ]
       )
 
     Let Variable [ Name=$xx ]
@@ -82,8 +79,7 @@ FROM [  (
             Variable [ Name=$xxx ]
             ]
             FROM [              Variable [ Name=$x ]
-              AS
-              Variable [ Name=$xxx ]
+              AS Variable [ Name=$xxx ]
             ]
             Orderby
               FieldAccessor [
@@ -93,10 +89,9 @@ FROM [  (
               ASC
 
           )
-          AS
-          Variable [ Name=$y ]
-          AT
-          Variable [ Name=$i ]
+          AS Variable [ Name=$y ]
+ AT 
+Variable [ Name=$i ]
         ]
       )
     Orderby
@@ -104,13 +99,11 @@ FROM [  (
       ASC
 
   )
-  AS
-  Variable [ Name=$gen0 ]
+  AS Variable [ Name=$gen0 ]
 ,
   FieldAccessor [
     Variable [ Name=$gen0 ]
     Field=xx
   ]
-  AS
-  Variable [ Name=$si ]
+  AS Variable [ Name=$si ]
 ]

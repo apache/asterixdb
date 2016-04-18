@@ -19,8 +19,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -30,8 +29,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ]
 Groupby
   Variable [ Name=$age ]
@@ -40,11 +38,9 @@ Groupby
     Variable [ Name=$c ]
     Field=age
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$c ]
-   AS c
+    c:=Variable [ Name=$c ]
   )
 
 Orderby

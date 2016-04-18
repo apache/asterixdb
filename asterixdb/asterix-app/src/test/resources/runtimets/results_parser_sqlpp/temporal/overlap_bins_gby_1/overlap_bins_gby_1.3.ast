@@ -19,8 +19,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -44,8 +43,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$i2 ]
-          AS
-          Variable [ Name=$i3 ]
+          AS Variable [ Name=$i3 ]
         ]
       )
     ]
@@ -74,8 +72,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [tsdata]
       ]
-      AS
-      Variable [ Name=$i1 ]
+      AS Variable [ Name=$i1 ]
     ]
     Orderby
       FieldAccessor [
@@ -85,8 +82,7 @@ FROM [  (
       ASC
 
   )
-  AS
-  Variable [ Name=$i2 ]
+  AS Variable [ Name=$i2 ]
 ,
   FunctionCall test.overlap-bins@3[
     FieldAccessor [
@@ -100,20 +96,16 @@ FROM [  (
       LiteralExpr [STRING] [PT1H30M]
     ]
   ]
-  AS
-  Variable [ Name=$j ]
+  AS Variable [ Name=$j ]
 ]
 Groupby
   Variable [ Name=$bin ]
   :=
   Variable [ Name=$j ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$j ]
-   AS j
-  Variable [ Name=$i2 ]
-   AS i2
+    j:=Variable [ Name=$j ]
+    i2:=Variable [ Name=$i2 ]
   )
 
 Orderby

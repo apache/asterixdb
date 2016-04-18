@@ -43,6 +43,5 @@ FROM [  OrderedListConstructor [
       LiteralExpr [STRING] [A33B2CD1EF78GHijk123LMNopqrstUVW3x2y01035Z]
     ]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]

@@ -6,8 +6,7 @@ Variable [ Name=$paper ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP1]
   ]
-  AS
-  Variable [ Name=$paper ]
+  AS Variable [ Name=$paper ]
 ]
 Orderby
   FieldAccessor [

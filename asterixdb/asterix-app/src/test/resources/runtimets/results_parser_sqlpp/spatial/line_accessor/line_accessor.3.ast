@@ -21,6 +21,5 @@ SELECT ELEMENT [
 Variable [ Name=$p ]
 ]
 FROM [  Variable [ Name=$line_list ]
-  AS
-  Variable [ Name=$p ]
+  AS Variable [ Name=$p ]
 ]

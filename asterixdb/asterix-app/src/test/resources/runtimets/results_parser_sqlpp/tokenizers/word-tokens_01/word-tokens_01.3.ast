@@ -12,6 +12,5 @@ SELECT ELEMENT [
 Variable [ Name=$token ]
 ]
 FROM [  Variable [ Name=$tokens ]
-  AS
-  Variable [ Name=$token ]
+  AS Variable [ Name=$token ]
 ]

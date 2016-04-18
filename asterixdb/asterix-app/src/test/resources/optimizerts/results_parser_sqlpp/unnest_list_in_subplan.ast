@@ -35,8 +35,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$paperDBLP ]
+  AS Variable [ Name=$paperDBLP ]
 ]
 Let Variable [ Name=$idDBLP ]
   :=
@@ -62,14 +61,12 @@ Let Variable [ Name=$tokensDBLP ]
     ]
     ]
     FROM [      Variable [ Name=$tokensUnrankedDBLP ]
-      AS
-      Variable [ Name=$tokenUnranked ]
+      AS Variable [ Name=$tokenUnranked ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [TOKENSRANKEDADM]
       ]
-      AS
-      Variable [ Name=$tokenRanked ]
+      AS Variable [ Name=$tokenRanked ]
     ]
     Where
       OperatorExpr [

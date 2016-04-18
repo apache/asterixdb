@@ -47,10 +47,8 @@ OrderedListConstructor [
 ]
 ]
 FROM [  Variable [ Name=$l ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ,
   Variable [ Name=$l ]
-  AS
-  Variable [ Name=$j ]
+  AS Variable [ Name=$j ]
 ]

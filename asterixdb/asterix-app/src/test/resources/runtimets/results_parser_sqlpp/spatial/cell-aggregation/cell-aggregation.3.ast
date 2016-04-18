@@ -20,8 +20,7 @@ Let Variable [ Name=$grid ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [MyData]
       ]
-      AS
-      Variable [ Name=$o ]
+      AS Variable [ Name=$o ]
     ]
     Groupby
       Variable [ Name=$c ]
@@ -38,11 +37,9 @@ Let Variable [ Name=$grid ]
         LiteralExpr [DOUBLE] [5.0]
         LiteralExpr [DOUBLE] [5.0]
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$o ]
-       AS o
+        o:=Variable [ Name=$o ]
       )
 
     Let Variable [ Name=$num ]
@@ -56,8 +53,7 @@ Let Variable [ Name=$grid ]
           ]
           ]
           FROM [            Variable [ Name=#1 ]
-            AS
-            Variable [ Name=#2 ]
+            AS Variable [ Name=#2 ]
           ]
         )
       ]
@@ -70,6 +66,5 @@ SELECT ELEMENT [
 Variable [ Name=$g ]
 ]
 FROM [  Variable [ Name=$grid ]
-  AS
-  Variable [ Name=$g ]
+  AS Variable [ Name=$g ]
 ]

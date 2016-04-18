@@ -12,8 +12,7 @@ FunctionCall null.avg@1[
           LiteralExpr [STRING] [3.0]
         ]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
   )
 ]

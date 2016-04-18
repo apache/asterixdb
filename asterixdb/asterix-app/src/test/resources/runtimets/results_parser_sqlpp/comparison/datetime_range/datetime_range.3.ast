@@ -15,8 +15,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterData]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Where
   OperatorExpr [

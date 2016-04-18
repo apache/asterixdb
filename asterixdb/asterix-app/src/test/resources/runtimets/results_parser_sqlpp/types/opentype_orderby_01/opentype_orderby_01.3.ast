@@ -23,8 +23,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [empDataset]
   ]
-  AS
-  Variable [ Name=$emp ]
+  AS Variable [ Name=$emp ]
 ]
 Orderby
   FieldAccessor [

@@ -15,12 +15,10 @@ OrderedListConstructor [
 FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [foofoo]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ,
   OrderedListConstructor [
     LiteralExpr [STRING] [barbar]
   ]
-  AS
-  Variable [ Name=$y ]
+  AS Variable [ Name=$y ]
 ]

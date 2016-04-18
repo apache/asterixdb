@@ -33,8 +33,7 @@ RecordConstructor [
           Variable [ Name=$ii ]
           ]
           FROM [            Variable [ Name=$m ]
-            AS
-            Variable [ Name=$ii ]
+            AS Variable [ Name=$ii ]
           ]
           Orderby
             FieldAccessor [
@@ -44,10 +43,9 @@ RecordConstructor [
             ASC
 
         )
-        AS
-        Variable [ Name=$a ]
-        AT
-        Variable [ Name=$p ]
+        AS Variable [ Name=$a ]
+ AT 
+Variable [ Name=$p ]
       ]
     )
   )
@@ -56,14 +54,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
-  AS
-  Variable [ Name=$u ]
+  AS Variable [ Name=$u ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
-  AS
-  Variable [ Name=$m ]
+  AS Variable [ Name=$m ]
 ]
 Where
   OperatorExpr [
@@ -84,13 +80,10 @@ Groupby
     Variable [ Name=$u ]
     Field=id
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$m ]
-   AS m
-  Variable [ Name=$u ]
-   AS u
+    m:=Variable [ Name=$m ]
+    u:=Variable [ Name=$u ]
   )
 
 Orderby

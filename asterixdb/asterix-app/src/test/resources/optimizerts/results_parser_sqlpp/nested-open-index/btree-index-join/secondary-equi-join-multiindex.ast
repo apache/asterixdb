@@ -95,14 +95,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
-  AS
-  Variable [ Name=$message ]
+  AS Variable [ Name=$message ]
 ]
 Where
   OperatorExpr [

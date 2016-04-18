@@ -23,14 +23,12 @@ msg
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
-  AS
-  Variable [ Name=$message ]
+  AS Variable [ Name=$message ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Where
   OperatorExpr [

@@ -19,14 +19,12 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [30]
     LiteralExpr [LONG] [40]
   ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ,
   UnorderedListConstructor [
     LiteralExpr [LONG] [4]
     LiteralExpr [LONG] [5]
     LiteralExpr [LONG] [6]
   ]
-  AS
-  Variable [ Name=$j ]
+  AS Variable [ Name=$j ]
 ]

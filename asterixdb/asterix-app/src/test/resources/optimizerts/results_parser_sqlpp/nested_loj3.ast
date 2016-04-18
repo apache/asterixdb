@@ -76,8 +76,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ]
 Let Variable [ Name=$orders ]
   :=
@@ -99,8 +98,7 @@ Let Variable [ Name=$orders ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$o ]
+      AS Variable [ Name=$o ]
     ]
     Let Variable [ Name=$items ]
       :=
@@ -122,8 +120,7 @@ Let Variable [ Name=$orders ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItems]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
         Let Variable [ Name=$partsupp ]
           :=
@@ -134,8 +131,7 @@ Let Variable [ Name=$orders ]
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [PartSupp]
               ]
-              AS
-              Variable [ Name=$ps ]
+              AS Variable [ Name=$ps ]
             ]
             Where
               OperatorExpr [

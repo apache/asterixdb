@@ -17,8 +17,7 @@ RecordConstructor [
 ]
 ]
 FROM [  Variable [ Name=$users ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Where
   QuantifiedExpression SOME [

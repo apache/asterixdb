@@ -36,8 +36,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
         Where
           OperatorExpr [
@@ -65,8 +64,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -96,8 +94,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -136,8 +133,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -156,8 +152,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
         Where
           OperatorExpr [
@@ -185,8 +180,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -205,8 +199,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -222,8 +215,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
       )
     ]

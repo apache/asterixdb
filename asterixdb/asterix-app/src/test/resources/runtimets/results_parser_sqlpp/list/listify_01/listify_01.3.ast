@@ -11,8 +11,7 @@ Let Variable [ Name=$token_list ]
         LiteralExpr [LONG] [2]
         LiteralExpr [LONG] [3]
       ]
-      AS
-      Variable [ Name=$token ]
+      AS Variable [ Name=$token ]
     ]
   )
 SELECT ELEMENT [

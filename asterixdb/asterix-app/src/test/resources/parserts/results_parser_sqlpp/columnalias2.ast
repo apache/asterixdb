@@ -22,8 +22,7 @@ root
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tbl_name]
   ]
-  AS
-  Variable [ Name=$root ]
+  AS Variable [ Name=$root ]
 ]
 Groupby
   Variable [ Name=#1 ]
@@ -32,11 +31,9 @@ Groupby
     Variable [ Name=$root ]
     Field=id
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$root ]
-   AS root
+    root:=Variable [ Name=$root ]
   )
 
 Let Variable [ Name=$u ]

@@ -23,8 +23,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$paper ]
+  AS Variable [ Name=$paper ]
 ,
   FunctionCall test.word-tokens@1[
     FieldAccessor [
@@ -32,8 +31,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       Field=title
     ]
   ]
-  AS
-  Variable [ Name=$word ]
+  AS Variable [ Name=$word ]
 ]
 Where
   IndexAccessor [

@@ -19,8 +19,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -30,8 +29,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Groupby
   Variable [ Name=$l_linenumber ]
@@ -40,10 +38,8 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linenumber
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$l ]
-   AS l
+    l:=Variable [ Name=$l ]
   )
 

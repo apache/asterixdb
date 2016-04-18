@@ -9,8 +9,7 @@ Let Variable [ Name=$lonelyusers ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
-      AS
-      Variable [ Name=$d ]
+      AS Variable [ Name=$d ]
     ]
     Where
       OperatorExpr [
@@ -33,8 +32,7 @@ Let Variable [ Name=$lonelyusers2 ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
-      AS
-      Variable [ Name=$d ]
+      AS Variable [ Name=$d ]
     ]
     Where
       OperatorExpr [
@@ -97,12 +95,10 @@ RecordConstructor [
 ]
 ]
 FROM [  Variable [ Name=$lonelyusers ]
-  AS
-  Variable [ Name=$l1 ]
+  AS Variable [ Name=$l1 ]
 ,
   Variable [ Name=$lonelyusers2 ]
-  AS
-  Variable [ Name=$l2 ]
+  AS Variable [ Name=$l2 ]
 ]
 Where
   OperatorExpr [

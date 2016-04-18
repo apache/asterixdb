@@ -31,8 +31,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
@@ -56,11 +55,9 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$l ]
-   AS l
+    l:=Variable [ Name=$l ]
   )
 
 Let Variable [ Name=$cheap ]
@@ -70,8 +67,7 @@ Let Variable [ Name=$cheap ]
     Variable [ Name=$m ]
     ]
     FROM [      Variable [ Name=$l ]
-      AS
-      Variable [ Name=$m ]
+      AS Variable [ Name=$m ]
     ]
     Where
       OperatorExpr [
@@ -90,8 +86,7 @@ Let Variable [ Name=$expensive ]
     Variable [ Name=$a ]
     ]
     FROM [      Variable [ Name=$l ]
-      AS
-      Variable [ Name=$a ]
+      AS Variable [ Name=$a ]
     ]
     Where
       OperatorExpr [

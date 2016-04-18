@@ -9,8 +9,7 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ]
 Where
   OperatorExpr [

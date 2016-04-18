@@ -9,8 +9,7 @@ FunctionCall test.count@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Customers]
       ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
   )
 ]

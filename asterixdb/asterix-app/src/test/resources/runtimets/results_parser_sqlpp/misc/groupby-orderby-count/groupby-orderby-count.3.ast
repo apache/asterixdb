@@ -19,8 +19,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -30,8 +29,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterData]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ,
   FunctionCall twitter.word-tokens@1[
     FieldAccessor [
@@ -39,20 +37,16 @@ FROM [  FunctionCall Metadata.dataset@1[
       Field=text
     ]
   ]
-  AS
-  Variable [ Name=$token ]
+  AS Variable [ Name=$token ]
 ]
 Groupby
   Variable [ Name=$tok ]
   :=
   Variable [ Name=$token ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$token ]
-   AS token
-  Variable [ Name=$t ]
-   AS t
+    token:=Variable [ Name=$token ]
+    t:=Variable [ Name=$t ]
   )
 
 Orderby
@@ -65,8 +59,7 @@ Orderby
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS
-        Variable [ Name=#3 ]
+        AS Variable [ Name=#3 ]
       ]
     )
   ]

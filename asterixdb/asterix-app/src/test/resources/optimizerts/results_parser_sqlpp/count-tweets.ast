@@ -30,8 +30,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -41,14 +40,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterData]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tokens]
   ]
-  AS
-  Variable [ Name=$token ]
+  AS Variable [ Name=$token ]
 ]
 Let Variable [ Name=$tokens ]
   :=
@@ -62,14 +59,10 @@ Groupby
   Variable [ Name=$tok ]
   :=
   Variable [ Name=$token ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$tokens ]
-   AS tokens
-  Variable [ Name=$token ]
-   AS token
-  Variable [ Name=$t ]
-   AS t
+    tokens:=Variable [ Name=$tokens ]
+    token:=Variable [ Name=$token ]
+    t:=Variable [ Name=$t ]
   )
 

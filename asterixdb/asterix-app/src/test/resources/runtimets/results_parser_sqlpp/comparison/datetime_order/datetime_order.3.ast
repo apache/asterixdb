@@ -71,8 +71,7 @@ FROM [  OrderedListConstructor [
     Variable [ Name=$dt10 ]
     Variable [ Name=$dt11 ]
   ]
-  AS
-  Variable [ Name=$dt ]
+  AS Variable [ Name=$dt ]
 ]
 Orderby
   Variable [ Name=$dt ]

@@ -12,8 +12,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [5]
     LiteralExpr [LONG] [6]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ,
   OrderedListConstructor [
     LiteralExpr [LONG] [4]
@@ -23,8 +22,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [8]
     LiteralExpr [LONG] [9]
   ]
-  AS
-  Variable [ Name=$y ]
+  AS Variable [ Name=$y ]
 ]
 Where
   OperatorExpr [

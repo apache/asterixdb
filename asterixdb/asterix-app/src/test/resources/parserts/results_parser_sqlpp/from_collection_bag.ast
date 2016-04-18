@@ -7,6 +7,5 @@ FROM [  UnorderedListConstructor [
     LiteralExpr [LONG] [20]
     LiteralExpr [LONG] [30]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

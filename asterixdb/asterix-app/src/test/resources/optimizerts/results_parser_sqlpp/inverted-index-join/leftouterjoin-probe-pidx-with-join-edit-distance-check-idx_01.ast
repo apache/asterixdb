@@ -76,8 +76,7 @@ RecordConstructor [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [TweetMessages]
         ]
-        AS
-        Variable [ Name=$t2 ]
+        AS Variable [ Name=$t2 ]
       ]
       Let Variable [ Name=$sim ]
         :=
@@ -125,8 +124,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$t1 ]
+  AS Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [

@@ -6,6 +6,5 @@ Variable [ Name=$x ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [All]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

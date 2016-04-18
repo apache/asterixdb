@@ -9,8 +9,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [LONG] [2]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Let Variable [ Name=$y ]
   :=
@@ -37,7 +36,6 @@ Let Variable [ Name=$y ]
           LiteralExpr [LONG] [0]
         ]
       ]
-      AS
-      Variable [ Name=$i ]
+      AS Variable [ Name=$i ]
     ]
   )

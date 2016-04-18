@@ -13,8 +13,7 @@ FunctionCall test.sum@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [tdst]
       ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Where
       FunctionCall test.not@1[

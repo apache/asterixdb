@@ -95,8 +95,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ,
   (
     SELECT ELEMENT [
@@ -146,8 +145,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$o ]
+      AS Variable [ Name=$o ]
 ,
       (
         SELECT ELEMENT [
@@ -197,8 +195,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItems]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
 ,
           (
             SELECT ELEMENT [
@@ -232,8 +229,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Suppliers]
               ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -259,14 +255,12 @@ FROM [  FunctionCall Metadata.dataset@1[
                 FROM [                  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [Nations]
                   ]
-                  AS
-                  Variable [ Name=$n ]
+                  AS Variable [ Name=$n ]
 ,
                   FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [Regions]
                   ]
-                  AS
-                  Variable [ Name=$r ]
+                  AS Variable [ Name=$r ]
                 ]
                 Where
                   OperatorExpr [
@@ -292,8 +286,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                     ]
                   ]
               )
-              AS
-              Variable [ Name=$n1 ]
+              AS Variable [ Name=$n1 ]
             ]
             Where
               OperatorExpr [
@@ -308,8 +301,7 @@ FROM [  FunctionCall Metadata.dataset@1[
                 ]
               ]
           )
-          AS
-          Variable [ Name=$s1 ]
+          AS Variable [ Name=$s1 ]
         ]
         Where
           OperatorExpr [
@@ -324,8 +316,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             ]
           ]
       )
-      AS
-      Variable [ Name=$l1 ]
+      AS Variable [ Name=$l1 ]
     ]
     Where
       OperatorExpr [
@@ -360,8 +351,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         ]
       ]
   )
-  AS
-  Variable [ Name=$o1 ]
+  AS Variable [ Name=$o1 ]
 ]
 Where
   OperatorExpr [
@@ -396,13 +386,10 @@ Groupby
     Variable [ Name=$o1 ]
     Field=n_name
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$o1 ]
-   AS o1
-  Variable [ Name=$c ]
-   AS c
+    o1:=Variable [ Name=$o1 ]
+    c:=Variable [ Name=$c ]
   )
 
 Let Variable [ Name=$revenue ]
@@ -427,8 +414,7 @@ Let Variable [ Name=$revenue ]
       ]
       ]
       FROM [        Variable [ Name=$o1 ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]

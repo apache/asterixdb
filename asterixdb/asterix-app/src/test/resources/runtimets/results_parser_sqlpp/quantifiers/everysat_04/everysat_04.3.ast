@@ -113,6 +113,5 @@ SELECT ELEMENT [
 Variable [ Name=$i ]
 ]
 FROM [  Variable [ Name=$x ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ]

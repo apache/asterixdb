@@ -17,8 +17,7 @@ Variable [ Name=$o ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ]
 Where
   FunctionCall test.contains@2[

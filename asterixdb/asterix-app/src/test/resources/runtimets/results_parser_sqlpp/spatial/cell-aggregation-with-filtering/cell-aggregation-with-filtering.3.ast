@@ -17,8 +17,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterData]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Let Variable [ Name=$keywords ]
   :=
@@ -87,15 +86,11 @@ Groupby
     LiteralExpr [DOUBLE] [3.0]
     LiteralExpr [DOUBLE] [3.0]
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$region ]
-   AS region
-  Variable [ Name=$keywords ]
-   AS keywords
-  Variable [ Name=$t ]
-   AS t
+    region:=Variable [ Name=$region ]
+    keywords:=Variable [ Name=$keywords ]
+    t:=Variable [ Name=$t ]
   )
 
 Let Variable [ Name=$num ]
@@ -109,8 +104,7 @@ Let Variable [ Name=$num ]
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS
-        Variable [ Name=#2 ]
+        AS Variable [ Name=#2 ]
       ]
     )
   ]

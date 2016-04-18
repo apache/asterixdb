@@ -21,8 +21,7 @@ FROM [  (
     Variable [ Name=$data ]
     ]
   )
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Where
   QuantifiedExpression SOME [

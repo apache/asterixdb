@@ -7,8 +7,7 @@ Variable [ Name=$tokenGroupped ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$paper ]
+  AS Variable [ Name=$paper ]
 ,
   FunctionCall fuzzyjoin.counthashed-word-tokens@1[
     FieldAccessor [
@@ -16,8 +15,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       Field=title
     ]
   ]
-  AS
-  Variable [ Name=$token ]
+  AS Variable [ Name=$token ]
 ]
 Let Variable [ Name=$paperid ]
   :=
@@ -29,15 +27,11 @@ Groupby
   Variable [ Name=$tokenGroupped ]
   :=
   Variable [ Name=$token ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$paperid ]
-   AS paperid
-  Variable [ Name=$token ]
-   AS token
-  Variable [ Name=$paper ]
-   AS paper
+    paperid:=Variable [ Name=$paperid ]
+    token:=Variable [ Name=$token ]
+    paper:=Variable [ Name=$paper ]
   )
 
 Orderby
@@ -50,8 +44,7 @@ Orderby
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS
-        Variable [ Name=#2 ]
+        AS Variable [ Name=#2 ]
       ]
     )
   ]

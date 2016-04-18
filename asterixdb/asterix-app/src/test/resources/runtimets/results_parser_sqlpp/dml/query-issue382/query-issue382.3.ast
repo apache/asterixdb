@@ -9,8 +9,7 @@ FunctionCall SocialNetworkData.count@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [HandbookUsers]
       ]
-      AS
-      Variable [ Name=$h ]
+      AS Variable [ Name=$h ]
     ]
   )
 ]

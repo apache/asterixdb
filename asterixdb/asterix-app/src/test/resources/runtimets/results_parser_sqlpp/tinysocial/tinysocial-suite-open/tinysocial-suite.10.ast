@@ -29,8 +29,7 @@ RecordConstructor [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [TweetMessages]
         ]
-        AS
-        Variable [ Name=$t2 ]
+        AS Variable [ Name=$t2 ]
       ]
       Where
         OperatorExpr [
@@ -61,8 +60,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Orderby
   FieldAccessor [

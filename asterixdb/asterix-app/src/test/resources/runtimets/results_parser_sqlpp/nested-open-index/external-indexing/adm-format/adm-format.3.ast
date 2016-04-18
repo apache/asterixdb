@@ -106,8 +106,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [MyData]
   ]
-  AS
-  Variable [ Name=$d ]
+  AS Variable [ Name=$d ]
 ]
 Where
   OperatorExpr [

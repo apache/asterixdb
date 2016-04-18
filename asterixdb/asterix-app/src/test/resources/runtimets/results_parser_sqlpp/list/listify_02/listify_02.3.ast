@@ -10,8 +10,7 @@ Let Variable [ Name=$token_list ]
         LiteralExpr [STRING] [foo]
         LiteralExpr [STRING] [bar]
       ]
-      AS
-      Variable [ Name=$token ]
+      AS Variable [ Name=$token ]
     ]
   )
 SELECT ELEMENT [

@@ -24,8 +24,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$profit ]
-          AS
-          Variable [ Name=$pr ]
+          AS Variable [ Name=$pr ]
         ]
       )
     ]
@@ -58,8 +57,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$o ]
+      AS Variable [ Name=$o ]
 ,
       (
         SELECT ELEMENT [
@@ -117,8 +115,7 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Part]
           ]
-          AS
-          Variable [ Name=$p ]
+          AS Variable [ Name=$p ]
 ,
           (
             SELECT ELEMENT [
@@ -184,8 +181,7 @@ FROM [  (
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Partsupp]
               ]
-              AS
-              Variable [ Name=$ps ]
+              AS Variable [ Name=$ps ]
 ,
               (
                 SELECT ELEMENT [
@@ -272,14 +268,12 @@ FROM [  (
                     FROM [                      FunctionCall Metadata.dataset@1[
                         LiteralExpr [STRING] [Supplier]
                       ]
-                      AS
-                      Variable [ Name=$s ]
+                      AS Variable [ Name=$s ]
 ,
                       FunctionCall Metadata.dataset@1[
                         LiteralExpr [STRING] [Nation]
                       ]
-                      AS
-                      Variable [ Name=$n ]
+                      AS Variable [ Name=$n ]
                     ]
                     Where
                       OperatorExpr [
@@ -294,14 +288,12 @@ FROM [  (
                         ]
                       ]
                   )
-                  AS
-                  Variable [ Name=$s1 ]
+                  AS Variable [ Name=$s1 ]
 ,
                   FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [LineItem]
                   ]
-                  AS
-                  Variable [ Name=$l ]
+                  AS Variable [ Name=$l ]
                 ]
                 Where
                   OperatorExpr [
@@ -316,8 +308,7 @@ FROM [  (
                     ]
                   ]
               )
-              AS
-              Variable [ Name=$l1 ]
+              AS Variable [ Name=$l1 ]
             ]
             Where
               OperatorExpr [
@@ -346,8 +337,7 @@ FROM [  (
                 ]
               ]
           )
-          AS
-          Variable [ Name=$l2 ]
+          AS Variable [ Name=$l2 ]
         ]
         Where
           OperatorExpr [
@@ -372,8 +362,7 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$l3 ]
+      AS Variable [ Name=$l3 ]
     ]
     Let Variable [ Name=$amount ]
       :=
@@ -427,8 +416,7 @@ FROM [  (
         ]
       ]
   )
-  AS
-  Variable [ Name=$profit ]
+  AS Variable [ Name=$profit ]
 ]
 Groupby
   Variable [ Name=$nation ]
@@ -443,11 +431,9 @@ Groupby
     Variable [ Name=$profit ]
     Field=o_year
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$profit ]
-   AS profit
+    profit:=Variable [ Name=$profit ]
   )
 
 Orderby

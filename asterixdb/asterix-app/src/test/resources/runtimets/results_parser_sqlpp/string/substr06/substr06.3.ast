@@ -12,8 +12,7 @@ FunctionCall test.substring@2[
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]
 Orderby
   FieldAccessor [

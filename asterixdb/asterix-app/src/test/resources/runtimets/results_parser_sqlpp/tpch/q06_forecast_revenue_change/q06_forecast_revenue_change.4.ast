@@ -10,8 +10,7 @@ FunctionCall tpch.count@1[
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS
-      Variable [ Name=#2 ]
+      AS Variable [ Name=#2 ]
     ]
   )
 ]
@@ -20,8 +19,7 @@ count
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [

@@ -15,6 +15,5 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [doublenests]
   ]
-  AS
-  Variable [ Name=$test ]
+  AS Variable [ Name=$test ]
 ]

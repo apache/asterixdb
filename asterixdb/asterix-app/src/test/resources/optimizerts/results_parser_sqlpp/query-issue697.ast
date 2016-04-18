@@ -26,8 +26,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$i ]
-          AS
-          Variable [ Name=$j ]
+          AS Variable [ Name=$j ]
         ]
         Where
           FunctionCall test.not@1[
@@ -46,8 +45,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [test]
   ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ]
 Groupby
   Variable [ Name=$aid ]
@@ -56,10 +54,8 @@ Groupby
     Variable [ Name=$i ]
     Field=key1
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$i ]
-   AS i
+    i:=Variable [ Name=$i ]
   )
 

@@ -44,14 +44,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Visitors]
   ]
-  AS
-  Variable [ Name=$visitor ]
+  AS Variable [ Name=$visitor ]
 ]
 Where
   OperatorExpr [

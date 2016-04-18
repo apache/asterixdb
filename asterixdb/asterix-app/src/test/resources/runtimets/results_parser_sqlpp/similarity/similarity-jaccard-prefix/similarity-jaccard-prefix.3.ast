@@ -104,6 +104,5 @@ OrderedListConstructor [
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]

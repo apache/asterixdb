@@ -24,8 +24,7 @@ RecordConstructor [
           LiteralExpr [STRING] [01020304050607080900]
           LiteralExpr [STRING] []
         ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   )
@@ -52,8 +51,7 @@ RecordConstructor [
           LiteralExpr [STRING] [QXN0ZXJpeAE=]
           LiteralExpr [STRING] [QXN0ZXJpeAE8]
         ]
-        AS
-        Variable [ Name=$j ]
+        AS Variable [ Name=$j ]
       ]
     )
   )

@@ -6,8 +6,7 @@ Variable [ Name=$tm ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$tm ]
+  AS Variable [ Name=$tm ]
 ]
 Where
   QuantifiedExpression EVERY [

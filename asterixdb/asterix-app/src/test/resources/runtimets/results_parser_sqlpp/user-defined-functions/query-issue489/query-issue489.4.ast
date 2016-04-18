@@ -8,8 +8,7 @@ FunctionCall null.count@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Metadata.Function]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
     Where
       OperatorExpr [

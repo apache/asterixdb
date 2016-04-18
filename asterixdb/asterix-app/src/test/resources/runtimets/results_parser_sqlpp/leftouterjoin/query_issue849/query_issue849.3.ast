@@ -30,8 +30,7 @@ FROM [  UnorderedListConstructor [
       )
     ]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ,
   (
     SELECT ELEMENT [
@@ -43,8 +42,7 @@ FROM [  UnorderedListConstructor [
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [s]
       ]
-      AS
-      Variable [ Name=$z ]
+      AS Variable [ Name=$z ]
     ]
     Where
       OperatorExpr [
@@ -59,6 +57,5 @@ FROM [  UnorderedListConstructor [
         ]
       ]
   )
-  AS
-  Variable [ Name=$y ]
+  AS Variable [ Name=$y ]
 ]

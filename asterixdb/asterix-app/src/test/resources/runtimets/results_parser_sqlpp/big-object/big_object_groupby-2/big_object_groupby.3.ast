@@ -24,8 +24,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Line]
   ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ]
 Groupby
   Variable [ Name=$comment ]
@@ -40,11 +39,9 @@ Groupby
     Variable [ Name=$i ]
     Field=l_orderkey
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$i ]
-   AS i
+    i:=Variable [ Name=$i ]
   )
 
 Orderby

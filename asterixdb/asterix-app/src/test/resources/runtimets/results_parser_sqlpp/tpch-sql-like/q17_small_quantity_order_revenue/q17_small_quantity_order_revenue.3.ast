@@ -23,8 +23,7 @@ FunctionDecl tmp([]) {
               ]
               ]
               FROM [                Variable [ Name=$l ]
-                AS
-                Variable [ Name=$i ]
+                AS Variable [ Name=$i ]
               ]
             )
           ]
@@ -33,8 +32,7 @@ FunctionDecl tmp([]) {
     ]
     ]
     FROM [      Variable [ Name=$LineItem ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Groupby
       Variable [ Name=$l_partkey ]
@@ -61,19 +59,16 @@ OperatorExpr [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [LineItem]
         ]
-        AS
-        Variable [ Name=$l ]
+        AS Variable [ Name=$l ]
 ,
         FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Part]
         ]
-        AS
-        Variable [ Name=$p ]
+        AS Variable [ Name=$p ]
 ,
         FunctionCall tpch.tmp@0[
         ]
-        AS
-        Variable [ Name=$t ]
+        AS Variable [ Name=$t ]
       ]
       Where
         OperatorExpr [

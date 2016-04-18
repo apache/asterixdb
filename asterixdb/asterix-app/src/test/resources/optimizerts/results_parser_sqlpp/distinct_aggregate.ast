@@ -46,8 +46,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#2 ]
-          AS
-          Variable [ Name=#3 ]
+          AS Variable [ Name=#3 ]
         ]
       )
     ]
@@ -77,8 +76,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [LineItems_q1]
       ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Where
       OperatorExpr [
@@ -108,16 +106,13 @@ FROM [  (
         Variable [ Name=$l ]
         Field=l_suppkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$l ]
-       AS l
+        l:=Variable [ Name=$l ]
       )
 
   )
-  AS
-  Variable [ Name=$g ]
+  AS Variable [ Name=$g ]
 ]
 Groupby
   Variable [ Name=$l_returnflag ]
@@ -132,11 +127,9 @@ Groupby
     Variable [ Name=$g ]
     Field=l_linestatus
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$g ]
-   AS g
+    g:=Variable [ Name=$g ]
   )
 
 Orderby

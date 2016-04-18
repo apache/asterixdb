@@ -36,8 +36,7 @@ OperatorExpr [
       ]
       ]
       FROM [        Variable [ Name=$lp ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]
@@ -62,8 +61,7 @@ OperatorExpr [
       ]
       ]
       FROM [        Variable [ Name=$lp ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]
@@ -72,14 +70,12 @@ OperatorExpr [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Part]
   ]
-  AS
-  Variable [ Name=$p ]
+  AS Variable [ Name=$p ]
 ]
 Let Variable [ Name=$lp ]
   :=
@@ -145,14 +141,10 @@ Groupby
   Variable [ Name=$t ]
   :=
   LiteralExpr [LONG] [1]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$lp ]
-   AS lp
-  Variable [ Name=$p ]
-   AS p
-  Variable [ Name=$l ]
-   AS l
+    lp:=Variable [ Name=$lp ]
+    p:=Variable [ Name=$p ]
+    l:=Variable [ Name=$l ]
   )
 

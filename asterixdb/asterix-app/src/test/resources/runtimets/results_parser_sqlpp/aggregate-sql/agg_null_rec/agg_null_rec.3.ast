@@ -15,8 +15,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
-          AS
-          Variable [ Name=$t ]
+          AS Variable [ Name=$t ]
         ]
       )
     ]
@@ -35,8 +34,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
-          AS
-          Variable [ Name=$t ]
+          AS Variable [ Name=$t ]
         ]
       )
     ]
@@ -55,8 +53,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
-          AS
-          Variable [ Name=$t ]
+          AS Variable [ Name=$t ]
         ]
       )
     ]
@@ -75,8 +72,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
-          AS
-          Variable [ Name=$t ]
+          AS Variable [ Name=$t ]
         ]
       )
     ]
@@ -95,8 +91,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Test]
           ]
-          AS
-          Variable [ Name=$t ]
+          AS Variable [ Name=$t ]
         ]
       )
     ]

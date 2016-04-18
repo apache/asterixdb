@@ -11,6 +11,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [FLOAT] [0.1]
     LiteralExpr [FLOAT] [0.1]
   ]
-  AS
-  Variable [ Name=$f ]
+  AS Variable [ Name=$f ]
 ]

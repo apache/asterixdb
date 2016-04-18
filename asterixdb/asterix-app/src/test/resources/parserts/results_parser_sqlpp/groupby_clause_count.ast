@@ -9,8 +9,7 @@ FunctionCall null.count@1[
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS
-      Variable [ Name=#2 ]
+      AS Variable [ Name=#2 ]
     ]
   )
 ]
@@ -89,8 +88,7 @@ FROM [  UnorderedListConstructor [
       )
     ]
   ]
-  AS
-  Variable [ Name=$r ]
+  AS Variable [ Name=$r ]
 ]
 Groupby
   Variable [ Name=$g ]
@@ -99,10 +97,8 @@ Groupby
     Variable [ Name=$r ]
     Field=gas
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$r ]
-   AS r
+    r:=Variable [ Name=$r ]
   )
 

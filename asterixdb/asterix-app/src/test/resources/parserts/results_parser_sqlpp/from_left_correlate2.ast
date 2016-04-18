@@ -47,13 +47,11 @@ FROM [  UnorderedListConstructor [
       )
     ]
   ]
-  AS
-  Variable [ Name=$s ]
+  AS Variable [ Name=$s ]
   LEFTOUTER UNNEST
     FieldAccessor [
       Variable [ Name=$s ]
       Field=readings
     ]
-     AS
-    Variable [ Name=$r ]
+     AS Variable [ Name=$r ]
 ]

@@ -9,8 +9,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [DOUBLE] [0.9]
     LiteralExpr [DOUBLE] [0.901]
   ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ]
 Where
   OperatorExpr [

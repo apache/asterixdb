@@ -23,8 +23,7 @@ RecordConstructor [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [CSX]
         ]
-        AS
-        Variable [ Name=$b ]
+        AS Variable [ Name=$b ]
       ]
       Where
         OperatorExpr [
@@ -66,8 +65,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]
 Orderby
   FieldAccessor [

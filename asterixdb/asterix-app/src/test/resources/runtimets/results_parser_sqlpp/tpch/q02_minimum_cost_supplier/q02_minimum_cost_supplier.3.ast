@@ -78,8 +78,7 @@ FunctionDecl tmp1([]) {
     ]
     ]
     FROM [      Variable [ Name=$Part ]
-      AS
-      Variable [ Name=$p ]
+      AS Variable [ Name=$p ]
 ,
       (
         SELECT ELEMENT [
@@ -151,8 +150,7 @@ FunctionDecl tmp1([]) {
         ]
         ]
         FROM [          Variable [ Name=$Partsupp ]
-          AS
-          Variable [ Name=$ps ]
+          AS Variable [ Name=$ps ]
 ,
           (
             SELECT ELEMENT [
@@ -216,8 +214,7 @@ FunctionDecl tmp1([]) {
             ]
             ]
             FROM [              Variable [ Name=$Supplier ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -241,12 +238,10 @@ FunctionDecl tmp1([]) {
                 ]
                 ]
                 FROM [                  Variable [ Name=$Region ]
-                  AS
-                  Variable [ Name=$r ]
+                  AS Variable [ Name=$r ]
 ,
                   Variable [ Name=$Nation ]
-                  AS
-                  Variable [ Name=$n ]
+                  AS Variable [ Name=$n ]
                 ]
                 Where
                   OperatorExpr [
@@ -272,8 +267,7 @@ FunctionDecl tmp1([]) {
                     ]
                   ]
               )
-              AS
-              Variable [ Name=$rn ]
+              AS Variable [ Name=$rn ]
             ]
             Where
               OperatorExpr [
@@ -288,8 +282,7 @@ FunctionDecl tmp1([]) {
                 ]
               ]
           )
-          AS
-          Variable [ Name=$srn ]
+          AS Variable [ Name=$srn ]
         ]
         Where
           OperatorExpr [
@@ -304,8 +297,7 @@ FunctionDecl tmp1([]) {
             ]
           ]
       )
-      AS
-      Variable [ Name=$pssrn ]
+      AS Variable [ Name=$pssrn ]
     ]
     Where
       OperatorExpr [
@@ -353,8 +345,7 @@ FunctionDecl tmp2([]) {
             ]
             ]
             FROM [              Variable [ Name=$pssrn ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -362,8 +353,7 @@ FunctionDecl tmp2([]) {
     ]
     ]
     FROM [      Variable [ Name=$Part ]
-      AS
-      Variable [ Name=$p ]
+      AS Variable [ Name=$p ]
 ,
       (
         SELECT ELEMENT [
@@ -435,8 +425,7 @@ FunctionDecl tmp2([]) {
         ]
         ]
         FROM [          Variable [ Name=$Partsupp ]
-          AS
-          Variable [ Name=$ps ]
+          AS Variable [ Name=$ps ]
 ,
           (
             SELECT ELEMENT [
@@ -500,8 +489,7 @@ FunctionDecl tmp2([]) {
             ]
             ]
             FROM [              Variable [ Name=$Supplier ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
 ,
               (
                 SELECT ELEMENT [
@@ -525,12 +513,10 @@ FunctionDecl tmp2([]) {
                 ]
                 ]
                 FROM [                  Variable [ Name=$Region ]
-                  AS
-                  Variable [ Name=$r ]
+                  AS Variable [ Name=$r ]
 ,
                   Variable [ Name=$Nation ]
-                  AS
-                  Variable [ Name=$n ]
+                  AS Variable [ Name=$n ]
                 ]
                 Where
                   OperatorExpr [
@@ -556,8 +542,7 @@ FunctionDecl tmp2([]) {
                     ]
                   ]
               )
-              AS
-              Variable [ Name=$rn ]
+              AS Variable [ Name=$rn ]
             ]
             Where
               OperatorExpr [
@@ -572,8 +557,7 @@ FunctionDecl tmp2([]) {
                 ]
               ]
           )
-          AS
-          Variable [ Name=$srn ]
+          AS Variable [ Name=$srn ]
         ]
         Where
           OperatorExpr [
@@ -588,8 +572,7 @@ FunctionDecl tmp2([]) {
             ]
           ]
       )
-      AS
-      Variable [ Name=$pssrn ]
+      AS Variable [ Name=$pssrn ]
     ]
     Where
       OperatorExpr [
@@ -695,13 +678,11 @@ RecordConstructor [
 ]
 FROM [  FunctionCall tpch.tmp2@0[
   ]
-  AS
-  Variable [ Name=$t2 ]
+  AS Variable [ Name=$t2 ]
 ,
   FunctionCall tpch.tmp1@0[
   ]
-  AS
-  Variable [ Name=$t1 ]
+  AS Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [

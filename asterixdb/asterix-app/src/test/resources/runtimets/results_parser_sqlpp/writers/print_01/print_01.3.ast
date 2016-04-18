@@ -7,6 +7,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [foo]
     LiteralExpr [STRING] [bar]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

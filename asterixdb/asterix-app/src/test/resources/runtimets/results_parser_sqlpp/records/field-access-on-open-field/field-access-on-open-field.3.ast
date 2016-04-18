@@ -9,8 +9,7 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Let Variable [ Name=$a ]
   :=

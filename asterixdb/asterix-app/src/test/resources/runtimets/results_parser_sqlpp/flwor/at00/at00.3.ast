@@ -47,8 +47,7 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
         Orderby
           FieldAccessor [
@@ -63,8 +62,7 @@ FROM [  (
           ASC
 
       )
-      AS
-      Variable [ Name=$i ]
+      AS Variable [ Name=$i ]
     ]
     Groupby
       Variable [ Name=$partkey ]
@@ -73,25 +71,21 @@ FROM [  (
         Variable [ Name=$i ]
         Field=l_partkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$i ]
-       AS i
+        i:=Variable [ Name=$i ]
       )
 
   )
-  AS
-  Variable [ Name=$gen0 ]
+  AS Variable [ Name=$gen0 ]
 ,
   FieldAccessor [
     Variable [ Name=$gen0 ]
     Field=i
   ]
-  AS
-  Variable [ Name=$j ]
-  AT
-  Variable [ Name=$p ]
+  AS Variable [ Name=$j ]
+ AT 
+Variable [ Name=$p ]
 ]
 Where
   OperatorExpr [

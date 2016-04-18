@@ -27,8 +27,7 @@ FunctionDecl q22_customer_tmp([]) {
     ]
     ]
     FROM [      Variable [ Name=$Customer ]
-      AS
-      Variable [ Name=$c ]
+      AS Variable [ Name=$c ]
     ]
     Let Variable [ Name=$phone_substr ]
       :=
@@ -101,8 +100,7 @@ Let Variable [ Name=$avg ]
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Customer]
         ]
-        AS
-        Variable [ Name=$c ]
+        AS Variable [ Name=$c ]
       ]
       Let Variable [ Name=$phone_substr ]
         :=
@@ -190,8 +188,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -208,8 +205,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$ct ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -218,8 +214,7 @@ RecordConstructor [
 ]
 FROM [  FunctionCall tpch.q22_customer_tmp@0[
   ]
-  AS
-  Variable [ Name=$ct ]
+  AS Variable [ Name=$ct ]
 ]
 Where
   OperatorExpr [
@@ -231,8 +226,7 @@ Where
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
-          AS
-          Variable [ Name=$o ]
+          AS Variable [ Name=$o ]
         ]
         Where
           OperatorExpr [
@@ -258,13 +252,10 @@ Groupby
     Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$ct ]
-   AS ct
-  Variable [ Name=$avg ]
-   AS avg
+    ct:=Variable [ Name=$ct ]
+    avg:=Variable [ Name=$avg ]
   )
 
 Orderby

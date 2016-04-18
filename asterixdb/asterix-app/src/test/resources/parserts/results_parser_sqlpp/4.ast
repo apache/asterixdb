@@ -11,8 +11,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [SIGroup]
   ]
-  AS
-  Variable [ Name=$sig ]
+  AS Variable [ Name=$sig ]
 ]
 Let Variable [ Name=$similar_sigs ]
   :=
@@ -32,8 +31,7 @@ Let Variable [ Name=$similar_sigs ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [SIGroup]
       ]
-      AS
-      Variable [ Name=$similar_sig ]
+      AS Variable [ Name=$similar_sig ]
     ]
     Where
       OperatorExpr [

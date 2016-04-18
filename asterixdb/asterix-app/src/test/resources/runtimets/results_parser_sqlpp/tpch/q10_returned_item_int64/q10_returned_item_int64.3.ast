@@ -124,8 +124,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [LineItem]
       ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
 ,
       (
         SELECT ELEMENT [
@@ -199,20 +198,17 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
-          AS
-          Variable [ Name=$o ]
+          AS Variable [ Name=$o ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Customer]
           ]
-          AS
-          Variable [ Name=$c ]
+          AS Variable [ Name=$c ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Nation]
           ]
-          AS
-          Variable [ Name=$n ]
+          AS Variable [ Name=$n ]
         ]
         Where
           OperatorExpr [
@@ -261,8 +257,7 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$ocn ]
+      AS Variable [ Name=$ocn ]
     ]
     Where
       OperatorExpr [
@@ -288,8 +283,7 @@ FROM [  (
         ]
       ]
   )
-  AS
-  Variable [ Name=$locn ]
+  AS Variable [ Name=$locn ]
 ]
 Groupby
   Variable [ Name=$c_custkey ]
@@ -334,11 +328,9 @@ Groupby
     Variable [ Name=$locn ]
     Field=c_comment
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$locn ]
-   AS locn
+    locn:=Variable [ Name=$locn ]
   )
 
 Let Variable [ Name=$revenue ]
@@ -363,8 +355,7 @@ Let Variable [ Name=$revenue ]
       ]
       ]
       FROM [        Variable [ Name=$locn ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]

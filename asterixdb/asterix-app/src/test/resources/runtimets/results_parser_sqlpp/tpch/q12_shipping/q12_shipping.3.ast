@@ -40,8 +40,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$o ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -79,8 +78,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$o ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -90,14 +88,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ]
 Where
   OperatorExpr [
@@ -182,13 +178,10 @@ Groupby
     Variable [ Name=$l ]
     Field=l_shipmode
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$o ]
-   AS o
-  Variable [ Name=$l ]
-   AS l
+    o:=Variable [ Name=$o ]
+    l:=Variable [ Name=$l ]
   )
 
 Orderby

@@ -17,8 +17,7 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TOKENSRANKEDADM]
   ]
-  AS
-  Variable [ Name=$token1 ]
+  AS Variable [ Name=$token1 ]
 ,
   (
     SELECT ELEMENT [
@@ -27,8 +26,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [TOKENSRANKEDADM]
       ]
-      AS
-      Variable [ Name=$tokenRanked ]
+      AS Variable [ Name=$tokenRanked ]
     ]
     Orderby
       FieldAccessor [
@@ -38,8 +36,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       ASC
 
   )
-  AS
-  Variable [ Name=$token2 ]
+  AS Variable [ Name=$token2 ]
 ]
 Where
   OperatorExpr [

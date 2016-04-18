@@ -8,8 +8,7 @@ FunctionCall TinySocial.get-record-fields@1[
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsersAlternate]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Where
   OperatorExpr [

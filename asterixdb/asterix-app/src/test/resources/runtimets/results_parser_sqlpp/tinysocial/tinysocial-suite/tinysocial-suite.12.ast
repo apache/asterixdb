@@ -6,8 +6,7 @@ Variable [ Name=$fbu ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
-  AS
-  Variable [ Name=$fbu ]
+  AS Variable [ Name=$fbu ]
 ]
 Where
   QuantifiedExpression SOME [

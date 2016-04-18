@@ -50,8 +50,7 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [tsdata]
           ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
         Orderby
           FieldAccessor [
@@ -61,8 +60,7 @@ FROM [  (
           ASC
 
       )
-      AS
-      Variable [ Name=$i ]
+      AS Variable [ Name=$i ]
 ,
       FunctionCall test.overlap-bins@3[
         FunctionCall test.interval-start-from-time@2[
@@ -82,20 +80,16 @@ FROM [  (
           LiteralExpr [STRING] [PT1H30M]
         ]
       ]
-      AS
-      Variable [ Name=$j ]
+      AS Variable [ Name=$j ]
     ]
     Groupby
       Variable [ Name=$bin ]
       :=
       Variable [ Name=$j ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$j ]
-       AS j
-      Variable [ Name=$i ]
-       AS i
+        j:=Variable [ Name=$j ]
+        i:=Variable [ Name=$i ]
       )
 
     Orderby
@@ -105,15 +99,13 @@ FROM [  (
       ASC
 
   )
-  AS
-  Variable [ Name=$gen0 ]
+  AS Variable [ Name=$gen0 ]
 ,
   FieldAccessor [
     Variable [ Name=$gen0 ]
     Field=i
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Let Variable [ Name=$itv ]
   :=

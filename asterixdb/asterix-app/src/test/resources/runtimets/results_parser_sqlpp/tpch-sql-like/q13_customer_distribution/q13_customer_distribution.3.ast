@@ -35,8 +35,7 @@ FROM [  (
             ]
             ]
             FROM [              Variable [ Name=$co ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -68,8 +67,7 @@ FROM [  (
                 FROM [                  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [Orders]
                   ]
-                  AS
-                  Variable [ Name=$o ]
+                  AS Variable [ Name=$o ]
                 ]
                 Where
                   OperatorExpr [
@@ -103,12 +101,10 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Customer]
           ]
-          AS
-          Variable [ Name=$c ]
+          AS Variable [ Name=$c ]
         ]
       )
-      AS
-      Variable [ Name=$co ]
+      AS Variable [ Name=$co ]
     ]
     Groupby
       Variable [ Name=$c_custkey ]
@@ -117,16 +113,13 @@ FROM [  (
         Variable [ Name=$co ]
         Field=c_custkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$co ]
-       AS co
+        co:=Variable [ Name=$co ]
       )
 
   )
-  AS
-  Variable [ Name=$gco ]
+  AS Variable [ Name=$gco ]
 ]
 Groupby
   Variable [ Name=$c_count ]
@@ -135,11 +128,9 @@ Groupby
     Variable [ Name=$gco ]
     Field=c_count
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$gco ]
-   AS gco
+    gco:=Variable [ Name=$gco ]
   )
 
 Let Variable [ Name=$custdist ]
@@ -153,8 +144,7 @@ Let Variable [ Name=$custdist ]
       ]
       ]
       FROM [        Variable [ Name=#2 ]
-        AS
-        Variable [ Name=#3 ]
+        AS Variable [ Name=#3 ]
       ]
     )
   ]

@@ -6,13 +6,11 @@ Variable [ Name=$r ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [sensors]
   ]
-  AS
-  Variable [ Name=$s ]
+  AS Variable [ Name=$s ]
   INNER UNNEST
     FieldAccessor [
       Variable [ Name=$s ]
       Field=readings
     ]
-     AS
-    Variable [ Name=$r ]
+     AS Variable [ Name=$r ]
 ]

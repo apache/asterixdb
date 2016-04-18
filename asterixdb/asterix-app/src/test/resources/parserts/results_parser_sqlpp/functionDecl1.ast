@@ -20,15 +20,13 @@ FunctionDecl calculate([$events]) {
     ]
     ]
     FROM [      Variable [ Name=$events ]
-      AS
-      Variable [ Name=$event ]
+      AS Variable [ Name=$event ]
 ,
       FieldAccessor [
         Variable [ Name=$event ]
         Field=sponsoring_sigs
       ]
-      AS
-      Variable [ Name=$sponsor ]
+      AS Variable [ Name=$sponsor ]
     ]
     Let Variable [ Name=$es ]
       :=
@@ -77,8 +75,7 @@ FunctionDecl calculate([$events]) {
         ]
         ]
         FROM [          Variable [ Name=$es ]
-          AS
-          Variable [ Name=$e ]
+          AS Variable [ Name=$e ]
         ]
         Groupby
           Variable [ Name=$chapter_name ]

@@ -6,8 +6,7 @@ Variable [ Name=$l ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [test.employee]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Orderby
   FieldAccessor [

@@ -33,8 +33,7 @@ RecordConstructor [
           ]
           ]
           FROM [            Variable [ Name=$t ]
-            AS
-            Variable [ Name=$i ]
+            AS Variable [ Name=$i ]
           ]
         )
       ]
@@ -48,8 +47,7 @@ RecordConstructor [
           ]
           ]
           FROM [            Variable [ Name=$t ]
-            AS
-            Variable [ Name=$i ]
+            AS Variable [ Name=$i ]
           ]
         )
       ]
@@ -142,8 +140,7 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Supplier]
           ]
-          AS
-          Variable [ Name=$s ]
+          AS Variable [ Name=$s ]
 ,
           (
             SELECT ELEMENT [
@@ -230,8 +227,7 @@ FROM [  (
                 FROM [                  FunctionCall Metadata.dataset@1[
                     LiteralExpr [STRING] [LineItem]
                   ]
-                  AS
-                  Variable [ Name=$l ]
+                  AS Variable [ Name=$l ]
 ,
                   (
                     SELECT ELEMENT [
@@ -257,8 +253,7 @@ FROM [  (
                     FROM [                      FunctionCall Metadata.dataset@1[
                         LiteralExpr [STRING] [Orders]
                       ]
-                      AS
-                      Variable [ Name=$o ]
+                      AS Variable [ Name=$o ]
 ,
                       (
                         SELECT ELEMENT [
@@ -276,8 +271,7 @@ FROM [  (
                         FROM [                          FunctionCall Metadata.dataset@1[
                             LiteralExpr [STRING] [Customer]
                           ]
-                          AS
-                          Variable [ Name=$c ]
+                          AS Variable [ Name=$c ]
 ,
                           (
                             SELECT ELEMENT [
@@ -295,14 +289,12 @@ FROM [  (
                             FROM [                              FunctionCall Metadata.dataset@1[
                                 LiteralExpr [STRING] [Nation]
                               ]
-                              AS
-                              Variable [ Name=$n1 ]
+                              AS Variable [ Name=$n1 ]
 ,
                               FunctionCall Metadata.dataset@1[
                                 LiteralExpr [STRING] [Region]
                               ]
-                              AS
-                              Variable [ Name=$r1 ]
+                              AS Variable [ Name=$r1 ]
                             ]
                             Where
                               OperatorExpr [
@@ -328,8 +320,7 @@ FROM [  (
                                 ]
                               ]
                           )
-                          AS
-                          Variable [ Name=$nr ]
+                          AS Variable [ Name=$nr ]
                         ]
                         Where
                           OperatorExpr [
@@ -344,8 +335,7 @@ FROM [  (
                             ]
                           ]
                       )
-                      AS
-                      Variable [ Name=$nrc ]
+                      AS Variable [ Name=$nrc ]
                     ]
                     Where
                       OperatorExpr [
@@ -360,8 +350,7 @@ FROM [  (
                         ]
                       ]
                   )
-                  AS
-                  Variable [ Name=$nrco ]
+                  AS Variable [ Name=$nrco ]
                 ]
                 Where
                   OperatorExpr [
@@ -396,14 +385,12 @@ FROM [  (
                     ]
                   ]
               )
-              AS
-              Variable [ Name=$lnrco ]
+              AS Variable [ Name=$lnrco ]
 ,
               FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Part]
               ]
-              AS
-              Variable [ Name=$p ]
+              AS Variable [ Name=$p ]
             ]
             Where
               OperatorExpr [
@@ -429,8 +416,7 @@ FROM [  (
                 ]
               ]
           )
-          AS
-          Variable [ Name=$lnrcop ]
+          AS Variable [ Name=$lnrcop ]
         ]
         Where
           OperatorExpr [
@@ -445,14 +431,12 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$slnrcop ]
+      AS Variable [ Name=$slnrcop ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Nation]
       ]
-      AS
-      Variable [ Name=$n2 ]
+      AS Variable [ Name=$n2 ]
     ]
     Let Variable [ Name=$o_year ]
       :=
@@ -475,8 +459,7 @@ FROM [  (
         ]
       ]
   )
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Groupby
   Variable [ Name=$year ]
@@ -485,11 +468,9 @@ Groupby
     Variable [ Name=$t ]
     Field=year
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$t ]
-   AS t
+    t:=Variable [ Name=$t ]
   )
 
 Orderby

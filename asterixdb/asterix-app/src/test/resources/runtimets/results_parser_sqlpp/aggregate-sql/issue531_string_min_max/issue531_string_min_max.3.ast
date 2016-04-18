@@ -16,8 +16,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [t1]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
       )
     ]
@@ -36,8 +35,7 @@ RecordConstructor [
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [t1]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
       )
     ]

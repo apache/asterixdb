@@ -12,8 +12,7 @@ FunctionCall TinySocial.count@1[
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS
-      Variable [ Name=#2 ]
+      AS Variable [ Name=#2 ]
     ]
   )
 ]
@@ -31,16 +30,14 @@ count
       ]
       ]
       FROM [        Variable [ Name=#3 ]
-        AS
-        Variable [ Name=#4 ]
+        AS Variable [ Name=#4 ]
       ]
     )
   ]
   sum
   ]
   FROM [    Variable [ Name=$t ]
-    AS
-    Variable [ Name=$k ]
+    AS Variable [ Name=$k ]
   ]
   Groupby
     Variable [ Name=$min ]
@@ -51,17 +48,12 @@ count
         Field=send-time
       ]
     ]
-    GROUP AS
-    Variable [ Name=#3 ]
+    GROUP AS Variable [ Name=#3 ]
     (
-    Variable [ Name=$k ]
-     AS k
-    Variable [ Name=$t ]
-     AS t
-    Variable [ Name=$h ]
-     AS h
-    Variable [ Name=#1 ]
-     AS #1
+      k:=Variable [ Name=$k ]
+      t:=Variable [ Name=$t ]
+      h:=Variable [ Name=$h ]
+      #1:=Variable [ Name=#1 ]
     )
 
   Orderby
@@ -74,8 +66,7 @@ finer
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Groupby
   Variable [ Name=$h ]
@@ -86,10 +77,8 @@ Groupby
       Field=send-time
     ]
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$t ]
-   AS t
+    t:=Variable [ Name=$t ]
   )
 

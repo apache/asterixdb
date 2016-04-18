@@ -31,8 +31,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -49,8 +48,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$o ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -67,8 +65,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$o ]
-          AS
-          Variable [ Name=$i ]
+          AS Variable [ Name=$i ]
         ]
       )
     ]
@@ -78,8 +75,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ]
 Groupby
   Variable [ Name=$cid ]
@@ -88,10 +84,8 @@ Groupby
     Variable [ Name=$o ]
     Field=cid
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$o ]
-   AS o
+    o:=Variable [ Name=$o ]
   )
 

@@ -22,6 +22,5 @@ FunctionCall test.string@1[
 ]
 ]
 FROM [  Variable [ Name=$d ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

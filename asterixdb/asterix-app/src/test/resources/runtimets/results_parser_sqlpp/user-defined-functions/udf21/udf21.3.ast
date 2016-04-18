@@ -28,8 +28,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [65]
     LiteralExpr [LONG] [75]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]
 Where
   FunctionCall test.isOdd@1[

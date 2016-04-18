@@ -120,14 +120,12 @@ RecordConstructor [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Orders]
         ]
-        AS
-        Variable [ Name=$orders ]
+        AS Variable [ Name=$orders ]
 ,
         FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Customer]
         ]
-        AS
-        Variable [ Name=$customer ]
+        AS Variable [ Name=$customer ]
       ]
       Where
         OperatorExpr [
@@ -162,17 +160,12 @@ RecordConstructor [
           Variable [ Name=$orders ]
           Field=o_orderdate
         ]
-        GROUP AS
-        Variable [ Name=#1 ]
+        GROUP AS Variable [ Name=#1 ]
         (
-        Variable [ Name=$customer ]
-         AS customer
-        Variable [ Name=$orders ]
-         AS orders
-        Variable [ Name=$sn ]
-         AS sn
-        Variable [ Name=$nation ]
-         AS nation
+          customer:=Variable [ Name=$customer ]
+          orders:=Variable [ Name=$orders ]
+          sn:=Variable [ Name=$sn ]
+          nation:=Variable [ Name=$nation ]
         )
 
       Let Variable [ Name=$sum ]
@@ -186,8 +179,7 @@ RecordConstructor [
             ]
             ]
             FROM [              Variable [ Name=$orders ]
-              AS
-              Variable [ Name=$o ]
+              AS Variable [ Name=$o ]
             ]
           )
         ]
@@ -204,14 +196,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Nation]
   ]
-  AS
-  Variable [ Name=$nation ]
+  AS Variable [ Name=$nation ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [SelectedNation]
   ]
-  AS
-  Variable [ Name=$sn ]
+  AS Variable [ Name=$sn ]
 ]
 Where
   OperatorExpr [

@@ -31,8 +31,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
   ]
-  AS
-  Variable [ Name=$paperDBLP ]
+  AS Variable [ Name=$paperDBLP ]
 ]
 Let Variable [ Name=$unrankedTokensDBLP ]
   :=
@@ -49,8 +48,7 @@ Let Variable [ Name=$tokensDBLP ]
     Variable [ Name=$i ]
     ]
     FROM [      Variable [ Name=$unrankedTokensDBLP ]
-      AS
-      Variable [ Name=$token ]
+      AS Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
@@ -59,8 +57,7 @@ Let Variable [ Name=$tokensDBLP ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
           ]
-          AS
-          Variable [ Name=$paper ]
+          AS Variable [ Name=$paper ]
 ,
           FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
             FieldAccessor [
@@ -68,24 +65,18 @@ Let Variable [ Name=$tokensDBLP ]
               Field=title
             ]
           ]
-          AS
-          Variable [ Name=$token ]
+          AS Variable [ Name=$token ]
         ]
         Groupby
           Variable [ Name=$tokenGroupped ]
           :=
           Variable [ Name=$token ]
-          GROUP AS
-          Variable [ Name=#1 ]
+          GROUP AS Variable [ Name=#1 ]
           (
-          Variable [ Name=$token ]
-           AS token
-          Variable [ Name=$paper ]
-           AS paper
-          Variable [ Name=$unrankedTokensDBLP ]
-           AS unrankedTokensDBLP
-          Variable [ Name=$paperDBLP ]
-           AS paperDBLP
+            token:=Variable [ Name=$token ]
+            paper:=Variable [ Name=$paper ]
+            unrankedTokensDBLP:=Variable [ Name=$unrankedTokensDBLP ]
+            paperDBLP:=Variable [ Name=$paperDBLP ]
           )
 
         Orderby
@@ -98,8 +89,7 @@ Let Variable [ Name=$tokensDBLP ]
               ]
               ]
               FROM [                Variable [ Name=#1 ]
-                AS
-                Variable [ Name=#2 ]
+                AS Variable [ Name=#2 ]
               ]
             )
           ]
@@ -108,10 +98,9 @@ Let Variable [ Name=$tokensDBLP ]
           ASC
 
       )
-      AS
-      Variable [ Name=$tokenRanked ]
-      AT
-      Variable [ Name=$i ]
+      AS Variable [ Name=$tokenRanked ]
+ AT 
+Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [

@@ -12,8 +12,7 @@ FunctionCall test.sql-count@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Test]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
   )
 ]

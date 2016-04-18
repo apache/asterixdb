@@ -9,8 +9,7 @@ FunctionCall test.readDataset@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [test.t1]
       ]
-      AS
-      Variable [ Name=$a ]
+      AS Variable [ Name=$a ]
     ]
     Orderby
       FieldAccessor [

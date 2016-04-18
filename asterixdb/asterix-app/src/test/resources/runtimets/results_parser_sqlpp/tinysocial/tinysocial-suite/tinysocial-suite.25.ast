@@ -14,8 +14,7 @@ FunctionCall TinySocial.avg@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookMessages]
       ]
-      AS
-      Variable [ Name=$message ]
+      AS Variable [ Name=$message ]
     ]
     Where
       OperatorExpr [

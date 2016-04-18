@@ -15,8 +15,7 @@ FunctionCall null.sql-avg@1[
           LiteralExpr [STRING] [2013-01-01]
         ]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
   )
 ]

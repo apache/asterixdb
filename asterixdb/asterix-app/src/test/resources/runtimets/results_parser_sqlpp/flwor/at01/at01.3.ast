@@ -32,8 +32,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
-      AS
-      Variable [ Name=$fb ]
+      AS Variable [ Name=$fb ]
     ]
     Orderby
       FieldAccessor [
@@ -43,8 +42,7 @@ FROM [  (
       ASC
 
   )
-  AS
-  Variable [ Name=$i ]
-  AT
-  Variable [ Name=$p ]
+  AS Variable [ Name=$i ]
+ AT 
+Variable [ Name=$p ]
 ]

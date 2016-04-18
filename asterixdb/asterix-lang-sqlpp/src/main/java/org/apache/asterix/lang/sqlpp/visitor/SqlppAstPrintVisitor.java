@@ -81,11 +81,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     @Override
     public Void visit(FromTerm fromTerm, Integer step) throws AsterixException {
         fromTerm.getLeftExpression().accept(this, step);
-        out.println(skip(step) + "AS");
-        fromTerm.getLeftVariable().accept(this, step);
+        out.print(skip(step) + "AS ");
+        fromTerm.getLeftVariable().accept(this, 0);
         if (fromTerm.hasPositionalVariable()) {
-            out.println(skip(step) + "AT");
-            fromTerm.getPositionalVariable().accept(this, step);
+            out.println(" AT ");
+            fromTerm.getPositionalVariable().accept(this, 0);
         }
         if (fromTerm.hasCorrelateClauses()) {
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
@@ -99,11 +99,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(JoinClause joinClause, Integer step) throws AsterixException {
         out.println(skip(step) + joinClause.getJoinType() + " JOIN");
         joinClause.getRightExpression().accept(this, step + 1);
-        out.println(skip(step + 1) + "AS");
-        joinClause.getRightVariable().accept(this, step + 1);
+        out.print(skip(step + 1) + "AS ");
+        joinClause.getRightVariable().accept(this, 0);
         if (joinClause.hasPositionalVariable()) {
-            out.println(skip(step + 1) + "AT");
-            joinClause.getPositionalVariable().accept(this, step + 1);
+            out.print(" AT ");
+            joinClause.getPositionalVariable().accept(this, 0);
         }
         out.println(skip(step + 1) + "ON");
         joinClause.getConditionExpression().accept(this, step + 1);
@@ -114,11 +114,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(NestClause nestClause, Integer step) throws AsterixException {
         out.println(skip(step) + nestClause.getJoinType() + " NEST");
         nestClause.getRightExpression().accept(this, step + 1);
-        out.println(skip(step + 1) + "AS");
-        nestClause.getRightVariable().accept(this, step + 1);
+        out.print(skip(step + 1) + "AS ");
+        nestClause.getRightVariable().accept(this, 0);
         if (nestClause.hasPositionalVariable()) {
-            out.println(skip(step + 1) + "AT");
-            nestClause.getPositionalVariable().accept(this, step + 1);
+            out.print(" AT ");
+            nestClause.getPositionalVariable().accept(this, 0);
         }
         out.println(skip(step + 1) + "ON");
         nestClause.getConditionExpression().accept(this, step + 1);
@@ -230,11 +230,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(UnnestClause unnestClause, Integer step) throws AsterixException {
         out.println(skip(step) + unnestClause.getJoinType() + " UNNEST");
         unnestClause.getRightExpression().accept(this, step + 1);
-        out.println(skip(step + 1) + " AS");
-        unnestClause.getRightVariable().accept(this, step + 1);
+        out.print(skip(step + 1) + " AS ");
+        unnestClause.getRightVariable().accept(this, 0);
         if (unnestClause.hasPositionalVariable()) {
-            out.println(skip(step + 1) + " AT");
-            unnestClause.getPositionalVariable().accept(this, step + 1);
+            out.println(" AT");
+            unnestClause.getPositionalVariable().accept(this, 0);
         }
         return null;
     }
@@ -277,13 +277,13 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             pair.getExpr().accept(this, step + 1);
         }
         if (gc.hasGroupVar()) {
-            out.println(skip(step + 1) + "GROUP AS");
-            gc.getGroupVar().accept(this, step + 1);
+            out.print(skip(step + 1) + "GROUP AS ");
+            gc.getGroupVar().accept(this, 0);
             if (gc.hasGroupFieldList()) {
                 out.println(skip(step + 1) + "(");
                 for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
-                    field.first.accept(this, step + 1);
-                    out.println(skip(step + 1) + " AS " + field.second);
+                    out.print(skip(step + 2) + field.second + ":=");
+                    field.first.accept(this, 0);
                 }
                 out.println(skip(step + 1) + ")");
             }

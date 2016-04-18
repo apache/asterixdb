@@ -21,14 +21,12 @@ Variable [ Name=$x ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [test1.DsOne]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [test1.DsTwo]
   ]
-  AS
-  Variable [ Name=$y ]
+  AS Variable [ Name=$y ]
 ]
 Where
   OperatorExpr [

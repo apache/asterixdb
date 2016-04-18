@@ -19,8 +19,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -30,15 +29,13 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$tweet ]
+  AS Variable [ Name=$tweet ]
 ,
   FieldAccessor [
     Variable [ Name=$tweet ]
     Field=referred-topics
   ]
-  AS
-  Variable [ Name=$reftopic ]
+  AS Variable [ Name=$reftopic ]
 ]
 Where
   QuantifiedExpression SOME [
@@ -60,13 +57,10 @@ Groupby
   Variable [ Name=$topic ]
   :=
   Variable [ Name=$reftopic ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$reftopic ]
-   AS reftopic
-  Variable [ Name=$tweet ]
-   AS tweet
+    reftopic:=Variable [ Name=$reftopic ]
+    tweet:=Variable [ Name=$tweet ]
   )
 
 Orderby

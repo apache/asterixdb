@@ -50,8 +50,7 @@ FunctionCall test.string-concat@1[
 ]
 ]
 FROM [  Variable [ Name=$k ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Where
   OperatorExpr [

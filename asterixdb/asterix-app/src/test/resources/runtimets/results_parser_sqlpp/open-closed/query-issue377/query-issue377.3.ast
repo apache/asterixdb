@@ -47,8 +47,7 @@ RecordConstructor [
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [TweetMessages]
         ]
-        AS
-        Variable [ Name=$t ]
+        AS Variable [ Name=$t ]
       ]
       Let Variable [ Name=$tu ]
         :=
@@ -75,8 +74,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
-  AS
-  Variable [ Name=$fbu ]
+  AS Variable [ Name=$fbu ]
 ]
 Orderby
   FieldAccessor [

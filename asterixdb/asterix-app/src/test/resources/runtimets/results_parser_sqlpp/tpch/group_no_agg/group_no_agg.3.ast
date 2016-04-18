@@ -6,8 +6,7 @@ Variable [ Name=$name ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Regions_group_no_agg]
   ]
-  AS
-  Variable [ Name=$r ]
+  AS Variable [ Name=$r ]
 ]
 Groupby
   Variable [ Name=$name ]
@@ -16,11 +15,9 @@ Groupby
     Variable [ Name=$r ]
     Field=r_name
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$r ]
-   AS r
+    r:=Variable [ Name=$r ]
   )
 
 Orderby

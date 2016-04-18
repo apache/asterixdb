@@ -23,8 +23,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [s]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ,
   (
     SELECT ELEMENT [
@@ -71,8 +70,7 @@ FROM [  FunctionCall Metadata.dataset@1[
           )
         ]
       ]
-      AS
-      Variable [ Name=$z ]
+      AS Variable [ Name=$z ]
     ]
     Where
       OperatorExpr [
@@ -87,6 +85,5 @@ FROM [  FunctionCall Metadata.dataset@1[
         ]
       ]
   )
-  AS
-  Variable [ Name=$y ]
+  AS Variable [ Name=$y ]
 ]

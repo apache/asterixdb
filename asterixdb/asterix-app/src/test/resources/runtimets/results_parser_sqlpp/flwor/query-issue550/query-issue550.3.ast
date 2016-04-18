@@ -162,16 +162,14 @@ RecordConstructor [
       Variable [ Name=$srec ]
       ]
       FROM [        Variable [ Name=$s ]
-        AS
-        Variable [ Name=$srec ]
+        AS Variable [ Name=$srec ]
       ]
     )
   )
 ]
 ]
 FROM [  Variable [ Name=$sample ]
-  AS
-  Variable [ Name=$s ]
+  AS Variable [ Name=$s ]
 ]
 Groupby
   Variable [ Name=$u ]
@@ -180,12 +178,9 @@ Groupby
     Variable [ Name=$s ]
     Field=uid
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$s ]
-   AS s
-  Variable [ Name=$sample ]
-   AS sample
+    s:=Variable [ Name=$s ]
+    sample:=Variable [ Name=$sample ]
   )
 

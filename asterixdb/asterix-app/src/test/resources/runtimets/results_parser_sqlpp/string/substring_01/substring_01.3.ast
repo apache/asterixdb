@@ -10,6 +10,5 @@ FunctionCall test.substring@3[
 FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [foobar]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

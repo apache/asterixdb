@@ -23,6 +23,5 @@ SELECT ELEMENT [
 Variable [ Name=$p ]
 ]
 FROM [  Variable [ Name=$polygon_list ]
-  AS
-  Variable [ Name=$p ]
+  AS Variable [ Name=$p ]
 ]

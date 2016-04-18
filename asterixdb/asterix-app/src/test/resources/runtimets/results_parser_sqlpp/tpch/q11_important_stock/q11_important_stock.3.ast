@@ -20,8 +20,7 @@ Let Variable [ Name=$sum ]
       FROM [        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [Partsupp]
         ]
-        AS
-        Variable [ Name=$ps ]
+        AS Variable [ Name=$ps ]
 ,
         (
           SELECT ELEMENT [
@@ -39,14 +38,12 @@ Let Variable [ Name=$sum ]
           FROM [            FunctionCall Metadata.dataset@1[
               LiteralExpr [STRING] [Supplier]
             ]
-            AS
-            Variable [ Name=$s ]
+            AS Variable [ Name=$s ]
 ,
             FunctionCall Metadata.dataset@1[
               LiteralExpr [STRING] [Nation]
             ]
-            AS
-            Variable [ Name=$n ]
+            AS Variable [ Name=$n ]
           ]
           Where
             OperatorExpr [
@@ -61,8 +58,7 @@ Let Variable [ Name=$sum ]
               ]
             ]
         )
-        AS
-        Variable [ Name=$sn ]
+        AS Variable [ Name=$sn ]
       ]
       Where
         OperatorExpr [
@@ -125,8 +121,7 @@ FROM [  (
             ]
             ]
             FROM [              Variable [ Name=$ps ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -136,8 +131,7 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Partsupp]
       ]
-      AS
-      Variable [ Name=$ps ]
+      AS Variable [ Name=$ps ]
 ,
       (
         SELECT ELEMENT [
@@ -155,14 +149,12 @@ FROM [  (
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Supplier]
           ]
-          AS
-          Variable [ Name=$s ]
+          AS Variable [ Name=$s ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Nation]
           ]
-          AS
-          Variable [ Name=$n ]
+          AS Variable [ Name=$n ]
         ]
         Where
           OperatorExpr [
@@ -177,8 +169,7 @@ FROM [  (
             ]
           ]
       )
-      AS
-      Variable [ Name=$sn ]
+      AS Variable [ Name=$sn ]
     ]
     Where
       OperatorExpr [
@@ -199,20 +190,15 @@ FROM [  (
         Variable [ Name=$ps ]
         Field=ps_partkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$sn ]
-       AS sn
-      Variable [ Name=$ps ]
-       AS ps
-      Variable [ Name=$sum ]
-       AS sum
+        sn:=Variable [ Name=$sn ]
+        ps:=Variable [ Name=$ps ]
+        sum:=Variable [ Name=$sum ]
       )
 
   )
-  AS
-  Variable [ Name=$t1 ]
+  AS Variable [ Name=$t1 ]
 ]
 Where
   OperatorExpr [

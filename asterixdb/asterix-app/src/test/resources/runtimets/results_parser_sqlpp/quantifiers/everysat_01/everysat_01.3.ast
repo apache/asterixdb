@@ -7,8 +7,7 @@ FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [10]
     NEGATIVE LiteralExpr [LONG] [30]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Where
   QuantifiedExpression EVERY [

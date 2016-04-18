@@ -18,14 +18,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$dblp ]
+  AS Variable [ Name=$dblp ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
-  AS
-  Variable [ Name=$csx ]
+  AS Variable [ Name=$csx ]
 ]
 Where
   OperatorExpr [

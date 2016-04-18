@@ -39,8 +39,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=$l ]
-          AS
-          Variable [ Name=$j ]
+          AS Variable [ Name=$j ]
         ]
       )
     ]
@@ -50,14 +49,12 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
-  AS
-  Variable [ Name=$c ]
+  AS Variable [ Name=$c ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ,
   (
     SELECT ELEMENT [
@@ -79,8 +76,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             ]
             ]
             FROM [              Variable [ Name=$l ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -90,8 +86,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [LineItem]
       ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Groupby
       Variable [ Name=$l_orderkey ]
@@ -100,26 +95,20 @@ FROM [  FunctionCall Metadata.dataset@1[
         Variable [ Name=$l ]
         Field=l_orderkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$l ]
-       AS l
-      Variable [ Name=$o ]
-       AS o
-      Variable [ Name=$c ]
-       AS c
+        l:=Variable [ Name=$l ]
+        o:=Variable [ Name=$o ]
+        c:=Variable [ Name=$c ]
       )
 
   )
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
 Where
   OperatorExpr [
@@ -201,17 +190,12 @@ Groupby
     Variable [ Name=$o ]
     Field=o_totalprice
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$l ]
-   AS l
-  Variable [ Name=$t ]
-   AS t
-  Variable [ Name=$o ]
-   AS o
-  Variable [ Name=$c ]
-   AS c
+    l:=Variable [ Name=$l ]
+    t:=Variable [ Name=$t ]
+    o:=Variable [ Name=$o ]
+    c:=Variable [ Name=$c ]
   )
 
 Orderby

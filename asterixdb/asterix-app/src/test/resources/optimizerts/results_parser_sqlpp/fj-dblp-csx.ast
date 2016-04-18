@@ -38,26 +38,22 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
-  AS
-  Variable [ Name=$paperDBLP ]
+  AS Variable [ Name=$paperDBLP ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tokensDBLP]
   ]
-  AS
-  Variable [ Name=$prefixTokenDBLP ]
+  AS Variable [ Name=$prefixTokenDBLP ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
-  AS
-  Variable [ Name=$paperCSX ]
+  AS Variable [ Name=$paperCSX ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [tokensCSX]
   ]
-  AS
-  Variable [ Name=$prefixTokenCSX ]
+  AS Variable [ Name=$prefixTokenCSX ]
 ]
 Let Variable [ Name=$idDBLP ]
   :=
@@ -80,8 +76,7 @@ Let Variable [ Name=$tokensDBLP ]
     Variable [ Name=$i ]
     ]
     FROM [      Variable [ Name=$unrankedTokensDBLP ]
-      AS
-      Variable [ Name=$token ]
+      AS Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
@@ -93,14 +88,12 @@ Let Variable [ Name=$tokensDBLP ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [DBLP]
           ]
-          AS
-          Variable [ Name=$paper ]
+          AS Variable [ Name=$paper ]
         ]
       )
-      AS
-      Variable [ Name=$tokenRanked ]
-      AT
-      Variable [ Name=$i ]
+      AS Variable [ Name=$tokenRanked ]
+ AT 
+Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
@@ -134,8 +127,7 @@ Let Variable [ Name=$tokensCSX ]
     Variable [ Name=$i ]
     ]
     FROM [      Variable [ Name=$unrankedTokensCSX ]
-      AS
-      Variable [ Name=$token ]
+      AS Variable [ Name=$token ]
 ,
       (
         SELECT ELEMENT [
@@ -147,14 +139,12 @@ Let Variable [ Name=$tokensCSX ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [DBLP]
           ]
-          AS
-          Variable [ Name=$paper ]
+          AS Variable [ Name=$paper ]
         ]
       )
-      AS
-      Variable [ Name=$tokenRanked ]
-      AT
-      Variable [ Name=$i ]
+      AS Variable [ Name=$tokenRanked ]
+ AT 
+Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [
@@ -180,29 +170,18 @@ Groupby
   Variable [ Name=$idCSX ]
   :=
   Variable [ Name=$idCSX ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$tokensCSX ]
-   AS tokensCSX
-  Variable [ Name=$unrankedTokensCSX ]
-   AS unrankedTokensCSX
-  Variable [ Name=$idCSX ]
-   AS idCSX
-  Variable [ Name=$tokensDBLP ]
-   AS tokensDBLP
-  Variable [ Name=$unrankedTokensDBLP ]
-   AS unrankedTokensDBLP
-  Variable [ Name=$idDBLP ]
-   AS idDBLP
-  Variable [ Name=$prefixTokenCSX ]
-   AS prefixTokenCSX
-  Variable [ Name=$paperCSX ]
-   AS paperCSX
-  Variable [ Name=$prefixTokenDBLP ]
-   AS prefixTokenDBLP
-  Variable [ Name=$paperDBLP ]
-   AS paperDBLP
+    tokensCSX:=Variable [ Name=$tokensCSX ]
+    unrankedTokensCSX:=Variable [ Name=$unrankedTokensCSX ]
+    idCSX:=Variable [ Name=$idCSX ]
+    tokensDBLP:=Variable [ Name=$tokensDBLP ]
+    unrankedTokensDBLP:=Variable [ Name=$unrankedTokensDBLP ]
+    idDBLP:=Variable [ Name=$idDBLP ]
+    prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
+    paperCSX:=Variable [ Name=$paperCSX ]
+    prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
+    paperDBLP:=Variable [ Name=$paperDBLP ]
   )
 
 Orderby

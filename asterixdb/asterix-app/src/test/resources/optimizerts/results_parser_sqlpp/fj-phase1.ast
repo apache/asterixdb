@@ -39,8 +39,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Let Variable [ Name=$tokens ]
   :=
@@ -52,8 +51,7 @@ Let Variable [ Name=$tokens ]
         Variable [ Name=$user ]
         Field=lottery_numbers
       ]
-      AS
-      Variable [ Name=$lottery_number ]
+      AS Variable [ Name=$lottery_number ]
 ,
       (
         SELECT ELEMENT [
@@ -62,27 +60,22 @@ Let Variable [ Name=$tokens ]
         FROM [          FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [Users]
           ]
-          AS
-          Variable [ Name=$user ]
+          AS Variable [ Name=$user ]
 ,
           FieldAccessor [
             Variable [ Name=$user ]
             Field=lottery_numbers
           ]
-          AS
-          Variable [ Name=$lottery_number ]
+          AS Variable [ Name=$lottery_number ]
         ]
         Groupby
           Variable [ Name=$item ]
           :=
           Variable [ Name=$lottery_number ]
-          GROUP AS
-          Variable [ Name=#1 ]
+          GROUP AS Variable [ Name=#1 ]
           (
-          Variable [ Name=$lottery_number ]
-           AS lottery_number
-          Variable [ Name=$user ]
-           AS user
+            lottery_number:=Variable [ Name=$lottery_number ]
+            user:=Variable [ Name=$user ]
           )
 
         Let Variable [ Name=$count ]
@@ -96,8 +89,7 @@ Let Variable [ Name=$tokens ]
               ]
               ]
               FROM [                Variable [ Name=#1 ]
-                AS
-                Variable [ Name=#2 ]
+                AS Variable [ Name=#2 ]
               ]
             )
           ]
@@ -106,10 +98,9 @@ Let Variable [ Name=$tokens ]
           DESC
 
       )
-      AS
-      Variable [ Name=$token ]
-      AT
-      Variable [ Name=$i ]
+      AS Variable [ Name=$token ]
+ AT 
+Variable [ Name=$i ]
     ]
     Where
       OperatorExpr [

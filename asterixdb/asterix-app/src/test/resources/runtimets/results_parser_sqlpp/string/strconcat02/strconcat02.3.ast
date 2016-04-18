@@ -50,6 +50,5 @@ FROM [  OrderedListConstructor [
       ]
     ]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]

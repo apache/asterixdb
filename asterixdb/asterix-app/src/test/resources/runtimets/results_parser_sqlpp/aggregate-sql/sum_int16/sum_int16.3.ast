@@ -17,8 +17,7 @@ FunctionCall test.sql-sum@1[
           LiteralExpr [STRING] [3]
         ]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
   )
 ]

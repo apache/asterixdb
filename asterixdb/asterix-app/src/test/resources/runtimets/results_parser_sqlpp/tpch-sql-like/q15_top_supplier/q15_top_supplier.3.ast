@@ -31,8 +31,7 @@ FunctionDecl revenue([]) {
             ]
             ]
             FROM [              Variable [ Name=$l ]
-              AS
-              Variable [ Name=$i ]
+              AS Variable [ Name=$i ]
             ]
           )
         ]
@@ -40,8 +39,7 @@ FunctionDecl revenue([]) {
     ]
     ]
     FROM [      Variable [ Name=$LineItem ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Where
       OperatorExpr [
@@ -87,8 +85,7 @@ Let Variable [ Name=$m ]
       ]
       FROM [        FunctionCall tpch.revenue@0[
         ]
-        AS
-        Variable [ Name=$r2 ]
+        AS Variable [ Name=$r2 ]
       ]
     )
   ]
@@ -139,13 +136,11 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Supplier]
   ]
-  AS
-  Variable [ Name=$s ]
+  AS Variable [ Name=$s ]
 ,
   FunctionCall tpch.revenue@0[
   ]
-  AS
-  Variable [ Name=$r ]
+  AS Variable [ Name=$r ]
 ]
 Where
   OperatorExpr [

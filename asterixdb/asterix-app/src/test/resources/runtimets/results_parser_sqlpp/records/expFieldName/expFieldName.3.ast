@@ -13,6 +13,5 @@ FROM [  OrderedListConstructor [
     LiteralExpr [STRING] [field1]
     LiteralExpr [STRING] [field2]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]

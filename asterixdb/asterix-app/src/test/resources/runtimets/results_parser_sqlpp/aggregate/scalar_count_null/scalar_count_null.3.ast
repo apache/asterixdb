@@ -118,6 +118,5 @@ FROM [  OrderedListConstructor [
     Variable [ Name=$d ]
     Variable [ Name=$s ]
   ]
-  AS
-  Variable [ Name=$i ]
+  AS Variable [ Name=$i ]
 ]

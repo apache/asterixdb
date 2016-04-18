@@ -11,8 +11,7 @@ FunctionCall test.sum@1[
         LiteralExpr [LONG] [2]
         LiteralExpr [LONG] [3]
       ]
-      AS
-      Variable [ Name=$x ]
+      AS Variable [ Name=$x ]
     ]
     Where
       OperatorExpr [

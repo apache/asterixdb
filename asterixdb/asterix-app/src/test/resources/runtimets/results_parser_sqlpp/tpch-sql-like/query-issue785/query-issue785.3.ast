@@ -26,8 +26,7 @@ RecordConstructor [
       ]
       ]
       FROM [        Variable [ Name=$x ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
       Groupby
         Variable [ Name=$od ]
@@ -36,17 +35,12 @@ RecordConstructor [
           Variable [ Name=$i ]
           Field=order_date
         ]
-        GROUP AS
-        Variable [ Name=#3 ]
+        GROUP AS Variable [ Name=#3 ]
         (
-        Variable [ Name=$i ]
-         AS i
-        Variable [ Name=$x ]
-         AS x
-        Variable [ Name=$nation_key ]
-         AS nation_key
-        Variable [ Name=#2 ]
-         AS #2
+          i:=Variable [ Name=$i ]
+          x:=Variable [ Name=$x ]
+          nation_key:=Variable [ Name=$nation_key ]
+          #2:=Variable [ Name=#2 ]
         )
 
       Let Variable [ Name=$sum ]
@@ -60,8 +54,7 @@ RecordConstructor [
             ]
             ]
             FROM [              Variable [ Name=$i ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
             ]
           )
         ]
@@ -100,8 +93,7 @@ FROM [  (
             ]
             ]
             FROM [              Variable [ Name=$orders ]
-              AS
-              Variable [ Name=$o ]
+              AS Variable [ Name=$o ]
             ]
           )
         ]
@@ -111,20 +103,17 @@ FROM [  (
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Nation]
       ]
-      AS
-      Variable [ Name=$n ]
+      AS Variable [ Name=$n ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Customer]
       ]
-      AS
-      Variable [ Name=$customer ]
+      AS Variable [ Name=$customer ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$orders ]
+      AS Variable [ Name=$orders ]
     ]
     Where
       OperatorExpr [
@@ -165,20 +154,15 @@ FROM [  (
         Variable [ Name=$n ]
         Field=n_nationkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$orders ]
-       AS orders
-      Variable [ Name=$customer ]
-       AS customer
-      Variable [ Name=$n ]
-       AS n
+        orders:=Variable [ Name=$orders ]
+        customer:=Variable [ Name=$customer ]
+        n:=Variable [ Name=$n ]
       )
 
   )
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Groupby
   Variable [ Name=$nation_key ]
@@ -187,10 +171,8 @@ Groupby
     Variable [ Name=$x ]
     Field=nation_key
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$x ]
-   AS x
+    x:=Variable [ Name=$x ]
   )
 

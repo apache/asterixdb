@@ -17,8 +17,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Groupby
   Variable [ Name=$uid ]
@@ -30,11 +29,9 @@ Groupby
     ]
     Field=screen-name
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$t ]
-   AS t
+    t:=Variable [ Name=$t ]
   )
 
 Let Variable [ Name=$c ]
@@ -48,8 +45,7 @@ Let Variable [ Name=$c ]
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS
-        Variable [ Name=#2 ]
+        AS Variable [ Name=#2 ]
       ]
     )
   ]

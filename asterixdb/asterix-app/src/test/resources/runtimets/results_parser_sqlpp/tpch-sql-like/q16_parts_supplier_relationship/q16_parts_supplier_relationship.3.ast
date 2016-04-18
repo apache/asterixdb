@@ -75,12 +75,10 @@ FunctionDecl tmp([]) {
         ]
         ]
         FROM [          Variable [ Name=$Partsupp ]
-          AS
-          Variable [ Name=$ps ]
+          AS Variable [ Name=$ps ]
 ,
           Variable [ Name=$Part ]
-          AS
-          Variable [ Name=$p ]
+          AS Variable [ Name=$p ]
         ]
         Where
           OperatorExpr [
@@ -116,12 +114,10 @@ FunctionDecl tmp([]) {
             ]
           ]
       )
-      AS
-      Variable [ Name=$psp ]
+      AS Variable [ Name=$psp ]
 ,
       Variable [ Name=$Supplier ]
-      AS
-      Variable [ Name=$s ]
+      AS Variable [ Name=$s ]
     ]
     Where
       OperatorExpr [
@@ -202,8 +198,7 @@ FROM [  (
     ]
     FROM [      FunctionCall tpch.tmp@0[
       ]
-      AS
-      Variable [ Name=$t ]
+      AS Variable [ Name=$t ]
     ]
     Where
       OperatorExpr [
@@ -304,16 +299,13 @@ FROM [  (
         Variable [ Name=$t ]
         Field=ps_suppkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$t ]
-       AS t
+        t:=Variable [ Name=$t ]
       )
 
   )
-  AS
-  Variable [ Name=$t2 ]
+  AS Variable [ Name=$t2 ]
 ]
 Groupby
   Variable [ Name=$p_brand ]
@@ -334,11 +326,9 @@ Groupby
     Variable [ Name=$t2 ]
     Field=p_size
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$t2 ]
-   AS t2
+    t2:=Variable [ Name=$t2 ]
   )
 
 Let Variable [ Name=$supplier_cnt ]
@@ -352,8 +342,7 @@ Let Variable [ Name=$supplier_cnt ]
       ]
       ]
       FROM [        Variable [ Name=$t2 ]
-        AS
-        Variable [ Name=$i ]
+        AS Variable [ Name=$i ]
       ]
     )
   ]

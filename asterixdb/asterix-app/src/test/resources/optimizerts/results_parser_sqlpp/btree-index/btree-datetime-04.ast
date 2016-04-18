@@ -15,8 +15,7 @@ Variable [ Name=$emergency ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CHPReports]
   ]
-  AS
-  Variable [ Name=$emergency ]
+  AS Variable [ Name=$emergency ]
 ]
 Where
   OperatorExpr [

@@ -9,8 +9,7 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [CustomerSomeSat02]
   ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Where
   QuantifiedExpression SOME [

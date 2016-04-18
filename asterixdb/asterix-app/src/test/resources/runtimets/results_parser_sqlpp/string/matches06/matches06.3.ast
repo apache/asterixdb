@@ -68,6 +68,5 @@ FROM [  OrderedListConstructor [
       LiteralExpr [STRING] [[\p{Sc}]]
     ]
   ]
-  AS
-  Variable [ Name=$a ]
+  AS Variable [ Name=$a ]
 ]

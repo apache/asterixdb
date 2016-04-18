@@ -19,8 +19,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
-  AS
-  Variable [ Name=$user ]
+  AS Variable [ Name=$user ]
 ]
 Let Variable [ Name=$similar_users ]
   :=
@@ -45,8 +44,7 @@ Let Variable [ Name=$similar_users ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Users]
       ]
-      AS
-      Variable [ Name=$similar_user ]
+      AS Variable [ Name=$similar_user ]
     ]
     Let Variable [ Name=$similarity ]
       :=

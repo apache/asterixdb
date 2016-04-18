@@ -14,8 +14,7 @@ FunctionDecl tmp([]) {
     ]
     ]
     FROM [      Variable [ Name=$LineItem ]
-      AS
-      Variable [ Name=$l ]
+      AS Variable [ Name=$l ]
     ]
     Where
       OperatorExpr [
@@ -52,8 +51,7 @@ RecordConstructor [
         ]
         ]
         FROM [          Variable [ Name=#1 ]
-          AS
-          Variable [ Name=#2 ]
+          AS Variable [ Name=#2 ]
         ]
       )
     ]
@@ -63,13 +61,11 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
-  AS
-  Variable [ Name=$o ]
+  AS Variable [ Name=$o ]
 ,
   FunctionCall tpch.tmp@0[
   ]
-  AS
-  Variable [ Name=$t ]
+  AS Variable [ Name=$t ]
 ]
 Where
   OperatorExpr [
@@ -110,13 +106,10 @@ Groupby
     Variable [ Name=$o ]
     Field=o_orderpriority
   ]
-  GROUP AS
-  Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#1 ]
   (
-  Variable [ Name=$t ]
-   AS t
-  Variable [ Name=$o ]
-   AS o
+    t:=Variable [ Name=$t ]
+    o:=Variable [ Name=$o ]
   )
 
 Orderby

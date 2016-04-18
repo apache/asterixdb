@@ -26,8 +26,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$test ]
+  AS Variable [ Name=$test ]
 ]
 Orderby
   FieldAccessor [

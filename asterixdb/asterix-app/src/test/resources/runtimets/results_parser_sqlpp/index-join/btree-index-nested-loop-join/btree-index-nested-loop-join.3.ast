@@ -9,20 +9,17 @@ FieldAccessor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TwitterUsers]
   ]
-  AS
-  Variable [ Name=$tu ]
+  AS Variable [ Name=$tu ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
-  AS
-  Variable [ Name=$tm ]
+  AS Variable [ Name=$tm ]
 ,
   FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [results]
   ]
-  AS
-  Variable [ Name=$r ]
+  AS Variable [ Name=$r ]
 ]
 Where
   OperatorExpr [

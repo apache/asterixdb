@@ -63,6 +63,5 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
-  AS
-  Variable [ Name=$r ]
+  AS Variable [ Name=$r ]
 ]

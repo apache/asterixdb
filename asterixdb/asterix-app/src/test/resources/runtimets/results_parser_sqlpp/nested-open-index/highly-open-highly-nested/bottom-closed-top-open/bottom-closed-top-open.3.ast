@@ -6,8 +6,7 @@ Variable [ Name=$test ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Animals]
   ]
-  AS
-  Variable [ Name=$test ]
+  AS Variable [ Name=$test ]
 ]
 Where
   OperatorExpr [

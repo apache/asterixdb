@@ -156,8 +156,7 @@ RecordConstructor [
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Part]
   ]
-  AS
-  Variable [ Name=$p ]
+  AS Variable [ Name=$p ]
 ,
   (
     SELECT ELEMENT [
@@ -223,8 +222,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Partsupp]
       ]
-      AS
-      Variable [ Name=$ps ]
+      AS Variable [ Name=$ps ]
 ,
       (
         SELECT ELEMENT [
@@ -311,14 +309,12 @@ FROM [  FunctionCall Metadata.dataset@1[
             FROM [              FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Supplier]
               ]
-              AS
-              Variable [ Name=$s ]
+              AS Variable [ Name=$s ]
 ,
               FunctionCall Metadata.dataset@1[
                 LiteralExpr [STRING] [Nation]
               ]
-              AS
-              Variable [ Name=$n ]
+              AS Variable [ Name=$n ]
             ]
             Where
               OperatorExpr [
@@ -333,14 +329,12 @@ FROM [  FunctionCall Metadata.dataset@1[
                 ]
               ]
           )
-          AS
-          Variable [ Name=$s1 ]
+          AS Variable [ Name=$s1 ]
 ,
           FunctionCall Metadata.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
-          AS
-          Variable [ Name=$l ]
+          AS Variable [ Name=$l ]
         ]
         Where
           OperatorExpr [
@@ -355,8 +349,7 @@ FROM [  FunctionCall Metadata.dataset@1[
             ]
           ]
       )
-      AS
-      Variable [ Name=$l1 ]
+      AS Variable [ Name=$l1 ]
     ]
     Where
       OperatorExpr [
@@ -385,8 +378,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         ]
       ]
   )
-  AS
-  Variable [ Name=$l2 ]
+  AS Variable [ Name=$l2 ]
 ]
 Where
   OperatorExpr [

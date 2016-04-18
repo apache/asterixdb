@@ -26,14 +26,12 @@ Let Variable [ Name=$t ]
     FROM [      FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Nation]
       ]
-      AS
-      Variable [ Name=$nation ]
+      AS Variable [ Name=$nation ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [SelectedNation]
       ]
-      AS
-      Variable [ Name=$sn ]
+      AS Variable [ Name=$sn ]
     ]
     Where
       OperatorExpr [
@@ -71,20 +69,17 @@ Let Variable [ Name=$X ]
     ]
     ]
     FROM [      Variable [ Name=$t ]
-      AS
-      Variable [ Name=$n ]
+      AS Variable [ Name=$n ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Customer]
       ]
-      AS
-      Variable [ Name=$customer ]
+      AS Variable [ Name=$customer ]
 ,
       FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
-      AS
-      Variable [ Name=$orders ]
+      AS Variable [ Name=$orders ]
     ]
     Where
       OperatorExpr [
@@ -125,17 +120,12 @@ Let Variable [ Name=$X ]
         Variable [ Name=$n ]
         Field=n_nationkey
       ]
-      GROUP AS
-      Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#1 ]
       (
-      Variable [ Name=$orders ]
-       AS orders
-      Variable [ Name=$customer ]
-       AS customer
-      Variable [ Name=$n ]
-       AS n
-      Variable [ Name=$t ]
-       AS t
+        orders:=Variable [ Name=$orders ]
+        customer:=Variable [ Name=$customer ]
+        n:=Variable [ Name=$n ]
+        t:=Variable [ Name=$t ]
       )
 
     Let Variable [ Name=$sum ]
@@ -149,8 +139,7 @@ Let Variable [ Name=$X ]
           ]
           ]
           FROM [            Variable [ Name=$orders ]
-            AS
-            Variable [ Name=$o ]
+            AS Variable [ Name=$o ]
           ]
         )
       ]
@@ -187,8 +176,7 @@ RecordConstructor [
       ]
       ]
       FROM [        Variable [ Name=$x ]
-        AS
-        Variable [ Name=$y ]
+        AS Variable [ Name=$y ]
       ]
       Orderby
         FieldAccessor [
@@ -204,8 +192,7 @@ RecordConstructor [
 ]
 ]
 FROM [  Variable [ Name=$X ]
-  AS
-  Variable [ Name=$x ]
+  AS Variable [ Name=$x ]
 ]
 Groupby
   Variable [ Name=$nation_key ]
@@ -214,14 +201,10 @@ Groupby
     Variable [ Name=$x ]
     Field=nation_key
   ]
-  GROUP AS
-  Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#2 ]
   (
-  Variable [ Name=$x ]
-   AS x
-  Variable [ Name=$X ]
-   AS X
-  Variable [ Name=$t ]
-   AS t
+    x:=Variable [ Name=$x ]
+    X:=Variable [ Name=$X ]
+    t:=Variable [ Name=$t ]
   )
 

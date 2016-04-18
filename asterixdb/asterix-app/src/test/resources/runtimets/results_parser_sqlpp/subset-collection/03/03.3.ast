@@ -14,6 +14,5 @@ FROM [  FunctionCall test.subset-collection@3[
     LiteralExpr [LONG] [0]
     LiteralExpr [LONG] [0]
   ]
-  AS
-  Variable [ Name=$l ]
+  AS Variable [ Name=$l ]
 ]
