@@ -21,12 +21,13 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class IntervalCoveredByDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_COVERED_BY;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -36,20 +37,15 @@ public class IntervalCoveredByDescriptor extends AbstractIntervalLogicFuncDescri
         }
     };
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.functions.IFunctionDescriptor#getIdentifier()
-     */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.INTERVAL_COVERED_BY;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.runtime.evaluators.functions.temporal.AbstractIntervalLogicFuncDescriptor#compareIntervals(long, long, long, long)
-     */
     @Override
-    protected boolean compareIntervals(long s1, long e1, long s2, long e2) {
-        return IntervalLogic.coveredBy(s1, e1, s2, e2);
+    protected boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
+            throws AlgebricksException {
+        return il.coveredBy(ip1, ip2);
     }
 
 }

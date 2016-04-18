@@ -18,16 +18,11 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
@@ -78,46 +73,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return FALSE since this is equality comparison
-                    ABoolean b = ABoolean.FALSE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r == ComparisonResult.EQUAL) ? ABoolean.TRUE : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Equality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r == ComparisonResult.EQUAL);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return false;
+        }
     }
 
     static class InequalityComparisonEvaluator extends AbstractComparisonEvaluator {
@@ -127,47 +90,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return TRUE since this is NOT EQ comparison.
-                    ABoolean b = ABoolean.TRUE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r != ComparisonResult.EQUAL) ? ABoolean.TRUE : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r != ComparisonResult.EQUAL);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return false;
+        }
     }
 
     static class GreaterThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
@@ -177,52 +107,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-
-            // checks whether we can apply >, >=, <, and <= to the given type since
-            // these operations cannot be defined for certain types.
-            checkTotallyOrderable();
-
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return FALSE since this is an inequality comparison.
-                    ABoolean b = ABoolean.FALSE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r == ComparisonResult.EQUAL || r == ComparisonResult.GREATER_THAN) ? ABoolean.TRUE
-                            : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r == ComparisonResult.EQUAL || r == ComparisonResult.GREATER_THAN);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return true;
+        }
     }
 
     static class GreaterThanComparisonEvaluator extends AbstractComparisonEvaluator {
@@ -232,51 +124,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-
-            // checks whether we can apply >, >=, <, and <= to the given type since
-            // these operations cannot be defined for certain types.
-            checkTotallyOrderable();
-
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return FALSE since this is an inequality comparison.
-                    ABoolean b = ABoolean.FALSE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r == ComparisonResult.GREATER_THAN) ? ABoolean.TRUE : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r == ComparisonResult.GREATER_THAN);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return true;
+        }
     }
 
     static class LessThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
@@ -286,52 +141,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-
-            // checks whether we can apply >, >=, <, and <= to the given type since
-            // these operations cannot be defined for certain types.
-            checkTotallyOrderable();
-
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return FALSE since this is an inequality comparison.
-                    ABoolean b = ABoolean.FALSE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r == ComparisonResult.EQUAL || r == ComparisonResult.LESS_THAN) ? ABoolean.TRUE
-                            : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r == ComparisonResult.EQUAL || r == ComparisonResult.LESS_THAN);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return true;
+        }
     }
 
     static class LessThanComparisonEvaluator extends AbstractComparisonEvaluator {
@@ -341,51 +158,14 @@ public class ComparisonEvalFactory implements IScalarEvaluatorFactory {
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            resultStorage.reset();
-            evalInputs(tuple);
-
-            // checks whether we can apply >, >=, <, and <= to the given type since
-            // these operations cannot be defined for certain types.
-            checkTotallyOrderable();
-
-            // Checks whether two types are comparable
-            switch (comparabilityCheck()) {
-                case UNKNOWN:
-                    // result:UNKNOWN - NULL value found
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                case FALSE:
-                    // result:FALSE - two types cannot be compared. Thus we return FALSE since this is an inequality comparison.
-                    ABoolean b = ABoolean.FALSE;
-                    try {
-                        serde.serialize(b, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                case TRUE:
-                    // Two types can be compared
-                    ComparisonResult r = compareResults();
-                    ABoolean b1 = (r == ComparisonResult.LESS_THAN) ? ABoolean.TRUE : ABoolean.FALSE;
-                    try {
-                        serde.serialize(b1, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException(
-                            "Inequality Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
-            }
-            result.set(resultStorage);
+        protected boolean getComparisonResult(ComparisonResult r) {
+            return (r == ComparisonResult.LESS_THAN);
         }
 
+        @Override
+        protected boolean isTotallyOrderable() {
+            return true;
+        }
     }
 
 }

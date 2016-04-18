@@ -18,148 +18,182 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-public class IntervalLogic {
+import java.io.Serializable;
 
-    public static <T extends Comparable<T>> boolean validateInterval(T s, T e) {
-        return s.compareTo(e) <= 0;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
+import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
+
+public class IntervalLogic implements Serializable{
+
+    private static final long serialVersionUID = 1L;
+    private final ComparisonHelper ch = new ComparisonHelper();
+    private final IPointable s1 = VoidPointable.FACTORY.createPointable();
+    private final IPointable e1 = VoidPointable.FACTORY.createPointable();
+    private final IPointable s2 = VoidPointable.FACTORY.createPointable();
+    private final IPointable e2 = VoidPointable.FACTORY.createPointable();
+
+    public boolean validateInterval(AIntervalPointable ip1) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        return ch.compare(ip1.getTypeTag(), ip1.getTypeTag(), s1, e1) <= 0;
     }
 
     /**
      * Anything from interval 1 is less than anything from interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #after(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean before(T s1, T e1, T s2, T e2) {
-        return e1.compareTo(s2) < 0;
+    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) < 0;
     }
 
-    public static <T extends Comparable<T>> boolean after(T s1, T e1, T s2, T e2) {
-        return before(s2, e2, s1, e1);
+    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return before(ip2, ip1);
     }
 
     /**
      * The end of interval 1 is the same as the start of interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #metBy(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean meets(T s1, T e1, T s2, T e2) {
-        return e1.compareTo(s2) == 0;
+    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) == 0;
     }
 
-    public static <T extends Comparable<T>> boolean metBy(T s1, T e1, T s2, T e2) {
-        return meets(s2, e2, s1, e1);
+    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return meets(ip2, ip1);
     }
 
     /**
      * Something at the end of interval 1 is contained as the beginning of interval 2.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;|------|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #overlappedBy(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean overlaps(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s2) < 0 && e1.compareTo(s2) > 0 && e2.compareTo(e1) > 0;
+    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) < 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) < 0;
     }
 
-    public static <T extends Comparable<T>> boolean overlappedBy(T s1, T e1, T s2, T e2) {
-        return overlaps(s2, e2, s1, e1);
+    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return overlaps(ip2, ip1);
     }
 
     /**
      * Something is shared by both interval 1 and interval 2.
-     * <p/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @throws AlgebricksException
+     * @return boolean
      */
-    public static <T extends Comparable<T>> boolean overlap(T s1, T e1, T s2, T e2) {
-        return (s2.compareTo(s1) >= 0 && s2.compareTo(e1) < 0) || (e2.compareTo(e1) <= 0 && e2.compareTo(s1) > 0);
+    public boolean overlap(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) <= 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0)
+                || (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0
+                        && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) < 0);
     }
 
     /**
      * Anything from interval 1 is contained in the beginning of interval 2.
-     * <p/>
-     * |------|<br/>
-     * |-------|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #startedBy(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean starts(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s2) == 0 && e1.compareTo(e2) <= 0;
+    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) == 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) <= 0;
     }
 
-    public static <T extends Comparable<T>> boolean startedBy(T s1, T e1, T s2, T e2) {
-        return starts(s2, e2, s1, e1);
+    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return starts(ip2, ip1);
     }
 
     /**
      * Anything from interval 2 is in interval 1.
-     * <p/>
-     * |------|<br/>
-     * &nbsp;&nbsp;|----|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #coveredBy(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean covers(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s2) <= 0 && e1.compareTo(e2) >= 0;
+    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) <= 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0;
     }
 
-    public static <T extends Comparable<T>> boolean coveredBy(T s1, T e1, T s2, T e2) {
-        return covers(s2, e2, s1, e1);
+    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return covers(ip2, ip1);
     }
 
     /**
      * Anything from interval 1 is from the ending part of interval 2.
-     * <p/>
-     * &nbsp;&nbsp;|-----|<br/>
-     * |------|<br/>
      *
-     * @param s1
-     * @param e1
-     * @param s2
-     * @param e2
-     * @return
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws AlgebricksException
+     * @see #endedBy(AIntervalPointable, AIntervalPointable)
      */
-    public static <T extends Comparable<T>> boolean ends(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s2) >= 0 && e1.compareTo(e2) == 0;
+    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) >= 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) == 0;
     }
 
-    public static <T extends Comparable<T>> boolean endedBy(T s1, T e1, T s2, T e2) {
-        return ends(s2, e2, s1, e1);
+    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        return ends(ip2, ip1);
     }
 
-    public static <T extends Comparable<T>> boolean equals(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(s1) == 0 && e1.compareTo(e2) == 0;
+    public boolean equals(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+        ip1.getStart(s1);
+        ip1.getEnd(e1);
+        ip2.getStart(s2);
+        ip2.getEnd(e2);
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) == 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) == 0;
     }
 
 }

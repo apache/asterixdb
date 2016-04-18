@@ -20,10 +20,10 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -35,7 +35,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -57,10 +57,17 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                 return new IScalarEvaluator() {
 
+                    protected final IntervalLogic il = new IntervalLogic();
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argPtr0 = new VoidPointable();
-                    private IPointable argPtr1 = new VoidPointable();
+                    private TaggedValuePointable argPtr0 = (TaggedValuePointable) TaggedValuePointable.FACTORY
+                            .createPointable();
+                    private TaggedValuePointable argPtr1 = (TaggedValuePointable) TaggedValuePointable.FACTORY
+                            .createPointable();
+                    private AIntervalPointable interval0 = (AIntervalPointable) AIntervalPointable.FACTORY
+                            .createPointable();
+                    private AIntervalPointable interval1 = (AIntervalPointable) AIntervalPointable.FACTORY
+                            .createPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
@@ -78,40 +85,31 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
 
-                        byte[] bytes0 = argPtr0.getByteArray();
-                        int offset0 = argPtr0.getStartOffset();
-                        byte[] bytes1 = argPtr1.getByteArray();
-                        int offset1 = argPtr1.getStartOffset();
-
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                            if (argPtr0.getTag() == ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                                    || argPtr1.getTag() == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 result.set(resultStorage);
                                 return;
                             }
 
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
-                                    || bytes1[offset1] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            if (argPtr0.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
+                                    || argPtr1.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": expects input type (INTERVAL, INTERVAL) but got ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr0.getTag()) + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getTag()) + ")");
                             }
 
-                            if (AIntervalSerializerDeserializer.getIntervalTimeType(bytes0,
-                                    offset0 + 1) != AIntervalSerializerDeserializer.getIntervalTimeType(bytes1,
-                                            offset1 + 1)) {
+                            argPtr0.getValue(interval0);
+                            argPtr1.getValue(interval1);
+
+                            if (interval0.getType() != interval1.getType()) {
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": failed to compare intervals with different internal time type.");
                             }
 
-                            ABoolean res = (compareIntervals(
-                                    AIntervalSerializerDeserializer.getIntervalStart(bytes0, offset0 + 1),
-                                    AIntervalSerializerDeserializer.getIntervalEnd(bytes0, offset0 + 1),
-                                    AIntervalSerializerDeserializer.getIntervalStart(bytes1, offset1 + 1),
-                                    AIntervalSerializerDeserializer.getIntervalEnd(bytes1, offset1 + 1)))
-                                            ? ABoolean.TRUE : ABoolean.FALSE;
+                            ABoolean res = (compareIntervals(il, interval0, interval1)) ? ABoolean.TRUE : ABoolean.FALSE;
 
                             booleanSerde.serialize(res, out);
                         } catch (HyracksDataException hex) {
@@ -124,6 +122,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
         };
     }
 
-    protected abstract boolean compareIntervals(long s1, long e1, long s2, long e2);
+    protected abstract boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
+            throws AlgebricksException;
 
 }

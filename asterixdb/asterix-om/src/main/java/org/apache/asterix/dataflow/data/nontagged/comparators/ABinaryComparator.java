@@ -30,19 +30,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public abstract class ABinaryComparator implements IBinaryComparator {
 
-    public static ComparableResultCode isComparable(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+    public static ComparableResultCode isComparable(byte tag1,byte tag2) {
         // NULL Check. If one type is NULL, then we return NULL
-        if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG || b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG || b1[s1] == 0
-                || b2[s2] == 0) {
+        if (tag1 == ATypeTag.SERIALIZED_NULL_TYPE_TAG || tag2 == ATypeTag.SERIALIZED_NULL_TYPE_TAG || tag1 == 0
+                || tag2 == 0) {
             return ComparableResultCode.UNKNOWN;
         }
 
         // Checks whether two types are comparable or not
-        ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
-        ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
+        ATypeTag typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tag1);
+        ATypeTag typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tag2);
 
         // Are two types compatible, meaning that they can be compared? (e.g., compare between numeric types
-        if (ATypeHierarchy.isCompatible(tag1, tag2)) {
+        if (ATypeHierarchy.isCompatible(typeTag1, typeTag2)) {
             return ComparableResultCode.TRUE;
         } else {
             return ComparableResultCode.FALSE;

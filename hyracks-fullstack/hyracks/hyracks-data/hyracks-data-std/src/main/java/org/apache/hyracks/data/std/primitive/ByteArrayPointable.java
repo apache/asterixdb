@@ -28,10 +28,10 @@ import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
-import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class ByteArrayPointable extends AbstractPointable implements IHashable, IComparable, Serializable {
+    private static final long serialVersionUID = 1L;
 
     // These three values are cached to speed up the length data access.
     // Since the we are using the variable-length encoding, we can save the repeated decoding efforts.
