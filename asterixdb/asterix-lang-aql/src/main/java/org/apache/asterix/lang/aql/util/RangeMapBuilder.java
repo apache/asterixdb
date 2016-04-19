@@ -65,7 +65,9 @@ public abstract class RangeMapBuilder {
 
         IParser parser = parserFactory.createParser((String) hint);
         List<Statement> hintStatements = parser.parse();
-        if (hintStatements.size() != 1) {
+        if (hintStatements.size() == 0) {
+            throw new AsterixException("No range hint was supplied to the RangeMapBuilder.");
+        } else if (hintStatements.size() != 1) {
             throw new AsterixException("Only one range statement is allowed for the range hint.");
         }
 

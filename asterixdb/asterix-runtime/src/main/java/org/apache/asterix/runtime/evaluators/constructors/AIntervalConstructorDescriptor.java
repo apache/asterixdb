@@ -136,8 +136,6 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                             intervalSerde.serialize(aInterval, out);
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
-                        } catch (Exception e2) {
-                            throw new AlgebricksException(e2);
                         }
                         result.set(resultStorage);
                     }

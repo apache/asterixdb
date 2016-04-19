@@ -17,7 +17,10 @@
  ! under the License.
  !-->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>algebricks-data</artifactId>
   <name>algebricks-data</name>
@@ -38,19 +41,24 @@
   </licenses>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
 
   <dependencies>
-  <dependency>
-  	<groupId>org.apache.hyracks</groupId>
-  	<artifactId>algebricks-common</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>org.apache.hyracks</groupId>
-  	<artifactId>hyracks-data-std</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
-  </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-common</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-data-std</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-dataflow-common</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

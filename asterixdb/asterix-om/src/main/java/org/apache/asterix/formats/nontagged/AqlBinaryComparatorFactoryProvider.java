@@ -27,7 +27,9 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartia
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscRangeBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescRangeBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
@@ -35,11 +37,14 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialB
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.IntervalAscRangeBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.rangeinterval.IntervalDescRangeBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
@@ -51,6 +56,7 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.RawUTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
+import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
@@ -77,6 +83,23 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             ByteArrayPointable.FACTORY);
 
     private AqlBinaryComparatorFactoryProvider() {
+    }
+
+    // This method adds the option of range range
+    public IBinaryRangeComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
+            RangePartitioningType rangeType) {
+        if (type == null) {
+            return anyBinaryRangeComparatorFactory(ascending);
+        }
+        IAType aqlType = (IAType) type;
+        switch (aqlType.getTypeTag()) {
+            case INTERVAL: {
+                return addOffsetForRange(getIntervalRangeBinaryComparatorFactory(ascending), ascending);
+            }
+            default: {
+                return anyBinaryRangeComparatorFactory(ascending);
+            }
+        }
     }
 
     // This method add the option of ignoring the case in string comparisons.
@@ -173,7 +196,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(ADurationPartialBinaryComparatorFactory.INSTANCE, ascending);
             }
             case INTERVAL: {
-                return addOffset(intervalBinaryComparatorFactory(ascending), ascending);
+                return addOffset(getIntervalBinaryComparatorFactory(ascending), ascending);
             }
             case UUID: {
                 return addOffset(AUUIDPartialBinaryComparatorFactory.INSTANCE, ascending);
@@ -197,7 +220,58 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 final IBinaryComparator bc = inst.createBinaryComparator();
                 if (ascending) {
                     return new ABinaryComparator() {
+                        @Override
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
+                            return bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        }
+                    };
+                } else {
+                    return new ABinaryComparator() {
+                        @Override
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
+                            return -bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        }
+                    };
+                }
+            }
+        };
+    }
 
+    private IBinaryRangeComparatorFactory addOffsetForRange(final IBinaryRangeComparatorFactory inst,
+            final boolean ascending) {
+        return new IBinaryRangeComparatorFactory() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IBinaryComparator createMinBinaryComparator() {
+                final IBinaryComparator bc = inst.createMinBinaryComparator();
+                if (ascending) {
+                    return new ABinaryComparator() {
+                        @Override
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
+                            return bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        }
+                    };
+                } else {
+                    return new ABinaryComparator() {
+                        @Override
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
+                            return -bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        }
+                    };
+                }
+            }
+
+            @Override
+            public IBinaryComparator createMaxBinaryComparator() {
+                final IBinaryComparator bc = inst.createMaxBinaryComparator();
+                if (ascending) {
+                    return new ABinaryComparator() {
                         @Override
                         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
                                 throws HyracksDataException {
@@ -225,7 +299,23 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
         }
     }
 
-    private IBinaryComparatorFactory intervalBinaryComparatorFactory(boolean ascending) {
+    private IBinaryRangeComparatorFactory anyBinaryRangeComparatorFactory(boolean ascending) {
+        if (ascending) {
+            return AObjectAscRangeBinaryComparatorFactory.INSTANCE;
+        } else {
+            return AObjectDescRangeBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryRangeComparatorFactory getIntervalRangeBinaryComparatorFactory(boolean ascending) {
+        if (ascending) {
+            return IntervalAscRangeBinaryComparatorFactory.INSTANCE;
+        } else {
+            return IntervalDescRangeBinaryComparatorFactory.INSTANCE;
+        }
+    }
+
+    private IBinaryComparatorFactory getIntervalBinaryComparatorFactory(boolean ascending) {
         // Intervals have separate binary comparator factories, since asc is primarily based on start point
         // and desc is similarly based on end point.
         if (ascending) {

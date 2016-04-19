@@ -110,15 +110,15 @@ public class IntervalLogic implements Serializable{
      * @throws AlgebricksException
      * @return boolean
      */
-    public boolean overlap(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
         ip2.getEnd(e2);
-        return (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) <= 0
+        return (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) <= 0
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0)
-                || (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0
-                        && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) < 0);
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) != 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) != 0);
     }
 
     /**

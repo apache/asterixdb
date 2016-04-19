@@ -242,7 +242,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
-    public ITuplePointerAccessor getTupleAccessor(final RecordDescriptor recordDescriptor) {
+    public ITuplePointerAccessor getTuplePointerAccessor(final RecordDescriptor recordDescriptor) {
         return new AbstractTuplePointerAccessor() {
             FrameTupleAccessor innerAccessor = new FrameTupleAccessor(recordDescriptor);
 
@@ -261,6 +261,30 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
+    public ITupleAccessor getTupleAccessor(final RecordDescriptor recordDescriptor) {
+        return new AbstractTupleAccessor() {
+            FrameTupleAccessor innerAccessor = new FrameTupleAccessor(recordDescriptor);
+
+            @Override
+            IFrameTupleAccessor getInnerAccessor() {
+                return innerAccessor;
+            }
+
+            @Override
+            void resetInnerAccessor(int frameIndex) {
+                partitionArray[parsePartitionId(frameIndex)]
+                        .getFrame(parseFrameIdInPartition(frameIndex), tempInfo);
+                innerAccessor.reset(tempInfo.getBuffer(), tempInfo.getStartOffset(), tempInfo.getLength());
+            }
+
+            @Override
+            int getFrameCount() {
+                return partitionArray.length;
+            }
+        };
+    }
+
+    @Override
     public void flushPartition(int pid, IFrameWriter writer) throws HyracksDataException {
         IFrameBufferManager partition = partitionArray[pid];
         if (partition != null && getNumTuples(pid) > 0) {
@@ -272,6 +296,13 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
             }
         }
 
+    }
+
+    public IFrameBufferManager getPartitionFrameBufferManager(int partition) {
+        if (partitionArray[partition] == null || partitionArray[partition].getNumFrames() == 0) {
+            return null;
+        }
+        return partitionArray[partition];
     }
 
 }

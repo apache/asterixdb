@@ -27,7 +27,7 @@ import org.apache.hyracks.data.std.api.IPointableFactory;
 public class PointableBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    private final IPointableFactory pf;
+    protected final IPointableFactory pf;
 
     public static PointableBinaryComparatorFactory of(IPointableFactory pf) {
         return new PointableBinaryComparatorFactory(pf);

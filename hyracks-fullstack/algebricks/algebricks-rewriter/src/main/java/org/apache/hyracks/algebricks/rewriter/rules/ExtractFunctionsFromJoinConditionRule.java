@@ -55,15 +55,16 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *
  * After plan:
  *
- *   join (eq($$3,$$4))
- *   assign [$$4] <- [funcY($$2)]
- *   assign [$$3] <- [funcX($$1)]
+ *   join ( eq($$3, $$4) )
+ *   assign [$$4] &lt;- [funcY($$2)]
+ *   assign [$$3] &lt;- [funcX($$1)]
  * </pre>
  */
 public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -104,8 +105,8 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
             for (Mutable<ILogicalExpression> exprRef : fexp.getArguments()) {
                 if (exprRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     LogicalVariable newVar = context.newVar();
-                    AssignOperator newAssign = new AssignOperator(newVar, new MutableObject<ILogicalExpression>(exprRef
-                            .getValue().cloneExpression()));
+                    AssignOperator newAssign = new AssignOperator(newVar,
+                            new MutableObject<ILogicalExpression>(exprRef.getValue().cloneExpression()));
                     newAssign.setExecutionMode(joinOp.getExecutionMode());
 
                     // Place assign below joinOp.

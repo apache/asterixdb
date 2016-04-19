@@ -19,6 +19,6 @@
 use dataverse TinySocial;
 
 for $user in dataset TwitterUsers
-/*+ range ["Nb", "F", "Ci"] */
+/*+ range ["Zz", "Nb", "F", "Ci", "Aa"] */
 order by $user.screen-name desc
 return $user;

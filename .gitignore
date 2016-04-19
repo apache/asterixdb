@@ -24,6 +24,8 @@ asterixdb/asterix-app/data/csv/beer.csv
 asterixdb/asterix-installer/ittest/
 asterixdb/asterix-installer/repliationtest/
 asterixdb/asterix-installer/src/test/resources/clusterts/asterix-installer-*-SNAPSHOT-binary-assembly/
+asterixdb/asterix-app/data/webkit/webkit.meta.txt
+asterixdb/asterix-app/data/webkit/webkit.txt
 build
 asterix_logs
 bin/

@@ -106,7 +106,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledSet),
                     numPartitions, framesLimit * ctx.getInitialFrameSize());
 
-            final ITuplePointerAccessor bufferAccessor = bufferManager.getTupleAccessor(outRecordDescriptor);
+            final ITuplePointerAccessor bufferAccessor = bufferManager.getTuplePointerAccessor(outRecordDescriptor);
 
             private final PreferToSpillFullyOccupiedFramePolicy spillPolicy = new PreferToSpillFullyOccupiedFramePolicy(
                     bufferManager, spilledSet, ctx.getInitialFrameSize());
