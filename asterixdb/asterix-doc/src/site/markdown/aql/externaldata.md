@@ -23,6 +23,7 @@
 
 * [Introduction](#Introduction)
 * [Adapter for an External Dataset](#IntroductionAdapterForAnExternalDataset)
+* [Builtin Adapters](#BuiltinAdapters)
 * [Creating an External Dataset](#IntroductionCreatingAnExternalDataset)
 * [Writing Queries against an External Dataset](#WritingQueriesAgainstAnExternalDataset)
 * [Building Indexes over External Datasets](#BuildingIndexesOverExternalDatasets)
@@ -35,8 +36,43 @@ Data that needs to be processed by AsterixDB could be residing outside AsterixDB
 ### <a id="IntroductionAdapterForAnExternalDataset">Adapter for an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 External data is accessed using wrappers (adapters in AsterixDB) that abstract away the mechanism of connecting with an external service, receiving its data and transforming the data into ADM records that are understood by AsterixDB. AsterixDB comes with built-in adapters for common storage systems such as HDFS or the local file system.
 
-### <a id="IntroductionCreatingAnExternalDataset">Creating an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+### <a id="BuiltinAdapters">Builtin Adapters</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+AsterixDB offers a set of builtin adapters that can be used to query external data or for loading data into an internal dataset using a load statement or a data feed. Each adapter requires specifying the `format` of the data in order to be able to parse records correctly. Using adapters with feeds, the parameter `output-type` must also be specified.
 
+Following is a listing of existing built-in adapters and their configuration parameters:
+
+1. ___localfs___: used for reading data stored in a local filesystem in one or more of the node controllers
+     * `path`: A fully qualified path of the form `host://absolute_path`. Comma separated list if there are
+     multiple directories or files
+     * `expression`: A [regular expression](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html) to match and filter against file names
+2. ___hdfs___: used for reading data stored in an HDFS instance
+     * `path`: A fully qualified path of the form `host://absolute_path`. Comma separated list if there are
+     multiple directories or files
+     * `expression`: A [regular expression](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html) to match and filter against file names
+     * `input-format`: A fully qualified name or an alias for a class of HDFS input format
+     * `hdfs`: The HDFS name node URL
+3. ___socket___: used for listening to connections that sends data streams through one or more sockets
+     * `sockets`: comma separated list of sockets to listen to
+     * `address-type`: either IP if the list uses IP addresses, or NC if the list uses NC names
+4. ___socket\_client___: used for connecting to one or more sockets and reading data streams
+     * `sockets`: comma separated list of sockets to connect to
+5. ___twitter\_push___: used for establishing a connection and subscribing to a twitter feed
+     * `consumer.key`: access parameter provided by twitter OAuth
+     * `consumer.secret`: access parameter provided by twitter OAuth
+     * `access.token`: access parameter provided by twitter OAuth
+     * `access.token.secret`: access parameter provided by twitter OAuth
+6. ___twitter\_pull___: used for polling a twitter feed for tweets based on a configurable frequency
+     * `consumer.key`: access parameter provided by twitter OAuth
+     * `consumer.secret`: access parameter provided by twitter OAuth
+     * `access.token`: access parameter provided by twitter OAuth
+     * `access.token.secret`: access parameter provided by twitter OAuth
+     * `query`: twitter query string
+     * `interval`: poll interval in seconds
+7. ___rss___: used for reading RSS feed
+     * `url`: a comma separated list of RSS urls
+
+
+### <a id="IntroductionCreatingAnExternalDataset">Creating an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 As an example we consider the Lineitem dataset from the [TPCH schema](http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql).
 We assume that you have successfully created an AsterixDB instance following the instructions at [Installing AsterixDB Using Managix](../install.html). _For constructing an example, we assume a single machine setup.._
 

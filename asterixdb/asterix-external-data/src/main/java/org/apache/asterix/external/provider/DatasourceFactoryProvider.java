@@ -29,6 +29,7 @@ import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory;
 import org.apache.asterix.external.input.record.reader.kv.KVReaderFactory;
 import org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory;
+import org.apache.asterix.external.input.record.reader.rss.RSSRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
@@ -112,6 +113,8 @@ public class DatasourceFactoryProvider {
                 return new StreamRecordReaderFactory(new SocketServerInputStreamFactory());
             case ExternalDataConstants.STREAM_SOCKET_CLIENT:
                 return new StreamRecordReaderFactory(new SocketClientInputStreamFactory());
+            case ExternalDataConstants.READER_RSS:
+                return new RSSRecordReaderFactory();
             default:
                 try {
                     return (IRecordReaderFactory<?>) Class.forName(reader).newInstance();
