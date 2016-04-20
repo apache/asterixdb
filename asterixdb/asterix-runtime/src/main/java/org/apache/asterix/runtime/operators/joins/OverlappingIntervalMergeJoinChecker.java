@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,40 +38,46 @@ public class OverlappingIntervalMergeJoinChecker extends AbstractIntervalMergeJo
     public boolean checkToSaveInResult(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, idLeft);
-        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, idLeft);
-
         long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, idRight);
-        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, idRight);
-
         if (start0 < partitionStart && start1 < partitionStart) {
             // Both tuples will match in a different partition.
             return false;
         }
-        return compareInterval(start0, end0, start1, end1);
+        try {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+            return compareInterval(ipLeft, ipRight);
+        } catch (AsterixException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-
         long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
-
         if (start0 < partitionStart && start1 < partitionStart) {
             // Both tuples will match in a different partition.
             return false;
         }
-        return compareInterval(start0, end0, start1, end1);
+        try {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
+            return compareInterval(ipLeft, ipRight);
+        } catch (AsterixException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
-    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
-        return IntervalLogic.overlapping(start0, end0, start1, end1);
+    @Override
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+        return il.overlapping(ipLeft, ipRight);
     }
 
-    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
-        return IntervalPartitionLogic.overlapping(start0, end0, start1, end1);
+    @Override
+    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
+        return IntervalPartitionLogic.overlapping(s1, e1, s2, e2);
     }
 
 }

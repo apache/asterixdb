@@ -16,20 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.hyracks.dataflow.std.join;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
+import java.nio.ByteBuffer;
 
-public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    public boolean checkToRemoveLeftActive();
+public interface IMergeJoiner {
 
-    public boolean checkToRemoveRightActive();
+    void closeResult(IFrameWriter writer) throws HyracksDataException;
 
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException;
+    void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException;
 
-    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2);
+    void setLeftFrame(ByteBuffer buffer);
+
+    void setRightFrame(ByteBuffer buffer);
 
 }

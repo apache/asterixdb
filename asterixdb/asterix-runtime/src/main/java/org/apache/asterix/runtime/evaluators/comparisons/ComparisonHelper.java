@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
@@ -37,7 +38,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -73,7 +73,7 @@ public class ComparisonHelper implements Serializable {
             ByteArrayPointable.FACTORY).createBinaryComparator();
 
     public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
-            throws AlgebricksException {
+            throws AsterixException {
         switch (typeTag1) {
             case INT8:
                 return compareInt8WithArg(typeTag2, arg1, arg2);
@@ -97,9 +97,9 @@ public class ComparisonHelper implements Serializable {
     }
 
     private int compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag, IPointable arg1,
-            IPointable arg2) throws AlgebricksException {
+            IPointable arg2) throws AsterixException {
         if (expectedTypeTag != actualTypeTag) {
-            throw new AlgebricksException(
+            throw new AsterixException(
                     "Comparison is undefined between " + expectedTypeTag + " and " + actualTypeTag + ".");
         }
         int result = 0;
@@ -164,38 +164,38 @@ public class ComparisonHelper implements Serializable {
                             rightLen);
                     break;
                 default:
-                    throw new AlgebricksException("Comparison for " + actualTypeTag + " is not supported.");
+                    throw new AsterixException("Comparison for " + actualTypeTag + " is not supported.");
             }
         } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+            throw new AsterixException(e);
         }
         return result;
     }
 
-    private int compareBooleanWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareBooleanWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         if (typeTag2 == ATypeTag.BOOLEAN) {
             byte b0 = arg1.getByteArray()[arg1.getStartOffset()];
             byte b1 = arg2.getByteArray()[arg2.getStartOffset()];
             return compareByte(b0, b1);
         }
-        throw new AlgebricksException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
+        throw new AsterixException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
     }
 
-    private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         if (typeTag2 == ATypeTag.STRING) {
             int result;
             try {
                 result = strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
                         arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
             } catch (HyracksDataException e) {
-                throw new AlgebricksException(e);
+                throw new AsterixException(e);
             }
             return result;
         }
-        throw new AlgebricksException("Comparison is undefined between types AString and " + typeTag2 + " .");
+        throw new AsterixException("Comparison is undefined between types AString and " + typeTag2 + " .");
     }
 
-    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -228,12 +228,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types ADouble and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types ADouble and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -266,12 +266,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types AFloat and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types AFloat and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -304,12 +304,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types AInt64 and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types AInt64 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -342,12 +342,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types AInt32 and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types AInt32 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -380,12 +380,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AlgebricksException {
+    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
         byte[] leftBytes = arg1.getByteArray();
         int leftStart = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -418,7 +418,7 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AlgebricksException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
+                throw new AsterixException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
             }
         }
     }

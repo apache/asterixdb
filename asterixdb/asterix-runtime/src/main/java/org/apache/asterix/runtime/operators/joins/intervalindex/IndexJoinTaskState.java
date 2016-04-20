@@ -16,27 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-public class CoversIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
-    private static final long serialVersionUID = 1L;
+import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 
-    public CoversIntervalMergeJoinChecker(int[] keysLeft, int[] keysRight) {
-        super(keysLeft[0], keysRight[0]);
+public class IndexJoinTaskState extends AbstractStateObject {
+    public MergeStatus status;
+    public IntervalIndexJoiner joiner;
+    public boolean failed;
+    public RecordDescriptor leftRd;
+    public RecordDescriptor rightRd;
+
+    public IndexJoinTaskState(JobId jobId, TaskId taskId) {
+        super(jobId, taskId);
+        status = new MergeStatus();
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
-        return il.covers(ipLeft, ipRight);
+    public void toBytes(DataOutput out) throws IOException {
+
     }
 
     @Override
-    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
-        return IntervalPartitionLogic.covers(s1, e1, s2, e2);
+    public void fromBytes(DataInput in) throws IOException {
     }
-
 }

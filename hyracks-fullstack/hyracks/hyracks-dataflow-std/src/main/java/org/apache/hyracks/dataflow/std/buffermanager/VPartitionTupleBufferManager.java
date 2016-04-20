@@ -35,18 +35,24 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
- * This buffer manager will dived the buffers into given number of partitions.
+ * This buffer manager will divide the buffers into given number of partitions.
  * The cleared partition (spilled one in the caller side) can only get no more than one frame.
  */
 public class VPartitionTupleBufferManager implements IPartitionedTupleBufferManager {
+    public static IPartitionedMemoryConstrain NO_CONSTRAIN = new IPartitionedMemoryConstrain() {
+        @Override
+        public int frameLimit(int partitionId) {
+            return Integer.MAX_VALUE;
+        }
+    };
 
-    private IDeallocatableFramePool framePool;
-    private IFrameBufferManager[] partitionArray;
-    private int[] numTuples;
+    protected IDeallocatableFramePool framePool;
+    protected IFrameBufferManager[] partitionArray;
+    protected int[] numTuples;
     private final FixedSizeFrame appendFrame;
     private final FixedSizeFrameTupleAppender appender;
-    private BufferInfo tempInfo;
-    private final IPartitionedMemoryConstrain constrain;
+    protected BufferInfo tempInfo;
+    protected final IPartitionedMemoryConstrain constrain;
 
     public VPartitionTupleBufferManager(IHyracksFrameMgrContext ctx, IPartitionedMemoryConstrain constrain,
             int partitions, int frameLimitInBytes) throws HyracksDataException {
@@ -140,26 +146,26 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
                 tupleAccessor.getTupleStartOffset(tupleId), tupleAccessor.getTupleLength(tupleId), pointer);
     }
 
-    private static int calculateActualSize(int[] fieldEndOffsets, int size) {
+    protected static int calculateActualSize(int[] fieldEndOffsets, int size) {
         if (fieldEndOffsets != null) {
             return FrameHelper.calcRequiredSpace(fieldEndOffsets.length, size);
         }
         return FrameHelper.calcRequiredSpace(0, size);
     }
 
-    private int makeGroupFrameId(int partition, int fid) {
+    protected int makeGroupFrameId(int partition, int fid) {
         return fid * getNumPartitions() + partition;
     }
 
-    private int parsePartitionId(int externalFrameId) {
+    protected int parsePartitionId(int externalFrameId) {
         return externalFrameId % getNumPartitions();
     }
 
-    private int parseFrameIdInPartition(int externalFrameId) {
+    protected int parseFrameIdInPartition(int externalFrameId) {
         return externalFrameId / getNumPartitions();
     }
 
-    private int createNewBuffer(int partition, int size) throws HyracksDataException {
+    protected int createNewBuffer(int partition, int size) throws HyracksDataException {
         ByteBuffer newBuffer = requestNewBufferFromPool(size);
         if (newBuffer == null) {
             return -1;
@@ -174,8 +180,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return framePool.allocateFrame(frameSize);
     }
 
-    private int appendTupleToBuffer(BufferInfo bufferInfo, int[] fieldEndOffsets, byte[] byteArray, int start, int size)
-            throws HyracksDataException {
+    protected int appendTupleToBuffer(BufferInfo bufferInfo, int[] fieldEndOffsets, byte[] byteArray, int start,
+            int size) throws HyracksDataException {
         assert (bufferInfo.getStartOffset() == 0) : "Haven't supported yet in FrameTupleAppender";
         if (bufferInfo.getBuffer() != appendFrame.getBuffer()) {
             appendFrame.reset(bufferInfo.getBuffer());
@@ -194,7 +200,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return -1;
     }
 
-    private int getLastBufferOrCreateNewIfNotExist(int partition, int actualSize) throws HyracksDataException {
+    protected int getLastBufferOrCreateNewIfNotExist(int partition, int actualSize) throws HyracksDataException {
         if (partitionArray[partition] == null || partitionArray[partition].getNumFrames() == 0) {
             partitionArray[partition] = new PartitionFrameBufferManager();
             return createNewBuffer(partition, actualSize);
@@ -208,7 +214,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         Arrays.fill(partitionArray, null);
     }
 
-    private static class PartitionFrameBufferManager implements IFrameBufferManager {
+    static class PartitionFrameBufferManager implements IFrameBufferManager {
 
         ArrayList<ByteBuffer> buffers = new ArrayList<>();
 
@@ -272,8 +278,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
             @Override
             void resetInnerAccessor(int frameIndex) {
-                partitionArray[parsePartitionId(frameIndex)]
-                        .getFrame(parseFrameIdInPartition(frameIndex), tempInfo);
+                partitionArray[parsePartitionId(frameIndex)].getFrame(parseFrameIdInPartition(frameIndex), tempInfo);
                 innerAccessor.reset(tempInfo.getBuffer(), tempInfo.getStartOffset(), tempInfo.getLength());
             }
 

@@ -53,24 +53,28 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-storage-am-btree</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-transactions</artifactId>
             <version>0.8.9-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-dataflow-std</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-storage-am-btree</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <type>jar</type>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.e-movimento.tinytools</groupId>

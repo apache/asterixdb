@@ -62,8 +62,8 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
     @Override
     IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight, IOperatorDescriptorRegistry spec,
             RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
-        return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, leftCountInFrames, rightCountInFrames,
-                keysLeft, keysRight, recordDescriptor, mjcf);
+        return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight,
+                recordDescriptor, mjcf);
     }
 
 }

@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
@@ -33,9 +34,15 @@ public class EndsIntervalMergeJoinChecker extends AbstractIntervalMergeJoinCheck
     @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, idLeft);
-        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, idRight);
-        return (end0 <= end1);
+        try {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+            ipLeft.getEnd(endLeft);
+            ipRight.getEnd(endRight);
+            return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, endRight) <= 0;
+        } catch (AsterixException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
@@ -44,12 +51,14 @@ public class EndsIntervalMergeJoinChecker extends AbstractIntervalMergeJoinCheck
         return !checkToSaveInMemory(accessorLeft, accessorRight);
     }
 
-    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
-        return IntervalLogic.ends(start0, end0, start1, end1);
+    @Override
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+        return il.ends(ipLeft, ipRight);
     }
 
-    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
-        return IntervalPartitionLogic.ends(start0, end0, start1, end1);
+    @Override
+    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
+        return IntervalPartitionLogic.ends(s1, e1, s2, e2);
     }
 
 }

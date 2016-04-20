@@ -19,22 +19,11 @@
 
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.PriorityQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
-import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -46,321 +35,277 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.buffermanager.IFramePool;
-import org.apache.hyracks.dataflow.std.buffermanager.ITupleBufferManager;
-import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
-import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
-import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
-import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.join.MergeJoinLocks;
 
 public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private static final int BUILD_LEFT_ACTIVITY_ID = 0;
-    private static final int BUILD_RIGHT_ACTIVITY_ID = 1;
-    private static final int JOIN_ACTIVITY_ID = 2;
-
-    private final int memsize;
-    private final int leftKey;
-    private final int rightKey;
+    private static final int LEFT_ACTIVITY_ID = 0;
+    private static final int RIGHT_ACTIVITY_ID = 1;
     private final int[] leftKeys;
     private final int[] rightKeys;
-
-    private final int leftCountInFrames;
-    private final int rightCountInFrames;
+    private final int memoryForJoin;
     private final IIntervalMergeJoinCheckerFactory imjcf;
 
     private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoinOperatorDescriptor.class.getName());
 
-    public IntervalIndexJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int leftCountInFrames,
-            int rightCountInFrames, int[] leftKeys, int[] rightKeys, RecordDescriptor recordDescriptor,
-            IIntervalMergeJoinCheckerFactory imjcf) {
+    public IntervalIndexJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memoryForJoin, int[] leftKeys,
+            int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf) {
         super(spec, 2, 1);
-        this.memsize = memsize;
-        this.leftCountInFrames = leftCountInFrames;
-        this.rightCountInFrames = rightCountInFrames;
-        this.leftKey = leftKeys[0];
-        this.rightKey = rightKeys[0];
-        this.rightKeys = leftKeys;
-        this.leftKeys = rightKeys;
         recordDescriptors[0] = recordDescriptor;
+        this.leftKeys = leftKeys;
+        this.rightKeys = rightKeys;
+        this.memoryForJoin = memoryForJoin;
         this.imjcf = imjcf;
     }
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        ActivityId leftAid = new ActivityId(odId, BUILD_LEFT_ACTIVITY_ID);
-        ActivityId rightAid = new ActivityId(odId, BUILD_RIGHT_ACTIVITY_ID);
-        ActivityId joinAid = new ActivityId(odId, JOIN_ACTIVITY_ID);
+        MergeJoinLocks locks = new MergeJoinLocks();
 
-        IActivity phaseBuildLeft = new BuildIndexActivityNode(leftAid, leftKey, leftCountInFrames);
-        IActivity phaseBuildRight = new BuildIndexActivityNode(rightAid, rightKey, rightCountInFrames);
-        IActivity phaseJoin = new JoinActivityNode(joinAid, leftAid, rightAid);
+        ActivityId leftAid = new ActivityId(odId, LEFT_ACTIVITY_ID);
+        ActivityId rightAid = new ActivityId(odId, RIGHT_ACTIVITY_ID);
 
-        builder.addActivity(this, phaseBuildLeft);
-        builder.addSourceEdge(0, phaseBuildLeft, 0);
+        IActivity leftAN = new LeftJoinerActivityNode(leftAid, rightAid, locks);
+        IActivity rightAN = new RightDataActivityNode(rightAid, leftAid, locks);
 
-        builder.addActivity(this, phaseBuildRight);
-        builder.addSourceEdge(1, phaseBuildRight, 0);
+        builder.addActivity(this, rightAN);
+        builder.addSourceEdge(1, rightAN, 0);
 
-        builder.addActivity(this, phaseJoin);
-        builder.addTargetEdge(0, phaseJoin, 0);
-
-        builder.addBlockingEdge(phaseBuildLeft, phaseJoin);
-        builder.addBlockingEdge(phaseBuildRight, phaseJoin);
+        builder.addActivity(this, leftAN);
+        builder.addSourceEdge(0, leftAN, 0);
+        builder.addTargetEdge(0, leftAN, 0);
     }
 
-    public static class IndexTaskState extends AbstractStateObject {
-        private int partition;
-        private int memoryForJoin;
-        protected ITupleBufferManager bufferManager;
-        protected PriorityQueue<EndPointIndexItem> indexQueue;
-        protected byte point;
+    public static class IndexTaskState extends IndexJoinTaskState {
+        protected int actvityId;
+        protected int key;
+        protected int size;
+        protected int partition;
+        protected int memoryForJoin;
+        protected IntervalIndexJoiner indexJoiner;
         protected Comparator<EndPointIndexItem> endPointComparator;
-
-        public IndexTaskState() {
-        }
+        protected byte point;
+        public RecordDescriptor leftRd;
+        public RecordDescriptor rightRd;
 
         private IndexTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
         }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-
-        }
-
     }
 
-    private class BuildIndexActivityNode extends AbstractActivityNode {
+    private class LeftJoinerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        private final int key;
-        private final int size;
+        private final MergeJoinLocks locks;
+        private final ActivityId joinAid;
 
-        public BuildIndexActivityNode(ActivityId id, int key, int size) {
+        public LeftJoinerActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
-            this.key = key;
-            this.size = size;
+            this.locks = locks;
+            this.joinAid = joinAid;
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                throws HyracksDataException {
+            locks.setPartitions(nPartitions);
+            final RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            return new LeftJoinerOperator(ctx, partition, inRecordDesc);
+        }
 
-            final RecordDescriptor rd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            final FrameTupleAccessor accessor = new FrameTupleAccessor(rd);
+        private class LeftJoinerOperator extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
-                private IndexTaskState state;
-                private boolean memoryIsFull = false;
+            private final IHyracksTaskContext ctx;
+            private final int partition;
+            private final RecordDescriptor leftRd;
 
-                @Override
-                public void open() throws HyracksDataException {
+            public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
+                this.ctx = ctx;
+                this.partition = partition;
+                this.leftRd = inRecordDesc;
+            }
+
+            private IndexTaskState state;
+            private boolean first = true;
+
+            public void open() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    writer.open();
                     state = new IndexTaskState(ctx.getJobletContext().getJobId(),
-                            new TaskId(getActivityId(), partition));
-                    ctx.setStateObject(state);
-                    if (memsize <= 2) {
-                        // Dedicated buffers: One buffer to read and one buffer for output
-                        throw new HyracksDataException("not enough memory for join");
-                    }
-                    state.partition = partition;
-                    state.memoryForJoin = memsize / 2;
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.partition
-                                + " interval partitions using " + state.memoryForJoin + " frames for memory.");
-                    }
-                    IFramePool framePool = new VariableFramePool(ctx, state.memoryForJoin * ctx.getInitialFrameSize());
-                    state.bufferManager = new VariableDeletableTupleMemoryManager(framePool, rd);
+                            new TaskId(getActivityId(), partition));;
+                    state.leftRd = leftRd;
                     state.point = imjcf.isOrderAsc() ? EndPointIndexItem.START_POINT : EndPointIndexItem.END_POINT;
                     state.endPointComparator = imjcf.isOrderAsc() ? EndPointIndexItem.EndPointAscComparator
                             : EndPointIndexItem.EndPointDescComparator;
-                    state.indexQueue = new PriorityQueue<EndPointIndexItem>(16, state.endPointComparator);
-                }
+                    ctx.setStateObject(state);
+                    locks.getRight(partition).signal();
 
-                @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    if (!memoryIsFull) {
-                        accessor.reset(buffer);
-                        int tupleCount = accessor.getTupleCount();
-                        for (int i = 0; i < tupleCount; ++i) {
-                            TuplePointer tuplePointer = new TuplePointer();
-                            if (state.bufferManager.insertTuple(accessor, i, tuplePointer)) {
-                                EndPointIndexItem s = new EndPointIndexItem(tuplePointer, EndPointIndexItem.START_POINT,
-                                        IntervalJoinUtil.getIntervalStart(accessor, i, key));
-                                state.indexQueue.add(s);
-                                EndPointIndexItem e = new EndPointIndexItem(tuplePointer, EndPointIndexItem.END_POINT,
-                                        IntervalJoinUtil.getIntervalEnd(accessor, i, key));
-                                state.indexQueue.add(e);
-                            } else {
-                                if (LOGGER.isLoggable(Level.FINE)) {
-                                    LOGGER.fine("IntervalPartitionJoin has run out of memory with "
-                                            + state.bufferManager.getNumTuples() + " tuples in " + state.memoryForJoin
-                                            + " frames (needed " + size + " frames).");
-                                }
-                                memoryIsFull = true;
-                                return;
-                            }
+                    do {
+                        // Continue after joiner created in right branch.
+                        if (state.indexJoiner == null) {
+                            locks.getLeft(partition).await();
                         }
+                    } while (state.indexJoiner == null);
+                    state.status.left.setStageOpen();
+                    locks.getRight(partition).signal();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException("LeftJoinerOperator interrupted exceptrion", e);
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                locks.getLock(partition).lock();
+                if (first) {
+                    state.status.left.setStageData();
+                    first = false;
+                }
+                try {
+                    state.indexJoiner.setLeftFrame(buffer);
+                    state.indexJoiner.processMergeUsingLeftTuple(writer);
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            public void fail() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.failed = true;
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            public void close() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.status.left.noMore();
+                    if (state.failed) {
+                        writer.fail();
+                    } else {
+                        state.indexJoiner.processMergeUsingLeftTuple(writer);
+                        state.indexJoiner.closeResult(writer);
+                        writer.close();
                     }
+                    state.status.left.setStageClose();
+                    locks.getRight(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin closed its build phase");
-                    }
-                }
-
-                @Override
-                public void fail() throws HyracksDataException {
-                }
-
-            };
-            return op;
+            }
         }
     }
 
-    private class JoinActivityNode extends AbstractActivityNode {
+    private class RightDataActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        private final ActivityId leftAid;
-        private final ActivityId rightAid;
+        private final ActivityId joinAid;
+        private MergeJoinLocks locks;
 
-        public JoinActivityNode(ActivityId id, ActivityId leftAid, ActivityId rightAid) {
+        public RightDataActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
-            this.leftAid = leftAid;
-            this.rightAid = rightAid;
+            this.joinAid = joinAid;
+            this.locks = locks;
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
                 throws HyracksDataException {
-            FrameTupleAppender resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+            locks.setPartitions(nPartitions);
+            RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            return new RightDataOperator(ctx, partition, inRecordDesc);
+        }
 
-            LinkedList<TuplePointer> leftActive = new LinkedList<TuplePointer>();
-            LinkedList<TuplePointer> rightActive = new LinkedList<TuplePointer>();
-            LinkedList<TuplePointer> buffer = new LinkedList<TuplePointer>();
+        private class RightDataOperator extends AbstractUnaryInputSinkOperatorNodePushable {
 
-            return new AbstractUnaryOutputSourceOperatorNodePushable() {
-                @Override
-                public void initialize() throws HyracksDataException {
-                    IndexTaskState leftState = (IndexTaskState) ctx.getStateObject(new TaskId(leftAid, partition));
-                    IndexTaskState rightState = (IndexTaskState) ctx.getStateObject(new TaskId(rightAid, partition));
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalIndexJoin is starting the join phase.");
-                    }
-                    IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(rightKeys, leftKeys, partition);
+            private int partition;
+            private IHyracksTaskContext ctx;
+            private final RecordDescriptor rightRd;
 
-                    ITuplePointerAccessor leftAccessor = leftState.bufferManager.createTuplePointerAccessor();
-                    ITuplePointerAccessor rightAccessor = rightState.bufferManager.createTuplePointerAccessor();
+            public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
+                this.ctx = ctx;
+                this.partition = partition;
+                this.rightRd = inRecordDesc;
+            }
 
-                    EndPointIndexItem leftItem;
-                    EndPointIndexItem rightItem;
+            private IndexTaskState state;
+            private boolean first = true;
 
-                    try {
-                        writer.open();
-
-                        leftItem = leftState.indexQueue.poll();
-                        rightItem = rightState.indexQueue.poll();
-
-                        while (leftItem != null && rightItem != null) {
-
-                            if (leftState.endPointComparator.compare(leftItem, rightItem) < 0) {
-                                // Process endpoints
-                                do {
-                                    if (leftItem.getStart() == leftState.point) {
-                                        leftActive.add(leftItem.getTuplePointer());
-                                        buffer.add(leftItem.getTuplePointer());
-                                    } else if (imjc.checkToRemoveLeftActive()) {
-                                        // Conditionally remove based on after/before interval condition.
-                                        leftActive.remove(leftItem.getTuplePointer());
-                                    }
-                                    leftItem = leftState.indexQueue.poll();
-                                } while (leftItem != null
-                                        && leftState.endPointComparator.compare(rightItem, leftItem) >= 0);
-
-                                // Add Results
-                                if (!buffer.isEmpty()) {
-                                    for (TuplePointer rightTp : rightActive) {
-                                        rightAccessor.reset(rightTp);
-                                        for (TuplePointer leftTp : buffer) {
-                                            leftAccessor.reset(leftTp);
-                                            if (imjc.checkToSaveInResult(leftAccessor, leftTp.tupleIndex, rightAccessor,
-                                                    rightTp.tupleIndex)) {
-                                                addToResult(leftAccessor, leftTp.tupleIndex, rightAccessor,
-                                                        rightTp.tupleIndex, writer);
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                // Process endpoints
-                                do {
-                                    if (rightItem.getStart() == leftState.point) {
-                                        rightActive.add(rightItem.getTuplePointer());
-                                        buffer.add(rightItem.getTuplePointer());
-                                    } else if (imjc.checkToRemoveRightActive()) {
-                                        // Conditionally remove based on after/before interval condition.
-                                        rightActive.remove(rightItem.getTuplePointer());
-                                    }
-                                    rightItem = rightState.indexQueue.poll();
-                                } while (rightItem != null
-                                        && leftState.endPointComparator.compare(leftItem, rightItem) >= 0);
-
-                                // Add Results
-                                if (!buffer.isEmpty()) {
-                                    for (TuplePointer leftTp : leftActive) {
-                                        leftAccessor.reset(leftTp);
-                                        for (TuplePointer rightTp : buffer) {
-                                            rightAccessor.reset(rightTp);
-                                            if (imjc.checkToSaveInResult(leftAccessor, leftTp.tupleIndex, rightAccessor,
-                                                    rightTp.tupleIndex)) {
-                                                addToResult(leftAccessor, leftTp.tupleIndex, rightAccessor,
-                                                        rightTp.tupleIndex, writer);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            buffer.clear();
+            @Override
+            public void open() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    do {
+                        // Wait for the state to be set in the context form Left.
+                        state = (IndexTaskState) ctx.getStateObject(new TaskId(joinAid, partition));
+                        if (state == null) {
+                            locks.getRight(partition).await();
                         }
-                        closeResult(writer);
-                        if (LOGGER.isLoggable(Level.FINE)) {
-                            LOGGER.fine("IntervalIndexJoin closed its join phase");
-                        }
-                    } catch (Throwable th) {
-                        writer.fail();
-                        throw new HyracksDataException(th);
-                    } finally {
-                        writer.close();
+                    } while (state == null);
+                    state.rightRd = rightRd;
+                    state.indexJoiner = new IntervalIndexJoiner(ctx, memoryForJoin, partition, state.status, locks,
+                            state.endPointComparator, imjcf, leftKeys, rightKeys, state.leftRd, state.rightRd);
+                    state.status.right.setStageOpen();
+                    locks.getLeft(partition).signal();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            @Override
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                locks.getLock(partition).lock();
+                if (first) {
+                    state.status.right.setStageData();
+                    first = false;
+                }
+                try {
+                    while (state.status.continueRightLoad == false && state.status.left.hasMore()) {
+                        // Wait for the state to request right frame unless left has finished.
+                        locks.getRight(partition).await();
                     }
+                    state.indexJoiner.setRightFrame(buffer);
+                    locks.getLeft(partition).signal();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
+            }
 
-                private void addToResult(IFrameTupleAccessor accessor1, int index1, IFrameTupleAccessor accessor2,
-                        int index2, IFrameWriter writer) throws HyracksDataException {
-                    FrameUtils.appendConcatToWriter(writer, resultAppender, accessor1, index1, accessor2, index2);
+            @Override
+            public void fail() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.failed = true;
+                    locks.getLeft(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
+            }
 
-                public void closeResult(IFrameWriter writer) throws HyracksDataException {
-                    resultAppender.write(writer, true);
+            @Override
+            public void close() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.status.right.setStageClose();
+                    locks.getLeft(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
-
-            };
+            }
         }
     }
 }

@@ -160,11 +160,13 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
+                private boolean failure = false;
 
                 @Override
                 public void open() throws HyracksDataException {
                     if (memsize <= 2) {
                         // Dedicated buffers: One buffer to read and one buffer for output
+                        failure = true;
                         throw new HyracksDataException("not enough memory for join");
                     }
                     state.k = k;
@@ -202,10 +204,12 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.ipj.closeBuild();
-                    ctx.setStateObject(state);
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin closed its build phase");
+                    if (!failure) {
+                        state.ipj.closeBuild();
+                        ctx.setStateObject(state);
+                        if (LOGGER.isLoggable(Level.FINE)) {
+                            LOGGER.fine("IntervalPartitionJoin closed its build phase");
+                        }
                     }
                 }
 
@@ -228,7 +232,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private BuildAndPartitionTaskState state;

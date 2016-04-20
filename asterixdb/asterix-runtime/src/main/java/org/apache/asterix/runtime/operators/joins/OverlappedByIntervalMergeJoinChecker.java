@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 
 public class OverlappedByIntervalMergeJoinChecker extends AbstractIntervalInverseMergeJoinChecker {
@@ -28,12 +29,14 @@ public class OverlappedByIntervalMergeJoinChecker extends AbstractIntervalInvers
         super(keysLeft[0], keysRight[0]);
     }
 
-    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
-        return IntervalLogic.overlappedBy(start0, end0, start1, end1);
+    @Override
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+        return il.overlappedBy(ipLeft, ipRight);
     }
 
-    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
-        return IntervalPartitionLogic.overlappedBy(start0, end0, start1, end1);
+    @Override
+    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
+        return IntervalPartitionLogic.overlappedBy(s1, e1, s2, e2);
     }
 
 }

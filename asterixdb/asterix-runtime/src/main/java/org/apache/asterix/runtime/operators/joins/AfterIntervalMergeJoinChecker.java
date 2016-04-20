@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
@@ -38,9 +39,15 @@ public class AfterIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChec
     @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, idLeft);
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, idRight);
-        return (start0 > start1);
+        try {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+            ipLeft.getStart(startLeft);
+            ipRight.getStart(startRight);
+            return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, startRight) > 0;
+        } catch (AsterixException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
@@ -49,11 +56,14 @@ public class AfterIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChec
         return !checkToSaveInMemory(accessorLeft, accessorRight);
     }
 
-    public <T extends Comparable<T>> boolean compareInterval(T start0, T end0, T start1, T end1) {
-        return IntervalLogic.after(start0, end0, start1, end1);
+    @Override
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+        return il.after(ipLeft, ipRight);
     }
 
-    public <T extends Comparable<T>> boolean compareIntervalPartition(T start0, T end0, T start1, T end1) {
-        return IntervalPartitionLogic.after(start0, end0, start1, end1);
+    @Override
+    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
+        return IntervalPartitionLogic.after(s1, e1, s2, e2);
     }
+
 }

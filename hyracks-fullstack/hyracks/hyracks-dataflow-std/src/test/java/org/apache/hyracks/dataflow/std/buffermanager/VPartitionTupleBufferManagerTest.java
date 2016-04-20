@@ -40,14 +40,8 @@ public class VPartitionTupleBufferManagerTest extends AbstractTupleMemoryManager
 
     @Before
     public void setup() throws HyracksDataException {
-        IPartitionedMemoryConstrain constrain = new IPartitionedMemoryConstrain() {
-            @Override
-            public int frameLimit(int partitionId) {
-                return Integer.MAX_VALUE;
-            }
-        };
-        bufferManager = new VPartitionTupleBufferManager(Common.commonFrameManager, constrain, PARTITION,
-                Common.BUDGET);
+        bufferManager = new VPartitionTupleBufferManager(Common.commonFrameManager,
+                VPartitionTupleBufferManager.NO_CONSTRAIN, PARTITION, Common.BUDGET);
     }
 
     @Test

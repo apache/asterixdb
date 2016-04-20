@@ -126,13 +126,7 @@ public class IntervalPartitionJoin {
     }
 
     private IPartitionedMemoryConstrain getPartitionMemoryConstrain() {
-        IPartitionedMemoryConstrain constrain = new IPartitionedMemoryConstrain() {
-            @Override
-            public int frameLimit(int partitionId) {
-                return Integer.MAX_VALUE;
-            }
-        };
-        return constrain;
+        return VPartitionTupleBufferManager.NO_CONSTRAIN;
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {

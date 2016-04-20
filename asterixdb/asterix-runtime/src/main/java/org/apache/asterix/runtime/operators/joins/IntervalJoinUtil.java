@@ -19,36 +19,53 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
+import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
 public class IntervalJoinUtil {
 
-    public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId)
-            throws HyracksDataException {
+    public static void getIntervalPointable(ITupleAccessor accessor, int fieldId, TaggedValuePointable tvp,
+            AIntervalPointable ip) {
+        int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(fieldId);
+        int length = accessor.getFieldLength(fieldId);
+        tvp.set(accessor.getBuffer().array(), start, length);
+        tvp.getValue(ip);
+    }
+
+    public static void getIntervalPointable(IFrameTupleAccessor accessor, int tupleId, int fieldId,
+            TaggedValuePointable tvp, AIntervalPointable ip) {
+        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(tupleId, fieldId);
+        int length = accessor.getFieldLength(tupleId, fieldId);
+        tvp.set(accessor.getBuffer().array(), start, length);
+        tvp.getValue(ip);
+    }
+
+    public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
         long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
         return intervalStart;
     }
 
-    public static long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId)
-            throws HyracksDataException {
+    public static long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
         long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
         return intervalEnd;
     }
 
-    public static long getIntervalStart(ITupleAccessor accessor, int fieldId) throws HyracksDataException {
+    public static long getIntervalStart(ITupleAccessor accessor, int fieldId) {
         int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(fieldId) + 1;
         long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
         return intervalStart;
     }
 
-    public static long getIntervalEnd(ITupleAccessor accessor, int fieldId) throws HyracksDataException {
+    public static long getIntervalEnd(ITupleAccessor accessor, int fieldId) {
         int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(fieldId) + 1;
         long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);

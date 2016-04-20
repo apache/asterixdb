@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -160,7 +161,7 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         return ABinaryComparator.isComparable(argLeft.getTag(), argRight.getTag());
     }
 
-    protected ComparisonResult compareResults() throws AlgebricksException {
+    protected ComparisonResult compareResults() throws AsterixException {
         boolean isLeftNull = false;
         boolean isRightNull = false;
         ATypeTag typeTag1 = null;

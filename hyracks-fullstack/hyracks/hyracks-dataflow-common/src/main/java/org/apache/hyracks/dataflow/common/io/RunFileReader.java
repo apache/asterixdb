@@ -77,6 +77,10 @@ public class RunFileReader implements IFrameReader {
         return true;
     }
 
+    public void reset() throws HyracksDataException {
+        readPtr = 0;
+    }
+
     @Override
     public void close() throws HyracksDataException {
         ioManager.close(handle);

@@ -20,13 +20,13 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 
-public class IntervalLogic implements Serializable{
+public class IntervalLogic implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private final ComparisonHelper ch = new ComparisonHelper();
@@ -35,7 +35,7 @@ public class IntervalLogic implements Serializable{
     private final IPointable s2 = VoidPointable.FACTORY.createPointable();
     private final IPointable e2 = VoidPointable.FACTORY.createPointable();
 
-    public boolean validateInterval(AIntervalPointable ip1) throws AlgebricksException {
+    public boolean validateInterval(AIntervalPointable ip1) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         return ch.compare(ip1.getTypeTag(), ip1.getTypeTag(), s1, e1) <= 0;
@@ -47,16 +47,16 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #after(AIntervalPointable, AIntervalPointable)
      */
-    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getEnd(e1);
         ip2.getStart(s2);
         return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) < 0;
     }
 
-    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return before(ip2, ip1);
     }
 
@@ -66,16 +66,16 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #metBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getEnd(e1);
         ip2.getStart(s2);
         return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) == 0;
     }
 
-    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return meets(ip2, ip1);
     }
 
@@ -85,10 +85,10 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #overlappedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -98,7 +98,7 @@ public class IntervalLogic implements Serializable{
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) < 0;
     }
 
-    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return overlaps(ip2, ip1);
     }
 
@@ -107,18 +107,18 @@ public class IntervalLogic implements Serializable{
      *
      * @param ip1
      * @param ip2
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @return boolean
      */
-    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
         ip2.getEnd(e2);
-        return (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) <= 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0)
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) <= 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) >= 0
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) != 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) != 0);
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) != 0;
     }
 
     /**
@@ -127,10 +127,10 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #startedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -139,7 +139,7 @@ public class IntervalLogic implements Serializable{
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) <= 0;
     }
 
-    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return starts(ip2, ip1);
     }
 
@@ -149,10 +149,10 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #coveredBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -161,7 +161,7 @@ public class IntervalLogic implements Serializable{
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0;
     }
 
-    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return covers(ip2, ip1);
     }
 
@@ -171,10 +171,10 @@ public class IntervalLogic implements Serializable{
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AlgebricksException
+     * @throws AsterixException
      * @see #endedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -183,11 +183,11 @@ public class IntervalLogic implements Serializable{
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) == 0;
     }
 
-    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         return ends(ip2, ip1);
     }
 
-    public boolean equals(AIntervalPointable ip1, AIntervalPointable ip2) throws AlgebricksException {
+    public boolean equals(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);

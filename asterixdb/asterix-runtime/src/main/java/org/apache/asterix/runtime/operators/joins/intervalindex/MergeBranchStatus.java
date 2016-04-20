@@ -16,78 +16,63 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.join;
+package org.apache.asterix.runtime.operators.joins.intervalindex;
 
 import java.io.Serializable;
 
-public class MergeStatus implements IRunFileStreamStatus, Serializable {
+import org.apache.hyracks.dataflow.std.join.IRunFileStreamStatus;
+
+public class MergeBranchStatus implements IRunFileStreamStatus, Serializable {
     private static final long serialVersionUID = 1L;
 
-    public enum BranchStatus {
+    public enum Stage {
         UNKNOWN,
         OPENED,
         DATA_PROCESSING,
         JOIN_PROCESSING,
         CLOSED;
 
-        public boolean isEqualOrBefore(BranchStatus bs) {
+        public boolean isEqualOrBefore(Stage bs) {
             return this.ordinal() <= bs.ordinal();
         }
     }
 
-    public boolean reloadingLeftFrame = false;
-    public boolean continueRightLoad = false;
+    private boolean hasMore = true;
 
-    public boolean leftHasMore = true;
-    public boolean rightHasMore = true;
-
-    private BranchStatus leftStatus = BranchStatus.UNKNOWN;
-    private BranchStatus rightStatus = BranchStatus.UNKNOWN;
+    private Stage stage = Stage.UNKNOWN;
 
     private boolean runFileWriting = false;
     private boolean runFileReading = false;
 
-    public MergeStatus() {
+    public MergeBranchStatus() {
     }
 
-    public BranchStatus getLeftStatus() {
-        return leftStatus;
+    public Stage getStatus() {
+        return stage;
     }
 
-    public BranchStatus getRightStatus() {
-        return rightStatus;
+    public void setStageOpen() {
+        stage = Stage.OPENED;
     }
 
-    public void openLeft() {
-        leftStatus = BranchStatus.OPENED;
+    public void setStageData() {
+        stage = Stage.DATA_PROCESSING;
     }
 
-    public void openRight() {
-        rightStatus = BranchStatus.OPENED;
+    public void setStageJoin() {
+        stage = Stage.JOIN_PROCESSING;
     }
 
-    public void dataLeft() {
-        leftStatus = BranchStatus.DATA_PROCESSING;
+    public void setStageClose() {
+        stage = Stage.CLOSED;
     }
 
-    public void dataRight() {
-        rightStatus = BranchStatus.DATA_PROCESSING;
+    public boolean hasMore() {
+        return hasMore;
     }
 
-    public void joinLeft() {
-        leftStatus = BranchStatus.JOIN_PROCESSING;
-    }
-
-    public void joinRight() {
-        rightStatus = BranchStatus.JOIN_PROCESSING;
-    }
-
-    public void closeLeft() {
-        leftStatus = BranchStatus.CLOSED;
-    }
-
-    public void closeRight() {
-        rightStatus = BranchStatus.CLOSED;
+    public void noMore() {
+        this.hasMore = false;
     }
 
     public boolean isRunFileWriting() {

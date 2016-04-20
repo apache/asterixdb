@@ -16,20 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
+package org.apache.hyracks.dataflow.std.buffermanager;
 
-public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
-    public boolean checkToRemoveLeftActive();
+public interface IPartitionedDeletableTupleBufferManager extends IPartitionedTupleBufferManager {
 
-    public boolean checkToRemoveRightActive();
-
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException;
-
-    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2);
+    void deleteTuple(int partition, TuplePointer tuplePointer) throws HyracksDataException;
 
 }

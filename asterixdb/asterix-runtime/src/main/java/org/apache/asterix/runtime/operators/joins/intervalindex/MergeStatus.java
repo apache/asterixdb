@@ -16,27 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import java.io.Serializable;
 
-public class CoversIntervalMergeJoinChecker extends AbstractIntervalMergeJoinChecker {
+public class MergeStatus implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public CoversIntervalMergeJoinChecker(int[] keysLeft, int[] keysRight) {
-        super(keysLeft[0], keysRight[0]);
-    }
+    public boolean reloadingLeftFrame = false;
+    public boolean continueRightLoad = false;
 
-    @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
-        return il.covers(ipLeft, ipRight);
-    }
-
-    @Override
-    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2) {
-        return IntervalPartitionLogic.covers(s1, e1, s2, e2);
-    }
+    public MergeBranchStatus right = new MergeBranchStatus();
+    public MergeBranchStatus left = new MergeBranchStatus();
 
 }

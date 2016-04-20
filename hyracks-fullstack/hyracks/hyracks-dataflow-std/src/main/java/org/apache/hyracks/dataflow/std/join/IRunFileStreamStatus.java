@@ -16,20 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.hyracks.dataflow.std.join;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
+public interface IRunFileStreamStatus {
 
-public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
+    public boolean isRunFileWriting();
 
-    public boolean checkToRemoveLeftActive();
+    public void setRunFileWriting(boolean runFileWriting);
 
-    public boolean checkToRemoveRightActive();
+    public boolean isRunFileReading();
 
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException;
-
-    public boolean compareIntervalPartition(int s1, int e1, int s2, int e2);
+    public void setRunFileReading(boolean runFileReading);
 
 }
