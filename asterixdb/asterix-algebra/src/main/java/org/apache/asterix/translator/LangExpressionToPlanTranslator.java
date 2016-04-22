@@ -95,6 +95,7 @@ import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledSubscribeFeedStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.util.FunctionCollection;
 import org.apache.asterix.translator.util.PlanTranslationUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -173,7 +174,7 @@ class LangExpressionToPlanTranslator
             throws AlgebricksException {
         this.context = new TranslationContext(new Counter(currentVarCounter));
         this.metadataProvider = metadataProvider;
-        FormatUtils.getDefaultFormat().registerRuntimeFunctions();
+        FormatUtils.getDefaultFormat().registerRuntimeFunctions(FunctionCollection.getFunctionDescriptorFactories());
     }
 
     @Override

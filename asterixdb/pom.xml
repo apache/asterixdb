@@ -248,6 +248,19 @@
                                 </pluginExecution>
                                 <pluginExecution>
                                     <pluginExecutionFilter>
+                                        <groupId>org.apache.asterix</groupId>
+                                        <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
+                                        <versionRange>[0.8.7-SNAPSHOT,)</versionRange>
+                                        <goals>
+                                            <goal>generate-evaluator</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-jar-plugin</artifactId>
                                         <versionRange>[2.4,)</versionRange>

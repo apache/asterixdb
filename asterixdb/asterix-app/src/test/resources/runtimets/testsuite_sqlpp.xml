@@ -3582,6 +3582,33 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="null">
+        <test-case FilePath="null">
+            <compilation-unit name="ceil">
+                <output-dir compare="Text">ceil</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="null">
+            <compilation-unit name="length">
+                <output-dir compare="Text">length</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="null">
+            <compilation-unit name="lower">
+                <output-dir compare="Text">lower</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="null">
+            <compilation-unit name="substr">
+                <output-dir compare="Text">substr</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="null">
+            <compilation-unit name="upper">
+                <output-dir compare="Text">upper</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="numeric">
         <test-case FilePath="numeric">
             <compilation-unit name="caret0">

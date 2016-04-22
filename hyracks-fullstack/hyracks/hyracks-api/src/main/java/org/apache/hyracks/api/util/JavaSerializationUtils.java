@@ -66,9 +66,8 @@ public class JavaSerializationUtils {
             return null;
         }
         ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(classLoader);
-            ObjectInputStream ois = new ClassLoaderObjectInputStream(new ByteArrayInputStream(bytes), classLoader);
+        Thread.currentThread().setContextClassLoader(classLoader);
+        try (ObjectInputStream ois = new ClassLoaderObjectInputStream(new ByteArrayInputStream(bytes), classLoader)) {
             return ois.readObject();
         } finally {
             Thread.currentThread().setContextClassLoader(ctxCL);
@@ -82,8 +81,8 @@ public class JavaSerializationUtils {
     private static class ClassLoaderObjectInputStream extends ObjectInputStream {
         private ClassLoader classLoader;
 
-        protected ClassLoaderObjectInputStream(InputStream in, ClassLoader classLoader) throws IOException,
-                SecurityException {
+        protected ClassLoaderObjectInputStream(InputStream in, ClassLoader classLoader)
+                throws IOException, SecurityException {
             super(in);
             this.classLoader = classLoader;
         }
@@ -99,9 +98,9 @@ public class JavaSerializationUtils {
             boolean hasNonPublicInterface = false;
 
             // define proxy in class loader of non-public interface(s), if any
-            Class[] classObjs = new Class[interfaces.length];
+            Class<?>[] classObjs = new Class[interfaces.length];
             for (int i = 0; i < interfaces.length; i++) {
-                Class cl = Class.forName(interfaces[i], false, classLoader);
+                Class<?> cl = Class.forName(interfaces[i], false, classLoader);
                 if ((cl.getModifiers() & Modifier.PUBLIC) == 0) {
                     if (hasNonPublicInterface) {
                         if (nonPublicLoader != cl.getClassLoader()) {
