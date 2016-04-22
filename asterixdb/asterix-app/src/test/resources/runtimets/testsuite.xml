@@ -5374,6 +5374,16 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
+            <compilation-unit name="substring-after-5">
+                <output-dir compare="Text">substring-after-5</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="string">
+            <compilation-unit name="substring-after-6">
+                <output-dir compare="Text">substring-after-5</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="string">
             <compilation-unit name="substring-before-1">
                 <output-dir compare="Text">substring-before-1</output-dir>
             </compilation-unit>

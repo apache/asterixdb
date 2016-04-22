@@ -16,28 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
+use dataverse test;
 
-/**
- * @author Xiaoyu Ma
- */
-public class BinaryStringStringOrNullTypeComputer extends AbstractBinaryStringTypeComputer {
+insert into dataset log {
+  "id": 1,
+  "RemoteHost": "10.0.0.2@123"
+}
 
-    public static final BinaryStringStringOrNullTypeComputer INSTANCE = new BinaryStringStringOrNullTypeComputer();
-
-    private BinaryStringStringOrNullTypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(IAType t0, IAType t1, boolean nullable) {
-        if (nullable) {
-            return AUnionType.createNullableType(BuiltinType.ASTRING);
-        }
-        return BuiltinType.ASTRING;
-    }
-
+insert into dataset log {
+   "id": 2
 }

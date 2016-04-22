@@ -16,28 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
+/* This query is to verify substring-after can work with open type. */
 
-/**
- * @author Xiaoyu Ma
- */
-public class BinaryStringStringOrNullTypeComputer extends AbstractBinaryStringTypeComputer {
+use dataverse test;
 
-    public static final BinaryStringStringOrNullTypeComputer INSTANCE = new BinaryStringStringOrNullTypeComputer();
-
-    private BinaryStringStringOrNullTypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(IAType t0, IAType t1, boolean nullable) {
-        if (nullable) {
-            return AUnionType.createNullableType(BuiltinType.ASTRING);
-        }
-        return BuiltinType.ASTRING;
-    }
-
-}
+for $e in dataset log
+where not(is-null($e.RemoteHost))
+limit 1
+return substring-after($e.RemoteHost, "@");
