@@ -112,17 +112,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
          */
         while (childQueue.size() > 0) {
             /**
-             * expend the executing activities further to the downstream
-             */
-            if (outputConnectors != null && outputConnectors.size() > 0) {
-                for (IConnectorDescriptor conn : outputConnectors) {
-                    if (conn != null) {
-                        childQueue.add(parent.getConnectorActivityMap().get(conn.getConnectorId()));
-                    }
-                }
-            }
-
-            /**
              * construct the source to destination information
              */
             Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> channel = childQueue.poll();
@@ -149,6 +138,17 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
              * traverse to the child of the current activity
              */
             outputConnectors = parent.getActivityOutputMap().get(destId);
+
+            /**
+             * expend the executing activities further to the downstream
+             */
+            if (outputConnectors != null && outputConnectors.size() > 0) {
+                for (IConnectorDescriptor conn : outputConnectors) {
+                    if (conn != null) {
+                        childQueue.add(parent.getConnectorActivityMap().get(conn.getConnectorId()));
+                    }
+                }
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- NESTED_LOOP  |PARTITIONED|
-      -- BROADCAST_EXCHANGE  |PARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             -- DATASOURCE_SCAN  |PARTITIONED|
@@ -9,7 +9,7 @@
                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         -- NESTED_LOOP  |PARTITIONED|
-          -- BROADCAST_EXCHANGE  |PARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- STREAM_SELECT  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
@@ -26,14 +26,14 @@
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- NESTED_LOOP  |PARTITIONED|
-                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- STREAM_SELECT  |PARTITIONED|
@@ -44,7 +44,7 @@
                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          -- BROADCAST_EXCHANGE  |PARTITIONED|
             -- STREAM_PROJECT  |UNPARTITIONED|
               -- ASSIGN  |UNPARTITIONED|
                 -- AGGREGATE  |UNPARTITIONED|

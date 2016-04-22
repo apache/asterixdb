@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
-import java.util.List;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
@@ -32,7 +30,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -60,8 +57,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
- * Left input is broadcast and preserves its local properties.
- * Right input can be partitioned in any way.
+ * The right input is broadcast and the left input can be partitioned in any way.
  */
 public class NLJoinPOperator extends AbstractJoinPOperator {
 
@@ -104,11 +100,9 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             pp = IPartitioningProperty.UNPARTITIONED;
         }
 
-        // Nested loop join maintains the local structure property for the probe side.
-        AbstractLogicalOperator probeOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        IPhysicalPropertiesVector probeSideProperties = probeOp.getPhysicalOperator().getDeliveredProperties();
-        List<ILocalStructuralProperty> probeSideLocalProperties = probeSideProperties.getLocalProperties();
-        this.deliveredProperties = new StructuralPropertiesVector(pp, probeSideLocalProperties);
+        // Nested loop join cannot maintain the local structure property for the probe side
+        // because of the I/O optimization for the build branch.
+        this.deliveredProperties = new StructuralPropertiesVector(pp, null);
     }
 
     @Override
@@ -119,16 +113,18 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         }
 
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
-        pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(context.getComputationNodeDomain()),
+
+        // TODO: leverage statistics to make better decisions.
+        pv[0] = new StructuralPropertiesVector(null, null);
+        pv[1] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(context.getComputationNodeDomain()),
                 null);
-        pv[1] = new StructuralPropertiesVector(null, null);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
         RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
                 propagatedSchema, context);

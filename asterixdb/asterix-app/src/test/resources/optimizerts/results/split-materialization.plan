@@ -6,7 +6,7 @@
           -- STABLE_SORT [$$30(ASC), $$31(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- NESTED_LOOP  |PARTITIONED|
-                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ASSIGN  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -19,7 +19,7 @@
                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                -- BROADCAST_EXCHANGE  |PARTITIONED|
                   -- SPLIT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|

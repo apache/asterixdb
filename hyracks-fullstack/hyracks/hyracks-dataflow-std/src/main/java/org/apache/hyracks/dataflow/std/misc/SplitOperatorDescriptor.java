@@ -131,6 +131,7 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void nextFrame(ByteBuffer bufferAccessor) throws HyracksDataException {
                     if (requiresMaterialization) {
                         state.appendFrame(bufferAccessor);
+                        bufferAccessor.clear();
                     }
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                         FrameUtils.flushFrame(bufferAccessor, writers[i]);
@@ -211,7 +212,7 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
                 @Override

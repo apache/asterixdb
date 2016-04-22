@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.core.jobgen.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -68,7 +68,7 @@ public class JobGenContext {
     private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
     private final IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
     private final int frameSize;
-    private AlgebricksPartitionConstraint clusterLocations;
+    private AlgebricksAbsolutePartitionConstraint clusterLocations;
     private int varCounter;
     private final ITypingContext typingContext;
 
@@ -86,7 +86,7 @@ public class JobGenContext {
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
-            AlgebricksPartitionConstraint clusterLocations) {
+            AlgebricksAbsolutePartitionConstraint clusterLocations) {
         this.outerFlowSchema = outerFlowSchema;
         this.metadataProvider = metadataProvider;
         this.appContext = appContext;
@@ -115,7 +115,7 @@ public class JobGenContext {
         return outerFlowSchema;
     }
 
-    public AlgebricksPartitionConstraint getClusterLocations() {
+    public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
         return clusterLocations;
     }
 

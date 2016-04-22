@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.compiler.api;
 
 import java.util.List;
 
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
@@ -65,7 +66,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IPartialAggregationTypeComputer partialAggregationTypeComputer;
     protected IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
     protected PhysicalOptimizationConfig physicalOptimizationConfig = new PhysicalOptimizationConfig();
-    protected AlgebricksPartitionConstraint clusterLocations;
+    protected AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     public abstract ICompilerFactory create();
 
@@ -165,7 +166,7 @@ public abstract class AbstractCompilerFactoryBuilder {
         return expressionTypeComputer;
     }
 
-    public void setClusterLocations(AlgebricksPartitionConstraint clusterLocations) {
+    public void setClusterLocations(AlgebricksAbsolutePartitionConstraint clusterLocations) {
         this.clusterLocations = clusterLocations;
     }
 

@@ -4,17 +4,17 @@
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           -- NESTED_LOOP  |PARTITIONED|
-            -- BROADCAST_EXCHANGE  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- NESTED_LOOP  |PARTITIONED|
-                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- NESTED_LOOP  |PARTITIONED|
-                    -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- NESTED_LOOP  |PARTITIONED|
-                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- NESTED_LOOP  |PARTITIONED|
-                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- NESTED_LOOP  |PARTITIONED|
-                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                                   -- AGGREGATE  |UNPARTITIONED|
                                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                       -- AGGREGATE  |PARTITIONED|
@@ -29,7 +29,7 @@
                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                -- BROADCAST_EXCHANGE  |PARTITIONED|
                                   -- AGGREGATE  |UNPARTITIONED|
                                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                       -- AGGREGATE  |PARTITIONED|
@@ -48,7 +48,7 @@
                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                            -- BROADCAST_EXCHANGE  |PARTITIONED|
                               -- AGGREGATE  |UNPARTITIONED|
                                 -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                   -- AGGREGATE  |PARTITIONED|
@@ -64,7 +64,7 @@
                                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                        -- BROADCAST_EXCHANGE  |PARTITIONED|
                           -- AGGREGATE  |UNPARTITIONED|
                             -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                               -- AGGREGATE  |PARTITIONED|
@@ -80,7 +80,7 @@
                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                    -- BROADCAST_EXCHANGE  |PARTITIONED|
                       -- AGGREGATE  |UNPARTITIONED|
                         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                           -- AGGREGATE  |PARTITIONED|
@@ -101,7 +101,7 @@
                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                -- BROADCAST_EXCHANGE  |PARTITIONED|
                   -- AGGREGATE  |UNPARTITIONED|
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                       -- AGGREGATE  |PARTITIONED|
@@ -117,7 +117,7 @@
                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+            -- BROADCAST_EXCHANGE  |PARTITIONED|
               -- AGGREGATE  |UNPARTITIONED|
                 -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                   -- AGGREGATE  |PARTITIONED|
