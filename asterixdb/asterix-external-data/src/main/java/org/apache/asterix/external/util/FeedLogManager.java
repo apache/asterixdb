@@ -27,6 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.TreeSet;
 
 import org.apache.commons.io.FileUtils;
@@ -46,7 +49,8 @@ public class FeedLogManager {
     public static final String BAD_RECORDS_FILE_NAME = "failed_record.log";
     public static final String START_PREFIX = "s:";
     public static final String END_PREFIX = "e:";
-    public static final int PREFIX_SIZE = 2;
+    private static final String DATE_FORMAT_STRING = "MM/dd/yyyy HH:mm:ss";
+    public static final int PREFIX_SIZE = START_PREFIX.length() + DATE_FORMAT_STRING.length() + 1;
     private String currentPartition;
     private final TreeSet<String> completed;
     private final Path dir;
@@ -55,6 +59,7 @@ public class FeedLogManager {
     private BufferedWriter recordLogger;
     private final StringBuilder stringBuilder = new StringBuilder();
     private int count = 0;
+    private static final DateFormat df = new SimpleDateFormat(DATE_FORMAT_STRING);
 
     public FeedLogManager(File file) throws HyracksDataException {
         try {
@@ -144,6 +149,8 @@ public class FeedLogManager {
 
     public synchronized void logProgress(String log) throws IOException {
         stringBuilder.setLength(0);
+        stringBuilder.append(df.format((new Date())));
+        stringBuilder.append(' ');
         stringBuilder.append(log);
         stringBuilder.append(ExternalDataConstants.LF);
         progressLogger.write(stringBuilder.toString());
@@ -152,6 +159,8 @@ public class FeedLogManager {
 
     public synchronized void logError(String error, Throwable th) throws IOException {
         stringBuilder.setLength(0);
+        stringBuilder.append(df.format((new Date())));
+        stringBuilder.append(' ');
         stringBuilder.append(error);
         stringBuilder.append(ExternalDataConstants.LF);
         stringBuilder.append(th.toString());
@@ -164,6 +173,8 @@ public class FeedLogManager {
         stringBuilder.setLength(0);
         stringBuilder.append(record);
         stringBuilder.append(ExternalDataConstants.LF);
+        stringBuilder.append(df.format((new Date())));
+        stringBuilder.append(' ');
         stringBuilder.append(errorMessage);
         stringBuilder.append(ExternalDataConstants.LF);
         recordLogger.write(stringBuilder.toString());
