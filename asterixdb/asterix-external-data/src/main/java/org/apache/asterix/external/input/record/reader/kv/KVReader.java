@@ -30,36 +30,30 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
 
 import com.couchbase.client.core.CouchbaseCore;
-import com.couchbase.client.core.dcp.BucketStreamAggregator;
-import com.couchbase.client.core.dcp.BucketStreamAggregatorState;
-import com.couchbase.client.core.dcp.BucketStreamState;
-import com.couchbase.client.core.dcp.BucketStreamStateUpdatedEvent;
-import com.couchbase.client.core.env.DefaultCoreEnvironment;
-import com.couchbase.client.core.env.DefaultCoreEnvironment.Builder;
+import com.couchbase.client.core.endpoint.dcp.DCPConnection;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
 import com.couchbase.client.core.message.dcp.DCPRequest;
 import com.couchbase.client.core.message.dcp.MutationMessage;
+import com.couchbase.client.core.message.dcp.OpenConnectionRequest;
+import com.couchbase.client.core.message.dcp.OpenConnectionResponse;
 import com.couchbase.client.core.message.dcp.RemoveMessage;
 import com.couchbase.client.core.message.dcp.SnapshotMarkerMessage;
 
-import rx.functions.Action1;
+import rx.Subscriber;
 
 public class KVReader implements IRecordReader<DCPRequest> {
 
     private static final Logger LOGGER = Logger.getLogger(KVReader.class);
-    private static final MutationMessage POISON_PILL = new MutationMessage((short) 0, null, null, 0, 0L, 0L, 0, 0, 0L,
-            null);
+    private static final MutationMessage POISON_PILL = new MutationMessage(0, (short) 0, null, null, 0, 0L, 0L, 0, 0,
+            0L, null);
     private final String feedName;
     private final short[] vbuckets;
     private final String bucket;
     private final String password;
     private final String[] sourceNodes;
-    private final Builder builder;
-    private final BucketStreamAggregator bucketStreamAggregator;
     private final CouchbaseCore core;
-    private final DefaultCoreEnvironment env;
     private final GenericRecord<DCPRequest> record;
     private final ArrayBlockingQueue<DCPRequest> messages;
     private AbstractFeedDataFlowController controller;
@@ -67,20 +61,22 @@ public class KVReader implements IRecordReader<DCPRequest> {
     private boolean done = false;
 
     public KVReader(String feedName, String bucket, String password, String[] sourceNodes, short[] vbuckets,
-            int queueSize) throws HyracksDataException {
+            int queueSize, CouchbaseCore core) throws HyracksDataException {
         this.feedName = feedName;
         this.bucket = bucket;
         this.password = password;
         this.sourceNodes = sourceNodes;
         this.vbuckets = vbuckets;
         this.messages = new ArrayBlockingQueue<DCPRequest>(queueSize);
-        this.builder = DefaultCoreEnvironment.builder().dcpEnabled(KVReaderFactory.DCP_ENABLED)
-                .autoreleaseAfter(KVReaderFactory.AUTO_RELEASE_AFTER_MILLISECONDS);
-        this.env = builder.build();
-        this.core = new CouchbaseCore(env);
-        this.bucketStreamAggregator = new BucketStreamAggregator(feedName, core, bucket);
+        this.core = core;
         this.record = new GenericRecord<>();
-        connect();
+        this.pushThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                KVReader.this.run();
+            }
+        }, feedName);
+        pushThread.start();
     }
 
     @Override
@@ -90,44 +86,33 @@ public class KVReader implements IRecordReader<DCPRequest> {
         }
     }
 
-    private void connect() {
+    private void run() {
         core.send(new SeedNodesRequest(sourceNodes)).timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT)
                 .toBlocking().single();
         core.send(new OpenBucketRequest(bucket, password)).timeout(KVReaderFactory.TIMEOUT, KVReaderFactory.TIME_UNIT)
                 .toBlocking().single();
-        this.pushThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                KVReader.this.run(bucketStreamAggregator);
-            }
-        }, feedName);
-        pushThread.start();
-    }
-
-    private void run(BucketStreamAggregator bucketStreamAggregator) {
-        BucketStreamAggregatorState state = new BucketStreamAggregatorState();
+        DCPConnection connection = core.<OpenConnectionResponse> send(new OpenConnectionRequest(feedName, bucket))
+                .toBlocking().single().connection();
         for (int i = 0; i < vbuckets.length; i++) {
-            state.put(new BucketStreamState(vbuckets[i], 0, 0, 0xffffffff, 0, 0xffffffff));
+            connection.addStream(vbuckets[i]).toBlocking().single();
         }
-        state.updates().subscribe(new Action1<BucketStreamStateUpdatedEvent>() {
-            @Override
-            public void call(BucketStreamStateUpdatedEvent event) {
-                if (event.partialUpdate()) {
-                } else {
-                }
-            }
-        });
         try {
-            bucketStreamAggregator.feed(state).toBlocking().forEach(new Action1<DCPRequest>() {
+            connection.subject().toBlocking().subscribe(new Subscriber<DCPRequest>() {
                 @Override
-                public void call(DCPRequest dcpRequest) {
+                public void onCompleted() {
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onNext(DCPRequest dcpRequest) {
                     try {
                         if (dcpRequest instanceof SnapshotMarkerMessage) {
                             SnapshotMarkerMessage message = (SnapshotMarkerMessage) dcpRequest;
-                            BucketStreamState oldState = state.get(message.partition());
-                            state.put(new BucketStreamState(message.partition(), oldState.vbucketUUID(),
-                                    message.endSequenceNumber(), oldState.endSequenceNumber(),
-                                    message.endSequenceNumber(), oldState.snapshotEndSequenceNumber()));
+                            LOGGER.info("snapshot DCP message received: " + message);
                         } else if ((dcpRequest instanceof MutationMessage) || (dcpRequest instanceof RemoveMessage)) {
                             messages.put(dcpRequest);
                         } else {
@@ -139,13 +124,7 @@ public class KVReader implements IRecordReader<DCPRequest> {
                 }
             });
         } catch (Throwable th) {
-            if (th.getCause() instanceof InterruptedException) {
-                LOGGER.warn("dcp thread was interrupted", th);
-                synchronized (this) {
-                    KVReader.this.close();
-                    notifyAll();
-                }
-            }
+            th.printStackTrace();
             throw th;
         }
     }
@@ -172,6 +151,7 @@ public class KVReader implements IRecordReader<DCPRequest> {
     public boolean stop() {
         done = true;
         core.send(new CloseBucketRequest(bucket)).toBlocking();
+        pushThread.interrupt();
         try {
             messages.put(KVReader.POISON_PILL);
         } catch (InterruptedException e) {

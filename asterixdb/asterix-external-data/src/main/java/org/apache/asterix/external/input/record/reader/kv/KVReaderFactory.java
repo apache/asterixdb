@@ -19,7 +19,10 @@
 package org.apache.asterix.external.input.record.reader.kv;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -62,13 +65,19 @@ public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
     private int[] schedule;
     private String feedName;
     // Transient fields
-    private transient CouchbaseCore core;
+    private static transient CouchbaseCore core;
     private transient Builder builder;
-    private transient DefaultCoreEnvironment env;
+    private static transient DefaultCoreEnvironment env;
+    private transient AlgebricksAbsolutePartitionConstraint locationConstraints;
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        return AsterixClusterProperties.INSTANCE.getClusterLocations();
+        if (locationConstraints == null) {
+            String[] allPartitions = AsterixClusterProperties.INSTANCE.getClusterLocations().getLocations();
+            Set<String> ncs = new HashSet<String>(Arrays.asList(allPartitions));
+            locationConstraints = new AlgebricksAbsolutePartitionConstraint(ncs.toArray(new String[ncs.size()]));
+        }
+        return locationConstraints;
     }
 
     @Override
@@ -90,12 +99,20 @@ public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
         bucket = configuration.get(ExternalDataConstants.KEY_BUCKET);
         couchbaseNodes = configuration.get(ExternalDataConstants.KEY_NODES).split(",");
         feedName = configuration.get(ExternalDataConstants.KEY_FEED_NAME);
-        builder = DefaultCoreEnvironment.builder().dcpEnabled(DCP_ENABLED)
-                .autoreleaseAfter(AUTO_RELEASE_AFTER_MILLISECONDS);
-        env = builder.build();
-        core = new CouchbaseCore(env);
+        createEnvironment("CC");
         getNumberOfVbuckets();
         schedule();
+    }
+
+    private void createEnvironment(String connectionName) {
+        synchronized (TIME_UNIT) {
+            if (core == null) {
+                builder = DefaultCoreEnvironment.builder().dcpEnabled(DCP_ENABLED).dcpConnectionName(connectionName)
+                        .autoreleaseAfter(AUTO_RELEASE_AFTER_MILLISECONDS);
+                env = builder.build();
+                core = new CouchbaseCore(env);
+            }
+        }
     }
 
     /*
@@ -104,7 +121,7 @@ public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
      */
     private void schedule() {
         schedule = new int[numOfVBuckets];
-        String[] locations = AsterixClusterProperties.INSTANCE.getClusterLocations().getLocations();
+        String[] locations = getPartitionConstraint().getLocations();
         for (int i = 0; i < numOfVBuckets; i++) {
             schedule[i] = i % locations.length;
         }
@@ -128,6 +145,7 @@ public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
     public IRecordReader<? extends DCPRequest> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+        createEnvironment(nodeName);
         ArrayList<Short> listOfAssignedVBuckets = new ArrayList<Short>();
         for (int i = 0; i < schedule.length; i++) {
             if (schedule[i] == partition) {
@@ -138,8 +156,8 @@ public class KVReaderFactory implements IRecordReaderFactory<DCPRequest> {
         for (int i = 0; i < vbuckets.length; i++) {
             vbuckets[i] = listOfAssignedVBuckets.get(i);
         }
-        return new KVReader(feedName + ":" + nodeName + ":" + partition, bucket, password, couchbaseNodes,
-                vbuckets, ExternalDataUtils.getQueueSize(configuration));
+        return new KVReader(feedName + ":" + nodeName + ":" + partition, bucket, password, couchbaseNodes, vbuckets,
+                ExternalDataUtils.getQueueSize(configuration), core);
     }
 
     @Override
