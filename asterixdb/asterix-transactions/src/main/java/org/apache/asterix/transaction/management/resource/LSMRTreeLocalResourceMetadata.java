@@ -52,13 +52,14 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     protected final Map<String, String> mergePolicyProperties;
     protected final int[] rtreeFields;
     protected final int[] btreeFields;
+    protected final boolean isPointMBR;
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] rtreeFields,
-            int[] btreeFields, int[] filterFields) {
+            int[] btreeFields, int[] filterFields, boolean isPointMBR) {
         super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
@@ -70,11 +71,12 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         this.mergePolicyProperties = mergePolicyProperties;
         this.rtreeFields = rtreeFields;
         this.btreeFields = btreeFields;
+        this.isPointMBR = isPointMBR;
     }
 
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-                                         int partition, int ioDeviceNum) throws HyracksDataException {
+            int partition, int ioDeviceNum) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getDatasetLifecycleManager()
                 .getVirtualBufferCaches(datasetID, ioDeviceNum);
@@ -88,7 +90,7 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                             runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
-                    rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true);
+                    rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

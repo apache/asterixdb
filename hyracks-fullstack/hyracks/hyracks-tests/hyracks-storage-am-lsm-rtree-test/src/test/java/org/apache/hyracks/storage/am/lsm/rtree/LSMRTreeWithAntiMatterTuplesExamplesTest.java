@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -32,6 +29,8 @@ import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.junit.After;
+import org.junit.Before;
 
 public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeExamplesTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
@@ -48,11 +47,10 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeEx
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
-                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallback(),
+                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields,
-                filterTypeTraits, filterCmpFactories, filterFields, true);
+                filterTypeTraits, filterCmpFactories, filterFields, true, false);
     }
 
     @Before

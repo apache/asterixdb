@@ -43,9 +43,10 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     protected final IPrimitiveValueProvider[] keyValueProviders;
 
     protected IRTreePolicy rtreePolicy;
+    protected final boolean isPointMBR;
 
     public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-            RTreePolicyType rtreePolicyType) {
+            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, new UnorderedSlotManager());
         this.mbrTuples = new ITreeIndexTupleReference[keyValueProviders.length];
         for (int i = 0; i < keyValueProviders.length; i++) {
@@ -59,6 +60,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         } else {
             rtreePolicy = new RStarTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, totalFreeSpaceOff);
         }
+        this.isPointMBR = isPointMBR;
     }
 
     private static double computeDoubleEpsilon() {

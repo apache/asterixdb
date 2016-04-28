@@ -20,10 +20,11 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -84,6 +85,8 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+        //skVarMap is used to remove duplicated variable references for order operator
+        Map<Integer, Object> skVarMap = new HashMap<Integer, Object>();
         List<LogicalVariable> scanVariables = new ArrayList<>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
@@ -94,7 +97,10 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         // Data needs to be sorted based on the [token, number of token, PK]
         // OR [token, PK] if the index is not partitioned
         for (LogicalVariable skVar : secondaryKeys) {
-            orderColumns.add(new OrderColumn(skVar, OrderKind.ASC));
+            if (!skVarMap.containsKey(skVar.getId())) {
+                orderColumns.add(new OrderColumn(skVar, OrderKind.ASC));
+                skVarMap.put(skVar.getId(), null);
+            }
         }
         for (LogicalVariable pkVar : primaryKeys) {
             orderColumns.add(new OrderColumn(pkVar, OrderKind.ASC));

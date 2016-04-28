@@ -42,10 +42,10 @@ public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFa
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
-            double bloomFilterFalsePositiveRate, int[] btreeFields, int version, boolean durable) {
+            double bloomFilterFalsePositiveRate, int[] btreeFields, int version, boolean durable, boolean isPointMBR) {
         super(valueProviderFactories, rtreePolicyType, btreeComparatorFactories, null, mergePolicyFactory,
                 mergePolicyProperties, opTrackerFactory, ioSchedulerProvider, ioOpCallbackFactory, linearizeCmpFactory,
-                bloomFilterFalsePositiveRate, null, btreeFields, null, null, null, durable);
+                bloomFilterFalsePositiveRate, null, btreeFields, null, null, null, durable, isPointMBR);
         this.version = version;
     }
 
@@ -55,7 +55,7 @@ public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFa
         return new ExternalRTreeDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, btreeFields,
-                version, durable);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, btreeFields, version,
+                durable, isPointMBR);
     }
 }

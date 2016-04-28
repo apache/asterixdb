@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.storage.am.rtree;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,6 +28,8 @@ import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.am.rtree.utils.RTreeTestHarness;
+import org.junit.After;
+import org.junit.Before;
 
 public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
     private final RTreeTestHarness harness = new RTreeTestHarness();
@@ -56,7 +55,7 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
             RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException {
         return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
-                valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference(), true);
+                valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference(), true, false);
     }
 
 }

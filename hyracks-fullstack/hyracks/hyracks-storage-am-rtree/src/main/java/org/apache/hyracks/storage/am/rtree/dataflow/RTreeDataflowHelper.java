@@ -35,8 +35,7 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final RTreePolicyType rtreePolicyType;
 
     public RTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            boolean durable) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, boolean durable) {
         super(opDesc, ctx, partition, durable);
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
@@ -45,9 +44,9 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
-        return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx), treeOpDesc
-                .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
-                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, file,
-                durable);
+        return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx),
+                treeOpDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
+                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, file, durable,
+                false);
     }
 }

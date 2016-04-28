@@ -52,10 +52,10 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] btreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable) {
+            boolean durable, boolean isPointMBR) {
         super(opDesc, ctx, partition, virtualBufferCaches, btreeComparatorFactories, valueProviderFactories,
                 rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory,
-                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, durable);
+                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR);
         this.btreeFields = btreeFields;
     }
 
@@ -67,11 +67,11 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] btreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable) {
+            boolean durable, boolean isPointMBR) {
         super(opDesc, ctx, partition, virtualBufferCaches, bloomFilterFalsePositiveRate, btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
                 ioOpCallbackFactory, linearizeCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories,
-                filterFields, durable);
+                filterFields, durable, isPointMBR);
         this.btreeFields = btreeFields;
     }
 
@@ -88,7 +88,7 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
                     typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
-                    filterTypeTraits, filterCmpFactories, filterFields, durable);
+                    filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

@@ -47,8 +47,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     private final int keyFieldCount;
 
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-            RTreePolicyType rtreePolicyType) {
-        super(tupleWriter, keyValueProviders, rtreePolicyType);
+            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+        super(tupleWriter, keyValueProviders, rtreePolicyType, isPointMBR);
         keyFieldCount = keyValueProviders.length;
         frameTuple.setFieldCount(keyFieldCount);
     }

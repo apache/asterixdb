@@ -46,6 +46,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     protected final ILinearizeComparatorFactory linearizeCmpFactory;
     protected final int[] rtreeFields;
     protected final int[] btreeFields;
+    protected final boolean isPointMBR;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
@@ -54,7 +55,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, double bloomFilterFalsePositiveRate, int[] rtreeFields,
             int[] btreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields, boolean durable) {
+            int[] filterFields, boolean durable, boolean isPointMBR) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory,
                 ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate, filterTypeTraits,
                 filterCmpFactories, filterFields, durable);
@@ -64,16 +65,17 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
         this.linearizeCmpFactory = linearizeCmpFactory;
         this.rtreeFields = rtreeFields;
         this.btreeFields = btreeFields;
+        this.isPointMBR = isPointMBR;
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition,
-                virtualBufferCacheProvider.getVirtualBufferCaches(ctx, opDesc.getFileSplitProvider()), bloomFilterFalsePositiveRate,
-                btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
+                virtualBufferCacheProvider.getVirtualBufferCaches(ctx, opDesc.getFileSplitProvider()),
+                bloomFilterFalsePositiveRate, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, rtreeFields,
-                btreeFields, filterTypeTraits, filterCmpFactories, filterFields, durable);
+                btreeFields, filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR);
     }
 }
