@@ -74,7 +74,11 @@ public class DatasourceFactoryProvider {
                     streamSourceFactory = new TwitterFirehoseStreamFactory();
                     break;
                 default:
-                    throw new AsterixException("unknown input stream factory");
+                    try {
+                        streamSourceFactory = (IInputStreamFactory) Class.forName(streamSource).newInstance();
+                    } catch (Exception e) {
+                        throw new AsterixException("unknown input stream factory: " + streamSource, e);
+                    }
             }
         }
         return streamSourceFactory;
@@ -109,7 +113,11 @@ public class DatasourceFactoryProvider {
             case ExternalDataConstants.STREAM_SOCKET_CLIENT:
                 return new StreamRecordReaderFactory(new SocketClientInputStreamFactory());
             default:
-                throw new AsterixException("unknown record reader factory: " + reader);
+                try {
+                    return (IRecordReaderFactory<?>) Class.forName(reader).newInstance();
+                } catch (Exception e) {
+                    throw new AsterixException("unknown record reader factory: " + reader, e);
+                }
         }
     }
 }
