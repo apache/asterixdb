@@ -91,11 +91,11 @@ public class CachedPage implements ICachedPageInternal {
     }
 
     @Override
-    public boolean pinIfGoodVictim() {
+    public boolean isGoodVictim() {
         if (confiscated.get())
-            return false; //i am not a good victim because i cant flush!
+            return false; // i am not a good victim because i cant flush!
         else {
-            return pinCount.compareAndSet(0, 1);
+            return pinCount.get() == 0;
         }
     }
 

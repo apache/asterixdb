@@ -283,6 +283,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                      */
                     bucket.bucketLock.lock();
                     try {
+                        if (!victim.pinCount.compareAndSet(0, 1)) {
+                            continue;
+                        }
+                        // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
+                        // pin count and try again
+                        if (victim.dpid >= 0) {
+                            victim.pinCount.decrementAndGet();
+                            continue;
+                        }
                         if (DEBUG) {
                             confiscateLock.lock();
                             try{
@@ -324,7 +333,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                      */
                     bucket.bucketLock.lock();
                     try {
-                        if (victim.pinCount.get() != 1) {
+                        if (!victim.pinCount.compareAndSet(0, 1)) {
+                            continue;
+                        }
+                        // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
+                        // pin count and try again
+                        if (victimHash != hash(victim.dpid)) {
                             victim.pinCount.decrementAndGet();
                             continue;
                         }
@@ -371,7 +385,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         victimBucket.bucketLock.lock();
                     }
                     try {
-                        if (victim.pinCount.get() != 1) {
+                        if (!victim.pinCount.compareAndSet(0, 1)) {
+                            continue;
+                        }
+                        // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
+                        // pin count and try again
+                        if (victimHash != hash(victim.dpid)) {
                             victim.pinCount.decrementAndGet();
                             continue;
                         }
@@ -992,7 +1011,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 // find a page that would possibly be evicted anyway
                 // Case 1 from findPage()
                 if (victim.dpid < 0) { // new page
-                    if (victim.pinCount.get() != 1) {
+                    if (!victim.pinCount.compareAndSet(0, 1)) {
+                        continue;
+                    }
+                    // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
+                    // pin count and try again
+                    if (victim.dpid >= 0) {
                         victim.pinCount.decrementAndGet();
                         continue;
                     }
@@ -1013,8 +1037,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         while (curr != null) {
                             if (curr == victim) { // we found where the victim
                                                   // resides in the hash table
-                                if (victim.pinCount.get() != 1) {
-                                    victim.pinCount.decrementAndGet();
+                                if (!victim.pinCount.compareAndSet(0, 1)) {
                                     break;
                                 }
                                 // if this is the first page in the bucket

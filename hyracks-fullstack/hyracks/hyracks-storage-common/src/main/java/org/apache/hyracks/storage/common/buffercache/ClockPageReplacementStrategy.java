@@ -63,7 +63,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
 
     @Override
     public ICachedPageInternal findVictim() {
-        ICachedPageInternal cachedPage = null;
+        ICachedPageInternal cachedPage;
         if (numPages.get() >= maxAllowedNumPages) {
             cachedPage = findVictimByEviction();
         } else {
@@ -75,31 +75,40 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     private ICachedPageInternal findVictimByEviction() {
         //check if we're starved from confiscation
         assert (maxAllowedNumPages > 0);
-        int startClockPtr = clockPtr.get();
+        int clockPtr = advanceClock();
+        int startClockPtr = clockPtr;
+        int lastClockPtr = -1;
         int cycleCount = 0;
-        do {
-            ICachedPageInternal cPage = bufferCache.getPage(clockPtr.get());
+        boolean looped = false;
+        while (true) {
+            ICachedPageInternal cPage = bufferCache.getPage(clockPtr);
 
             /*
              * We do two things here:
              * 1. If the page has been accessed, then we skip it -- The CAS would return
              * false if the current value is false which makes the page a possible candidate
              * for replacement.
-             * 2. We check with the buffer manager if it feels its a good idea to use this
+             * 2. We check with the buffer manager if it feels it's a good idea to use this
              * page as a victim.
              */
             AtomicBoolean accessedFlag = getPerPageObject(cPage);
             if (!accessedFlag.compareAndSet(true, false)) {
-                if (cPage.pinIfGoodVictim()) {
-                        return cPage;
+                if (cPage.isGoodVictim()) {
+                    return cPage;
                 }
             }
-            advanceClock();
-            if (clockPtr.get() == startClockPtr) {
-                ++cycleCount;
+            if (clockPtr < lastClockPtr) {
+                looped = true;
             }
-        } while (cycleCount < MAX_UNSUCCESSFUL_CYCLE_COUNT);
-        return null;
+            if (looped && clockPtr >= startClockPtr) {
+                if (++cycleCount >= MAX_UNSUCCESSFUL_CYCLE_COUNT) {
+                    return null;
+                }
+                looped = false;
+            }
+            lastClockPtr = clockPtr;
+            clockPtr = advanceClock();
+        }
     }
 
     @Override
@@ -113,7 +122,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         numPages.incrementAndGet();
         AtomicBoolean accessedFlag = getPerPageObject(cPage);
         if (!accessedFlag.compareAndSet(true, false)) {
-            if (cPage.pinIfGoodVictim()) {
+            if (cPage.isGoodVictim()) {
                 return cPage;
             }
         }
@@ -121,17 +130,18 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     }
 
     //derived from RoundRobinAllocationPolicy in Apache directmemory
-    private int advanceClock(){
-        boolean clockInDial = false;
-        int newClockPtr = 0;
+    private int advanceClock() {
+
+        boolean clockInDial;
+        int currClockPtr;
         do
         {
-            int currClockPtr = clockPtr.get();
-            newClockPtr = ( currClockPtr + 1 ) % numPages.get();
+            currClockPtr = clockPtr.get();
+            int newClockPtr = ( currClockPtr + 1 ) % numPages.get();
             clockInDial = clockPtr.compareAndSet( currClockPtr, newClockPtr );
         }
         while ( !clockInDial );
-        return newClockPtr;
+        return currClockPtr;
 
     }
 
