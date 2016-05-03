@@ -125,25 +125,33 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                // what if nTuple is 0?
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
                 int t = 0;
-                if (nTuple > 1) {
-                    for (; t < nTuple - 1; t++) {
-                        tRef.reset(tAccess, t);
-                        produceTuple(tupleBuilder, tAccess, t, tRef);
+                if (nTuple < 1) {
+                    if (nTuple < 0) {
+                        throw new HyracksDataException("Negative number of tuples in the frame: " + nTuple);
+                    }
+                    appender.flush(writer);
+                } else {
+                    if (nTuple > 1) {
+                        for (; t < nTuple - 1; t++) {
+                            tRef.reset(tAccess, t);
+                            produceTuple(tupleBuilder, tAccess, t, tRef);
+                            appendToFrameFromTupleBuilder(tupleBuilder);
+                        }
+                    }
+
+                    tRef.reset(tAccess, t);
+                    produceTuple(tupleBuilder, tAccess, t, tRef);
+                    if (flushFramesRapidly) {
+                        // Whenever all the tuples in the incoming frame have been consumed, the assign operator
+                        // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
+                        appendToFrameFromTupleBuilder(tupleBuilder, true);
+                    } else {
                         appendToFrameFromTupleBuilder(tupleBuilder);
                     }
-                }
-
-                tRef.reset(tAccess, t);
-                produceTuple(tupleBuilder, tAccess, t, tRef);
-                if (flushFramesRapidly) {
-                    // Whenever all the tuples in the incoming frame have been consumed, the assign operator
-                    // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
-                    appendToFrameFromTupleBuilder(tupleBuilder, true);
-                } else {
-                    appendToFrameFromTupleBuilder(tupleBuilder);
                 }
             }
 
