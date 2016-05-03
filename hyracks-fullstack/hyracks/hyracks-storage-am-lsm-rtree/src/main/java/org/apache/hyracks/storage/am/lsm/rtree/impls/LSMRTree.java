@@ -207,7 +207,8 @@ public class LSMRTree extends AbstractLSMRTree {
             throws HyracksDataException {
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         rctx.setOperation(IndexOperation.FLUSH);
         rctx.getComponentHolder().addAll(ctx.getComponentHolder());
         LSMRTreeAccessor accessor = new LSMRTreeAccessor(lsmHarness, rctx);
@@ -330,7 +331,8 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         rctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer, buddyBTreeFields);
@@ -418,7 +420,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMRTreeAccessor(lsmHarness, createOpContext(modificationCallback));
+        return new LSMRTreeAccessor(lsmHarness, createOpContext(modificationCallback, searchCallback));
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {
