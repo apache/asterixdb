@@ -45,6 +45,7 @@
         <jdk.version>1.8</jdk.version>
         <runSlowAQLTests>false</runSlowAQLTests>
         <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
+        <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
 
     <!-- Definition of tests in various categories which may be excluded -->
         <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>

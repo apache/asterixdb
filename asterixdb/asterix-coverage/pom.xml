@@ -29,106 +29,142 @@
     <version>0.8.9-SNAPSHOT</version>
   </parent>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <phase>test</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target if="coverage" unless="skipTests">
-                <echo message="Generating JaCoCo Reports" />
-                <property name="asterix.dir" location="${basedir}/.."/>
-                <!-- special case for jenkins -->
-                <condition property="hyracks.dir" value="${asterix.dir}/hyracks">
-                  <available file="${asterix.dir}/hyracks/pom.xml"/>
-                </condition>
-                <pathconvert property="hyracks.dir">
-                  <first>
-                    <dirset dir="${asterix.dir}/..">
-                      <include name="*hyracks"/>
-                    </dirset>
-                  </first>
-                </pathconvert>
-                <!-- gather all of the source dirs -->
-                <pathconvert property="source.dirs" pathsep=",">
-                  <dirset dir="${asterix.dir}">
-                    <include name="**/src/main/java"/>
+  <profiles>
+    <profile>
+      <id>coverage</id>
+      <activation>
+        <property>
+          <name>coverage</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.8</version>
+            <executions>
+              <execution>
+                <phase>test</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target if="coverage" unless="skipTests">
+                    <echo message="Generating JaCoCo Reports" />
+                    <property name="asterix.dir" location="${basedir}/.."/>
                     <!-- special case for jenkins -->
-                    <exclude name="hyracks/**"/>
-                  </dirset>
-                </pathconvert>
-                <pathconvert property="hyracks.source.dirs" pathsep=",">
-                  <dirset dir="${hyracks.dir}">
-                    <include name="**/src/main/java"/>
-                  </dirset>
-                </pathconvert>
-                <echo message="asterix dir: ${asterix.dir}/"/>
-                <echo message="hyracks dir: ${hyracks.dir}"/>
-                <echo message="asterix source dirs: ${source.dirs}/"/>
-                <echo message="hyracks source dirs: ${hyracks.source.dirs}/"/>
+                    <condition property="hyracks.dir" value="${asterix.dir}/hyracks">
+                      <available file="${asterix.dir}/hyracks/pom.xml"/>
+                    </condition>
+                    <pathconvert property="hyracks.dir">
+                      <first>
+                        <dirset dir="${asterix.dir}/..">
+                          <include name="*hyracks"/>
+                        </dirset>
+                      </first>
+                    </pathconvert>
+                    <!-- gather all of the source dirs -->
+                    <pathconvert property="source.dirs" pathsep=",">
+                      <dirset dir="${asterix.dir}">
+                        <include name="**/src/main/java"/>
+                        <!-- special case for jenkins -->
+                        <exclude name="hyracks/**"/>
+                      </dirset>
+                    </pathconvert>
+                    <pathconvert property="hyracks.source.dirs" pathsep=",">
+                      <dirset dir="${hyracks.dir}">
+                        <include name="**/src/main/java"/>
+                      </dirset>
+                    </pathconvert>
+                    <echo message="asterix dir: ${asterix.dir}/"/>
+                    <echo message="hyracks dir: ${hyracks.dir}"/>
+                    <echo message="asterix source dirs: ${source.dirs}/"/>
+                    <echo message="hyracks source dirs: ${hyracks.source.dirs}/"/>
 
-                <taskdef name="report" classname="org.jacoco.ant.ReportTask">
-                  <classpath path="${basedir}/target/jacoco-jars/org.jacoco.ant.jar" />
-                </taskdef>
-                <mkdir dir="${basedir}/target/coverage-report" />
-                <report>
-                  <executiondata>
-                    <fileset dir="${asterix.dir}">
-                      <include name="**/jacoco.exec" />
-                    </fileset>
-                  </executiondata>
-                  <structure name="AsterixDB Coverage Project">
-                    <group name="AsterixDB">
-                      <classfiles>
+                    <taskdef name="report" classname="org.jacoco.ant.ReportTask">
+                      <classpath path="${basedir}/target/jacoco-jars/org.jacoco.ant.jar" />
+                    </taskdef>
+                    <mkdir dir="${basedir}/target/coverage-report" />
+                    <report>
+                      <executiondata>
                         <fileset dir="${asterix.dir}">
-                          <include name="**/target/classes/**/*.class"/>
-                          <!-- special case for jenkins -->
-                          <exclude name="hyracks/**"/>
+                          <include name="**/jacoco.exec" />
                         </fileset>
-                      </classfiles>
-                      <sourcefiles encoding="UTF-8">
-                        <multirootfileset basedirs="${source.dirs}" type="file">
-                          <include name="**/*.java"/>
-                        </multirootfileset>
-                      </sourcefiles>
-                    </group>
-                    <group name="Hyracks">
-                      <classfiles>
-                        <fileset dir="${hyracks.dir}">
-                          <include name="**/target/classes/**/*.class"/>
-                          <exclude name="hyracks/hyracks-hdfs/hyracks-hdfs-1.x/**"/>
-                        </fileset>
-                      </classfiles>
-                      <sourcefiles encoding="UTF-8">
-                        <multirootfileset basedirs="${hyracks.source.dirs}" type="file">
-                          <include name="**/*.java"/>
-                        </multirootfileset>
-                      </sourcefiles>
-                    </group>
-                  </structure>
-                  <html destdir="${basedir}/target/coverage-report/html" />
-                  <xml destfile="${basedir}/target/coverage-report/coverage-report.xml" />
-                  <csv destfile="${basedir}/target/coverage-report/coverage-report.csv" />
-                </report>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
+                      </executiondata>
+                      <structure name="AsterixDB Coverage Project">
+                        <group name="AsterixDB">
+                          <classfiles>
+                            <fileset dir="${asterix.dir}">
+                              <include name="**/target/classes/**/*.class"/>
+                              <!-- special case for jenkins -->
+                              <exclude name="hyracks/**"/>
+                            </fileset>
+                          </classfiles>
+                          <sourcefiles encoding="UTF-8">
+                            <multirootfileset basedirs="${source.dirs}" type="file">
+                              <include name="**/*.java"/>
+                            </multirootfileset>
+                          </sourcefiles>
+                        </group>
+                        <group name="Hyracks">
+                          <classfiles>
+                            <fileset dir="${hyracks.dir}">
+                              <include name="**/target/classes/**/*.class"/>
+                              <exclude name="hyracks/hyracks-hdfs/hyracks-hdfs-1.x/**"/>
+                            </fileset>
+                          </classfiles>
+                          <sourcefiles encoding="UTF-8">
+                            <multirootfileset basedirs="${hyracks.source.dirs}" type="file">
+                              <include name="**/*.java"/>
+                            </multirootfileset>
+                          </sourcefiles>
+                        </group>
+                      </structure>
+                      <html destdir="${basedir}/target/coverage-report/html" />
+                      <xml destfile="${basedir}/target/coverage-report/coverage-report.xml" />
+                      <csv destfile="${basedir}/target/coverage-report/coverage-report.csv" />
+                    </report>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.jacoco</groupId>
+                <artifactId>org.jacoco.ant</artifactId>
+                <version>${jacoco.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+          <plugin>
             <groupId>org.jacoco</groupId>
-            <artifactId>org.jacoco.ant</artifactId>
+            <artifactId>jacoco-maven-plugin</artifactId>
             <version>${jacoco.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
-  </build>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>merge</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${session.executionRootDirectory}</directory>
+                      <includes>
+                        <include>**/target/jacoco.exec</include>
+                        <include>**/target/jacoco-it.exec</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
+                  <destFile>${session.executionRootDirectory}/target/jacoco-merged.exec</destFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
