@@ -19,11 +19,14 @@
 
 package org.apache.asterix.transaction.management.opcallbacks;
 
+import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -36,18 +39,57 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
         implements IModificationOperationCallback {
 
+    private final AsterixLSMInsertDeleteOperatorNodePushable operatorNodePushable;
+
     public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, int resourcePartition,
-            byte resourceType, IndexOperation indexOp) {
+            byte resourceType, IndexOperation indexOp, IOperatorNodePushable operatorNodePushable) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
+        this.operatorNodePushable = (AsterixLSMInsertDeleteOperatorNodePushable) operatorNodePushable;
     }
 
     @Override
     public void before(ITupleReference tuple) throws HyracksDataException {
         int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
-            lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
+            if (operatorNodePushable != null) {
+
+                /**********************************************************************************
+                 * In order to achieve deadlock-free locking protocol during any write (insert/delete/upsert) operations,
+                 * the following logic is implemented.
+                 * See https://cwiki.apache.org/confluence/display/ASTERIXDB/Deadlock-Free+Locking+Protocol for more details.
+                 * 1. for each entry in a frame
+                 * 2. returnValue = tryLock() for an entry
+                 * 3. if returnValue == false
+                 * 3-1. flush all entries (which already acquired locks) to the next operator
+                 * : this will make all those entries reach commit operator so that corresponding commit logs will be created.
+                 * 3-2. create a WAIT log and wait until logFlusher thread will flush the WAIT log and gives notification
+                 * : this notification guarantees that all locks acquired by this transactor (or all locks acquired for the entries)
+                 * were released.
+                 * 3-3. acquire lock using lock() instead of tryLock() for the failed entry
+                 * : we know for sure this lock call will not cause deadlock since the transactor doesn't hold any other locks.
+                 * 4. create an update log and insert the entry
+                 * From the above logic, step 2 and 3 are implemented in this before() method.
+                 **********************/
+
+                //release all locks held by this actor (which is a thread) by flushing partial frame.
+                boolean tryLockSucceed = lockManager.tryLock(datasetId, pkHash, LockMode.X, txnCtx);
+                if (!tryLockSucceed) {
+                    //flush entries which have been inserted already to release locks hold by them
+                    operatorNodePushable.flushPartialFrame();
+
+                    //create WAIT log and wait until the WAIT log is flushed and notified by LogFlusher thread
+                    logWait();
+
+                    //acquire lock
+                    lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
+                }
+
+            } else {
+                //operatorNodePushable can be null when metadata node operation is executed
+                lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
+            }
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -61,5 +103,11 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    private void logWait() throws ACIDException {
+        logRecord.setLogType(LogType.WAIT);
+        logRecord.computeAndSetLogSize();
+        txnSubsystem.getLogManager().log(logRecord);
     }
 }

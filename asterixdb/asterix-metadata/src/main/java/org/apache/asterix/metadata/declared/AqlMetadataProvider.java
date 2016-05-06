@@ -110,7 +110,6 @@ import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOpera
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
@@ -730,17 +729,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     primaryKeyFields[i] = i;
                 }
 
-                AqlMetadataImplConfig aqlMetadataImplConfig = (AqlMetadataImplConfig) implConfig;
                 ITransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
-                if (aqlMetadataImplConfig != null && aqlMetadataImplConfig.isInstantLock()) {
-                    searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
-                            : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, datasetId, primaryKeyFields,
-                                    txnSubsystemProvider, ResourceType.LSM_BTREE);
-                } else {
-                    searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
-                            : new PrimaryIndexSearchOperationCallbackFactory(jobId, datasetId, primaryKeyFields,
-                                    txnSubsystemProvider, ResourceType.LSM_BTREE);
-                }
+
+                /**
+                 * Due to the read-committed isolation level,
+                 * we may acquire very short duration lock(i.e., instant lock) for readers.
+                 */
+                searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
+                        : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, datasetId, primaryKeyFields,
+                                txnSubsystemProvider, ResourceType.LSM_BTREE);
             }
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils
                     .getMergePolicyFactory(dataset, mdTxnCtx);

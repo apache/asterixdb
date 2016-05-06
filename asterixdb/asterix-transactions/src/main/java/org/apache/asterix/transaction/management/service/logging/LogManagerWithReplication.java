@@ -42,7 +42,7 @@ public class LogManagerWithReplication extends LogManager {
         }
 
         //only locally generated logs should be replicated
-        logRecord.setReplicated(logRecord.getLogSource() == LogSource.LOCAL);
+        logRecord.setReplicated(logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.WAIT);
 
         //Remote flush logs do not need to be flushed separately since they may not trigger local flush
         if (logRecord.getLogType() == LogType.FLUSH && logRecord.getLogSource() == LogSource.LOCAL) {
@@ -62,8 +62,8 @@ public class LogManagerWithReplication extends LogManager {
         }
 
         if (logRecord.getLogSource() == LogSource.LOCAL) {
-            if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
-                    && !logRecord.isFlushed()) {
+            if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                    || logRecord.getLogType() == LogType.WAIT) && !logRecord.isFlushed()) {
                 synchronized (logRecord) {
                     while (!logRecord.isFlushed()) {
                         try {
@@ -74,11 +74,13 @@ public class LogManagerWithReplication extends LogManager {
                     }
 
                     //wait for job Commit/Abort ACK from replicas
-                    while (!replicationManager.hasBeenReplicated(logRecord)) {
-                        try {
-                            logRecord.wait();
-                        } catch (InterruptedException e) {
-                            //ignore
+                    if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+                        while (!replicationManager.hasBeenReplicated(logRecord)) {
+                            try {
+                                logRecord.wait();
+                            } catch (InterruptedException e) {
+                                //ignore
+                            }
                         }
                     }
                 }

@@ -442,7 +442,7 @@ public class FramewriterTest {
     private ISearchOperationCallbackFactory[] mockSearchOpCallbackFactories() throws HyracksDataException {
         ISearchOperationCallback searchOpCallback = mockSearchOpCallback();
         ISearchOperationCallbackFactory searchOpCallbackFactory = Mockito.mock(ISearchOperationCallbackFactory.class);
-        Mockito.when(searchOpCallbackFactory.createSearchOperationCallback(Mockito.anyLong(), Mockito.any()))
+        Mockito.when(searchOpCallbackFactory.createSearchOperationCallback(Mockito.anyLong(), Mockito.any(), null))
                 .thenReturn(searchOpCallback);
         return new ISearchOperationCallbackFactory[] { searchOpCallbackFactory };
     }

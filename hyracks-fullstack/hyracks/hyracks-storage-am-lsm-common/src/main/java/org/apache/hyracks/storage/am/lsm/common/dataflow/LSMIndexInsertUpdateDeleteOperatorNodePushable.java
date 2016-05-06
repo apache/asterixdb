@@ -29,8 +29,10 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFrameWriter;
 
-public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertUpdateDeleteOperatorNodePushable {
+public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertUpdateDeleteOperatorNodePushable
+        implements ILSMIndexFrameWriter {
 
     protected FrameTupleAppender appender;
 
@@ -116,7 +118,8 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
         }
     }
 
-    private void flushPartialFrame(int startTupleIndex, int endTupleIndex) throws HyracksDataException {
+    @Override
+    public void flushPartialFrame(int startTupleIndex, int endTupleIndex) throws HyracksDataException {
         for (int i = startTupleIndex; i < endTupleIndex; i++) {
             FrameUtils.appendToWriter(writer, appender, accessor, i);
         }

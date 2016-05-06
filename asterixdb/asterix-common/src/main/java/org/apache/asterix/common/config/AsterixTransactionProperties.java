@@ -52,6 +52,9 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final String TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_KEY = "txn.lock.timeout.sweepthreshold";
     private static final int TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_DEFAULT = 10000; // 10s
 
+    private static final String TXN_COMMIT_PROFILER_REPORT_INTERVAL_KEY = "txn.commitprofiler.reportinterval";
+    private static final int TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT = 5; // 5 seconds
+
     public AsterixTransactionProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -112,6 +115,11 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     public int getTimeoutSweepThreshold() {
         return accessor.getProperty(TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_KEY, TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getCommitProfilerReportInterval() {
+        return accessor.getProperty(TXN_COMMIT_PROFILER_REPORT_INTERVAL_KEY,
+                TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
 }

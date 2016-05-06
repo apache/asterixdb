@@ -20,6 +20,7 @@
 package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
@@ -29,7 +30,7 @@ public class SecondaryIndexSearchOperationCallbackFactory implements ISearchOper
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx)
+    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
             throws HyracksDataException {
         return new SecondaryIndexSearchOperationCallback();
     }

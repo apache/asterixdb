@@ -19,15 +19,8 @@
 
 package org.apache.asterix.transaction.management.service.locking;
 
-
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.DatasetId;
-import org.apache.asterix.common.transactions.ILockManager;
-import org.apache.asterix.common.transactions.ITransactionContext;
-import org.apache.asterix.common.transactions.JobId;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -40,10 +33,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
-import static org.apache.asterix.transaction.management.service.locking.Request.Kind;
-import static org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.apache.asterix.common.transactions.DatasetId;
+import org.apache.asterix.common.transactions.ILockManager;
+import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.transaction.management.service.locking.Request.Kind;
+import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class LockManagerUnitTest {
 
@@ -59,7 +57,7 @@ public class LockManagerUnitTest {
         Logger.getLogger(ConcurrentLockManager.class.getName()).addHandler(new ConsoleHandler());
     }
 
-    Map<Integer, ITransactionContext> jobMap;
+    Map<Integer, ITransactionContext> jobId2TxnCtxMap;
     ILockManager lockMgr;
 
     // set to e.g. System.err to get some output
@@ -72,14 +70,14 @@ public class LockManagerUnitTest {
 
     @Before
     public void setUp() throws Exception {
-        jobMap = new HashMap<>();
+        jobId2TxnCtxMap = new HashMap<>();
         lockMgr = new ConcurrentLockManager(LOCK_MGR_SHRINK_TIMER, LOCK_MGR_ARENAS, LOCK_MGR_TABLE_SIZE);
     }
 
     @After
     public void tearDown() throws Exception {
         lockMgr = null;
-        jobMap = null;
+        jobId2TxnCtxMap = null;
     }
 
     @Test
@@ -87,7 +85,6 @@ public class LockManagerUnitTest {
         List<Request> reqs = new ArrayList<>();
         reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.S));
         reqs.add(req(Kind.UNLOCK, j(1), d(1), e(1), LockMode.S));
-        reqs.add(req(Kind.UNLOCK, j(1), d(1), e(-1), LockMode.IS));
         reportErrors(execute(reqs));
     }
 
@@ -139,55 +136,16 @@ public class LockManagerUnitTest {
     }
 
     @Test
-    public void testDeadlock() throws Exception {
-        List<Request> reqs = new ArrayList<>();
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.X));
-        reqs.add(req(Kind.LOCK, j(2), d(1), e(2), LockMode.X));
-        reqs.add(req(Kind.LOCK, j(2), d(1), e(1), LockMode.X));
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(2), LockMode.X));
-        reqs.add(req(Kind.RELEASE, j(1)));
-        reqs.add(req(Kind.RELEASE, j(2)));
-        expectError(execute(reqs), j(1), ACIDException.class);
-    }
-
-    @Test
+    /**
+     * lock conversion/upgrade is not supported when deadlock-free locking
+     * protocol is enabled.
+     */
     public void testUpgrade() throws Exception {
         List<Request> reqs = new ArrayList<>();
         reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.S));
         reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.X));
         reqs.add(req(Kind.RELEASE, j(1)));
-        reportErrors(execute(reqs));
-    }
-
-    @Test
-    public void testUpgradeDeadlock() throws Exception {
-        List<Request> reqs = new ArrayList<>();
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.S));
-        reqs.add(req(Kind.LOCK, j(2), d(1), e(1), LockMode.S));
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.X));
-        reqs.add(req(Kind.PRINT));
-        reqs.add(req(Kind.LOCK, j(2), d(1), e(1), LockMode.X));
-        reqs.add(req(Kind.RELEASE, j(1)));
-        reqs.add(req(Kind.RELEASE, j(2)));
-        expectError(execute(reqs), j(2), ACIDException.class);
-    }
-
-    @Test
-    /**
-     * Runs into a time-out and j(1) gets interrupted by
-     * the test. This scenario happens only in this test as there
-     * is additional synchronization between the locking threads
-     * through the coordinator.
-     */
-    public void testTimeout() throws Exception {
-        List<Request> reqs = new ArrayList<>();
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.S));
-        reqs.add(req(Kind.LOCK, j(2), d(1), e(1), LockMode.S));
-        reqs.add(req(Kind.LOCK, j(1), d(1), e(1), LockMode.X));
-        reqs.add(req(Kind.RELEASE, j(1)));
-        reqs.add(req(Kind.RELEASE, j(2)));
-        // this runs into a time-out and j(1) gets interrupted
-        expectError(execute(reqs), j(1), WaitInterruptedException.class);
+        expectError(execute(reqs), j(1), IllegalStateException.class);
     }
 
     //--------------------------------------------------------------------
@@ -202,9 +160,10 @@ public class LockManagerUnitTest {
      * LockManager in list order, however they are fulfilled in the order
      * decided by the LockManager
      *
-     * @param reqs a list of requests that will be execute in order
+     * @param reqs
+     *            a list of requests that will be execute in order
      * @return a map of (JodId, exception) pairs that can either be handled
-     * by the test or thrown using #reportErrors
+     *         by the test or thrown using #reportErrors
      */
     private Map<String, Throwable> execute(List<Request> reqs) throws InterruptedException {
         if (err != null) {
@@ -258,7 +217,7 @@ public class LockManagerUnitTest {
     private Set<Locker> createLockers(List<Request> reqs, AtomicInteger timeStamp) {
         Set<Locker> lockers = new HashSet<>();
         lockers.add(new Locker(lockMgr, null, reqs, timeStamp, err));
-        for (ITransactionContext txnCtx : jobMap.values()) {
+        for (ITransactionContext txnCtx : jobId2TxnCtxMap.values()) {
             Locker locker = new Locker(lockMgr, txnCtx, reqs, timeStamp, err);
             lockers.add(locker);
         }
@@ -275,8 +234,8 @@ public class LockManagerUnitTest {
         return threads;
     }
 
-    private Map<String, Throwable> stopThreads(Set<Locker> lockers, Map<String, Thread> threads) throws
-            InterruptedException {
+    private Map<String, Throwable> stopThreads(Set<Locker> lockers, Map<String, Thread> threads)
+            throws InterruptedException {
         Map<String, Throwable> result = new HashMap<>();
         for (Locker locker : lockers) {
             stopThread(threads.get(locker.name));
@@ -317,7 +276,8 @@ public class LockManagerUnitTest {
      * throws the first Throwable found in the map.
      * This is the default way to handle the errors returned by #execute
      *
-     * @param errors a map of (JodId, exception) pairs
+     * @param errors
+     *            a map of (JodId, exception) pairs
      */
     void reportErrors(Map<String, Throwable> errors) {
         for (String name : errors.keySet()) {
@@ -333,8 +293,10 @@ public class LockManagerUnitTest {
     /**
      * gets the error for a specific job from the errors map
      *
-     * @param errors a map of (JodId, throwable) pairs
-     * @param txnCtx the transaction context of the job whose error is requested
+     * @param errors
+     *            a map of (JodId, throwable) pairs
+     * @param txnCtx
+     *            the transaction context of the job whose error is requested
      * @return throwable for said error
      */
     private static Throwable getError(Map<String, Throwable> errors, ITransactionContext txnCtx) {
@@ -344,16 +306,19 @@ public class LockManagerUnitTest {
     /**
      * asserts that the error for a specific job from the errors map is of a specific class
      *
-     * @param errors a map of (JodId, throwable) pairs
-     * @param txnCtx the transaction context of the job whose error is requested
-     * @param clazz  the exception class
+     * @param errors
+     *            a map of (JodId, throwable) pairs
+     * @param txnCtx
+     *            the transaction context of the job whose error is requested
+     * @param clazz
+     *            the exception class
      */
     private void expectError(Map<String, Throwable> errors, ITransactionContext txnCtx,
-                             Class<? extends Throwable> clazz) throws Exception {
+            Class<? extends Throwable> clazz) throws Exception {
         Throwable error = getError(errors, txnCtx);
         if (error == null) {
-            throw new AssertionError("expected " + clazz.getSimpleName() + " for " + txnCtx.getJobId() + ", got no " +
-                    "exception");
+            throw new AssertionError(
+                    "expected " + clazz.getSimpleName() + " for " + txnCtx.getJobId() + ", got no " + "exception");
         }
         if (!clazz.isInstance(error)) {
             throw new AssertionError(error);
@@ -365,8 +330,8 @@ public class LockManagerUnitTest {
     // Convenience methods to make test description more compact
     //--------------------------------------------------------------------
 
-    private Request req(final Kind kind, final ITransactionContext txnCtx,
-                        final DatasetId dsId, final int hashValue, final byte lockMode) {
+    private Request req(final Kind kind, final ITransactionContext txnCtx, final DatasetId dsId, final int hashValue,
+            final byte lockMode) {
         return Request.create(kind, txnCtx, dsId, hashValue, lockMode);
     }
 
@@ -387,12 +352,11 @@ public class LockManagerUnitTest {
     }
 
     private ITransactionContext j(int jId) {
-        if (!jobMap.containsKey(jId)) {
+        if (!jobId2TxnCtxMap.containsKey(jId)) {
             ITransactionContext mockTxnContext = mock(ITransactionContext.class);
             when(mockTxnContext.getJobId()).thenReturn(new JobId(jId));
-            jobMap.put(jId, mockTxnContext);
+            jobId2TxnCtxMap.put(jId, mockTxnContext);
         }
-        return jobMap.get(jId);
+        return jobId2TxnCtxMap.get(jId);
     }
-
 }

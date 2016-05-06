@@ -18,11 +18,6 @@
 */
 package org.apache.asterix.transaction.management.service.locking;
 
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.ILockManager;
-import org.apache.asterix.common.transactions.ITransactionContext;
-import org.junit.Assert;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +25,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.ILockManager;
+import org.apache.asterix.common.transactions.ITransactionContext;
+import org.junit.Assert;
 
 /**
  * Executes a sequence of lock requests against an ILockManager.
@@ -55,18 +55,22 @@ class Locker implements Runnable {
     private PrintStream err;
 
     /**
-     * @param lockMgr the ILockManager to send requests to
-     * @param txnCtx the ITransactionContext that identifies the transaction that this Locker represents
-     * @param allRequests an ordered list of lock requests for multiple transactions, this Locker will only execute
-     *                    requests for the transaction identified by txnCtx
-     * @param time a global timestamp that is used to synchronize different lockers to ensure that requests are started
-     *             in the order given in allRequests
-     * @param err a stream to write log/error information to
-     *
+     * @param lockMgr
+     *            the ILockManager to send requests to
+     * @param txnCtx
+     *            the ITransactionContext that identifies the transaction that this Locker represents
+     * @param allRequests
+     *            an ordered list of lock requests for multiple transactions, this Locker will only execute
+     *            requests for the transaction identified by txnCtx
+     * @param time
+     *            a global timestamp that is used to synchronize different lockers to ensure that requests are started
+     *            in the order given in allRequests
+     * @param err
+     *            a stream to write log/error information to
      * @see Request
      */
     Locker(ILockManager lockMgr, ITransactionContext txnCtx, List<Request> allRequests, AtomicInteger time,
-           PrintStream err) {
+            PrintStream err) {
         this.name = txnCtx == null ? "admin" : txnCtx.getJobId().toString();
         this.lockMgr = lockMgr;
 
@@ -110,7 +114,7 @@ class Locker implements Runnable {
     public void run() {
         log("running");
         try {
-            while (! hasErrors() && reqIter.hasNext()) {
+            while (!hasErrors() && reqIter.hasNext()) {
                 curReq = reqIter.next();
                 int localTime = globalTime.get();
                 while (localTime < curReq.time) {
@@ -123,13 +127,14 @@ class Locker implements Runnable {
                 log("will exec at t=" + localTime + " " + curReq);
                 try {
                     reqStart = currentTime();
-                    Assert.assertEquals(localTime, globalTime.getAndIncrement());
-                    log("incremented");
+                    Assert.assertEquals(localTime, globalTime.get());
                     curReq.setResult(curReq.request.execute(lockMgr) ? Requester.SUCCESS : Requester.FAIL);
                 } catch (ACIDException e) {
                     curReq.setResult(Requester.ERROR);
                     addError(e);
                 } finally {
+                    globalTime.getAndIncrement();
+                    log("incremented");
                     reqStart = -1;
                 }
                 log("time " + localTime);

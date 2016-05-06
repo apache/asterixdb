@@ -65,6 +65,9 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * 3) UPDATE: (Header1(6) + Header2(16) + + Header3(20) + Body(9) + Tail(8)) + PKValueSize + NewValueSize
  *    --> UPDATE_LOG_BASE_SIZE = 59
  * 4) FLUSH: 18 bytes (Header1(6) + DatasetId(4) + Tail(8))
+ * 5) WAIT_LOG_SIZE: 14 bytes (Header1(6) + Tail(8))
+ *    --> WAIT_LOG only requires LogType Field, but in order to conform the log reader protocol
+ *        it also includes LogSource and JobId fields.
  */
 
 public class LogRecord implements ILogRecord {
@@ -265,7 +268,16 @@ public class LogRecord implements ILogRecord {
         logType = buffer.get();
         jobId = buffer.getInt();
 
-        if (logType != LogType.FLUSH) {
+        if (logType == LogType.FLUSH) {
+            if (buffer.remaining() < DatasetId.BYTES) {
+                return RECORD_STATUS.TRUNCATED;
+            }
+            datasetId = buffer.getInt();
+            resourceId = 0l;
+            computeAndSetLogSize();
+        } else if (logType == LogType.WAIT) {
+            computeAndSetLogSize();
+        } else {
             if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
                 datasetId = -1;
                 PKHashValue = -1;
@@ -306,15 +318,8 @@ public class LogRecord implements ILogRecord {
             } else {
                 computeAndSetLogSize();
             }
-        } else {
-            computeAndSetLogSize();
-            if (buffer.remaining() < DatasetId.BYTES) {
-                return RECORD_STATUS.TRUNCATED;
-            }
-            datasetId = buffer.getInt();
-            resourceId = 0l;
-            computeAndSetLogSize();
         }
+
         return RECORD_STATUS.OK;
     }
 
@@ -412,6 +417,9 @@ public class LogRecord implements ILogRecord {
             case LogType.FLUSH:
                 logSize = FLUSH_LOG_SIZE;
                 break;
+            case LogType.WAIT:
+                logSize = WAIT_LOG_SIZE;
+                break;
             default:
                 throw new IllegalStateException("Unsupported Log Type");
         }
@@ -425,7 +433,7 @@ public class LogRecord implements ILogRecord {
         builder.append(" LogType : ").append(LogType.toString(logType));
         builder.append(" LogSize : ").append(logSize);
         builder.append(" JobId : ").append(jobId);
-        if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPDATE) {
+        if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPSERT_ENTITY_COMMIT || logType == LogType.UPDATE) {
             builder.append(" DatasetId : ").append(datasetId);
             builder.append(" ResourcePartition : ").append(resourcePartition);
             builder.append(" PKHashValue : ").append(PKHashValue);

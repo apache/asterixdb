@@ -92,7 +92,7 @@ public class ExternalFileIndexAccessor implements Serializable {
 
         // create the accessor  and the cursor using the passed version
         ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                .createSearchOperationCallback(indexDataflowHelper.getResourceID(), ctx);
+                .createSearchOperationCallback(indexDataflowHelper.getResourceID(), ctx, null);
         fileIndexAccessor = index.createAccessor(searchCallback, indexDataflowHelper.getVersion());
         fileIndexSearchCursor = fileIndexAccessor.createSearchCursor(false);
     }

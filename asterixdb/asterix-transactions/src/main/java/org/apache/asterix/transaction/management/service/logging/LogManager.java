@@ -128,8 +128,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     protected void appendToLogTail(ILogRecord logRecord) throws ACIDException {
         syncAppendToLogTail(logRecord);
 
-        if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
-                && !logRecord.isFlushed()) {
+        if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                || logRecord.getLogType() == LogType.WAIT) && !logRecord.isFlushed()) {
             synchronized (logRecord) {
                 while (!logRecord.isFlushed()) {
                     try {

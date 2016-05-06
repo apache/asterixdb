@@ -270,6 +270,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     abortLogCount++;
                     break;
                 case LogType.FLUSH:
+                case LogType.WAIT:
                     break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
@@ -289,8 +290,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return winnerJobSet;
     }
 
-    private synchronized void startRecoveryRedoPhase(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN,
-            Set<Integer> winnerJobSet) throws IOException, ACIDException {
+    private synchronized void startRecoveryRedoPhase(Set<Integer> partitions, ILogReader logReader,
+            long lowWaterMarkLSN, Set<Integer> winnerJobSet) throws IOException, ACIDException {
         int redoCount = 0;
         int jobId = -1;
 
@@ -765,6 +766,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         throw new ACIDException("Unexpected LogType(" + logRecord.getLogType() + ") during abort.");
                     case LogType.ABORT:
                     case LogType.FLUSH:
+                    case LogType.WAIT:
                         //ignore
                         break;
                     default:
