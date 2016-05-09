@@ -83,8 +83,8 @@ public class LSMBTreeUtils {
         TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
-        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
-                bloomFilterKeyFields);
+        BloomFilterFactory bloomFilterFactory = needKeyDupCheck
+                ? new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields) : null;
 
         LSMComponentFilterFactory filterFactory = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
@@ -97,7 +97,9 @@ public class LSMBTreeUtils {
             filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
         }
 
-        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory);
+        //Primary LSMBTree index has a BloomFilter.
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory,
+                needKeyDupCheck);
 
         LSMBTree lsmTree = new LSMBTree(virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, bloomFilterFactory,
@@ -145,7 +147,9 @@ public class LSMBTreeUtils {
         TreeIndexFactory<BTree> transactionBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, dualLeafFrameFactory, cmpFactories, typeTraits.length);
 
-        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory);
+        //TODO remove BloomFilter from external dataset's secondary LSMBTree index 
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory,
+                true);
 
         // the disk only index uses an empty ArrayList for virtual buffer caches
         ExternalBTree lsmTree = new ExternalBTree(interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,

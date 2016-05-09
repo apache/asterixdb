@@ -60,7 +60,9 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
     public Set<IODeviceHandle> getWriteDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         devs.add(btreeFlushTarget.getDeviceHandle());
-        devs.add(bloomFilterFlushTarget.getDeviceHandle());
+        if (bloomFilterFlushTarget != null) {
+            devs.add(bloomFilterFlushTarget.getDeviceHandle());
+        }
         return devs;
     }
 
