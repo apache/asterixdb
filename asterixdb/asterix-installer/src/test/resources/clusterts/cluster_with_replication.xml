@@ -18,46 +18,46 @@
  !-->
 <cluster xmlns="cluster">
 
-    <name>vagrant</name>
+  <name>vagrant</name>
 
-    <username>vagrant</username>
+  <username>vagrant</username>
 
-    <working_dir>
-        <dir>/vagrant/asterix/managix-working</dir>
-        <NFS>true</NFS>
-    </working_dir>
+  <working_dir>
+    <dir>/vagrant/asterix/managix-working</dir>
+    <NFS>true</NFS>
+  </working_dir>
 
-    <log_dir>/home/vagrant/asterix/logs/</log_dir>
-    <txn_log_dir>/home/vagrant/asterix/tx_logs</txn_log_dir>
-    <iodevices>/home/vagrant/asterix/p1,/home/vagrant/asterix/p2</iodevices>
+  <log_dir>/home/vagrant/asterix/logs/</log_dir>
+  <txn_log_dir>/home/vagrant/asterix/tx_logs</txn_log_dir>
+  <iodevices>/home/vagrant/asterix/p1,/home/vagrant/asterix/p2</iodevices>
 
-    <store>storage</store>
+  <store>storage</store>
 
-    <java_home>/usr/java/latest</java_home>
-    <metadata_node>nc1</metadata_node>
+  <java_home>/usr/java/latest</java_home>
+  <metadata_node>nc1</metadata_node>
 
-    <data_replication>
-        <enabled>true</enabled>
-        <replication_port>2000</replication_port>
-        <replication_factor>2</replication_factor>
-        <auto_failover>true</auto_failover>
-        <replication_time_out>10</replication_time_out>
-    </data_replication>
+  <data_replication>
+    <enabled>true</enabled>
+    <replication_port>2000</replication_port>
+    <replication_factor>2</replication_factor>
+    <auto_failover>true</auto_failover>
+    <replication_time_out>10</replication_time_out>
+  </data_replication>
 
-    <master_node>
-        <id>cc</id>
-        <client_ip>10.10.0.2</client_ip>
-        <cluster_ip>10.10.0.2</cluster_ip>
-        <client_port>1098</client_port>
-        <cluster_port>1099</cluster_port>
-        <http_port>8888</http_port>
-    </master_node>
-    <node>
-        <id>nc1</id>
-        <cluster_ip>10.10.0.3</cluster_ip>
-    </node>
-    <node>
-        <id>nc2</id>
-        <cluster_ip>10.10.0.4</cluster_ip>
-    </node>
+  <master_node>
+    <id>cc</id>
+    <client_ip>10.10.0.2</client_ip>
+    <cluster_ip>10.10.0.2</cluster_ip>
+    <client_port>1098</client_port>
+    <cluster_port>1099</cluster_port>
+    <http_port>8888</http_port>
+  </master_node>
+  <node>
+    <id>nc1</id>
+    <cluster_ip>10.10.0.3</cluster_ip>
+  </node>
+  <node>
+    <id>nc2</id>
+    <cluster_ip>10.10.0.4</cluster_ip>
+  </node>
 </cluster>

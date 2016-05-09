@@ -142,10 +142,10 @@ class AqlQueryRewriter implements IQueryRewriter {
                 }
                 StringBuilder messageBuilder = new StringBuilder();
                 if (functionDecls.size() > 0) {
-                    messageBuilder.append(" function " + functionDecls.get(functionDecls.size() - 1).getSignature()
+                    messageBuilder.append("function " + functionDecls.get(functionDecls.size() - 1).getSignature()
                             + " depends upon function " + signature + " which is undefined");
                 } else {
-                    messageBuilder.append(" function " + signature + " is undefined ");
+                    messageBuilder.append("function " + signature + " is undefined ");
                 }
                 throw new AsterixException(messageBuilder.toString());
             }
@@ -154,7 +154,7 @@ class AqlQueryRewriter implements IQueryRewriter {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
-                        throw new AsterixException("ERROR:Recursive invocation "
+                        throw new AsterixException("Recursive invocation "
                                 + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
                                 + functionDecl.getSignature());
                     }

@@ -21,9 +21,9 @@
   <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
   <parent>
-        <groupId>org.apache.asterix</groupId>
-        <artifactId>asterix-maven-plugins</artifactId>
-        <version>0.8.9-SNAPSHOT</version>
+    <groupId>org.apache.asterix</groupId>
+    <artifactId>asterix-maven-plugins</artifactId>
+    <version>0.8.9-SNAPSHOT</version>
   </parent>
 
   <packaging>maven-plugin</packaging>
@@ -34,11 +34,11 @@
   </properties>
   <dependencies>
     <dependency>
-       <groupId>org.apache.asterix</groupId>
-       <artifactId>asterix-runtime</artifactId>
-       <type>jar</type>
-       <version>${project.version}</version>
-       <scope>compile</scope>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-runtime</artifactId>
+      <type>jar</type>
+      <version>${project.version}</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

@@ -597,8 +597,8 @@
       <name>Jetty Server</name>
       <url>http://jetty.mortbay.org/</url>
       <organization>
-	    <name>Mort Bay Consulting</name>
-	    <url>http://www.mortbay.com</url>
+        <name>Mort Bay Consulting</name>
+        <url>http://www.mortbay.com</url>
       </organization>
       <licenses>
         <license>
@@ -615,8 +615,8 @@
       <name>Jetty Utilities</name>
       <url>http://jetty.mortbay.org/</url>
       <organization>
-	    <name>Mort Bay Consulting</name>
-	    <url>http://www.mortbay.com</url>
+        <name>Mort Bay Consulting</name>
+        <url>http://www.mortbay.com</url>
       </organization>
       <licenses>
         <license>

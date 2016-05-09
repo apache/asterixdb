@@ -25,26 +25,26 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
-        <directory>target/classes/META-INF</directory>
-        <outputDirectory>.</outputDirectory>
-        <includes>
-            <include>DISCLAIMER*</include>
-        </includes>
+      <directory>target/classes/META-INF</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>DISCLAIMER*</include>
+      </includes>
     </fileSet>
     <fileSet>
-        <directory>src/main/licenses</directory>
-        <outputDirectory>.</outputDirectory>
-        <includes>
-            <include>LICENSE*</include>
-            <include>NOTICE*</include>
-        </includes>
+      <directory>src/main/licenses</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+      </includes>
     </fileSet>
     <fileSet>
-        <directory>src/main/resources</directory>
-        <outputDirectory>.</outputDirectory>
-        <includes>
-            <include>LICENSE*</include>
-        </includes>
+      <directory>src/main/resources</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE*</include>
+      </includes>
     </fileSet>
     <fileSet>
       <directory>target/appassembler/repo</directory>

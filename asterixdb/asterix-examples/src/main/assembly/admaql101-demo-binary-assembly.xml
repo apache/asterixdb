@@ -17,15 +17,15 @@
  ! under the License.
  !-->
 <assembly>
-	<id>admaql101-demo-binary-assembly</id>
-	<formats>
-		<format>zip</format>
-	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
-	<fileSets>
-		<fileSet>
-			<directory>src/main/resources/admaql101-demo</directory>
-			<fileMode>0755</fileMode>
-		</fileSet>
-	</fileSets>
- </assembly>
+  <id>admaql101-demo-binary-assembly</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/resources/admaql101-demo</directory>
+      <fileMode>0755</fileMode>
+    </fileSet>
+  </fileSets>
+</assembly>

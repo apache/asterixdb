@@ -30,7 +30,7 @@
   </parent>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
 
   <licenses>
@@ -41,7 +41,6 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
 
   <modules>
     <module>hyracks-hdfs-1.x</module>

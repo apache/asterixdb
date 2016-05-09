@@ -27,54 +27,54 @@
     <version>0.2.18-SNAPSHOT</version>
   </parent>
 
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
-        </license>
-    </licenses>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
 
-    <properties>
-        <root.dir>${basedir}/../..</root.dir>
-    </properties>
+  <properties>
+    <root.dir>${basedir}/../..</root.dir>
+  </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-util</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-util</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-api</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-data-std</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-control-nc</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-api</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-data-std</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-control-nc</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

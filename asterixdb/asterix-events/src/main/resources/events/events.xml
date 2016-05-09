@@ -34,7 +34,7 @@
   <event>
     <type>cc_start</type>
     <script>cc_start/cc_start.sh</script>
-    <description>Starts a  ClusterController process at a specified location.</description>
+    <description>Starts a ClusterController process at a specified location.</description>
     <args></args>
     <daemon>true</daemon>
   </event>

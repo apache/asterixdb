@@ -30,7 +30,7 @@
   </parent>
 
   <properties>
-      <root.dir>${basedir}/../../..</root.dir>
+    <root.dir>${basedir}/../../..</root.dir>
   </properties>
 
   <modules>

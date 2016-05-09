@@ -46,7 +46,7 @@
         <include>DEPENDENCIES*</include>
       </includes>
     </fileSet>
-     <fileSet>
+    <fileSet>
       <directory>src/main/licenses</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
@@ -54,5 +54,5 @@
         <include>NOTICE*</include>
       </includes>
     </fileSet>
- </fileSets>
+  </fileSets>
 </assembly>

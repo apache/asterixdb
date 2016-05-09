@@ -18,6 +18,6 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries">
-    <test-group name="failed">
-    </test-group>
+  <test-group name="failed">
+  </test-group>
 </test-suite>

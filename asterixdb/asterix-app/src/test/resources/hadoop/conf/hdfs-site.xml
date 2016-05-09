@@ -23,14 +23,14 @@
 
 <configuration>
 
-<property>
-   <name>dfs.replication</name>
-   <value>1</value>
-</property>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
 
-<property>
-	<name>dfs.block.size</name>
-	<value>1048576</value>
-</property>
+  <property>
+    <name>dfs.block.size</name>
+    <value>1048576</value>
+  </property>
 
 </configuration>
