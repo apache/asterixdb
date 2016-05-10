@@ -49,6 +49,8 @@ public interface IApplicationContext {
 
     public void setThreadFactory(ThreadFactory threadFactory);
 
+    public IApplicationConfig getAppConfig();
+
     /**
      * @return The controller service which the application context belongs to.
      */

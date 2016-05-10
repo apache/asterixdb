@@ -20,17 +20,14 @@ package org.apache.asterix.common.config;
 
 import java.util.logging.Level;
 
-import org.apache.asterix.common.configuration.Property;
-
 public class PropertyInterpreters {
 
     public static IPropertyInterpreter<Integer> getIntegerPropertyInterpreter() {
         return new IPropertyInterpreter<Integer>() {
-
             @Override
-            public Integer interpret(Property p) throws IllegalArgumentException {
+            public Integer interpret(String s) throws IllegalArgumentException {
                 try {
-                    return Integer.parseInt(p.getValue());
+                    return Integer.parseInt(s);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException(e);
                 }
@@ -40,20 +37,19 @@ public class PropertyInterpreters {
 
     public static IPropertyInterpreter<Boolean> getBooleanPropertyInterpreter() {
         return new IPropertyInterpreter<Boolean>() {
-
-            public Boolean interpret(Property p) throws IllegalArgumentException {
-                return Boolean.parseBoolean(p.getValue());
+            @Override
+            public Boolean interpret(String s) throws IllegalArgumentException {
+                return Boolean.parseBoolean(s);
             }
         };
     }
 
     public static IPropertyInterpreter<Long> getLongPropertyInterpreter() {
         return new IPropertyInterpreter<Long>() {
-
             @Override
-            public Long interpret(Property p) throws IllegalArgumentException {
+            public Long interpret(String s) throws IllegalArgumentException {
                 try {
-                    return Long.parseLong(p.getValue());
+                    return Long.parseLong(s);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException(e);
                 }
@@ -63,31 +59,28 @@ public class PropertyInterpreters {
 
     public static IPropertyInterpreter<Level> getLevelPropertyInterpreter() {
         return new IPropertyInterpreter<Level>() {
-
             @Override
-            public Level interpret(Property p) throws IllegalArgumentException {
-                return Level.parse(p.getValue());
+            public Level interpret(String s) throws IllegalArgumentException {
+                return Level.parse(s);
             }
         };
     }
 
     public static IPropertyInterpreter<String> getStringPropertyInterpreter() {
         return new IPropertyInterpreter<String>() {
-
             @Override
-            public String interpret(Property p) throws IllegalArgumentException {
-                return p.getValue();
+            public String interpret(String s) throws IllegalArgumentException {
+                return s;
             }
         };
     }
 
     public static IPropertyInterpreter<Double> getDoublePropertyInterpreter() {
         return new IPropertyInterpreter<Double>() {
-
             @Override
-            public Double interpret(Property p) throws IllegalArgumentException {
+            public Double interpret(String s) throws IllegalArgumentException {
                 try {
-                    return Double.parseDouble(p.getValue());
+                    return Double.parseDouble(s);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException(e);
                 }

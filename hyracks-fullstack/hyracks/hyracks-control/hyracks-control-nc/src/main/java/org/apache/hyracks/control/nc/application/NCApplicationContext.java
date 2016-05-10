@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 
+import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.context.IHyracksRootContext;
@@ -42,10 +43,10 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     private IStateDumpHandler sdh;
     private final NodeControllerService ncs;
 
-    public NCApplicationContext(NodeControllerService ncs, ServerContext serverCtx, IHyracksRootContext rootCtx,
-            String nodeId, MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager)
-                    throws IOException {
-        super(serverCtx);
+    public NCApplicationContext(NodeControllerService ncs, ServerContext serverCtx, IHyracksRootContext rootCtx, String nodeId,
+                                MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
+                                IApplicationConfig appConfig) throws IOException {
+        super(serverCtx, appConfig);
         this.lccm = lifeCyclecomponentManager;
         this.nodeId = nodeId;
         this.rootCtx = rootCtx;

@@ -43,21 +43,27 @@ import org.apache.asterix.common.configuration.Property;
 import org.apache.asterix.common.configuration.Store;
 import org.apache.asterix.common.configuration.TransactionLogDir;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.api.application.IApplicationConfig;
 
 public class AsterixPropertiesAccessor {
     private static Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
     private final String instanceName;
     private final String metadataNodeName;
-    private final List<String> nodeNames;
-    private final Map<String, String[]> stores;
-    private final Map<String, String> coredumpConfig;
+    private final List<String> nodeNames = new ArrayList<>();;
+    private final Map<String, String[]> stores = new HashMap<>();;
+    private final Map<String, String> coredumpConfig = new HashMap<>();
     private final Map<String, Property> asterixConfigurationParams;
-    private final Map<String, String> transactionLogDirs;
+    private final IApplicationConfig cfg;
+    private final Map<String, String> transactionLogDirs = new HashMap<>();
     private final Map<String, String> asterixBuildProperties;
     private final Map<String, ClusterPartition[]> nodePartitionsMap;
-    private final SortedMap<Integer, ClusterPartition> clusterPartitions;
+    private final SortedMap<Integer, ClusterPartition> clusterPartitions = new TreeMap<>();
 
+    /**
+     * Constructor which reads asterix-configuration.xml, the old way.
+     * @throws AsterixException
+     */
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
         if (fileName == null) {
@@ -75,6 +81,7 @@ public class AsterixPropertiesAccessor {
         }
 
         AsterixConfiguration asterixConfiguration = null;
+        cfg = null;
         try {
             JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
             Unmarshaller unmarshaller = ctx.createUnmarshaller();
@@ -84,11 +91,8 @@ public class AsterixPropertiesAccessor {
         }
         instanceName = asterixConfiguration.getInstanceName();
         metadataNodeName = asterixConfiguration.getMetadataNode();
-        stores = new HashMap<String, String[]>();
         List<Store> configuredStores = asterixConfiguration.getStore();
-        nodeNames = new ArrayList<String>();
         nodePartitionsMap = new HashMap<>();
-        clusterPartitions = new TreeMap<>();
         int uniquePartitionId = 0;
         for (Store store : configuredStores) {
             String trimmedStoreDirs = store.getStoreDirs().trim();
@@ -107,11 +111,9 @@ public class AsterixPropertiesAccessor {
         for (Property p : asterixConfiguration.getProperty()) {
             asterixConfigurationParams.put(p.getName(), p);
         }
-        coredumpConfig = new HashMap<String, String>();
         for (Coredump cd : asterixConfiguration.getCoredump()) {
             coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
         }
-        transactionLogDirs = new HashMap<String, String>();
         for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
             transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
         }
@@ -125,7 +127,44 @@ public class AsterixPropertiesAccessor {
         } catch (IOException e) {
             throw new AsterixException(e);
         }
+    }
 
+    /**
+     * Constructor which wraps an IApplicationConfig.
+     */
+    public AsterixPropertiesAccessor (IApplicationConfig cfg) {
+        this.cfg = cfg;
+        instanceName = cfg.getString("asterix", "instance", "DEFAULT_INSTANCE");
+        String mdNode = null;
+        for (String section : cfg.getSections()) {
+            if (!section.startsWith("nc/")) {
+                continue;
+            }
+            String ncId = section.substring(3);
+            nodeNames.add(ncId);
+
+            if (mdNode == null) {
+                // Default is first node == metadata node
+                mdNode = ncId;
+            }
+            if (cfg.getString(section, "metadata.port") != null) {
+                // QQQ But we don't actually *honor* metadata.port yet!
+                mdNode = ncId;
+            }
+
+            // QQQ Default values? Should they be specified here? Or should there
+            // be a default.ini? They can't be inserted by TriggerNCWork except
+            // possibly for hyracks-specified values. Certainly wherever they are,
+            // they should be platform-dependent.
+            stores.put(ncId, cfg.getString(section, "iodevices", "/var/lib/asterixdb/data").split(","));
+            coredumpConfig.put(ncId, cfg.getString(section, "coredumpdir", "/var/lib/asterixdb/coredump"));
+            transactionLogDirs.put(ncId, cfg.getString(section, "txnlogdir", "/var/lib/asterixdb/txn-log"));
+        }
+
+        metadataNodeName = mdNode;
+        asterixConfigurationParams = null;
+        asterixBuildProperties = null;
+        nodePartitionsMap = null;
     }
 
     public String getMetadataNodeName() {
@@ -171,15 +210,28 @@ public class AsterixPropertiesAccessor {
     }
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
-        Property p = asterixConfigurationParams.get(property);
-        if (p == null) {
+        String value;
+        Property p = null;
+        if (asterixConfigurationParams != null) {
+            p = asterixConfigurationParams.get(property);
+            value = (p == null) ? null : p.getValue();
+        } else {
+            value = cfg.getString("asterix", property);
+        }
+        if (value == null) {
             return defaultValue;
         }
-
         try {
-            return interpreter.interpret(p);
+            return interpreter.interpret(value);
         } catch (IllegalArgumentException e) {
-            logConfigurationError(p, defaultValue);
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                StringBuilder msg = new StringBuilder("Invalid property value '" + value + "' for property '" + property + "'.\n");
+                if (p != null) {
+                    msg.append("See the description: \n" + p.getDescription() + "\n");
+                }
+                msg.append("Default = " + defaultValue);
+                LOGGER.severe(msg.toString());
+            }
             throw e;
         }
     }

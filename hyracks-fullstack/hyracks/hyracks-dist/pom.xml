@@ -76,7 +76,7 @@
             <phase>package</phase>
             <configuration>
               <target>
-                <chmod file="target/appassembler/bin/*)" perm="755"/>
+                <chmod file="target/appassembler/bin/*" perm="755"/>
               </target>
             </configuration>
             <goals>

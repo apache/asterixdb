@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.context.ICCContext;
@@ -52,9 +53,9 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     private List<IClusterLifecycleListener> clusterLifecycleListeners;
     private final ClusterControllerService ccs;
 
-    public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext)
-            throws IOException {
-        super(serverCtx);
+    public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext,
+                                IApplicationConfig appConfig) throws IOException {
+        super(serverCtx, appConfig);
         this.ccContext = ccContext;
         this.ccs = ccs;
         initPendingNodeIds = new HashSet<String>();

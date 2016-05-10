@@ -45,7 +45,7 @@ public class RemoveDeadNodesWork extends AbstractWork {
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
             NodeControllerState state = e.getValue();
-            if (state.incrementLastHeartbeatDuration() >= ccs.getConfig().maxHeartbeatLapsePeriods) {
+            if (state.incrementLastHeartbeatDuration() >= ccs.getCCConfig().maxHeartbeatLapsePeriods) {
                 deadNodes.add(e.getKey());
                 LOGGER.info(e.getKey() + " considered dead");
             }

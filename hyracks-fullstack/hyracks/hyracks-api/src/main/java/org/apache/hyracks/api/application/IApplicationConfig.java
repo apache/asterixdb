@@ -16,8 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.api.application;
 
-public interface IPropertyInterpreter<T> {
-    public T interpret(String s) throws IllegalArgumentException;
+import java.util.Set;
+
+/**
+ * Accessor for the data contained in the global application configuration file.
+ */
+public interface IApplicationConfig {
+    String getString(String section, String key);
+    String getString(String section, String key, String defaultValue);
+    int getInt(String section, String key);
+    int getInt(String section, String key, int defaultValue);
+    long getLong(String section, String key);
+    long getLong(String section, String key, long defaultValue);
+    Set<String> getSections();
+    Set<String> getKeys(String section);
 }

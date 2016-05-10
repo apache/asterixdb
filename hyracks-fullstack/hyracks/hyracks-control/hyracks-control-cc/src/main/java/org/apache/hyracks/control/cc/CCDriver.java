@@ -34,6 +34,8 @@ public class CCDriver {
                 cp.printUsage(System.err);
                 return;
             }
+            ccConfig.loadConfigAndApplyDefaults();
+
             ClusterControllerService ccService = new ClusterControllerService(ccConfig);
             ccService.start();
             while (true) {

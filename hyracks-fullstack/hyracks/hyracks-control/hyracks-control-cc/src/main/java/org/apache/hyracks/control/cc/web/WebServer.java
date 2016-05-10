@@ -18,11 +18,10 @@
  */
 package org.apache.hyracks.control.cc.web;
 
-import java.util.EnumSet;
-import java.util.logging.Logger;
-
-import javax.servlet.DispatcherType;
-
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
+import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
+import org.apache.hyracks.control.cc.web.util.RoutingHandler;
 import org.apache.wicket.Application;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.protocol.http.ContextParamWebApplicationFactory;
@@ -38,10 +37,9 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
-import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
-import org.apache.hyracks.control.cc.web.util.RoutingHandler;
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
+import java.util.logging.Logger;
 
 public class WebServer {
     private final static Logger LOGGER = Logger.getLogger(WebServer.class.getName());

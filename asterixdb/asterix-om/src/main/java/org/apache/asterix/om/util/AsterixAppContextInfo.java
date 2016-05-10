@@ -34,6 +34,7 @@ import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
+import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -62,10 +63,21 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
             IGlobalRecoveryMaanger globalRecoveryMaanger) throws AsterixException {
-        if (INSTANCE == null) {
-            INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger);
+        if (INSTANCE != null) {
+            return;
         }
-        AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
+        INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger);
+
+        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
+        // QQQ strip this out eventually
+        AsterixPropertiesAccessor propertiesAccessor;
+        IApplicationConfig cfg = ccAppCtx.getAppConfig();
+        // QQQ this is NOT a good way to determine whether the config is valid
+        if (cfg.getString("cc", "cluster.address") != null) {
+            propertiesAccessor = new AsterixPropertiesAccessor(cfg);
+        } else {
+            propertiesAccessor = new AsterixPropertiesAccessor();
+        }
         INSTANCE.compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
         INSTANCE.externalProperties = new AsterixExternalProperties(propertiesAccessor);
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);

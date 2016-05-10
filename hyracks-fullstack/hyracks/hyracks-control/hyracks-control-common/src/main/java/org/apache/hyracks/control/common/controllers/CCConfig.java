@@ -19,20 +19,31 @@
 package org.apache.hyracks.control.common.controllers;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
 
+import org.apache.hyracks.api.application.IApplicationConfig;
+import org.apache.hyracks.control.common.application.IniApplicationConfig;
+import org.ini4j.Ini;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StopOptionHandler;
 
 public class CCConfig {
-    @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients", required = true)
+    @Option(name = "-address", usage = "IP Address for CC (default: localhost)", required = false)
+    public String ipAddress = InetAddress.getLoopbackAddress().getHostAddress();
+
+    @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients (default: same as -address)", required = false)
     public String clientNetIpAddress;
 
     @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
     public int clientNetPort = 1098;
 
-    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from", required = true)
+    // QQQ Note that clusterNetIpAddress is *not directly used* yet. Both
+    // the cluster listener and the web server listen on "all interfaces".
+    // This IP address is only used to instruct the NC on which IP to call in.
+    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from NCs (default: same as -address)", required = false)
     public String clusterNetIpAddress;
 
     @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
@@ -71,9 +82,76 @@ public class CCConfig {
     @Option(name = "-app-cc-main-class", required = false, usage = "Application CC Main Class")
     public String appCCMainClass = null;
 
+    @Option(name = "-config-file", usage = "Specify path to master configuration file (default: none)", required = false)
+    public String configFile = null;
+
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
+
+    private Ini ini = null;
+
+    private void loadINIFile() throws IOException {
+        // This method simply maps from the ini parameters to the CCConfig's fields.
+        // It does not apply defaults or any logic.
+        ini = IniUtils.loadINIFile(configFile);
+
+        ipAddress = IniUtils.getString(ini, "cc", "address", ipAddress);
+        clientNetIpAddress = IniUtils.getString(ini, "cc", "client.address", clientNetIpAddress);
+        clientNetPort = IniUtils.getInt(ini, "cc", "client.port", clientNetPort);
+        clusterNetIpAddress = IniUtils.getString(ini, "cc", "cluster.address", clusterNetIpAddress);
+        clusterNetPort = IniUtils.getInt(ini, "cc", "cluster.port", clusterNetPort);
+        httpPort = IniUtils.getInt(ini, "cc", "http.port", httpPort);
+        heartbeatPeriod = IniUtils.getInt(ini, "cc", "heartbeat.period", heartbeatPeriod);
+        maxHeartbeatLapsePeriods = IniUtils.getInt(ini, "cc", "heartbeat.maxlapse", maxHeartbeatLapsePeriods);
+        profileDumpPeriod = IniUtils.getInt(ini, "cc", "profiledump.period", profileDumpPeriod);
+        defaultMaxJobAttempts = IniUtils.getInt(ini, "cc", "job.defaultattempts", defaultMaxJobAttempts);
+        jobHistorySize = IniUtils.getInt(ini, "cc", "job.historysize", jobHistorySize);
+        resultTTL = IniUtils.getLong(ini, "cc", "results.ttl", resultTTL);
+        resultSweepThreshold = IniUtils.getLong(ini, "cc", "results.sweepthreshold", resultSweepThreshold);
+        ccRoot = IniUtils.getString(ini, "cc", "rootfolder", ccRoot);
+        // QQQ clusterTopologyDefinition is a "File"; should support verifying that the file
+        // exists, as @Option likely does
+        appCCMainClass = IniUtils.getString(ini, "cc", "app.class", appCCMainClass);
+    }
+
+    /**
+     * Once all @Option fields have been loaded from command-line or otherwise
+     * specified programmatically, call this method to:
+     * 1. Load options from a config file (as specified by -config-file)
+     * 2. Set default values for certain derived values, such as setting
+     *    clusterNetIpAddress to ipAddress
+     */
+    public void loadConfigAndApplyDefaults() throws IOException {
+        if (configFile != null) {
+            loadINIFile();
+            // QQQ This way of passing overridden/defaulted values back into
+            // the ini feels clunky, and it's clearly incomplete
+            ini.add("cc", "cluster.address", clusterNetIpAddress);
+            ini.add("cc", "client.address", clientNetIpAddress);
+        }
+
+        // "address" is the default for all IP addresses
+        if (clusterNetIpAddress == null) clusterNetIpAddress = ipAddress;
+        if (clientNetIpAddress == null) clientNetIpAddress = ipAddress;
+    }
+
+    /**
+     * Returns the global config Ini file. Note: this will be null
+     * if -config-file wasn't specified.
+     */
+    public Ini getIni() {
+        return ini;
+    }
+
+    /**
+     * @return An IApplicationConfig representing this NCConfig.
+     * Note: Currently this only includes the values from the configuration
+     * file, not anything specified on the command-line. QQQ
+     */
+    public IApplicationConfig getAppConfig() {
+        return new IniApplicationConfig(ini);
+    }
 
     public void toCommandLine(List<String> cList) {
         cList.add("-client-net-ip-address");
