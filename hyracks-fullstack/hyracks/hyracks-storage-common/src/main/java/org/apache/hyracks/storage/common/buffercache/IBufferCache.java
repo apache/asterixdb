@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 
@@ -44,6 +43,8 @@ public interface IBufferCache {
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
+    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException;
+
     public void unpin(ICachedPage page) throws HyracksDataException;
 
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
@@ -51,6 +52,8 @@ public interface IBufferCache {
     public void adviseWontNeed(ICachedPage page);
 
     public ICachedPage confiscatePage(long dpid) throws HyracksDataException;
+
+    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException;
 
     public void returnPage(ICachedPage page);
 
@@ -82,4 +85,5 @@ public interface IBufferCache {
 
     void purgeHandle(int fileId) throws HyracksDataException;
 
+    void resizePage(ICachedPage page, int multiple);
 }

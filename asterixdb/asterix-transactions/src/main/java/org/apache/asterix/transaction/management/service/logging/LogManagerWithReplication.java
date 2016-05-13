@@ -108,7 +108,11 @@ public class LogManagerWithReplication extends LogManager {
             getAndInitNewPage();
         } else if (!appendPage.hasSpace(logRecord.getLogSize())) {
             appendPage.isFull(true);
-            getAndInitNewPage();
+            if (logRecord.getLogSize() > logPageSize) {
+                getAndInitNewLargePage(logRecord.getLogSize());
+            } else {
+                getAndInitNewPage();
+            }
         }
         if (logRecord.getLogSource() == LogSource.LOCAL) {
             if (logRecord.getLogType() == LogType.UPDATE) {

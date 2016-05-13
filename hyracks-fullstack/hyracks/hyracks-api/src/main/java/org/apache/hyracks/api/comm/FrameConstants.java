@@ -25,20 +25,20 @@ public interface FrameConstants {
     int SIZE_LEN = 4;
 
     /**
-     * The offset of the frame_count which is one byte indicate how many initial_frames contained in current frame.
-     * The actual frameSize = frame_count * intitialFrameSize(given by user)
+     * The offset of the frame_count which is one int indicates how many initial_frames contained in current frame.
+     * The actual frameSize = frame_count * initialFrameSize(given by user)
      */
     int META_DATA_FRAME_COUNT_OFFSET = 0;
 
     /**
-     * The start offset of the tuple data. The first byte is used to store the frame_count
+     * The start offset of the tuple data. The first int is used to store the frame_count
      */
-    int TUPLE_START_OFFSET = 1;
+    int TUPLE_START_OFFSET = 5;
 
     /**
-     * Since we use one byte to store the frame_count, the max frame_count is 255.
+     * The max frame size is Integer.MAX_VALUE.
      */
-    int MAX_NUM_MINFRAME = 255;
+    int MAX_FRAMESIZE = Integer.MAX_VALUE;
 
     /**
      * Indicate the total size of the meta data.

@@ -412,7 +412,8 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
-                        ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey);
+                        ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey, freePageManager, ctx.metaFrame,
+                                bufferCache);
                         ctx.interiorFrame.setRightPage(rightPageId);
                     } else {
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
@@ -420,7 +421,8 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.modificationCallback.found(null, tuple);
-                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
+                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey, freePageManager, ctx.metaFrame,
+                                bufferCache);
                         ctx.leafFrame.setRightPage(rightPageId);
                     }
                     succeeded = true;
@@ -493,6 +495,10 @@ public class RTree extends AbstractTreeIndex {
                     }
                 }
                 break;
+            }
+
+            default: {
+                throw new IllegalStateException("NYI: " + spaceStatus);
             }
         }
     }
@@ -1043,8 +1049,8 @@ public class RTree extends AbstractTreeIndex {
 
             NodeFrontier frontier = nodeFrontiers.get(level);
             interiorFrame.setPage(frontier.page);
-            //see if we have space for two tuples. this works around a  tricky boundary condition with sequential bulk load where
-            //finalization can possibly lead to a split
+            //see if we have space for two tuples. this works around a  tricky boundary condition with sequential bulk
+            // load where finalization can possibly lead to a split
             //TODO: accomplish this without wasting 1 tuple
             int sizeOfTwoTuples = 2 * (mbrTuple.getTupleSize() + RTreeNSMInteriorFrame.childPtrSize);
             FrameOpSpaceStatus spaceForTwoTuples = (((RTreeNSMInteriorFrame) interiorFrame)

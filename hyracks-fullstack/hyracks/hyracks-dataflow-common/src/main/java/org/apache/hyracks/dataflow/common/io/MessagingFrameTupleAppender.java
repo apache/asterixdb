@@ -25,7 +25,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public class MessagingFrameTupleAppender extends FrameTupleAppender {
 

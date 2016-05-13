@@ -25,7 +25,7 @@ import org.apache.hyracks.api.comm.IFrameFieldAppender;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FrameFixedFieldAppender extends AbstractFrameAppender implements IFrameFieldAppender {
     private final int fieldCount;

@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.util.Random;
 import java.util.logging.Level;
 
+import org.apache.hyracks.storage.am.btree.frames.BTreeLargeFrameHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -135,7 +136,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         int btreeFileId = fileMapProvider.lookupFileId(harness.getFileReference());
         bufferCache.openFile(btreeFileId);
         IHyracksTaskContext ctx = harness.getHyracksTaskContext();
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), false);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), false,
+                BTreeLargeFrameHelper.INSTANCE);
         try {
 
             ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
@@ -206,7 +208,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
                     }
                 }
 
-                ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
+                ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2],
+                        false);
                 try {
                     int tupleIndex = frame.findDeleteTupleIndex(tuple);
                     frame.delete(tuple, tupleIndex);

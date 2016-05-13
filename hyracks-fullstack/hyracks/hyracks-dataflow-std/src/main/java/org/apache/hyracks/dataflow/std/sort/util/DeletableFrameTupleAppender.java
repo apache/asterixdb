@@ -25,7 +25,7 @@ import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 /**
  * This is a special frame which is used in TupleMemoryBuffer.

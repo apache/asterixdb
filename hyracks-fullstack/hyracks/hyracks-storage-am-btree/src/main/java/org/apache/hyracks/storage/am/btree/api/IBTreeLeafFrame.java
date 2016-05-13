@@ -21,15 +21,18 @@ package org.apache.hyracks.storage.am.btree.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public interface IBTreeLeafFrame extends IBTreeFrame {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
-            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
+                              FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
 
     public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException;
 
@@ -49,4 +52,13 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
     public void setNextLeaf(int nextPage);
 
     public int getNextLeaf();
+
+    public void configureLargePage(int supplementalPages, int supplementalBlockPageId);
+
+    public boolean isLargePage();
+
+    public int getSupplementalNumPages();
+
+    void ensureCapacity(IMetaDataPageManager freePageManager, ITreeIndexMetaDataFrame metaFrame,
+                        IBufferCache bufferCache, ITupleReference tuple) throws HyracksDataException;
 }

@@ -23,6 +23,8 @@ public interface IPageReplacementStrategy {
 
     public void setBufferCache(IBufferCacheInternal bufferCache);
 
+    public IBufferCacheInternal getBufferCache();
+
     public void notifyCachePageReset(ICachedPageInternal cPage);
 
     public void notifyCachePageAccess(ICachedPageInternal cPage);
@@ -31,9 +33,13 @@ public interface IPageReplacementStrategy {
 
     public ICachedPageInternal findVictim();
 
+    public ICachedPageInternal findVictim(int multiplier);
+
     public int getNumPages();
 
     public int getPageSize();
 
     public int getMaxAllowedNumPages();
+
+    public void resizePage(ICachedPageInternal page, int multiplier);
 }

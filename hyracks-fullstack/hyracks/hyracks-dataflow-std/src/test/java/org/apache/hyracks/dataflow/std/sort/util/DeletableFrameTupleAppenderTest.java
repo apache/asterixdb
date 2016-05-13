@@ -31,7 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.sort.Utility;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Before;

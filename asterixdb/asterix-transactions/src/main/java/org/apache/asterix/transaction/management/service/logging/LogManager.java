@@ -114,10 +114,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     @Override
     public void log(ILogRecord logRecord) throws ACIDException {
-        if (logRecord.getLogSize() > logPageSize) {
-            throw new IllegalStateException();
-        }
-
         if (logRecord.getLogType() == LogType.FLUSH) {
             flushLogsQ.offer(logRecord);
             return;
@@ -158,7 +154,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             getAndInitNewPage();
         } else if (!appendPage.hasSpace(logRecord.getLogSize())) {
             appendPage.isFull(true);
-            getAndInitNewPage();
+            if (logRecord.getLogSize() > logPageSize) {
+                getAndInitNewLargePage(logRecord.getLogSize());
+            } else {
+                getAndInitNewPage();
+            }
         }
         if (logRecord.getLogType() == LogType.UPDATE) {
             logRecord.setPrevLSN(txnCtx.getLastLSN());
@@ -169,6 +169,14 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             logRecord.setLSN(appendLSN.get());
         }
         appendLSN.addAndGet(logRecord.getLogSize());
+    }
+
+    protected void getAndInitNewLargePage(int logSize) {
+        // for now, alloc a new buffer for each large page
+        // TODO: pool large pages
+        appendPage = new LogBuffer(txnSubsystem, logSize, flushLSN);
+        appendPage.setFileChannel(appendChannel);
+        flushQ.offer(appendPage);
     }
 
     protected void getAndInitNewPage() {
@@ -577,7 +585,9 @@ class LogFlusher implements Callable<Boolean> {
                     }
                 }
                 flushPage.flush();
-                emptyQ.offer(flushPage);
+                if (flushPage.getLogPageSize() == logMgr.getLogPageSize()) {
+                    emptyQ.offer(flushPage);
+                }
             }
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.INFO)) {

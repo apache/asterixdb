@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.rtree.frames;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
@@ -31,10 +33,11 @@ import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeFrame;
 import org.apache.hyracks.storage.am.rtree.api.IRTreePolicy;
 import org.apache.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
-    protected static final int pageNsnOff = smFlagOff + 1;
-    protected static final int rightPageOff = pageNsnOff + 8;
+    protected static final int pageNsnOff = flagOff + 1; // 22
+    protected static final int rightPageOff = pageNsnOff + 8; // 30
 
     protected ITreeIndexTupleReference[] mbrTuples;
     protected ITreeIndexTupleReference cmpFrameTuple;
@@ -46,8 +49,8 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     protected final boolean isPointMBR;
 
     public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
-        super(tupleWriter, new UnorderedSlotManager());
+                         RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+        super(tupleWriter, new UnorderedSlotManager(), null);
         this.mbrTuples = new ITreeIndexTupleReference[keyValueProviders.length];
         for (int i = 0; i < keyValueProviders.length; i++) {
             this.mbrTuples[i] = tupleWriter.createTupleReference();
@@ -98,12 +101,6 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     }
 
     @Override
-    protected void resetSpaceParams() {
-        buf.putInt(freeSpaceOff, rightPageOff + 4);
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - (rightPageOff + 4));
-    }
-
-    @Override
     public int getRightPage() {
         return buf.getInt(rightPageOff);
     }
@@ -118,7 +115,8 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
+                      IMetaDataPageManager freePageManager, ITreeIndexMetaDataFrame metaFrame, IBufferCache bufferCache)
             throws HyracksDataException {
         rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
     }

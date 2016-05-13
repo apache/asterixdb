@@ -16,7 +16,6 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class FIFOLocalWriter implements IFIFOPageWriter {
     private static FIFOLocalWriter instance;

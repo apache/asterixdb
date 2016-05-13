@@ -362,4 +362,8 @@ public class LogBuffer implements ILogBuffer {
     public void isStop(boolean stop) {
         this.stop = stop;
     }
+
+    public int getLogPageSize() {
+        return logPageSize;
+    }
 }

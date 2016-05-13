@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame {
 
     public RTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+                             RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, keyValueProviders, rtreePolicyType, isPointMBR);
     }
 

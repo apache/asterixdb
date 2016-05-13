@@ -40,4 +40,15 @@ public interface ICacheMemoryAllocator {
      */
     public ByteBuffer[] ensureAvailabilityThenAllocate(int pageSize, int numPages) throws HyracksDataException;
 
+    /**
+     * Reserves the allocation with the ResourceMemoryManager (if exists). Otherwise, a HyracksDataException is thrown.
+     * Typically the memory will be subsequently allocated with call to allocate()
+     *
+     * @param pageSize
+     * @param numPages
+     * @return
+     * @throws HyracksDataException
+     */
+    public void reserveAllocation(int pageSize, int numPages) throws HyracksDataException;
+
 }

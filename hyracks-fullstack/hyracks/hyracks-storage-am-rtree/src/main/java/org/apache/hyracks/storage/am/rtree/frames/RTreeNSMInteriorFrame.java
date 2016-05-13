@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
@@ -47,7 +46,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     private final int keyFieldCount;
 
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+                                 RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, keyValueProviders, rtreePolicyType, isPointMBR);
         keyFieldCount = keyValueProviders.length;
         frameTuple.setFieldCount(keyFieldCount);
@@ -174,7 +173,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
         int bytesRequired = tupleWriter.bytesRequired(tuple) + childPtrSize;
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
                 - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))

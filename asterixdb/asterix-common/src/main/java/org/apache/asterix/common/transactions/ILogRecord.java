@@ -25,10 +25,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ILogRecord {
 
-    public enum RECORD_STATUS {
+    enum RecordReadStatus {
         TRUNCATED,
         BAD_CHKSUM,
-        OK
+        OK,
+        LARGE_RECORD
     }
 
     public static final int JOB_TERMINATE_LOG_SIZE = 14; //JOB_COMMIT or ABORT log type
@@ -37,7 +38,7 @@ public interface ILogRecord {
     public static final int FLUSH_LOG_SIZE = 18;
     public static final int WAIT_LOG_SIZE = 14;
 
-    public LogRecord.RECORD_STATUS readLogRecord(ByteBuffer buffer);
+    public RecordReadStatus readLogRecord(ByteBuffer buffer);
 
     public void writeLogRecord(ByteBuffer buffer);
 
@@ -115,7 +116,7 @@ public interface ILogRecord {
 
     public int writeRemoteRecoveryLog(ByteBuffer buffer);
 
-    public RECORD_STATUS readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog);
+    public RecordReadStatus readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog);
 
     public void setReplicationThread(IReplicationThread replicationThread);
 

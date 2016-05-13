@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class CachedPage implements ICachedPageInternal {
     final int cpid;
-    final ByteBuffer buffer;
+    ByteBuffer buffer;
     public final AtomicInteger pinCount;
     final AtomicBoolean dirty;
     final ReentrantReadWriteLock latch;
@@ -39,6 +39,7 @@ public class CachedPage implements ICachedPageInternal {
     volatile boolean valid;
     final AtomicBoolean confiscated;
     private IQueueInfo queueInfo;
+    ILargePageHelper largePageHelper;
 
     //Constructor for making dummy entry for FIFO queue
     public CachedPage(){
@@ -74,6 +75,7 @@ public class CachedPage implements ICachedPageInternal {
         confiscated.set(false);
         pageReplacementStrategy.notifyCachePageReset(this);
         queueInfo = null;
+        largePageHelper = null;
     }
 
     public void invalidate() {
@@ -158,6 +160,14 @@ public class CachedPage implements ICachedPageInternal {
 
     void setNext(CachedPage next) {
         this.next = next;
+    }
+
+    public ILargePageHelper getLargePageHelper() {
+        return largePageHelper;
+    }
+
+    public void setLargePageHelper(ILargePageHelper largePageHelper) {
+        this.largePageHelper = largePageHelper;
     }
 
 }

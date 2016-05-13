@@ -20,13 +20,22 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +74,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private ConcurrentHashMap<CachedPage, StackTraceElement[]> pinnedPageOwner;
     //!DEBUG
     private IIOReplicationManager ioReplicationManager;
-    public List<ICachedPageInternal> cachedPages = new ArrayList<ICachedPageInternal>();
+    private List<ICachedPageInternal> cachedPages = new ArrayList<>();
 
     private boolean closed;
 
@@ -166,6 +175,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
+        return pin(dpid, newPage, null);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
         // Calling the pinSanityCheck should be used only for debugging, since
         // the synchronized block over the fileInfoMap is a hot spot.
         if (DEBUG) {
@@ -183,7 +197,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                             }
                         }
                     }
-                }finally{
+                } finally{
                     confiscateLock.unlock();
                 }
             }
@@ -191,7 +205,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // disk.
             synchronized (cPage) {
                 if (!cPage.valid) {
-                    read(cPage);
+                    read(cPage, helper);
                     cPage.valid = true;
                 }
             }
@@ -202,10 +216,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if(DEBUG){
             pinnedPageOwner.put((CachedPage) cPage, Thread.currentThread().getStackTrace());
         }
+        cPage.setLargePageHelper(helper);
         return cPage;
     }
-
-
 
     private boolean isVirtual(long vpid) throws HyracksDataException {
         CachedPage virtPage = findPage(vpid, true);
@@ -544,11 +557,26 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         return false;
     }
 
-    private void read(CachedPage cPage) throws HyracksDataException {
+    private void read(CachedPage cPage, ILargePageHelper helper) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
         cPage.buffer.clear();
         ioManager.syncRead(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
                 cPage.buffer);
+        if (helper != null) {
+            int totalPages = helper.getSupplementalBlockNumPages(cPage) + 1;
+            if (totalPages > 1) {
+                resizePage(cPage, totalPages);
+                cPage.buffer.position(pageSize);
+                cPage.buffer.limit(totalPages * pageSize);
+                ioManager.syncRead(fInfo.getFileHandle(), (long) helper.getSupplementalBlockPageId(cPage) * pageSize,
+                        cPage.buffer);
+            }
+        }
+    }
+
+    @Override
+    public void resizePage(ICachedPage cPage, int totalPages) {
+        pageReplacementStrategy.resizePage((ICachedPageInternal) cPage, totalPages);
     }
 
     BufferedFileHandle getFileInfo(CachedPage cPage) throws HyracksDataException {
@@ -567,13 +595,25 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     void write(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
-        //synchronize on fInfo to prevent the file handle from being deleted until the page is written.
+        // synchronize on fInfo to prevent the file handle from being deleted until the page is written.
         synchronized (fInfo) {
             if (!fInfo.fileHasBeenDeleted()) {
-                cPage.buffer.position(0);
-                cPage.buffer.limit(pageSize);
+                ByteBuffer buf = cPage.buffer.duplicate();
+                buf.position(0);
+                buf.limit(pageSize);
                 ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
-                        cPage.buffer);
+                        buf);
+                if (cPage.largePageHelper != null) {
+                    int totalPages = cPage.largePageHelper.getSupplementalBlockNumPages(cPage) + 1;
+                    if (totalPages > 1) {
+                        buf.limit(totalPages * pageSize);
+                        long offset = (long) cPage.largePageHelper.getSupplementalBlockPageId(cPage) * pageSize;
+                        ioManager.syncWrite(fInfo.getFileHandle(), offset, buf);
+                    }
+                    assert buf.capacity() == (pageSize * totalPages);
+                } else {
+                    assert buf.capacity() == pageSize;
+                }
             }
         }
     }
@@ -583,11 +623,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (closed) {
             throw new HyracksDataException("unpin called on a closed cache");
         }
-        if(DEBUG){
+        int pinCount = ((CachedPage) page).pinCount.decrementAndGet();
+        if (DEBUG && pinCount == 0) {
             pinnedPageOwner.remove(page);
         }
-        ((CachedPage) page).pinCount.decrementAndGet();
     }
+
 
     private int hash(long dpid) {
         int hashValue = (int) dpid ^ (Integer.reverse((int) (dpid >>> 32)) >>> 1);
@@ -677,10 +718,13 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     int curPage = 0;
                     while (true) {
                         synchronized (cachedPages) {
-                            if (curPage >= pageReplacementStrategy.getNumPages()) {
+                            if (curPage >= cachedPages.size()) {
                                 break;
                             }
-                            cleanPage((CachedPage) cachedPages.get(curPage), false);
+                            CachedPage cPage = (CachedPage) cachedPages.get(curPage);
+                            if (cPage != null) {
+                                cleanPage(cPage, false);
+                            }
                         }
                         curPage++;
                     }
@@ -970,8 +1014,99 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void addPage(ICachedPageInternal page) {
         synchronized (cachedPages) {
-            cachedPages.add(page);
+            final int cpid = page.getCachedPageId();
+            if (cpid < cachedPages.size()) {
+                ICachedPageInternal old = cachedPages.set(cpid, page);
+                if (DEBUG) {
+                    assert old == null;
+                }
+            } else {
+                if (cpid > cachedPages.size()) {
+                    // 4 > 1 -> [exiting, null, null, null, new]
+                    cachedPages.addAll(Collections.nCopies(cpid - cachedPages.size(), null));
+                }
+                cachedPages.add(page);
+            }
         }
+    }
+
+    @Override
+    public boolean removePage(ICachedPageInternal victimPage) {
+        CachedPage victim = (CachedPage)victimPage;
+        // Case 1 from findPage()
+        if (victim.dpid < 0) { // new page
+            if (!victim.pinCount.compareAndSet(0, 1)) {
+                return false;
+            }
+            // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
+            // pin count and try again
+            if (victim.dpid >= 0) {
+                victim.pinCount.decrementAndGet();
+                return false;
+            }
+        } else {
+            // Case 2a/b
+            int pageHash = hash(victim.dpid);
+            CacheBucket bucket = pageMap[pageHash];
+            bucket.bucketLock.lock();
+            try {
+                if (!victim.pinCount.compareAndSet(0, 1)) {
+                    return false;
+                }
+                // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
+                // pin count and try again
+                if (pageHash != hash(victim.dpid)) {
+                    victim.pinCount.decrementAndGet();
+                    return false;
+                }
+                // readjust the next pointers to remove this page from
+                // the pagemap
+                CachedPage curr = bucket.cachedPage;
+                CachedPage prev = null;
+                boolean found = false;
+                //traverse the bucket's linked list to find the victim.
+                while (curr != null) {
+                    if (curr == victim) { // we found where the victim
+                        // resides in the hash table
+                        // if this is the first page in the bucket
+                        if (prev == null) {
+                            if(DEBUG) {
+                                assert curr != curr.next;
+                            }
+                            bucket.cachedPage = bucket.cachedPage.next;
+                            found = true;
+                            break;
+                            // if it isn't we need to make the previous
+                            // node point to where it should
+                        } else {
+                            if(DEBUG) {
+                                assert curr.next != curr;
+                            }
+                            prev.next = curr.next;
+                            curr.next = null;
+                            if(DEBUG) {
+                                assert prev.next != prev;
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                    // go to the next entry
+                    prev = curr;
+                    curr = curr.next;
+                }
+                assert found;
+            } finally {
+                bucket.bucketLock.unlock();
+            }
+        }
+        synchronized (cachedPages) {
+            ICachedPageInternal old = cachedPages.set(victim.cpid, null);
+            if (DEBUG) {
+                assert old == victim;
+            };
+        }
+        return true;
     }
 
     @Override
@@ -1000,10 +1135,20 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public ICachedPage confiscatePage(long dpid) throws HyracksDataException {
+        return confiscatePage(dpid, () -> pageReplacementStrategy.findVictim());
+    }
+
+    @Override
+    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
+        return confiscatePage(dpid, () -> pageReplacementStrategy.findVictim(multiplier));
+    }
+
+    private ICachedPage confiscatePage(long dpid, Supplier<ICachedPageInternal> victimSupplier)
+            throws HyracksDataException {
         while (true) {
             int startCleanedCount = cleanerThread.cleanedCount;
             ICachedPage returnPage = null;
-            CachedPage victim = (CachedPage) pageReplacementStrategy.findVictim();
+            CachedPage victim = (CachedPage) victimSupplier.get();
             if (victim != null) {
                 if(DEBUG) {
                     assert !victim.confiscated.get();
@@ -1079,6 +1224,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // if we found a page after all that, go ahead and finish
             if (returnPage != null) {
                 ((CachedPage) returnPage).confiscated.set(true);
+                ((CachedPage) returnPage).setLargePageHelper(null);
                 if (DEBUG) {
                     confiscateLock.lock();
                     try{
@@ -1167,6 +1313,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             }
         }
         pageReplacementStrategy.adviseWontNeed(cPage);
+        cPage.largePageHelper = null;
     }
 
     @Override
@@ -1219,4 +1366,5 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 }
         }
     }
+
 }

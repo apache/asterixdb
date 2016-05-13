@@ -85,7 +85,7 @@ public class SubscribeFeedStatement implements Statement {
         if (appliedFunction != null) {
             function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
             if (function == null) {
-                throw new MetadataException(" Unknown function " + function);
+                throw new MetadataException(" Unknown function " + appliedFunction);
             } else if (function.getParams().size() > 1) {
                 throw new MetadataException(
                         " Incompatible function: " + appliedFunction + " Number if arguments must be 1");

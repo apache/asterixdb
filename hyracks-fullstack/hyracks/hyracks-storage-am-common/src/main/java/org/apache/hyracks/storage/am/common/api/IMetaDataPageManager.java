@@ -43,13 +43,22 @@ public interface IMetaDataPageManager {
     public void close() throws HyracksDataException;
 
     /**
-     * Get the locaiton of a free page to use for index operations
+     * Get the location of a free page to use for index operations
      * @param metaFrame A metadata frame to use to wrap the raw page
      * @return A page location, or -1 if no free page could be found or allocated
      * @throws HyracksDataException
      */
 
     public int getFreePage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException;
+
+    /**
+     * Get the location of a block of free pages to use for index operations
+     * @param metaFrame A metadata frame to use to wrap the raw page
+     * @return The starting page location, or -1 if a block of free pages could be found or allocated
+     * @throws HyracksDataException
+     */
+
+    public int getFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int count) throws HyracksDataException;
 
     /**
      * Add a page back to the pool of free pages within an index file
@@ -59,6 +68,9 @@ public interface IMetaDataPageManager {
      */
 
     public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException;
+
+    public void addFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int startingPage, int count)
+            throws HyracksDataException;
 
     /**
      * Gets the highest page offset according to the metadata
@@ -137,5 +149,4 @@ public interface IMetaDataPageManager {
      * @throws HyracksDataException
      */
     long getLSNOffset() throws HyracksDataException;
-
 }

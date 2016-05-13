@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
@@ -51,12 +52,17 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
         for (int i = 0; i < keyValueProviders.length; i++) {
             keyValueProviders[i] = keyValueProviderFactories[i].createPrimitiveValueProvider();
         }
-        return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders, rtreePolicyType,
-                isPointMBR);
+        return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders,
+                rtreePolicyType, isPointMBR);
     }
 
     @Override
     public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
         return tupleWriterFactory;
+    }
+
+    @Override
+    public ILargePageHelper getLargePageHelper() {
+        return null;
     }
 }

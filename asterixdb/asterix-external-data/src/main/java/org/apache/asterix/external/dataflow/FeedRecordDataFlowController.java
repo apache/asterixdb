@@ -78,11 +78,6 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 tb.addFieldEndOffset();
                 addMetaPart(tb, record);
                 addPrimaryKeys(tb, record);
-                if (tb.getSize() > tupleForwarder.getMaxRecordSize()) {
-                    // log
-                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_LARGE_RECORD);
-                    continue;
-                }
                 tupleForwarder.addTuple(tb);
             }
         } catch (InterruptedException e) {

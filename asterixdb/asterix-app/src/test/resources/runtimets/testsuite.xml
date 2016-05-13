@@ -6460,6 +6460,16 @@
         <output-dir compare="Text">big_object_load</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="big-object">
+      <compilation-unit name="big_object_bulkload">
+        <output-dir compare="Text">big_object_bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="big-object">
+      <compilation-unit name="big_object_insert">
+        <output-dir compare="Text">big_object_insert</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="temporal">
     <test-case FilePath="temporal">

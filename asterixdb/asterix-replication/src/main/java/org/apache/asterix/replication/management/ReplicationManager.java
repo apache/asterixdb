@@ -232,6 +232,14 @@ public class ReplicationManager implements IReplicationManager {
         appendToLogBuffer(logRecord);
     }
 
+    protected void getAndInitNewLargePage(int pageSize) {
+        // for now, alloc a new buffer for each large page
+        // TODO: consider pooling large pages
+        currentTxnLogBuffer = new ReplicationLogBuffer(this, pageSize);
+        currentTxnLogBuffer.setReplicationSockets(logsReplicaSockets);
+        pendingFlushLogBuffersQ.offer(currentTxnLogBuffer);
+    }
+
     protected void getAndInitNewPage() {
         currentTxnLogBuffer = null;
         while (currentTxnLogBuffer == null) {
@@ -249,7 +257,11 @@ public class ReplicationManager implements IReplicationManager {
     private synchronized void appendToLogBuffer(ILogRecord logRecord) {
         if (!currentTxnLogBuffer.hasSpace(logRecord)) {
             currentTxnLogBuffer.isFull(true);
-            getAndInitNewPage();
+            if (logRecord.getLogSize() > logManager.getLogPageSize()) {
+                getAndInitNewLargePage(logRecord.getLogSize());
+            } else {
+                getAndInitNewPage();
+            }
         }
 
         currentTxnLogBuffer.append(logRecord);
@@ -1110,6 +1122,10 @@ public class ReplicationManager implements IReplicationManager {
             //send goodbye
             ReplicationProtocol.sendGoodbye(socketChannel);
         }
+    }
+
+    public int getLogPageSize() {
+        return logManager.getLogPageSize();
     }
 
     //supporting classes
