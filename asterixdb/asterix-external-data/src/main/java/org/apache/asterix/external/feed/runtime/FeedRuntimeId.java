@@ -21,26 +21,31 @@ package org.apache.asterix.external.feed.runtime;
 import java.io.Serializable;
 
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.external.feed.management.FeedId;
 
 public class FeedRuntimeId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String DEFAULT_OPERAND_ID = "N/A";
+    public static final String DEFAULT_TARGET_ID = "N/A";
 
+    private final FeedId feedId;
     private final FeedRuntimeType runtimeType;
     private final int partition;
-    private final String operandId;
+    private final String targetId;
+    private final int hashCode;
 
-    public FeedRuntimeId(FeedRuntimeType runtimeType, int partition, String operandId) {
+    public FeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition, String operandId) {
+        this.feedId = feedId;
         this.runtimeType = runtimeType;
         this.partition = partition;
-        this.operandId = operandId;
+        this.targetId = operandId;
+        this.hashCode = toString().hashCode();
     }
 
     @Override
     public String toString() {
-        return runtimeType + "[" + partition + "]" + "{" + operandId + "}";
+        return runtimeType + "(" + feedId + ")" + "[" + partition + "]" + "==>" + "{" + targetId + "}";
     }
 
     @Override
@@ -52,13 +57,13 @@ public class FeedRuntimeId implements Serializable {
             return false;
         }
         FeedRuntimeId other = (FeedRuntimeId) o;
-        return (other.getFeedRuntimeType().equals(runtimeType) && other.getOperandId().equals(operandId) && other
-                .getPartition() == partition);
+        return (other.feedId.equals(feedId) && other.getFeedRuntimeType().equals(runtimeType)
+                && other.getTargetId().equals(targetId) && other.getPartition() == partition);
     }
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return hashCode;
     }
 
     public FeedRuntimeType getFeedRuntimeType() {
@@ -73,8 +78,11 @@ public class FeedRuntimeId implements Serializable {
         return runtimeType;
     }
 
-    public String getOperandId() {
-        return operandId;
+    public String getTargetId() {
+        return targetId;
     }
 
+    public FeedId getFeedId() {
+        return feedId;
+    }
 }

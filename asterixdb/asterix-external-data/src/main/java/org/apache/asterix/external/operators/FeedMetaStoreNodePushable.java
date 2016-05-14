@@ -25,15 +25,16 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
-import org.apache.asterix.external.feed.api.IFeedManager;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.api.IFeedRuntime.Mode;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
+import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.feed.management.FeedManager;
 import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
 import org.apache.asterix.external.feed.runtime.FeedRuntime;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.external.util.FeedUtils;
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -48,7 +49,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private static final Logger LOGGER = Logger.getLogger(FeedMetaStoreNodePushable.class.getName());
 
     /** Runtime node pushable corresponding to the core feed operator **/
-    private final AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
+    private AbstractUnaryInputUnaryOutputOperatorNodePushable insertOperator;
 
     /**
      * A policy enforcer that ensures dyanmic decisions for a feed are taken
@@ -74,21 +75,17 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
      **/
     private final int partition;
 
-    private final int nPartitions;
-
     /** Type associated with the core feed operator **/
     private final FeedRuntimeType runtimeType = FeedRuntimeType.STORE;
 
     /** The (singleton) instance of IFeedManager **/
-    private final IFeedManager feedManager;
+    private final FeedManager feedManager;
 
     private FrameTupleAccessor fta;
 
     private final IHyracksTaskContext ctx;
 
-    private final String operandId;
-
-    private FeedRuntimeInputHandler inputSideHandler;
+    private final String targetId;
 
     private final ByteBuffer message = ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE);
 
@@ -98,18 +95,17 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicyProperties, String operationId,
+            Map<String, String> feedPolicyProperties, String targetId,
             FeedMetaOperatorDescriptor feedMetaOperatorDescriptor) throws HyracksDataException {
         this.ctx = ctx;
-        this.coreOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
+        this.insertOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
         this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
         this.partition = partition;
-        this.nPartitions = nPartitions;
         this.connectionId = feedConnectionId;
-        this.feedManager = (IFeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+        this.feedManager = (FeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getFeedManager();
-        this.operandId = operationId;
+        this.targetId = targetId;
         ctx.setSharedObject(message);
         this.recordDescProvider = recordDescProvider;
         this.opDesc = feedMetaOperatorDescriptor;
@@ -117,15 +113,10 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void open() throws HyracksDataException {
-        FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, partition, operandId);
+        FeedRuntimeId runtimeId = new FeedRuntimeId(connectionId.getFeedId(), runtimeType, partition, targetId);
         try {
-            feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
-            if (feedRuntime == null) {
-                initializeNewFeedRuntime(runtimeId);
-            } else {
-                reviveOldFeedRuntime(runtimeId);
-            }
-            coreOperator.open();
+            initializeNewFeedRuntime(runtimeId);
+            insertOperator.open();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to open feed store operator", e);
             throw new HyracksDataException(e);
@@ -133,39 +124,29 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     }
 
     private void initializeNewFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("Runtime not found for  " + runtimeId + " connection id " + connectionId);
-        }
-        this.fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
-        this.inputSideHandler = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
-                policyEnforcer.getFeedPolicyAccessor(), policyEnforcer.getFeedPolicyAccessor().bufferingEnabled(), fta,
-                recordDesc, feedManager, nPartitions);
-        if (coreOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable) {
-            AsterixLSMInsertDeleteOperatorNodePushable indexOp = (AsterixLSMInsertDeleteOperatorNodePushable) coreOperator;
+        fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
+        insertOperator.setOutputFrameWriter(0, writer, recordDesc);
+        if (insertOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable) {
+            AsterixLSMInsertDeleteOperatorNodePushable indexOp =
+                    (AsterixLSMInsertDeleteOperatorNodePushable) insertOperator;
             if (!indexOp.isPrimary()) {
-                inputSideHandler.setBufferingEnabled(false);
+                writer = insertOperator;
+                setupBasicRuntime(writer);
+                return;
             }
         }
-        setupBasicRuntime(inputSideHandler);
-    }
-
-    private void reviveOldFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
-        this.inputSideHandler = feedRuntime.getInputHandler();
-        this.fta = new FrameTupleAccessor(recordDesc);
-        coreOperator.setOutputFrameWriter(0, writer, recordDesc);
-        this.inputSideHandler.reset(nPartitions);
-        this.inputSideHandler.setCoreOperator(coreOperator);
-        feedRuntime.setMode(Mode.PROCESS);
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning(
-                    "Retreived state from the zombie instance from previous execution for " + runtimeType + " node.");
+        if (policyEnforcer.getFeedPolicyAccessor().bufferingEnabled()) {
+            writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, insertOperator,
+                    policyEnforcer.getFeedPolicyAccessor(), fta, feedManager.getFeedMemoryManager());
+        } else {
+            writer = new SyncFeedRuntimeInputHandler(ctx, insertOperator, fta);
         }
+        setupBasicRuntime(writer);
     }
 
-    private void setupBasicRuntime(FeedRuntimeInputHandler inputHandler) throws Exception {
-        coreOperator.setOutputFrameWriter(0, writer, recordDesc);
-        FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, partition, operandId);
-        feedRuntime = new FeedRuntime(runtimeId, inputHandler, writer);
+    private void setupBasicRuntime(IFrameWriter frameWriter) throws Exception {
+        FeedRuntimeId runtimeId = new FeedRuntimeId(connectionId.getFeedId(), runtimeType, partition, targetId);
+        feedRuntime = new FeedRuntime(runtimeId);
         feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, feedRuntime);
     }
 
@@ -173,7 +154,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         try {
             FeedUtils.processFeedMessage(buffer, message, fta);
-            inputSideHandler.nextFrame(buffer);
+            writer.nextFrame(buffer);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
@@ -182,68 +163,25 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void fail() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.info("Core Op:" + coreOperator.getDisplayName() + " fail ");
-        }
-        feedRuntime.setMode(Mode.FAIL);
-        coreOperator.fail();
+        writer.fail();
     }
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("CLOSE CALLED FOR " + this.feedRuntime.getRuntimeId());
-        }
-        boolean stalled = inputSideHandler.getMode().equals(Mode.STALL);
         try {
-            if (!stalled) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("SIGNALLING END OF DATA for " + this.feedRuntime.getRuntimeId() + " mode is "
-                            + inputSideHandler.getMode() + " WAITING ON " + coreOperator);
-                }
-                inputSideHandler.nextFrame(null); // signal end of data
-                while (!inputSideHandler.isFinished()) {
-                    synchronized (coreOperator) {
-                        if (inputSideHandler.isFinished()) {
-                            break;
-                        }
-                        coreOperator.wait();
-                    }
-                }
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("ABOUT TO CLOSE OPERATOR  " + coreOperator);
-                }
-            }
-            coreOperator.close();
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+            writer.close();
         } finally {
-            if (!stalled) {
-                deregister();
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("DEREGISTERING " + this.feedRuntime.getRuntimeId());
-                }
-            } else {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("NOT DEREGISTERING " + this.feedRuntime.getRuntimeId());
-                }
-            }
-            inputSideHandler.close();
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Ending Operator  " + this.feedRuntime.getRuntimeId());
-            }
+            deregister();
         }
     }
 
     private void deregister() {
-        if (feedRuntime != null) {
-            feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, feedRuntime.getRuntimeId());
-        }
+        feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, feedRuntime.getRuntimeId());
     }
 
     @Override
     public void flush() throws HyracksDataException {
-        inputSideHandler.flush();
+        writer.flush();
     }
 
 }

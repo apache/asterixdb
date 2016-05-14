@@ -16,24 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+package org.apache.asterix.external.feed.dataflow;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
+import java.nio.ByteBuffer;
+import java.util.concurrent.LinkedBlockingDeque;
 
-public interface IFeedMetadataManager {
+import rx.functions.Action1;
 
-    /**
-     * @param feedConnectionId
-     *            connection id corresponding to the feed connection
-     * @param tuple
-     *            the erroneous tuple that raised an exception
-     * @param message
-     *            the message corresponding to the exception being raised
-     * @param feedManager
-     * @throws AsterixException
-     */
-    public void logTuple(FeedConnectionId feedConnectionId, String tuple, String message, IFeedManager feedManager)
-            throws AsterixException;
+public class FrameAction implements Action1<ByteBuffer> {
+    private final LinkedBlockingDeque<ByteBuffer> inbox;
+    private ByteBuffer frame;
 
+    public FrameAction(LinkedBlockingDeque<ByteBuffer> inbox) {
+        this.inbox = inbox;
+    }
+
+    @Override
+    public void call(ByteBuffer freeFrame) {
+        freeFrame.put(frame);
+        inbox.add(freeFrame);
+        synchronized (this) {
+            notify();
+        }
+    }
+
+    public ByteBuffer getFrame() {
+        return frame;
+    }
+
+    public void setFrame(ByteBuffer frame) {
+        this.frame = frame;
+    }
+
+    public int getSize() {
+        return frame.capacity();
+    }
 }

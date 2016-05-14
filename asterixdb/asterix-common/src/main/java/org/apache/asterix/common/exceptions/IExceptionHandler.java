@@ -16,24 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+package org.apache.asterix.common.exceptions;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 
-import org.apache.asterix.external.feed.dataflow.DataBucket;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IFeedFrameHandler {
+/**
+ * Handles an exception encountered during processing of a data frame.
+ * In the case when the exception is of type {@code FrameDataException}, the causing
+ * tuple is logged and a new frame with tuple after the exception-generating tuple
+ * is returned. This functionality is used during feed ingestion to bypass an exception
+ * generating tuple and thus avoid the data flow from terminating
+ */
+public interface IExceptionHandler {
 
-    public void handleFrame(ByteBuffer frame) throws HyracksDataException, InterruptedException;
-
-    public void handleDataBucket(DataBucket bucket) throws InterruptedException;
-
-    public void close();
-
-    public Iterator<ByteBuffer> replayData() throws HyracksDataException;
-
-    public String getSummary();
-
+    /**
+     * @param e
+     *            the exception that needs to be handled
+     * @param frame
+     *            the frame that was being processed when exception occurred
+     * @return returns a new frame with tuples after the exception generating tuple
+     * @throws HyracksDataException
+     */
+    public ByteBuffer handle(HyracksDataException e, ByteBuffer frame);
 }

@@ -20,11 +20,8 @@ package org.apache.asterix.external.feed.api;
 
 import java.util.Map;
 
-import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-
 public interface ISubscriberRuntime {
 
     public Map<String, String> getFeedPolicy();
 
-    public FeedFrameCollector getFrameCollector();
 }

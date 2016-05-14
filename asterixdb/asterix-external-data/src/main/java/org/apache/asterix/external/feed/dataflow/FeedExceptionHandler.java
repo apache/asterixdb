@@ -24,12 +24,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.FrameDataException;
-import org.apache.asterix.external.feed.api.IExceptionHandler;
-import org.apache.asterix.external.feed.api.IFeedManager;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.common.exceptions.IExceptionHandler;
 import org.apache.asterix.external.util.FeedFrameUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
@@ -37,12 +34,11 @@ public class FeedExceptionHandler implements IExceptionHandler {
 
     private static Logger LOGGER = Logger.getLogger(FeedExceptionHandler.class.getName());
 
-    //TODO: Enable logging
+    // TODO: Enable logging
     private final IHyracksTaskContext ctx;
     private final FrameTupleAccessor fta;
 
-    public FeedExceptionHandler(IHyracksTaskContext ctx, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedManager feedManager, FeedConnectionId connectionId) {
+    public FeedExceptionHandler(IHyracksTaskContext ctx, FrameTupleAccessor fta) {
         this.ctx = ctx;
         this.fta = fta;
     }
@@ -53,20 +49,21 @@ public class FeedExceptionHandler implements IExceptionHandler {
     }
 
     @Override
-    public ByteBuffer handleException(Exception e, ByteBuffer frame) {
+    public ByteBuffer handle(HyracksDataException th, ByteBuffer frame) {
         try {
-            if (e instanceof FrameDataException) {
+            if (th instanceof FrameDataException) {
                 fta.reset(frame);
-                FrameDataException fde = (FrameDataException) e;
+                FrameDataException fde = (FrameDataException) th;
                 int tupleIndex = fde.getTupleIndex();
                 try {
-                    logExceptionCausingTuple(tupleIndex, e);
+                    logExceptionCausingTuple(tupleIndex, th);
                 } catch (Exception ex) {
-                    ex.addSuppressed(e);
+                    ex.addSuppressed(th);
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Unable to log exception causing tuple due to..." + ex.getMessage());
                     }
                 }
+                // TODO: Improve removeBadTuple. Right now, it creates lots of objects
                 return FeedFrameUtil.removeBadTuple(ctx, tupleIndex, fta);
             } else {
                 return null;
@@ -80,6 +77,8 @@ public class FeedExceptionHandler implements IExceptionHandler {
         }
     }
 
-    private void logExceptionCausingTuple(int tupleIndex, Exception e) throws HyracksDataException, AsterixException {
+    // TODO: Fix logging of exceptions
+    private void logExceptionCausingTuple(int tupleIndex, Throwable e) throws HyracksDataException, AsterixException {
+        LOGGER.log(Level.WARNING, e.getMessage(), e);
     }
 }

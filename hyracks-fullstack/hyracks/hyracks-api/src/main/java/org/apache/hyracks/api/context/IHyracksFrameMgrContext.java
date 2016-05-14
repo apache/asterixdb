@@ -25,19 +25,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IHyracksFrameMgrContext {
 
-    int getInitialFrameSize();
+    public int getInitialFrameSize();
 
-    ByteBuffer allocateFrame() throws HyracksDataException;
+    public ByteBuffer allocateFrame() throws HyracksDataException;
 
-    ByteBuffer allocateFrame(int bytes) throws HyracksDataException;
+    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException;
 
-    ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newSizeInBytes, boolean copyOldData)
+    public ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newSizeInBytes, boolean copyOldData)
             throws HyracksDataException;
 
-    /**
-     * The caller should call this method to return the pre-allocated frames.
-     *
-     * @param bytes
-     */
-    void deallocateFrames(int bytes);
+    public void deallocateFrames(int bytes);
 }

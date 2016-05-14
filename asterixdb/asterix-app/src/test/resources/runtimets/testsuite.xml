@@ -28,6 +28,28 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries"
              QueryFileExtension=".aql">
+  <test-group name="external-library">
+    <test-case FilePath="external-library">
+      <compilation-unit name="typed_adapter">
+        <output-dir compare="Text">typed_adapter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="classad-parser-new">
+        <output-dir compare="Text">classad-parser-new</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="classad-parser-old">
+        <output-dir compare="Text">classad-parser-old</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="getCapital">
+        <output-dir compare="Text">getCapital</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="external">
     <test-case FilePath="external">
       <compilation-unit name="invalid-format">
@@ -65,28 +87,6 @@
     <test-case FilePath="external-indexing">
       <compilation-unit name="leftouterjoin-rtree">
         <output-dir compare="Text">leftouterjoin-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="external-library">
-    <test-case FilePath="external-library">
-      <compilation-unit name="typed_adapter">
-        <output-dir compare="Text">typed_adapter</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="classad-parser-new">
-        <output-dir compare="Text">classad-parser-new</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="classad-parser-old">
-        <output-dir compare="Text">classad-parser-old</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="getCapital">
-        <output-dir compare="Text">getCapital</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

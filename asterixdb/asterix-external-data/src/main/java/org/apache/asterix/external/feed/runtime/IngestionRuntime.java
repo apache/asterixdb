@@ -21,70 +21,66 @@ package org.apache.asterix.external.feed.runtime;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 
-import org.apache.asterix.external.api.IAdapterRuntimeManager;
+import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-import org.apache.asterix.external.feed.dataflow.FrameDistributor;
 import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
 
 public class IngestionRuntime extends SubscribableRuntime {
 
-    private final IAdapterRuntimeManager adapterRuntimeManager;
+    private final AdapterRuntimeManager adapterRuntimeManager;
     private final IHyracksTaskContext ctx;
+    private int numSubscribers = 0;
 
     public IngestionRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
-            RecordDescriptor recordDesc, IAdapterRuntimeManager adaptorRuntimeManager, IHyracksTaskContext ctx) {
-        super(feedId, runtimeId, null, feedWriter, recordDesc);
+            AdapterRuntimeManager adaptorRuntimeManager, IHyracksTaskContext ctx) {
+        super(feedId, runtimeId, feedWriter);
         this.adapterRuntimeManager = adaptorRuntimeManager;
         this.ctx = ctx;
     }
 
     @Override
-    public void subscribeFeed(FeedPolicyAccessor fpa, CollectionRuntime collectionRuntime) throws Exception {
-        FeedFrameCollector reader = dWriter.subscribeFeed(fpa, collectionRuntime.getInputHandler(),
-                collectionRuntime.getConnectionId());
-        collectionRuntime.setFrameCollector(reader);
-
-        if (dWriter.getDistributionMode().equals(FrameDistributor.DistributionMode.SINGLE)) {
+    public synchronized void subscribe(CollectionRuntime collectionRuntime) throws HyracksDataException {
+        FeedFrameCollector collector = collectionRuntime.getFrameCollector();
+        dWriter.subscribe(collector);
+        subscribers.add(collectionRuntime);
+        if (numSubscribers == 0) {
             ctx.setSharedObject(ByteBuffer.allocate(MessagingFrameTupleAppender.MAX_MESSAGE_SIZE));
+            collectionRuntime.getCtx().setSharedObject(ctx.getSharedObject());
             adapterRuntimeManager.start();
         }
-        subscribers.add(collectionRuntime);
+        numSubscribers++;
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Subscribed feed collection [" + collectionRuntime + "] to " + this);
         }
-        collectionRuntime.getCtx().setSharedObject(ctx.getSharedObject());
     }
 
     @Override
-    public void unsubscribeFeed(CollectionRuntime collectionRuntime) throws Exception {
-        if (dWriter.getDistributionMode().equals(FrameDistributor.DistributionMode.SINGLE)) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Stopping adapter for " + this + " as no more registered collectors");
-            }
+    public synchronized void unsubscribe(CollectionRuntime collectionRuntime) throws InterruptedException {
+        numSubscribers--;
+        if (numSubscribers == 0) {
             adapterRuntimeManager.stop();
-        } else {
-            dWriter.unsubscribeFeed(collectionRuntime.getInputHandler());
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Unsubscribed feed collection [" + collectionRuntime + "] from " + this);
         }
         subscribers.remove(collectionRuntime);
     }
 
-    public void endOfFeed() throws InterruptedException {
-        dWriter.notifyEndOfFeed();
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Notified End Of Feed  [" + this + "]");
-        }
+    public AdapterRuntimeManager getAdapterRuntimeManager() {
+        return adapterRuntimeManager;
     }
 
-    public IAdapterRuntimeManager getAdapterRuntimeManager() {
-        return adapterRuntimeManager;
+    public void terminate() {
+        for (ISubscriberRuntime subscriber : subscribers) {
+            try {
+                unsubscribe((CollectionRuntime) subscriber);
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Excpetion in unsubscribing " + subscriber + " message " + e.getMessage());
+                }
+            }
+        }
     }
 
 }

@@ -22,9 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.external.api.IAdapterRuntimeManager;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
-import org.apache.asterix.external.feed.api.IIntakeProgressTracker;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.log4j.Logger;
@@ -32,7 +30,7 @@ import org.apache.log4j.Logger;
 /**
  * This class manages the execution of an adapter within a feed
  */
-public class AdapterRuntimeManager implements IAdapterRuntimeManager {
+public class AdapterRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterRuntimeManager.class.getName());
 
@@ -40,46 +38,37 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 
     private final FeedAdapter feedAdapter;         // The adapter
 
-    private final IIntakeProgressTracker tracker;   // Not used. needs to be fixed soon.
-
-    private final AdapterExecutor adapterExecutor;  // The executor for the adapter <-- two way visibility -->
+    private final AdapterExecutor adapterExecutor;  // The executor for the adapter
 
     private final int partition;                    // The partition number
 
     private final ExecutorService executorService;  // Executor service to run/shutdown the adapter executor
 
-    private IngestionRuntime ingestionRuntime;      // Runtime representing the ingestion stage of a feed <-- two way
-                                                    // visibility -->
+    private IngestionRuntime ingestionRuntime;      // Runtime representing the ingestion stage of a feed
 
-    private State state;                            // One of {ACTIVE_INGESTION, NACTIVE_INGESTION, FINISHED_INGESTION,
-                                                    // FAILED_INGESTION}
+    private volatile boolean done = false;
+    private volatile boolean failed = false;
 
-    public AdapterRuntimeManager(FeedId feedId, FeedAdapter feedAdapter, IIntakeProgressTracker tracker,
-            DistributeFeedFrameWriter writer, int partition) {
+    public AdapterRuntimeManager(FeedId feedId, FeedAdapter feedAdapter, DistributeFeedFrameWriter writer,
+            int partition) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
-        this.tracker = tracker;
         this.partition = partition;
         this.adapterExecutor = new AdapterExecutor(partition, writer, feedAdapter, this);
         this.executorService = Executors.newSingleThreadExecutor();
-        this.state = State.INACTIVE_INGESTION;
     }
 
-    @Override
-    public void start() throws Exception {
-        state = State.ACTIVE_INGESTION;
+    public void start() {
         executorService.execute(adapterExecutor);
     }
 
-    @Override
-    public void stop() {
+    public void stop() throws InterruptedException {
         boolean stopped = false;
         try {
             stopped = feedAdapter.stop();
         } catch (Exception exception) {
             LOGGER.error("Unable to stop adapter " + feedAdapter, exception);
         } finally {
-            state = State.FINISHED_INGESTION;
             if (stopped) {
                 // stop() returned true, we wait for the process termination
                 executorService.shutdown();
@@ -87,6 +76,7 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
                     executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     LOGGER.error("Interrupted while waiting for feed adapter to finish its work", e);
+                    throw e;
                 }
             } else {
                 // stop() returned false, we try to force shutdown
@@ -96,7 +86,6 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
         }
     }
 
-    @Override
     public FeedId getFeedId() {
         return feedId;
     }
@@ -106,30 +95,14 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
         return feedId + "[" + partition + "]";
     }
 
-    @Override
     public FeedAdapter getFeedAdapter() {
         return feedAdapter;
-    }
-
-    public IIntakeProgressTracker getTracker() {
-        return tracker;
-    }
-
-    @Override
-    public synchronized State getState() {
-        return state;
-    }
-
-    @Override
-    public synchronized void setState(State state) {
-        this.state = state;
     }
 
     public AdapterExecutor getAdapterExecutor() {
         return adapterExecutor;
     }
 
-    @Override
     public int getPartition() {
         return partition;
     }
@@ -138,9 +111,19 @@ public class AdapterRuntimeManager implements IAdapterRuntimeManager {
         return ingestionRuntime;
     }
 
-    @Override
-    public IIntakeProgressTracker getProgressTracker() {
-        return tracker;
+    public boolean isFailed() {
+        return failed;
     }
 
+    public void setFailed(boolean failed) {
+        this.failed = failed;
+    }
+
+    public boolean isDone() {
+        return done;
+    }
+
+    public void setDone(boolean done) {
+        this.done = done;
+    }
 }

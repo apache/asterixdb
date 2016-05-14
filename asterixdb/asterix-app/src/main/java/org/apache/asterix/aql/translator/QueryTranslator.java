@@ -40,7 +40,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.app.external.CentralFeedManager;
 import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.app.external.FeedJoint;
 import org.apache.asterix.app.external.FeedLifecycleListener;
@@ -268,8 +267,7 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
             validateOperation(activeDefaultDataverse, stmt);
             rewriteStatement(stmt); // Rewrite the statement's AST.
-            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse,
-                    CentralFeedManager.getInstance());
+            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);
             metadataProvider.setWriterFactory(writerFactory);
             metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
@@ -2366,18 +2364,12 @@ public class QueryTranslator extends AbstractLangTranslator {
                 throw new AsterixException(
                         "Unknown dataset :" + cfs.getDatasetName().getValue() + " in dataverse " + dataverseName);
             }
-
             Pair<JobSpecification, Boolean> specDisconnectType = FeedOperations
                     .buildDisconnectFeedJobSpec(metadataProvider, connectionId);
             JobSpecification jobSpec = specDisconnectType.first;
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             JobUtils.runJob(hcc, jobSpec, true);
-
-            if (!specDisconnectType.second) {
-                CentralFeedManager.getInstance().getFeedLoadManager().removeFeedActivity(connectionId);
-                FeedLifecycleListener.INSTANCE.reportPartialDisconnection(connectionId);
-            }
             eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_COLLECT_ENDED);
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -2418,9 +2410,7 @@ public class QueryTranslator extends AbstractLangTranslator {
         String dataset = feedConnectionId.getDatasetName();
         MetadataLockManager.INSTANCE.subscribeFeedBegin(dataverse, dataverse + "." + dataset,
                 dataverse + "." + feedConnectionId.getFeedId().getFeedName());
-
         try {
-
             JobSpecification alteredJobSpec = FeedMetadataUtil.alterJobSpecificationForFeed(compiled, feedConnectionId,
                     bfs.getSubscriptionRequest().getPolicyParameters());
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

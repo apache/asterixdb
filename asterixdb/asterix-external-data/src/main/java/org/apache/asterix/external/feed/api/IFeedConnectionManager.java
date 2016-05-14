@@ -37,7 +37,7 @@ public interface IFeedConnectionManager {
      * @param feedRuntime
      * @throws Exception
      */
-    public void registerFeedRuntime(FeedConnectionId connectionId, FeedRuntime feedRuntime) throws Exception;
+    public void registerFeedRuntime(FeedConnectionId connectionId, FeedRuntime feedRuntime);
 
     /**
      * Obtain feed runtime corresponding to a feedRuntimeId

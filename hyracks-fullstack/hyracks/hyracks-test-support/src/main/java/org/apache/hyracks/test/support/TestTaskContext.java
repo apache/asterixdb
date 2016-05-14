@@ -134,7 +134,12 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception {
+    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) {
+
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) {
     }
 
     @Override

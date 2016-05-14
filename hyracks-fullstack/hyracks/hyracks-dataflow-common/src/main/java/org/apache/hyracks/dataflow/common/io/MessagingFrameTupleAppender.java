@@ -52,19 +52,16 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
 
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
-        if (tupleCount > 0) {
-            appendMessage();
-            getBuffer().clear();
-            outWriter.nextFrame(getBuffer());
-            if (clearFrame) {
-                frame.reset();
-                reset(getBuffer(), true);
-            }
+        appendMessage((ByteBuffer) ctx.getSharedObject());
+        getBuffer().clear();
+        outWriter.nextFrame(getBuffer());
+        if (clearFrame) {
+            frame.reset();
+            reset(getBuffer(), true);
         }
     }
 
-    public void appendMessage() {
-        ByteBuffer message = (ByteBuffer) ctx.getSharedObject();
+    private void appendMessage(ByteBuffer message) {
         System.arraycopy(message.array(), message.position(), array, tupleDataEndOffset, message.limit());
         tupleDataEndOffset += message.limit();
         IntSerDeUtils.putInt(getBuffer().array(),

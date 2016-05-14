@@ -46,6 +46,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
         this.nodeId = nodeId;
     }
 
+    @Override
     public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId) {
         return feedRuntimeManagers.get(feedId);
     }
@@ -67,8 +68,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public synchronized void registerFeedRuntime(FeedConnectionId connectionId, FeedRuntime feedRuntime)
-            throws Exception {
+    public synchronized void registerFeedRuntime(FeedConnectionId connectionId, FeedRuntime feedRuntime) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         if (runtimeMgr == null) {
             runtimeMgr = new FeedRuntimeManager(connectionId, this);

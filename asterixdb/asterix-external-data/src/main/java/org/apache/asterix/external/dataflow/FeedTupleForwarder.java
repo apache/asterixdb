@@ -95,13 +95,30 @@ public class FeedTupleForwarder implements ITupleForwarder {
 
     @Override
     public void close() throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(frame.getBuffer(), writer);
-        }
+        Throwable throwable = null;
         try {
-            feedLogManager.close();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
+            if (appender.getTupleCount() > 0) {
+                FrameUtils.flushFrame(frame.getBuffer(), writer);
+            }
+        } catch (Throwable th) {
+            throwable = th;
+            throw th;
+        } finally {
+            try {
+                feedLogManager.close();
+            } catch (IOException e) {
+                if (throwable != null) {
+                    throwable.addSuppressed(e);
+                } else {
+                    throw new HyracksDataException(e);
+                }
+            } catch (Throwable th) {
+                if (throwable != null) {
+                    throwable.addSuppressed(th);
+                } else {
+                    throw th;
+                }
+            }
         }
     }
 

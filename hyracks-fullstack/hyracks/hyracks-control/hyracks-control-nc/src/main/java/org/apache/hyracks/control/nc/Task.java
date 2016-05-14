@@ -384,6 +384,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
+    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, deploymentId);
+    }
+
+    @Override
     public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception {
         this.ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), deploymentId);
     }

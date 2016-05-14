@@ -23,10 +23,7 @@ import java.util.Map;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-import org.apache.asterix.external.feed.dataflow.FeedFrameCollector.State;
-import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -40,20 +37,20 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
     private final FeedConnectionId connectionId;            // [Dataverse - Feed - Dataset]
     private final ISubscribableRuntime sourceRuntime;       // Runtime that provides the data
     private final Map<String, String> feedPolicy;           // Policy associated with the feed
-    private FeedFrameCollector frameCollector;              // Collector that can be plugged into a frame distributor
+    private final FeedFrameCollector frameCollector;        // Collector that can be plugged into a frame distributor
     private final IHyracksTaskContext ctx;
 
-    public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter, ISubscribableRuntime sourceRuntime,
-            Map<String, String> feedPolicy, IHyracksTaskContext ctx) {
-        super(runtimeId, inputSideHandler, outputSideWriter);
+    public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ISubscribableRuntime sourceRuntime,
+            Map<String, String> feedPolicy, IHyracksTaskContext ctx, FeedFrameCollector frameCollector) {
+        super(runtimeId);
         this.connectionId = connectionId;
         this.sourceRuntime = sourceRuntime;
         this.feedPolicy = feedPolicy;
         this.ctx = ctx;
+        this.frameCollector = frameCollector;
     }
 
-    public State waitTillCollectionOver() throws InterruptedException {
+    public void waitTillCollectionOver() throws InterruptedException {
         if (!(isCollectionOver())) {
             synchronized (frameCollector) {
                 while (!isCollectionOver()) {
@@ -61,17 +58,11 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
                 }
             }
         }
-        return frameCollector.getState();
     }
 
     private boolean isCollectionOver() {
         return frameCollector.getState().equals(FeedFrameCollector.State.FINISHED)
                 || frameCollector.getState().equals(FeedFrameCollector.State.HANDOVER);
-    }
-
-    @Override
-    public void setMode(Mode mode) {
-        getInputHandler().setMode(mode);
     }
 
     @Override
@@ -87,11 +78,6 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
         return sourceRuntime;
     }
 
-    public void setFrameCollector(FeedFrameCollector frameCollector) {
-        this.frameCollector = frameCollector;
-    }
-
-    @Override
     public FeedFrameCollector getFrameCollector() {
         return frameCollector;
     }

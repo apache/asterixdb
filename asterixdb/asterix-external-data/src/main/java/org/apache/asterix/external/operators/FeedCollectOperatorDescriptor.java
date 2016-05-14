@@ -19,17 +19,14 @@
 package org.apache.asterix.external.operators;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.external.feed.api.IFeedManager;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.api.IFeedSubscriptionManager;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.runtime.IngestionRuntime;
-import org.apache.asterix.external.feed.runtime.SubscribableFeedRuntimeId;
+import org.apache.asterix.external.feed.management.FeedManager;
+import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -48,7 +45,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(FeedCollectOperatorDescriptor.class.getName());
 
     /** The type associated with the ADM data output from (the feed adapter OR the compute operator) */
     private final IAType outputType;
@@ -58,9 +54,6 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
 
     /** Map representation of policy parameters */
     private final Map<String, String> feedPolicyProperties;
-
-    /** The (singleton) instance of {@code IFeedIngestionManager} **/
-    private IFeedSubscriptionManager subscriptionManager;
 
     /** The source feed from which the feed derives its data from. **/
     private final FeedId sourceFeedId;
@@ -72,7 +65,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
             ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicyProperties,
             FeedRuntimeType subscriptionLocation) {
         super(spec, 0, 1);
-        recordDescriptors[0] = rDesc;
+        this.recordDescriptors[0] = rDesc;
         this.outputType = atype;
         this.connectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
@@ -84,22 +77,11 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
-        this.subscriptionManager = ((IFeedManager) runtimeCtx.getFeedManager()).getFeedSubscriptionManager();
-        ISubscribableRuntime sourceRuntime = null;
-        SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
-                subscriptionLocation, partition);
-        switch (subscriptionLocation) {
-            case INTAKE:
-                sourceRuntime = getIntakeRuntime(feedSubscribableRuntimeId);
-                break;
-            case COMPUTE:
-                sourceRuntime = subscriptionManager.getSubscribableRuntime(feedSubscribableRuntimeId);
-                break;
-            default:
-                throw new HyracksDataException("Can't subscirbe to FeedRuntime with Type: " + subscriptionLocation);
-        }
+        FeedManager feedManager = (FeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject()).getFeedManager();
+        FeedRuntimeId sourceRuntimeId =
+                new FeedRuntimeId(sourceFeedId, subscriptionLocation, partition, FeedRuntimeId.DEFAULT_TARGET_ID);
+        ISubscribableRuntime sourceRuntime = feedManager.getSubscribableRuntime(sourceRuntimeId);
         return new FeedCollectOperatorNodePushable(ctx, sourceFeedId, connectionId, feedPolicyProperties, partition,
                 nPartitions, sourceRuntime);
     }
@@ -122,10 +104,6 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
 
     public FeedId getSourceFeedId() {
         return sourceFeedId;
-    }
-
-    private IngestionRuntime getIntakeRuntime(SubscribableFeedRuntimeId subscribableRuntimeId) {
-        return (IngestionRuntime) subscriptionManager.getSubscribableRuntime(subscribableRuntimeId);
     }
 
     public FeedRuntimeType getSubscriptionLocation() {

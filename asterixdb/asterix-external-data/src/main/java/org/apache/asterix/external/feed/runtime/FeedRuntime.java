@@ -18,30 +18,15 @@
  */
 package org.apache.asterix.external.feed.runtime;
 
-import org.apache.asterix.external.feed.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.external.feed.api.IFeedRuntime;
-import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
-import org.apache.hyracks.api.comm.IFrameWriter;
 
 public class FeedRuntime implements IFeedRuntime {
 
     /** A unique identifier for the runtime **/
     protected final FeedRuntimeId runtimeId;
 
-    /** The output frame writer associated with the runtime **/
-    protected IFrameWriter frameWriter;
-
-    /** The pre-processor associated with the runtime **/
-    protected FeedRuntimeInputHandler inputHandler;
-
-    public FeedRuntime(FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter) {
-        this.runtimeId = runtimeId;
-        this.frameWriter = frameWriter;
-        this.inputHandler = inputHandler;
-    }
-
-    public void setFrameWriter(IFeedOperatorOutputSideHandler frameWriter) {
-        this.frameWriter = frameWriter;
+    public FeedRuntime(FeedRuntimeId runtimeId) {
+        this.runtimeId = runtimeId;;
     }
 
     @Override
@@ -50,26 +35,7 @@ public class FeedRuntime implements IFeedRuntime {
     }
 
     @Override
-    public IFrameWriter getFeedFrameWriter() {
-        return frameWriter;
-    }
-
-    @Override
     public String toString() {
         return runtimeId.toString();
     }
-
-    @Override
-    public FeedRuntimeInputHandler getInputHandler() {
-        return inputHandler;
-    }
-
-    public Mode getMode() {
-        return inputHandler != null ? inputHandler.getMode() : Mode.PROCESS;
-    }
-
-    public void setMode(Mode mode) {
-        this.inputHandler.setMode(mode);
-    }
-
 }

@@ -21,8 +21,6 @@ package org.apache.asterix.app.external;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
@@ -31,7 +29,6 @@ import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.feed.api.IFeedWork;
 import org.apache.asterix.external.feed.api.IFeedWorkEventListener;
-import org.apache.asterix.external.feed.management.FeedCollectInfo;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest.ConnectionStatus;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
@@ -39,7 +36,8 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.hyracks.api.job.JobId;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * A collection of feed management related task, each represented as an implementation of {@code IFeedWork}.
@@ -81,7 +79,8 @@ public class FeedWorkCollection {
             @Override
             public void run() {
                 try {
-                    PrintWriter writer = new PrintWriter(System.out, true);
+                    //TODO(amoudi): route PrintWriter to log file
+                    PrintWriter writer = new PrintWriter(System.err, true);
                     SessionConfig pc = new SessionConfig(writer, OutputFormat.ADM);
                     DataverseDecl dataverseDecl = new DataverseDecl(
                             new Identifier(request.getReceivingFeedId().getDataverse()));
@@ -92,12 +91,12 @@ public class FeedWorkCollection {
                     QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
                     translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                             QueryTranslator.ResultDelivery.SYNC);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isEnabledFor(Level.INFO)) {
                         LOGGER.info("Submitted connection requests for execution: " + request);
                     }
                 } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("Exception in executing " + request);
+                    if (LOGGER.isEnabledFor(Level.FATAL)) {
+                        LOGGER.fatal("Exception in executing " + request);
                     }
                 }
             }
@@ -107,8 +106,8 @@ public class FeedWorkCollection {
 
             @Override
             public void workFailed(IFeedWork work, Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning(" Feed subscription request " + ((SubscribeFeedWork) work).request
+                if (LOGGER.isEnabledFor(Level.WARN)) {
+                    LOGGER.warn(" Feed subscription request " + ((SubscribeFeedWork) work).request
                             + " failed with exception " + e);
                 }
             }
@@ -116,8 +115,8 @@ public class FeedWorkCollection {
             @Override
             public void workCompleted(IFeedWork work) {
                 ((SubscribeFeedWork) work).request.setSubscriptionStatus(ConnectionStatus.ACTIVE);
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.warning(" Feed subscription request " + ((SubscribeFeedWork) work).request + " completed ");
+                if (LOGGER.isEnabledFor(Level.INFO)) {
+                    LOGGER.info(" Feed subscription request " + ((SubscribeFeedWork) work).request + " completed ");
                 }
             }
 
@@ -131,75 +130,5 @@ public class FeedWorkCollection {
         public String toString() {
             return "SubscribeFeedWork for [" + request + "]";
         }
-
-    }
-
-    /**
-     * The task of activating a set of feeds.
-     */
-    public static class ActivateFeedWork implements IFeedWork {
-
-        private final Runnable runnable;
-
-        @Override
-        public Runnable getRunnable() {
-            return runnable;
-        }
-
-        public ActivateFeedWork(List<FeedCollectInfo> feedsToRevive) {
-            this.runnable = new FeedsActivateRunnable(feedsToRevive);
-        }
-
-        public ActivateFeedWork() {
-            this.runnable = new FeedsActivateRunnable();
-        }
-
-        private static class FeedsActivateRunnable implements Runnable {
-
-            private List<FeedCollectInfo> feedsToRevive;
-            private Mode mode;
-
-            public enum Mode {
-                REVIVAL_POST_NODE_REJOIN
-            }
-
-            public FeedsActivateRunnable(List<FeedCollectInfo> feedsToRevive) {
-                this.feedsToRevive = feedsToRevive;
-            }
-
-            public FeedsActivateRunnable() {
-            }
-
-            @Override
-            public void run() {
-                switch (mode) {
-                    case REVIVAL_POST_NODE_REJOIN:
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e1) {
-                            if (LOGGER.isLoggable(Level.INFO)) {
-                                LOGGER.info("Attempt to resume feed interrupted");
-                            }
-                            throw new IllegalStateException(e1.getMessage());
-                        }
-                        for (FeedCollectInfo finfo : feedsToRevive) {
-                            try {
-                                JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.jobSpec);
-                                if (LOGGER.isLoggable(Level.INFO)) {
-                                    LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
-                                    LOGGER.info("Job:" + finfo.jobSpec);
-                                }
-                            } catch (Exception e) {
-                                if (LOGGER.isLoggable(Level.WARNING)) {
-                                    LOGGER.warning(
-                                            "Unable to resume feed " + finfo.feedConnectionId + " " + e.getMessage());
-                                }
-                            }
-                        }
-                }
-            }
-
-        }
-
     }
 }
