@@ -25,8 +25,8 @@ import org.apache.zookeeper.ZooKeeper;
 
 //A zookeeper watcher that watches the change in the state of the cluster
 public class ClusterStateWatcher implements Watcher {
-    private static Integer mutex;
-    private static ZooKeeper zk;
+    private final Object mutex = new Object();
+    private final ZooKeeper zk;
     private String clusterStatePath;
     private boolean done = false;
     private ClusterState clusterState = ClusterState.STARTING;
@@ -35,12 +35,9 @@ public class ClusterStateWatcher implements Watcher {
     private static Logger LOGGER = Logger.getLogger(ClusterStateWatcher.class.getName());
 
     public ClusterStateWatcher(ZooKeeper zk, String clusterName) {
-        if (mutex == null) {
-            mutex = new Integer(-1);
-        }
         this.clusterStatePath = ZooKeeperService.ASTERIX_INSTANCE_BASE_PATH + File.separator + clusterName
                 + ZooKeeperService.ASTERIX_INSTANCE_STATE_PATH;
-        ClusterStateWatcher.zk = zk;
+        this.zk = zk;
     }
 
     public ClusterState waitForClusterStart() throws Exception {
