@@ -139,7 +139,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         VariableExpr columnAlias = new VariableExpr(
                 SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(columnAlias));
+        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstitution(columnAlias));
         if (overwriteWithGbyKeyVarRefs) {
             if (gbyKey != null) {
                 projection.setExpression(gbyKey);
@@ -233,7 +233,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
                     if (overwriteWithGbyKeyVarRefs) {
                         // Rewrites the field value expression by the mapped grouping key
                         // (for the column alias) if there exists such a mapping.
-                        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(columnAlias));
+                        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstitution(columnAlias));
                         if (gbyKey != null) {
                             binding.setRightExpr(gbyKey);
                         }
@@ -335,7 +335,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
             }
             if (oldGbyExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
                 VariableExpr oldGbyVarExpr = (VariableExpr) oldGbyExpr;
-                if (env.findSubstituion(oldGbyVarExpr) != null) {
+                if (env.findSubstitution(oldGbyVarExpr) != null) {
                     // Re-mapping that needs to be added.
                     oldGbyExprsToNewGbyVarMap.put(oldGbyVarExpr, gbyVarExpr.getVar());
                 }
