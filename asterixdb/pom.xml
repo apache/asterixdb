@@ -344,6 +344,11 @@
     </profile>
     <profile>
       <id>asterix-release</id>
+      <activation>
+        <file>
+          <exists>src/main/assembly/source.xml</exists>
+        </file>
+      </activation>
       <build>
         <plugins>
           <plugin>
