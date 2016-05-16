@@ -1712,9 +1712,9 @@ including [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) and
 
 * Example:
 
-        let $itv1 := interval-from-date("2010-10-30", "2010-12-21")
-        let $itv2 := interval-from-datetime("2012-06-26T01:01:01.111", "2012-07-27T02:02:02.222")
-        let $itv3 := interval-from-time("12:32:38", "20:29:20")
+        let $itv1 := interval("2010-10-30", "2010-12-21")
+        let $itv2 := interval("2012-06-26T01:01:01.111", "2012-07-27T02:02:02.222")
+        let $itv3 := interval("12:32:38", "20:29:20")
 
         return { "dr1" : duration-from-interval($itv1),
           "dr2" : duration-from-interval($itv2),
@@ -2031,12 +2031,12 @@ parse-date/parse-time/parse-datetime(date,formatting_expression)
 
  * Example:
 
-        { "overlap1": get-overlapping-interval(interval-from-time(time("11:23:39"), time("18:27:19")), interval-from-time(time("12:23:39"), time("23:18:00"))),
-          "overlap2": get-overlapping-interval(interval-from-time(time("12:23:39"), time("18:27:19")), interval-from-time(time("07:19:39"), time("09:18:00"))),
-          "overlap3": get-overlapping-interval(interval-from-date(date("1980-11-30"), date("1999-09-09")), interval-from-date(date("2013-01-01"), date("2014-01-01"))),
-          "overlap4": get-overlapping-interval(interval-from-date(date("1980-11-30"), date("2099-09-09")), interval-from-date(date("2013-01-01"), date("2014-01-01"))),
-          "overlap5": get-overlapping-interval(interval-from-datetime(datetime("1844-03-03T11:19:39"), datetime("2000-10-30T18:27:19")), interval-from-datetime(datetime("1989-03-04T12:23:39"), datetime("2009-10-10T23:18:00"))),
-          "overlap6": get-overlapping-interval(interval-from-datetime(datetime("1989-03-04T12:23:39"), datetime("2000-10-30T18:27:19")), interval-from-datetime(datetime("1844-03-03T11:19:39"), datetime("1888-10-10T23:18:00")))  }
+        { "overlap1": get-overlapping-interval(interval(time("11:23:39"), time("18:27:19")), interval(time("12:23:39"), time("23:18:00"))),
+          "overlap2": get-overlapping-interval(interval(time("12:23:39"), time("18:27:19")), interval(time("07:19:39"), time("09:18:00"))),
+          "overlap3": get-overlapping-interval(interval(date("1980-11-30"), date("1999-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
+          "overlap4": get-overlapping-interval(interval(date("1980-11-30"), date("2099-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
+          "overlap5": get-overlapping-interval(interval(datetime("1844-03-03T11:19:39"), datetime("2000-10-30T18:27:19")), interval(datetime("1989-03-04T12:23:39"), datetime("2009-10-10T23:18:00"))),
+          "overlap6": get-overlapping-interval(interval(datetime("1989-03-04T12:23:39"), datetime("2000-10-30T18:27:19")), interval(datetime("1844-03-03T11:19:39"), datetime("1888-10-10T23:18:00")))  }
 
  * The expected result is:
 
@@ -2141,9 +2141,9 @@ See the [Allen's Relations](allens.html).
 
   * Example:
 
-        let $itv1 := interval-from-time(time("17:23:37"), time("18:30:21"))
-        let $itv2 := interval-from-date(date("1984-03-17"), date("2013-08-22"))
-        let $itv3 := interval-from-datetime(datetime("1800-01-01T23:59:48.938"), datetime("2015-07-26T13:28:30.218"))
+        let $itv1 := interval(time("17:23:37"), time("18:30:21"))
+        let $itv2 := interval(date("1984-03-17"), date("2013-08-22"))
+        let $itv3 := interval(datetime("1800-01-01T23:59:48.938"), datetime("2015-07-26T13:28:30.218"))
         return { "timebins": overlap-bins($itv1, time("00:00:00"), day-time-duration("PT30M")),
           "datebins": overlap-bins($itv2, date("1990-01-01"), year-month-duration("P20Y")),
           "datetimebins": overlap-bins($itv3, datetime("1900-01-01T00:00:00.000"), year-month-duration("P100Y")) }
