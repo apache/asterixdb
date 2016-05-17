@@ -133,6 +133,29 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.asterix</groupId>
+        <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
+        <version>0.8.9-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <id>replace-template-data</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>generate-testdata</goal>
+            </goals>
+            <configuration>
+              <inputFiles>
+                <directory>data</directory>
+                <includes>
+                  <include>**/*.template</include>
+                </includes>
+              </inputFiles>
+              <outputDir>target/data</outputDir>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
