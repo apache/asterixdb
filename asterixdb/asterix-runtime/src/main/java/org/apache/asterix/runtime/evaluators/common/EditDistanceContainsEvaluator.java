@@ -46,9 +46,9 @@ public class EditDistanceContainsEvaluator extends EditDistanceCheckEvaluator {
                         rightStartOffset + typeIndicatorSize, edThresh);
             }
             case ORDEREDLIST: {
-                firstOrdListIter.reset(leftBytes, leftStartOffset);
-                secondOrdListIter.reset(rightBytes, rightStartOffset);
                 try {
+                    firstOrdListIter.reset(leftBytes, leftStartOffset);
+                    secondOrdListIter.reset(rightBytes, rightStartOffset);
                     return ed.getSimilarityContains(firstOrdListIter, secondOrdListIter, edThresh);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);

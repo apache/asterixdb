@@ -25,12 +25,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.common.config.MetadataConstants;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -82,13 +82,13 @@ public final class MetadataIndex implements IMetadataIndex {
 
     public MetadataIndex(MetadataIndexImmutableProperties indexImmutableProperties, int numFields, IAType[] keyTypes,
             List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, boolean isPrimaryIndex,
-            int[] primaryKeyIndexes) throws AsterixRuntimeException {
+            int[] primaryKeyIndexes) throws MetadataException {
         // Sanity checks.
         if (keyTypes.length != keyNames.size()) {
-            throw new AsterixRuntimeException("Unequal number of key types and names given.");
+            throw new MetadataException("Unequal number of key types and names given.");
         }
         if (keyTypes.length > numFields) {
-            throw new AsterixRuntimeException("Number of keys given is greater than total number of fields.");
+            throw new MetadataException("Number of keys given is greater than total number of fields.");
         }
         // Set simple fields.
         this.datasetName = indexImmutableProperties.getDatasetName();

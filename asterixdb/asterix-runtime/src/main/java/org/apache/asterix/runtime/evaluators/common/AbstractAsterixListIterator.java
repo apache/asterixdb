@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.fuzzyjoin.similarity.IListIterator;
 import org.apache.asterix.om.types.ATypeTag;
@@ -72,7 +71,7 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     }
 
     @Override
-    public void next() {
+    public void next() throws HyracksDataException {
         try {
             pos = nextPos;
             ++count;
@@ -82,12 +81,12 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
             }
             itemLen = nextPos - pos;
         } catch (AsterixException e) {
-            throw new AsterixRuntimeException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void reset() {
+    public void reset() throws HyracksDataException {
         count = 0;
         try {
             pos = getItemOffset(data, startOff, count);
@@ -97,11 +96,11 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
             }
             itemLen = nextPos - pos;
         } catch (AsterixException e) {
-            throw new AsterixRuntimeException(e);
+            throw new HyracksDataException(e);
         }
     }
 
-    public void reset(byte[] data, int startOff) {
+    public void reset(byte[] data, int startOff) throws HyracksDataException {
         this.data = data;
         this.startOff = startOff;
         this.numberOfItems = getNumberOfItems(data, startOff);

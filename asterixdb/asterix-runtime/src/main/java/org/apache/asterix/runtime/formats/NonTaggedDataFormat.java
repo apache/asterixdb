@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
@@ -365,7 +364,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         IFunctionManager mgr = FunctionManagerHolder.getFunctionManager();
         IFunctionDescriptor fd = mgr.lookupFunction(fnId);
         if (fd == null) {
-            throw new AsterixRuntimeException("Unresolved function " + fnId);
+            throw new AlgebricksException("Unresolved function " + fnId);
         }
         final FunctionIdentifier fid = fd.getIdentifier();
         if (functionTypeInferers.containsKey(fid)) {
