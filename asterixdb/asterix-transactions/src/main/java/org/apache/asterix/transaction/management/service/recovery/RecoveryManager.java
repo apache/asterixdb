@@ -93,9 +93,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final boolean replicationEnabled;
     public static final long NON_SHARP_CHECKPOINT_TARGET_LSN = -1;
     private final static String RECOVERY_FILES_DIR_NAME = "recovery_temp";
-    private static final long MEGABYTE = 1024L * 1024L;
     private Map<Integer, JobEntityCommits> jobId2WinnerEntitiesMap = null;
-    private static final long MAX_CACHED_ENTITY_COMMITS_PER_JOB_SIZE = 4 * MEGABYTE; //4MB;
+    private final long cachedEntityCommitsPerJobSize;
     private final PersistentLocalResourceRepository localResourceRepository;
 
     /**
@@ -114,6 +113,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         replicationEnabled = propertiesProvider.getReplicationProperties().isReplicationEnabled();
         localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getLocalResourceRepository();
+        cachedEntityCommitsPerJobSize = txnSubsystem.getTransactionProperties().getJobRecoveryMemorySize();
     }
 
     /**
@@ -422,8 +422,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
     }
 
-    private static boolean needToFreeMemory() {
-        return Runtime.getRuntime().freeMemory() < MAX_CACHED_ENTITY_COMMITS_PER_JOB_SIZE;
+    private boolean needToFreeMemory() {
+        return Runtime.getRuntime().freeMemory() < cachedEntityCommitsPerJobSize;
     }
 
     @Override
@@ -902,7 +902,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             partitionMaxLSN = logRecord.getLSN();
             currentPartitionSize += winnerEntity.getCurrentSize();
             //if the memory budget for the current partition exceeded the limit, spill it to disk and free memory
-            if (currentPartitionSize >= MAX_CACHED_ENTITY_COMMITS_PER_JOB_SIZE) {
+            if (currentPartitionSize >= cachedEntityCommitsPerJobSize) {
                 spillToDiskAndfreeMemory();
             }
         }

@@ -581,7 +581,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     protected LSMBTreeDiskComponent createDiskComponent(LSMBTreeDiskComponentFactory factory,
             FileReference btreeFileRef, FileReference bloomFilterFileRef, boolean createComponent)
-            throws HyracksDataException, IndexException {
+                    throws HyracksDataException, IndexException {
         // Create new BTree instance.
         LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) factory
                 .createLSMComponentInstance(new LSMComponentFileReferences(btreeFileRef, null, bloomFilterFileRef));
@@ -878,7 +878,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         Set<String> files = new HashSet<String>();
         LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) lsmComponent;
         files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
-        files.add(component.getBloomFilter().getFileReference().getFile().getAbsolutePath());
+        if (hasBloomFilter) {
+            files.add(component.getBloomFilter().getFileReference().getFile().getAbsolutePath());
+        }
         return files;
     }
 

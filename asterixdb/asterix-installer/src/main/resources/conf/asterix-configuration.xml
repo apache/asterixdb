@@ -196,6 +196,14 @@
   </property>
 
   <property>
+    <name>txn.job.recovery.memorysize</name>
+    <value>67108864</value>
+    <description>The memory allocated per job during recovery.
+     (Default = "67108864" // 64MB)
+    </description>
+  </property>
+
+  <property>
     <name>compiler.sortmemory</name>
     <value>33554432</value>
     <description>The amount of memory in bytes given to sort operations.

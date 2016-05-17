@@ -20,6 +20,9 @@ package org.apache.asterix.common.config;
 
 import java.util.Map;
 
+import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.StorageUtil.StorageUnit;
+
 public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     private static final String TXN_LOG_BUFFER_NUMPAGES_KEY = "txn.log.buffer.numpages";
@@ -54,6 +57,10 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     private static final String TXN_COMMIT_PROFILER_REPORT_INTERVAL_KEY = "txn.commitprofiler.reportinterval";
     private static final int TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT = 5; // 5 seconds
+
+    private static final String TXN_JOB_RECOVERY_MEMORY_SIZE_KEY = "txn.job.recovery.memorysize";
+    private static final long TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT = StorageUtil.getSizeInBytes(64L,
+            StorageUnit.MEGABYTE);
 
     public AsterixTransactionProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
@@ -122,4 +129,8 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
                 TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    public long getJobRecoveryMemorySize() {
+        return accessor.getProperty(TXN_JOB_RECOVERY_MEMORY_SIZE_KEY, TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT,
+                PropertyInterpreters.getLongPropertyInterpreter());
+    }
 }
