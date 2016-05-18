@@ -206,7 +206,7 @@ public class ExternalDataConstants {
      * Size default values
      */
     public static final int DEFAULT_BUFFER_SIZE = 4096;
-    public static final int DEFAULT_BUFFER_INCREMENT = 2048;
+    public static final float DEFAULT_BUFFER_INCREMENT_FACTOR = 1.5F;
     public static final int DEFAULT_QUEUE_SIZE = 64;
     public static final int MAX_RECORD_SIZE = 32000000;
 

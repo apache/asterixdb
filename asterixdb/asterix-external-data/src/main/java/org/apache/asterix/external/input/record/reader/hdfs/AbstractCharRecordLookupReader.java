@@ -64,7 +64,7 @@ public abstract class AbstractCharRecordLookupReader extends AbstractHDFSLookupR
         reusableByteBuffer.clear();
         if (reusableByteBuffer.remaining() < value.getLength()) {
             reusableByteBuffer = ByteBuffer
-                    .allocateDirect(value.getLength() + ExternalDataConstants.DEFAULT_BUFFER_INCREMENT);
+                    .allocateDirect((int)(value.getLength() * ExternalDataConstants.DEFAULT_BUFFER_INCREMENT_FACTOR));
         }
         reusableByteBuffer.put(value.getBytes(), 0, value.getLength());
         reusableByteBuffer.flip();
