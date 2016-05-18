@@ -19,9 +19,15 @@
 
 <wicket:extend xmlns:wicket>
     <div>
-        Registered Node Count: <span wicket:id="node-count"></span>
+        <b>Registered Node Count:</b> <span wicket:id="node-count"></span>
     </div>
     <table>
+        <tr>
+            <th>Node ID</th>
+            <th>Heap Used</th>
+            <th>System Load Average</th>
+            <th>Node Details</th>
+        </tr>
         <tr wicket:id="node-list">
             <td>
                 <span wicket:id="node-id"></span>
@@ -38,6 +44,13 @@
         </tr>
     </table>
     <table>
+        <tr>
+            <th>JOB ID</th>
+            <th>Status</th>
+            <th>Create Time</th>
+            <th>Start Time</th>
+            <th>Job Details</th>
+        </tr>
         <tr wicket:id="jobs-list">
             <td>
                 <span wicket:id="job-id"></span>

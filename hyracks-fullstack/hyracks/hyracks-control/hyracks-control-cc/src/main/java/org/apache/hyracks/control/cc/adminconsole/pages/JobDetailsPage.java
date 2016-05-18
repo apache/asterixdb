@@ -61,14 +61,20 @@ public class JobDetailsPage extends AbstractPage {
         JSONObject jagO = gacgw.getJSON();
 
         Map<ActivityId, String> activityMap = new HashMap<ActivityId, String>();
-        if (jagO.has("activities")) {
-            JSONArray aArray = jagO.getJSONArray("activities");
-            for (int i = 0; i < aArray.length(); ++i) {
-                JSONObject aO = aArray.getJSONObject(i);
-                ActivityId aid = ActivityId.parse(aO.getString("id"));
-                String className = aO.getString("java-class");
+        if (jagO.has("activity-clusters")) {
+            JSONArray acArray = jagO.getJSONArray("activity-clusters");
+            for (int j = 0; j < acArray.length(); ++j) {
+                JSONObject acO = acArray.getJSONObject(j);
+                if (acO.has("activities")) {
+                    JSONArray aArray = acO.getJSONArray("activities");
+                    for (int i = 0; i < aArray.length(); ++i) {
+                        JSONObject aO = aArray.getJSONObject(i);
+                        ActivityId aid = ActivityId.parse(aO.getString("id"));
+                        String className = aO.getString("java-class");
 
-                activityMap.put(aid, className);
+                        activityMap.put(aid, className);
+                    }
+                }
             }
         }
 

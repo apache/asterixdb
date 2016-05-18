@@ -148,43 +148,38 @@
           </licenseFamilies>
           <excludeSubProjects>false</excludeSubProjects>
           <excludes>
-            <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
-            <exclude>**/javascript/flot/*.js</exclude>
-            <exclude>**/javascript/jsplumb/*.js</exclude>
-            <exclude>**/javascript/jquery/*.js</exclude>
-            <exclude>**/javascript/adminconsole/*.js</exclude>
-            <exclude>**/stylesheet/jquery-ui/**</exclude>
-            <exclude>**/hyracks-dist/src/main/resources/conf/**</exclude>
-            <exclude>**/src/test/resources/data/**</exclude>
-            <exclude>**/src/test/resources/results/**</exclude>
-            <exclude>**/src/test/resources/expected/**</exclude>
-            <exclude>**/testcases/*.piglet</exclude>
-            <exclude>**/data/**/*.tbl</exclude>
-            <exclude>**/data/**/*.ddl</exclude>
-            <exclude>**/data/**/*.tsv</exclude>
-            <exclude>**/actual/conf.xml</exclude>
-            <exclude>**/actual/customer_result/part-*</exclude>
-            <exclude>**/src/main/resources/conf/*</exclude>
-            <exclude>**/data/dfs/**</exclude>
-            <exclude>**/invIndex*/**</exclude>
-            <exclude>**/*.job</exclude>
             <exclude>**/*.conf</exclude>
-            <exclude>**/src/main/resources/*.cleaned</exclude>
-            <exclude>**/ClusterControllerService/**</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/output/**</exclude>
-            <exclude>**/target/**</exclude>
             <exclude>**/*.iml</exclude>
+            <exclude>**/*.job</exclude>
             <exclude>**/*.prefs</exclude>
-            <exclude>**/data/*.txt</exclude>
-            <exclude>**/data/**/*.txt</exclude>
-            <exclude>**/.classpath</exclude>
-            <exclude>**/.project</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/*.iml</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.project</exclude>
             <exclude>**/.settings/**</exclude>
+            <exclude>**/actual/conf.xml</exclude>
+            <exclude>**/actual/customer_result/part-*</exclude>
+            <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
+            <exclude>**/ClusterControllerService/**</exclude>
+            <exclude>**/data/**/*.ddl</exclude>
+            <exclude>**/data/**/*.tbl</exclude>
+            <exclude>**/data/**/*.tsv</exclude>
+            <exclude>**/data/**/*.txt</exclude>
+            <exclude>**/data/*.txt</exclude>
+            <exclude>**/data/dfs/**</exclude>
+            <exclude>**/hyracks-dist/src/main/resources/conf/**</exclude>
+            <exclude>**/invIndex*/**</exclude>
+            <exclude>**/javascript/adminconsole/*.js</exclude>
+            <exclude>**/javascript/flot/*.js</exclude>
+            <exclude>**/javascript/jquery/*.js</exclude>
+            <exclude>**/javascript/jsplumb/*.js</exclude>
+            <exclude>**/output/**</exclude>
+            <exclude>**/src/main/resources/*.cleaned</exclude>
+            <exclude>**/src/main/resources/conf/*</exclude>
+            <exclude>**/src/test/resources/data/**</exclude>
+            <exclude>**/src/test/resources/expected/**</exclude>
+            <exclude>**/src/test/resources/results/**</exclude>
+            <exclude>**/stylesheet/jquery-ui/**</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/testcases/*.piglet</exclude>
             <exclude>algebricks/algebricks-examples/piglet-example/testcases/*.piglet</exclude>
             <exclude>algebricks/algebricks-tests/ClusterControllerService/logs/jobs/*.log</exclude>
             <exclude>algebricks/algebricks-tests/data/simple/*.tbl</exclude>
@@ -195,6 +190,7 @@
             <exclude>hyracks/hyracks-client/ClusterControllerService/logs/jobs/*.log</exclude>
             <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/flot/*.js</exclude>
             <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jsplumb/jquery.jsPlumb-1.3.5-all-min.js</exclude>
+            <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/stylesheet/json.human.css</exclude>
             <exclude>hyracks/hyracks-dist/src/main/resources/conf/master</exclude>
             <exclude>hyracks/hyracks-dist/src/main/resources/conf/slaves</exclude>
             <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/*.txt</exclude>

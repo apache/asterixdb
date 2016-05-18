@@ -110,6 +110,7 @@ public class JobRun implements IJobStatusConditionVariable {
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
         operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
+        createTime = System.currentTimeMillis();
     }
 
     public DeploymentId getDeploymentId() {
@@ -242,8 +243,8 @@ public class JobRun implements IJobStatusConditionVariable {
         result.put("job-id", jobId.toString());
         result.put("status", getStatus());
         result.put("create-time", getCreateTime());
-        result.put("start-time", getCreateTime());
-        result.put("end-time", getCreateTime());
+        result.put("start-time", getStartTime());
+        result.put("end-time", getEndTime());
 
         JSONArray aClusters = new JSONArray();
         for (ActivityCluster ac : acg.getActivityClusterMap().values()) {
