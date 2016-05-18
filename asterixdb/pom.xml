@@ -28,6 +28,7 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>LATEST</version>
+    <relativePath/>
   </parent>
 
   <licenses>
