@@ -24,8 +24,8 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import org.apache.hyracks.storage.am.btree.frames.BTreeLargeFrameHelper;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -119,7 +119,8 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
         do {
-            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
+            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false,
+                    BTreeLargeFrameHelper.INSTANCE);
             if (exclusiveLatchNodes) {
                 nextLeaf.acquireWriteLatch();
                 page.releaseWriteLatch(isPageDirty);

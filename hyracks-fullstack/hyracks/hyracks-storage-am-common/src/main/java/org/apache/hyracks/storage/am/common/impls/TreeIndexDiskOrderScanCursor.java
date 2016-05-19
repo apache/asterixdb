@@ -70,7 +70,8 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
             page.releaseReadLatch();
             bufferCache.unpin(page);
 
-            ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
+            ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false,
+                    frame.getLargePageHelper());
             nextPage.acquireReadLatch();
 
             page = nextPage;

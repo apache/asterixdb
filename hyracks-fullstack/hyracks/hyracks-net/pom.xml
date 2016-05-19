@@ -37,9 +37,8 @@
   </licenses>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
-
 
   <dependencies>
     <dependency>

@@ -75,7 +75,7 @@ public abstract class AbstractExternalSortRunMerger {
         this.recordDesc = recordDesc;
         this.framesLimit = framesLimit;
         this.writer = writer;
-        this.MAX_FRAME_SIZE = FrameConstants.MAX_NUM_MINFRAME * ctx.getInitialFrameSize();
+        this.MAX_FRAME_SIZE = FrameConstants.MAX_FRAMESIZE;
         this.topK = topK;
     }
 

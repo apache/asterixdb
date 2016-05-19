@@ -18,22 +18,14 @@
  */
 package org.apache.asterix.external.feed.management;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.feed.api.IFeedConnectionManager;
-import org.apache.asterix.external.feed.api.IFeedManager;
-import org.apache.asterix.external.feed.api.IFeedMemoryManager;
-import org.apache.asterix.external.feed.api.IFeedMessageService;
-import org.apache.asterix.external.feed.api.IFeedMetadataManager;
-import org.apache.asterix.external.feed.api.IFeedMetricCollector;
-import org.apache.asterix.external.feed.api.IFeedSubscriptionManager;
-import org.apache.asterix.external.feed.message.FeedMessageService;
-import org.apache.asterix.external.feed.watch.FeedMetricCollector;
-import org.apache.asterix.external.feed.watch.NodeLoadReportService;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.external.feed.api.ISubscribableRuntime;
+import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -41,23 +33,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * Provider necessary central repository for registering/retrieving
  * artifacts/services associated with a feed.
  */
-public class FeedManager implements IFeedManager {
+public class FeedManager {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
-
-    private final IFeedSubscriptionManager feedSubscriptionManager;
+    private final Map<FeedRuntimeId, ISubscribableRuntime> subscribableRuntimes;
 
     private final IFeedConnectionManager feedConnectionManager;
 
-    private final IFeedMemoryManager feedMemoryManager;
-
-    private final IFeedMetricCollector feedMetricCollector;
-
-    private final IFeedMetadataManager feedMetadataManager;
-
-    private final IFeedMessageService feedMessageService;
-
-    private final NodeLoadReportService nodeLoadReportService;
+    private final ConcurrentFramePool feedMemoryManager;
 
     private final AsterixFeedProperties asterixFeedProperties;
 
@@ -68,60 +50,39 @@ public class FeedManager implements IFeedManager {
     public FeedManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize)
             throws AsterixException, HyracksDataException {
         this.nodeId = nodeId;
-        this.feedSubscriptionManager = new FeedSubscriptionManager(nodeId);
         this.feedConnectionManager = new FeedConnectionManager(nodeId);
-        this.feedMetadataManager = new FeedMetadataManager(nodeId);
-        this.feedMemoryManager = new FeedMemoryManager(nodeId, feedProperties, frameSize);
-        String ccClusterIp = AsterixClusterProperties.INSTANCE.getCluster() != null
-                ? AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp() : "localhost";
-        this.feedMessageService = new FeedMessageService(feedProperties, nodeId, ccClusterIp);
-        this.nodeLoadReportService = new NodeLoadReportService(nodeId, this);
-        try {
-            this.feedMessageService.start();
-            this.nodeLoadReportService.start();
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to start feed services " + e.getMessage());
-            }
-            e.printStackTrace();
-        }
-        this.feedMetricCollector = new FeedMetricCollector(nodeId);
+        this.feedMemoryManager =
+                new ConcurrentFramePool(nodeId, feedProperties.getMemoryComponentGlobalBudget(), frameSize);
         this.frameSize = frameSize;
         this.asterixFeedProperties = feedProperties;
+        this.subscribableRuntimes = new ConcurrentHashMap<FeedRuntimeId, ISubscribableRuntime>();
     }
 
-    @Override
-    public IFeedSubscriptionManager getFeedSubscriptionManager() {
-        return feedSubscriptionManager;
-    }
-
-    @Override
     public IFeedConnectionManager getFeedConnectionManager() {
         return feedConnectionManager;
     }
 
-    @Override
-    public IFeedMemoryManager getFeedMemoryManager() {
+    public ConcurrentFramePool getFeedMemoryManager() {
         return feedMemoryManager;
-    }
-
-    @Override
-    public IFeedMetricCollector getFeedMetricCollector() {
-        return feedMetricCollector;
     }
 
     public int getFrameSize() {
         return frameSize;
     }
 
-    @Override
-    public IFeedMetadataManager getFeedMetadataManager() {
-        return feedMetadataManager;
+    public void registerFeedSubscribableRuntime(ISubscribableRuntime subscribableRuntime) {
+        FeedRuntimeId sid = subscribableRuntime.getRuntimeId();
+        if (!subscribableRuntimes.containsKey(sid)) {
+            subscribableRuntimes.put(sid, subscribableRuntime);
+        }
     }
 
-    @Override
-    public IFeedMessageService getFeedMessageService() {
-        return feedMessageService;
+    public void deregisterFeedSubscribableRuntime(FeedRuntimeId subscribableRuntimeId) {
+        subscribableRuntimes.remove(subscribableRuntimeId);
+    }
+
+    public ISubscribableRuntime getSubscribableRuntime(FeedRuntimeId subscribableRuntimeId) {
+        return subscribableRuntimes.get(subscribableRuntimeId);
     }
 
     @Override
@@ -129,7 +90,6 @@ public class FeedManager implements IFeedManager {
         return "FeedManager " + "[" + nodeId + "]";
     }
 
-    @Override
     public AsterixFeedProperties getAsterixFeedProperties() {
         return asterixFeedProperties;
     }

@@ -70,10 +70,10 @@ public class BufferedFileHandle {
     }
 
     public static int getFileId(long dpid) {
-        return (int) ((dpid >> 32) & 0xffffffff);
+        return (int) (dpid >> 32);
     }
 
     public static int getPageId(long dpid) {
-        return (int) (dpid & 0xffffffff);
+        return (int) dpid;
     }
 }

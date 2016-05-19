@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public class VariableFrameMemoryManager implements IFrameBufferManager {
 

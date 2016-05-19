@@ -80,7 +80,6 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
             }
         }
         this.byteBuff = ByteBufAllocator.DEFAULT.buffer(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-        byteBuff.retain();
         this.record = new GenericRecord<DCPRequest>();
         this.counter = counterStart;
     }
@@ -132,7 +131,7 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
             if (nextDeleteKey != null) {
                 final String key = nextDeleteKey;
                 nextDeleteKey = null;
-                return new RemoveMessage(nextDeletePartition, key, cas++, seq++, 0L, bucket);
+                return new RemoveMessage(0, nextDeletePartition, key, cas++, seq++, 0L, bucket);
             }
         }
         generateNextDocument();
@@ -141,15 +140,16 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
                 final String key = nextUpsertKey;
                 nextUpsertKey = null;
                 upsertCounter++;
-                return new MutationMessage(nextUpsertPartition, key, byteBuff, expiration++, seq++, 0, 0, lockTime++,
-                        cas++, bucket);
+                return new MutationMessage(byteBuff.readableBytes(), nextUpsertPartition, key, byteBuff, expiration++,
+                        seq++, 0, 0, lockTime++, cas++, bucket);
             }
         }
-        return new MutationMessage(assigned.get(counter % assigned.size()), generateKey(), byteBuff, expiration++,
-                seq++, 0, 0, lockTime++, cas++, bucket);
+        return new MutationMessage(byteBuff.readableBytes(), assigned.get(counter % assigned.size()), generateKey(),
+                byteBuff, expiration++, seq++, 0, 0, lockTime++, cas++, bucket);
     }
 
     private void generateNextDocument() {
+        byteBuff.retain();
         // reset the string
         strBuilder.setLength(0);
         strBuilder.append("{\"id\":" + (counter + upsertCounter) + ",\"name\":\""

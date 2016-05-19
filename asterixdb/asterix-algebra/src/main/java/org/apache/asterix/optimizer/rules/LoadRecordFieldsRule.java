@@ -28,7 +28,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -215,7 +214,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                         }
                     }
                 }
-                throw new AsterixRuntimeException("Field access " + getFirstExpr(a2)
+                throw new AlgebricksException("Field access " + getFirstExpr(a2)
                         + " does not correspond to any input of operator " + topOp);
             }
         }

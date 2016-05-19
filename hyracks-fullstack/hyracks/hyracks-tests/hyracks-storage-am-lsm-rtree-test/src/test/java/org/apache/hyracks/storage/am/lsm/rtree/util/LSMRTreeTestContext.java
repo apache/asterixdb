@@ -46,7 +46,8 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 @SuppressWarnings("rawtypes")
 public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
 
-    public LSMRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) throws HyracksDataException {
+    public LSMRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex)
+            throws HyracksDataException {
         super(fieldSerdes, treeIndex);
     }
 
@@ -77,8 +78,8 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils
-                .serdesToComparatorFactories(fieldSerdes, numKeyFields);
+        IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
+                numKeyFields);
         int numBtreeFields = fieldSerdes.length - numKeyFields;
         ISerializerDeserializer[] btreeFieldSerdes = new ISerializerDeserializer[numBtreeFields];
         int[] btreeFields = new int[numBtreeFields];
@@ -92,7 +93,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
                 typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,
-                null, null, true);
+                null, null, true, false);
         LSMRTreeTestContext testCtx = new LSMRTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

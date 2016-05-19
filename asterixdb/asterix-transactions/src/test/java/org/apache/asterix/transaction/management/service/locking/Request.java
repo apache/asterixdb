@@ -18,13 +18,13 @@
 */
 package org.apache.asterix.transaction.management.service.locking;
 
+import java.io.PrintStream;
+
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants;
-
-import java.io.PrintStream;
 
 /**
  * repesents a lock request for testing.
@@ -56,16 +56,17 @@ abstract class Request {
         this.txnCtx = txnCtx;
     }
 
-    String asString(final Kind kind, final ITransactionContext txnCtx,
-                    final DatasetId dsId, final int hashValue, final byte lockMode) {
-        return txnCtx.getJobId().toString() + ":" + kind.name() + ":" + dsId.getId() + ":" + hashValue + ":"
+    String asString(final Kind kind, final ITransactionContext txnCtx, final DatasetId dsId, final int hashValue,
+            final byte lockMode) {
+        return txnCtx.getJobId() + ":" + kind.name() + ":" + dsId.getId() + ":" + hashValue + ":"
                 + TransactionManagementConstants.LockManagerConstants.LockMode.toString(lockMode);
     }
 
     abstract boolean execute(ILockManager lockMgr) throws ACIDException;
 
-    static Request create(final Kind kind, final ITransactionContext txnCtx,
-                          final DatasetId dsId, final int hashValue, final byte lockMode) {
+    static Request create(final Kind kind, final ITransactionContext txnCtx, final DatasetId dsId, final int hashValue,
+            final byte lockMode) {
+
         switch (kind) {
             case INSTANT_TRY_LOCK:
                 return new Request(kind, txnCtx) {

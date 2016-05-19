@@ -44,7 +44,12 @@ public class ResourceHeapBufferAllocator implements ICacheMemoryAllocator {
 
     @Override
     public ByteBuffer[] ensureAvailabilityThenAllocate(int pageSize, int numPages) throws HyracksDataException {
-        memoryManager.allocateMemory(resourceName);
+        reserveAllocation(pageSize, numPages);
         return allocate(pageSize, numPages);
+    }
+
+    @Override
+    public void reserveAllocation(int pageSize, int numPages) throws HyracksDataException {
+        memoryManager.allocateMemory(resourceName);
     }
 }

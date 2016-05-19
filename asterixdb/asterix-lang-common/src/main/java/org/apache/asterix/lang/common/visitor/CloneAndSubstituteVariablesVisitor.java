@@ -156,7 +156,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             if (!env.constainsOldVar(varExpr)) {
                 throw new AsterixException("Parameter " + vi + " does not appear in the substitution list.");
             }
-            Expression newExpr = env.findSubstituion(varExpr);
+            Expression newExpr = env.findSubstitution(varExpr);
             if (newExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
                 throw new AsterixException("Parameter " + vi + " cannot be substituted by a non-variable expression.");
             }
@@ -297,7 +297,7 @@ public class CloneAndSubstituteVariablesVisitor extends
     protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env)
             throws AsterixException {
         if (env.constainsOldVar(expr)) {
-            return env.findSubstituion(expr);
+            return env.findSubstitution(expr);
         } else {
             // it is a variable from the context
             VarIdentifier var = context.getRewrittenVar(expr.getVar().getId());

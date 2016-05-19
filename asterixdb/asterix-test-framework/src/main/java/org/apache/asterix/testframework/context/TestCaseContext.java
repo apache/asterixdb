@@ -19,11 +19,13 @@
 package org.apache.asterix.testframework.context;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.asterix.testframework.template.TemplateHelper;
 import org.apache.asterix.testframework.xml.CategoryEnum;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -140,6 +142,14 @@ public class TestCaseContext {
                 }
 
                 File testFile = new File(path, fName);
+                if (fName.endsWith(".template")) {
+                    try {
+                        testFile = TemplateHelper.INSTANCE.resolveTemplateFile(testFile);
+                    } catch (IOException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                    fName = testFile.getName();
+                }
                 TestFileContext tfsc = new TestFileContext(testFile);
                 String[] nameSplits = fName.split("\\.");
                 if (nameSplits.length < 3) {

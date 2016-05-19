@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -34,6 +35,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 import org.apache.hyracks.storage.common.buffercache.IQueueInfo;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
@@ -53,6 +55,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     private final ArrayList<VirtualPage> pages;
 
     private volatile int nextFree;
+    private final AtomicInteger largePages;
 
     private boolean open;
 
@@ -65,6 +68,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         buckets = new CacheBucket[this.numPages];
         pages = new ArrayList<VirtualPage>();
         nextFree = 0;
+        largePages = new AtomicInteger(0);
         open = false;
     }
 
@@ -164,6 +168,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
+    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
+        return pin(dpid, newPage);
+    }
+
+    @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         VirtualPage page = null;
         int hash = hash(dpid);
@@ -200,7 +209,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private VirtualPage getOrAllocPage(long dpid) {
-        VirtualPage page = null;
+        VirtualPage page;
         synchronized (pages) {
             if (nextFree >= pages.size()) {
                 page = new VirtualPage(allocator.allocate(pageSize, 1)[0]);
@@ -212,6 +221,38 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             page.dpid = dpid;
         }
         return page;
+    }
+
+    @Override
+    public void resizePage(ICachedPage cPage, int multiplier) {
+        ByteBuffer oldBuffer = cPage.getBuffer();
+        int origMultiplier = oldBuffer.capacity() / pageSize;
+        if (origMultiplier == multiplier) {
+            // no-op
+            return;
+        }
+        if (origMultiplier == 1) {
+            synchronized (pages) {
+                pages.remove(cPage);
+                nextFree--;
+            }
+        }
+        ByteBuffer newBuffer = allocator.allocate(pageSize * multiplier, 1)[0];
+        oldBuffer.position(0);
+        if (multiplier < origMultiplier) {
+            oldBuffer.limit(newBuffer.capacity());
+        }
+        newBuffer.put(oldBuffer);
+        if (origMultiplier == 1) {
+            largePages.getAndAdd(multiplier);
+        } else if (multiplier == 1) {
+            largePages.getAndAdd(-origMultiplier);
+            pages.add(0, (VirtualPage) cPage);
+            nextFree++;
+        } else {
+            largePages.getAndAdd(multiplier - origMultiplier);
+        }
+        ((VirtualPage)cPage).buffer = newBuffer;
     }
 
     @Override
@@ -243,19 +284,18 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
         pages.trimToSize();
         pages.ensureCapacity(numPages + OVERFLOW_PADDING);
-        ByteBuffer[] buffers = allocator.ensureAvailabilityThenAllocate(pageSize, numPages);
+        allocator.reserveAllocation(pageSize, numPages);
         for (int i = 0; i < numPages; i++) {
-            pages.add(new VirtualPage(buffers[i]));
             buckets[i] = new CacheBucket();
         }
         nextFree = 0;
+        largePages.set(0);
         open = true;
     }
 
     @Override
     public void reset() {
         for (int i = 0; i < numPages; i++) {
-            pages.get(i).reset();
             buckets[i].cachedPage = null;
         }
         int excess = pages.size() - numPages;
@@ -265,6 +305,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             }
         }
         nextFree = 0;
+        largePages.set(0);
     }
 
     @Override
@@ -285,6 +326,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         sb.append(String.format("Page size = %d\n", pageSize));
         sb.append(String.format("Capacity = %d\n", numPages));
         sb.append(String.format("Allocated pages = %d\n", pages.size()));
+        sb.append(String.format("Allocated large pages = %d\n", largePages.get()));
         sb.append(String.format("Next free page = %d\n", nextFree));
         return sb.toString();
     }
@@ -296,7 +338,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public boolean isFull() {
-        return nextFree >= numPages;
+        return (nextFree  + largePages.get()) >= numPages;
     }
 
     private static class CacheBucket {
@@ -309,7 +351,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private class VirtualPage implements ICachedPage {
-        final ByteBuffer buffer;
+        ByteBuffer buffer;
         final ReadWriteLock latch;
         volatile long dpid;
         VirtualPage next;
@@ -410,6 +452,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
+    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
     public void copyPage(ICachedPage src, ICachedPage dst) {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
@@ -443,4 +490,5 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     public void purgeHandle(int fileId) throws HyracksDataException {
 
     }
+
 }

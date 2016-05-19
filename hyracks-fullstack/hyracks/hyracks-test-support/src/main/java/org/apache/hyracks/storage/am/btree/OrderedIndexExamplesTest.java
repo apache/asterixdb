@@ -19,14 +19,9 @@
 
 package org.apache.hyracks.storage.am.btree;
 
-import static org.junit.Assert.fail;
-
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.hyracks.storage.common.buffercache.BufferCache;
-import org.junit.Test;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -54,6 +49,9 @@ import org.apache.hyracks.storage.am.common.api.UnsortedInputException;
 import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexExamplesTest {

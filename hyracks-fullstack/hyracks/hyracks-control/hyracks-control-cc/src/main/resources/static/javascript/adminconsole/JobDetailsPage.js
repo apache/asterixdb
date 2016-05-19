@@ -17,6 +17,8 @@
  * under the License.
  */
  $(function() {
+    $('#tabs').tabs();
+
     var jobSpecDAG = new Graphs.DAG();
     var jobSpecRenderer;
 
@@ -94,7 +96,7 @@
     }
 
     function init() {
-        fetchJobSpecification();
+          fetchJobActivityGraph();
     }
 
     jsPlumb.bind("ready", function() {

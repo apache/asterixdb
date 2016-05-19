@@ -20,6 +20,8 @@ package org.apache.hyracks.api.comm;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.util.IntSerDeUtils;
+
 public class FrameHelper {
     public static int getTupleCountOffset(int frameSize) {
         return frameSize - FrameConstants.SIZE_LEN;
@@ -27,24 +29,24 @@ public class FrameHelper {
 
     /**
      * The actual frameSize = frameCount * intitialFrameSize
-     * This method is used to put that frameCount into the first byte of the frame buffer.
+     * This method is used to put that frameCount into the first int of the frame buffer.
      * @param outputFrame
      * @param numberOfMinFrame
      */
-    public static void serializeFrameSize(ByteBuffer outputFrame, byte numberOfMinFrame) {
+    public static void serializeFrameSize(ByteBuffer outputFrame, int numberOfMinFrame) {
         serializeFrameSize(outputFrame, 0, numberOfMinFrame);
     }
 
-    public static void serializeFrameSize(ByteBuffer outputFrame, int start, byte numberOfMinFrame) {
-        outputFrame.array()[start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET] = (byte) (numberOfMinFrame & 0xff);
+    public static void serializeFrameSize(ByteBuffer outputFrame, int start, int numberOfMinFrame) {
+        IntSerDeUtils.putInt(outputFrame.array(), start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET, numberOfMinFrame);
     }
 
-    public static byte deserializeNumOfMinFrame(ByteBuffer frame) {
+    public static int deserializeNumOfMinFrame(ByteBuffer frame) {
         return deserializeNumOfMinFrame(frame, 0);
     }
 
-    public static byte deserializeNumOfMinFrame(ByteBuffer buffer, int start) {
-        return (byte) (buffer.array()[start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET] & 0xff);
+    public static int deserializeNumOfMinFrame(ByteBuffer buffer, int start) {
+        return IntSerDeUtils.getInt(buffer.array(), start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET);
     }
 
     /**

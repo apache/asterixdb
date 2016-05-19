@@ -61,6 +61,7 @@ public class JobStartWork extends SynchronizableWork {
             IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(jobId, appCtx, jobFlags);
             JobRun run = new JobRun(ccs, deploymentId, jobId, acgg, jobFlags);
             run.setStatus(JobStatus.INITIALIZED, null);
+            run.setStartTime(System.currentTimeMillis());
             ccs.getActiveRunMap().put(jobId, run);
             appCtx.notifyJobCreation(jobId, acggf);
             run.setStatus(JobStatus.RUNNING, null);

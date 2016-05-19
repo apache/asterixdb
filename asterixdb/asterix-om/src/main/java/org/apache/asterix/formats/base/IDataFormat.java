@@ -21,6 +21,7 @@ package org.apache.asterix.formats.base;
 import java.util.List;
 
 import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -44,7 +45,7 @@ import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public interface IDataFormat {
-    public void registerRuntimeFunctions() throws AlgebricksException;
+    public void registerRuntimeFunctions(List<IFunctionDescriptorFactory> funcDescriptor) throws AlgebricksException;
 
     public ISerializerDeserializerProvider getSerdeProvider();
 

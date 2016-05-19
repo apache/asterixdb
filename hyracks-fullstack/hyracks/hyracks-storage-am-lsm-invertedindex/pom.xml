@@ -19,48 +19,48 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 
-	<parent>
-		<artifactId>hyracks</artifactId>
-		<groupId>org.apache.hyracks</groupId>
-		<version>0.2.18-SNAPSHOT</version>
-		<relativePath>..</relativePath>
-	</parent>
+  <parent>
+    <artifactId>hyracks</artifactId>
+    <groupId>org.apache.hyracks</groupId>
+    <version>0.2.18-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
 
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
-        </license>
-    </licenses>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-util</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-storage-am-btree</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hyracks</groupId>
-            <artifactId>hyracks-storage-am-lsm-common</artifactId>
-            <version>0.2.18-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-btree</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-lsm-common</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
 </project>

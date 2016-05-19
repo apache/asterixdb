@@ -25,10 +25,10 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.data.PointablePrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
@@ -45,18 +45,18 @@ public class RTreeUtils {
     public static RTree createRTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             ITypeTraits[] typeTraits, IPrimitiveValueProviderFactory[] valueProviderFactories,
             IBinaryComparatorFactory[] cmpFactories, RTreePolicyType rtreePolicyType, FileReference file,
-            boolean durable) {
+            boolean durable, boolean isPointMBR) {
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                valueProviderFactories, rtreePolicyType);
+                valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
-                valueProviderFactories, rtreePolicyType);
+                valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
         RTree rtree = new RTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
-                cmpFactories, typeTraits.length, file);
+                cmpFactories, typeTraits.length, file, isPointMBR);
         return rtree;
     }
 
@@ -73,7 +73,8 @@ public class RTreeUtils {
         return new MultiComparator(newCmps);
     }
 
-    public static IPrimitiveValueProviderFactory[] createPrimitiveValueProviderFactories(int len, IPointableFactory pf) {
+    public static IPrimitiveValueProviderFactory[] createPrimitiveValueProviderFactories(int len,
+            IPointableFactory pf) {
         IPrimitiveValueProviderFactory[] pvpfs = new IPrimitiveValueProviderFactory[len];
         for (int i = 0; i < len; ++i) {
             pvpfs[i] = new PointablePrimitiveValueProviderFactory(pf);

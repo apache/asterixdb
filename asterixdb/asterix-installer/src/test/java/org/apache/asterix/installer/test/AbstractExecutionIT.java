@@ -80,6 +80,10 @@ public abstract class AbstractExecutionIT {
                 new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/data"));
 
+        FileUtils.copyDirectoryStructure(
+                new File(StringUtils.join(new String[] { "..", "asterix-app", "target", "data" }, File.separator)),
+                new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/target/data"));
+
         FileUtils.copyDirectoryStructure(new File(StringUtils.join(new String[] { "target", "data" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome()
                         + "/clusters/local/working_dir/target/data/csv"));

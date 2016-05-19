@@ -23,11 +23,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Level;
 
-import org.apache.hyracks.storage.am.common.api.*;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -39,7 +34,14 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.util.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.util.HashMultiSet;
@@ -55,6 +57,8 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFacto
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.am.rtree.utils.AbstractRTreeTest;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.junit.Before;
+import org.junit.Test;
 
 public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
@@ -101,23 +105,23 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         cmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(cmpFactories.length, IntegerPointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, false);
         ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, false);
 
         IRTreeInteriorFrame interiorFrame = (IRTreeInteriorFrame) interiorFrameFactory.createFrame();
         IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
 
         RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference(), false);
         rtree.create();
         rtree.activate();
 

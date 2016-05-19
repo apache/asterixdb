@@ -38,7 +38,7 @@
       <directory>docs</directory>
       <outputDirectory>docs</outputDirectory>
     </fileSet>
-     <fileSet>
+    <fileSet>
       <directory>target/classes/META-INF</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
@@ -54,5 +54,5 @@
         <include>NOTICE*</include>
       </includes>
     </fileSet>
-</fileSets>
+  </fileSets>
 </assembly>

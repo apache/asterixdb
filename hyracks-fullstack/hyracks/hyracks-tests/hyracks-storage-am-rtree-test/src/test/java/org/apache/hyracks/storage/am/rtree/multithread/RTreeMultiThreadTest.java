@@ -62,7 +62,7 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
         return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
-                valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference(), true);
+                valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference(), true, false);
 
     }
 
@@ -77,19 +77,19 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertOnlyOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper.getUniformProbDist(insertOnlyOps.length)));
 
         // Inserts mixed with scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN,
                 TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertSearchOnlyOps.length)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps,
+                ProbabilityHelper.getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts and deletes.
         TestOperation[] insertDeleteOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteOps.length)));
+        workloadConfs.add(
+                new TestWorkloadConf(insertDeleteOps, ProbabilityHelper.getUniformProbDist(insertDeleteOps.length)));
 
         // All operations mixed.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN,

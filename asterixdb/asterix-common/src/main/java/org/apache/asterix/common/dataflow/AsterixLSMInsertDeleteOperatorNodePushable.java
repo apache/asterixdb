@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -43,6 +44,20 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
     private final boolean isPrimary;
     private AbstractLSMIndex lsmIndex;
     private int i = 0;
+
+    /**
+     * The following three variables are used to keep track of the information regarding flushing partial frame such as
+     * 1. whether there was a partial frame flush for the current frame,
+     * ==> captured in flushedPartialTuples variabl
+     * 2. the last flushed tuple index in the frame if there was a partial frame flush,
+     * ==> captured in lastFlushedTupleIdx variable
+     * 3. the current tuple index the frame, where this operator is working on the current tuple.
+     * ==> captured in currentTupleIdx variable
+     * These variables are reset for each frame, i.e., whenever nextFrame() is called, these variables are reset.
+     */
+    private boolean flushedPartialTuples;
+    private int currentTupleIdx;
+    private int lastFlushedTupleIdx;
 
     public boolean isPrimary() {
         return isPrimary;
@@ -60,13 +75,14 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
+        appender = new FrameTupleAppender(writeBuffer);
         indexHelper.open();
         lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
         try {
             writer.open();
             modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
                     indexHelper.getResourcePath(), indexHelper.getResourceID(), indexHelper.getResourcePartition(),
-                    lsmIndex, ctx);
+                    lsmIndex, ctx, this);
             indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
@@ -83,11 +99,15 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        currentTupleIdx = 0;
+        lastFlushedTupleIdx = 0;
+        flushedPartialTuples = false;
+
         accessor.reset(buffer);
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
         try {
-            for (; i < tupleCount; i++) {
+            for (; i < tupleCount; i++, currentTupleIdx++) {
                 if (tupleFilter != null) {
                     frameTuple.reset(accessor, i);
                     if (!tupleFilter.accept(frameTuple)) {
@@ -120,10 +140,32 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
             FrameDataException fde = new FrameDataException(i, th);
             throw fde;
         }
+
         writeBuffer.ensureFrameSize(buffer.capacity());
-        FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
-        FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
+        if (flushedPartialTuples) {
+            flushPartialFrame();
+        } else {
+            FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
+            FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
+        }
         i = 0;
+    }
+
+    /**
+     * flushes tuples in a frame from lastFlushedTupleIdx(inclusive) to currentTupleIdx(exclusive)
+     */
+    @Override
+    public void flushPartialFrame() throws HyracksDataException {
+        if (lastFlushedTupleIdx == currentTupleIdx) {
+            //nothing to flush
+            return;
+        }
+        for (int i = lastFlushedTupleIdx; i < currentTupleIdx; i++) {
+            FrameUtils.appendToWriter(writer, appender, accessor, i);
+        }
+        appender.write(writer, true);
+        lastFlushedTupleIdx = currentTupleIdx;
+        flushedPartialTuples = true;
     }
 
     @Override

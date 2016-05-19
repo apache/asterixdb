@@ -215,7 +215,7 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildFilesIndexReplicationJobSpec(Dataset dataset,
             ArrayList<ExternalFile> externalFilesSnapshot, AqlMetadataProvider metadataProvider, boolean createIndex)
-                    throws MetadataException, AlgebricksException {
+            throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
@@ -301,7 +301,7 @@ public class ExternalIndexingOperations {
      */
     public static boolean isDatasetUptodate(Dataset dataset, List<ExternalFile> metadataFiles,
             List<ExternalFile> addedFiles, List<ExternalFile> deletedFiles, List<ExternalFile> appendedFiles)
-                    throws MetadataException, AlgebricksException {
+            throws MetadataException, AlgebricksException {
         boolean uptodate = true;
         int newFileNumber = metadataFiles.get(metadataFiles.size() - 1).getFileNumber() + 1;
 
@@ -561,7 +561,7 @@ public class ExternalIndexingOperations {
     private static ExternalRTreeDataflowHelperFactory getRTreeDataflowHelperFactory(Dataset ds, Index index,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
             AsterixStorageProperties storageProperties, AqlMetadataProvider metadataProvider, JobSpecification spec)
-                    throws AlgebricksException, AsterixException {
+            throws AlgebricksException, AsterixException {
         int numPrimaryKeys = getRIDSize(ds);
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         secondaryKeyFields.size();
@@ -572,6 +572,7 @@ public class ExternalIndexingOperations {
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
         }
+        boolean isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numNestedSecondaryKeyFields = numDimensions * 2;
         IPrimitiveValueProviderFactory[] valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
@@ -610,7 +611,7 @@ public class ExternalIndexingOperations {
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
                 AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                 storageProperties.getBloomFilterFalsePositiveRate(), new int[] { index.getKeyFieldNames().size() },
-                ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true);
+                ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true, isPointMBR);
     }
 
     public static JobSpecification buildAbortOp(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)

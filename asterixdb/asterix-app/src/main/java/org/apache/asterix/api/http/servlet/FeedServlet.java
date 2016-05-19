@@ -32,9 +32,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.app.external.CentralFeedManager;
-import org.apache.asterix.external.feed.api.IFeedLoadManager;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.watch.FeedActivity;
@@ -86,52 +83,26 @@ public class FeedServlet extends HttpServlet {
         }
 
         String outStr = null;
-        if (requestURI.startsWith("/webui/static")) {
-            outStr = sb.toString();
-        } else {
-            Collection<FeedActivity> lfa = CentralFeedManager.getInstance().getFeedLoadManager().getFeedActivities();
-            StringBuilder ldStr = new StringBuilder();
-            ldStr.append("<br />");
-            ldStr.append("<br />");
-            if (lfa == null || lfa.isEmpty()) {
-                ldStr.append("Currently there are no active feeds in AsterixDB");
-            } else {
-                ldStr.append("Active Feeds");
-            }
-            insertTable(ldStr, lfa);
-            outStr = String.format(sb.toString(), ldStr.toString());
-
-        }
+        outStr = sb.toString();
 
         PrintWriter out = response.getWriter();
         out.println(outStr);
     }
 
+    @SuppressWarnings("unused")
     private void insertTable(StringBuilder html, Collection<FeedActivity> list) {
-        html.append("<table style=\"width:100%\">");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_FEED_NAME + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_DATASET_NAME + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_ACTIVE_SINCE + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_INTAKE_STAGE + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_COMPUTE_STAGE + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_STORE_STAGE + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_INTAKE_RATE + "</th>");
-        html.append("<th>" + FeedServletUtil.Constants.TABLE_HEADER_STORE_RATE + "</th>");
-        for (FeedActivity activity : list) {
-            insertRow(html, activity);
-        }
     }
 
+    @SuppressWarnings("null")
     private void insertRow(StringBuilder html, FeedActivity activity) {
         String intake = activity.getFeedActivityDetails().get(FeedActivityDetails.INTAKE_LOCATIONS);
         String compute = activity.getFeedActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
         String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
-        IFeedLoadManager loadManager = CentralFeedManager.getInstance().getFeedLoadManager();
         FeedConnectionId connectionId = new FeedConnectionId(
                 new FeedId(activity.getDataverseName(), activity.getFeedName()), activity.getDatasetName());
-        int intakeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.COLLECT) * intake.split(",").length;
-        int storeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.STORE) * store.split(",").length;
+        int intakeRate = 0;
+        int storeRate = 0;
 
         html.append("<tr>");
         html.append("<td>" + activity.getFeedName() + "</td>");

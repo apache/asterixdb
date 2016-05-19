@@ -19,21 +19,16 @@
 package org.apache.asterix.external.feed.dataflow;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.message.MessageReceiver;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FeedFrameCollector extends MessageReceiver<DataBucket> {
+public class FeedFrameCollector implements IFrameWriter {
 
     private final FeedConnectionId connectionId;
-    private final FrameDistributor frameDistributor;
-    private FeedPolicyAccessor fpa;
-    private IFrameWriter frameWriter;
+    private IFrameWriter writer;
     private State state;
 
     public enum State {
@@ -43,70 +38,27 @@ public class FeedFrameCollector extends MessageReceiver<DataBucket> {
         HANDOVER
     }
 
-    public FeedFrameCollector(FrameDistributor frameDistributor, FeedPolicyAccessor feedPolicyAccessor,
-            IFrameWriter frameWriter, FeedConnectionId connectionId) {
-        super();
-        this.frameDistributor = frameDistributor;
-        this.fpa = feedPolicyAccessor;
+    public FeedFrameCollector(FeedPolicyAccessor feedPolicyAccessor, IFrameWriter writer,
+            FeedConnectionId connectionId) {
         this.connectionId = connectionId;
-        this.frameWriter = frameWriter;
+        this.writer = writer;
         this.state = State.ACTIVE;
     }
 
     @Override
-    public void processMessage(DataBucket bucket) throws Exception {
-        try {
-            ByteBuffer frame = bucket.getContent();
-            switch (bucket.getContentType()) {
-                case DATA:
-                    frameWriter.nextFrame(frame);
-                    break;
-                case EOD:
-                    closeCollector();
-                    break;
-                case EOSD:
-                    throw new AsterixException("Received data bucket with content of type " + bucket.getContentType());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to process data bucket " + bucket + ", encountered exception " + e.getMessage());
-            }
-        } finally {
-            bucket.doneReading();
-        }
-    }
-
-    public void closeCollector() {
-        if (state.equals(State.TRANSITION)) {
-            super.close(true);
-            setState(State.ACTIVE);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info(this + " is now " + State.ACTIVE + " mode, processing frames synchronously");
-            }
-        } else {
-            flushPendingMessages();
-            setState(State.FINISHED);
-            synchronized (frameDistributor.getRegisteredCollectors()) {
-                frameDistributor.getRegisteredCollectors().notifyAll();
-            }
-            disconnect();
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Closed collector " + this);
-        }
+    public synchronized void close() throws HyracksDataException {
+        writer.close();
+        state = State.FINISHED;
+        notify();
     }
 
     public synchronized void disconnect() {
         setState(State.FINISHED);
     }
 
+    @Override
     public synchronized void nextFrame(ByteBuffer frame) throws HyracksDataException {
-        frameWriter.nextFrame(frame);
-    }
-
-    public FeedPolicyAccessor getFeedPolicyAccessor() {
-        return fpa;
+        writer.nextFrame(frame);
     }
 
     public synchronized State getState() {
@@ -123,17 +75,14 @@ public class FeedFrameCollector extends MessageReceiver<DataBucket> {
             default:
                 break;
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Frame Collector " + this.frameDistributor.getFeedRuntimeType() + " switched to " + state);
-        }
     }
 
     public IFrameWriter getFrameWriter() {
-        return frameWriter;
+        return writer;
     }
 
-    public void setFrameWriter(IFrameWriter frameWriter) {
-        this.frameWriter = frameWriter;
+    public void setFrameWriter(IFrameWriter writer) {
+        this.writer = writer;
     }
 
     @Override
@@ -158,12 +107,21 @@ public class FeedFrameCollector extends MessageReceiver<DataBucket> {
     }
 
     @Override
-    public void emptyInbox() throws HyracksDataException {
-        flush();
-    }
-
     public synchronized void flush() throws HyracksDataException {
-        frameWriter.flush();
+        writer.flush();
     }
 
+    @Override
+    public void open() throws HyracksDataException {
+        writer.open();
+    }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        writer.fail();
+    }
+
+    public FeedConnectionId getConnectionId() {
+        return connectionId;
+    }
 }

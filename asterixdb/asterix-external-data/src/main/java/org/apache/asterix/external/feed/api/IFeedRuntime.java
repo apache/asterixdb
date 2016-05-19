@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.external.feed.api;
 
-import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
-import org.apache.hyracks.api.comm.IFrameWriter;
 
 public interface IFeedRuntime {
 
@@ -36,27 +34,14 @@ public interface IFeedRuntime {
     }
 
     public enum Mode {
-        PROCESS,
-        SPILL,
-        PROCESS_SPILL,
-        DISCARD,
-        POST_SPILL_DISCARD,
-        PROCESS_BACKLOG,
-        STALL,
-        FAIL,
-        END
+        PROCESS,            // There is memory
+        SPILL,              // Memory budget has been consumed. Now we're writing to disk
+        DISCARD             // Memory budget has been consumed. Disk space budget has been consumed. Now we're
+                            // discarding
     }
 
     /**
      * @return the unique runtime id associated with the feedRuntime
      */
     public FeedRuntimeId getRuntimeId();
-
-    /**
-     * @return the frame writer associated with the feed runtime.
-     */
-    public IFrameWriter getFeedFrameWriter();
-
-    public FeedRuntimeInputHandler getInputHandler();
-
 }

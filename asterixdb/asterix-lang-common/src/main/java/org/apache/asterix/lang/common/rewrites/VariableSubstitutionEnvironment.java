@@ -46,7 +46,7 @@ public class VariableSubstitutionEnvironment {
         oldVarToNewExpressionMap.putAll(varExprMap);
     }
 
-    public Expression findSubstituion(VariableExpr oldVar) {
+    public Expression findSubstitution(VariableExpr oldVar) {
         return oldVarToNewExpressionMap.get(oldVar.getVar().getValue());
     }
 

@@ -38,19 +38,19 @@
   </licenses>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
 
   <dependencies>
-  <dependency>
-  	<groupId>org.apache.hyracks</groupId>
-  	<artifactId>algebricks-rewriter</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>org.apache.hyracks</groupId>
-  	<artifactId>algebricks-core</artifactId>
-  	<version>0.2.18-SNAPSHOT</version>
-  </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-rewriter</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-core</artifactId>
+      <version>0.2.18-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

@@ -21,6 +21,7 @@ package org.apache.hyracks.test.support;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.context.IHyracksRootContext;
@@ -119,6 +120,11 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public void setThreadFactory(ThreadFactory threadFactory) {
+    }
+
+    @Override
+    public IApplicationConfig getAppConfig() {
+        return null;
     }
 
     @Override

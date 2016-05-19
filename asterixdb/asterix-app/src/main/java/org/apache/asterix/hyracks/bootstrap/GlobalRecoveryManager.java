@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.app.external.CentralFeedManager;
 import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -62,13 +62,13 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
     public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
         state = AsterixClusterProperties.INSTANCE.getState();
         AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(false);
-        return null;
+        return Collections.emptySet();
     }
 
     @Override
     public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId) {
         startGlobalRecovery();
-        return null;
+        return Collections.emptySet();
     }
 
     private void executeHyracksJob(JobSpecification spec) throws Exception {
@@ -106,8 +106,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
                         for (Dataverse dataverse : dataverses) {
                             if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse,
-                                        CentralFeedManager.getInstance());
+                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse);
                                 List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
                                         dataverse.getDataverseName());
                                 for (Dataset dataset : datasets) {

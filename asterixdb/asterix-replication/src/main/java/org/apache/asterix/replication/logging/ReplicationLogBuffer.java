@@ -156,4 +156,12 @@ public class ReplicationLogBuffer {
     public void isStop(boolean stop) {
         this.stop = stop;
     }
+
+    public int getLogBufferSize() {
+        return logBufferSize;
+    }
+
+    public ReplicationManager getReplicationManager() {
+        return replicationManager;
+    }
 }

@@ -18,16 +18,16 @@
  !-->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <artifactId>asterix</artifactId>
-        <groupId>org.apache.asterix</groupId>
-        <version>0.8.7-SNAPSHOT</version>
-    </parent>
-    <artifactId>asterix-docker</artifactId>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>apache-asterixdb</artifactId>
+    <groupId>org.apache.asterix</groupId>
+    <version>0.8.9-SNAPSHOT</version>
+  </parent>
+  <artifactId>asterix-docker</artifactId>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <licenses>
     <license>
@@ -38,26 +38,25 @@
     </license>
   </licenses>
 
-    <build>
+  <build>
     <plugins>
-    <plugin>
-      <groupId>com.spotify</groupId>
-      <artifactId>docker-maven-plugin</artifactId>
-      <version>0.2.11</version>
-      <configuration>
-        <imageName>asterixdb/demo</imageName>
-        <dockerDirectory>docker</dockerDirectory>
-        <resources>
-           <resource>
-             <targetPath>/</targetPath>
-             <directory>../asterix-server/target/</directory>
-             <include>asterix-server-${project.version}-binary-assembly.zip</include>
-           </resource>
-        </resources>
-      </configuration>
-    </plugin>
+      <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.2.11</version>
+        <configuration>
+          <imageName>asterixdb/demo</imageName>
+          <dockerDirectory>docker</dockerDirectory>
+          <resources>
+            <resource>
+              <targetPath>/</targetPath>
+              <directory>../asterix-server/target/</directory>
+              <include>asterix-server-${project.version}-binary-assembly.zip</include>
+            </resource>
+          </resources>
+        </configuration>
+      </plugin>
     </plugins>
-    </build>
-
+  </build>
 
 </project>

@@ -18,12 +18,11 @@
  */
 package org.apache.hyracks.control.nc;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.kohsuke.args4j.CmdLineParser;
 
-import org.apache.hyracks.control.common.controllers.NCConfig;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class NCDriver {
     private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());
@@ -35,13 +34,14 @@ public class NCDriver {
             try {
                 cp.parseArgument(args);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                e.printStackTrace();
                 cp.printUsage(System.err);
-                return;
+                System.exit(1);
             }
+            ncConfig.loadConfigAndApplyDefaults();
 
             final NodeControllerService nService = new NodeControllerService(ncConfig);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe("Setting uncaught exception handler " + nService.getLifeCycleComponentManager());
             }
             Thread.currentThread().setUncaughtExceptionHandler(nService.getLifeCycleComponentManager());

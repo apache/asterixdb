@@ -22,7 +22,6 @@ package org.apache.asterix.common.transactions;
 import java.io.Serializable;
 
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
-import org.apache.asterix.common.transactions.JobId;
 
 public abstract class AbstractOperationCallbackFactory implements Serializable {
     private static final long serialVersionUID = 1L;

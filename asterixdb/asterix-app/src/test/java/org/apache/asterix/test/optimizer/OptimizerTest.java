@@ -107,7 +107,7 @@ public class OptimizerTest {
         if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
             File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
-            File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
+            File actualFile = new File(PATH_ACTUAL + SEPARATOR + path + resultFileName);
             testArgs.add(new Object[] { file, expectedFile, actualFile });
         }
     }
@@ -157,6 +157,10 @@ public class OptimizerTest {
 
             LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
             Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
+
+            // Forces the creation of actualFile.
+            actualFile.getParentFile().mkdirs();
+
             PrintWriter plan = new PrintWriter(actualFile);
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan, compilationProvider);

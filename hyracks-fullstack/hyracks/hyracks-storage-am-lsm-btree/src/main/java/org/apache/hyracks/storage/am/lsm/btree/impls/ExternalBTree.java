@@ -88,6 +88,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     private final ITreeIndexFrameFactory interiorFrameFactory;
 
+    //TODO remove BloomFilter from external dataset's secondary LSMBTree index
     public ExternalBTree(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,

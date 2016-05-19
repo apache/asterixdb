@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.config;
 
-import org.apache.asterix.common.configuration.Property;
-
 public interface IPropertyInterpreter<T> {
-    public T interpret(Property p) throws IllegalArgumentException;
+    public T interpret(String s) throws IllegalArgumentException;
 }

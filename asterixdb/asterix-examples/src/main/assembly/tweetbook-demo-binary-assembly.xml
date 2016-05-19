@@ -17,15 +17,15 @@
  ! under the License.
  !-->
 <assembly>
-	<id>tweetbook-demo-binary-assembly</id>
-	<formats>
-		<format>zip</format>
-	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
-	<fileSets>
-		<fileSet>
-			<directory>src/main/resources/tweetbook-demo</directory>
-			<fileMode>0755</fileMode>
-		</fileSet>
-	</fileSets>
- </assembly>
+  <id>tweetbook-demo-binary-assembly</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/resources/tweetbook-demo</directory>
+      <fileMode>0755</fileMode>
+    </fileSet>
+  </fileSets>
+</assembly>

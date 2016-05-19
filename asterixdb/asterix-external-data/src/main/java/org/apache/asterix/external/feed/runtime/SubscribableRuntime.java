@@ -25,26 +25,18 @@ import java.util.logging.Logger;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
-public class SubscribableRuntime extends FeedRuntime implements ISubscribableRuntime {
+public abstract class SubscribableRuntime extends FeedRuntime implements ISubscribableRuntime {
 
     protected static final Logger LOGGER = Logger.getLogger(SubscribableRuntime.class.getName());
-
     protected final FeedId feedId;
     protected final List<ISubscriberRuntime> subscribers;
-    protected final RecordDescriptor recordDescriptor;
     protected final DistributeFeedFrameWriter dWriter;
 
-    public SubscribableRuntime(FeedId feedId, FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler,
-            DistributeFeedFrameWriter dWriter, RecordDescriptor recordDescriptor) {
-        super(runtimeId, inputHandler, dWriter);
+    public SubscribableRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter dWriter) {
+        super(runtimeId);
         this.feedId = feedId;
-        this.recordDescriptor = recordDescriptor;
         this.dWriter = dWriter;
         this.subscribers = new ArrayList<ISubscriberRuntime>();
     }
@@ -58,38 +50,7 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
         return "SubscribableRuntime" + " [" + feedId + "]" + "(" + runtimeId + ")";
     }
 
-    @Override
-    public synchronized void subscribeFeed(FeedPolicyAccessor fpa, CollectionRuntime collectionRuntime)
-            throws Exception {
-        FeedFrameCollector collector = dWriter.subscribeFeed(new FeedPolicyAccessor(collectionRuntime.getFeedPolicy()),
-                collectionRuntime.getInputHandler(), collectionRuntime.getConnectionId());
-        collectionRuntime.setFrameCollector(collector);
-        subscribers.add(collectionRuntime);
-    }
-
-    @Override
-    public synchronized void unsubscribeFeed(CollectionRuntime collectionRuntime) throws Exception {
-        dWriter.unsubscribeFeed(collectionRuntime.getFeedFrameWriter());
-        subscribers.remove(collectionRuntime);
-    }
-
-    @Override
-    public synchronized List<ISubscriberRuntime> getSubscribers() {
-        return subscribers;
-    }
-
-    @Override
-    public DistributeFeedFrameWriter getFeedFrameWriter() {
-        return dWriter;
-    }
-
     public FeedRuntimeType getFeedRuntimeType() {
         return runtimeId.getFeedRuntimeType();
     }
-
-    @Override
-    public RecordDescriptor getRecordDescriptor() {
-        return recordDescriptor;
-    }
-
 }

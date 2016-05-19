@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -284,7 +283,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            throw new AsterixRuntimeException("Field access " + access.getExpressions().get(0).getValue()
+            throw new AlgebricksException("Field access " + access.getExpressions().get(0).getValue()
                     + " does not correspond to any input of operator " + op2);
         } else {
             // Check if the accessed field is not one of the partitioning key

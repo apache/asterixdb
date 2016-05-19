@@ -35,7 +35,7 @@ public class SqlppSubstituteVariablesVisitor extends SqlppCloneAndSubstituteVari
     protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env)
             throws AsterixException {
         if (env.constainsOldVar(expr)) {
-            return (Expression) SqlppRewriteUtil.deepCopy(env.findSubstituion(expr));
+            return (Expression) SqlppRewriteUtil.deepCopy(env.findSubstitution(expr));
         }
         return expr;
     }

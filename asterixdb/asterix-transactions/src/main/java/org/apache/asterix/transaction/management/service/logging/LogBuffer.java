@@ -90,7 +90,7 @@ public class LogBuffer implements ILogBuffer {
     @Override
     public void append(ILogRecord logRecord, long appendLSN) {
         logRecord.writeLogRecord(appendBuffer);
-        if (logRecord.getLogType() != LogType.FLUSH) {
+        if (logRecord.getLogType() != LogType.FLUSH && logRecord.getLogType() != LogType.WAIT) {
             logRecord.getTxnCtx().setLastLSN(appendLSN);
         }
         synchronized (this) {
@@ -98,7 +98,8 @@ public class LogBuffer implements ILogBuffer {
             if (IS_DEBUG_MODE) {
                 LOGGER.info("append()| appendOffset: " + appendOffset);
             }
-            if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+            if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                    || logRecord.getLogType() == LogType.WAIT) {
                 logRecord.isFlushed(false);
                 syncCommitQ.offer(logRecord);
             }
@@ -114,18 +115,19 @@ public class LogBuffer implements ILogBuffer {
     public void appendWithReplication(ILogRecord logRecord, long appendLSN) {
         logRecord.writeLogRecord(appendBuffer, appendLSN);
 
-        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH) {
-            if (logRecord.getLogType() != LogType.FLUSH) {
-                logRecord.getTxnCtx().setLastLSN(appendLSN);
-            }
+        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH
+                && logRecord.getLogType() != LogType.WAIT) {
+            logRecord.getTxnCtx().setLastLSN(appendLSN);
         }
+
         synchronized (this) {
             appendOffset += logRecord.getLogSize();
             if (IS_DEBUG_MODE) {
                 LOGGER.info("append()| appendOffset: " + appendOffset);
             }
             if (logRecord.getLogSource() == LogSource.LOCAL) {
-                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                        || logRecord.getLogType() == LogType.WAIT) {
                     logRecord.isFlushed(false);
                     syncCommitQ.offer(logRecord);
                 }
@@ -265,18 +267,23 @@ public class LogBuffer implements ILogBuffer {
                             // since this operation consisted of delete and insert, we need to notify the optracker twice
                             txnCtx.notifyOptracker(false);
                         }
+                        if (TransactionSubsystem.IS_PROFILE_MODE) {
+                            txnSubsystem.incrementEntityCommitCount();
+                        }
                     } else if (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT) {
                         reusableJobId.setId(logRecord.getJobId());
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                         txnCtx.notifyOptracker(true);
-                        notifyJobTerminator();
+                        notifyJobTermination();
                     } else if (logRecord.getLogType() == LogType.FLUSH) {
-                        notifyFlushTerminator();
+                        notifyFlushTermination();
+                    } else if (logRecord.getLogType() == LogType.WAIT) {
+                        notifyWaitTermination();
                     }
                 } else if (logRecord.getLogSource() == LogSource.REMOTE) {
                     if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
-                        notifyReplicationTerminator();
+                        notifyReplicationTermination();
                     }
                 }
 
@@ -285,7 +292,15 @@ public class LogBuffer implements ILogBuffer {
         }
     }
 
-    public void notifyJobTerminator() {
+    public void notifyJobTermination() {
+        notifyToSyncCommitQWaiter();
+    }
+
+    public void notifyWaitTermination() {
+        notifyToSyncCommitQWaiter();
+    }
+
+    public void notifyToSyncCommitQWaiter() {
         ILogRecord logRecord = null;
         while (logRecord == null) {
             try {
@@ -300,7 +315,7 @@ public class LogBuffer implements ILogBuffer {
         }
     }
 
-    public void notifyFlushTerminator() throws ACIDException {
+    public void notifyFlushTermination() throws ACIDException {
         LogRecord logRecord = null;
         try {
             logRecord = (LogRecord) flushQ.take();
@@ -321,7 +336,7 @@ public class LogBuffer implements ILogBuffer {
         }
     }
 
-    public void notifyReplicationTerminator() {
+    public void notifyReplicationTermination() {
         LogRecord logRecord = null;
         try {
             logRecord = (LogRecord) remoteJobsQ.take();
@@ -346,5 +361,9 @@ public class LogBuffer implements ILogBuffer {
 
     public void isStop(boolean stop) {
         this.stop = stop;
+    }
+
+    public int getLogPageSize() {
+        return logPageSize;
     }
 }

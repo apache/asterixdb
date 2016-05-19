@@ -22,10 +22,10 @@ package org.apache.hyracks.storage.am.lsm.common.freepage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IVirtualMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.api.IVirtualMetaDataPageManager;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
@@ -45,6 +45,11 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         // The very first call returns page id 2 because the BTree uses
         // the first page as metadata page, and the second page as root page.
         return currentPageId.incrementAndGet();
+    }
+
+    @Override
+    public int getFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int count) throws HyracksDataException {
+        return currentPageId.getAndUpdate(operand -> operand + count) + 1;
     }
 
     @Override
@@ -72,6 +77,11 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
 
     @Override
     public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException {
+    }
+
+    @Override
+    public void addFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int startingPage, int count)
+            throws HyracksDataException {
     }
 
     @Override

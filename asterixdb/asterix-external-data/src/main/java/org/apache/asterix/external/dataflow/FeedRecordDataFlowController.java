@@ -78,11 +78,6 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 tb.addFieldEndOffset();
                 addMetaPart(tb, record);
                 addPrimaryKeys(tb, record);
-                if (tb.getSize() > tupleForwarder.getMaxRecordSize()) {
-                    // log
-                    feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_LARGE_RECORD);
-                    continue;
-                }
                 tupleForwarder.addTuple(tb);
             }
         } catch (InterruptedException e) {
@@ -97,13 +92,13 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         try {
             tupleForwarder.close();
         } catch (Throwable th) {
-            hde = ExternalDataExceptionUtils.suppress(hde, th);
+            hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, th);
         }
         try {
             recordReader.close();
         } catch (Throwable th) {
             LOGGER.warn("Failure during while operating a feed sourcec", th);
-            hde = ExternalDataExceptionUtils.suppress(hde, th);
+            hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, th);
         } finally {
             closeSignal();
             if (hde != null) {
@@ -142,12 +137,12 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 try {
                     tupleForwarder.close();
                 } catch (Throwable th) {
-                    hde = ExternalDataExceptionUtils.suppress(hde, th);
+                    hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, th);
                 }
                 try {
                     recordReader.close();
                 } catch (Throwable th) {
-                    hde = ExternalDataExceptionUtils.suppress(hde, th);
+                    hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, th);
                 }
                 if (hde != null) {
                     throw hde;

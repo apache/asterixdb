@@ -93,7 +93,10 @@ public class ReplicationLogFlusher implements Callable<Boolean> {
                     }
                 }
                 flushPage.flush();
-                emptyQ.offer(flushPage);
+                // TODO: pool large pages
+                if (flushPage.getLogBufferSize() == flushPage.getReplicationManager().getLogPageSize()) {
+                    emptyQ.offer(flushPage);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

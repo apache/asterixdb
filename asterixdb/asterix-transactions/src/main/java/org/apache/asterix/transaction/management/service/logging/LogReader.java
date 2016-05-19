@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.common.transactions.ILogRecord.RECORD_STATUS;
+import org.apache.asterix.common.transactions.ILogRecord.RecordReadStatus;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.MutableLong;
 
@@ -92,36 +92,42 @@ public class LogReader implements ILogReader {
                 return null;
             }
         }
+        ByteBuffer readBuffer = this.readBuffer;
+        boolean refilled = false;
 
-        RECORD_STATUS status = logRecord.readLogRecord(readBuffer);
-        switch(status) {
-            case TRUNCATED: {
-                //we may have just read off the end of the buffer, so try refiling it
-                if(!refillLogReadBuffer()) {
-                    return null;
-                }
-                //now see what we have in the refilled buffer
-                status = logRecord.readLogRecord(readBuffer);
-                switch(status){
-                    case TRUNCATED: {
+        while (true) {
+            RecordReadStatus status = logRecord.readLogRecord(readBuffer);
+            switch (status) {
+                case TRUNCATED: {
+                    if (!refilled) {
+                        //we may have just read off the end of the buffer, so try refiling it
+                        if (!refillLogReadBuffer()) {
+                            return null;
+                        }
+                        refilled = true;
+                        //now see what we have in the refilled buffer
+                        continue;
+                    } else {
                         LOGGER.info("Log file has truncated log records.");
                         return null;
                     }
-                    case BAD_CHKSUM:{
-                        LOGGER.severe("Transaction log contains corrupt log records (perhaps due to medium error). Stopping recovery early.");
-                        return null;
-                    }
-                    case OK: break;
                 }
-                //if we have exited the inner switch,
-                // this means status is really "OK" after buffer refill
-                break;
+                case LARGE_RECORD: {
+                    readBuffer = ByteBuffer.allocate(logRecord.getLogSize());
+                    fillLogReadBuffer(logRecord.getLogSize(), readBuffer);
+                    //now see what we have in the expanded buffer
+                    continue;
+                }
+                case BAD_CHKSUM: {
+                    LOGGER.severe("Transaction log contains corrupt log records (perhaps due to medium error). Stopping recovery early.");
+                    return null;
+                }
+                case OK:
+                    break;
+
             }
-            case BAD_CHKSUM:{
-                LOGGER.severe("Transaction log contains corrupt log records (perhaps due to medium error). Stopping recovery early.");
-                return null;
-            }
-            case OK: break;
+            // break the loop by default
+            break;
         }
         logRecord.setLSN(readLSN);
         readLSN += logRecord.getLogSize();
@@ -173,15 +179,19 @@ public class LogReader implements ILogReader {
      */
 
     private boolean fillLogReadBuffer() throws ACIDException {
+        return fillLogReadBuffer(logPageSize, readBuffer);
+    }
+
+    private boolean fillLogReadBuffer(int readSize, ByteBuffer readBuffer) throws ACIDException {
         int size=0;
         int read=0;
         readBuffer.position(0);
-        readBuffer.limit(logPageSize);
+        readBuffer.limit(readSize);
         try {
             fileChannel.position(readLSN % logFileSize);
             //We loop here because read() may return 0, but this simply means we are waiting on IO.
             //Therefore we want to break out only when either the buffer is full, or we reach EOF.
-            while( size < logPageSize && read != -1) {
+            while( size < readSize && read != -1) {
                 read = fileChannel.read(readBuffer);
                 if(read>0) {
                     size += read;
@@ -235,16 +245,27 @@ public class LogReader implements ILogReader {
                 throw new ACIDException("LSN is out of bounds");
             }
         }
-        RECORD_STATUS status = logRecord.readLogRecord(readBuffer);
-        switch(status){
-            case TRUNCATED:{
-                throw new ACIDException("LSN is out of bounds");
-            }
-            case BAD_CHKSUM:{
-                throw new ACIDException("Log record has incorrect checksum");
-            }
-            case OK: break;
+        ByteBuffer readBuffer = this.readBuffer;
+        while (true) {
+            RecordReadStatus status = logRecord.readLogRecord(readBuffer);
+            switch (status) {
+                case LARGE_RECORD: {
+                    readBuffer = ByteBuffer.allocate(logRecord.getLogSize());
+                    fillLogReadBuffer(logRecord.getLogSize(), readBuffer);
+                    //now see what we have in the refilled buffer
+                    continue;
+                }
+                case TRUNCATED: {
+                    throw new ACIDException("LSN is out of bounds");
+                }
+                case BAD_CHKSUM: {
+                    throw new ACIDException("Log record has incorrect checksum");
+                }
+                case OK:
+                    break;
 
+            }
+            break;
         }
         logRecord.setLSN(readLSN);
         readLSN += logRecord.getLogSize();

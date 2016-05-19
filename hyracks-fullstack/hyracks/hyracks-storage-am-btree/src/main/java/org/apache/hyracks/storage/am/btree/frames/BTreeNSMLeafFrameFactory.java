@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.btree.frames;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public class BTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
@@ -35,11 +36,16 @@ public class BTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     @Override
     public IBTreeLeafFrame createFrame() {
-        return new BTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter());
+        return new BTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), getLargePageHelper());
     }
 
     @Override
     public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
         return tupleWriterFactory;
+    }
+
+    @Override
+    public ILargePageHelper getLargePageHelper() {
+        return BTreeLargeFrameHelper.INSTANCE;
     }
 }

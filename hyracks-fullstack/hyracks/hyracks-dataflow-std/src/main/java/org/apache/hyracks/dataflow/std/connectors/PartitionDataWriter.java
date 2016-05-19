@@ -103,14 +103,13 @@ public class PartitionDataWriter implements IFrameWriter {
             isOpen[i] = true;
             pWriters[i].open();
         }
+        if (!allocatedFrame) {
+            allocateFrames();
+        }
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        if (!allocatedFrame) {
-            allocateFrames();
-            allocatedFrame = true;
-        }
         tupleAccessor.reset(buffer);
         int tupleCount = tupleAccessor.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
@@ -123,6 +122,7 @@ public class PartitionDataWriter implements IFrameWriter {
         for (int i = 0; i < appenders.length; ++i) {
             appenders[i].reset(new VSizeFrame(ctx), true);
         }
+        allocatedFrame = true;
     }
 
     @Override

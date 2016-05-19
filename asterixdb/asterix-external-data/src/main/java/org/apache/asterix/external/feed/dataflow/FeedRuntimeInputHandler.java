@@ -19,328 +19,262 @@
 package org.apache.asterix.external.feed.dataflow;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IFeedManager;
-import org.apache.asterix.external.feed.api.IFeedMemoryComponent;
-import org.apache.asterix.external.feed.api.IFeedMessage;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.api.IFeedRuntime.Mode;
-import org.apache.asterix.external.feed.dataflow.DataBucket.ContentType;
+import org.apache.asterix.external.feed.management.ConcurrentFramePool;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.message.FeedCongestionMessage;
-import org.apache.asterix.external.feed.message.ThrottlingEnabledFeedMessage;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
-import org.apache.asterix.external.feed.watch.MonitoredBuffer;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 /**
+ * TODO: Add unit test cases for this class
  * Provides for error-handling and input-side buffering for a feed runtime.
- * The input handler is buffering in:
- * 1. FeedMetaComputeNodePushable.initializeNewFeedRuntime();
- * 2. FeedMetaStoreNodePushable.initializeNewFeedRuntime();
- *              ______
- *             |      |
- * ============| core |============
- * ============|  op  |============
- * ^^^^^^^^^^^^|______|
- * Input Side
- * Handler
+ * .............______.............
+ * ............|......|............
+ * ============|(core)|============
+ * ============|( op )|============
+ * ^^^^^^^^^^^^|______|............
+ * .Input Side.
+ * ..Handler...
  **/
-public class FeedRuntimeInputHandler implements IFrameWriter {
+public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
     private static final Logger LOGGER = Logger.getLogger(FeedRuntimeInputHandler.class.getName());
-
-    private final FeedConnectionId connectionId;
-    private final FeedRuntimeId runtimeId;
-    private final FeedPolicyAccessor feedPolicyAccessor;
+    private static final ByteBuffer POISON_PILL = ByteBuffer.allocate(0);
+    private static final double MAX_SPILL_USED_BEFORE_RESUME = 0.8;
     private final FeedExceptionHandler exceptionHandler;
-    private final FeedFrameDiscarder discarder;
-    private final FeedFrameSpiller spiller;
+    private final FrameSpiller spiller;
     private final FeedPolicyAccessor fpa;
-    private final IFeedManager feedManager;
-    private final MonitoredBuffer mBuffer;
-    private final DataBucketPool pool;
-    private final FrameEventCallback frameEventCallback;
-
-    private boolean bufferingEnabled;
-    private FrameCollection frameCollection;
-    private Mode mode;
-    private Mode lastMode;
-    private boolean finished;
-    private long nProcessed;
-    private boolean throttlingEnabled;
-    protected IFrameWriter coreOperator;
+    private final FrameAction frameAction;
+    private final int initialFrameSize;
+    private final FrameTransporter consumer;
+    private final Thread consumerThread;
+    private final LinkedBlockingDeque<ByteBuffer> inbox;
+    private final ConcurrentFramePool memoryManager;
+    private Mode mode = Mode.PROCESS;
+    private int numDiscarded = 0;
+    private int numSpilled = 0;
+    private int numProcessedInMemory = 0;
+    private int numStalled = 0;
 
     public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
-            RecordDescriptor recordDesc, IFeedManager feedManager, int nPartitions) throws HyracksDataException {
-        this.connectionId = connectionId;
-        this.runtimeId = runtimeId;
-        this.coreOperator = coreOperator;
-        this.bufferingEnabled = bufferingEnabled;
-        this.feedPolicyAccessor = fpa;
-        this.spiller = new FeedFrameSpiller(ctx, connectionId, runtimeId, fpa);
-        this.discarder = new FeedFrameDiscarder(connectionId, runtimeId, fpa, this);
-        this.exceptionHandler = new FeedExceptionHandler(ctx, fta, recordDesc, feedManager, connectionId);
-        this.mode = Mode.PROCESS;
-        this.lastMode = Mode.PROCESS;
-        this.finished = false;
+            IFrameWriter writer, FeedPolicyAccessor fpa, FrameTupleAccessor fta, ConcurrentFramePool feedMemoryManager)
+            throws HyracksDataException {
+        this.writer = writer;
+        this.spiller =
+                new FrameSpiller(ctx,
+                        connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_"
+                                + runtimeId.getFeedRuntimeType() + "_" + runtimeId.getPartition(),
+                        fpa.getMaxSpillOnDisk());
+        this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;
-        this.feedManager = feedManager;
-        this.pool = (DataBucketPool) feedManager.getFeedMemoryManager()
-                .getMemoryComponent(IFeedMemoryComponent.Type.POOL);
-        this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager()
-                .getMemoryComponent(IFeedMemoryComponent.Type.COLLECTION);
-        this.frameEventCallback = new FrameEventCallback(fpa, this, coreOperator);
-        this.mBuffer = MonitoredBuffer.getMonitoredBuffer(ctx, this, coreOperator, fta, recordDesc,
-                feedManager.getFeedMetricCollector(), connectionId, runtimeId, exceptionHandler, frameEventCallback,
-                nPartitions, fpa);
-        this.throttlingEnabled = false;
+        this.memoryManager = feedMemoryManager;
+        this.inbox = new LinkedBlockingDeque<>();
+        this.consumer = new FrameTransporter();
+        this.consumerThread = new Thread();
+        this.consumerThread.start();
+        this.initialFrameSize = ctx.getInitialFrameSize();
+        this.frameAction = new FrameAction(inbox);
     }
 
     @Override
-    public synchronized void nextFrame(ByteBuffer frame) throws HyracksDataException {
+    public void open() throws HyracksDataException {
+        synchronized (writer) {
+            writer.open();
+        }
+    }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        synchronized (writer) {
+            writer.fail();
+        }
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        inbox.add(POISON_PILL);
+        notify();
         try {
+            consumerThread.join();
+        } catch (InterruptedException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+        }
+        try {
+            memoryManager.release(inbox);
+        } catch (Throwable th) {
+            LOGGER.log(Level.WARNING, th.getMessage(), th);
+        }
+        try {
+            spiller.close();
+        } catch (Throwable th) {
+            LOGGER.log(Level.WARNING, th.getMessage(), th);
+        }
+        writer.close();
+    }
+
+    @Override
+    public void nextFrame(ByteBuffer frame) throws HyracksDataException {
+        try {
+            if (consumer.cause() != null) {
+                throw consumer.cause();
+            }
             switch (mode) {
                 case PROCESS:
-                    switch (lastMode) {
-                        case SPILL:
-                        case POST_SPILL_DISCARD:
-                            setMode(Mode.PROCESS_SPILL);
-                            processSpilledBacklog();
-                            break;
-                        case STALL:
-                            setMode(Mode.PROCESS_BACKLOG);
-                            processBufferredBacklog();
-                            break;
-                        default:
-                            break;
-                    }
-                    process(frame);
-                    break;
-                case PROCESS_BACKLOG:
-                case PROCESS_SPILL:
                     process(frame);
                     break;
                 case SPILL:
                     spill(frame);
                     break;
                 case DISCARD:
-                case POST_SPILL_DISCARD:
                     discard(frame);
                     break;
-                case STALL:
-                    switch (runtimeId.getFeedRuntimeType()) {
-                        case COLLECT:
-                        case COMPUTE_COLLECT:
-                        case COMPUTE:
-                        case STORE:
-                            bufferDataUntilRecovery(frame);
-                            break;
-                        default:
-                            if (LOGGER.isLoggable(Level.WARNING)) {
-                                LOGGER.warning("Discarding frame during " + mode + " mode " + this.runtimeId);
-                            }
-                            break;
-                    }
-                    break;
-                case END:
-                case FAIL:
+                default:
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Ignoring incoming tuples in " + mode + " mode");
                     }
                     break;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new HyracksDataException(e);
+        } catch (Throwable th) {
+            throw new HyracksDataException(th);
         }
     }
 
-    private void bufferDataUntilRecovery(ByteBuffer frame) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Bufferring data until recovery is complete " + this.runtimeId);
+    private ByteBuffer getFreeBuffer(int frameSize) throws HyracksDataException {
+        int numFrames = frameSize / initialFrameSize;
+        if (numFrames == 1) {
+            return memoryManager.get();
+        } else {
+            return memoryManager.get(frameSize);
         }
-        if (frameCollection == null) {
-            this.frameCollection = (FrameCollection) feedManager.getFeedMemoryManager()
-                    .getMemoryComponent(IFeedMemoryComponent.Type.COLLECTION);
-        }
-        if (frameCollection == null) {
-            discarder.processMessage(frame);
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Running low on memory! DISCARDING FRAME ");
+    }
+
+    private void discard(ByteBuffer frame) throws HyracksDataException {
+        if (fpa.spillToDiskOnCongestion()) {
+            if (spiller.spill(frame)) {
+                numSpilled++;
+                mode = Mode.SPILL;
+                return;
             }
         } else {
-            boolean success = frameCollection.addFrame(frame);
-            if (!success) {
-                if (fpa.spillToDiskOnCongestion()) {
-                    if (frame != null) {
-                        spiller.processMessage(frame);
-                    } // TODO handle the else casec
-
-                } else {
-                    discarder.processMessage(frame);
-                }
+            ByteBuffer next = getFreeBuffer(frame.capacity());
+            if (next != null) {
+                numProcessedInMemory++;
+                next.put(frame);
+                inbox.offer(next);
+                mode = Mode.PROCESS;
+                return;
             }
+        }
+        numDiscarded++;
+    }
+
+    private synchronized void exitProcessState(ByteBuffer frame) throws HyracksDataException {
+        if (fpa.spillToDiskOnCongestion()) {
+            mode = Mode.SPILL;
+            spiller.open();
+            spill(frame);
+        } else {
+            discardOrStall(frame);
         }
     }
 
-    public void reportUnresolvableCongestion() throws HyracksDataException {
-        if (this.runtimeId.getFeedRuntimeType().equals(FeedRuntimeType.COMPUTE)) {
-            FeedCongestionMessage congestionReport = new FeedCongestionMessage(connectionId, runtimeId,
-                    mBuffer.getInflowRate(), mBuffer.getOutflowRate(), mode);
-            feedManager.getFeedMessageService().sendMessage(congestionReport);
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Congestion reported " + this.connectionId + " " + this.runtimeId);
+    private void discardOrStall(ByteBuffer frame) throws HyracksDataException {
+        if (fpa.discardOnCongestion()) {
+            numDiscarded++;
+            mode = Mode.DISCARD;
+            discard(frame);
+        } else {
+            stall(frame);
+        }
+    }
+
+    private void stall(ByteBuffer frame) throws HyracksDataException {
+        try {
+            numStalled++;
+            // If spilling is enabled, we wait on the spiller
+            if (fpa.spillToDiskOnCongestion()) {
+                synchronized (spiller) {
+                    while (spiller.usedBudget() > MAX_SPILL_USED_BEFORE_RESUME) {
+                        spiller.wait();
+                    }
+                }
+                spiller.spill(frame);
+                synchronized (this) {
+                    notify();
+                }
+                return;
+            }
+            // Spilling is disabled, we subscribe to feedMemoryManager
+            frameAction.setFrame(frame);
+            synchronized (frameAction) {
+                if (memoryManager.subscribe(frameAction)) {
+                    frameAction.wait();
+                }
+            }
+            synchronized (this) {
+                notify();
+            }
+        } catch (InterruptedException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    private void process(ByteBuffer frame) throws HyracksDataException {
+        // Get a page from
+        ByteBuffer next = getFreeBuffer(frame.capacity());
+        if (next != null) {
+            numProcessedInMemory++;
+            next.put(frame);
+            inbox.offer(next);
+            if (inbox.size() == 1) {
+                synchronized (this) {
+                    notify();
+                }
             }
         } else {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unresolvable congestion at " + this.connectionId + " " + this.runtimeId);
-            }
+            // out of memory. we switch to next mode as per policy -- synchronized method
+            exitProcessState(frame);
         }
     }
 
-    private void processBufferredBacklog() throws HyracksDataException {
-        try {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Processing backlog " + this.runtimeId);
-            }
-
-            if (frameCollection != null) {
-                Iterator<ByteBuffer> backlog = frameCollection.getFrameCollectionIterator();
-                while (backlog.hasNext()) {
-                    process(backlog.next());
-                    nProcessed++;
-                }
-                DataBucket bucket = pool.getDataBucket();
-                bucket.setContentType(ContentType.EOSD);
-                bucket.setDesiredReadCount(1);
-                mBuffer.sendMessage(bucket);
-                feedManager.getFeedMemoryManager().releaseMemoryComponent(frameCollection);
-                frameCollection = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new HyracksDataException(e);
-        }
-    }
-
-    private void processSpilledBacklog() throws HyracksDataException {
-        try {
-            Iterator<ByteBuffer> backlog = spiller.replayData();
-            while (backlog.hasNext()) {
-                process(backlog.next());
-                nProcessed++;
-            }
-            DataBucket bucket = pool.getDataBucket();
-            bucket.setContentType(ContentType.EOSD);
-            bucket.setDesiredReadCount(1);
-            mBuffer.sendMessage(bucket);
-            spiller.reset();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new HyracksDataException(e);
-        }
-    }
-
-    protected void process(ByteBuffer frame) throws HyracksDataException {
-        boolean frameProcessed = false;
-        while (!frameProcessed) {
-            try {
-                if (!bufferingEnabled) {
-                    if (frame == null) {
-                        setFinished(true);
-                        synchronized (coreOperator) {
-                            coreOperator.notifyAll();
-                        }
-                    } else {
-                        coreOperator.nextFrame(frame); // synchronous
-                    }
+    private void spill(ByteBuffer frame) throws HyracksDataException {
+        if (spiller.switchToMemory()) {
+            synchronized (this) {
+                // Check if there is memory
+                ByteBuffer next = getFreeBuffer(frame.capacity());
+                if (next != null) {
+                    spiller.close();
+                    numProcessedInMemory++;
+                    next.put(frame);
+                    inbox.offer(next);
+                    mode = Mode.PROCESS;
                 } else {
-                    DataBucket bucket = pool.getDataBucket();
-                    if (bucket != null) {
-                        if (frame != null) {
-                            bucket.reset(frame); // created a copy here
-                            bucket.setContentType(ContentType.DATA);
-                        } else {
-                            bucket.setContentType(ContentType.EOD);
-                            setFinished(true);
-                            synchronized (coreOperator) {
-                                coreOperator.notifyAll();
-                            }
-                        }
-                        // TODO: fix handling of eod case with monitored buffers.
-                        bucket.setDesiredReadCount(1);
-                        mBuffer.sendMessage(bucket);
-                        mBuffer.sendReport(frame);
-                        nProcessed++;
-                    } else {
-                        if (fpa.spillToDiskOnCongestion()) {
-                            if (frame != null) {
-                                boolean spilled = spiller.processMessage(frame);
-                                if (spilled) {
-                                    setMode(Mode.SPILL);
-                                } else {
-                                    reportUnresolvableCongestion();
-                                }
-                            }
-                        } else if (fpa.discardOnCongestion()) {
-                            boolean discarded = discarder.processMessage(frame);
-                            if (!discarded) {
-                                reportUnresolvableCongestion();
-                            }
-                        } else if (fpa.throttlingEnabled()) {
-                            setThrottlingEnabled(true);
-                        } else {
-                            reportUnresolvableCongestion();
-                        }
-
-                    }
-                }
-                frameProcessed = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                if (feedPolicyAccessor.continueOnSoftFailure()) {
-                    frame = exceptionHandler.handleException(e, frame);
-                    if (frame == null) {
-                        frameProcessed = true;
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Encountered exception! " + e.getMessage()
-                                    + "Insufficient information, Cannot extract failing tuple");
-                        }
-                    }
-                } else {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Ingestion policy does not require recovering from tuple. Feed would terminate");
-                    }
-                    mBuffer.close(false);
-                    throw new HyracksDataException(e);
+                    // spill. This will always succeed since spilled = 0 (must verify that budget can't be 0)
+                    spiller.spill(frame);
+                    numSpilled++;
+                    notify();
                 }
             }
-        }
-    }
-
-    private void spill(ByteBuffer frame) throws Exception {
-        boolean success = spiller.processMessage(frame);
-        if (!success) {
-            // limit reached
-            setMode(Mode.POST_SPILL_DISCARD);
-            reportUnresolvableCongestion();
-        }
-    }
-
-    private void discard(ByteBuffer frame) throws Exception {
-        boolean success = discarder.processMessage(frame);
-        if (!success) { // limit reached
-            reportUnresolvableCongestion();
+        } else {
+            // try to spill. If failed switch to either discard or stall
+            if (spiller.spill(frame)) {
+                numSpilled++;
+            } else {
+                if (fpa.discardOnCongestion()) {
+                    discard(frame);
+                } else {
+                    stall(frame);
+                }
+            }
         }
     }
 
@@ -349,120 +283,105 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     }
 
     public synchronized void setMode(Mode mode) {
-        if (mode.equals(this.mode)) {
-            return;
-        }
-        this.lastMode = this.mode;
         this.mode = mode;
-        if (mode.equals(Mode.END)) {
-            this.close();
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Switched from " + lastMode + " to " + mode + " " + this.runtimeId);
-        }
-    }
-
-    @Override
-    public void close() {
-        boolean disableMonitoring = !this.mode.equals(Mode.STALL);
-        if (frameCollection != null) {
-            feedManager.getFeedMemoryManager().releaseMemoryComponent(frameCollection);
-        }
-        if (pool != null) {
-            feedManager.getFeedMemoryManager().releaseMemoryComponent(pool);
-        }
-        mBuffer.close(false, disableMonitoring);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Closed input side handler for " + this.runtimeId + " disabled monitoring " + disableMonitoring
-                    + " Mode for runtime " + this.mode);
-        }
-    }
-
-    public IFrameWriter getCoreOperator() {
-        return coreOperator;
-    }
-
-    public void setCoreOperator(IFrameWriter coreOperator) {
-        this.coreOperator = coreOperator;
-        mBuffer.setFrameWriter(coreOperator);
-        frameEventCallback.setCoreOperator(coreOperator);
-    }
-
-    public boolean isFinished() {
-        return finished;
-    }
-
-    public void setFinished(boolean finished) {
-        this.finished = finished;
-    }
-
-    public long getProcessed() {
-        return nProcessed;
-    }
-
-    public FeedRuntimeId getRuntimeId() {
-        return runtimeId;
-    }
-
-    @Override
-    public void open() throws HyracksDataException {
-        coreOperator.open();
-        mBuffer.start();
-    }
-
-    @Override
-    public void fail() throws HyracksDataException {
-        coreOperator.fail();
-    }
-
-    public void reset(int nPartitions) {
-        this.mBuffer.setNumberOfPartitions(nPartitions);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Reset number of partitions to " + nPartitions + " for " + this.runtimeId);
-        }
-        mBuffer.reset();
-    }
-
-    public FeedConnectionId getConnectionId() {
-        return connectionId;
-    }
-
-    public IFeedManager getFeedManager() {
-        return feedManager;
-    }
-
-    public MonitoredBuffer getmBuffer() {
-        return mBuffer;
-    }
-
-    public boolean isThrottlingEnabled() {
-        return throttlingEnabled;
-    }
-
-    public void setThrottlingEnabled(boolean throttlingEnabled) {
-        if (this.throttlingEnabled != throttlingEnabled) {
-            this.throttlingEnabled = throttlingEnabled;
-            IFeedMessage throttlingEnabledMesg = new ThrottlingEnabledFeedMessage(connectionId, runtimeId);
-            feedManager.getFeedMessageService().sendMessage(throttlingEnabledMesg);
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Throttling " + throttlingEnabled + " for " + this.connectionId + "[" + runtimeId + "]");
-            }
-        }
-    }
-
-    public boolean isBufferingEnabled() {
-        return bufferingEnabled;
-    }
-
-    public void setBufferingEnabled(boolean bufferingEnabled) {
-        this.bufferingEnabled = bufferingEnabled;
     }
 
     @Override
     public void flush() throws HyracksDataException {
-        // Only flush when in process mode.
-        if (mode == Mode.PROCESS) {
-            coreOperator.flush();
+        synchronized (writer) {
+            writer.flush();
+        }
+    }
+
+    public int getNumDiscarded() {
+        return numDiscarded;
+    }
+
+    public int getNumSpilled() {
+        return numSpilled;
+    }
+
+    public int getNumProcessedInMemory() {
+        return numProcessedInMemory;
+    }
+
+    public int getNumStalled() {
+        return numStalled;
+    }
+
+    private class FrameTransporter implements Runnable {
+        private volatile Throwable cause;
+
+        public Throwable cause() {
+            return cause;
+        }
+
+        private Throwable consume(ByteBuffer frame) {
+            while (frame != null) {
+                try {
+                    writer.nextFrame(frame);
+                    frame = null;
+                } catch (HyracksDataException e) {
+                    // It is fine to catch throwable here since this thread is always expected to terminate gracefully
+                    frame = exceptionHandler.handle(e, frame);
+                    if (frame == null) {
+                        this.cause = e;
+                        return e;
+                    }
+                } catch (Throwable th) {
+                    this.cause = th;
+                    return th;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ByteBuffer frame = inbox.poll();
+                while (frame != POISON_PILL) {
+                    if (frame != null) {
+                        try {
+                            if (consume(frame) != null) {
+                                return;
+                            }
+                        } finally {
+                            // Done with frame.
+                            memoryManager.release(frame);
+                        }
+                    }
+                    frame = inbox.poll();
+                    if (frame == null) {
+                        // Memory queue is empty. Check spill
+                        frame = spiller.next();
+                        while (frame != null) {
+                            if (consume(frame) != null) {
+                                // We don't release the frame since this is a spill frame that we didn't get from memory
+                                // manager
+                                return;
+                            }
+                            frame = spiller.next();
+                        }
+                        writer.flush();
+                        // At this point. We consumed all memory and spilled
+                        // We can't assume the next will be in memory. what if there is 0 memory?
+                        synchronized (FeedRuntimeInputHandler.this) {
+                            frame = inbox.poll();
+                            if (frame == null) {
+                                // Nothing in memory
+                                if (spiller.switchToMemory()) {
+                                    // Nothing in disk
+                                    FeedRuntimeInputHandler.this.wait();
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable th) {
+                this.cause = th;
+            }
+            // cleanup will always be done through the close() call
         }
     }
 }

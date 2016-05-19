@@ -18,16 +18,16 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="query_after_restart">
-      <test-case FilePath="query_after_restart">
-          <compilation-unit name="dataset-with-meta-record">
-              <output-dir compare="Text">dataset-with-meta-record</output-dir>
-          </compilation-unit>
-      </test-case>
-      <test-case FilePath="query_after_restart">
-          <compilation-unit name="external_index">
-              <output-dir compare="Text">external_index</output-dir>
-          </compilation-unit>
-      </test-case>
+    <test-case FilePath="query_after_restart">
+      <compilation-unit name="dataset-with-meta-record">
+        <output-dir compare="Text">dataset-with-meta-record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="query_after_restart">
+      <compilation-unit name="external_index">
+        <output-dir compare="Text">external_index</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="recover_after_abort">
 
@@ -60,13 +60,13 @@
         <output-dir compare="Text">primary_plus_ngram_index</output-dir>
       </compilation-unit>
     </test-case>
- 
-	<test-case FilePath="recover_after_abort">
+
+    <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_multiple_secondary_indices">
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
       </compilation-unit>
     </test-case>
-  
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="temp_primary_index_only">
         <output-dir compare="Text">primary_index_only</output-dir>
@@ -108,9 +108,9 @@
         <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
- </test-group>
+  </test-group>
 
- <test-group name="recovery_ddl">
+  <test-group name="recovery_ddl">
 
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
@@ -197,7 +197,7 @@
         <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
- 
+
   </test-group>
 
 </test-suite>

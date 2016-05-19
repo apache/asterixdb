@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ISlotManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -30,6 +31,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
@@ -38,7 +40,10 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     protected static final int freeSpaceOff = tupleCountOff + 4; // 12
     protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
     protected static final int levelOff = totalFreeSpaceOff + 4; // 20
-    protected static final int smFlagOff = levelOff + 1; // 21
+    protected static final int flagOff = levelOff + 1; // 21
+
+    protected static final byte smFlagBit           = 0x1;
+    protected static final byte largeFlagBit        = 0x2;
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -46,12 +51,14 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     protected ITreeIndexTupleWriter tupleWriter;
     protected ITreeIndexTupleReference frameTuple;
+    protected ILargePageHelper largePageHelper;
 
-    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager) {
+    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager, ILargePageHelper largePageHelper) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
         this.slotManager = slotManager;
         this.slotManager.setFrame(this);
+        this.largePageHelper = largePageHelper;
     }
 
     @Override
@@ -61,7 +68,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         buf.putInt(tupleCountOff, 0);
         resetSpaceParams();
         buf.put(levelOff, level);
-        buf.put(smFlagOff, (byte) 0);
+        buf.put(flagOff, (byte) 0);
     }
 
     @Override
@@ -72,6 +79,34 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     @Override
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
+    }
+
+    public boolean getSmFlag() {
+        return (buf.get(flagOff) & smFlagBit) != 0;
+    }
+
+    public void setSmFlag(boolean smFlag) {
+        if (smFlag) {
+            buf.put(flagOff, (byte) (buf.get(flagOff) | smFlagBit));
+        } else {
+            buf.put(flagOff, (byte) (buf.get(flagOff) & ~smFlagBit));
+        }
+    }
+
+    public void setLargeFlag(boolean largeFlag) {
+        if (largeFlag) {
+            buf.put(flagOff, (byte) (buf.get(flagOff) | largeFlagBit));
+        } else {
+            buf.put(flagOff, (byte) (buf.get(flagOff) & ~largeFlagBit));
+        }
+    }
+
+    public static boolean isLargePage(ByteBuffer buf) {
+        return (buf.get(flagOff) & largeFlagBit) != 0;
+    }
+
+    public boolean isLargePage() {
+        return isLargePage(buf);
     }
 
     @Override
@@ -165,7 +200,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
         // Enough space in the contiguous space region?
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
@@ -184,6 +219,10 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         frameTuple.resetByTupleIndex(this, oldTupleIndex);
         int oldTupleBytes = frameTuple.getTupleSize();
         int newTupleBytes = tupleWriter.bytesRequired(newTuple);
+        return hasSpaceUpdate(oldTupleBytes, newTupleBytes);
+    }
+
+    protected FrameOpSpaceStatus hasSpaceUpdate(int oldTupleBytes, int newTupleBytes) {
         int additionalBytesRequired = newTupleBytes - oldTupleBytes;
         // Enough space for an in-place update?
         if (additionalBytesRequired <= 0) {
@@ -203,8 +242,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     protected void resetSpaceParams() {
-        buf.putInt(freeSpaceOff, smFlagOff + 1);
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - (smFlagOff + 1));
+        buf.putInt(freeSpaceOff, getPageHeaderSize());
+        buf.putInt(totalFreeSpaceOff, buf.capacity() - getPageHeaderSize());
     }
 
     @Override
@@ -246,7 +285,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         strBuilder.append("freeSpaceOff:      " + freeSpaceOff + "\n");
         strBuilder.append("totalFreeSpaceOff: " + totalFreeSpaceOff + "\n");
         strBuilder.append("levelOff:          " + levelOff + "\n");
-        strBuilder.append("smFlagOff:         " + smFlagOff + "\n");
+        strBuilder.append("flagOff:           " + flagOff + "\n");
         return strBuilder.toString();
     }
 
@@ -301,5 +340,10 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     public int getFreeContiguousSpace() {
         return buf.capacity() - getFreeSpaceOff() - (getTupleCount() * slotManager.getSlotSize());
+    }
+
+    @Override
+    public ILargePageHelper getLargePageHelper() {
+        return largePageHelper;
     }
 }

@@ -36,4 +36,8 @@ public class DirectBufferAllocator implements ICacheMemoryAllocator {
     public ByteBuffer[] ensureAvailabilityThenAllocate(int pageSize, int numPages) throws HyracksDataException {
         return allocate(pageSize, numPages);
     }
+
+    @Override
+    public void reserveAllocation(int pageSize, int numPages) throws HyracksDataException {
+    }
 }

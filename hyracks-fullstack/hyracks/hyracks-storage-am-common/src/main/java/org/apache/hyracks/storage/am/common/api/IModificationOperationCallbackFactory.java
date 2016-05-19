@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IModificationOperationCallbackFactory extends Serializable {
     public IModificationOperationCallback createModificationOperationCallback(String resourcePath, long resourceId,
-            int resourcePartition, Object resource, IHyracksTaskContext ctx) throws HyracksDataException;
+            int resourcePartition, Object resource, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
+            throws HyracksDataException;
 }

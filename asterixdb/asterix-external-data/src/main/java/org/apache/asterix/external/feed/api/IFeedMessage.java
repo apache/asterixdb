@@ -28,18 +28,7 @@ import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 public interface IFeedMessage extends Serializable, JSONSerializable {
 
     public enum MessageType {
-        END,
-        XAQL,
-        FEED_REPORT,
-        NODE_REPORT,
-        STORAGE_REPORT,
-        CONGESTION,
-        PREPARE_STALL,
-        TERMINATE_FLOW,
-        SCALE_IN_REQUEST,
-        COMMIT_ACK,
-        COMMIT_ACK_RESPONSE,
-        THROTTLING_ENABLED
+        END
     }
 
     /**

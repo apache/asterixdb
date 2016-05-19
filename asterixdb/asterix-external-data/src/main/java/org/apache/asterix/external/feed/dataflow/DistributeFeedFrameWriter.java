@@ -20,17 +20,10 @@ package org.apache.asterix.external.feed.dataflow;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IFeedManager;
-import org.apache.asterix.external.feed.api.IFeedOperatorOutputSideHandler;
-import org.apache.asterix.external.feed.api.IFeedOperatorOutputSideHandler.Type;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,8 +37,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
  **/
 public class DistributeFeedFrameWriter implements IFrameWriter {
 
-    private static final Logger LOGGER = Logger.getLogger(DistributeFeedFrameWriter.class.getName());
-
     /** A unique identifier for the feed to which the incoming tuples belong. **/
     private final FeedId feedId;
 
@@ -56,7 +47,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private final FrameDistributor frameDistributor;
 
     /** The original frame writer instantiated as part of job creation **/
-    private IFrameWriter writer;
+    private final IFrameWriter writer;
 
     /** The feed operation whose output is being distributed by the DistributeFeedFrameWriter **/
     private final FeedRuntimeType feedRuntimeType;
@@ -65,11 +56,9 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private final int partition;
 
     public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer,
-            FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta, IFeedManager feedManager)
-            throws IOException {
+            FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta) throws IOException {
         this.feedId = feedId;
-        this.frameDistributor = new FrameDistributor(feedId, feedRuntimeType, partition, true,
-                feedManager.getFeedMemoryManager(), fta);
+        this.frameDistributor = new FrameDistributor();
         this.feedRuntimeType = feedRuntimeType;
         this.partition = partition;
         this.writer = writer;
@@ -78,38 +67,19 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /**
      * @param fpa
      *            Feed policy accessor
-     * @param frameWriter
+     * @param nextOnlyWriter
      *            the writer which will deliver the buffers
      * @param connectionId
      *            (Dataverse - Dataset - Feed)
      * @return A frame collector.
-     * @throws Exception
+     * @throws HyracksDataException
      */
-    public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter,
-            FeedConnectionId connectionId) throws Exception {
-        FeedFrameCollector collector = null;
-        if (!frameDistributor.isRegistered(frameWriter)) {
-            collector = new FeedFrameCollector(frameDistributor, fpa, frameWriter, connectionId);
-            frameDistributor.registerFrameCollector(collector);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Registered subscriber, new mode " + frameDistributor.getMode());
-            }
-            return collector;
-        } else {
-            throw new IllegalStateException("subscriber " + feedId + " already registered");
-        }
+    public void subscribe(FeedFrameCollector collector) throws HyracksDataException {
+        frameDistributor.registerFrameCollector(collector);
     }
 
-    public void unsubscribeFeed(IFrameWriter recipientFeedFrameWriter) throws Exception {
-        boolean success = frameDistributor.deregisterFrameCollector(recipientFeedFrameWriter);
-        if (!success) {
-            throw new IllegalStateException(
-                    "Invalid attempt to unregister FeedFrameWriter " + recipientFeedFrameWriter + " not registered.");
-        }
-    }
-
-    public void notifyEndOfFeed() throws InterruptedException {
-        frameDistributor.notifyEndOfFeed();
+    public void unsubscribeFeed(FeedConnectionId connectionId) throws HyracksDataException {
+        frameDistributor.deregisterFrameCollector(connectionId);
     }
 
     @Override
@@ -136,25 +106,9 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
         writer.open();
     }
 
-    public Map<IFrameWriter, FeedFrameCollector> getRegisteredReaders() {
-        return frameDistributor.getRegisteredReaders();
-    }
-
-    public void setWriter(IFrameWriter writer) {
-        this.writer = writer;
-    }
-
-    public Type getType() {
-        return IFeedOperatorOutputSideHandler.Type.DISTRIBUTE_FEED_OUTPUT_HANDLER;
-    }
-
     @Override
     public String toString() {
         return feedId.toString() + feedRuntimeType + "[" + partition + "]";
-    }
-
-    public FrameDistributor.DistributionMode getDistributionMode() {
-        return frameDistributor.getDistributionMode();
     }
 
     @Override

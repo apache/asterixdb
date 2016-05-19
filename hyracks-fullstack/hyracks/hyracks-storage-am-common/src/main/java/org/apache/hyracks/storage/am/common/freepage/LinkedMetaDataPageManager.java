@@ -96,6 +96,14 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     }
 
     @Override
+    public void addFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int startingPage, int count)
+            throws HyracksDataException {
+        for (int i = 0; i < count; i++) {
+            addFreePage(metaFrame, startingPage + i);
+        }
+    }
+
+    @Override
     public int getFreePage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
         ICachedPage metaNode;
         if (!appendOnly) {
@@ -161,6 +169,13 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         }
 
         return freePage;
+    }
+
+    @Override
+    public int getFreePageBlock(ITreeIndexMetaDataFrame metaFrame, int count) throws HyracksDataException {
+        int maxPage = metaFrame.getMaxPage();
+        metaFrame.setMaxPage(maxPage + count);
+        return maxPage + 1;
     }
 
     @Override

@@ -39,12 +39,13 @@
   </licenses>
 
   <properties>
-      <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
 
   <modules>
     <module>hyracks-control-common</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
+    <module>hyracks-nc-service</module>
   </modules>
 </project>

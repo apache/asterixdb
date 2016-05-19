@@ -34,7 +34,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import org.apache.hyracks.control.cc.work.TriggerNCWork;
+import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.ini4j.Ini;
+import org.xml.sax.InputSource;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
@@ -244,6 +247,7 @@ public class ClusterControllerService implements IControllerService {
 
         datasetDirectoryService.init(executor);
         workQueue.start();
+        connectNCs();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
         if (aep != null) {
             // Sometimes, there is no application entry point. Check hyracks-client project
@@ -252,7 +256,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new CCApplicationContext(this, serverCtx, ccContext);
+        appCtx = new CCApplicationContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
         appCtx.addJobLifecycleListener(datasetDirectoryService);
         String className = ccConfig.appCCMainClass;
         if (className != null) {
@@ -263,6 +267,25 @@ public class ClusterControllerService implements IControllerService {
             aep.start(appCtx, args);
         }
         executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
+    }
+
+    private void connectNCs() throws Exception {
+        Ini ini = ccConfig.getIni();
+        if (ini == null) {
+            return;
+        }
+        for (String section : ini.keySet()) {
+            if (!section.startsWith("nc/")) {
+                continue;
+            }
+            String ncid = section.substring(3);
+            String address = ini.get(section, "address");
+            int port = IniUtils.getInt(ini, section, "port", 9090);
+            if (address == null) {
+                address = InetAddress.getLoopbackAddress().getHostAddress();
+            }
+            workQueue.schedule(new TriggerNCWork(this, address, port, ncid));
+        }
     }
 
     @Override
@@ -317,7 +340,6 @@ public class ClusterControllerService implements IControllerService {
     public Map<String, NodeControllerState> getNodeMap() {
         return nodeRegistry;
     }
-
     public CCConfig getConfig() {
         return ccConfig;
     }
@@ -614,7 +636,7 @@ public class ClusterControllerService implements IControllerService {
      * Add a deployment run
      *
      * @param deploymentKey
-     * @param nodeControllerIds
+     * @param dRun
      */
     public synchronized void addDeploymentRun(DeploymentId deploymentKey, DeploymentRun dRun) {
         deploymentRunMap.put(deploymentKey, dRun);

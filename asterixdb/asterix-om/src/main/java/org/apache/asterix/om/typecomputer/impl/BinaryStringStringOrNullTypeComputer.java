@@ -21,7 +21,6 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeHelper;
 
 /**
  * @author Xiaoyu Ma
@@ -34,8 +33,8 @@ public class BinaryStringStringOrNullTypeComputer extends AbstractBinaryStringTy
     }
 
     @Override
-    public IAType getResultType(IAType t0, IAType t1) {
-        if (TypeHelper.canBeNull(t0) || TypeHelper.canBeNull(t1)) {
+    public IAType getResultType(IAType t0, IAType t1, boolean nullable) {
+        if (nullable) {
             return AUnionType.createNullableType(BuiltinType.ASTRING);
         }
         return BuiltinType.ASTRING;

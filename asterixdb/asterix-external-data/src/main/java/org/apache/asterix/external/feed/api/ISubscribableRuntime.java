@@ -18,12 +18,8 @@
  */
 package org.apache.asterix.external.feed.api;
 
-import java.util.List;
-
-import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.CollectionRuntime;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Represent a feed runtime whose output can be routed along other parallel path(s).
@@ -34,28 +30,12 @@ public interface ISubscribableRuntime extends IFeedRuntime {
      * @param collectionRuntime
      * @throws Exception
      */
-    public void subscribeFeed(FeedPolicyAccessor fpa, CollectionRuntime collectionRuntime) throws Exception;
+    public void subscribe(CollectionRuntime collectionRuntime) throws HyracksDataException;
 
     /**
      * @param collectionRuntime
+     * @throws InterruptedException
      * @throws Exception
      */
-    public void unsubscribeFeed(CollectionRuntime collectionRuntime) throws Exception;
-
-    /**
-     * @return
-     * @throws Exception
-     */
-    public List<ISubscriberRuntime> getSubscribers();
-
-    /**
-     * @return
-     */
-    public DistributeFeedFrameWriter getFeedFrameWriter();
-
-    /**
-     * @return
-     */
-    public RecordDescriptor getRecordDescriptor();
-
+    public void unsubscribe(CollectionRuntime collectionRuntime) throws HyracksDataException, InterruptedException;
 }

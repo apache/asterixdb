@@ -32,6 +32,9 @@ import org.apache.hyracks.control.cc.web.util.JSONUtils;
 import org.apache.hyracks.control.cc.work.GetJobSummariesJSONWork;
 import org.apache.hyracks.control.cc.work.GetNodeSummariesJSONWork;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class IndexPage extends AbstractPage {
     private static final long serialVersionUID = 1L;
 
@@ -74,9 +77,9 @@ public class IndexPage extends AbstractPage {
                 try {
                     item.add(new Label("job-id", o.getString("job-id")));
                     item.add(new Label("status", o.getString("status")));
-                    item.add(new Label("create-time", o.getString("create-time")));
-                    item.add(new Label("start-time", o.getString("start-time")));
-                    item.add(new Label("end-time", o.getString("end-time")));
+                    item.add(new Label("create-time", longToDateString(Long.parseLong(o.getString("create-time")))));
+                    item.add(new Label("start-time", longToDateString(Long.parseLong(o.getString("start-time")))));
+                    item.add(new Label("end-time", longToDateString(Long.parseLong(o.getString("end-time")))));
                     PageParameters params = new PageParameters();
                     params.add("job-id", o.getString("job-id"));
                     item.add(new BookmarkablePageLink<Object>("job-details", JobDetailsPage.class, params));
@@ -86,5 +89,11 @@ public class IndexPage extends AbstractPage {
             }
         };
         add(jobList);
+    }
+
+    private String longToDateString(long milliseconds) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm:ss");
+        Date date = new Date(milliseconds);
+        return sdf.format(date);
     }
 }

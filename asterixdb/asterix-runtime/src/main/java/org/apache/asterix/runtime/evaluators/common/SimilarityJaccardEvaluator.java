@@ -141,8 +141,12 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
     }
 
     protected boolean prepareLists(IPointable left, IPointable right, ATypeTag argType) throws AlgebricksException {
-        firstListIter.reset(left.getByteArray(), left.getStartOffset());
-        secondListIter.reset(right.getByteArray(), right.getStartOffset());
+        try {
+            firstListIter.reset(left.getByteArray(), left.getStartOffset());
+            secondListIter.reset(right.getByteArray(), right.getStartOffset());
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
         // Check for special case where one of the lists is empty, since list
         // types won't match.
         if (firstListIter.size() == 0 || secondListIter.size() == 0) {

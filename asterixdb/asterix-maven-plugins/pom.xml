@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
  ! Licensed to the Apache Software Foundation (ASF) under one
  ! or more contributor license agreements.  See the NOTICE file
@@ -32,27 +33,28 @@
   </licenses>
 
   <properties>
-      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
 
-
-	<parent>
-		<artifactId>apache-asterixdb</artifactId>
-		<groupId>org.apache.asterix</groupId>
-		<version>0.8.9-SNAPSHOT</version>
-	</parent>
+  <parent>
+    <artifactId>apache-asterixdb</artifactId>
+    <groupId>org.apache.asterix</groupId>
+    <version>0.8.9-SNAPSHOT</version>
+  </parent>
 
   <dependencies>
-  	<dependency>
-  		<groupId>org.apache.maven</groupId>
-  		<artifactId>maven-plugin-api</artifactId>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <modules>
     <module>lexer-generator-maven-plugin</module>
     <module>record-manager-generator-maven-plugin</module>
+    <module>asterix-evaluator-generator-maven-plugin</module>
+    <module>asterix-test-datagenerator-maven-plugin</module>
   </modules>
 </project>

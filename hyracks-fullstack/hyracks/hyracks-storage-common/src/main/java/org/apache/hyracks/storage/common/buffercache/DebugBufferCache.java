@@ -88,6 +88,13 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
+    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
+        ICachedPage page = bufferCache.pin(dpid, newPage, helper);
+        pinCount.addAndGet(1);
+        return page;
+    }
+
+    @Override
     public void unpin(ICachedPage page) throws HyracksDataException {
         bufferCache.unpin(page);
         unpinCount.addAndGet(1);
@@ -197,6 +204,11 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
+    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
+        return bufferCache.confiscateLargePage(dpid, multiplier);
+    }
+
+    @Override
     public void returnPage(ICachedPage page) {
         bufferCache.returnPage(page);
     }
@@ -247,5 +259,10 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public void purgeHandle(int fileId) throws HyracksDataException {
         bufferCache.purgeHandle(fileId);
+    }
+
+    @Override
+    public void resizePage(ICachedPage page, int multiple) {
+        bufferCache.resizePage(page, multiple);
     }
 }

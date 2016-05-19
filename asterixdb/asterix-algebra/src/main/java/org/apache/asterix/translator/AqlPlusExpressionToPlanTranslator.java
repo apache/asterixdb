@@ -114,6 +114,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.util.FunctionCollection;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -244,7 +245,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
         if (format == null) {
             throw new AlgebricksException("Data format has not been set.");
         }
-        format.registerRuntimeFunctions();
+        format.registerRuntimeFunctions(FunctionCollection.getFunctionDescriptorFactories());
         Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this,
                 new MutableObject<ILogicalOperator>(new EmptyTupleSourceOperator()));
 

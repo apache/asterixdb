@@ -24,11 +24,6 @@ package org.apache.asterix.transaction.management.service.transaction;
  */
 public class TransactionManagementConstants {
 
-    public static class ResourceMgrIds {
-        public static final byte BTREE_RESOURCE_MGR_ID = 1;
-        public static final byte METADATA_RESOURCE_MGR_ID = 2;
-    }
-
     public static class LogManagerConstants {
         public static final int TERMINAL_LSN = -1;
     }
@@ -36,30 +31,28 @@ public class TransactionManagementConstants {
     public static class LockManagerConstants {
         public static class LockMode {
             public static final byte ANY = -1;
-            public static final byte NL  =  0;
-            public static final byte IS  =  1;
-            public static final byte IX  =  2;
-            public static final byte S   =  3;
-            public static final byte X   =  4;
-
-            public static byte intentionMode(byte mode) {
-                switch (mode) {
-                    case S:  return IS;
-                    case X:  return IX;
-                    default: throw new IllegalArgumentException(
-                            "no intention lock mode for " + toString(mode));
-                }
-            }
+            public static final byte NL = 0;
+            public static final byte IS = 1;
+            public static final byte IX = 2;
+            public static final byte S = 3;
+            public static final byte X = 4;
 
             public static String toString(byte mode) {
                 switch (mode) {
-                    case ANY: return "ANY";
-                    case NL:  return "NL";
-                    case IS:  return "IS";
-                    case IX:  return "IX";
-                    case S:   return "S";
-                    case X:   return "X";
-                    default:  throw new IllegalArgumentException("no such lock mode");
+                    case ANY:
+                        return "ANY";
+                    case NL:
+                        return "NL";
+                    case IS:
+                        return "IS";
+                    case IX:
+                        return "IX";
+                    case S:
+                        return "S";
+                    case X:
+                        return "X";
+                    default:
+                        throw new IllegalArgumentException("no such lock mode");
                 }
             }
         }

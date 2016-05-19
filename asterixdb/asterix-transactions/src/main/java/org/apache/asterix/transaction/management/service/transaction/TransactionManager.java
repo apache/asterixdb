@@ -117,7 +117,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             }
             throw ae;
         } finally {
-            txnSubsystem.getLockManager().releaseLocks(txnCtx); // release
+            txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());
             txnCtx.setTxnState(ITransactionManager.COMMITTED);
         }

@@ -77,7 +77,7 @@
       <item name="Installing and Managing AsterixDB using Managix" href="install.html"/>
       <item name="Deploying AsterixDB using YARN" href="yarn.html"/>
       <item name="AsterixDB 101: An ADM and AQL Primer" href="aql/primer.html"/>
-       <item name="AsterixDB 101: An ADM and AQL Primer (For SQL Fans)" href="aql/primer-sql-like.html"/>
+      <item name="AsterixDB 101: An ADM and AQL Primer (For SQL Fans)" href="aql/primer-sql-like.html"/>
       <item name="AsterixDB Javascript SDK" href="aql/js-sdk.html"/>
       <item name="Asterix Data Model (ADM)" href="aql/datamodel.html"/>
       <item name="Asterix Query Language (AQL)" href="aql/manual.html"/>
@@ -85,17 +85,17 @@
       <item name="AQL Allen's Relations Functions" href="aql/allens.html"/>
       <item name="AQL Support of Similarity Queries" href="aql/similarity.html"/>
       <item name="Accessing External Data" href="aql/externaldata.html"/>
-      <item name="Support for Data Ingestion in AsterixDB" href="feeds/tutorial.html" />
-      <item name="Support for User Defined Functions in AsterixDB" href="udf.html" />
+      <item name="Support for Data Ingestion in AsterixDB" href="feeds/tutorial.html"/>
+      <item name="Support for User Defined Functions in AsterixDB" href="udf.html"/>
       <item name="Filter-Based LSM Index Acceleration" href="aql/filters.html"/>
       <item name="HTTP API to AsterixDB" href="api.html"/>
     </menu>
-    
+
     <menu name="SQL++">
       <item name="SQL++ integration into AsterixDB" href="sqlpp/sqlpp-internals.html"/>
       <item name="The SQL++ query language in AsterixDB" href="sqlpp/sqlpp-in-asterixdb.html"/>
     </menu>
-    
+
     <menu ref="reports"/>
 
     <footer>

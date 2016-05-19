@@ -30,9 +30,9 @@ public interface IListIterator {
 
     public boolean hasNext();
 
-    public void next();
+    public void next() throws HyracksDataException;
 
-    public void reset();
+    public void reset() throws HyracksDataException;
 
     public int size();
 }

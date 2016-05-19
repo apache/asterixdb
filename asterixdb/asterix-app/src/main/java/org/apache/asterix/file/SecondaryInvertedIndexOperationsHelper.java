@@ -253,13 +253,13 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
             sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
         }
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys);
+        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys, secondaryRecDesc);
 
         // If any of the secondary fields are nullable, then add a select op
         // that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
         if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
-            selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
+            selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys, secondaryRecDesc);
         }
 
         // Create a tokenizer op.

@@ -21,360 +21,162 @@ package org.apache.asterix.external.feed.dataflow;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IFeedMemoryComponent.Type;
-import org.apache.asterix.external.feed.api.IFeedMemoryManager;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.dataflow.FeedFrameCollector.State;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.log4j.Logger;
 
-public class FrameDistributor {
+public class FrameDistributor implements IFrameWriter {
 
-    private static final Logger LOGGER = Logger.getLogger(FrameDistributor.class.getName());
-
-    private static final long MEMORY_AVAILABLE_POLL_PERIOD = 1000; // 1 second
-
-    private final FeedId feedId;
-    private final FeedRuntimeType feedRuntimeType;
-    private final int partition;
-    private final IFeedMemoryManager memoryManager;
-    private final boolean enableSynchronousTransfer;
+    public static final Logger LOGGER = Logger.getLogger(FrameDistributor.class.getName());
     /** A map storing the registered frame readers ({@code FeedFrameCollector}. **/
-    private final Map<IFrameWriter, FeedFrameCollector> registeredCollectors;
-    private final FrameTupleAccessor fta;
+    private final Map<FeedConnectionId, FeedFrameCollector> registeredCollectors;
+    private Throwable rootFailureCause = null;
 
-    private DataBucketPool pool;
-    private DistributionMode distributionMode;
-    private boolean spillToDiskRequired = false;
-
-    public enum DistributionMode {
-        /**
-         * A single feed frame collector is registered for receiving tuples.
-         * Tuple is sent via synchronous call, that is no buffering is involved
-         **/
-        SINGLE,
-
-        /**
-         * Multiple feed frame collectors are concurrently registered for
-         * receiving tuples.
-         **/
-        SHARED,
-
-        /**
-         * Feed tuples are not being processed, irrespective of # of registered
-         * feed frame collectors.
-         **/
-        INACTIVE
+    public FrameDistributor() throws HyracksDataException {
+        this.registeredCollectors = new HashMap<FeedConnectionId, FeedFrameCollector>();
     }
 
-    public FrameDistributor(FeedId feedId, FeedRuntimeType feedRuntimeType, int partition,
-            boolean enableSynchronousTransfer, IFeedMemoryManager memoryManager, FrameTupleAccessor fta)
-            throws HyracksDataException {
-        this.feedId = feedId;
-        this.feedRuntimeType = feedRuntimeType;
-        this.partition = partition;
-        this.memoryManager = memoryManager;
-        this.enableSynchronousTransfer = enableSynchronousTransfer;
-        this.registeredCollectors = new HashMap<IFrameWriter, FeedFrameCollector>();
-        this.distributionMode = DistributionMode.INACTIVE;
-        this.fta = fta;
-    }
-
-    public void notifyEndOfFeed() throws InterruptedException {
-        DataBucket bucket = getDataBucket();
-        if (bucket != null) {
-            sendEndOfFeedDataBucket(bucket);
-        } else {
-            while (bucket == null) {
+    public synchronized void registerFrameCollector(FeedFrameCollector frameCollector) throws HyracksDataException {
+        if (rootFailureCause != null) {
+            throw new HyracksDataException("attempt to register to a failed feed data provider", rootFailureCause);
+        }
+        // registering a new collector.
+        try {
+            frameCollector.open();
+        } catch (Throwable th) {
+            rootFailureCause = th;
+            try {
+                frameCollector.fail();
+            } catch (Throwable failThrowable) {
+                th.addSuppressed(failThrowable);
+            } finally {
                 try {
-                    Thread.sleep(MEMORY_AVAILABLE_POLL_PERIOD);
-                    bucket = getDataBucket();
-                } catch (InterruptedException e) {
-                    break;
+                    frameCollector.close();
+                } catch (Throwable closeThrowable) {
+                    th.addSuppressed(closeThrowable);
                 }
             }
-            if (bucket != null) {
-                sendEndOfFeedDataBucket(bucket);
-            }
+            throw th;
+        }
+        registeredCollectors.put(frameCollector.getConnectionId(), frameCollector);
+    }
+
+    public synchronized void deregisterFrameCollector(FeedFrameCollector frameCollector) throws HyracksDataException {
+        deregisterFrameCollector(frameCollector.getConnectionId());
+    }
+
+    public synchronized void deregisterFrameCollector(FeedConnectionId connectionId) throws HyracksDataException {
+        if (rootFailureCause != null) {
+            throw new HyracksDataException("attempt to register to a failed feed data provider", rootFailureCause);
+        }
+        FeedFrameCollector frameCollector = removeFrameCollector(connectionId);
+        try {
+            frameCollector.close();
+        } catch (Throwable th) {
+            rootFailureCause = th;
+            throw th;
         }
     }
 
-    private void sendEndOfFeedDataBucket(DataBucket bucket) throws InterruptedException {
-        bucket.setContentType(DataBucket.ContentType.EOD);
-        nextBucket(bucket);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("End of feed data packet sent " + this.feedId);
-        }
+    public synchronized FeedFrameCollector removeFrameCollector(FeedConnectionId connectionId) {
+        return registeredCollectors.remove(connectionId);
     }
 
-    public synchronized void registerFrameCollector(FeedFrameCollector frameCollector) {
-        DistributionMode currentMode = distributionMode;
-        switch (distributionMode) {
-            case INACTIVE:
-                if (!enableSynchronousTransfer) {
-                    pool = (DataBucketPool) memoryManager.getMemoryComponent(Type.POOL);
-                    frameCollector.start();
-                }
-                registeredCollectors.put(frameCollector.getFrameWriter(), frameCollector);
-                setMode(DistributionMode.SINGLE);
-                break;
-            case SINGLE:
-                pool = (DataBucketPool) memoryManager.getMemoryComponent(Type.POOL);
-                registeredCollectors.put(frameCollector.getFrameWriter(), frameCollector);
-                for (FeedFrameCollector reader : registeredCollectors.values()) {
-                    reader.start();
-                }
-                setMode(DistributionMode.SHARED);
-                break;
-            case SHARED:
-                frameCollector.start();
-                registeredCollectors.put(frameCollector.getFrameWriter(), frameCollector);
-                break;
-        }
-        evaluateIfSpillIsEnabled();
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(
-                    "Switching to " + distributionMode + " mode from " + currentMode + " mode " + " Feed id " + feedId);
-        }
-    }
-
-    public synchronized void deregisterFrameCollector(FeedFrameCollector frameCollector) {
-        switch (distributionMode) {
-            case INACTIVE:
-                throw new IllegalStateException(
-                        "Invalid attempt to deregister frame collector in " + distributionMode + " mode.");
-            case SHARED:
-                frameCollector.closeCollector();
-                registeredCollectors.remove(frameCollector.getFrameWriter());
-                int nCollectors = registeredCollectors.size();
-                if (nCollectors == 1) {
-                    FeedFrameCollector loneCollector = registeredCollectors.values().iterator().next();
-                    setMode(DistributionMode.SINGLE);
-                    loneCollector.setState(FeedFrameCollector.State.TRANSITION);
-                    loneCollector.closeCollector();
-                    memoryManager.releaseMemoryComponent(pool);
-                    evaluateIfSpillIsEnabled();
-                } else {
-                    if (!spillToDiskRequired) {
-                        evaluateIfSpillIsEnabled();
-                    }
-                }
-                break;
-            case SINGLE:
-                frameCollector.closeCollector();
-                setMode(DistributionMode.INACTIVE);
-                spillToDiskRequired = false;
-                break;
-
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Deregistered frame reader" + frameCollector + " from feed distributor for " + feedId);
-        }
-    }
-
-    public void evaluateIfSpillIsEnabled() {
-        if (!spillToDiskRequired) {
-            for (FeedFrameCollector collector : registeredCollectors.values()) {
-                spillToDiskRequired = spillToDiskRequired
-                        || collector.getFeedPolicyAccessor().spillToDiskOnCongestion();
-                if (spillToDiskRequired) {
-                    break;
-                }
-            }
-        }
-    }
-
-    public boolean deregisterFrameCollector(IFrameWriter frameWriter) {
-        FeedFrameCollector collector = registeredCollectors.get(frameWriter);
-        if (collector != null) {
-            deregisterFrameCollector(collector);
-            return true;
-        }
-        return false;
-    }
-
-    public synchronized void setMode(DistributionMode mode) {
-        this.distributionMode = mode;
-    }
-
-    public boolean isRegistered(IFrameWriter writer) {
-        return registeredCollectors.get(writer) != null;
-    }
-
+    /*
+     * Fix. What should be done?:
+     * 0. mark failure so no one can subscribe or unsubscribe.
+     * 1. Throw the throwable.
+     * 2. when fail() is called, call fail on all subscribers
+     * 3. close all the subscribers.
+     * (non-Javadoc)
+     * @see org.apache.hyracks.api.comm.IFrameWriter#nextFrame(java.nio.ByteBuffer)
+     */
+    @Override
     public synchronized void nextFrame(ByteBuffer frame) throws HyracksDataException {
-        try {
-            switch (distributionMode) {
-                case INACTIVE:
-                    break;
-                case SINGLE:
-                    FeedFrameCollector collector = registeredCollectors.values().iterator().next();
-                    switch (collector.getState()) {
-                        case HANDOVER:
-                        case ACTIVE:
-                            if (enableSynchronousTransfer) {
-                                collector.nextFrame(frame); // processing is synchronous
-                            } else {
-                                handleDataBucket(frame);
-                            }
-                            break;
-                        case TRANSITION:
-                            handleDataBucket(frame);
-                            break;
-                        case FINISHED:
-                            if (LOGGER.isLoggable(Level.WARNING)) {
-                                LOGGER.warning("Discarding fetched tuples, feed has ended ["
-                                        + registeredCollectors.get(0) + "]" + " Feed Id " + feedId
-                                        + " frame distributor " + this.getFeedRuntimeType());
-                            }
-                            registeredCollectors.remove(0);
-                            break;
-                    }
-                    break;
-                case SHARED:
-                    handleDataBucket(frame);
-                    break;
-            }
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+        if (rootFailureCause != null) {
+            throw new HyracksDataException(rootFailureCause);
         }
-    }
-
-    private void nextBucket(DataBucket bucket) throws InterruptedException {
         for (FeedFrameCollector collector : registeredCollectors.values()) {
-            collector.sendMessage(bucket); // asynchronous call
-        }
-    }
-
-    private void handleDataBucket(ByteBuffer frame) throws HyracksDataException, InterruptedException {
-        DataBucket bucket = getDataBucket();
-        if (bucket == null) {
-            handleFrameDuringMemoryCongestion(frame);
-        } else {
-            bucket.reset(frame);
-            bucket.setDesiredReadCount(registeredCollectors.size());
-            nextBucket(bucket);
-        }
-    }
-
-    private void handleFrameDuringMemoryCongestion(ByteBuffer frame) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("Unable to allocate memory, will evaluate the need to spill");
-        }
-        // wait till memory is available
-    }
-
-    private DataBucket getDataBucket() {
-        DataBucket bucket = null;
-        if (pool != null) {
-            bucket = pool.getDataBucket();
-            if (bucket != null) {
-                bucket.setDesiredReadCount(registeredCollectors.size());
-                return bucket;
-            } else {
-                return null;
+            try {
+                collector.nextFrame(frame);
+            } catch (Throwable th) {
+                rootFailureCause = th;
+                throw th;
             }
         }
-        return null;
     }
 
-    public DistributionMode getMode() {
-        return distributionMode;
-    }
-
-    public void close() throws HyracksDataException {
-        try {
-            switch (distributionMode) {
-                case INACTIVE:
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("FrameDistributor is " + distributionMode);
+    @Override
+    public void fail() throws HyracksDataException {
+        Collection<FeedFrameCollector> collectors = registeredCollectors.values();
+        Iterator<FeedFrameCollector> it = collectors.iterator();
+        while (it.hasNext()) {
+            FeedFrameCollector collector = it.next();
+            try {
+                collector.fail();
+            } catch (Throwable th) {
+                while (it.hasNext()) {
+                    FeedFrameCollector innerCollector = it.next();
+                    try {
+                        innerCollector.fail();
+                    } catch (Throwable innerTh) {
+                        th.addSuppressed(innerTh);
                     }
-                    break;
-                case SINGLE:
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Disconnecting single frame reader in " + distributionMode + " mode "
-                                + " for  feedId " + feedId + " " + this.feedRuntimeType);
-                    }
-                    setMode(DistributionMode.INACTIVE);
-                    if (!enableSynchronousTransfer) {
-                        notifyEndOfFeed(); // send EOD Data Bucket
-                        waitForCollectorsToFinish();
-                    }
-                    registeredCollectors.values().iterator().next().disconnect();
-                    break;
-                case SHARED:
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Signalling End Of Feed; currently operating in " + distributionMode + " mode");
-                    }
-                    notifyEndOfFeed(); // send EOD Data Bucket
-                    waitForCollectorsToFinish();
-                    break;
-            }
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
-    private void waitForCollectorsToFinish() {
-        synchronized (registeredCollectors.values()) {
-            while (!allCollectorsFinished()) {
-                try {
-                    registeredCollectors.values().wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
+                throw th;
             }
         }
     }
 
-    private boolean allCollectorsFinished() {
-        boolean allFinished = true;
-        for (FeedFrameCollector collector : registeredCollectors.values()) {
-            allFinished = allFinished && collector.getState().equals(FeedFrameCollector.State.FINISHED);
+    @Override
+    public void close() throws HyracksDataException {
+        Collection<FeedFrameCollector> collectors = registeredCollectors.values();
+        Iterator<FeedFrameCollector> it = collectors.iterator();
+        while (it.hasNext()) {
+            FeedFrameCollector collector = it.next();
+            try {
+                collector.close();
+            } catch (Throwable th) {
+                while (it.hasNext()) {
+                    FeedFrameCollector innerCollector = it.next();
+                    try {
+                        innerCollector.close();
+                    } catch (Throwable innerTh) {
+                        th.addSuppressed(innerTh);
+                    } finally {
+                        innerCollector.setState(State.FINISHED);
+                    }
+                }
+                // resume here
+                throw th;
+            } finally {
+                collector.setState(State.FINISHED);
+            }
         }
-        return allFinished;
     }
 
-    public Collection<FeedFrameCollector> getRegisteredCollectors() {
-        return registeredCollectors.values();
-    }
-
-    public Map<IFrameWriter, FeedFrameCollector> getRegisteredReaders() {
-        return registeredCollectors;
-    }
-
-    public FeedId getFeedId() {
-        return feedId;
-    }
-
-    public DistributionMode getDistributionMode() {
-        return distributionMode;
-    }
-
-    public FeedRuntimeType getFeedRuntimeType() {
-        return feedRuntimeType;
-    }
-
-    public int getPartition() {
-        return partition;
-    }
-
-    public FrameTupleAccessor getFta() {
-        return fta;
-    }
-
+    @Override
     public void flush() throws HyracksDataException {
-        switch (distributionMode) {
-            case SINGLE:
-                FeedFrameCollector collector = registeredCollectors.values().iterator().next();
+        if (rootFailureCause != null) {
+            throw new HyracksDataException(rootFailureCause);
+        }
+        for (FeedFrameCollector collector : registeredCollectors.values()) {
+            try {
                 collector.flush();
-            default:
-                break;
+            } catch (Throwable th) {
+                rootFailureCause = th;
+                throw th;
+            }
         }
     }
 
+    @Override
+    public void open() throws HyracksDataException {
+        // Nothing to do here :)
+    }
 }

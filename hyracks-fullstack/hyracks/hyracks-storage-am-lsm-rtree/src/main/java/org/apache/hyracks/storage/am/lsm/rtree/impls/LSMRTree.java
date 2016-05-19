@@ -89,13 +89,13 @@ public class LSMRTree extends AbstractLSMRTree {
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, int[] rtreeFields, int[] buddyBTreeFields, int[] filterFields,
-            boolean durable) {
+            boolean durable, boolean isPointMBR) {
         super(virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileNameManager,
                 new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, filterFactory),
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
                 linearizerArray, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
-                filterFactory, filterFrameFactory, filterManager, rtreeFields, filterFields, durable);
+                filterFactory, filterFrameFactory, filterManager, rtreeFields, filterFields, durable, isPointMBR);
         this.buddyBTreeFields = buddyBTreeFields;
     }
 
@@ -110,19 +110,20 @@ public class LSMRTree extends AbstractLSMRTree {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields, boolean durable) {
+            ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields, boolean durable, boolean isPointMBR) {
         super(rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager,
                 new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, null),
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
                 linearizerArray, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
-                durable);
+                durable, isPointMBR);
         this.buddyBTreeFields = buddyBTreeFields;
     }
 
     /**
      * Opens LSMRTree, cleaning up invalid files from base dir, and registering
      * all valid files as on-disk RTrees and BTrees.
+     * 
      * @throws HyracksDataException
      */
     @Override
@@ -206,7 +207,8 @@ public class LSMRTree extends AbstractLSMRTree {
             throws HyracksDataException {
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         rctx.setOperation(IndexOperation.FLUSH);
         rctx.getComponentHolder().addAll(ctx.getComponentHolder());
         LSMRTreeAccessor accessor = new LSMRTreeAccessor(lsmHarness, rctx);
@@ -329,7 +331,8 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         rctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer, buddyBTreeFields);
@@ -417,7 +420,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMRTreeAccessor(lsmHarness, createOpContext(modificationCallback));
+        return new LSMRTreeAccessor(lsmHarness, createOpContext(modificationCallback, searchCallback));
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {

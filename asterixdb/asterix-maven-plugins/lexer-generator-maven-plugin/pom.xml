@@ -20,17 +20,17 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>lexer-generator-maven-plugin</artifactId>
-	<parent>
-		<artifactId>asterix-maven-plugins</artifactId>
-		<groupId>org.apache.asterix</groupId>
-		<version>0.8.9-SNAPSHOT</version>
-	</parent>
+  <parent>
+    <artifactId>asterix-maven-plugins</artifactId>
+    <groupId>org.apache.asterix</groupId>
+    <version>0.8.9-SNAPSHOT</version>
+  </parent>
 
   <packaging>maven-plugin</packaging>
   <name>lexer-generator-maven-plugin</name>
 
   <properties>
-      <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
+    <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
   <dependencies>
     <dependency>
@@ -41,5 +41,5 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
     </dependency>
-  </dependencies>    
+  </dependencies>
 </project>

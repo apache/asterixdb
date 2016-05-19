@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
+import org.apache.hyracks.storage.am.btree.frames.BTreeLargeFrameHelper;
 import org.junit.Test;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -89,7 +90,8 @@ public class StorageManagerTest extends AbstractBTreeTest {
             }
 
             try {
-                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false,
+                        BTreeLargeFrameHelper.INSTANCE);
                 LatchType latch = null;
 
                 switch (fta) {

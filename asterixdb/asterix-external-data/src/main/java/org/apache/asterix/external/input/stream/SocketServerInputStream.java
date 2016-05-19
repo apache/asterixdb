@@ -116,14 +116,14 @@ public class SocketServerInputStream extends AsterixInputStream {
             }
             socket = null;
         } catch (IOException e) {
-            hde = ExternalDataExceptionUtils.suppress(hde, e);
+            hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, e);
         }
         try {
             if (server != null) {
                 server.close();
             }
         } catch (IOException e) {
-            hde = ExternalDataExceptionUtils.suppress(hde, e);
+            hde = ExternalDataExceptionUtils.suppressIntoHyracksDataException(hde, e);
         } finally {
             server = null;
         }

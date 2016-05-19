@@ -68,6 +68,7 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
                 }
             }
             run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
+            run.setEndTime(System.currentTimeMillis());
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
             ccs.getRunHistory().put(jobId, run.getExceptions());

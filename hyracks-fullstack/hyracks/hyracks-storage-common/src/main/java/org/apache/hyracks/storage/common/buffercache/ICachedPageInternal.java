@@ -25,6 +25,6 @@ public interface ICachedPageInternal extends ICachedPage {
 
     public Object getReplacementStrategyObject();
 
-    public boolean pinIfGoodVictim();
+    public boolean isGoodVictim();
 
 }

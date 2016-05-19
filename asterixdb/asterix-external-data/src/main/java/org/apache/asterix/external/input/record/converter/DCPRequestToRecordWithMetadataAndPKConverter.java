@@ -37,6 +37,7 @@ import com.couchbase.client.core.message.dcp.DCPRequest;
 import com.couchbase.client.core.message.dcp.MutationMessage;
 import com.couchbase.client.core.message.dcp.RemoveMessage;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 
 public class DCPRequestToRecordWithMetadataAndPKConverter
         implements IRecordToRecordWithMetadataAndPKConverter<DCPRequest, char[]> {
@@ -88,6 +89,7 @@ public class DCPRequestToRecordWithMetadataAndPKConverter
             recordWithMetadata.setMetadata(8, revSeqNumber);
             recordWithMetadata.setMetadata(9, lockTime);
             DCPRequestToRecordWithMetadataAndPKConverter.set(message.content(), decoder, bytes, chars, value);
+            ReferenceCountUtil.release(message.content());
         } else if (dcpRequest instanceof RemoveMessage) {
             final RemoveMessage message = (RemoveMessage) dcpRequest;
             final String key = message.key();

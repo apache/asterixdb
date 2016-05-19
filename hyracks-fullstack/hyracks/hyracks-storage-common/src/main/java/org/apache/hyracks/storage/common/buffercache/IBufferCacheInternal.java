@@ -24,4 +24,6 @@ public interface IBufferCacheInternal extends IBufferCache {
     public ICachedPageInternal getPage(int cpid);
 
     public void addPage(ICachedPageInternal page);
+
+    boolean removePage(ICachedPageInternal victim);
 }

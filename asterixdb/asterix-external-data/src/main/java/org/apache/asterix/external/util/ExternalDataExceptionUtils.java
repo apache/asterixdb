@@ -43,12 +43,28 @@ public class ExternalDataExceptionUtils {
         return true;
     }
 
-    public static HyracksDataException suppress(HyracksDataException hde, Throwable th) {
+    public static HyracksDataException suppressIntoHyracksDataException(HyracksDataException hde, Throwable th) {
         if (hde == null) {
             return new HyracksDataException(th);
         } else {
             hde.addSuppressed(th);
             return hde;
         }
+    }
+
+    public static Throwable suppress(Throwable suppressor, Throwable suppressed) {
+        if (suppressor == null) {
+            return suppressed;
+        } else if (suppressed != null) {
+            suppressor.addSuppressed(suppressed);
+        }
+        return suppressor;
+    }
+
+    public static HyracksDataException convertToHyracksDataException(Throwable throwable) {
+        if (throwable == null || throwable instanceof HyracksDataException) {
+            return (HyracksDataException) throwable;
+        }
+        return new HyracksDataException(throwable);
     }
 }

@@ -49,13 +49,13 @@ public class FrameManager implements IHyracksFrameMgrContext {
         if (bytes % minFrameSize != 0) {
             throw new HyracksDataException("The size should be an integral multiple of the default frame size");
         }
-        ByteBuffer buffer = ByteBuffer.allocate(bytes);
-        if (bytes / minFrameSize > FrameConstants.MAX_NUM_MINFRAME) {
+        if (bytes > FrameConstants.MAX_FRAMESIZE) {
             throw new HyracksDataException(
-                    "Unable to allocate frame larger than:" + FrameConstants.MAX_NUM_MINFRAME * minFrameSize
+                    "Unable to allocate frame larger than:" + FrameConstants.MAX_FRAMESIZE
                             + " bytes");
         }
-        FrameHelper.serializeFrameSize(buffer, (byte) (bytes / minFrameSize));
+        ByteBuffer buffer = ByteBuffer.allocate(bytes);
+        FrameHelper.serializeFrameSize(buffer, bytes / minFrameSize);
         return (ByteBuffer) buffer.clear();
     }
 
@@ -66,6 +66,10 @@ public class FrameManager implements IHyracksFrameMgrContext {
             deallocateFrames(tobeDeallocate.capacity());
             return allocateFrame(newSizeInBytes);
         } else {
+            if (newSizeInBytes > FrameConstants.MAX_FRAMESIZE) {
+                throw new HyracksDataException("Unable to allocate frame of size bigger than: "
+                        + FrameConstants.MAX_FRAMESIZE + " bytes");
+            }
             ByteBuffer buffer = allocateFrame(newSizeInBytes);
             int limit = Math.min(newSizeInBytes, tobeDeallocate.capacity());
             int pos = Math.min(limit, tobeDeallocate.position());
@@ -74,11 +78,7 @@ public class FrameManager implements IHyracksFrameMgrContext {
             buffer.put(tobeDeallocate);
             buffer.position(pos);
 
-            if (newSizeInBytes / minFrameSize > FrameConstants.MAX_NUM_MINFRAME) {
-                throw new HyracksDataException("Unable to allocate frame of size bigger than: "
-                        + FrameConstants.MAX_NUM_MINFRAME * minFrameSize + " bytes");
-            }
-            FrameHelper.serializeFrameSize(buffer, (byte) (newSizeInBytes / minFrameSize));
+            FrameHelper.serializeFrameSize(buffer, newSizeInBytes / minFrameSize);
             return buffer;
         }
     }

@@ -20,17 +20,17 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>record-manager-generator-maven-plugin</artifactId>
-    <parent>
-        <artifactId>asterix-maven-plugins</artifactId>
-        <groupId>org.apache.asterix</groupId>
-        <version>0.8.9-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <artifactId>asterix-maven-plugins</artifactId>
+    <groupId>org.apache.asterix</groupId>
+    <version>0.8.9-SNAPSHOT</version>
+  </parent>
 
   <packaging>maven-plugin</packaging>
   <name>record-manager-generator-maven-plugin</name>
 
   <properties>
-      <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
+    <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
   <dependencies>
     <dependency>
@@ -47,10 +47,10 @@
       <artifactId>maven-project</artifactId>
       <version>2.2.1</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <type>jar</type>
     </dependency>
-  </dependencies>    
+  </dependencies>
 </project>

@@ -37,9 +37,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
@@ -74,7 +74,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
 
     public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
+            RecordDescriptor recordDescriptor, int outputLimit)
+            throws HyracksDataException {
         this.bufferManager = bufferManager;
         this.sortFields = sortFields;
         this.nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
@@ -134,8 +135,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
                 int f0StartRel = inputTupleAccessor.getFieldStartOffset(j, sfIdx);
                 int f0EndRel = inputTupleAccessor.getFieldEndOffset(j, sfIdx);
                 int f0Start = f0StartRel + tStart + inputTupleAccessor.getFieldSlotsLength();
-                tPointers[ptr * PTR_SIZE + ID_NORMAL_KEY] = nkc == null ? 0
-                        : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
+                tPointers[ptr * PTR_SIZE + ID_NORMAL_KEY] =
+                        nkc == null ? 0 : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
                 ++ptr;
             }
         }

@@ -20,7 +20,9 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -273,7 +275,7 @@ public class OptimizedHybridHashJoin {
     }
 
     private boolean loadPartitionInMem(int pid, RunFileWriter wr) throws HyracksDataException {
-        RunFileReader r = wr.createDeleteOnCloseReader();
+        RunFileReader r = wr.createReader();
         r.open();
         if (reloadBuffer == null) {
             reloadBuffer = new VSizeFrame(ctx);
@@ -290,6 +292,7 @@ public class OptimizedHybridHashJoin {
             }
         }
 
+        FileUtils.deleteQuietly(wr.getFileReference().getFile()); // delete the runfile if it already loaded into memory.
         r.close();
         spilledStatus.set(pid, false);
         buildRFWriters[pid] = null;

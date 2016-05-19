@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
@@ -31,15 +32,18 @@ public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
     private final IPrimitiveValueProviderFactory[] keyValueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
+    private final boolean isPointMBR;
 
     public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
-            IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType) {
+            IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType,
+            boolean isPointMBR) {
         this.tupleWriterFactory = tupleWriterFactory;
         if (keyValueProviderFactories.length % 2 != 0) {
             throw new IllegalArgumentException("The key has different number of dimensions.");
         }
         this.keyValueProviderFactories = keyValueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.isPointMBR = isPointMBR;
     }
 
     @Override
@@ -48,11 +52,17 @@ public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
         for (int i = 0; i < keyValueProviders.length; i++) {
             keyValueProviders[i] = keyValueProviderFactories[i].createPrimitiveValueProvider();
         }
-        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders, rtreePolicyType);
+        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders,
+                rtreePolicyType, isPointMBR);
     }
 
     @Override
     public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
         return tupleWriterFactory;
+    }
+
+    @Override
+    public ILargePageHelper getLargePageHelper() {
+        return null;
     }
 }

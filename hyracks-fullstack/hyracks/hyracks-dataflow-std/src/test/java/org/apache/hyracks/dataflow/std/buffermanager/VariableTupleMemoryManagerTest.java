@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.hyracks.api.comm.FixedSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.junit.Before;
 import org.junit.Test;

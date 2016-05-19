@@ -36,7 +36,7 @@
   </licenses>
 
   <properties>
-      <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
 
   <artifactId>asterix-doc</artifactId>
@@ -75,6 +75,5 @@
       <url>file:../../../../site/incubator-asterixdb-site</url>
     </site>
   </distributionManagement>
-
 
 </project>

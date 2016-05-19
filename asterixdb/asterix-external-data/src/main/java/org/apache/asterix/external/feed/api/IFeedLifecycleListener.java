@@ -20,13 +20,12 @@ package org.apache.asterix.external.feed.api;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.management.FeedJointKey;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 
-public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterEventsSubscriber {
+public interface IFeedLifecycleListener extends IJobLifecycleListener {
     public IFeedJoint getAvailableFeedJoint(FeedJointKey feedJoinKey);
 
     public boolean isFeedJointAvailable(FeedJointKey feedJoinKey);

@@ -131,7 +131,6 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
      * This method returns whether there is an ongoing merge operation or not by checking
      * each component state of given components.
      *
-     * @param immutableComponents
      * @return true if there is an ongoing merge operation, false otherwise.
      */
     private boolean isMergeOngoing(List<ILSMComponent> immutableComponents) {

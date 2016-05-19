@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.IApplicationContext;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.job.JobSerializerDeserializerContainer;
@@ -32,6 +33,7 @@ public abstract class ApplicationContext implements IApplicationContext {
     protected ServerContext serverCtx;
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
+    protected final IApplicationConfig appConfig;
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
     protected ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -41,8 +43,9 @@ public abstract class ApplicationContext implements IApplicationContext {
         }
     };
 
-    public ApplicationContext(ServerContext serverCtx) throws IOException {
+    public ApplicationContext(ServerContext serverCtx, IApplicationConfig appConfig) {
         this.serverCtx = serverCtx;
+        this.appConfig = appConfig;
     }
 
     @Override
@@ -73,5 +76,10 @@ public abstract class ApplicationContext implements IApplicationContext {
     @Override
     public void setThreadFactory(ThreadFactory threadFactory) {
         this.threadFactory = threadFactory;
+    }
+
+    @Override
+    public IApplicationConfig getAppConfig() {
+        return appConfig;
     }
 }

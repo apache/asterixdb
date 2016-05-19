@@ -26,18 +26,15 @@ public class DumpTablePrinter implements TablePrinter {
     private ResourceArenaManager resArenaMgr;
     private RequestArenaManager reqArenaMgr;
     private JobArenaManager jobArenaMgr;
-    private ConcurrentHashMap<Integer, Long> jobIdSlotMap;
+    private ConcurrentHashMap<Integer, Long> jobId2JobSlotMap;
 
-    DumpTablePrinter(ResourceGroupTable table,
-                     ResourceArenaManager resArenaMgr,
-                     RequestArenaManager reqArenaMgr,
-                     JobArenaManager jobArenaMgr,
-                     ConcurrentHashMap<Integer, Long> jobIdSlotMap) {
+    DumpTablePrinter(ResourceGroupTable table, ResourceArenaManager resArenaMgr, RequestArenaManager reqArenaMgr,
+            JobArenaManager jobArenaMgr, ConcurrentHashMap<Integer, Long> jobId2JobSlotMap) {
         this.table = table;
         this.resArenaMgr = resArenaMgr;
         this.reqArenaMgr = reqArenaMgr;
         this.jobArenaMgr = jobArenaMgr;
-        this.jobIdSlotMap = jobIdSlotMap;
+        this.jobId2JobSlotMap = jobId2JobSlotMap;
     }
 
     public StringBuilder append(StringBuilder sb) {
@@ -56,9 +53,9 @@ public class DumpTablePrinter implements TablePrinter {
             sb.append(">>dump_end\t>>----- [reqArenaMgr] -----\n");
 
             sb.append(">>dump_begin\t>>----- [jobIdSlotMap] -----\n");
-            for (Integer i : jobIdSlotMap.keySet()) {
+            for (Integer i : jobId2JobSlotMap.keySet()) {
                 sb.append(i).append(" : ");
-                TypeUtil.Global.append(sb, jobIdSlotMap.get(i));
+                TypeUtil.Global.append(sb, jobId2JobSlotMap.get(i));
                 sb.append("\n");
             }
             sb.append(">>dump_end\t>>----- [jobIdSlotMap] -----\n");

@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -66,6 +67,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final ILinearizeComparatorFactory linearizer;
     protected final int[] comparatorFields;
     protected final IBinaryComparatorFactory[] linearizerArray;
+    protected final boolean isPointMBR;
 
     // On-disk components.
     // For creating RTree's used in flush and merge.
@@ -91,7 +93,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFactory filterFactory,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
-            int[] rtreeFields, int[] filterFields, boolean durable) {
+            int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) {
         super(virtualBufferCaches, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
                 filterManager, filterFields, durable);
@@ -100,7 +102,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             RTree memRTree = new RTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), rtreeInteriorFrameFactory,
                     rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
-                    new FileReference(new File(fileManager.getBaseDir() + "_virtual_r_" + i)));
+                    new FileReference(new File(fileManager.getBaseDir() + "_virtual_r_" + i)), isPointMBR);
             BTree memBTree = new BTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
                     btreeLeafFrameFactory, btreeCmpFactories, btreeCmpFactories.length,
@@ -123,6 +125,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
         this.rtreeFields = rtreeFields;
+        this.isPointMBR = isPointMBR;
     }
 
     /*
@@ -135,7 +138,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, boolean durable) {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, boolean durable,
+            boolean isPointMBR) {
         super(componentFactory.getBufferCache(), fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallback, durable);
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
@@ -149,6 +153,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
         this.rtreeFields = null;
+        this.isPointMBR = isPointMBR;
     }
 
     @Override
@@ -269,7 +274,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
     protected LSMRTreeDiskComponent createDiskComponent(ILSMComponentFactory factory, FileReference insertFileRef,
             FileReference deleteFileRef, FileReference bloomFilterFileRef, boolean createComponent)
-                    throws HyracksDataException, IndexException {
+            throws HyracksDataException, IndexException {
         // Create new tree instance.
         LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) factory.createLSMComponentInstance(
                 new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
@@ -368,11 +373,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         }
     }
 
-    protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback) {
+    protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback,
+            ISearchOperationCallback searchCallback) {
         return new LSMRTreeOpContext(memoryComponents, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
                 btreeLeafFrameFactory, btreeInteriorFrameFactory, rtreeCmpFactories, btreeCmpFactories, modCallback,
-                NoOpOperationCallback.INSTANCE, rtreeFields, filterFields, lsmHarness, comparatorFields,
-                linearizerArray);
+                searchCallback, rtreeFields, filterFields, lsmHarness, comparatorFields, linearizerArray);
     }
 
     @Override

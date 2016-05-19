@@ -23,8 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -43,27 +45,46 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class JobBuilder implements IHyracksJobBuilder {
 
-    private JobSpecification jobSpec;
-    private AlgebricksPartitionConstraint clusterLocations;
+    private final JobSpecification jobSpec;
+    private final AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private final AlgebricksAbsolutePartitionConstraint countOneLocation;
 
-    private Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
+    private final Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>>();
 
-    private Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>>();
-    private Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<IPushRuntimeFactory, ILogicalOperator>();
-    private Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<ILogicalOperator, IOperatorDescriptor>();
-    private Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<ILogicalOperator, AlgebricksPartitionConstraint>();
+    private final Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>>();
+    private final Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<IPushRuntimeFactory, ILogicalOperator>();
+    private final Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<ILogicalOperator, IOperatorDescriptor>();
+    private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<ILogicalOperator, AlgebricksPartitionConstraint>();
 
-    private int aodCounter = 0;
-    private Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<ILogicalOperator, Integer>();
-    private Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>>();
-    private Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<Integer, AlgebricksMetaOperatorDescriptor>();
+    private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<ILogicalOperator, Integer>();
+    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>>();
+    private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<Integer, AlgebricksMetaOperatorDescriptor>();
     private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<IOperatorDescriptor, AlgebricksPartitionConstraint>();
 
-    public JobBuilder(JobSpecification jobSpec, AlgebricksPartitionConstraint clusterLocations) {
+    private int aodCounter = 0;
+
+    public JobBuilder(JobSpecification jobSpec, AlgebricksAbsolutePartitionConstraint clusterLocations) {
         this.jobSpec = jobSpec;
         this.clusterLocations = clusterLocations;
+
+        // Uses a partition (fixed within a query) for the count constraint count=1.
+        // In this way, the SuperActivityRewriter can be faithful to the original JobSpecification.
+        // Otherwise, the following query plan:
+        // Nested-Loop-Join (count=1)
+        //   -- OneToOne Exchange
+        //    -- Aggregate (count=1)
+        //      ....
+        //   -- OneToOne Exchange
+        //    -- Aggregate (count=1)
+        //      ....
+        // might not be able to execute correctly, i.e.,
+        // the join-build activity and the join-probe activity get assigned to
+        // different partitions.
+        int nPartitions = clusterLocations.getLocations().length;
+        countOneLocation = new AlgebricksAbsolutePartitionConstraint(
+                new String[] { clusterLocations.getLocations()[Math.abs(jobSpec.hashCode() % nPartitions)] });
     }
 
     @Override
@@ -81,7 +102,7 @@ public class JobBuilder implements IHyracksJobBuilder {
         }
         AbstractLogicalOperator logicalOp = (AbstractLogicalOperator) op;
         if (logicalOp.getExecutionMode() == ExecutionMode.UNPARTITIONED && pc == null) {
-            AlgebricksPartitionConstraint apc = new AlgebricksCountPartitionConstraint(1);
+            AlgebricksPartitionConstraint apc = countOneLocation;
             pcForMicroOps.put(logicalOp, apc);
         }
     }
@@ -122,6 +143,12 @@ public class JobBuilder implements IHyracksJobBuilder {
 
     @Override
     public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc, AlgebricksPartitionConstraint apc) {
+        if (apc.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
+            AlgebricksCountPartitionConstraint constraint = (AlgebricksCountPartitionConstraint) apc;
+            if (constraint.getCount() == 1) {
+                apc = countOneLocation;
+            }
+        }
         partitionConstraintMap.put(opDesc, apc);
     }
 
@@ -216,7 +243,7 @@ public class JobBuilder implements IHyracksJobBuilder {
                 if (constraint != null) {
                     switch (constraint) {
                         case ONE: {
-                            opConstraint = new AlgebricksCountPartitionConstraint(1);
+                            opConstraint = countOneLocation;
                             break;
                         }
                         case SAME_COUNT: {
@@ -229,7 +256,7 @@ public class JobBuilder implements IHyracksJobBuilder {
         }
         if (partitionConstraintMap.get(opDesc) == null) {
             if (finalPass && opConstraint == null && (opInputs == null || opInputs.size() == 0)) {
-                opConstraint = new AlgebricksCountPartitionConstraint(1);
+                opConstraint = countOneLocation;
             }
             if (finalPass && opConstraint == null) {
                 opConstraint = clusterLocations;

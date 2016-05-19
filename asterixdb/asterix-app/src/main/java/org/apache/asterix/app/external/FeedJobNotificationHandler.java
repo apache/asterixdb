@@ -21,7 +21,6 @@ package org.apache.asterix.app.external;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,15 +39,12 @@ import org.apache.asterix.external.feed.api.IFeedJoint;
 import org.apache.asterix.external.feed.api.IFeedJoint.State;
 import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
-import org.apache.asterix.external.feed.api.IIntakeProgressTracker;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.management.FeedJointKey;
 import org.apache.asterix.external.feed.management.FeedWorkManager;
-import org.apache.asterix.external.feed.message.StorageReportFeedMessage;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.watch.FeedActivity;
 import org.apache.asterix.external.feed.watch.FeedConnectJobInfo;
 import org.apache.asterix.external.feed.watch.FeedIntakeInfo;
 import org.apache.asterix.external.feed.watch.FeedJobInfo;
@@ -57,9 +53,7 @@ import org.apache.asterix.external.feed.watch.FeedJobInfo.JobType;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -85,7 +79,6 @@ public class FeedJobNotificationHandler implements Runnable {
     private final Map<FeedId, FeedIntakeInfo> intakeJobInfos;
     private final Map<FeedConnectionId, FeedConnectJobInfo> connectJobInfos;
     private final Map<FeedId, Pair<FeedOperationCounter, List<IFeedJoint>>> feedPipeline;
-    private final Map<FeedConnectionId, Pair<IIntakeProgressTracker, Long>> feedIntakeProgressTrackers;
 
     public FeedJobNotificationHandler(LinkedBlockingQueue<FeedEvent> inbox) {
         this.inbox = inbox;
@@ -94,7 +87,6 @@ public class FeedJobNotificationHandler implements Runnable {
         this.connectJobInfos = new HashMap<FeedConnectionId, FeedConnectJobInfo>();
         this.feedPipeline = new HashMap<FeedId, Pair<FeedOperationCounter, List<IFeedJoint>>>();
         this.eventSubscribers = new HashMap<FeedConnectionId, List<IFeedLifecycleEventSubscriber>>();
-        this.feedIntakeProgressTrackers = new HashMap<FeedConnectionId, Pair<IIntakeProgressTracker, Long>>();
     }
 
     @Override
@@ -121,29 +113,6 @@ public class FeedJobNotificationHandler implements Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public void registerFeedIntakeProgressTracker(FeedConnectionId connectionId,
-            IIntakeProgressTracker feedIntakeProgressTracker) {
-        if (feedIntakeProgressTrackers.get(connectionId) == null) {
-            this.feedIntakeProgressTrackers.put(connectionId,
-                    new Pair<IIntakeProgressTracker, Long>(feedIntakeProgressTracker, 0L));
-        } else {
-            throw new IllegalStateException(
-                    " Progress tracker for connection " + connectionId + " is alreader registered");
-        }
-    }
-
-    public void deregisterFeedIntakeProgressTracker(FeedConnectionId connectionId) {
-        this.feedIntakeProgressTrackers.remove(connectionId);
-    }
-
-    public void updateTrackingInformation(StorageReportFeedMessage srm) {
-        Pair<IIntakeProgressTracker, Long> p = feedIntakeProgressTrackers.get(srm.getConnectionId());
-        if (p != null && p.second < srm.getLastPersistedTupleIntakeTimestamp()) {
-            p.second = srm.getLastPersistedTupleIntakeTimestamp();
-            p.first.notifyIngestedTupleTimestamp(p.second);
         }
     }
 
@@ -358,8 +327,6 @@ public class FeedJobNotificationHandler implements Runnable {
             }
         }
         cInfo.setState(FeedJobState.ACTIVE);
-        // register activity in metadata
-        registerFeedActivity(cInfo);
     }
 
     private void notifyFeedEventSubscribers(FeedJobInfo jobInfo, FeedLifecycleEvent event) {
@@ -489,61 +456,10 @@ public class FeedJobNotificationHandler implements Runnable {
 
         connectJobInfos.remove(connectionId);
         jobInfos.remove(cInfo.getJobId());
-        feedIntakeProgressTrackers.remove(cInfo.getConnectionId());
-        deregisterFeedActivity(cInfo);
         // notify event listeners
         FeedLifecycleEvent event = failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE
                 : FeedLifecycleEvent.FEED_COLLECT_ENDED;
         notifyFeedEventSubscribers(cInfo, event);
-    }
-
-    private void registerFeedActivity(FeedConnectJobInfo cInfo) {
-        Map<String, String> feedActivityDetails = new HashMap<String, String>();
-
-        if (cInfo.getCollectLocations() != null) {
-            feedActivityDetails.put(FeedActivity.FeedActivityDetails.INTAKE_LOCATIONS,
-                    StringUtils.join(cInfo.getCollectLocations().iterator(), ','));
-        }
-
-        if (cInfo.getComputeLocations() != null) {
-            feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS,
-                    StringUtils.join(cInfo.getComputeLocations().iterator(), ','));
-        }
-
-        if (cInfo.getStorageLocations() != null) {
-            feedActivityDetails.put(FeedActivity.FeedActivityDetails.STORAGE_LOCATIONS,
-                    StringUtils.join(cInfo.getStorageLocations().iterator(), ','));
-        }
-
-        String policyName = cInfo.getFeedPolicy().get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
-        feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME, policyName);
-
-        feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_CONNECT_TIMESTAMP, (new Date()).toString());
-        try {
-            FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getFeedId().getDataverse(),
-                    cInfo.getConnectionId().getFeedId().getFeedName(), cInfo.getConnectionId().getDatasetName(),
-                    feedActivityDetails);
-            CentralFeedManager.getInstance().getFeedLoadManager().reportFeedActivity(cInfo.getConnectionId(),
-                    feedActivity);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to register feed activity for " + cInfo + " " + e.getMessage());
-            }
-
-        }
-
-    }
-
-    public void deregisterFeedActivity(FeedConnectJobInfo cInfo) {
-        try {
-            CentralFeedManager.getInstance().getFeedLoadManager().removeFeedActivity(cInfo.getConnectionId());
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to deregister feed activity for " + cInfo + " " + e.getMessage());
-            }
-        }
     }
 
     public boolean isRegisteredFeedJob(JobId jobId) {

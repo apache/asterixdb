@@ -20,7 +20,7 @@ package org.apache.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.transactions.ILogRecord.RECORD_STATUS;
+import org.apache.asterix.common.transactions.ILogRecord.RecordReadStatus;
 import org.apache.asterix.common.transactions.LogRecord;
 
 public class LogBufferTailReader {
@@ -43,9 +43,9 @@ public class LogBufferTailReader {
         if (buffer.position() == endOffset) {
             return null;
         }
-        RECORD_STATUS status = logRecord.readLogRecord(buffer);
+        RecordReadStatus status = logRecord.readLogRecord(buffer);
         //underflow is not expected because we are at the very tail of the current log buffer
-        if (status != RECORD_STATUS.OK) {
+        if (status != RecordReadStatus.OK) {
             throw new IllegalStateException();
         }
         return logRecord;

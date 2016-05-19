@@ -100,6 +100,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         FunctionIdentifier fid = null;
         /** find the record variable */
         InsertDeleteUpsertOperator insertOp = (InsertDeleteUpsertOperator) op1;
+        boolean isBulkload = insertOp.isBulkload();
         ILogicalExpression recordExpr = insertOp.getPayloadExpression().getValue();
         LogicalVariable recordVar = null;
         List<LogicalVariable> usedRecordVars = new ArrayList<>();
@@ -441,8 +442,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
                         secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
+                boolean isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT
+                        || spatialType.getTypeTag() == ATypeTag.POINT3D;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
-                int numKeys = dimension * 2;
+                int numKeys = (isPointMBR && isBulkload) ? dimension : dimension * 2;
                 // Get variables and expressions
                 List<LogicalVariable> keyVarList = new ArrayList<LogicalVariable>();
                 List<Mutable<ILogicalExpression>> keyExprList = new ArrayList<Mutable<ILogicalExpression>>();
@@ -462,6 +465,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 for (LogicalVariable secondaryKeyVar : keyVarList) {
                     secondaryExpressions.add(
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
+                }
+                if (isPointMBR && isBulkload) {
+                    //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and 
+                    //createFieldPermutationForBulkLoadOp(int) for more details.
+                    for (LogicalVariable secondaryKeyVar : keyVarList) {
+                        secondaryExpressions.add(new MutableObject<ILogicalExpression>(
+                                new VariableReferenceExpression(secondaryKeyVar)));
+                    }
                 }
                 AssignOperator assignCoordinates = new AssignOperator(keyVarList, keyExprList);
                 assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
@@ -489,6 +500,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     for (LogicalVariable secondaryKeyVar : originalKeyVarList) {
                         prevSecondaryExpressions.add(new MutableObject<ILogicalExpression>(
                                 new VariableReferenceExpression(secondaryKeyVar)));
+                    }
+                    if (isPointMBR && isBulkload) {
+                        //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and 
+                        //createFieldPermutationForBulkLoadOp(int) for more details.
+                        for (LogicalVariable secondaryKeyVar : originalKeyVarList) {
+                            prevSecondaryExpressions.add(new MutableObject<ILogicalExpression>(
+                                    new VariableReferenceExpression(secondaryKeyVar)));
+                        }
                     }
                     originalAssignCoordinates = new AssignOperator(originalKeyVarList, originalKeyExprList);
                     originalAssignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
@@ -654,7 +673,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
     @SuppressWarnings("unchecked")
     private void prepareVarAndExpression(List<String> fields, String[] recordFields, LogicalVariable recordVar,
             List<Mutable<ILogicalExpression>> expressions, List<LogicalVariable> vars, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // Get a reference to the record variable
         Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(
                 new VariableReferenceExpression(recordVar));

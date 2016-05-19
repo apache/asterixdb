@@ -17,91 +17,91 @@
  ! under the License.
  !-->
 <asterixConfiguration xmlns="asterixconf">
-	<metadataNode>asterix_nc1</metadataNode>
-	<store>
-		<ncId>asterix_nc1</ncId>
-		<storeDirs>iodevice0,iodevice1</storeDirs>
-	</store>
-	<store>
-		<ncId>asterix_nc2</ncId>
-		<storeDirs>iodevice0,iodevice1</storeDirs>
-	</store>
-	<transactionLogDir>
-		<ncId>asterix_nc1</ncId>
-		<txnLogDirPath>target/txnLogDir/asterix_nc1</txnLogDirPath>
-	</transactionLogDir>
-	<transactionLogDir>
-		<ncId>asterix_nc2</ncId>
-		<txnLogDirPath>target/txnLogDir/asterix_nc2</txnLogDirPath>
-	</transactionLogDir>
+  <metadataNode>asterix_nc1</metadataNode>
+  <store>
+    <ncId>asterix_nc1</ncId>
+    <storeDirs>iodevice0,iodevice1</storeDirs>
+  </store>
+  <store>
+    <ncId>asterix_nc2</ncId>
+    <storeDirs>iodevice0,iodevice1</storeDirs>
+  </store>
+  <transactionLogDir>
+    <ncId>asterix_nc1</ncId>
+    <txnLogDirPath>target/txnLogDir/asterix_nc1</txnLogDirPath>
+  </transactionLogDir>
+  <transactionLogDir>
+    <ncId>asterix_nc2</ncId>
+    <txnLogDirPath>target/txnLogDir/asterix_nc2</txnLogDirPath>
+  </transactionLogDir>
 
-	<property>
-		<name>max.wait.active.cluster</name>
-		<value>60</value>
-		<description>Maximum wait (in seconds) for a cluster to be ACTIVE (all
-			nodes are available)
-			before a submitted query/statement can be
-			executed. (Default = 60 seconds)
-		</description>
-	</property>
+  <property>
+    <name>max.wait.active.cluster</name>
+    <value>60</value>
+    <description>Maximum wait (in seconds) for a cluster to be ACTIVE (all
+      nodes are available)
+      before a submitted query/statement can be
+      executed. (Default = 60 seconds)
+    </description>
+  </property>
 
-	<property>
-		<name>log.level</name>
-		<value>WARNING</value>
-		<description>Log level for running tests/build</description>
-	</property>
-	<property>
-		<name>compiler.framesize</name>
-		<value>32768</value>
-	</property>
-	<property>
-		<name>compiler.sortmemory</name>
-		<value>327680</value>
-	</property>
-	<property>
-		<name>compiler.groupmemory</name>
-		<value>163840</value>
-	</property>
-	<property>
-		<name>compiler.joinmemory</name>
-		<value>163840</value>
-	</property>
-        <property>
-               <name>compiler.pregelix.home</name>
-               <value>~/pregelix</value>
-        </property>
-	<property>
-		<name>storage.buffercache.pagesize</name>
-		<value>32768</value>
-		<description>The page size in bytes for pages in the buffer cache.
-			(Default = "32768" // 32KB)
-		</description>
-	</property>
-	<property>
-		<name>storage.buffercache.size</name>
-		<value>33554432</value>
-		<description>The size of memory allocated to the disk buffer cache.
-			The value should be a multiple of the buffer cache page size(Default
-			= "33554432" // 32MB)
-		</description>
-	</property>
-	<property>
-		<name>storage.memorycomponent.numpages</name>
-		<value>8</value>
-		<description>The number of pages to allocate for a memory component.
-			(Default = 8)
-		</description>
-	</property>
-	<property>
-		<name>plot.activate</name>
-		<value>false</value>
-		<description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
-		</description>
-	</property>
-    <property>
-        <name>log.level</name>
-        <value>WARNING</value>
-        <description>The minimum log level to be displayed. (Default = INFO)
-        </description>
-    </property>
+  <property>
+    <name>log.level</name>
+    <value>WARNING</value>
+    <description>Log level for running tests/build</description>
+  </property>
+  <property>
+    <name>compiler.framesize</name>
+    <value>32768</value>
+  </property>
+  <property>
+    <name>compiler.sortmemory</name>
+    <value>327680</value>
+  </property>
+  <property>
+    <name>compiler.groupmemory</name>
+    <value>163840</value>
+  </property>
+  <property>
+    <name>compiler.joinmemory</name>
+    <value>163840</value>
+  </property>
+  <property>
+    <name>compiler.pregelix.home</name>
+    <value>~/pregelix</value>
+  </property>
+  <property>
+    <name>storage.buffercache.pagesize</name>
+    <value>32768</value>
+    <description>The page size in bytes for pages in the buffer cache.
+      (Default = "32768" // 32KB)
+    </description>
+  </property>
+  <property>
+    <name>storage.buffercache.size</name>
+    <value>33554432</value>
+    <description>The size of memory allocated to the disk buffer cache.
+      The value should be a multiple of the buffer cache page size(Default
+      = "33554432" // 32MB)
+    </description>
+  </property>
+  <property>
+    <name>storage.memorycomponent.numpages</name>
+    <value>8</value>
+    <description>The number of pages to allocate for a memory component.
+      (Default = 8)
+    </description>
+  </property>
+  <property>
+    <name>plot.activate</name>
+    <value>false</value>
+    <description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
+    </description>
+  </property>
+  <property>
+    <name>log.level</name>
+    <value>WARNING</value>
+    <description>The minimum log level to be displayed. (Default = INFO)
+    </description>
+  </property>
 </asterixConfiguration>

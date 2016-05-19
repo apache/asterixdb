@@ -78,9 +78,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeJoin(nodeId);
-            if (workRequest != null && !workRequest.isEmpty()) {
-                work.addAll(workRequest);
-            }
+            work.addAll(workRequest);
         }
         if (!work.isEmpty()) {
             executeWorkSet(work);
@@ -104,9 +102,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeFailure(deadNodeIds);
-            if (workRequest != null && !workRequest.isEmpty()) {
-                work.addAll(workRequest);
-            }
+            work.addAll(workRequest);
         }
         if (!work.isEmpty()) {
             executeWorkSet(work);

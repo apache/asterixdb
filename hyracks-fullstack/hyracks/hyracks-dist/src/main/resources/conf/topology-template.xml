@@ -18,9 +18,9 @@
  !-->
 
 <cluster-topology>
-    <network-switch name="Global">
-        <network-switch name="local">
-            <terminal name="127.0.0.1"/>
-        </network-switch>
+  <network-switch name="Global">
+    <network-switch name="local">
+      <terminal name="127.0.0.1"/>
     </network-switch>
+  </network-switch>
 </cluster-topology>

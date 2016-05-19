@@ -168,6 +168,9 @@ public class TestExecutor {
             if (lineActual != null) {
                 throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
             }
+        } catch (Exception e) {
+            System.err.println("Actual results file: " + actualFile.toString());
+            throw e;
         } finally {
             readerExpected.close();
             readerActual.close();

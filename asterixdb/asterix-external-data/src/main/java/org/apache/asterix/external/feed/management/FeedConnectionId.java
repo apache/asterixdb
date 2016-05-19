@@ -29,16 +29,17 @@ public class FeedConnectionId implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final FeedId feedId;            // Dataverse - Feed
-    private final String datasetName;       // Dataset
+    private final String datasetName;       // Dataset <Dataset is empty in case of no target dataset>
+    private final int hash;
 
     public FeedConnectionId(FeedId feedId, String datasetName) {
         this.feedId = feedId;
         this.datasetName = datasetName;
+        this.hash = toString().hashCode();
     }
 
     public FeedConnectionId(String dataverse, String feedName, String datasetName) {
-        this.feedId = new FeedId(dataverse, feedName);
-        this.datasetName = datasetName;
+        this(new FeedId(dataverse, feedName), datasetName);
     }
 
     public FeedId getFeedId() {
@@ -64,7 +65,7 @@ public class FeedConnectionId implements Serializable {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return hash;
     }
 
     @Override
