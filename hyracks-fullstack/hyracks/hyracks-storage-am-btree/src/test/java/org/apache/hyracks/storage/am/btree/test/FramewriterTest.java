@@ -30,6 +30,9 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.test.CountAndThrowError;
+import org.apache.hyracks.api.test.CountAndThrowException;
+import org.apache.hyracks.api.test.CountAnswer;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -92,8 +95,8 @@ public class FramewriterTest {
     public boolean validate(boolean finished) {
         // get number of open calls
         int openCount = openException.getCallCount() + openNormal.getCallCount() + openError.getCallCount();
-        int nextFrameCount = nextFrameException.getCallCount() + nextFrameNormal.getCallCount()
-                + nextFrameError.getCallCount();
+        int nextFrameCount =
+                nextFrameException.getCallCount() + nextFrameNormal.getCallCount() + nextFrameError.getCallCount();
         int failCount = failException.getCallCount() + failNormal.getCallCount() + failError.getCallCount();
         int closeCount = closeException.getCallCount() + closeNormal.getCallCount() + closeError.getCallCount();
 
@@ -422,8 +425,9 @@ public class FramewriterTest {
     public AbstractTreeIndexOperatorDescriptor[] mockIndexOpDesc() throws HyracksDataException, IndexException {
         IIndexDataflowHelperFactory[] indexDataflowHelperFactories = mockIndexHelperFactories();
         ISearchOperationCallbackFactory[] searchOpCallbackFactories = mockSearchOpCallbackFactories();
-        AbstractTreeIndexOperatorDescriptor[] opDescs = new AbstractTreeIndexOperatorDescriptor[indexDataflowHelperFactories.length
-                * searchOpCallbackFactories.length];
+        AbstractTreeIndexOperatorDescriptor[] opDescs =
+                new AbstractTreeIndexOperatorDescriptor[indexDataflowHelperFactories.length
+                        * searchOpCallbackFactories.length];
         int k = 0;
         for (int i = 0; i < indexDataflowHelperFactories.length; i++) {
             for (int j = 0; j < searchOpCallbackFactories.length; j++) {
@@ -450,52 +454,6 @@ public class FramewriterTest {
     private ISearchOperationCallback mockSearchOpCallback() {
         ISearchOperationCallback opCallback = Mockito.mock(ISearchOperationCallback.class);
         return opCallback;
-    }
-
-    public class CountAnswer implements Answer<Object> {
-        protected int count = 0;
-
-        @Override
-        public Object answer(InvocationOnMock invocation) throws Throwable {
-            count++;
-            return null;
-        }
-
-        public int getCallCount() {
-            return count;
-        }
-
-        public void reset() {
-            count = 0;
-        }
-    }
-
-    public class CountAndThrowException extends CountAnswer {
-        private String errorMessage;
-
-        public CountAndThrowException(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-
-        @Override
-        public Object answer(InvocationOnMock invocation) throws Throwable {
-            count++;
-            throw new HyracksDataException(errorMessage);
-        }
-    }
-
-    public class CountAndThrowError extends CountAnswer {
-        private String errorMessage;
-
-        public CountAndThrowError(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-
-        @Override
-        public Object answer(InvocationOnMock invocation) throws Throwable {
-            count++;
-            throw new UnknownError(errorMessage);
-        }
     }
 
     public IFrameWriter[] createOutputWriters() throws Exception {

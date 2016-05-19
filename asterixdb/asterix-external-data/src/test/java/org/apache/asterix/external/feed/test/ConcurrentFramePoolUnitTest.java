@@ -22,8 +22,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.external.feed.dataflow.FrameAction;
 import org.apache.asterix.external.feed.management.ConcurrentFramePool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
@@ -36,7 +38,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 @RunWith(PowerMockRunner.class)
-public class FeedMemoryManagerUnitTest extends TestCase {
+public class ConcurrentFramePoolUnitTest extends TestCase {
 
     private static final int DEFAULT_FRAME_SIZE = 32768;
     private static final int NUM_FRAMES = 2048;
@@ -44,8 +46,9 @@ public class FeedMemoryManagerUnitTest extends TestCase {
     private static final int NUM_THREADS = 8;
     private static final int MAX_SIZE = 52;
     private static final double RELEASE_PROBABILITY = 0.20;
+    private volatile static HyracksDataException cause = null;
 
-    public FeedMemoryManagerUnitTest(String testName) {
+    public ConcurrentFramePoolUnitTest(String testName) {
         super(testName);
     }
 
@@ -53,7 +56,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite(FeedMemoryManagerUnitTest.class);
+        return new TestSuite(ConcurrentFramePoolUnitTest.class);
     }
 
     @org.junit.Test
@@ -67,6 +70,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
             i++;
         }
         Assert.assertEquals(i, NUM_FRAMES);
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -97,6 +101,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
             th.printStackTrace();
             Assert.fail(th.getMessage());
         }
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -131,6 +136,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
             th.printStackTrace();
             Assert.fail(th.getMessage());
         }
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -170,6 +176,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
             th.printStackTrace();
             Assert.fail(th.getMessage());
         }
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -201,6 +208,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
         }
         stack.clear();
         Assert.assertEquals(fmm.remaining(), NUM_FRAMES);
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -231,6 +239,7 @@ public class FeedMemoryManagerUnitTest extends TestCase {
             th.printStackTrace();
             Assert.fail(th.getMessage());
         }
+        Assert.assertNull(cause);
     }
 
     @org.junit.Test
@@ -281,6 +290,8 @@ public class FeedMemoryManagerUnitTest extends TestCase {
         } catch (Throwable th) {
             th.printStackTrace();
             Assert.fail(th.getMessage());
+        } finally {
+            Assert.assertNull(cause);
         }
     }
 
@@ -315,6 +326,125 @@ public class FeedMemoryManagerUnitTest extends TestCase {
         } catch (Throwable th) {
             th.printStackTrace();
             Assert.fail(th.getMessage());
+        } finally {
+            Assert.assertNull(cause);
+        }
+    }
+
+    @org.junit.Test
+    public void testFixedSizeSubscribtion() {
+        try {
+            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
+            ConcurrentFramePool fmm =
+                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            int i = 0;
+            ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
+            LinkedBlockingDeque<ByteBuffer> buffers = new LinkedBlockingDeque<>();
+            FrameAction frameAction = new FrameAction();
+            frameAction.setFrame(buffer);
+            while (!fmm.subscribe(frameAction)) {
+                buffers.put(frameAction.retrieve());
+                i++;
+            }
+            // One subscriber.
+            // Check that all frames have been consumed
+            Assert.assertEquals(i, NUM_FRAMES);
+            // Release a frame (That will be handed out to the subscriber)
+            fmm.release(buffers.take());
+            // Check that all frames have been consumed (since the released frame have been handed to the consumer)
+            Assert.assertEquals(0, fmm.remaining());
+        } catch (Throwable th) {
+            th.printStackTrace();
+            Assert.fail(th.getMessage());
+        } finally {
+            Assert.assertNull(cause);
+        }
+    }
+
+    @org.junit.Test
+    public void testLargerThanBudgetRequests() {
+        HyracksDataException hde = null;
+        try {
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", DEFAULT_FRAME_SIZE * 16, DEFAULT_FRAME_SIZE);
+            fmm.get(32 * DEFAULT_FRAME_SIZE);
+        } catch (HyracksDataException e) {
+            hde = e;
+        } catch (Throwable th) {
+            th.printStackTrace();
+            Assert.fail(th.getMessage());
+        }
+        Assert.assertNotNull(hde);
+        Assert.assertNull(cause);
+    }
+
+    @org.junit.Test
+    public void testLargerThanBudgetSubscribe() {
+        HyracksDataException hde = null;
+        try {
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", DEFAULT_FRAME_SIZE * 16, DEFAULT_FRAME_SIZE);
+            ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE * 32);
+            FrameAction frameAction = new FrameAction();
+            frameAction.setFrame(buffer);
+            fmm.subscribe(frameAction);
+        } catch (HyracksDataException e) {
+            hde = e;
+        } catch (Throwable th) {
+            th.printStackTrace();
+            Assert.fail(th.getMessage());
+        }
+        Assert.assertNotNull(hde);
+        Assert.assertNull(cause);
+    }
+
+    @org.junit.Test
+    public void testgetWhileSubscribersExist() {
+        try {
+            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
+            ConcurrentFramePool fmm =
+                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            int i = 0;
+            ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
+            LinkedBlockingDeque<ByteBuffer> buffers = new LinkedBlockingDeque<>();
+            FrameAction frameAction = new FrameAction();
+            frameAction.setFrame(buffer);
+            while (!fmm.subscribe(frameAction)) {
+                buffers.put(frameAction.retrieve());
+                i++;
+            }
+            // One subscriber.
+            // Check that all frames have been consumed
+            Assert.assertEquals(i, NUM_FRAMES);
+            // Release a frame (That will be handed out to the subscriber)
+            fmm.release(buffers.take());
+            // Check that all frames have been consumed (since the released frame have been handed to the consumer)
+            Assert.assertEquals(fmm.remaining(), 0);
+            buffers.put(frameAction.retrieve());
+            // Create another subscriber that takes frames of double the size
+            ByteBuffer bufferTimes2 = ByteBuffer.allocate(DEFAULT_FRAME_SIZE * 2);
+            LinkedBlockingDeque<ByteBuffer> buffersTimes2 = new LinkedBlockingDeque<>();
+            FrameAction frameActionTimes2 = new FrameAction();
+            frameActionTimes2.setFrame(bufferTimes2);
+            Assert.assertEquals(true, fmm.subscribe(frameActionTimes2));
+            // release a small one
+            fmm.release(buffers.take());
+            Assert.assertEquals(fmm.remaining(), 1);
+            // Check that a small get fails
+            Assert.assertEquals(null, fmm.get());
+            // release another small one
+            fmm.release(buffers.take());
+            // Check that no small frames exists in the pool since subscriber request was satisfied
+            Assert.assertEquals(fmm.remaining(), 0);
+            buffersTimes2.add(frameActionTimes2.retrieve());
+            fmm.release(buffers);
+            fmm.release(bufferTimes2);
+            Assert.assertEquals(fmm.remaining(), NUM_FRAMES);
+        } catch (Throwable th) {
+            th.printStackTrace();
+            Assert.fail(th.getMessage());
+        } finally {
+            Assert.assertNull(cause);
         }
     }
 
@@ -362,7 +492,8 @@ public class FeedMemoryManagerUnitTest extends TestCase {
                         try {
                             fmm.release(stack.pop());
                         } catch (HyracksDataException e) {
-                            Assert.fail();
+                            e.printStackTrace();
+                            cause = e;
                         }
                     }
                 } else {

@@ -19,29 +19,45 @@
 package org.apache.asterix.external.feed.dataflow;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.LinkedBlockingDeque;
 
-import rx.functions.Action1;
+import org.apache.log4j.Logger;
 
-public class FrameAction implements Action1<ByteBuffer> {
-    private final LinkedBlockingDeque<ByteBuffer> inbox;
+public class FrameAction {
+    private static final boolean DEBUG = false;
+    private static final Logger LOGGER = Logger.getLogger(FrameAction.class.getName());
+    private ByteBuffer allocated;
     private ByteBuffer frame;
 
-    public FrameAction(LinkedBlockingDeque<ByteBuffer> inbox) {
-        this.inbox = inbox;
-    }
-
-    @Override
     public void call(ByteBuffer freeFrame) {
+        if (DEBUG) {
+            LOGGER.info("FrameAction: My subscription is being answered");
+        }
         freeFrame.put(frame);
-        inbox.add(freeFrame);
         synchronized (this) {
-            notify();
+            allocated = freeFrame;
+            if (DEBUG) {
+                LOGGER.info("FrameAction: Waking up waiting threads");
+            }
+            notifyAll();
         }
     }
 
-    public ByteBuffer getFrame() {
-        return frame;
+    public synchronized ByteBuffer retrieve() throws InterruptedException {
+        if (DEBUG) {
+            LOGGER.info("FrameAction: Attempting to get allocated buffer");
+        }
+        while (allocated == null) {
+            if (DEBUG) {
+                LOGGER.info("FrameAction: Allocated buffer is not ready yet. I will wait for it");
+            }
+            wait();
+            if (DEBUG) {
+                LOGGER.info("FrameAction: Awoken Up");
+            }
+        }
+        ByteBuffer temp = allocated;
+        allocated = null;
+        return temp;
     }
 
     public void setFrame(ByteBuffer frame) {
