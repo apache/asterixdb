@@ -27,7 +27,6 @@ import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory;
-import org.apache.asterix.external.input.record.reader.kv.KVReaderFactory;
 import org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory;
 import org.apache.asterix.external.input.record.reader.rss.RSSRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
@@ -91,8 +90,6 @@ public class DatasourceFactoryProvider {
             return ExternalDataUtils.createExternalRecordReaderFactory(configuration);
         }
         switch (reader) {
-            case ExternalDataConstants.READER_KV:
-                return new KVReaderFactory();
             case ExternalDataConstants.READER_KV_TEST:
                 return new KVTestReaderFactory();
             case ExternalDataConstants.READER_HDFS:
