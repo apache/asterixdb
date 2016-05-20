@@ -28,7 +28,8 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 
 public class WorkQueue {
     private static final Logger LOGGER = Logger.getLogger(WorkQueue.class.getName());
-    private static final Level COUNT_LOGGING_LEVEL = Level.FINEST;
+    //to be fixed when application vs. hyracks log level issues are sorted
+    private static final boolean DEBUG = false;
 
     private final LinkedBlockingQueue<AbstractWork> queue;
     private final WorkerThread thread;
@@ -48,7 +49,7 @@ public class WorkQueue {
         thread = new WorkerThread();
         stopSemaphore = new Semaphore(1);
         stopped = true;
-        if (LOGGER.isLoggable(COUNT_LOGGING_LEVEL)) {
+        if(DEBUG) {
             enqueueCount = new AtomicInteger(0);
             dequeueCount = new AtomicInteger(0);
         }
@@ -60,7 +61,7 @@ public class WorkQueue {
         } catch (InterruptedException e) {
             throw new HyracksException(e);
         }
-        if (LOGGER.isLoggable(COUNT_LOGGING_LEVEL)) {
+        if (DEBUG) {
             enqueueCount.set(0);
             dequeueCount.set(0);
         }
@@ -85,8 +86,8 @@ public class WorkQueue {
     }
 
     public void schedule(AbstractWork event) {
-        if (LOGGER.isLoggable(COUNT_LOGGING_LEVEL)) {
-            LOGGER.log(COUNT_LOGGING_LEVEL, "Enqueue (" + hashCode() + "): " + enqueueCount.incrementAndGet());
+        if (DEBUG) {
+            LOGGER.log(Level.FINEST, "Enqueue (" + hashCode() + "): " + enqueueCount.incrementAndGet());
         }
         if (LOGGER.isLoggable(Level.FINER)) {
             LOGGER.finer("Scheduling: " + event);
@@ -120,8 +121,8 @@ public class WorkQueue {
                     } catch (InterruptedException e) {
                         continue;
                     }
-                    if (LOGGER.isLoggable(COUNT_LOGGING_LEVEL)) {
-                        LOGGER.log(COUNT_LOGGING_LEVEL,
+                    if (DEBUG) {
+                        LOGGER.log(Level.FINEST,
                                 "Dequeue (" + WorkQueue.this.hashCode() + "): " + dequeueCount.incrementAndGet() + "/"
                                         + enqueueCount);
                     }
