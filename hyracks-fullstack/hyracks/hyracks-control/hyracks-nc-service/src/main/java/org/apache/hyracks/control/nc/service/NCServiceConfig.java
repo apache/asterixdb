@@ -35,16 +35,20 @@ public class NCServiceConfig {
      * If an option is specified both in the config file and on the command line, the config file
      * version will take precedence.
      */
-    @Option(name = "-config-file", usage = "Local NC configuration file (default: none)", required = false)
+    @Option(name = "-config-file", required = false,
+            usage = "Local NC configuration file (default: none)")
     public String configFile = null;
 
-    @Option(name = "-address", usage = "Address to listen on for connections from CC (default: localhost)", required = false)
-    public String address = InetAddress.getLoopbackAddress().getHostAddress();
+    @Option(name = "-address", required = false,
+            usage = "Address to listen on for connections from CC (default: all addresses)")
+    public String address = null;
 
-    @Option(name = "-port", usage = "Port to listen on for connections from CC (default: 9090)", required = false)
+    @Option(name = "-port", required = false,
+            usage = "Port to listen on for connections from CC (default: 9090)")
     public int port = 9090;
 
-    @Option(name = "-command", usage = "NC command to run (default: 'hyracksnc' on PATH)", required = false)
+    @Option(name = "-command", required = false,
+            usage = "NC command to run (default: 'hyracksnc' on PATH)")
     public String command = "hyracksnc";
 
     private Ini ini = null;
