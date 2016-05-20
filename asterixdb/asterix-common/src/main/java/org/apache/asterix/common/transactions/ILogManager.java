@@ -19,6 +19,7 @@
 package org.apache.asterix.common.transactions;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -85,4 +86,23 @@ public interface ILogManager {
      */
     public int getNumLogPages();
 
+    /**
+     * Opens a file channel to the log file which contains {@code LSN}.
+     * The start position of the file channel will be at the first LSN of the file.
+     *
+     * @param LSN
+     * @return
+     * @throws IOException
+     *             if the log file does not exist.
+     */
+    public TxnLogFile getLogFile(long LSN) throws IOException;
+
+    /**
+     * Closes the log file.
+     *
+     * @param logFileRef
+     * @param fileChannel
+     * @throws IOException
+     */
+    public void closeLogFile(TxnLogFile logFileRef, FileChannel fileChannel) throws IOException;
 }

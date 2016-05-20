@@ -27,6 +27,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -47,6 +48,7 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.LogManagerProperties;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
+import org.apache.asterix.common.transactions.TxnLogFile;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
@@ -74,6 +76,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final String nodeId;
     protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
     private final FlushLogsLogger flushLogsLogger;
+    private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
 
     public LogManager(TransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
@@ -148,7 +151,13 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                         "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
             }
         }
-        if (getLogFileOffset(appendLSN.get()) + logRecord.getLogSize() > logFileSize) {
+
+        /**
+         * To eliminate the case where the modulo of the next appendLSN = 0 (the next
+         * appendLSN = the first LSN of the next log file), we do not allow a log to be
+         * written at the last offset of the current file.
+         */
+        if (getLogFileOffset(appendLSN.get()) + logRecord.getLogSize() >= logFileSize) {
             prepareNextLogFile();
             appendPage.isFull(true);
             getAndInitNewPage();
@@ -194,8 +203,28 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     protected void prepareNextLogFile() {
+        //wait until all log records have been flushed in the current file
+        synchronized (flushLSN) {
+            while (flushLSN.get() != appendLSN.get()) {
+                //notification will come from LogBuffer.internalFlush(.)
+                try {
+                    flushLSN.wait();
+                } catch (InterruptedException e) {
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.severe("Preparing new log file was interrupted");
+                    }
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        //move appendLSN and flushLSN to the first LSN of the next log file
         appendLSN.addAndGet(logFileSize - getLogFileOffset(appendLSN.get()));
+        flushLSN.set(appendLSN.get());
         appendChannel = getFileChannel(appendLSN.get(), true);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Created new txn log file with id(" + getLogFileId(appendLSN.get()) + ") starting with LSN = "
+                    + appendLSN.get());
+        }
         appendPage.isLastPage(true);
         //[Notice]
         //the current log file channel is closed if
@@ -323,15 +352,32 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     @Override
     public void deleteOldLogFiles(long checkpointLSN) {
-
         Long checkpointLSNLogFileID = getLogFileId(checkpointLSN);
         List<Long> logFileIds = getLogFileIds();
         if (logFileIds != null) {
-            for (Long id : logFileIds) {
-                if (id < checkpointLSNLogFileID) {
+            //sort log files from oldest to newest
+            Collections.sort(logFileIds);
+            /**
+             * At this point, any future LogReader should read from LSN >= checkpointLSN
+             */
+            synchronized (txnLogFileId2ReaderCount) {
+                for (Long id : logFileIds) {
+                    /**
+                     * Stop deletion if:
+                     * The log file which contains the checkpointLSN has been reached.
+                     * The oldest log file being accessed by a LogReader has been reached.
+                     */
+                    if (id >= checkpointLSNLogFileID
+                            || (txnLogFileId2ReaderCount.containsKey(id) && txnLogFileId2ReaderCount.get(id) > 0)) {
+                        break;
+                    }
+
+                    //delete old log file
                     File file = new File(getLogFilePath(id));
-                    if (!file.delete()) {
-                        throw new IllegalStateException("Failed to delete a file: " + file.getAbsolutePath());
+                    file.delete();
+                    txnLogFileId2ReaderCount.remove(id);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Deleted log file " + file.getAbsolutePath());
                     }
                 }
             }
@@ -365,6 +411,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                 throw new IllegalStateException("Failed to close a fileChannel of a log file");
             }
         }
+        txnLogFileId2ReaderCount.clear();
         List<Long> logFileIds = getLogFileIds();
         if (logFileIds != null) {
             for (Long id : logFileIds) {
@@ -434,7 +481,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return (new File(path)).mkdir();
     }
 
-    public FileChannel getFileChannel(long lsn, boolean create) {
+    private FileChannel getFileChannel(long lsn, boolean create) {
         FileChannel newFileChannel = null;
         try {
             long fileId = getLogFileId(lsn);
@@ -494,6 +541,55 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public int getNumLogPages() {
         return numLogPages;
+    }
+
+    @Override
+    public TxnLogFile getLogFile(long LSN) throws IOException {
+        long fileId = getLogFileId(LSN);
+        String logFilePath = getLogFilePath(fileId);
+        File file = new File(logFilePath);
+        if (!file.exists()) {
+            throw new IOException("Log file with id(" + fileId + ") was not found. Requested LSN: " + LSN);
+        }
+        RandomAccessFile raf = new RandomAccessFile(new File(logFilePath), "r");
+        FileChannel newFileChannel = raf.getChannel();
+        TxnLogFile logFile = new TxnLogFile(this, newFileChannel, fileId, fileId * logFileSize);
+        touchLogFile(fileId);
+        return logFile;
+    }
+
+    @Override
+    public void closeLogFile(TxnLogFile logFileRef, FileChannel fileChannel) throws IOException {
+        if (!fileChannel.isOpen()) {
+            throw new IllegalStateException("File channel is not open");
+        }
+        fileChannel.close();
+        untouchLogFile(logFileRef.getLogFileId());
+    }
+
+    private void touchLogFile(long fileId) {
+        synchronized (txnLogFileId2ReaderCount) {
+            if (txnLogFileId2ReaderCount.containsKey(fileId)) {
+                txnLogFileId2ReaderCount.put(fileId, txnLogFileId2ReaderCount.get(fileId) + 1);
+            } else {
+                txnLogFileId2ReaderCount.put(fileId, 1);
+            }
+        }
+    }
+
+    private void untouchLogFile(long fileId) {
+        synchronized (txnLogFileId2ReaderCount) {
+            if (txnLogFileId2ReaderCount.containsKey(fileId)) {
+                int newReaderCount = txnLogFileId2ReaderCount.get(fileId) - 1;
+                if (newReaderCount < 0) {
+                    throw new IllegalStateException(
+                            "Invalid log file reader count (ID=" + fileId + ", count: " + newReaderCount + ")");
+                }
+                txnLogFileId2ReaderCount.put(fileId, newReaderCount);
+            } else {
+                throw new IllegalStateException("Trying to close log file id(" + fileId + ") which was not opened.");
+            }
+        }
     }
 
     /**
