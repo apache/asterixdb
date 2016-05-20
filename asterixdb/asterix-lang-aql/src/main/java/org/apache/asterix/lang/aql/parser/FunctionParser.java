@@ -19,7 +19,6 @@
 
 package org.apache.asterix.lang.aql.parser;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +29,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.commons.io.input.CharSequenceReader;
 
 public class FunctionParser {
 
@@ -48,23 +48,20 @@ public class FunctionParser {
         builder.append(" use dataverse " + function.getDataverseName() + ";");
         builder.append(" declare function " + function.getName().split("@")[0]);
         builder.append("(");
+        boolean first = true;
         for (String param : params) {
             VarIdentifier varId = new VarIdentifier(param);
             varIdentifiers.add(varId);
+            if (first) {
+                first = false;
+            } else {
+                builder.append(",");
+            }
             builder.append(param);
-            builder.append(",");
         }
-        if (params.size() > 0) {
-            builder.delete(builder.length() - 1, builder.length());
-        }
-        builder.append(")");
-        builder.append("{");
-        builder.append("\n");
-        builder.append(functionBody);
-        builder.append("\n");
-        builder.append("}");
+        builder.append("){\n").append(functionBody).append("\n}");
 
-        IParser parser = parserFactory.createParser(new StringReader(new String(builder)));
+        IParser parser = parserFactory.createParser(new CharSequenceReader(builder));
         List<Statement> statements = parser.parse();
         FunctionDecl decl = (FunctionDecl) statements.get(1);
         return decl;
