@@ -27,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 import org.apache.asterix.common.replication.ReplicaEvent;
-import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
@@ -35,7 +34,7 @@ import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 public class ReplicationProtocol {
 
     /**
-     * All replication messages start with ReplicationFunctions (4 bytes), then the length of the request in bytes
+     * All replication messages start with ReplicationRequestType (4 bytes), then the length of the request in bytes
      */
     public static final String JOB_REPLICATION_ACK = "$";
 
@@ -48,9 +47,7 @@ public class ReplicationProtocol {
      * REPLICATE_FILE: replicate a file(s)
      * DELETE_FILE: delete a file(s)
      * GET_REPLICA_FILES: used during remote recovery to request lost LSM Components
-     * GET_REPLICA_LOGS: used during remote recovery to request lost txn logs
      * GET_REPLICA_MAX_LSN: used during remote recovery initialize a log manager LSN
-     * GET_REPLICA_MIN_LSN: used during remote recovery to specify the low water mark per replica
      * GOODBYE: used to notify replicas that the replication request has been completed
      * REPLICA_EVENT: used to notify replicas about a remote replica split/merge.
      * LSM_COMPONENT_PROPERTIES: used to send the properties of an LSM Component before its physical files are sent
@@ -62,9 +59,7 @@ public class ReplicationProtocol {
         REPLICATE_FILE,
         DELETE_FILE,
         GET_REPLICA_FILES,
-        GET_REPLICA_LOGS,
         GET_REPLICA_MAX_LSN,
-        GET_REPLICA_MIN_LSN,
         GOODBYE,
         REPLICA_EVENT,
         LSM_COMPONENT_PROPERTIES,
@@ -90,21 +85,20 @@ public class ReplicationProtocol {
     public static ByteBuffer writeLSMComponentPropertiesRequest(LSMComponentProperties lsmCompProp, ByteBuffer buffer)
             throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        lsmCompProp.serialize(oos);
-        oos.close();
-
-        int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
-        if (buffer.capacity() < requestSize) {
-            buffer = ByteBuffer.allocate(requestSize);
-        } else {
-            buffer.clear();
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            lsmCompProp.serialize(oos);
+            int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
+            if (buffer.capacity() < requestSize) {
+                buffer = ByteBuffer.allocate(requestSize);
+            } else {
+                buffer.clear();
+            }
+            buffer.putInt(ReplicationRequestType.LSM_COMPONENT_PROPERTIES.ordinal());
+            buffer.putInt(oos.size());
+            buffer.put(outputStream.toByteArray());
+            buffer.flip();
+            return buffer;
         }
-        buffer.putInt(ReplicationRequestType.LSM_COMPONENT_PROPERTIES.ordinal());
-        buffer.putInt(oos.size());
-        buffer.put(outputStream.toByteArray());
-        buffer.flip();
-        return buffer;
     }
 
     public static ReplicationRequestType getRequestType(SocketChannel socketChannel, ByteBuffer byteBuffer)
@@ -136,47 +130,23 @@ public class ReplicationProtocol {
         return bb;
     }
 
-    public static void writeRemoteRecoveryLogRequest(ByteBuffer requestBuffer, ILogRecord logRecord) {
-        requestBuffer.clear();
-        //put request type (4 bytes)
-        requestBuffer.putInt(ReplicationRequestType.REPLICATE_LOG.ordinal());
-        //leave space for log size
-        requestBuffer.position(requestBuffer.position() + Integer.BYTES);
-        int logSize = logRecord.writeRemoteRecoveryLog(requestBuffer);
-        //put request size (4 bytes)
-        requestBuffer.putInt(4, logSize);
-        requestBuffer.flip();
-    }
-
-    public static void writeReplicateLogRequest(ByteBuffer requestBuffer, byte[] serializedLog) {
-        requestBuffer.clear();
-        //put request type (4 bytes)
-        requestBuffer.putInt(ReplicationRequestType.REPLICATE_LOG.ordinal());
-        //length of the log
-        requestBuffer.putInt(serializedLog.length);
-        //the log itself
-        requestBuffer.put(serializedLog);
-        requestBuffer.flip();
-    }
-
     public static ByteBuffer writeFileReplicationRequest(ByteBuffer requestBuffer, LSMIndexFileProperties afp,
             ReplicationRequestType requestType) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        afp.serialize(oos);
-        oos.close();
-
-        int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
-        if (requestBuffer.capacity() < requestSize) {
-            requestBuffer = ByteBuffer.allocate(requestSize);
-        } else {
-            requestBuffer.clear();
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            afp.serialize(oos);
+            int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
+            if (requestBuffer.capacity() < requestSize) {
+                requestBuffer = ByteBuffer.allocate(requestSize);
+            } else {
+                requestBuffer.clear();
+            }
+            requestBuffer.putInt(requestType.ordinal());
+            requestBuffer.putInt(oos.size());
+            requestBuffer.put(outputStream.toByteArray());
+            requestBuffer.flip();
+            return requestBuffer;
         }
-        requestBuffer.putInt(requestType.ordinal());
-        requestBuffer.putInt(oos.size());
-        requestBuffer.put(outputStream.toByteArray());
-        requestBuffer.flip();
-        return requestBuffer;
     }
 
     public static LSMIndexFileProperties readFileReplicationRequest(ByteBuffer buffer) throws IOException {
@@ -185,44 +155,17 @@ public class ReplicationProtocol {
         return LSMIndexFileProperties.create(dis);
     }
 
-    public static ReplicaLogsRequest readReplicaLogsRequest(ByteBuffer buffer) throws IOException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
-        DataInputStream dis = new DataInputStream(bais);
-        return ReplicaLogsRequest.create(dis);
-    }
-
-    public static ByteBuffer writeGetReplicaLogsRequest(ByteBuffer requestBuffer, ReplicaLogsRequest request)
-            throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        request.serialize(oos);
-        oos.close();
-
-        int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
-        if (requestBuffer.capacity() < requestSize) {
-            requestBuffer = ByteBuffer.allocate(requestSize);
-        } else {
-            requestBuffer.clear();
-        }
-        requestBuffer.putInt(ReplicationRequestType.GET_REPLICA_LOGS.ordinal());
-        requestBuffer.putInt(oos.size());
-        requestBuffer.put(outputStream.toByteArray());
-        requestBuffer.flip();
-        return requestBuffer;
-    }
-
     public static ByteBuffer writeReplicaEventRequest(ReplicaEvent event) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        event.serialize(oos);
-        oos.close();
-
-        ByteBuffer buffer = ByteBuffer.allocate(REPLICATION_REQUEST_HEADER_SIZE + oos.size());
-        buffer.putInt(ReplicationRequestType.REPLICA_EVENT.ordinal());
-        buffer.putInt(oos.size());
-        buffer.put(outputStream.toByteArray());
-        buffer.flip();
-        return buffer;
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            event.serialize(oos);
+            ByteBuffer buffer = ByteBuffer.allocate(REPLICATION_REQUEST_HEADER_SIZE + oos.size());
+            buffer.putInt(ReplicationRequestType.REPLICA_EVENT.ordinal());
+            buffer.putInt(oos.size());
+            buffer.put(outputStream.toByteArray());
+            buffer.flip();
+            return buffer;
+        }
     }
 
     public static ReplicaEvent readReplicaEventRequest(ByteBuffer buffer) throws IOException {
@@ -255,21 +198,20 @@ public class ReplicationProtocol {
     public static ByteBuffer writeGetReplicaIndexFlushRequest(ByteBuffer buffer, ReplicaIndexFlushRequest request)
             throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream oos = new DataOutputStream(outputStream);
-        request.serialize(oos);
-        oos.close();
-
-        int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
-        if (buffer.capacity() < requestSize) {
-            buffer = ByteBuffer.allocate(requestSize);
-        } else {
-            buffer.clear();
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            request.serialize(oos);
+            int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
+            if (buffer.capacity() < requestSize) {
+                buffer = ByteBuffer.allocate(requestSize);
+            } else {
+                buffer.clear();
+            }
+            buffer.putInt(ReplicationRequestType.FLUSH_INDEX.ordinal());
+            buffer.putInt(oos.size());
+            buffer.put(outputStream.toByteArray());
+            buffer.flip();
+            return buffer;
         }
-        buffer.putInt(ReplicationRequestType.FLUSH_INDEX.ordinal());
-        buffer.putInt(oos.size());
-        buffer.put(outputStream.toByteArray());
-        buffer.flip();
-        return buffer;
     }
 
     public static ReplicaFilesRequest readReplicaFileRequest(ByteBuffer buffer) throws IOException {
@@ -287,12 +229,6 @@ public class ReplicationProtocol {
     public static void writeGetReplicaMaxLSNRequest(ByteBuffer requestBuffer) {
         requestBuffer.clear();
         requestBuffer.putInt(ReplicationRequestType.GET_REPLICA_MAX_LSN.ordinal());
-        requestBuffer.flip();
-    }
-
-    public static void writeMinLSNRequest(ByteBuffer requestBuffer) {
-        requestBuffer.clear();
-        requestBuffer.putInt(ReplicationRequestType.GET_REPLICA_MIN_LSN.ordinal());
         requestBuffer.flip();
     }
 

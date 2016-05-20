@@ -22,11 +22,9 @@ public class LogSource {
 
     public static final byte LOCAL = 0;
     public static final byte REMOTE = 1;
-    public static final byte REMOTE_RECOVERY = 2;
 
     private static final String STRING_LOCAL = "LOCAL";
     private static final String STRING_REMOTE = "REMOTE";
-    private static final String STRING_REMOTE_RECOVERY = "REMOTE_RECOVERY";
 
     private static final String STRING_INVALID_LOG_SOURCE = "INVALID_LOG_SOURCE";
 
@@ -36,8 +34,6 @@ public class LogSource {
                 return STRING_LOCAL;
             case REMOTE:
                 return STRING_REMOTE;
-            case REMOTE_RECOVERY:
-                return STRING_REMOTE_RECOVERY;
             default:
                 return STRING_INVALID_LOG_SOURCE;
         }

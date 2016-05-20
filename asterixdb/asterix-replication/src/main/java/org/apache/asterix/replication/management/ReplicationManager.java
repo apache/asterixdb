@@ -55,7 +55,6 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.AsterixReplicationJob;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -65,12 +64,10 @@ import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.replication.functions.ReplicaFilesRequest;
 import org.apache.asterix.replication.functions.ReplicaIndexFlushRequest;
-import org.apache.asterix.replication.functions.ReplicaLogsRequest;
 import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.asterix.replication.functions.ReplicationProtocol.ReplicationRequestType;
 import org.apache.asterix.replication.logging.ReplicationLogBuffer;
@@ -1032,91 +1029,6 @@ public class ReplicationManager implements IReplicationManager {
                 }
 
                 responseFunction = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
-            }
-
-            //send goodbye
-            ReplicationProtocol.sendGoodbye(socketChannel);
-        }
-    }
-
-    //Recovery Method
-    @Override
-    public long requestReplicaMinLSN(String selectedReplicaId) throws IOException {
-        long minLSN = 0;
-        ReplicationProtocol.writeMinLSNRequest(dataBuffer);
-        try (SocketChannel socketChannel = getReplicaSocket(selectedReplicaId);) {
-            //transfer request
-            NetworkingUtil.transferBufferToChannel(socketChannel, dataBuffer);
-
-            //read response
-            NetworkingUtil.readBytes(socketChannel, dataBuffer, Long.BYTES);
-            minLSN = dataBuffer.getLong();
-
-            //send goodbye
-            ReplicationProtocol.sendGoodbye(socketChannel);
-        }
-
-        return minLSN;
-    }
-
-    //Recovery Method
-    @Override
-    public void requestReplicaLogs(String remoteNode, Set<String> nodeIdsToRecoverFor, long fromLSN,
-            File recoveryLogsFile) throws IOException, ACIDException {
-        ReplicaLogsRequest request = new ReplicaLogsRequest(nodeIdsToRecoverFor, fromLSN);
-        dataBuffer = ReplicationProtocol.writeGetReplicaLogsRequest(dataBuffer, request);
-        try (SocketChannel socketChannel = getReplicaSocket(remoteNode)) {
-            //transfer request
-            NetworkingUtil.transferBufferToChannel(socketChannel, dataBuffer);
-
-            //read response type
-            ReplicationRequestType responseType = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
-
-            ILogRecord logRecord = new LogRecord();
-            Set<Integer> nodePartitions = ((PersistentLocalResourceRepository) asterixAppRuntimeContextProvider
-                    .getLocalResourceRepository()).getNodeOrignalPartitions();
-            Set<Integer> nodePartitionsJobs = new HashSet<>();
-            try (RandomAccessFile raf = new RandomAccessFile(recoveryLogsFile, "rw");
-                    FileChannel fileChannel = raf.getChannel();) {
-                while (responseType != ReplicationRequestType.GOODBYE) {
-                    dataBuffer = ReplicationProtocol.readRequest(socketChannel, dataBuffer);
-                    logRecord.readRemoteLog(dataBuffer, true);
-                    switch (logRecord.getLogType()) {
-                        case LogType.UPDATE:
-                        case LogType.ENTITY_COMMIT:
-                        case LogType.UPSERT_ENTITY_COMMIT:
-                            if (nodePartitions.contains(logRecord.getResourcePartition())) {
-                                nodePartitionsJobs.add(logRecord.getJobId());
-                                dataBuffer.flip();
-                                while (dataBuffer.hasRemaining()) {
-                                    //store log in temp file to replay it for recovery
-                                    fileChannel.write(dataBuffer);
-                                }
-                            } else {
-                                //send log to log manager as a remote recovery log
-                                logManager.log(logRecord);
-                            }
-                            break;
-                        case LogType.JOB_COMMIT:
-                            if (nodePartitionsJobs.contains(logRecord.getJobId())) {
-                                nodePartitionsJobs.remove(logRecord.getJobId());
-                                dataBuffer.flip();
-                                while (dataBuffer.hasRemaining()) {
-                                    //store log in temp file to replay it for recovery
-                                    fileChannel.write(dataBuffer);
-                                }
-                                break;
-                            }
-                            logManager.log(logRecord);
-                            break;
-                        case LogType.ABORT:
-                        case LogType.FLUSH:
-                            break;
-                        default:
-                            throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
-                    }
-                    responseType = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
-                }
             }
 
             //send goodbye

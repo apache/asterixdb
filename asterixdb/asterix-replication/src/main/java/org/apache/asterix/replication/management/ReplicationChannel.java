@@ -56,15 +56,12 @@ import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
-import org.apache.asterix.common.transactions.ILogReader;
-import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.asterix.replication.functions.ReplicaFilesRequest;
 import org.apache.asterix.replication.functions.ReplicaIndexFlushRequest;
-import org.apache.asterix.replication.functions.ReplicaLogsRequest;
 import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.asterix.replication.functions.ReplicationProtocol.ReplicationRequestType;
 import org.apache.asterix.replication.logging.RemoteLogMapping;
@@ -77,6 +74,8 @@ import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
 /**
  * This class is used to receive and process replication requests from remote replicas or replica events from CC
@@ -93,7 +92,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final IReplicationManager replicationManager;
     private final AsterixReplicationProperties replicationProperties;
     private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
-    private final static int INTIAL_BUFFER_SIZE = 4000; //4KB
+    private final static int INTIAL_BUFFER_SIZE = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
     private final LinkedBlockingQueue<LSMComponentLSNSyncTask> lsmComponentRemoteLSN2LocalLSNMappingTaskQ;
     private final LinkedBlockingQueue<LogRecord> pendingNotificationRemoteLogsQ;
     private final Map<String, LSMComponentProperties> lsmComponentId2PropertiesMap;
@@ -195,18 +194,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         }
     }
 
-    private static void sendRemoteRecoveryLog(ILogRecord logRecord, SocketChannel socketChannel, ByteBuffer outBuffer)
-            throws IOException {
-        logRecord.setLogSource(LogSource.REMOTE_RECOVERY);
-        if (logRecord.getSerializedLogSize() > outBuffer.capacity()) {
-            int requestSize = logRecord.getSerializedLogSize() + ReplicationProtocol.REPLICATION_REQUEST_HEADER_SIZE;
-            outBuffer = ByteBuffer.allocate(requestSize);
-        }
-        //set log source to REMOTE_RECOVERY to avoid re-logging on the recipient side
-        ReplicationProtocol.writeRemoteRecoveryLogRequest(outBuffer, logRecord);
-        NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
-    }
-
     /**
      * A replication thread is created per received replication request.
      */
@@ -249,14 +236,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                         case GET_REPLICA_MAX_LSN:
                             handleGetReplicaMaxLSN();
                             break;
-                        case GET_REPLICA_MIN_LSN:
-                            handleGetReplicaMinLSN();
-                            break;
                         case GET_REPLICA_FILES:
                             handleGetReplicaFiles();
-                            break;
-                        case GET_REPLICA_LOGS:
-                            handleGetRemoteLogs();
                             break;
                         case FLUSH_INDEX:
                             handleFlushIndex();
@@ -373,15 +354,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
         }
 
-        private void handleGetReplicaMinLSN() throws IOException {
-            long minLSN = asterixAppRuntimeContextProvider.getAppContext().getTransactionSubsystem()
-                    .getRecoveryManager().getMinFirstLSN();
-            outBuffer.clear();
-            outBuffer.putLong(minLSN);
-            outBuffer.flip();
-            NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
-        }
-
         private void handleGetReplicaFiles() throws IOException {
             inBuffer = ReplicationProtocol.readRequest(socketChannel, inBuffer);
             ReplicaFilesRequest request = ReplicationProtocol.readReplicaFileRequest(inBuffer);
@@ -423,75 +395,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             }
 
             //send goodbye (end of files)
-            ReplicationProtocol.sendGoodbye(socketChannel);
-        }
-
-        private void handleGetRemoteLogs() throws IOException, ACIDException {
-            inBuffer = ReplicationProtocol.readRequest(socketChannel, inBuffer);
-            ReplicaLogsRequest request = ReplicationProtocol.readReplicaLogsRequest(inBuffer);
-
-            Set<String> replicaIds = request.getReplicaIds();
-            //get list of partitions that belong to the replicas in the request
-            Set<Integer> requestedPartitions = new HashSet<>();
-            Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
-                    .getAppContext()).getMetadataProperties().getNodePartitions();
-            for (String replicaId : replicaIds) {
-                //get replica partitions
-                ClusterPartition[] replicaPatitions = nodePartitions.get(replicaId);
-                for (ClusterPartition partition : replicaPatitions) {
-                    requestedPartitions.add(partition.getPartitionId());
-                }
-            }
-
-            long fromLSN = request.getFromLSN();
-            long minLocalFirstLSN = asterixAppRuntimeContextProvider.getAppContext().getTransactionSubsystem()
-                    .getRecoveryManager().getLocalMinFirstLSN();
-
-            //get Log reader
-            ILogReader logReader = logManager.getLogReader(true);
-            try {
-                if (fromLSN < logManager.getReadableSmallestLSN()) {
-                    fromLSN = logManager.getReadableSmallestLSN();
-                }
-
-                logReader.initializeScan(fromLSN);
-                ILogRecord logRecord = logReader.next();
-                Set<Integer> requestedPartitionsJobs = new HashSet<>();
-                while (logRecord != null) {
-                    //we should not send any local log which has already been converted to disk component
-                    if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLSN() < minLocalFirstLSN) {
-                        logRecord = logReader.next();
-                        continue;
-                    }
-                    //send only logs that belong to the partitions of the request and required for recovery
-                    switch (logRecord.getLogType()) {
-                        case LogType.UPDATE:
-                        case LogType.ENTITY_COMMIT:
-                        case LogType.UPSERT_ENTITY_COMMIT:
-                            if (requestedPartitions.contains(logRecord.getResourcePartition())) {
-                                sendRemoteRecoveryLog(logRecord, socketChannel, outBuffer);
-                                requestedPartitionsJobs.add(logRecord.getJobId());
-                            }
-                            break;
-                        case LogType.JOB_COMMIT:
-                            if (requestedPartitionsJobs.contains(logRecord.getJobId())) {
-                                sendRemoteRecoveryLog(logRecord, socketChannel, outBuffer);
-                                requestedPartitionsJobs.remove(logRecord.getJobId());
-                            }
-                            break;
-                        case LogType.ABORT:
-                        case LogType.FLUSH:
-                            break;
-                        default:
-                            throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
-                    }
-                    logRecord = logReader.next();
-                }
-            } finally {
-                logReader.close();
-            }
-
-            //send goodbye (end of logs)
             ReplicationProtocol.sendGoodbye(socketChannel);
         }
 

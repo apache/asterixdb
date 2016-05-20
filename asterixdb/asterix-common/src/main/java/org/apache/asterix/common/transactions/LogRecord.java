@@ -560,10 +560,6 @@ public class LogRecord implements ILogRecord {
             //serialized node id String
             serilizedSize += Integer.BYTES + nodeId.length();
         }
-        if (logSource == LogSource.REMOTE_RECOVERY) {
-            //for LSN;
-            serilizedSize += Long.BYTES;
-        }
         serilizedSize -= CHKSUM_LEN;
         return serilizedSize;
     }
