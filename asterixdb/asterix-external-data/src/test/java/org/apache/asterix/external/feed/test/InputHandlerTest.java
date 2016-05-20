@@ -714,6 +714,7 @@ public class InputHandlerTest extends TestCase {
             Assert.assertEquals(1, handler.framesOnDisk());
             writer.unfreeze();
             result.get();
+            handler.close();
             Assert.assertEquals(0, handler.framesOnDisk());
         } catch (Throwable th) {
             th.printStackTrace();
