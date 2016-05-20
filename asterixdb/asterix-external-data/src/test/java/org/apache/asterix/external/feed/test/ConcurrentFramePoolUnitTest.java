@@ -29,15 +29,12 @@ import org.apache.asterix.external.feed.dataflow.FrameAction;
 import org.apache.asterix.external.feed.management.ConcurrentFramePool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-@RunWith(PowerMockRunner.class)
 public class ConcurrentFramePoolUnitTest extends TestCase {
 
     private static final int DEFAULT_FRAME_SIZE = 32768;

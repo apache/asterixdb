@@ -49,7 +49,8 @@ public class TestControlledFrameWriter extends TestFrameWriter {
         duration = ms;
     }
 
-    public synchronized void unfreeze() {
+    public synchronized void unfreeze() throws InterruptedException {
+        wait(10);
         frozen = false;
         notify();
     }

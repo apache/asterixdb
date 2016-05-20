@@ -202,7 +202,7 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                 return;
             }
         }
-        if (((numDiscarded + 1.0) / total) > fpa.getMaxFractionDiscard()) {
+        if ((numDiscarded + 1.0) / total > fpa.getMaxFractionDiscard()) {
             if (DEBUG) {
                 LOGGER.info("in discard(frame). Discard allowance has been consumed. --> Stalling");
             }
@@ -381,14 +381,6 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                 mutex.notify();
             }
         }
-    }
-
-    public Mode getMode() {
-        return mode;
-    }
-
-    public void setMode(Mode mode) {
-        this.mode = mode;
     }
 
     @Override

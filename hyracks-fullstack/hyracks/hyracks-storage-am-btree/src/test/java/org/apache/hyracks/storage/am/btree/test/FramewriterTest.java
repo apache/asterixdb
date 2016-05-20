@@ -26,6 +26,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -219,6 +220,7 @@ public class FramewriterTest {
             testBTreeSearchOperatorNodePushable();
         } catch (Throwable th) {
             th.printStackTrace();
+            Assert.fail(th.toString());
         }
         System.out.println("Number of passed tests: " + successes);
         System.out.println("Number of failed tests: " + failures);
@@ -446,7 +448,8 @@ public class FramewriterTest {
     private ISearchOperationCallbackFactory[] mockSearchOpCallbackFactories() throws HyracksDataException {
         ISearchOperationCallback searchOpCallback = mockSearchOpCallback();
         ISearchOperationCallbackFactory searchOpCallbackFactory = Mockito.mock(ISearchOperationCallbackFactory.class);
-        Mockito.when(searchOpCallbackFactory.createSearchOperationCallback(Mockito.anyLong(), Mockito.any(), null))
+        Mockito.when(searchOpCallbackFactory.createSearchOperationCallback(Mockito.anyLong(),
+                Mockito.any(IHyracksTaskContext.class), Mockito.isNull(IOperatorNodePushable.class)))
                 .thenReturn(searchOpCallback);
         return new ISearchOperationCallbackFactory[] { searchOpCallbackFactory };
     }
