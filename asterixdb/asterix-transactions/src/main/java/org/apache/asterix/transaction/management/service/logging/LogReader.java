@@ -142,7 +142,7 @@ public class LogReader implements ILogReader {
 
     private ReturnState waitForFlushOrReturnIfEOF() {
         synchronized (flushLSN) {
-            while (readLSN > flushLSN.get()) {
+            while (readLSN >= flushLSN.get()) {
                 if (isRecoveryMode) {
                     return ReturnState.EOF;
                 }
@@ -223,7 +223,7 @@ public class LogReader implements ILogReader {
         readLSN = LSN;
         //wait for the log to be flushed if needed before trying to read it.
         synchronized (flushLSN) {
-            while (readLSN > flushLSN.get()) {
+            while (readLSN >= flushLSN.get()) {
                 try {
                     flushLSN.wait();
                 } catch (InterruptedException e) {

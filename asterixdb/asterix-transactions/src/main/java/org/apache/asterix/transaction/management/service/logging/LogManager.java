@@ -205,16 +205,13 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     protected void prepareNextLogFile() {
         //wait until all log records have been flushed in the current file
         synchronized (flushLSN) {
-            while (flushLSN.get() != appendLSN.get()) {
-                //notification will come from LogBuffer.internalFlush(.)
-                try {
+            try {
+                while (flushLSN.get() != appendLSN.get()) {
+                    //notification will come from LogBuffer.internalFlush(.)
                     flushLSN.wait();
-                } catch (InterruptedException e) {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("Preparing new log file was interrupted");
-                    }
-                    Thread.currentThread().interrupt();
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
         //move appendLSN and flushLSN to the first LSN of the next log file
