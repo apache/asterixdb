@@ -142,10 +142,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     protected synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
-        ITransactionContext txnCtx = null;
-
         if (logRecord.getLogType() != LogType.FLUSH) {
-            txnCtx = logRecord.getTxnCtx();
+            ITransactionContext txnCtx = logRecord.getTxnCtx();
             if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
                 throw new ACIDException(
                         "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
@@ -168,9 +166,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             } else {
                 getAndInitNewPage();
             }
-        }
-        if (logRecord.getLogType() == LogType.UPDATE) {
-            logRecord.setPrevLSN(txnCtx.getLastLSN());
         }
         appendPage.append(logRecord, appendLSN.get());
 
