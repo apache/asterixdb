@@ -48,6 +48,8 @@ public interface ITupleAccessor extends IFrameTupleAccessor {
 
     int getTupleId();
 
+    void setTupleId(int tupleId);
+
     void getTuplePointer(TuplePointer tp);
 
     /**

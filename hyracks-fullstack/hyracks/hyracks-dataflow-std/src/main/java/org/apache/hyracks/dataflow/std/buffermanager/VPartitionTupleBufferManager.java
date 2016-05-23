@@ -108,8 +108,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
             for (int i = 0; i < partition.getNumFrames(); ++i) {
                 framePool.deAllocateBuffer(partition.getFrame(i, tempInfo).getBuffer());
             }
+            partition.reset();
         }
-        partitionArray[partitionId].reset();
         numTuples[partitionId] = 0;
     }
 

@@ -65,7 +65,7 @@ public class RunFileStream {
         runFileWriter.open();
         ++runFileCounter;
         if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("A new run file has been started (key: " + key + ", number: " + runFileCounter + ").");
+            LOGGER.fine("A new run file has been started (key: " + key + ", number: " + runFileCounter + ", file: " + file + ").");
         }
     }
 
@@ -85,13 +85,19 @@ public class RunFileStream {
         runFileReader.open();
 
         // Load first frame
-        runFileReader.nextFrame(runFileBuffer);
-        accessor.reset(runFileBuffer.getBuffer());
-        accessor.next();
+        loadNextBuffer(accessor);
     }
 
-    public void resetReader() throws HyracksDataException {
-        runFileReader.reset();
+    public void resetReader(ITupleAccessor accessor) throws HyracksDataException {
+        if (status.isRunFileWriting()) {
+            flushAndStopRunFile(accessor);
+            openRunFile(accessor);
+        } else {
+            runFileReader.reset();
+
+            // Load first frame
+            loadNextBuffer(accessor);
+        }
     }
 
     public boolean loadNextBuffer(ITupleAccessor accessor) throws HyracksDataException {
@@ -103,8 +109,22 @@ public class RunFileStream {
         return false;
     }
 
-    public void flushAndStopRunFile() throws HyracksDataException {
+    public void flushAndStopRunFile(ITupleAccessor accessor) throws HyracksDataException {
         status.setRunFileWriting(false);
+
+        // Copy left over tuples into new run file.
+        if (status.isRunFileReading()) {
+            if (!accessor.exists()) {
+                loadNextBuffer(accessor);
+            }
+            while (accessor.exists()) {
+                addToRunFile(accessor);
+                accessor.next();
+                if (!accessor.exists()) {
+                    loadNextBuffer(accessor);
+                }
+            }
+        }
 
         // Flush buffer.
         if (runFileAppender.getTupleCount() > 0) {
@@ -115,6 +135,15 @@ public class RunFileStream {
     public void closeRunFile() throws HyracksDataException {
         status.setRunFileReading(false);
         runFileReader.close();
+    }
+
+    public void close() throws HyracksDataException {
+        if (runFileReader != null) {
+            runFileReader.close();
+        }
+        if (runFileWriter != null) {
+            runFileWriter.close();
+        }
     }
 
 }

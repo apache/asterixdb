@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -25,10 +26,14 @@ import java.util.PriorityQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
 import org.apache.asterix.runtime.operators.joins.intervalindex.MergeBranchStatus.Stage;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -87,7 +92,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
     private ByteBuffer leftBuffer;
     private ByteBuffer rightBuffer;
 
-    private final TuplePointer tp;
+    private int streamIndex[];
 
     private RunFileStream runFileStream[];
 
@@ -95,6 +100,8 @@ public class IntervalIndexJoiner implements IMergeJoiner {
 
     private int leftKey;
     private int rightKey;
+
+    private IPrinter printer;
 
     public IntervalIndexJoiner(IHyracksTaskContext ctx, int memorySize, int partition, MergeStatus status,
             MergeJoinLocks locks, Comparator<EndPointIndexItem> endPointComparator,
@@ -121,6 +128,10 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         recordDescriptors[LEFT_PARTITION] = leftRd;
         recordDescriptors[RIGHT_PARTITION] = rightRd;
 
+        streamIndex = new int[JOIN_PARTITIONS];
+        streamIndex[LEFT_PARTITION] = TupleAccessor.UNSET;
+        streamIndex[RIGHT_PARTITION] = TupleAccessor.UNSET;
+
         if (memorySize < 5) {
             throw new HyracksDataException(
                     "IntervalIndexJoiner does not have enough memory (needs > 4, got " + memorySize + ").");
@@ -130,8 +141,6 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 (memorySize - 4) * ctx.getInitialFrameSize(), recordDescriptors);
         this.leftMemoryAccessor = bufferManager.getTuplePointerAccessor(leftRd);
         this.rightMemoryAccessor = bufferManager.getTuplePointerAccessor(rightRd);
-
-        tp = new TuplePointer();
 
         activeManager = new ActiveSweepManager[JOIN_PARTITIONS];
         activeManager[LEFT_PARTITION] = new ActiveSweepManager(bufferManager, leftKey, LEFT_PARTITION,
@@ -150,6 +159,8 @@ public class IntervalIndexJoiner implements IMergeJoiner {
             LOGGER.fine("IntervalIndexJoiner has started partition " + partition + " with " + memorySize
                     + " frames of memory.");
         }
+
+        printer = AObjectPrinter.INSTANCE;
     }
 
     private void addToResult(IFrameTupleAccessor accessor1, int index1, IFrameTupleAccessor accessor2, int index2,
@@ -159,6 +170,10 @@ public class IntervalIndexJoiner implements IMergeJoiner {
 
     public void closeResult(IFrameWriter writer) throws HyracksDataException {
         resultAppender.write(writer, true);
+        activeManager[LEFT_PARTITION].clear();
+        activeManager[RIGHT_PARTITION].clear();
+        runFileStream[LEFT_PARTITION].close();
+        runFileStream[RIGHT_PARTITION].close();
     }
 
     private void flushMemory(int partition) throws HyracksDataException {
@@ -175,25 +190,24 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         if (status.right.isRunFileReading()) {
             if (!rightInputAccessor.exists()) {
                 if (!runFileStream[RIGHT_PARTITION].loadNextBuffer(rightInputAccessor)) {
-                    if (memoryHasTuples()) {
-                        // More tuples from the right need to be processed. Clear memory and replay the run file.
-                        runFileStream[RIGHT_PARTITION].flushAndStopRunFile();
-                        flushMemory(LEFT_PARTITION);
-                        runFileStream[RIGHT_PARTITION].resetReader();
+                    // No more disk items.
+                    if (status.right.hasMore()) {
+                        continueStream(RIGHT_PARTITION, rightInputAccessor);
+                        return loadRightTuple();
+                        //                    } else if (status.right.isRunFileWriting()) {
+                        //                        // Frozen
+                        //                        // More tuples from the left need to be processed. Clear memory and replay the run file.
+                        //                        unfreezeAndContinue(RIGHT_PARTITION, rightInputAccessor, LEFT_PARTITION);
                     } else {
-                        // Memory is empty and replay is complete.
-                        runFileStream[RIGHT_PARTITION].closeRunFile();
-                        rightInputAccessor.reset(rightBuffer);
+                        return false;
                     }
-                    return loadRightTuple();
+
                 }
             }
         } else {
             if (!status.right.hasMore() && status.right.isRunFileWriting()) {
                 // Finished left stream. Start the replay.
-                runFileStream[RIGHT_PARTITION].flushAndStopRunFile();
-                flushMemory(LEFT_PARTITION);
-                runFileStream[RIGHT_PARTITION].openRunFile(rightInputAccessor);;
+                unfreezeAndContinue(RIGHT_PARTITION, rightInputAccessor, LEFT_PARTITION);
             } else if (rightInputAccessor != null && rightInputAccessor.exists()) {
                 // Still processing frame.
             } else if (status.right.hasMore()) {
@@ -217,6 +231,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 loaded = false;
             }
         }
+        printTuple("Right Pointer", rightInputAccessor);
         return loaded;
     }
 
@@ -230,29 +245,24 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         if (status.left.isRunFileReading()) {
             if (!leftInputAccessor.exists()) {
                 if (!runFileStream[LEFT_PARTITION].loadNextBuffer(leftInputAccessor)) {
-                    if (memoryHasTuples()) {
-                        // More tuples from the right need to be processed. Clear memory and replay the run file.
-                        runFileStream[LEFT_PARTITION].flushAndStopRunFile();
-                        flushMemory(RIGHT_PARTITION);
-                        runFileStream[LEFT_PARTITION].resetReader();
+                    // No more disk items.
+                    if (status.left.hasMore()) {
+                        continueStream(LEFT_PARTITION, leftInputAccessor);
+                        return loadLeftTuple();
                     } else {
-                        // Memory is empty and replay is complete.
-                        runFileStream[LEFT_PARTITION].closeRunFile();
-                        leftInputAccessor.reset(leftBuffer);
+                        return false;
                     }
-                    return loadLeftTuple();
                 }
             }
         } else {
             if (!status.left.hasMore() && status.left.isRunFileWriting()) {
                 // Finished left stream. Start the replay.
-                runFileStream[LEFT_PARTITION].flushAndStopRunFile();
-                flushMemory(RIGHT_PARTITION);
-                runFileStream[LEFT_PARTITION].openRunFile(leftInputAccessor);
+                unfreezeAndContinue(LEFT_PARTITION, leftInputAccessor, RIGHT_PARTITION);
             } else if (!status.left.hasMore() || !leftInputAccessor.exists()) {
                 loaded = false;
             }
         }
+        printTuple("Left Pointer", leftInputAccessor);
         return loaded;
     }
 
@@ -277,6 +287,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 // *********************
                 // Left side from stream or disk
                 // *********************
+                printTuple("Right Pointer", rightInputAccessor);
                 if (status.left.isRunFileWriting()) {
                     processLeftTupleSpill(writer);
                 } else {
@@ -308,12 +319,17 @@ public class IntervalIndexJoiner implements IMergeJoiner {
 
     private void processLeftTupleSpill(IFrameWriter writer) throws HyracksDataException {
         // Process left tuples one by one, check them with active memory from the right branch.
+        System.err.println("---------------Start left spill");
+        int count = 0;
         while (loadLeftTuple() && activeManager[RIGHT_PARTITION].hasRecords()) {
-            if (IntervalJoinUtil.getIntervalStart(leftInputAccessor, leftKey) < activeManager[RIGHT_PARTITION]
-                    .getTopPoint()) {
+            long sweep = activeManager[RIGHT_PARTITION].getTopPoint();
+            printTuple("Left Spill", leftInputAccessor);
+            if (IntervalJoinUtil.getIntervalStart(leftInputAccessor, leftKey) < sweep) {
+
                 // Add individual tuples.
                 for (TuplePointer rightTp : activeManager[RIGHT_PARTITION].getActiveList()) {
                     rightMemoryAccessor.reset(rightTp);
+                    printTuple("Right Memory", rightMemoryAccessor, rightTp.tupleIndex);
                     if (imjc.checkToSaveInResult(leftInputAccessor, leftInputAccessor.getTupleId(), rightMemoryAccessor,
                             rightTp.tupleIndex)) {
                         addToResult(leftInputAccessor, leftInputAccessor.getTupleId(), rightMemoryAccessor,
@@ -322,20 +338,58 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 }
                 runFileStream[LEFT_PARTITION].addToRunFile(leftInputAccessor);
                 leftInputAccessor.next();
+                ++count;
             } else {
                 // Remove from active.
                 activeManager[RIGHT_PARTITION].removeTop();
             }
         }
 
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Spill for " + count + " left tuples");
+        }
+
         // Memory is empty and we can start processing the run file.
         if (activeManager[RIGHT_PARTITION].isEmpty()) {
-            runFileStream[LEFT_PARTITION].flushAndStopRunFile();
-            flushMemory(RIGHT_PARTITION);
-            runFileStream[LEFT_PARTITION].openRunFile(leftInputAccessor);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Memory is now empty. Replaying left branch while continuing with the right branch.");
+            unfreezeAndContinue(LEFT_PARTITION, leftInputAccessor, RIGHT_PARTITION);
+        }
+    }
+
+    private void processRightTupleSpill(IFrameWriter writer) throws HyracksDataException {
+        // Process left tuples one by one, check them with active memory from the right branch.
+        System.err.println("---------------Start right spill");
+        int count = 0;
+        while (loadRightTuple() && activeManager[LEFT_PARTITION].hasRecords()) {
+            long sweep = activeManager[LEFT_PARTITION].getTopPoint();
+            printTuple("Right Spill", rightInputAccessor);
+            if (IntervalJoinUtil.getIntervalStart(rightInputAccessor, rightKey) < sweep) {
+                // Add individual tuples.
+                for (TuplePointer leftTp : activeManager[LEFT_PARTITION].getActiveList()) {
+                    leftMemoryAccessor.reset(leftTp);
+                    printTuple("Left Memory", leftMemoryAccessor, leftTp.tupleIndex);
+                    if (imjc.checkToSaveInResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
+                            rightInputAccessor.getTupleId())) {
+                        addToResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
+                                rightInputAccessor.getTupleId(), writer);
+                    }
+                }
+                runFileStream[RIGHT_PARTITION].addToRunFile(rightInputAccessor);
+                rightInputAccessor.next();
+                ++count;
+            } else {
+                // Remove from active.
+                printTuple("Right Forced Memory Delete", rightInputAccessor);
+                activeManager[LEFT_PARTITION].removeTop();
             }
+        }
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Spill for " + count + " right tuples");
+        }
+
+        // Memory is empty and we can start processing the run file.
+        if (!activeManager[LEFT_PARTITION].hasRecords()) {
+            unfreezeAndContinue(RIGHT_PARTITION, rightInputAccessor, LEFT_PARTITION);
         }
     }
 
@@ -347,6 +401,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 // Add to active, end point index and buffer.
                 TuplePointer tp = new TuplePointer();
                 if (activeManager[LEFT_PARTITION].addTuple(leftInputAccessor, tp)) {
+                    printTuple("Left To Memory", leftInputAccessor);
                     buffer.add(tp);
                 } else {
                     // Spill case
@@ -373,40 +428,10 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                     }
                 }
             }
-            buffer.clear();
-        }
-    }
-
-    private void processRightTupleSpill(IFrameWriter writer) throws HyracksDataException {
-        // Process left tuples one by one, check them with active memory from the right branch.
-        while (loadRightTuple() && activeManager[LEFT_PARTITION].hasRecords()) {
-            if (IntervalJoinUtil.getIntervalStart(rightInputAccessor, rightKey) < activeManager[LEFT_PARTITION]
-                    .getTopPoint()) {
-                // Add individual tuples.
-                for (TuplePointer leftTp : activeManager[LEFT_PARTITION].getActiveList()) {
-                    leftMemoryAccessor.reset(leftTp);
-                    if (imjc.checkToSaveInResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
-                            rightInputAccessor.getTupleId())) {
-                        addToResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
-                                rightInputAccessor.getTupleId(), writer);
-                    }
-                }
-                runFileStream[RIGHT_PARTITION].addToRunFile(rightInputAccessor);
-                rightInputAccessor.next();
-            } else {
-                // Remove from active.
-                activeManager[LEFT_PARTITION].removeTop();
-            }
-        }
-
-        // Memory is empty and we can start processing the run file.
-        if (!activeManager[LEFT_PARTITION].hasRecords()) {
-            runFileStream[RIGHT_PARTITION].flushAndStopRunFile();
-            flushMemory(LEFT_PARTITION);
-            runFileStream[RIGHT_PARTITION].openRunFile(rightInputAccessor);
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Memory is now empty. Replaying left branch while continuing with the left branch.");
+                LOGGER.fine("Sweep for " + buffer.size() + " left tuples");
             }
+            buffer.clear();
         }
     }
 
@@ -418,6 +443,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                 // Add to active, end point index and buffer.
                 TuplePointer tp = new TuplePointer();
                 if (activeManager[RIGHT_PARTITION].addTuple(rightInputAccessor, tp)) {
+                    printTuple("Right To Memory", rightInputAccessor);
                     buffer.add(tp);
                 } else {
                     // Spill case
@@ -444,6 +470,10 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                     }
                 }
             }
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Sweep for " + buffer.size() + " right tuples");
+            }
+
             buffer.clear();
         }
     }
@@ -451,8 +481,41 @@ public class IntervalIndexJoiner implements IMergeJoiner {
     public void freezeAndSpill() throws HyracksDataException {
         if (bufferManager.getNumTuples(LEFT_PARTITION) > bufferManager.getNumTuples(RIGHT_PARTITION)) {
             runFileStream[RIGHT_PARTITION].startRunFile();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Memory is full. Freezing the left branch. (Left memory tuples: "
+                        + bufferManager.getNumTuples(LEFT_PARTITION) + ", Right memory tuples: "
+                        + bufferManager.getNumTuples(RIGHT_PARTITION) + ")");
+            }
         } else {
             runFileStream[LEFT_PARTITION].startRunFile();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Memory is full. Freezing the right branch. (Left memory tuples: "
+                        + bufferManager.getNumTuples(LEFT_PARTITION) + ", Right memory tuples: "
+                        + bufferManager.getNumTuples(RIGHT_PARTITION) + ")");
+            }
+        }
+    }
+
+    public void continueStream(int diskPartition, ITupleAccessor accessor) throws HyracksDataException {
+        runFileStream[diskPartition].closeRunFile();
+        accessor.reset(leftBuffer);
+        accessor.setTupleId(streamIndex[diskPartition]);
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Continue with stream (" + diskPartition + ").");
+        }
+    }
+
+    public void unfreezeAndContinue(int frozenPartition, ITupleAccessor accessor, int flushPartition)
+            throws HyracksDataException {
+        runFileStream[frozenPartition].flushAndStopRunFile(accessor);
+        flushMemory(flushPartition);
+        if ((LEFT_PARTITION == frozenPartition && !status.left.isRunFileReading())
+                || (RIGHT_PARTITION == frozenPartition && !status.right.isRunFileReading())) {
+            streamIndex[frozenPartition] = accessor.getTupleId();
+        }
+        runFileStream[frozenPartition].openRunFile(accessor);
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Unfreezing (" + frozenPartition + ").");
         }
     }
 
@@ -475,6 +538,30 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         rightInputAccessor.reset(rightBuffer);
         rightInputAccessor.next();
         status.continueRightLoad = false;
+    }
+
+    private void printTuple(String message, ITupleAccessor accessor) throws HyracksDataException {
+        if (accessor.exists()) {
+            printTuple(message, accessor, accessor.getTupleId());
+        } else {
+            System.err.print(String.format("%1$-" + 15 + "s", message) + " --");
+            System.err.print("no tuple");
+            System.err.println();
+        }
+    }
+
+    private void printTuple(String message, IFrameTupleAccessor accessor, int tupleId) throws HyracksDataException {
+        System.err.print(String.format("%1$-" + 15 + "s", message) + " --");
+        int fields = accessor.getFieldCount();
+        for (int i = 0; i < fields; ++i) {
+            System.err.print(" " + i + ": ");
+            int fieldStartOffset = accessor.getFieldStartOffset(tupleId, i);
+            int fieldSlotsLength = accessor.getFieldSlotsLength();
+            int tupleStartOffset = accessor.getTupleStartOffset(tupleId);
+            printer.print(accessor.getBuffer().array(), fieldStartOffset + fieldSlotsLength + tupleStartOffset,
+                    accessor.getFieldLength(tupleId, i), System.err);
+        }
+        System.err.println();
     }
 
 }

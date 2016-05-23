@@ -82,6 +82,10 @@ public class TupleAccessor extends FrameTupleAccessor implements ITupleAccessor 
         tp.reset(INITIALIZED, tupleId);
     }
 
+    public void setTupleId(int tupleId) {
+        this.tupleId = tupleId;
+    }
+
     @Override
     public void reset() {
         tupleId = INITIALIZED;

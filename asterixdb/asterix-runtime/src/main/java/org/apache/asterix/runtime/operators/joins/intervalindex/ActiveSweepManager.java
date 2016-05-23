@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
@@ -35,29 +36,32 @@ public class ActiveSweepManager {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveSweepManager.class.getName());
 
-    private final int LEFT_PARTITION;
-    private final int leftKey;
+    private final int partition;
+    private final int key;
 
-    private IPartitionedDeletableTupleBufferManager bufferManager;
-    private PriorityQueue<EndPointIndexItem> leftIndexQueue;
-    private EndPointIndexItem leftItem = null;
-    private LinkedList<TuplePointer> leftActive = new LinkedList<TuplePointer>();
+    private final IPartitionedDeletableTupleBufferManager bufferManager;
+    private final PriorityQueue<EndPointIndexItem> indexQueue;
+    private EndPointIndexItem item = null;
+    private final LinkedList<TuplePointer> active = new LinkedList<TuplePointer>();
 
     public ActiveSweepManager(IPartitionedDeletableTupleBufferManager bufferManager, int key, int partition,
             Comparator<EndPointIndexItem> endPointComparator) {
         this.bufferManager = bufferManager;
-        this.leftKey = key;
-        LEFT_PARTITION = partition;
-        leftIndexQueue = new PriorityQueue<EndPointIndexItem>(16, endPointComparator);
+        this.key = key;
+        this.partition = partition;
+        indexQueue = new PriorityQueue<EndPointIndexItem>(16, endPointComparator);
     }
 
     public boolean addTuple(ITupleAccessor leftInputAccessor, TuplePointer tp) throws HyracksDataException {
-        if (bufferManager.insertTuple(LEFT_PARTITION, leftInputAccessor, leftInputAccessor.getTupleId(), tp)) {
+        if (bufferManager.insertTuple(partition, leftInputAccessor, leftInputAccessor.getTupleId(), tp)) {
             EndPointIndexItem e = new EndPointIndexItem(tp, EndPointIndexItem.END_POINT,
-                    IntervalJoinUtil.getIntervalEnd(leftInputAccessor, leftInputAccessor.getTupleId(), leftKey));
-            leftIndexQueue.add(e);
-            leftActive.add(tp);
-            leftItem = leftIndexQueue.peek();
+                    IntervalJoinUtil.getIntervalEnd(leftInputAccessor, leftInputAccessor.getTupleId(), key));
+            indexQueue.add(e);
+            active.add(tp);
+            item = indexQueue.peek();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Add to memory (partition: " + partition + " index: " + e + ").");
+            }
             return true;
         }
         return false;
@@ -65,34 +69,38 @@ public class ActiveSweepManager {
 
     public void removeTop() throws HyracksDataException {
         // Remove from active.
-        bufferManager.deleteTuple(LEFT_PARTITION, leftItem.getTuplePointer());
-        leftActive.remove(leftItem.getTuplePointer());
-        leftIndexQueue.remove(leftItem);
-        leftItem = leftIndexQueue.peek();
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Remove top from memory (partition: " + partition + " index: " + item + ").");
+        }
+        bufferManager.deleteTuple(partition, item.getTuplePointer());
+        active.remove(item.getTuplePointer());
+        indexQueue.remove(item);
+        item = indexQueue.peek();
     }
 
     public long getTopPoint() {
-        return leftItem.getPoint();
+        return item.getPoint();
     }
 
     public List<TuplePointer> getActiveList() {
-        return leftActive;
+        return active;
     }
 
     public boolean isEmpty() {
-        return leftIndexQueue.isEmpty();
+        return indexQueue.isEmpty();
     }
+
     public boolean hasRecords() {
-        return !leftIndexQueue.isEmpty();
+        return !indexQueue.isEmpty();
     }
 
     public void clear() throws HyracksDataException {
-        for (TuplePointer leftTp : leftActive) {
-            bufferManager.deleteTuple(LEFT_PARTITION, leftTp);
+        for (TuplePointer leftTp : active) {
+            bufferManager.deleteTuple(partition, leftTp);
         }
-        leftIndexQueue.clear();
-        leftActive.clear();
-        leftItem = null;
-        bufferManager.clearPartition(LEFT_PARTITION);
+        indexQueue.clear();
+        active.clear();
+        item = null;
+        bufferManager.clearPartition(partition);
     }
 }

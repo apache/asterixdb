@@ -61,6 +61,7 @@ public class MergeJoiner implements IMergeJoiner {
     private IDeletableTupleBufferManager bufferManager;
     private ITupleAccessor memoryAccessor;
 
+    private int leftStreamIndex;
     private RunFileStream runFileStream;
 
     private final FrameTupleAppender resultAppender;
@@ -95,6 +96,7 @@ public class MergeJoiner implements IMergeJoiner {
         memoryAccessor = bufferManager.createTupleAccessor();
 
         // Run File and frame cache (left buffer)
+        leftStreamIndex = TupleAccessor.UNSET;
         runFileStream = new RunFileStream(ctx, "left", status);
 
         // Result
@@ -176,13 +178,14 @@ public class MergeJoiner implements IMergeJoiner {
                 if (!runFileStream.loadNextBuffer(accessorLeft)) {
                     if (memoryHasTuples()) {
                         // More tuples from the right need to be processed. Clear memory and replay the run file.
-                        runFileStream.flushAndStopRunFile();
+                        runFileStream.flushAndStopRunFile(accessorLeft);
                         flushMemory();
-                        runFileStream.resetReader();
+                        runFileStream.resetReader(accessorLeft);
                     } else {
                         // Memory is empty and replay is complete.
                         runFileStream.closeRunFile();
                         accessorLeft.reset(leftBuffer);
+                        accessorLeft.setTupleId(leftStreamIndex);
                     }
                     return loadLeftTuple();
                 }
@@ -190,8 +193,9 @@ public class MergeJoiner implements IMergeJoiner {
         } else {
             if (!status.leftHasMore && status.isRunFileWriting()) {
                 // Finished left stream. Start the replay.
-                runFileStream.flushAndStopRunFile();
+                runFileStream.flushAndStopRunFile(accessorLeft);
                 flushMemory();
+                leftStreamIndex = accessorLeft.getTupleId();
                 runFileStream.openRunFile(accessorLeft);
             } else if (!status.leftHasMore || !accessorLeft.exists()) {
                 loaded = false;
@@ -260,8 +264,9 @@ public class MergeJoiner implements IMergeJoiner {
 
                 // Memory is empty and we can start processing the run file.
                 if (!memoryHasTuples() && status.isRunFileWriting()) {
-                    runFileStream.flushAndStopRunFile();
+                    runFileStream.flushAndStopRunFile(accessorLeft);
                     flushMemory();
+                    leftStreamIndex = accessorLeft.getTupleId();
                     runFileStream.openRunFile(accessorLeft);
                     if (LOGGER.isLoggable(Level.FINE)) {
                         LOGGER.fine(

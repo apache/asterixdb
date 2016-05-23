@@ -143,6 +143,10 @@ public abstract class AbstractTupleAccessor implements ITupleAccessor {
         return tupleId;
     }
 
+    public void setTupleId(int tupleId) {
+        this.tupleId = tupleId;
+    }
+
     @Override
     public void reset() {
         tupleId = INITIALIZED;
