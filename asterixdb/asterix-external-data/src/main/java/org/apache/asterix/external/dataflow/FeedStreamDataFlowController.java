@@ -31,9 +31,8 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     private final AsterixInputStream stream;
 
     public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, int numOfFields, IStreamDataParser streamParser,
-            AsterixInputStream inputStream) {
-        super(ctx, tupleForwarder, feedLogManager, numOfFields);
+            FeedLogManager feedLogManager, IStreamDataParser streamParser, AsterixInputStream inputStream) {
+        super(ctx, tupleForwarder, feedLogManager, 1);
         this.dataParser = streamParser;
         this.stream = inputStream;
     }

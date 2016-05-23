@@ -30,8 +30,9 @@ public class TestControlledFrameWriter extends TestFrameWriter {
     private volatile int currentMultiplier = 0;
     private volatile int kicks = 0;
 
-    public TestControlledFrameWriter(int initialFrameSize) {
-        super(new CountAnswer(), new CountAnswer(), new CountAnswer(), new CountAnswer(), new CountAnswer());
+    public TestControlledFrameWriter(int initialFrameSize, boolean deepCopyInputFrames) {
+        super(new CountAnswer(), new CountAnswer(), new CountAnswer(), new CountAnswer(), new CountAnswer(),
+                deepCopyInputFrames);
         this.initialFrameSize = initialFrameSize;
     }
 

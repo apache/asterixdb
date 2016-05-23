@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
+package org.apache.asterix.test.dataflow;
 
-public class FeedMessageUtils {
-    public enum MessageType {
-        NULL,
-        ACK_REQUEST
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+
+public class TestRecordDescriptorFactory {
+    public RecordDescriptor createRecordDescriptor(ISerializerDeserializer<?>... serdes) {
+        return null;
     }
-
-    public static final byte NULL_FEED_MESSAGE = (byte) MessageType.NULL.ordinal();
-    public static final byte ACK_REQ_FEED_MESSAGE = (byte) MessageType.ACK_REQUEST.ordinal();
 }

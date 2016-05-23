@@ -29,19 +29,27 @@ public class TestFrameWriter implements IFrameWriter {
     private final CountAnswer flushAnswer;
     private final CountAnswer failAnswer;
     private final CountAnswer closeAnswer;
+    private static final int BYTES32KB = 32768;
     private long openDuration = 0L;
     private long nextDuration = 0L;
     private long flushDuration = 0L;
     private long failDuration = 0L;
     private long closeDuration = 0L;
+    // If copyFrames was set, we take a copy of the frame, otherwise, we simply point lastFrame to it
+    private final boolean deepCopyFrames;
+    private ByteBuffer lastFrame;
 
     public TestFrameWriter(CountAnswer openAnswer, CountAnswer nextAnswer, CountAnswer flushAnswer,
-            CountAnswer failAnswer, CountAnswer closeAnswer) {
+            CountAnswer failAnswer, CountAnswer closeAnswer, boolean deepCopyFrames) {
         this.openAnswer = openAnswer;
         this.nextAnswer = nextAnswer;
         this.closeAnswer = closeAnswer;
         this.flushAnswer = flushAnswer;
         this.failAnswer = failAnswer;
+        this.deepCopyFrames = deepCopyFrames;
+        if (deepCopyFrames) {
+            lastFrame = ByteBuffer.allocate(BYTES32KB);
+        }
     }
 
     @Override
@@ -56,6 +64,15 @@ public class TestFrameWriter implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        if (deepCopyFrames) {
+            if (lastFrame.capacity() != buffer.capacity()) {
+                lastFrame = ByteBuffer.allocate(buffer.capacity());
+            }
+            lastFrame.clear();
+            lastFrame.put(buffer.array());
+        } else {
+            lastFrame = buffer;
+        }
         delay(nextDuration);
         nextAnswer.call();
     }
@@ -169,5 +186,9 @@ public class TestFrameWriter implements IFrameWriter {
                 throw new HyracksDataException(e);
             }
         }
+    }
+
+    public ByteBuffer getLastFrame() {
+        return lastFrame;
     }
 }

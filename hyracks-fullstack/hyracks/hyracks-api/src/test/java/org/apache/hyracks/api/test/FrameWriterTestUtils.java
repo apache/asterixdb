@@ -33,7 +33,7 @@ public class FrameWriterTestUtils {
     }
 
     public static TestFrameWriter create(Collection<FrameWriterOperation> exceptionThrowingOperations,
-            Collection<FrameWriterOperation> errorThrowingOperations) {
+            Collection<FrameWriterOperation> errorThrowingOperations, boolean deepCopyInputFrames) {
         CountAnswer openAnswer =
                 createAnswer(FrameWriterOperation.Open, exceptionThrowingOperations, errorThrowingOperations);
         CountAnswer nextAnswer =
@@ -44,7 +44,7 @@ public class FrameWriterTestUtils {
                 createAnswer(FrameWriterOperation.Fail, exceptionThrowingOperations, errorThrowingOperations);
         CountAnswer closeAnswer =
                 createAnswer(FrameWriterOperation.Close, exceptionThrowingOperations, errorThrowingOperations);
-        return new TestFrameWriter(openAnswer, nextAnswer, flushAnswer, failAnswer, closeAnswer);
+        return new TestFrameWriter(openAnswer, nextAnswer, flushAnswer, failAnswer, closeAnswer, deepCopyInputFrames);
     }
 
     public static CountAnswer createAnswer(FrameWriterOperation operation,
@@ -59,7 +59,7 @@ public class FrameWriterTestUtils {
         }
     }
 
-    public static TestControlledFrameWriter create(int initialFrameSize) {
-        return new TestControlledFrameWriter(initialFrameSize);
+    public static TestControlledFrameWriter create(int initialFrameSize, boolean deepCopyInputFrames) {
+        return new TestControlledFrameWriter(initialFrameSize, deepCopyInputFrames);
     }
 }
