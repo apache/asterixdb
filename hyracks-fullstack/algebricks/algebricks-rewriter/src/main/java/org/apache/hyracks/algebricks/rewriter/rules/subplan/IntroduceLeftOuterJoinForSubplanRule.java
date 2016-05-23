@@ -65,7 +65,7 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) subplanRoot.getValue();
         Mutable<ILogicalOperator> opUnder = subplan.getInputs().get(0);
 
-        if (OperatorPropertiesUtil.isNullTest((AbstractLogicalOperator) opUnder.getValue())) {
+        if (OperatorPropertiesUtil.isMissingTest((AbstractLogicalOperator) opUnder.getValue())) {
             return false;
         }
 

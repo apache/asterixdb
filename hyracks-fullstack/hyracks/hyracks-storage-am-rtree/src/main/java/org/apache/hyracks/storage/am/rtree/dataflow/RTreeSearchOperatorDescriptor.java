@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.rtree.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -49,7 +49,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
-            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
+            IMissingWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
 
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,

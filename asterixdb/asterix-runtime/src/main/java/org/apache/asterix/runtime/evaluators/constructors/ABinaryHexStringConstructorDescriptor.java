@@ -22,20 +22,16 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -80,10 +76,6 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private IValueParser byteArrayParser;
         private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
-        @SuppressWarnings("unchecked")
-        private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ANULL);
-
         public ABinaryConstructorEvaluator(IScalarEvaluatorFactory copyEvaluatorFactory,
                 IValueParserFactory valueParserFactory, IHyracksTaskContext context) throws AlgebricksException {
             eval = copyEvaluatorFactory.createScalarEvaluator(context);
@@ -99,11 +91,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                 int len = inputArg.getLength();
 
                 ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[binary[startOffset]];
-                if (tt == ATypeTag.NULL) {
-                    resultStorage.reset();
-                    nullSerde.serialize(ANull.NULL, out);
-                    result.set(resultStorage);
-                } else if (tt == ATypeTag.BINARY) {
+                if (tt == ATypeTag.BINARY) {
                     result.set(inputArg);
                 } else if (tt == ATypeTag.STRING) {
                     resultStorage.reset();

@@ -23,11 +23,9 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -77,22 +75,15 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
                         try {
-                            if (argPtr.getByteArray()[argPtr.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else {
-                                aDate.setValue(
-                                        ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset()));
-                                dateSerde.serialize(aDate, out);
-                            }
+                            aDate.setValue(
+                                    ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset()));
+                            dateSerde.serialize(aDate, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

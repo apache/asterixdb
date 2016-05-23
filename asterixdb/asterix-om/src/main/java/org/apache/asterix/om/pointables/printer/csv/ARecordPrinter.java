@@ -45,8 +45,8 @@ class ARecordPrinter {
 
     }
 
-    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
-            AsterixException {
+    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor)
+            throws IOException, AsterixException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
@@ -71,8 +71,8 @@ class ARecordPrinter {
             List<IVisitablePointable> fieldTags, List<IVisitablePointable> fieldValues, int i) throws AsterixException {
         IVisitablePointable itemTypeTag = fieldTags.get(i);
         IVisitablePointable item = fieldValues.get(i);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                .getStartOffset()]);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
         itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
 
         // print field value

@@ -25,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeser
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -95,10 +94,6 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADURATION);
@@ -119,13 +114,6 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                         int offset1 = argPtr1.getStartOffset();
 
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes0[offset0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                 throw new AlgebricksException(
                                         FID.getName() + ": expects type DATETIME/NULL for parameter 0 but got "

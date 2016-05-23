@@ -20,18 +20,16 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.BinaryComparatorConstant.ComparableResultCode;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -41,13 +39,6 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
-
-    protected enum ComparisonResult {
-        LESS_THAN,
-        EQUAL,
-        GREATER_THAN,
-        UNKNOWN
-    }
 
     protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected DataOutput out = resultStorage.getDataOutput();
@@ -62,9 +53,6 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABoolean> serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
@@ -75,7 +63,12 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
         resultStorage.reset();
-        evalInputs(tuple);
+
+        // Evaluates input args.
+        evalLeft.evaluate(tuple, argLeft);
+        evalRight.evaluate(tuple, argRight);
+        argLeft.getValue(outLeft);
+        argRight.getValue(outRight);
 
         // checks whether we can apply >, >=, <, and <= to the given type since
         // these operations cannot be defined for certain types.
@@ -83,54 +76,27 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
             checkTotallyOrderable();
         }
 
+        ABoolean b;
         // Checks whether two types are comparable
-        switch (comparabilityCheck()) {
-            case UNKNOWN:
-                // result:UNKNOWN - NULL value found
-                try {
-                    nullSerde.serialize(ANull.NULL, out);
-                    result.set(resultStorage);
-                    return;
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
-            case FALSE:
-                // result:FALSE - two types cannot be compared. Thus we return FALSE since this is equality comparison
-                ABoolean b = ABoolean.FALSE;
-                try {
-                    serde.serialize(b, out);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
-                break;
-            case TRUE:
-                // Two types can be compared
-                ComparisonResult r = compareResults();
-                ABoolean b1 = getComparisonResult(r) ? ABoolean.TRUE : ABoolean.FALSE;
-                try {
-                    serde.serialize(b1, out);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
-                break;
-            default:
-                throw new AlgebricksException(
-                        "Comparison cannot be processed. The return code from ComparabilityCheck is not correct.");
+        if (comparabilityCheck()) {
+            // Two types can be compared
+            int r = compareResults();
+            b = getComparisonResult(r) ? ABoolean.TRUE : ABoolean.FALSE;
+        } else {
+            // result:FALSE - two types cannot be compared. Thus we return FALSE since this is equality comparison
+            b = ABoolean.FALSE;
+        }
+        try {
+            serde.serialize(b, out);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
         }
         result.set(resultStorage);
     }
 
     protected abstract boolean isTotallyOrderable();
 
-    protected abstract boolean getComparisonResult(ComparisonResult r);
-
-    protected void evalInputs(IFrameTupleReference tuple) throws AlgebricksException {
-        evalLeft.evaluate(tuple, argLeft);
-        evalRight.evaluate(tuple, argRight);
-
-        argLeft.getValue(outLeft);
-        argRight.getValue(outRight);
-    }
+    protected abstract boolean getComparisonResult(int r);
 
     // checks whether we can apply >, >=, <, and <= operations to the given type since
     // these operations can not be defined for certain types.
@@ -155,46 +121,19 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     }
 
     // checks whether two types are comparable
-    protected ComparableResultCode comparabilityCheck() {
-        // just check TypeTags
-        return ABinaryComparator.isComparable(argLeft.getTag(), argRight.getTag());
+    protected boolean comparabilityCheck() {
+        // Checks whether two types are comparable or not
+        ATypeTag typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
+        ATypeTag typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag());
+
+        // Are two types compatible, meaning that they can be compared? (e.g., compare between numeric types
+        return ATypeHierarchy.isCompatible(typeTag1, typeTag2);
     }
 
-    protected ComparisonResult compareResults() throws AlgebricksException {
-        boolean isLeftNull = false;
-        boolean isRightNull = false;
-        ATypeTag typeTag1 = null;
-        ATypeTag typeTag2 = null;
-
-        if (outLeft.getLength() == 0) {
-            isLeftNull = true;
-        } else {
-            typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
-            if (typeTag1 == ATypeTag.NULL) {
-                isLeftNull = true;
-            }
-        }
-        if (outRight.getLength() == 0) {
-            isRightNull = true;
-        } else {
-            typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag());
-            if (typeTag2 == ATypeTag.NULL) {
-                isRightNull = true;
-            }
-        }
-
-        if (isLeftNull || isRightNull) {
-            return ComparisonResult.UNKNOWN;
-        }
-
-        int result = ch.compare(typeTag1, typeTag2, outLeft, outRight);
-        if (result == 0) {
-            return ComparisonResult.EQUAL;
-        } else if (result < 0) {
-            return ComparisonResult.LESS_THAN;
-        } else {
-            return ComparisonResult.GREATER_THAN;
-        }
+    protected int compareResults() throws AlgebricksException {
+        int result = ch.compare(EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag()),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag()), outLeft, outRight);
+        return result;
     }
 
 }

@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableYearMonthDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
@@ -72,9 +71,6 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -92,8 +88,6 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                                 ADurationParserFactory.parseDuration(serString, utf8Ptr.getCharStartOffset(),
                                         stringLength, aYearMonthDuration, ADurationParseOption.YEAR_MONTH);
                                 yearMonthDurationSerde.serialize(aYearMonthDuration, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

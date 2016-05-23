@@ -29,6 +29,7 @@ public abstract class Literal implements Serializable {
     public enum Type {
         STRING,
         INTEGER,
+        MISSING,
         NULL,
         TRUE,
         FALSE,

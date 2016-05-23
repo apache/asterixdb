@@ -19,9 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import static org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor.BASE64_FORMAT;
-import static org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor.HEX_FORMAT;
-
 import java.io.IOException;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -45,6 +42,8 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
+    private static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");
+    private static final UTF8StringPointable BASE64_FORMAT = UTF8StringPointable.generateUTF8Pointable("base64");
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -78,14 +77,14 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        ATypeTag arg0Tag = evaluateTuple(tuple, 0);
-                        ATypeTag arg1Tag = evaluateTuple(tuple, 1);
+                        evaluators[0].evaluate(tuple, pointables[0]);
+                        evaluators[1].evaluate(tuple, pointables[1]);
 
                         try {
-                            if (serializeNullIfAnyNull(arg0Tag, arg1Tag)) {
-                                result.set(resultStorage);
-                                return;
-                            }
+                            ATypeTag arg0Tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
+                                    .getStartOffset()]];
+                            ATypeTag arg1Tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
+                                    .getStartOffset()]];
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, arg0Tag,
                                     arg1Tag);
 

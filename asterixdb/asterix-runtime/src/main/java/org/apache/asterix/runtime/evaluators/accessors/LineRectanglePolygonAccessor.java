@@ -30,7 +30,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeseri
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -80,10 +79,6 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private final AOrderedListType pointListType = new AOrderedListType(BuiltinType.APOINT, null);
-
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -157,8 +152,6 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                     listBuilder.addItem(inputVal);
                                 }
                                 listBuilder.write(out, true);
-                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(
                                         "get-points does not support the type: " + bytes[startOffset]

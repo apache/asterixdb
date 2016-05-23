@@ -30,7 +30,6 @@ import java.util.List;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.TypeException;
-import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -39,6 +38,7 @@ import org.apache.asterix.om.pointables.printer.adm.APrintVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -47,7 +47,6 @@ import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -74,6 +73,7 @@ class ARecordCaster {
     private final RecordBuilder recBuilder = new RecordBuilder();
     private final IVisitablePointable nullReference = allocator.allocateEmpty();
     private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
+    private final IVisitablePointable missingTypeTag = allocator.allocateEmpty();
 
     private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory
             .of(UTF8StringPointable.FACTORY).createBinaryComparator();
@@ -102,10 +102,13 @@ class ARecordCaster {
         try {
             bos.reset();
             int start = bos.size();
-            INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
-            nullWriter.writeNull(dos);
+            dos.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             int end = bos.size();
             nullReference.set(bos.getByteArray(), start, end - start);
+            start = bos.size();
+            dos.write(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+            end = bos.size();
+            missingTypeTag.set(bos.getByteArray(), start, end - start);
             start = bos.size();
             dos.write(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             end = bos.size();
@@ -142,12 +145,15 @@ class ARecordCaster {
     }
 
     private void reset() {
-        for (int i = 0; i < numInputFields; i++)
+        for (int i = 0; i < numInputFields; i++) {
             openFields[i] = true;
-        for (int i = 0; i < fieldPermutation.length; i++)
+        }
+        for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = -1;
-        for (int i = 0; i < numInputFields; i++)
+        }
+        for (int i = 0; i < numInputFields; i++) {
             fieldNamesSortedIndex[i] = i;
+        }
         outputBos.reset();
     }
 
@@ -161,8 +167,9 @@ class ARecordCaster {
         String[] fieldNames = reqType.getFieldNames();
         fieldPermutation = new int[numSchemaFields];
         optionalFields = new boolean[numSchemaFields];
-        for (int i = 0; i < optionalFields.length; i++)
+        for (int i = 0; i < optionalFields.length; i++) {
             optionalFields[i] = false;
+        }
 
         bos.reset(nullTypeTag.getStartOffset() + nullTypeTag.getLength());
         for (int i = 0; i < numSchemaFields; i++) {
@@ -172,7 +179,7 @@ class ARecordCaster {
             // add type tag pointable
             if (NonTaggedFormatUtil.isOptional(fieldTypes[i])) {
                 // optional field: add the embedded non-null type tag
-                ftypeTag = ((AUnionType) fieldTypes[i]).getNullableType().getTypeTag();
+                ftypeTag = ((AUnionType) fieldTypes[i]).getActualType().getTypeTag();
                 optionalFields[i] = true;
             }
             int tagStart = bos.size();
@@ -193,8 +200,9 @@ class ARecordCaster {
         }
 
         reqFieldNamesSortedIndex = new int[reqFieldNames.size()];
-        for (int i = 0; i < reqFieldNamesSortedIndex.length; i++)
+        for (int i = 0; i < reqFieldNamesSortedIndex.length; i++) {
             reqFieldNamesSortedIndex[i] = i;
+        }
         // sort the field name index
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
@@ -214,7 +222,8 @@ class ARecordCaster {
                 IVisitablePointable reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
-                optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
+                optionalFields[reqFnPos] && (fieldTypeTag.equals(nullTypeTag))
+                        || fieldTypeTag.equals(missingTypeTag))) {
                     fieldPermutation[reqFnPos] = fnPos;
                     openFields[fnPos] = false;
                 } else {
@@ -233,10 +242,12 @@ class ARecordCaster {
                 fnStart++;
                 reqFnStart++;
             }
-            if (c > 0)
+            if (c > 0) {
                 reqFnStart++;
-            if (c < 0)
+            }
+            if (c < 0) {
                 fnStart++;
+            }
         }
 
         // check unmatched fields in the input type
@@ -282,7 +293,7 @@ class ARecordCaster {
 
     private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
             List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor)
-                    throws IOException, AsterixException {
+            throws IOException, AsterixException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();
@@ -297,11 +308,12 @@ class ARecordCaster {
             // recursively casting, the result of casting can always be thought
             // as flat
             if (optionalFields[i]) {
-                if (pos == -1 || fieldTypeTags.get(pos) == null || fieldTypeTags.get(pos).equals(nullTypeTag)) {
+                if (pos == -1 || fieldTypeTags.get(pos) == null || fieldTypeTags.get(pos).equals(nullTypeTag)
+                        || fieldTypeTags.get(pos).equals(missingTypeTag)) {
                     //the field is optional in the input record
-                    nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
+                    nestedVisitorArg.second = BuiltinType.ANULL;
                 } else {
-                    nestedVisitorArg.second = ((AUnionType) fType).getNullableType();
+                    nestedVisitorArg.second = ((AUnionType) fType).getActualType();
                 }
             }
             field.accept(visitor, nestedVisitorArg);
@@ -327,8 +339,9 @@ class ARecordCaster {
 
     private void quickSort(int[] index, List<IVisitablePointable> names, int start, int end)
             throws HyracksDataException {
-        if (end <= start)
+        if (end <= start) {
             return;
+        }
         int i = partition(index, names, start, end);
         quickSort(index, names, start, i - 1);
         quickSort(index, names, i + 1, end);
@@ -340,13 +353,18 @@ class ARecordCaster {
         int j = right;
         while (true) {
             // grow from the left
-            while (compare(names.get(index[++i]), names.get(index[right])) < 0);
+            while (compare(names.get(index[++i]), names.get(index[right])) < 0) {
+                ;
+            }
             // lower from the right
-            while (compare(names.get(index[right]), names.get(index[--j])) < 0)
-                if (j == left)
+            while (compare(names.get(index[right]), names.get(index[--j])) < 0) {
+                if (j == left) {
                     break;
-            if (i >= j)
+                }
+            }
+            if (i >= j) {
                 break;
+            }
             // swap i and j
             swap(index, i, j);
         }

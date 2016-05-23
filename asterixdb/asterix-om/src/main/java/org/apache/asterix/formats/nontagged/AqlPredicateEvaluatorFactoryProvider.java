@@ -46,16 +46,17 @@ public class AqlPredicateEvaluatorFactoryProvider implements IPredicateEvaluator
                 return new IPredicateEvaluator() {
 
                     @Override
-                    public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1, int tupId1) {
+                    public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1,
+                            int tupId1) {
 
                         int tStart0 = fta0.getTupleStartOffset(tupId0);
                         int fStartOffset0 = fta0.getFieldSlotsLength() + tStart0;
 
                         for (int k0 : keys0) {
                             int fieldStartIx = fta0.getFieldStartOffset(tupId0, k0);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fta0.getBuffer()
-                                    .array()[fieldStartIx + fStartOffset0]);
-                            if (typeTag == ATypeTag.NULL) {
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(fta0.getBuffer().array()[fieldStartIx + fStartOffset0]);
+                            if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
                                 return false;
                             }
                         }
@@ -65,9 +66,9 @@ public class AqlPredicateEvaluatorFactoryProvider implements IPredicateEvaluator
 
                         for (int k1 : keys1) {
                             int fieldStartIx = fta1.getFieldStartOffset(tupId1, k1);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fta1.getBuffer()
-                                    .array()[fieldStartIx + fStartOffset1]);
-                            if (typeTag == ATypeTag.NULL) {
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(fta1.getBuffer().array()[fieldStartIx + fStartOffset1]);
+                            if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
                                 return false;
                             }
                         }

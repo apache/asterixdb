@@ -55,7 +55,7 @@ public class IntermediateAvgAggregateFunction extends AbstractAvgAggregateFuncti
 
     @Override
     protected boolean skipStep() {
-        return (aggType == ATypeTag.NULL);
+        return aggType == ATypeTag.NULL;
     }
 
 }

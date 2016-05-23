@@ -31,7 +31,7 @@ import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class RecordIdReader {
 
-    private final static byte nullByte = ATypeTag.NULL.serialize();
+    private final static byte MISSING_BYTE = ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
     protected FrameTupleAccessor tupleAccessor;
     protected int fieldSlotsLength;
     protected int[] ridFields;
@@ -60,7 +60,7 @@ public class RecordIdReader {
         int fileNumberStartOffset = tupleAccessor.getFieldStartOffset(index,
                 ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]);
         frameBuffer = tupleAccessor.getBuffer();
-        if (frameBuffer.get(tupleStartOffset + fileNumberStartOffset) == nullByte) {
+        if (frameBuffer.get(tupleStartOffset + fileNumberStartOffset) == MISSING_BYTE) {
             return null;
         }
         // Get file number

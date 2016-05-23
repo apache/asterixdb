@@ -24,7 +24,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeser
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -71,10 +70,6 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
                     private IPointable argPtr0 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
@@ -90,12 +85,6 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
                         int offset = argPtr0.getStartOffset();
 
                         try {
-                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes[offset] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(FID.getName() + ": expects NULL/DURATION, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));

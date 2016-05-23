@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -89,7 +89,7 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) expr;
                 IAType exprType = (IAType) env.getType(argFuncExpr);
                 if (StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env)) {
-                    TypeComputerUtilities.resetRequiredAndInputTypes(argFuncExpr);
+                    TypeCastUtils.resetRequiredAndInputTypes(argFuncExpr);
                     changed = true;
                 }
             }

@@ -34,7 +34,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
-import org.apache.asterix.dataflow.data.common.AqlNullableTypeComputer;
+import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
@@ -64,7 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
@@ -160,10 +160,10 @@ public class APIFramework {
         public IOptimizationContext createOptimizationContext(int varCounter,
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-                IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
+                IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
                 PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
-                    mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
+                    mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     physicalOptimizationConfig, clusterLocations);
         }
 
@@ -282,7 +282,7 @@ public class APIFramework {
         builder.setIMergeAggregationExpressionFactory(new AqlMergeAggregationExpressionFactory());
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
-        builder.setNullableTypeComputer(AqlNullableTypeComputer.INSTANCE);
+        builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
         builder.setClusterLocations(queryMetadataProvider.getClusterLocations());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
@@ -330,7 +330,7 @@ public class APIFramework {
                 new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
-        builder.setNullWriterFactory(format.getNullWriterFactory());
+        builder.setMissingWriterFactory(format.getMissingWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
         switch (conf.fmt()) {

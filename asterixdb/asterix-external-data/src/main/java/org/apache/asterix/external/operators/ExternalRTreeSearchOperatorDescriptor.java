@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -41,10 +41,10 @@ public class ExternalRTreeSearchOperatorDescriptor extends RTreeSearchOperatorDe
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
-            ExternalRTreeDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
-            INullWriterFactory iNullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory) {
+            ExternalRTreeDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, keyFields, dataflowHelperFactory, retainInput, retainNull, iNullWriterFactory,
+                comparatorFactories, keyFields, dataflowHelperFactory, retainInput, retainMissing, missingWriterFactory,
                 searchOpCallbackFactory, null, null);
     }
 

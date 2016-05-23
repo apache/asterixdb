@@ -431,8 +431,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
         args.add(filterVarExpr);
         List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<Mutable<ILogicalExpression>>();
-        argsForNotFunction.add(new MutableObject<ILogicalExpression>(
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL), args)));
+        argsForNotFunction.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING), args)));
         SelectOperator selectOp = new SelectOperator(
                 new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)),
@@ -525,7 +525,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                 args.add(filterVarExpr);
                 List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<Mutable<ILogicalExpression>>();
                 argsForNotFunction.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL), args)));
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING), args)));
                 nullCheckExprRefs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)));
             }

@@ -464,11 +464,10 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
 
         if (aObjectType.getTypeTag() == ATypeTag.UNION) {
-            List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
-            for (int i = 0; i < unionList.size(); i++) {
-                if (unionList.get(i).getTypeTag() == tag) {
-                    return unionList.get(i);
-                }
+            AUnionType unionType = (AUnionType) aObjectType;
+            IAType type = unionType.getActualType();
+            if (type.getTypeTag() == tag) {
+                return type;
             }
         }
         return null; // wont get here
@@ -490,7 +489,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         } else { // union
             List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
             for (IAType t : unionList) {
-                ATypeTag typeTag = t.getTypeTag();
+                final ATypeTag typeTag = t.getTypeTag();
                 if (ATypeHierarchy.canPromote(expectedTypeTag, typeTag)
                         || ATypeHierarchy.canDemote(expectedTypeTag, typeTag)) {
                     return typeTag;
@@ -621,7 +620,6 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     private int checkNullConstraints(ARecordType recType, BitSet nulls) {
-        boolean isNull = false;
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
             if (nulls.get(i) == false) {
                 IAType type = recType.getFieldTypes()[i];
@@ -629,17 +627,13 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     return i;
                 }
 
-                if (type.getTypeTag() == ATypeTag.UNION) { // union
-                    List<IAType> unionList = ((AUnionType) type).getUnionList();
-                    for (int j = 0; j < unionList.size(); j++) {
-                        if (unionList.get(j).getTypeTag() == ATypeTag.NULL) {
-                            isNull = true;
-                            break;
-                        }
-                    }
-                    if (!isNull) {
-                        return i;
-                    }
+                if (type.getTypeTag() != ATypeTag.UNION) {
+                    continue;
+                }
+                // union
+                AUnionType unionType = (AUnionType) type;
+                if (!unionType.isNullableType()) {
+                    return i;
                 }
             }
         }

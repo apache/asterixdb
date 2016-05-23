@@ -169,23 +169,23 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             for (int j = 0; j < intersectsBranch.length; j++) {
                 Mutable<ILogicalOperator> branch = branchIter.next();
                 boolean inter = intersectsBranch[j];
-                if (inter) {
-                    if (j > 0 && isLoj) {
-                        // if a left outer join, if the select condition is not-null filtering,
-                        // we rewrite left outer join
-                        // to inner join for this case.
-                        if (containsNotNullFiltering(selectCondition)) {
-                            lojToInner = true;
-                        }
-                    }
-                    if ((j > 0 && isLoj) && containsNullFiltering(selectCondition)) {
-                        // Select is-null($$var) cannot be pushed in the right branch of a LOJ;
-                        notPushedStack.addFirst(select);
-                    } else {
-                        // Conditions for the left branch can always be pushed.
-                        // Other conditions can be pushed to the right branch of a LOJ.
-                        copySelectToBranch(select, branch, context);
-                    }
+                if (!inter) {
+                    continue;
+                }
+
+                // if a left outer join, if the select condition is not-missing filtering,
+                // we rewrite left outer join
+                // to inner join for this case.
+                if (j > 0 && isLoj && containsNotMissingFiltering(selectCondition)) {
+                    lojToInner = true;
+                }
+                if ((j > 0 && isLoj) && containsMissingFiltering(selectCondition)) {
+                    // Select "is-not-missing($$var)" cannot be pushed in the right branch of a LOJ;
+                    notPushedStack.addFirst(select);
+                } else {
+                    // Conditions for the left branch can always be pushed.
+                    // Other conditions can be pushed to the right branch of a LOJ.
+                    copySelectToBranch(select, branch, context);
                 }
             }
             if (lojToInner) {
@@ -262,19 +262,19 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
     }
 
     /**
-     * Whether the expression contains a not-null filtering
+     * Whether the expression contains a not-missing filtering
      *
      * @param expr
-     * @return true if the expression contains a not-null filtering function call; false otherwise.
+     * @return true if the expression contains a not-missing filtering function call; false otherwise.
      */
-    private boolean containsNotNullFiltering(ILogicalExpression expr) {
+    private boolean containsNotMissingFiltering(ILogicalExpression expr) {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
         if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
             for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
-                if (containsNotNullFiltering(argumentRef.getValue())) {
+                if (containsNotMissingFiltering(argumentRef.getValue())) {
                     return true;
                 }
             }
@@ -288,32 +288,32 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
         ScalarFunctionCallExpression func2 = (ScalarFunctionCallExpression) arg;
-        if (func2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+        if (func2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_MISSING) {
             return false;
         }
         return true;
     }
 
     /**
-     * Whether the expression contains a null filtering
+     * Whether the expression contains a missing filtering
      *
      * @param expr
-     * @return true if the expression contains a null filtering function call; false otherwise.
+     * @return true if the expression contains a missing filtering function call; false otherwise.
      */
-    private boolean containsNullFiltering(ILogicalExpression expr) {
+    private boolean containsMissingFiltering(ILogicalExpression expr) {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
         if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
             for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
-                if (containsNullFiltering(argumentRef.getValue())) {
+                if (containsMissingFiltering(argumentRef.getValue())) {
                     return true;
                 }
             }
             return false;
         }
-        if (func.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+        if (func.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_MISSING) {
             return false;
         }
         return true;

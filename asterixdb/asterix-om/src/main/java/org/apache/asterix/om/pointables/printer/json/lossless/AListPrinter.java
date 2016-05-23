@@ -49,8 +49,8 @@ class AListPrinter {
         }
     }
 
-    public void printList(AListVisitablePointable listAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
-            AsterixException {
+    public void printList(AListVisitablePointable listAccessor, PrintStream ps, APrintVisitor visitor)
+            throws IOException, AsterixException {
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
@@ -78,8 +78,8 @@ class AListPrinter {
             int i) throws AsterixException {
         IVisitablePointable itemTypeTag = itemTags.get(i);
         IVisitablePointable item = items.get(i);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                .getStartOffset()]);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
         itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
         item.accept(visitor, itemVisitorArg);
     }

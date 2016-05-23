@@ -25,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -77,9 +76,6 @@ public class TemporalIntervalEndDatetimeAccessor extends AbstractScalarFunctionD
                     private final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
                     private final AMutableDateTime aDateTime = new AMutableDateTime(0);
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -89,11 +85,7 @@ public class TemporalIntervalEndDatetimeAccessor extends AbstractScalarFunctionD
 
                         resultStorage.reset();
                         try {
-                            if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
                                         startOffset + 1);
                                 long endTime = AIntervalSerializerDeserializer.getIntervalEnd(bytes, startOffset + 1);

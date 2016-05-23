@@ -20,7 +20,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -36,7 +36,7 @@ public class FlowRecordResultTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expression;
-        IAType type = TypeComputerUtilities.getRequiredType(funcExpr);
+        IAType type = TypeCastUtils.getRequiredType(funcExpr);
         if (type == null) {
             type = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         }

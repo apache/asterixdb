@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -42,9 +41,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
-     */
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
@@ -73,9 +69,6 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                     // possible output types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
@@ -86,13 +79,6 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                         eval1.evaluate(tuple, argPtr1);
 
                         try {
-                            if (argPtr0.getTag() == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || argPtr1.getTag() == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (argPtr0.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
                                     || argPtr1.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 throw new AlgebricksException(getIdentifier().getName()
@@ -109,7 +95,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                                         + ": failed to compare intervals with different internal time type.");
                             }
 
-                            ABoolean res = (compareIntervals(il, interval0, interval1)) ? ABoolean.TRUE : ABoolean.FALSE;
+                            ABoolean res = compareIntervals(il, interval0, interval1) ? ABoolean.TRUE : ABoolean.FALSE;
 
                             booleanSerde.serialize(res, out);
                         } catch (HyracksDataException hex) {

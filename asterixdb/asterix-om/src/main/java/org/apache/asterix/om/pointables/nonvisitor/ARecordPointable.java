@@ -231,7 +231,7 @@ public class ARecordPointable extends AbstractPointable {
         IAType aType = recordType.getFieldTypes()[fieldId];
         if (NonTaggedFormatUtil.isOptional(aType)) {
             // optional field: add the embedded non-null type tag
-            aType = ((AUnionType) aType).getNullableType();
+            aType = ((AUnionType) aType).getActualType();
         }
         return aType;
     }

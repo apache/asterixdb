@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -34,10 +32,9 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.typecomputer.impl.TypeComputerUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -48,8 +45,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -78,9 +73,9 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     private ARecordType inRecType1;
 
     public void reset(IAType outType, IAType inType0, IAType inType1) {
-        outRecType = TypeComputerUtils.extractRecordType(outType);
-        inRecType0 = TypeComputerUtils.extractRecordType(inType0);
-        inRecType1 = TypeComputerUtils.extractRecordType(inType1);
+        outRecType = TypeComputeUtils.extractRecordType(outType);
+        inRecType0 = TypeComputeUtils.extractRecordType(inType0);
+        inRecType1 = TypeComputeUtils.extractRecordType(inType1);
     }
 
     @Override
@@ -89,10 +84,6 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
-
-            @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
@@ -123,17 +114,6 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
 
-                        if (argPtr0.getByteArray()[argPtr0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                || argPtr1.getByteArray()[argPtr1.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            try {
-                                nullSerDe.serialize(ANull.NULL, out);
-                            } catch (HyracksDataException e) {
-                                throw new AlgebricksException(e);
-                            }
-                            result.set(resultStorage);
-                            return;
-                        }
-
                         vp0.set(argPtr0);
                         vp1.set(argPtr1);
 
@@ -151,7 +131,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
                             ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel)
-                                    throws IOException, AsterixException, AlgebricksException {
+                            throws IOException, AsterixException, AlgebricksException {
                         if (rbStack.size() < (nestedLevel + 1)) {
                             rbStack.add(new RecordBuilder());
                         }

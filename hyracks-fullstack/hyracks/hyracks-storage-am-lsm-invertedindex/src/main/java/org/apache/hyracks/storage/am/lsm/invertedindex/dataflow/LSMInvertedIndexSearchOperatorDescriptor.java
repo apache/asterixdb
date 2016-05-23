@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -54,7 +54,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IBinaryComparatorFactory[] invListComparatorFactories,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
-            boolean retainNull, INullWriterFactory nullWriterFactory,
+            boolean retainNull, IMissingWriterFactory nullWriterFactory,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes) {
 

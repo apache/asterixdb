@@ -127,7 +127,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
         int offset = inputVal.getStartOffset();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {

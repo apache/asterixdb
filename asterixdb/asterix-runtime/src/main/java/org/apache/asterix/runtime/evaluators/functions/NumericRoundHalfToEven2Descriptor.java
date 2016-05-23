@@ -39,7 +39,6 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -87,7 +86,8 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argPtr = new VoidPointable();
+                    private IPointable argValue = new VoidPointable();
+                    private IPointable argPrecision = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator precision = args[1].createScalarEvaluator(ctx);
                     private AMutableDouble aDouble = new AMutableDouble(0);
@@ -99,11 +99,9 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
 
-                    private int getPrecision(IFrameTupleReference tuple) throws AlgebricksException {
-                        resultStorage.reset();
-                        precision.evaluate(tuple, argPtr);
-                        byte[] bytes = argPtr.getByteArray();
-                        int offset = argPtr.getStartOffset();
+                    private int getPrecision() throws AlgebricksException {
+                        byte[] bytes = argPrecision.getByteArray();
+                        int offset = argPrecision.getStartOffset();
 
                         if (bytes[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
                             return AInt8SerializerDeserializer.getByte(bytes, offset + 1);
@@ -123,16 +121,13 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        eval.evaluate(tuple, argPtr);
-                        byte[] data = argPtr.getByteArray();
-                        int offset = argPtr.getStartOffset();
+                        eval.evaluate(tuple, argValue);
+                        precision.evaluate(tuple, argPrecision);
+                        byte[] data = argValue.getByteArray();
+                        int offset = argValue.getStartOffset();
 
                         try {
-                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.ANULL);
-                                serde.serialize(ANull.NULL, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                            if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
                                 byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
@@ -166,7 +161,7 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                 } else {
                                     BigDecimal r = new BigDecimal(Float.toString(val));
                                     aFloat.setValue(
-                                            r.setScale(getPrecision(tuple), BigDecimal.ROUND_HALF_EVEN).floatValue());
+                                            r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).floatValue());
                                     serde.serialize(aFloat, out);
                                 }
                             } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
@@ -179,7 +174,7 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                 } else {
                                     BigDecimal r = new BigDecimal(Double.toString(val));
                                     aDouble.setValue(
-                                            r.setScale(getPrecision(tuple), BigDecimal.ROUND_HALF_EVEN).doubleValue());
+                                            r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).doubleValue());
                                     serde.serialize(aDouble, out);
                                 }
                             } else {

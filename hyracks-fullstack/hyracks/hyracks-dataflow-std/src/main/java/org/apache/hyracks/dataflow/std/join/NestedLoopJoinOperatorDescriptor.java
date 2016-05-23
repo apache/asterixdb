@@ -29,8 +29,8 @@ import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -57,18 +57,18 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private final int memSize;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
-    private final INullWriterFactory[] nullWriterFactories1;
+    private final IMissingWriterFactory[] nullWriterFactories1;
 
     public NestedLoopJoinOperatorDescriptor(IOperatorDescriptorRegistry spec,
             ITuplePairComparatorFactory comparatorFactory, RecordDescriptor recordDescriptor, int memSize,
-            boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) {
+            boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
         this(spec, comparatorFactory, recordDescriptor, memSize, null, isLeftOuter, nullWriterFactories1);
     }
 
     public NestedLoopJoinOperatorDescriptor(IOperatorDescriptorRegistry spec,
             ITuplePairComparatorFactory comparatorFactory, RecordDescriptor recordDescriptor, int memSize,
             IPredicateEvaluatorFactory predEvalFactory, boolean isLeftOuter,
-            INullWriterFactory[] nullWriterFactories1) {
+            IMissingWriterFactory[] nullWriterFactories1) {
         super(spec, 2, 1);
         this.comparatorFactory = comparatorFactory;
         this.recordDescriptors[0] = recordDescriptor;
@@ -135,10 +135,10 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             final IPredicateEvaluator predEvaluator = ((predEvaluatorFactory != null)
                     ? predEvaluatorFactory.createPredicateEvaluator() : null);
 
-            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
+            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nullWriterFactories1.length] : null;
             if (isLeftOuter) {
                 for (int i = 0; i < nullWriterFactories1.length; i++) {
-                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
+                    nullWriters1[i] = nullWriterFactories1[i].createMissingWriter();
                 }
             }
 

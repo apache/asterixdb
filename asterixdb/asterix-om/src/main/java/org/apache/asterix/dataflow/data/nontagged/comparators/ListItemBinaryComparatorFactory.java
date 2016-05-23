@@ -43,7 +43,7 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return createBinaryComparator(ATypeTag.NULL, ATypeTag.NULL, false);
+        return createBinaryComparator(ATypeTag.MISSING, ATypeTag.MISSING, false);
     }
 
     public IBinaryComparator createBinaryComparator(final ATypeTag firstItemTypeTag, final ATypeTag secondItemTypeTag,
@@ -83,15 +83,17 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-
+                //  A list item cannot be MISSING.
                 if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         return 0;
-                    else
+                    } else {
                         return -1;
+                    }
                 } else {
-                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         return 1;
+                    }
                 }
 
                 ATypeTag tag1 = firstItemTypeTag;

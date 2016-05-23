@@ -90,4 +90,5 @@ public class EvaluatorGeneratorMojo extends AbstractMojo {
             outputStream.write(classDefinitionBinary, 0, classDefinitionBinary.length);
         }
     }
+
 }

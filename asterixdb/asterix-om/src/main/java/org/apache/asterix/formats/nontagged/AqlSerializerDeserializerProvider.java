@@ -38,6 +38,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AMissingSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -52,6 +53,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AUUIDSerializerDeseriali
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -136,6 +138,8 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             case LINE: {
                 return ALineSerializerDeserializer.INSTANCE;
             }
+            case MISSING:
+                return AMissingSerializerDeserializer.INSTANCE;
             case NULL: {
                 return ANullSerializerDeserializer.INSTANCE;
             }
@@ -203,8 +207,12 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             @Override
             public IAObject deserialize(DataInput in) throws HyracksDataException {
                 try {
+                    ATypeTag tag = SerializerDeserializerUtil.deserializeTag(in);
                     //deserialize the tag (move input cursor forward) and check if it's not NULL tag
-                    if (SerializerDeserializerUtil.deserializeTag(in) == ATypeTag.NULL) {
+                    if (tag == ATypeTag.MISSING) {
+                        return AMissing.MISSING;
+                    }
+                    if (tag == ATypeTag.NULL) {
                         return ANull.NULL;
                     }
                 } catch (IOException e) {

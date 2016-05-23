@@ -154,14 +154,14 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         Set<String> fieldNameSet = new HashSet<>();
         Deque<String> fieldPathStack = new ArrayDeque<>();
 
-        ARecordType inputRecordType = NonTaggedFieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
+        ARecordType inputRecordType = FieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
         if (inputRecordType == null) {
             return BuiltinType.ANY;
         }
 
         AbstractLogicalExpression arg1 = (AbstractLogicalExpression) funcExpr.getArguments().get(1).getValue();
         IAType inputListType = (IAType) env.getType(arg1);
-        AOrderedListType inputOrderedListType = TypeComputerUtils.extractOrderedListType(inputListType);
+        AOrderedListType inputOrderedListType = TypeComputeUtils.extractOrderedListType(inputListType);
         if (inputOrderedListType == null) {
             throw new AlgebricksException(
                     "The function 'remove-fields' expects an ordered list as the second argument, but got "
@@ -209,7 +209,6 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
 
     private IAType buildOutputType(Deque<String> fieldPathStack, ARecordType inputRecordType, Set<String> fieldNameSet,
             List<List<String>> pathList) throws AlgebricksException {
-        IAType resultType;
         List<String> resultFieldNames = new ArrayList<>();
         List<IAType> resultFieldTypes = new ArrayList<>();
 
@@ -247,11 +246,13 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
      * Note: l2 uses a LIFO insert and removal.
      */
     private <E> boolean isEqualPaths(List<E> l1, Deque<E> l2) {
-        if ((l1 == null) || (l2 == null))
+        if ((l1 == null) || (l2 == null)) {
             return false;
+        }
 
-        if (l1.size() != l2.size())
+        if (l1.size() != l2.size()) {
             return false;
+        }
 
         Iterator<E> it2 = l2.iterator();
 
@@ -259,8 +260,9 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         for (int i = len - 1; i >= 0; i--) {
             E o1 = l1.get(i);
             E o2 = it2.next();
-            if (!o1.equals(o2))
+            if (!o1.equals(o2)) {
                 return false;
+            }
         }
         return true;
     }

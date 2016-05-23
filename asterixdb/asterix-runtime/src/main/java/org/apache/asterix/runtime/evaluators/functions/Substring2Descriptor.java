@@ -63,7 +63,8 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argPtr = new VoidPointable();
+                    private IPointable argString = new VoidPointable();
+                    private IPointable argStart = new VoidPointable();
                     private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
                     private final GrowableArray array = new GrowableArray();
@@ -73,22 +74,21 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        evalStart.evaluate(tuple, argPtr);
+                        evalStart.evaluate(tuple, argStart);
+                        evalString.evaluate(tuple, argString);
+
                         int start = 0;
-
-                        byte[] bytes = argPtr.getByteArray();
-                        int offset = argPtr.getStartOffset();
-
+                        byte[] bytes = argStart.getByteArray();
+                        int offset = argStart.getStartOffset();
                         try {
                             start = ATypeHierarchy.getIntegerValue(bytes, offset) - 1;
                         } catch (HyracksDataException e1) {
                             throw new AlgebricksException(e1);
                         }
 
-                        evalString.evaluate(tuple, argPtr);
-                        bytes = argPtr.getByteArray();
-                        offset = argPtr.getStartOffset();
-                        int len = argPtr.getLength();
+                        bytes = argString.getByteArray();
+                        offset = argString.getStartOffset();
+                        int len = argString.getLength();
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING2.getName()
                                     + ": expects type STRING for the first argument but got "

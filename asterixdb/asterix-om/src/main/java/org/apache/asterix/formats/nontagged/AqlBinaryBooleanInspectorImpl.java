@@ -39,10 +39,13 @@ public class AqlBinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
 
     @Override
     public boolean getBooleanValue(byte[] bytes, int offset, int length) {
-        if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+        byte serializedTypeTag = bytes[offset];
+        if (serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
+                || serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             return false;
+        }
         /** check if the runtime type is boolean */
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serializedTypeTag);
         if (typeTag != ATypeTag.BOOLEAN) {
             throw new IllegalStateException("Runtime error: the select condition should be of the boolean type!");
         }

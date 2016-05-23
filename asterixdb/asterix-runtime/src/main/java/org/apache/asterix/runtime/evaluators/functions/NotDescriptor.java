@@ -23,7 +23,6 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -77,9 +76,6 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -94,8 +90,6 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 boolean argRes = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
                                 ABoolean aResult = argRes ? (ABoolean.FALSE) : (ABoolean.TRUE);
                                 booleanSerde.serialize(aResult, out);
-                            } else if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

@@ -26,8 +26,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -51,7 +51,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
     private final int[] keys1;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
     private final IBinaryComparatorFactory[] comparatorFactories;
-    private final INullWriterFactory[] nullWriterFactories;
+    private final IMissingWriterFactory[] nonMatchWriterFactories;
     private final RecordDescriptor rd0;
     private final RecordDescriptor rd1;
     private final int recordsPerFrame;
@@ -62,7 +62,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
 
     GraceHashJoinOperatorNodePushable(IHyracksTaskContext ctx, Object state0Id, Object state1Id, int recordsPerFrame,
             double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
-            IBinaryComparatorFactory[] comparatorFactories, INullWriterFactory[] nullWriterFactories,
+            IBinaryComparatorFactory[] comparatorFactories, IMissingWriterFactory[] nullWriterFactories,
             RecordDescriptor rd1, RecordDescriptor rd0, RecordDescriptor outRecordDescriptor, int numPartitions,
             IPredicateEvaluator predEval, boolean isLeftOuter) {
         this.ctx = ctx;
@@ -72,7 +72,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
         this.keys1 = keys1;
         this.hashFunctionFactories = hashFunctionFactories;
         this.comparatorFactories = comparatorFactories;
-        this.nullWriterFactories = nullWriterFactories;
+        this.nonMatchWriterFactories = nullWriterFactories;
         this.rd0 = rd0;
         this.rd1 = rd1;
         this.numPartitions = numPartitions;
@@ -98,10 +98,10 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
         ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(numPartitions,
                 new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)).createPartitioner();
 
-        final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories.length] : null;
+        final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length] : null;
         if (isLeftOuter) {
-            for (int i = 0; i < nullWriterFactories.length; i++) {
-                nullWriters1[i] = nullWriterFactories[i].createNullWriter();
+            for (int i = 0; i < nonMatchWriterFactories.length; i++) {
+                nullWriters1[i] = nonMatchWriterFactories[i].createMissingWriter();
             }
         }
         try {

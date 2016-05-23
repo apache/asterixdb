@@ -58,7 +58,7 @@ public class SerializableIntermediateAvgAggregateFunction extends AbstractSerial
     @Override
     protected boolean skipStep(byte[] state, int start) {
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
-        return (aggType == ATypeTag.NULL);
+        return aggType == ATypeTag.NULL;
     }
 
 }

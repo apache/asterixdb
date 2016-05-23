@@ -25,8 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
-import org.apache.asterix.dataflow.data.common.AqlNullableTypeComputer;
-import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
+import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -40,7 +39,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -126,10 +125,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             AqlSerializerDeserializerProvider.INSTANCE, AqlBinaryHashFunctionFactoryProvider.INSTANCE,
             AqlBinaryHashFunctionFamilyProvider.INSTANCE, AqlBinaryComparatorFactoryProvider.INSTANCE,
             AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
-            AqlADMPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
+            AqlADMPrinterFactoryProvider.INSTANCE, AqlMissingWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE),
-            AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null, null,
-            GlobalConfig.DEFAULT_FRAME_SIZE, null);
+            AqlExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
 
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 
@@ -195,7 +193,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
-                AbstractCollectionType listType = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(expr);
+                AbstractCollectionType listType = (AbstractCollectionType) TypeCastUtils.getRequiredType(expr);
                 if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
                         || listType.getItemType() instanceof AbstractCollectionType)) {
                     //case1: listType == null,  could be a nested list inside a list<ANY>

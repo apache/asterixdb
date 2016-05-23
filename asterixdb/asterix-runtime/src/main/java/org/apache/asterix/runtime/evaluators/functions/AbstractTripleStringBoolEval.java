@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -53,9 +52,6 @@ public abstract class AbstractTripleStringBoolEval implements IScalarEvaluator {
     @SuppressWarnings("rawtypes")
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
 
     private final FunctionIdentifier funcID;
 
@@ -65,7 +61,7 @@ public abstract class AbstractTripleStringBoolEval implements IScalarEvaluator {
 
     public AbstractTripleStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
@@ -80,32 +76,17 @@ public abstract class AbstractTripleStringBoolEval implements IScalarEvaluator {
         eval2.evaluate(tuple, array2);
 
         resultStorage.reset();
-        try {
-            if (array0.getByteArray()[array0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array1.getByteArray()[array1.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || array2.getByteArray()[array2.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                nullSerde.serialize(ANull.NULL, dout);
-                result.set(resultStorage);
-                return;
-            }
-
-            if (array0.getByteArray()[array0.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array1.getByteArray()[array1.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || array2.getByteArray()[array2.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                throw new AlgebricksException(
-                        funcID.getName() + ": expects iput type (STRING/NULL, STRING/NULL, STRING) but got ("
-                                + EnumDeserializer.ATYPETAGDESERIALIZER
-                                        .deserialize(array0.getByteArray()[array0.getStartOffset()])
-                                + ", "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER
-                                        .deserialize(array1.getByteArray()[array1.getStartOffset()])
-                                + ", " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                        .deserialize(array2.getByteArray()[array2.getStartOffset()])
-                                + ")");
-            }
-
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+        if (array0.getByteArray()[array0.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                || array1.getByteArray()[array1.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                || array2.getByteArray()[array2.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new AlgebricksException(funcID.getName()
+                    + ": expects iput type (STRING/NULL, STRING/NULL, STRING/NULL) but got ("
+                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[array0.getStartOffset()])
+                    + ", "
+                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[array1.getStartOffset()])
+                    + ", "
+                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[array2.getStartOffset()])
+                    + ")");
         }
 
         strPtr1st.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());

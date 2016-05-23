@@ -28,7 +28,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerial
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -85,9 +84,6 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
                     private final ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 aMutableInt64 = new AMutableInt64(0);
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -119,10 +115,6 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
                                         * GregorianCalendarSystem.CHRONON_OF_DAY;
                             } else if (bytes[startOffset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                 chrononTimeInMs = AInt64SerializerDeserializer.getLong(bytes, startOffset + 1);
-                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
                             } else if (bytes[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 int year;
                                 strExprPtr.set(bytes, startOffset + 1, len - 1);

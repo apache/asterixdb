@@ -55,7 +55,7 @@ public class FieldAccessByIndexResultType implements IResultTypeComputer {
             return null;
         }
         IAType type0 = (IAType) obj;
-        ARecordType t0 = NonTaggedFieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
+        ARecordType t0 = FieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
         if (t0 == null) {
             return BuiltinType.ANY;
         }

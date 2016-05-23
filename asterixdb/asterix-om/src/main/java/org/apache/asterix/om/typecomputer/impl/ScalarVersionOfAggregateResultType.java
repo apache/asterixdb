@@ -18,19 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class ScalarVersionOfAggregateResultType implements IResultTypeComputer {
+public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComputer {
 
     public static final ScalarVersionOfAggregateResultType INSTANCE = new ScalarVersionOfAggregateResultType();
 
@@ -38,24 +34,22 @@ public class ScalarVersionOfAggregateResultType implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        ILogicalExpression arg1 = fce.getArguments().get(0).getValue();
-        IAType t1 = (IAType) env.getType(arg1);
-        IAType nonOpt = TypeHelper.getNonOptionalType(t1);
-        ATypeTag tag1 = nonOpt.getTypeTag();
-        if (tag1 != ATypeTag.ORDEREDLIST && tag1 != ATypeTag.UNORDEREDLIST) {
-            throw new AlgebricksException("Type of argument in " + expression
-                    + " should be a collection type instead of " + t1);
-        }
-        AbstractCollectionType act = (AbstractCollectionType) nonOpt;
-        IAType t = act.getItemType();
-        if (TypeHelper.canBeNull(t)) {
-            return t;
-        } else {
-            return AUnionType.createNullableType(t);
+    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag tag = type.getTypeTag();
+        if (tag != ATypeTag.ANY && tag != ATypeTag.ORDEREDLIST && tag != ATypeTag.UNORDEREDLIST) {
+            throw new AlgebricksException(
+                    "Type of argument in aggregation should be a collection type instead of " + type.getDisplayName());
         }
     }
 
+    @Override
+    protected IAType getResultType(IAType... strippedInputTypes) {
+        AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];
+        ATypeTag tag = act.getTypeTag();
+        if (tag == ATypeTag.ANY) {
+            return BuiltinType.ANY;
+        }
+        IAType t = act.getItemType();
+        return AUnionType.createNullableType(t);
+    }
 }

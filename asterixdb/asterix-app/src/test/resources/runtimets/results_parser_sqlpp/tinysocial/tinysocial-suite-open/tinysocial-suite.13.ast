@@ -19,7 +19,7 @@ Where
     ]
     Satifies [
       FunctionCall TinySocial.not@1[
-        FunctionCall TinySocial.is-null@1[
+        FunctionCall TinySocial.is-missing@1[
           FieldAccessor [
             Variable [ Name=$e ]
             Field=end-date

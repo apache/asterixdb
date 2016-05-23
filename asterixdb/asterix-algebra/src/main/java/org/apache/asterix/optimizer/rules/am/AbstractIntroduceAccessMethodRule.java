@@ -443,7 +443,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // Need to also verify the index is pending no op
             if (index.getKeyFieldNames().contains(fieldName) && index.getPendingOp() == IMetadataEntity.PENDING_NO_OP) {
                 indexCandidates.add(index);
-                if (optFuncExpr.getFieldType(varIdx) == BuiltinType.ANULL
+                if (optFuncExpr.getFieldType(varIdx) == BuiltinType.AMISSING
                         || optFuncExpr.getFieldType(varIdx) == BuiltinType.ANY) {
                     optFuncExpr.setFieldType(varIdx,
                             index.getKeyFieldTypes().get(index.getKeyFieldNames().indexOf(fieldName)));

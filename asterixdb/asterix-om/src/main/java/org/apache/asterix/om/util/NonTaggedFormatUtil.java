@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.om.util;
 
-import java.util.List;
-
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -50,10 +48,11 @@ public final class NonTaggedFormatUtil {
     public static final boolean isFixedSizedCollection(IAType type) {
         switch (type.getTypeTag()) {
             case UNION:
-                if (!((AUnionType) type).isNullableType())
+                if (!((AUnionType) type).isUnknownableType()) {
                     return false;
-                else
-                    return isFixedSizedCollection(((AUnionType) type).getNullableType());
+                } else {
+                    return isFixedSizedCollection(((AUnionType) type).getActualType());
+                }
             default:
                 return isFixedSizedCollection(type.getTypeTag());
         }
@@ -76,19 +75,20 @@ public final class NonTaggedFormatUtil {
     }
 
     public static final boolean hasNullableField(ARecordType recType) {
-        IAType type;
-        List<IAType> unionList;
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
-            type = recType.getFieldTypes()[i];
+            IAType type = recType.getFieldTypes()[i];
             if (type != null) {
-                if (type.getTypeTag() == ATypeTag.NULL)
+                ATypeTag tag = type.getTypeTag();
+                if (tag == ATypeTag.NULL) {
                     return true;
-                if (type.getTypeTag() == ATypeTag.UNION) { // union
-                    unionList = ((AUnionType) type).getUnionList();
-                    for (int j = 0; j < unionList.size(); j++)
-                        if (unionList.get(j).getTypeTag() == ATypeTag.NULL)
-                            return true;
-
+                }
+                if (tag != ATypeTag.UNION) {
+                    continue;
+                }
+                // union
+                AUnionType unionType = (AUnionType) type;
+                if (unionType.isUnknownableType()) {
+                    return true;
                 }
             }
         }
@@ -102,7 +102,7 @@ public final class NonTaggedFormatUtil {
      * @return true if it is optional; false otherwise
      */
     public static boolean isOptional(IAType type) {
-        return type.getTypeTag() == ATypeTag.UNION && ((AUnionType) type).isNullableType();
+        return type.getTypeTag() == ATypeTag.UNION && ((AUnionType) type).isUnknownableType();
     }
 
     public static int getFieldValueLength(byte[] serNonTaggedAObject, int offset, ATypeTag typeTag, boolean tagged)
@@ -114,6 +114,7 @@ public final class NonTaggedFormatUtil {
                     throw new AsterixException("Field value has type tag ANY, but it should have a concrete type.");
                 }
                 return getFieldValueLength(serNonTaggedAObject, offset, tag, true) + 1;
+            case MISSING:
             case NULL:
                 return 0;
             case BOOLEAN:
@@ -139,10 +140,11 @@ public final class NonTaggedFormatUtil {
             case UUID:
                 return 16;
             case INTERVAL:
-                if (tagged)
+                if (tagged) {
                     return AIntervalSerializerDeserializer.getIntervalLength(serNonTaggedAObject, offset + 1);
-                else
+                } else {
                     return AIntervalSerializerDeserializer.getIntervalLength(serNonTaggedAObject, offset);
+                }
             case POINT3D:
             case CIRCLE:
                 return 24;
@@ -150,10 +152,11 @@ public final class NonTaggedFormatUtil {
             case RECTANGLE:
                 return 32;
             case POLYGON:
-                if (tagged)
+                if (tagged) {
                     return AInt16SerializerDeserializer.getShort(serNonTaggedAObject, offset + 1) * 16 + 2;
-                else
+                } else {
                     return AInt16SerializerDeserializer.getShort(serNonTaggedAObject, offset) * 16 + 2;
+                }
             case STRING:
                 if (tagged) {
                     int len = UTF8StringUtil.getUTFLength(serNonTaggedAObject, offset + 1);
@@ -171,21 +174,24 @@ public final class NonTaggedFormatUtil {
                     return len + ByteArrayPointable.getNumberBytesToStoreMeta(len);
                 }
             case RECORD:
-                if (tagged)
+                if (tagged) {
                     return ARecordSerializerDeserializer.getRecordLength(serNonTaggedAObject, offset + 1) - 1;
-                else
+                } else {
                     return ARecordSerializerDeserializer.getRecordLength(serNonTaggedAObject, offset) - 1;
+                }
             case ORDEREDLIST:
-                if (tagged)
+                if (tagged) {
                     return AOrderedListSerializerDeserializer.getOrderedListLength(serNonTaggedAObject, offset + 1) - 1;
-                else
+                } else {
                     return AOrderedListSerializerDeserializer.getOrderedListLength(serNonTaggedAObject, offset) - 1;
+                }
             case UNORDEREDLIST:
-                if (tagged)
+                if (tagged) {
                     return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset + 1)
                             - 1;
-                else
+                } else {
                     return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset) - 1;
+                }
             default:
                 throw new NotImplementedException(
                         "No getLength implemented for a value of this type " + typeTag + " .");

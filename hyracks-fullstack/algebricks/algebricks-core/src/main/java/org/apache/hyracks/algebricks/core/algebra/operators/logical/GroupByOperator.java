@@ -256,7 +256,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
             }
         }
         IVariableTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+                ctx.getMissableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
         ILogicalOperator child = inputs.get(0).getValue();
         IVariableTypeEnvironment env2 = ctx.getOutputTypeEnvironment(child);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : getGroupByList()) {

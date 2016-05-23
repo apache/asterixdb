@@ -28,8 +28,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -39,7 +37,6 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
@@ -47,7 +44,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -56,9 +52,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
     private IScalarEvaluatorFactory inputRecordEvalFactory;
     private IScalarEvaluatorFactory removeFieldPathsFactory;
     private ARecordType requiredRecType;
@@ -103,16 +96,6 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                 eval0.evaluate(tuple, inputArg0);
                 eval1.evaluate(tuple, inputArg1);
 
-                if (inputArg0.getByteArray()[inputArg0.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                    try {
-                        nullSerDe.serialize(ANull.NULL, out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                    result.set(resultStorage);
-                    return;
-                }
-
                 if (inputArg0.getByteArray()[inputArg0.getStartOffset()] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new AlgebricksException(
                             AsterixBuiltinFunctions.REMOVE_FIELDS.getName() + ": expects input type " + inputRecType
@@ -146,7 +129,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
             private void processRecord(ARecordType requiredType, ARecordVisitablePointable srp,
                     AListVisitablePointable inputList, int nestedLevel)
-                            throws IOException, AsterixException, AlgebricksException {
+                    throws IOException, AsterixException, AlgebricksException {
                 if (rbStack.size() < (nestedLevel + 1)) {
                     rbStack.add(new RecordBuilder());
                 }
@@ -177,7 +160,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
             private void addKeptFieldToSubRecord(ARecordType requiredType, IVisitablePointable fieldNamePointable,
                     IVisitablePointable fieldValuePointable, IVisitablePointable fieldTypePointable,
                     AListVisitablePointable inputList, int nestedLevel)
-                            throws IOException, AsterixException, AlgebricksException {
+                    throws IOException, AsterixException, AlgebricksException {
 
                 runtimeRecordTypeInfo.reset(requiredType);
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),

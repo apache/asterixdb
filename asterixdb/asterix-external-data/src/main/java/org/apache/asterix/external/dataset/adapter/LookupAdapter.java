@@ -31,8 +31,8 @@ import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -52,11 +52,11 @@ public final class LookupAdapter<T> implements IFrameWriter {
     private FrameTupleAccessor tupleAccessor;
     private IFrameWriter writer;
     private FrameTupleReference frameTuple;
-    private ArrayTupleBuilder nullTupleBuild;
+    private ArrayTupleBuilder missingTupleBuild;
 
     public LookupAdapter(IRecordDataParser<T> dataParser, ILookupRecordReader<? extends T> recordReader,
             RecordDescriptor inRecDesc, RecordIdReader ridReader, boolean propagateInput, boolean retainNull,
-            INullWriterFactory iNullWriterFactory, IHyracksTaskContext ctx, IFrameWriter writer)
+            IMissingWriterFactory iNullWriterFactory, IHyracksTaskContext ctx, IFrameWriter writer)
                     throws HyracksDataException {
         this.dataParser = dataParser;
         this.recordReader = recordReader;
@@ -70,7 +70,7 @@ public final class LookupAdapter<T> implements IFrameWriter {
         this.writer = writer;
     }
 
-    private void configurePropagation(INullWriterFactory iNullWriterFactory) {
+    private void configurePropagation(IMissingWriterFactory iNullWriterFactory) {
         if (propagateInput) {
             // This LookupAdapter generates an external record as its output.
             // Thus, we add 1.
@@ -80,16 +80,16 @@ public final class LookupAdapter<T> implements IFrameWriter {
             tb = new ArrayTupleBuilder(1);
         }
         if (retainNull) {
-            INullWriter nullWriter = iNullWriterFactory.createNullWriter();
-            nullTupleBuild = new ArrayTupleBuilder(1);
-            DataOutput out = nullTupleBuild.getDataOutput();
+            IMissingWriter missingWriter = iNullWriterFactory.createMissingWriter();
+            missingTupleBuild = new ArrayTupleBuilder(1);
+            DataOutput out = missingTupleBuild.getDataOutput();
             try {
-                nullWriter.writeNull(out);
+                missingWriter.writeMissing(out);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            nullTupleBuild = null;
+            missingTupleBuild = null;
         }
     }
 
@@ -131,7 +131,7 @@ public final class LookupAdapter<T> implements IFrameWriter {
                     tb.addFieldEndOffset();
                     DataflowUtils.addTupleToFrame(appender, tb, writer);
                 } else if (retainNull) {
-                    tb.getDataOutput().write(nullTupleBuild.getByteArray());
+                    tb.getDataOutput().write(missingTupleBuild.getByteArray());
                     tb.addFieldEndOffset();
                     DataflowUtils.addTupleToFrame(appender, tb, writer);
                 }

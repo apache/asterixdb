@@ -22,19 +22,14 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -56,10 +51,6 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
     public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
         return new IScalarEvaluator() {
 
-            @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
-
             private final ARecordPointable recordPointable = (ARecordPointable) ARecordPointable.FACTORY
                     .createPointable();
             private IPointable inputArg0 = new VoidPointable();
@@ -75,16 +66,6 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                 byte[] data = inputArg0.getByteArray();
                 int offset = inputArg0.getStartOffset();
                 int len = inputArg0.getLength();
-
-                if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                    try {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                }
 
                 if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new AlgebricksException("Field accessor is not defined for values of type "

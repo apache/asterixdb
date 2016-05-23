@@ -25,7 +25,6 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ALine;
 import org.apache.asterix.om.base.AMutableLine;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -73,9 +72,6 @@ public class ALineConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ALINE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -99,8 +95,6 @@ public class ALineConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                         Double.parseDouble(s.substring(commaIndex + 1, s.length())));
                                 aLine.setValue(aPoint[0], aPoint[1]);
                                 lineSerde.serialize(aLine, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

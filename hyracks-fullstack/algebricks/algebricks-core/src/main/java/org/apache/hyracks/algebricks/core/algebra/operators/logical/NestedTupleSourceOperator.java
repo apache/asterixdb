@@ -103,7 +103,7 @@ public class NestedTupleSourceOperator extends AbstractLogicalOperator {
                 return ctx.getOutputTypeEnvironment(op);
             }
         };
-        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(),
+        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
                 ctx.getMetadataProvider(), TypePropagationPolicy.ALL, p);
     }
 

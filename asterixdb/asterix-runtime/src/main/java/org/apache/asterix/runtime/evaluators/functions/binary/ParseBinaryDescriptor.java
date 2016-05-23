@@ -43,8 +43,8 @@ import org.apache.hyracks.util.bytes.HexParser;
 
 public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");
-    static final UTF8StringPointable BASE64_FORMAT = UTF8StringPointable.generateUTF8Pointable("base64");
+    private static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");
+    private static final UTF8StringPointable BASE64_FORMAT = UTF8StringPointable.generateUTF8Pointable("base64");
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -84,14 +84,15 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        ATypeTag binaryTag = evaluateTuple(tuple, 0);
-                        ATypeTag formatTag = evaluateTuple(tuple, 1);
+                        evaluators[0].evaluate(tuple, pointables[0]);
+                        evaluators[1].evaluate(tuple, pointables[1]);
 
                         try {
-                            if (serializeNullIfAnyNull(binaryTag, formatTag)) {
-                                result.set(resultStorage);
-                                return;
-                            }
+                            ATypeTag binaryTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
+                                    .getStartOffset()]];
+
+                            ATypeTag formatTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
+                                    .getStartOffset()]];
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, binaryTag,
                                     formatTag);
                             stringPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,

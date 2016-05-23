@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -41,7 +41,7 @@ import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public abstract class AbstractCompilerFactoryBuilder {
@@ -59,9 +59,9 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
     protected IExpressionRuntimeProvider expressionRuntimeProvider;
     protected IExpressionTypeComputer expressionTypeComputer;
-    protected INullableTypeComputer nullableTypeComputer;
+    protected IMissableTypeComputer missableTypeComputer;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
-    protected INullWriterFactory nullWriterFactory;
+    protected IMissingWriterFactory missingWriterFactory;
     protected INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     protected IPartialAggregationTypeComputer partialAggregationTypeComputer;
     protected IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
@@ -174,12 +174,12 @@ public abstract class AbstractCompilerFactoryBuilder {
         return clusterLocations;
     }
 
-    public void setNullWriterFactory(INullWriterFactory nullWriterFactory) {
-        this.nullWriterFactory = nullWriterFactory;
+    public void setMissingWriterFactory(IMissingWriterFactory missingWriterFactory) {
+        this.missingWriterFactory = missingWriterFactory;
     }
 
-    public INullWriterFactory getNullWriterFactory() {
-        return nullWriterFactory;
+    public IMissingWriterFactory getMissingWriterFactory() {
+        return missingWriterFactory;
     }
 
     public void setExpressionEvalSizeComputer(IExpressionEvalSizeComputer expressionEvalSizeComputer) {
@@ -224,12 +224,12 @@ public abstract class AbstractCompilerFactoryBuilder {
         this.physicalOptimizationConfig = physicalOptimizationConfig;
     }
 
-    public void setNullableTypeComputer(INullableTypeComputer nullableTypeComputer) {
-        this.nullableTypeComputer = nullableTypeComputer;
+    public void setMissableTypeComputer(IMissableTypeComputer missableTypeComputer) {
+        this.missableTypeComputer = missableTypeComputer;
     }
 
-    public INullableTypeComputer getNullableTypeComputer() {
-        return nullableTypeComputer;
+    public IMissableTypeComputer getMissableTypeComputer() {
+        return missableTypeComputer;
     }
 
 }

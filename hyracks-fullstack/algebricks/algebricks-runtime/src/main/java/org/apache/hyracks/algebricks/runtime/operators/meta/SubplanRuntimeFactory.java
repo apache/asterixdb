@@ -31,8 +31,8 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneO
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -44,13 +44,13 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
     private final AlgebricksPipeline pipeline;
     private final RecordDescriptor inputRecordDesc;
-    private final INullWriterFactory[] nullWriterFactories;
+    private final IMissingWriterFactory[] missingWriterFactories;
 
-    public SubplanRuntimeFactory(AlgebricksPipeline pipeline, INullWriterFactory[] nullWriterFactories,
+    public SubplanRuntimeFactory(AlgebricksPipeline pipeline, IMissingWriterFactory[] missingWriterFactories,
             RecordDescriptor inputRecordDesc, int[] projectionList) {
         super(projectionList);
         this.pipeline = pipeline;
-        this.nullWriterFactories = nullWriterFactories;
+        this.missingWriterFactories = missingWriterFactories;
         this.inputRecordDesc = inputRecordDesc;
         if (projectionList != null) {
             throw new NotImplementedException();
@@ -76,9 +76,9 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         final PipelineAssembler pa = new PipelineAssembler(pipeline, 1, 1, inputRecordDesc,
                 pipelineOutputRecordDescriptor);
-        final INullWriter[] nullWriters = new INullWriter[nullWriterFactories.length];
-        for (int i = 0; i < nullWriterFactories.length; i++) {
-            nullWriters[i] = nullWriterFactories[i].createNullWriter();
+        final IMissingWriter[] nullWriters = new IMissingWriter[missingWriterFactories.length];
+        for (int i = 0; i < missingWriterFactories.length; i++) {
+            nullWriters[i] = missingWriterFactories[i].createMissingWriter();
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
@@ -132,7 +132,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     }
                     DataOutput dos = tb.getDataOutput();
                     for (int i = 0; i < nullWriters.length; i++) {
-                        nullWriters[i].writeNull(dos);
+                        nullWriters[i].writeMissing(dos);
                         tb.addFieldEndOffset();
                     }
                 }

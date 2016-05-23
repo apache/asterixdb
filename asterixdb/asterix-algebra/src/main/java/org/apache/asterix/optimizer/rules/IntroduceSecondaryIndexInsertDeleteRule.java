@@ -41,7 +41,7 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -240,7 +240,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // The first argument is the record
                     castFunc.getArguments()
                             .add(new MutableObject<ILogicalExpression>(insertOp.getPayloadExpression().getValue()));
-                    TypeComputerUtilities.setRequiredAndInputTypes(castFunc, enforcedType, insertRecType);
+                    TypeCastUtils.setRequiredAndInputTypes(castFunc, enforcedType, insertRecType);
                     // AssignOperator puts in the cast var the casted record
                     AssignOperator castedRecordAssignOperator = new AssignOperator(castedRecVar,
                             new MutableObject<ILogicalExpression>(castFunc));
@@ -467,7 +467,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
                 }
                 if (isPointMBR && isBulkload) {
-                    //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and 
+                    //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and
                     //createFieldPermutationForBulkLoadOp(int) for more details.
                     for (LogicalVariable secondaryKeyVar : keyVarList) {
                         secondaryExpressions.add(new MutableObject<ILogicalExpression>(
@@ -502,7 +502,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                                 new VariableReferenceExpression(secondaryKeyVar)));
                     }
                     if (isPointMBR && isBulkload) {
-                        //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and 
+                        //for PointMBR optimization: see SecondaryRTreeOperationsHelper.buildLoadingJobSpec() and
                         //createFieldPermutationForBulkLoadOp(int) for more details.
                         for (LogicalVariable secondaryKeyVar : originalKeyVarList) {
                             prevSecondaryExpressions.add(new MutableObject<ILogicalExpression>(
@@ -620,8 +620,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // if a an enforced field already exists and the type is correct
                     IAType enforcedFieldType = recordNameTypesMap.get(splits.get(splits.size() - 1));
                     if (enforcedFieldType != null && enforcedFieldType.getTypeTag() == ATypeTag.UNION
-                            && ((AUnionType) enforcedFieldType).isNullableType()) {
-                        enforcedFieldType = ((AUnionType) enforcedFieldType).getNullableType();
+                            && ((AUnionType) enforcedFieldType).isUnknownableType()) {
+                        enforcedFieldType = ((AUnionType) enforcedFieldType).getActualType();
                     }
                     if (enforcedFieldType != null && !ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(),
                             index.getKeyFieldTypes().get(i).getTypeTag())) {
@@ -731,7 +731,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 continue;
             }
             ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL),
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_UNKOWN),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
             ScalarFunctionCallExpression notFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT),

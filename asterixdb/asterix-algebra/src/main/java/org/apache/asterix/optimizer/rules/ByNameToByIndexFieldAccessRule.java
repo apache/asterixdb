@@ -19,7 +19,6 @@
 
 package org.apache.asterix.optimizer.rules;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,9 +84,9 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             ILogicalExpression a0 = fce.getArguments().get(0).getValue();
             if (a0.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 LogicalVariable var1 = context.newVar();
-                ArrayList<LogicalVariable> varArray = new ArrayList<LogicalVariable>(1);
+                ArrayList<LogicalVariable> varArray = new ArrayList<>(1);
                 varArray.add(var1);
-                ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<Mutable<ILogicalExpression>>(1);
+                ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<>(1);
                 exprArray.add(new MutableObject<ILogicalExpression>(a0));
                 AssignOperator assignVar = new AssignOperator(varArray, exprArray);
                 fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
@@ -100,44 +99,37 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             }
 
             IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-            try {
-                switch (t.getTypeTag()) {
-                    case ANY: {
-                        return false || changed;
+            switch (t.getTypeTag()) {
+                case ANY:
+                    return changed;
+                case RECORD:
+                    ARecordType recType = (ARecordType) t;
+                    ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
+                    if (fai == null) {
+                        return changed;
                     }
-                    case RECORD: {
-                        ARecordType recType = (ARecordType) t;
-                        ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                        if (fai == null) {
-                            return false || changed;
-                        }
-                        expressions.get(i).setValue(fai);
-                        changed = true;
-                        break;
-                    }
-                    case UNION: {
-                        AUnionType unionT = (AUnionType) t;
-                        if (unionT.isNullableType()) {
-                            IAType t2 = unionT.getNullableType();
-                            if (t2.getTypeTag() == ATypeTag.RECORD) {
-                                ARecordType recType = (ARecordType) t2;
-                                ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                                if (fai == null) {
-                                    return false || changed;
-                                }
-                                expressions.get(i).setValue(fai);
-                                changed = true;
-                                break;
-                            }
-                        }
+                    expressions.get(i).setValue(fai);
+                    changed = true;
+                    break;
+                case UNION:
+                    AUnionType unionT = (AUnionType) t;
+                    if (!unionT.isUnknownableType()) {
                         throw new NotImplementedException("Union " + unionT);
                     }
-                    default: {
+                    IAType t2 = unionT.getActualType();
+                    if (t2.getTypeTag() != ATypeTag.RECORD) {
                         throw new AlgebricksException("Cannot call field-access on data of type " + t);
                     }
-                }
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
+                    recType = (ARecordType) t2;
+                    fai = createFieldAccessByIndex(recType, fce);
+                    if (fai == null) {
+                        return changed;
+                    }
+                    expressions.get(i).setValue(fai);
+                    changed = true;
+                    break;
+                default:
+                    throw new AlgebricksException("Cannot call field-access on data of type " + t);
             }
         }
         assign.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
@@ -145,8 +137,8 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     }
 
     @SuppressWarnings("unchecked")
-    private static ILogicalExpression createFieldAccessByIndex(ARecordType recType, AbstractFunctionCallExpression fce)
-            throws IOException {
+    private static ILogicalExpression createFieldAccessByIndex(ARecordType recType,
+            AbstractFunctionCallExpression fce) {
         String s = getStringSecondArgument(fce);
         if (s == null) {
             return null;

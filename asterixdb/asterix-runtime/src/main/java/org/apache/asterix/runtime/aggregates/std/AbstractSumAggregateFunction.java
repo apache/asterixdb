@@ -86,7 +86,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
         int offset = inputVal.getStartOffset();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
@@ -129,9 +129,6 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
             case DOUBLE: {
                 double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                 sum += val;
-                break;
-            }
-            case NULL: {
                 break;
             }
             case SYSTEM_NULL: {

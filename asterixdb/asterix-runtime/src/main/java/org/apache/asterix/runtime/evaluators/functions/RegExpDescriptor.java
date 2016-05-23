@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -100,9 +99,6 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private Matcher matcher;
                     private Pattern pattern;
 
@@ -112,15 +108,11 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         // evaluate the pattern first
                         try {
                             evalPattern.evaluate(tuple, array0);
+                            evalString.evaluate(tuple, array0);
+
                             byte[] patternBytes = array0.getByteArray();
                             int patternOffset = array0.getStartOffset();
                             int patternLen = array0.getLength();
-
-                            if (patternBytes[patternOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, dout);
-                                result.set(resultStorage);
-                                return;
-                            }
                             if (patternBytes[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the first input argument but got "
@@ -148,15 +140,9 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 pattern = Pattern.compile(strPattern.getStringValue());
 
                             }
-                            evalString.evaluate(tuple, array0);
                             byte[] data = array0.getByteArray();
                             int offset = array0.getStartOffset();
                             int len = array0.getLength();
-                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, dout);
-                                result.set(resultStorage);
-                                return;
-                            }
                             if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.REG_EXP.getName()
                                         + ": expects type STRING/NULL for the second input argument but got "

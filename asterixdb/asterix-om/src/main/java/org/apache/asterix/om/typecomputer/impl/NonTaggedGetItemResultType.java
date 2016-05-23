@@ -18,20 +18,16 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class NonTaggedGetItemResultType implements IResultTypeComputer {
+public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
 
     public static final NonTaggedGetItemResultType INSTANCE = new NonTaggedGetItemResultType();
 
@@ -39,19 +35,32 @@ public class NonTaggedGetItemResultType implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        IAType type = (IAType) env.getType(f.getArguments().get(0).getValue());
-        if (NonTaggedFormatUtil.isOptional(type))
-            type = ((AUnionType) type).getNullableType();
-        if (type.getTypeTag() == ATypeTag.ANY)
-            return BuiltinType.ANY;
-        else {
-            if (((AOrderedListType) type).getItemType().getTypeTag() == ATypeTag.NULL)
-                return BuiltinType.ANULL;
-            return AUnionType.createNullableType(((AOrderedListType) type).getItemType(), "GetItemResult");
+    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+        if (argIndex == 0) {
+            if (type.getTypeTag() != ATypeTag.UNORDEREDLIST && type.getTypeTag() != ATypeTag.ORDEREDLIST) {
+                throw new AlgebricksException("The input type for input argument " + argIndex + "("
+                        + type.getDisplayName() + ")" + " is not expected.");
+            }
+        } else {
+            if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INT32)) {
+                throw new AlgebricksException("The input type for input argument " + argIndex + "("
+                        + type.getDisplayName() + ")" + " is not expected.");
+            }
         }
+    }
+
+    @Override
+    protected IAType getResultType(IAType... strippedInputTypes) {
+        IAType type = strippedInputTypes[0];
+        if (type.getTypeTag() == ATypeTag.ANY) {
+            return BuiltinType.ANY;
+        }
+        IAType itemType = ((AbstractCollectionType) type).getItemType();
+        if (itemType.getTypeTag() == ATypeTag.ANY) {
+            return itemType;
+        }
+        // Could have out-of-bound access or null elements.
+        return AUnionType.createUnknownableType(itemType);
     }
 
 }

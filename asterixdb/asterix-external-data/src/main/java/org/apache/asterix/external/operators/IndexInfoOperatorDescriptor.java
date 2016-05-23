@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -114,12 +114,12 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
     }
 
     @Override
-    public boolean getRetainNull() {
+    public boolean getRetainMissing() {
         return false;
     }
 
     @Override
-    public INullWriterFactory getNullWriterFactory() {
+    public IMissingWriterFactory getMissingWriterFactory() {
         return null;
     }
 

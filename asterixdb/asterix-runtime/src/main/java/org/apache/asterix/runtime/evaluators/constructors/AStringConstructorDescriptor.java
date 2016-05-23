@@ -28,20 +28,16 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -72,9 +68,6 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     private DataOutput out = resultStorage.getDataOutput();
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private UTF8StringBuilder builder = new UTF8StringBuilder();
                     private GrowableArray baaos = new GrowableArray();
 
@@ -89,10 +82,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                             int len = inputArg.getLength();
 
                             ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[serString[offset]];
-                            if (tt == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                            } else if (tt == ATypeTag.STRING) {
+                            if (tt == ATypeTag.STRING) {
                                 result.set(inputArg);
                             } else {
                                 builder.reset(baaos, len);
@@ -134,7 +124,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         break;
                                     }
 
-                                        // NotYetImplemented
+                                    // NotYetImplemented
                                     case CIRCLE:
                                     case DATE:
                                     case DATETIME:

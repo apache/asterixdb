@@ -25,7 +25,7 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -50,7 +50,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
-    private final INullWriterFactory[] nullWriterFactories1;
+    private final IMissingWriterFactory[] nullWriterFactories1;
 
     public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
             int recordsPerFrame, double factor, int[] keys0, int[] keys1,
@@ -74,7 +74,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
             int recordsPerFrame, double factor, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1, IPredicateEvaluatorFactory predEvalFactory) {
+            RecordDescriptor recordDescriptor, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,
+            IPredicateEvaluatorFactory predEvalFactory) {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.inputsize0 = inputsize0;
@@ -117,9 +118,9 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
     private class HashPartitionActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
-        private int keys[];
+        private int[] keys;
 
-        public HashPartitionActivityNode(ActivityId id, int keys[]) {
+        public HashPartitionActivityNode(ActivityId id, int[] keys) {
             super(id);
             this.keys = keys;
         }
@@ -128,8 +129,9 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new GraceHashJoinPartitionBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition),
-                    keys, hashFunctionFactories, comparatorFactories, (int) Math.ceil(Math.sqrt(inputsize0 * factor
-                            / nPartitions)), recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
+                    keys, hashFunctionFactories, comparatorFactories,
+                    (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions)),
+                    recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         }
     }
 
@@ -152,13 +154,14 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(rpartAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(spartAid, 0);
             int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
-            final IPredicateEvaluator predEvaluator = ( predEvaluatorFactory == null ? null : predEvaluatorFactory.createPredicateEvaluator() );
+            final IPredicateEvaluator predEvaluator = predEvaluatorFactory == null ? null
+                    : predEvaluatorFactory.createPredicateEvaluator();
 
-            return new GraceHashJoinOperatorNodePushable(ctx, new TaskId(new ActivityId(getOperatorId(),
-                    RPARTITION_ACTIVITY_ID), partition), new TaskId(new ActivityId(getOperatorId(),
-                    SPARTITION_ACTIVITY_ID), partition), recordsPerFrame, factor, keys0, keys1, hashFunctionFactories,
-                    comparatorFactories, nullWriterFactories1, rd1, rd0, recordDescriptors[0], numPartitions,
-                    predEvaluator, isLeftOuter);
+            return new GraceHashJoinOperatorNodePushable(ctx,
+                    new TaskId(new ActivityId(getOperatorId(), RPARTITION_ACTIVITY_ID), partition),
+                    new TaskId(new ActivityId(getOperatorId(), SPARTITION_ACTIVITY_ID), partition), recordsPerFrame,
+                    factor, keys0, keys1, hashFunctionFactories, comparatorFactories, nullWriterFactories1, rd1, rd0,
+                    recordDescriptors[0], numPartitions, predEvaluator, isLeftOuter);
         }
     }
 }

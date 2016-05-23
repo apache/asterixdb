@@ -38,7 +38,6 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -105,13 +104,7 @@ public class NumericRoundHalfToEvenDescriptor extends AbstractScalarFunctionDyna
                         int offset = argPtr.getStartOffset();
 
                         try {
-                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.ANULL);
-                                serde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                            if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
                                 byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);

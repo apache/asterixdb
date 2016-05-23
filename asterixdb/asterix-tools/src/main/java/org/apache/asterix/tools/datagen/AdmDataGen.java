@@ -673,7 +673,7 @@ public class AdmDataGen {
                 for (int i = 0; i < m; i++) {
                     IAType ti = recType.getFieldTypes()[i];
                     if (NonTaggedFormatUtil.isOptional(ti)) {
-                        ti = ((AUnionType) ti).getNullableType();
+                        ti = ((AUnionType) ti).getActualType();
                         nullable[i] = true;
                     }
                     IRecordFieldDataGen rfdg = annot.getDeclaredFieldsDatagen()[i];

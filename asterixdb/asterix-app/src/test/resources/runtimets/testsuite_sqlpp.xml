@@ -3582,28 +3582,48 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="null">
-    <test-case FilePath="null">
+  <test-group name="null-missing">
+    <test-case FilePath="null-missing">
+      <compilation-unit name="array">
+        <output-dir compare="Text">array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="boolean">
+        <output-dir compare="Text">boolean</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="ceil">
         <output-dir compare="Text">ceil</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="null">
+    <test-case FilePath="null-missing">
+      <compilation-unit name="field-access">
+        <output-dir compare="Text">field-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="length">
         <output-dir compare="Text">length</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="null">
+    <test-case FilePath="null-missing">
       <compilation-unit name="lower">
         <output-dir compare="Text">lower</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="null">
+    <test-case FilePath="null-missing">
+      <compilation-unit name="scan-collection">
+        <output-dir compare="Text">scan-collection</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="substr">
         <output-dir compare="Text">substr</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="null">
+    <test-case FilePath="null-missing">
       <compilation-unit name="upper">
         <output-dir compare="Text">upper</output-dir>
       </compilation-unit>

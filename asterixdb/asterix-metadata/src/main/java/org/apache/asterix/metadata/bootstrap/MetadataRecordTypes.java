@@ -227,7 +227,7 @@ public final class MetadataRecordTypes {
                 "DatasourceAdapter", "Properties", "Function", "Status", "CompactionPolicy",
                 "CompactionPolicyProperties" };
 
-        AUnionType feedFunctionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
+        IAType feedFunctionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListType, orderedListType,
                 BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, feedFunctionUnion,
@@ -257,8 +257,8 @@ public final class MetadataRecordTypes {
                 "GroupName", "CompactionPolicy", "CompactionPolicyProperties", "InternalDetails", "ExternalDetails",
                 "Hints", "Timestamp", "DatasetId", "PendingOp" };
 
-        AUnionType internalRecordUnion = AUnionType.createNullableType(INTERNAL_DETAILS_RECORDTYPE);
-        AUnionType externalRecordUnion = AUnionType.createNullableType(EXTERNAL_DETAILS_RECORDTYPE);
+        IAType internalRecordUnion = AUnionType.createNullableType(INTERNAL_DETAILS_RECORDTYPE);
+        IAType externalRecordUnion = AUnionType.createNullableType(EXTERNAL_DETAILS_RECORDTYPE);
         AOrderedListType compactionPolicyPropertyListType = new AOrderedListType(
                 COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null);
 
@@ -305,8 +305,8 @@ public final class MetadataRecordTypes {
 
     private static final ARecordType createDerivedTypeRecordType() throws AsterixException {
         String[] fieldNames = { "Tag", "IsAnonymous", "Record", "UnorderedList", "OrderedList" };
-        AUnionType recordUnion = AUnionType.createNullableType(RECORD_RECORDTYPE);
-        AUnionType collectionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
+        IAType recordUnion = AUnionType.createNullableType(RECORD_RECORDTYPE);
+        IAType collectionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ABOOLEAN, recordUnion, collectionUnion,
                 collectionUnion };
@@ -322,7 +322,7 @@ public final class MetadataRecordTypes {
 
     private static final ARecordType createDatatypeRecordType() throws AsterixException {
         String[] fieldNames = { "DataverseName", "DatatypeName", "Derived", "Timestamp" };
-        AUnionType recordUnion = AUnionType.createNullableType(DERIVEDTYPE_RECORDTYPE);
+        IAType recordUnion = AUnionType.createNullableType(DERIVEDTYPE_RECORDTYPE);
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, recordUnion, BuiltinType.ASTRING };
         return new ARecordType("DatatypeRecordType", fieldNames, fieldTypes, true);
     };
@@ -435,9 +435,9 @@ public final class MetadataRecordTypes {
 
     private static ARecordType createFeedRecordType() throws AsterixException, HyracksDataException {
 
-        AUnionType feedFunctionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
-        AUnionType primaryRecordUnion = AUnionType.createNullableType(PRIMARY_FEED_DETAILS_RECORDTYPE);
-        AUnionType secondaryRecordUnion = AUnionType.createNullableType(SECONDARY_FEED_DETAILS_RECORDTYPE);
+        IAType feedFunctionUnion = AUnionType.createNullableType(BuiltinType.ASTRING);
+        IAType primaryRecordUnion = AUnionType.createNullableType(PRIMARY_FEED_DETAILS_RECORDTYPE);
+        IAType secondaryRecordUnion = AUnionType.createNullableType(SECONDARY_FEED_DETAILS_RECORDTYPE);
 
         String[] fieldNames = { "DataverseName", "FeedName", "Function", "FeedType", "PrimaryTypeDetails",
                 "SecondaryTypeDetails", "Timestamp" };

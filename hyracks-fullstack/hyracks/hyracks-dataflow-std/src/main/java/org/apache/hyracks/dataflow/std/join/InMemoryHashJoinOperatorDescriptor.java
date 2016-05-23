@@ -31,8 +31,8 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -42,7 +42,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -52,6 +51,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePu
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
+import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -61,7 +61,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
-    private final INullWriterFactory[] nullWriterFactories1;
+    private final IMissingWriterFactory[] nonMatchWriterFactories;
     private final int tableSize;
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
@@ -75,14 +75,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.predEvaluatorFactory = predEvalFactory;
         recordDescriptors[0] = recordDescriptor;
         this.isLeftOuter = false;
-        this.nullWriterFactories1 = null;
+        this.nonMatchWriterFactories = null;
         this.tableSize = tableSize;
     }
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
             IPredicateEvaluatorFactory predEvalFactory, RecordDescriptor recordDescriptor, boolean isLeftOuter,
-            INullWriterFactory[] nullWriterFactories1, int tableSize) {
+            IMissingWriterFactory[] missingWriterFactories1, int tableSize) {
         super(spec, 2, 1);
         this.keys0 = keys0;
         this.keys1 = keys1;
@@ -91,7 +91,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.predEvaluatorFactory = predEvalFactory;
         recordDescriptors[0] = recordDescriptor;
         this.isLeftOuter = isLeftOuter;
-        this.nullWriterFactories1 = nullWriterFactories1;
+        this.nonMatchWriterFactories = missingWriterFactories1;
         this.tableSize = tableSize;
     }
 
@@ -103,7 +103,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1,
+            RecordDescriptor recordDescriptor, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,
             int tableSize) {
         this(spec, keys0, keys1, hashFunctionFactories, comparatorFactories, null, recordDescriptor, isLeftOuter,
                 nullWriterFactories1, tableSize);
@@ -167,10 +167,11 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
+            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length]
+                    : null;
             if (isLeftOuter) {
-                for (int i = 0; i < nullWriterFactories1.length; i++) {
-                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
+                for (int i = 0; i < nonMatchWriterFactories.length; i++) {
+                    nullWriters1[i] = nonMatchWriterFactories[i].createMissingWriter();
                 }
             }
             final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null

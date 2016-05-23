@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -70,8 +70,8 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                             .createBinaryComparator();
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private ISerializerDeserializer<AMissing> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -85,7 +85,7 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, NULL, 0,
                                         NULL.length) == 0) {
                                     resultStorage.reset();
-                                    nullSerde.serialize(ANull.NULL, out);
+                                    nullSerde.serialize(AMissing.MISSING, out);
                                     result.set(resultStorage);
                                     return;
                                 } else {

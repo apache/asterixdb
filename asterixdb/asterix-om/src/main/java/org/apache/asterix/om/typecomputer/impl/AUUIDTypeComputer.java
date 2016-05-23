@@ -19,15 +19,11 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class AUUIDTypeComputer implements IResultTypeComputer {
+public class AUUIDTypeComputer extends AbstractResultTypeComputer {
 
     public static final AUUIDTypeComputer INSTANCE = new AUUIDTypeComputer();
 
@@ -35,8 +31,7 @@ public class AUUIDTypeComputer implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+    protected IAType getResultType(IAType... strippedInputTypes) {
         return BuiltinType.AUUID;
     }
 

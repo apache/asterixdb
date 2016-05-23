@@ -69,12 +69,10 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
                             throws AlgebricksException {
                         resultStorage.reset();
-                        ATypeTag tag = evaluateTuple(tuple, 0);
+                        evaluators[0].evaluate(tuple, pointables[0]);
+                        ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
+                                .getStartOffset()]];
                         try {
-                            if (serializeNullIfAnyNull(tag)) {
-                                resultPointable.set(resultStorage);
-                                return;
-                            }
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_TAGS, tag);
                             int len = ByteArrayPointable.getContentLength(pointables[0].getByteArray(),
                                     pointables[0].getStartOffset() + 1);

@@ -121,25 +121,25 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         IAType inputRecordType = (IAType) env.getVarType(recordVar.get(0));
 
         /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
-        boolean checkNull = false;
+        boolean checkUnknown = false;
         while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
             /** while-loop for the case there is a nested multi-level union */
-            inputRecordType = ((AUnionType) inputRecordType).getNullableType();
-            checkNull = true;
+            inputRecordType = ((AUnionType) inputRecordType).getActualType();
+            checkUnknown = true;
         }
 
         /** see whether the input record type needs to be casted */
         boolean cast = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType);
 
-        if (checkNull) {
+        if (checkUnknown) {
             recordVar.set(0, IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0),
-                    assignOp1, context, AsterixBuiltinFunctions.NOT_NULL));
+                    assignOp1, context, AsterixBuiltinFunctions.CHECK_UNKNOWN));
         }
         if (cast) {
             IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0), assignOp1, context,
                     AsterixBuiltinFunctions.CAST_RECORD);
         }
-        return cast || checkNull;
+        return cast || checkUnknown;
     }
 
 }

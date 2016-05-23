@@ -52,8 +52,7 @@ public class SubBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
-                return new SubBinaryFromToDescriptor.AbstractSubBinaryCopyEvaluator(ctx, args,
-                        getIdentifier().getName()) {
+                return new AbstractSubBinaryEvaluator(ctx, args, getIdentifier().getName()) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
                         return Integer.MAX_VALUE;

@@ -516,7 +516,7 @@ public class AccessMethodUtils {
         return primaryIndexUnnestOp;
     }
 
-    public static ScalarFunctionCallExpression findLOJIsNullFuncInGroupBy(GroupByOperator lojGroupbyOp)
+    public static ScalarFunctionCallExpression findLOJIsMissingFuncInGroupBy(GroupByOperator lojGroupbyOp)
             throws AlgebricksException {
         //find IS_NULL function of which argument has the nullPlaceholder variable in the nested plan of groupby.
         ALogicalPlanImpl subPlan = (ALogicalPlanImpl) lojGroupbyOp.getNestedPlans().get(0);
@@ -536,7 +536,7 @@ public class AccessMethodUtils {
                         if (notFuncExpr.getArguments().get(0).getValue()
                                 .getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                             if (((AbstractFunctionCallExpression) notFuncExpr.getArguments().get(0).getValue())
-                                    .getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
+                                    .getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
                                 isNullFuncExpr = (ScalarFunctionCallExpression) notFuncExpr.getArguments().get(0)
                                         .getValue();
                                 if (isNullFuncExpr.getArguments().get(0).getValue()

@@ -21,34 +21,25 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator {
-    @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
 
     protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected DataOutput dataOutput = resultStorage.getDataOutput();
     protected IPointable[] pointables;
     protected IScalarEvaluator[] evaluators;
 
-    public AbstractBinaryScalarEvaluator(final IHyracksTaskContext context, final IScalarEvaluatorFactory[] evaluatorFactories)
-            throws AlgebricksException {
+    public AbstractBinaryScalarEvaluator(final IHyracksTaskContext context,
+            final IScalarEvaluatorFactory[] evaluatorFactories) throws AlgebricksException {
         pointables = new IPointable[evaluatorFactories.length];
         evaluators = new IScalarEvaluator[evaluatorFactories.length];
         for (int i = 0; i < evaluators.length; ++i) {
@@ -57,27 +48,12 @@ public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator 
         }
     }
 
-    public ATypeTag evaluateTuple(IFrameTupleReference tuple, int id) throws AlgebricksException {
-        evaluators[id].evaluate(tuple, pointables[id]);
-        return ATypeTag.VALUE_TYPE_MAPPING[pointables[id].getByteArray()[pointables[id].getStartOffset()]];
-    }
-
-    public boolean serializeNullIfAnyNull(ATypeTag... tags) throws HyracksDataException {
-        for (ATypeTag typeTag : tags) {
-            if (typeTag == ATypeTag.NULL) {
-                nullSerde.serialize(ANull.NULL, dataOutput);
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static final String FIRST = "1st";
     private static final String SECOND = "2nd";
     private static final String THIRD = "3rd";
     private static final String TH = "th";
 
-    public static String rankToString(int i) {
+    protected String rankToString(int i) {
         String prefix = "";
         if (i >= 10) {
             prefix = String.valueOf(i / 10);
@@ -94,7 +70,7 @@ public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator 
         }
     }
 
-    public static void checkTypeMachingThrowsIfNot(String title, ATypeTag[] expected, ATypeTag... actual)
+    protected void checkTypeMachingThrowsIfNot(String title, ATypeTag[] expected, ATypeTag... actual)
             throws AlgebricksException {
         for (int i = 0; i < expected.length; i++) {
             if (expected[i] != actual[i]) {

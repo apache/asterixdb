@@ -33,7 +33,7 @@ import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.impl.BinaryBooleanInspectorImpl;
 import org.apache.hyracks.algebricks.data.impl.BinaryIntegerInspectorImpl;
 import org.apache.hyracks.algebricks.data.impl.IntegerPrinterFactory;
-import org.apache.hyracks.algebricks.data.impl.NoopNullWriterFactory;
+import org.apache.hyracks.algebricks.data.impl.NoopMissingWriterFactory;
 import org.apache.hyracks.algebricks.data.impl.UTF8StringPrinterFactory;
 import org.apache.hyracks.algebricks.runtime.aggregators.TupleCountAggregateFunctionFactory;
 import org.apache.hyracks.algebricks.runtime.aggregators.TupleCountRunningAggregateFunctionFactory;
@@ -66,7 +66,7 @@ import org.apache.hyracks.algebricks.tests.util.AlgebricksHyracksIntegrationUtil
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileReference;
@@ -701,7 +701,7 @@ public class PushRuntimeTest {
                 new RecordDescriptor[] { assign1Desc, assign2Desc, project1Desc });
 
         SubplanRuntimeFactory subplan = new SubplanRuntimeFactory(pipeline,
-                new INullWriterFactory[] { NoopNullWriterFactory.INSTANCE }, assign1Desc, null);
+                new IMissingWriterFactory[] { NoopMissingWriterFactory.INSTANCE }, assign1Desc, null);
 
         RecordDescriptor subplanDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });

@@ -339,11 +339,11 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             // add field value to value buffer
             writeFieldValueToBuffer(fieldType, fieldValueBuffer.getDataOutput(), fldName, entry.getValue(), pAd);
             if (openRecordField) {
-                if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                if (fieldValueBuffer.getByteArray()[0] != ATypeTag.MISSING.serialize()) {
                     recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                 }
             } else if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                if (fieldValueBuffer.getByteArray()[0] != ATypeTag.MISSING.serialize()) {
                     recBuilder.addField(fieldId, fieldValueBuffer);
                 }
             } else {
@@ -387,7 +387,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
         if (fieldType != null) {
             if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                fieldType = ((AUnionType) fieldType).getNullableType();
+                fieldType = ((AUnionType) fieldType).getActualType();
             }
         }
         switch (val.getValueType()) {
@@ -622,23 +622,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     public static int checkNullConstraints(ARecordType recType, BitSet nulls) {
-        boolean isNull = false;
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
             if (nulls.get(i) == false) {
                 IAType type = recType.getFieldTypes()[i];
-                if (type.getTypeTag() != ATypeTag.NULL && type.getTypeTag() != ATypeTag.UNION) {
+                if (type.getTypeTag() != ATypeTag.MISSING && type.getTypeTag() != ATypeTag.UNION) {
                     return i;
                 }
 
                 if (type.getTypeTag() == ATypeTag.UNION) { // union
-                    List<IAType> unionList = ((AUnionType) type).getUnionList();
-                    for (int j = 0; j < unionList.size(); j++) {
-                        if (unionList.get(j).getTypeTag() == ATypeTag.NULL) {
-                            isNull = true;
-                            break;
-                        }
-                    }
-                    if (!isNull) {
+                    AUnionType unionType = (AUnionType) type;
+                    if (!unionType.isNullableType()) {
                         return i;
                     }
                 }
@@ -685,7 +678,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case SLIST_VALUE:
                 return ATypeTag.UNORDEREDLIST;
             case NULL_VALUE:
-                return ATypeTag.NULL;
+                return ATypeTag.MISSING;
             case REAL_VALUE:
                 return ATypeTag.DOUBLE;
             case RELATIVE_TIME_VALUE:

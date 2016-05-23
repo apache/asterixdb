@@ -72,14 +72,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 IAType t = recordType.getFieldTypes()[i];
                 IAType t2;
                 if (t.getTypeTag() == ATypeTag.UNION) {
-                    if (((AUnionType) t).isNullableType()) {
-                        t2 = ((AUnionType) recordType.getFieldTypes()[i]).getNullableType();
-                        serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
-                                ((AUnionType) recordType.getFieldTypes()[i]).getNullableType());
-                    } else {
-                        // union .. the general case
-                        throw new NotImplementedException();
-                    }
+                    t2 = ((AUnionType) t).getActualType();
                 } else {
                     t2 = t;
                 }

@@ -77,12 +77,12 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
         /*
          * Make sure that if "setResult" is not called,
-         * or the result object is null we let Hyracks storage manager know
-         * we want to discard a null object
+         * or the result object is missing we let Hyracks storage manager know
+         * we want to discard a missing object
          */
         byte byteOutput = resultBuffer.getByteArray()[0];
-        if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+        if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+            resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
         }
     }
 

@@ -33,7 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
@@ -79,13 +79,13 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     protected final Map<ILogicalOperator, ILogicalPropertiesVector> logicalProps = new HashMap<ILogicalOperator, ILogicalPropertiesVector>();
     private final IExpressionTypeComputer expressionTypeComputer;
-    private final INullableTypeComputer nullableTypeComputer;
+    private final IMissableTypeComputer nullableTypeComputer;
     private final INodeDomain defaultNodeDomain;
     private final LogicalOperatorPrettyPrintVisitor prettyPrintVisitor;
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-            IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
+            IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
         this(varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
                 nullableTypeComputer, physicalOptimizationConfig, clusterLocations,
@@ -94,7 +94,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-            IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
+            IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations,
             LogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
         this.varCounter = varCounter;
@@ -281,7 +281,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     }
 
     @Override
-    public INullableTypeComputer getNullableTypeComputer() {
+    public IMissableTypeComputer getMissableTypeComputer() {
         return nullableTypeComputer;
     }
 

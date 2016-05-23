@@ -32,7 +32,7 @@ import org.json.JSONObject;
 public class AUnionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
-    public static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 1;
+    private static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 0;
     private final List<IAType> unionList;
 
     public AUnionType(List<IAType> unionList, String typeName) {
@@ -44,16 +44,96 @@ public class AUnionType extends AbstractComplexType {
         return unionList;
     }
 
-    public void setTypeAtIndex(IAType type, int index) {
-        unionList.set(index, type);
+    public boolean isMissableType() {
+        return containsType(BuiltinType.AMISSING);
     }
 
     public boolean isNullableType() {
-        return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
+        return containsType(BuiltinType.ANULL);
     }
 
-    public IAType getNullableType() {
+    public boolean isUnknownableType() {
+        return isMissableType() || isNullableType();
+    }
+
+    private boolean containsType(IAType t) {
+        for (int index = 0; index < unionList.size(); ++index) {
+            if (unionList.get(index) != null && unionList.get(index).equals(t)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public IAType getActualType() {
         return unionList.get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+    }
+
+    public void setActualType(IAType type) {
+        if (AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST < unionList.size()) {
+            unionList.set(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST, type);
+        } else {
+            unionList.add(type);
+        }
+    }
+
+    public static IAType createMissableType(IAType type, String typeName) {
+        if (type != null && type.getTypeTag() == ATypeTag.MISSING) {
+            return type;
+        }
+        List<IAType> unionList = new ArrayList<>();
+        if (type != null && type.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) type;
+            unionList.addAll(unionType.getUnionList());
+        } else {
+            unionList.add(type);
+        }
+        unionList.add(BuiltinType.AMISSING);
+        return new AUnionType(unionList, typeName);
+    }
+
+    public static IAType createMissableType(IAType t) {
+        if (t != null && t.getTypeTag() == ATypeTag.MISSING) {
+            return t;
+        }
+        String s = t != null ? t.getTypeName() : null;
+        return createMissableType(t, s == null ? null : s + "?");
+    }
+
+    public static IAType createNullableType(IAType type, String typeName) {
+        if (type != null && type.getTypeTag() == ATypeTag.NULL) {
+            return type;
+        }
+        List<IAType> unionList = new ArrayList<>();
+        if (type != null && type.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) type;
+            unionList.addAll(unionType.getUnionList());
+        } else {
+            unionList.add(type);
+        }
+        unionList.add(BuiltinType.ANULL);
+        return new AUnionType(unionList, typeName);
+    }
+
+    public static IAType createNullableType(IAType t) {
+        if (t != null && t.getTypeTag() == ATypeTag.NULL) {
+            return t;
+        }
+        String s = t != null ? t.getTypeName() : null;
+        return createNullableType(t, s == null ? null : s + "?");
+    }
+
+    public static IAType createUnknownableType(IAType type, String typeName) {
+        List<IAType> unionList = new ArrayList<>();
+        unionList.add(type);
+        unionList.add(BuiltinType.ANULL);
+        unionList.add(BuiltinType.AMISSING);
+        return new AUnionType(unionList, typeName);
+    }
+
+    public static IAType createUnknownableType(IAType t) {
+        String s = t != null ? t.getTypeName() : null;
+        return createUnknownableType(t, s == null ? null : s + "?");
     }
 
     @Override
@@ -92,22 +172,10 @@ public class AUnionType extends AbstractComplexType {
         return BuiltinType.ASTERIX_TYPE;
     }
 
-    public static AUnionType createNullableType(IAType type, String typeName) {
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
-        unionList.add(type);
-        return new AUnionType(unionList, typeName);
-    }
-
-    public static AUnionType createNullableType(IAType t) {
-        String s = t != null ? t.getTypeName() : null;
-        return createNullableType(t, s == null ? null : s + "?");
-    }
-
     @Override
     public void generateNestedDerivedTypeNames() {
-        if (isNullableType()) {
-            IAType nullableType = getNullableType();
+        if (isUnknownableType()) {
+            IAType nullableType = getActualType();
             if (nullableType.getTypeTag().isDerivedType() && nullableType.getTypeName() == null) {
                 AbstractComplexType derivedType = (AbstractComplexType) nullableType;
                 derivedType.setTypeName(getTypeName());

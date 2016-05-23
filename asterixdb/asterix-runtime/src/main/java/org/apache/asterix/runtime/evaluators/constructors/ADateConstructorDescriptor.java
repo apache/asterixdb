@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -72,9 +71,6 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -109,24 +105,19 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, startOffset,
                                         endOffset - startOffset + 1);
-
                                 short temp = 0;
                                 if (chrononTimeInMs < 0
                                         && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                                     temp = 1;
                                 }
-
                                 aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
-
                                 dateSerde.serialize(aDate, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
                 };

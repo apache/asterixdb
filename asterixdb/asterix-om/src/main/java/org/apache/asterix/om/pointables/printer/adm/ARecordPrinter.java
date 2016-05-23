@@ -19,16 +19,16 @@
 
 package org.apache.asterix.om.pointables.printer.adm;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
 
 /**
  * This class is to print the content of a record. It is ONLY visible to
@@ -47,8 +47,8 @@ class ARecordPrinter {
 
     }
 
-    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
-            AsterixException {
+    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor)
+            throws IOException, AsterixException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
@@ -79,8 +79,8 @@ class ARecordPrinter {
             List<IVisitablePointable> fieldTags, List<IVisitablePointable> fieldValues, int i) throws AsterixException {
         IVisitablePointable itemTypeTag = fieldTags.get(i);
         IVisitablePointable item = fieldValues.get(i);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                .getStartOffset()]);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
         itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
 
         // print field name

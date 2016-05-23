@@ -79,5 +79,10 @@
       <artifactId>asm-all</artifactId>
       <version>5.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.e-movimento.tinytools</groupId>
+      <artifactId>privilegedaccessor</artifactId>
+      <version>1.2.2</version>
+    </dependency>
   </dependencies>
 </project>

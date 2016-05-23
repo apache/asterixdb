@@ -70,7 +70,7 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
         if (ck != null) {
-            return AUnionType.createNullableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
+            return AUnionType.createUnknownableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
         }
         // Note: built-in functions + udfs
         IResultTypeComputer rtc = null;
@@ -90,6 +90,8 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
         IAlgebricksConstantValue acv = expr.getValue();
         if (acv.isFalse() || acv.isTrue()) {
             return BuiltinType.ABOOLEAN;
+        } else if (acv.isMissing()) {
+            return BuiltinType.AMISSING;
         } else if (acv.isNull()) {
             return BuiltinType.ANULL;
         } else {

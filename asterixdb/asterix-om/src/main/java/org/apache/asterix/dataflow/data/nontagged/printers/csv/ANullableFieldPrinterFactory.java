@@ -46,16 +46,16 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                nullPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
                         .createPrinter();
-                fieldPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getNullableType()))
+                fieldPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
                         .createPrinter();
             }
 
             @Override
             public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 fieldPrinter.init();
-                if (b[s] == ATypeTag.NULL.serialize()) {
+                if (b[s] == ATypeTag.MISSING.serialize()) {
                     nullPrinter.print(b, s, l, ps);
                 } else {
                     fieldPrinter.print(b, s, l, ps);

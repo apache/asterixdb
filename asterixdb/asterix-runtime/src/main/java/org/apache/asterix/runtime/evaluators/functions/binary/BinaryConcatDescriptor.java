@@ -22,10 +22,13 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -33,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
@@ -66,11 +70,16 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
                     private final byte[] metaBuffer = new byte[5];
+                    @SuppressWarnings("unchecked")
+                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        ATypeTag typeTag = evaluateTuple(tuple, 0);
+                        evaluators[0].evaluate(tuple, pointables[0]);
+                        ATypeTag typeTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
+                                .getStartOffset()]];
                         if (typeTag != ATypeTag.UNORDEREDLIST && typeTag != ATypeTag.ORDEREDLIST) {
                             throw new AlgebricksException(getIdentifier().getName()
                                     + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got " + typeTag);
@@ -113,8 +122,17 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         }
                         result.set(resultStorage);
                     }
-                };
 
+                    private boolean serializeNullIfAnyNull(ATypeTag... tags) throws HyracksDataException {
+                        for (ATypeTag typeTag : tags) {
+                            if (typeTag == ATypeTag.NULL) {
+                                nullSerde.serialize(ANull.NULL, dataOutput);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
             }
         };
 

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -144,7 +144,7 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
                         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                         // that expression has been rewritten, and it will not
                         // fail but just return false
-                        if (TypeComputerUtilities.getRequiredType(funcExpr) != null) {
+                        if (TypeCastUtils.getRequiredType(funcExpr) != null) {
                             context.computeAndSetTypeEnvironmentForOperator(assignOp);
                             return false;
                         }

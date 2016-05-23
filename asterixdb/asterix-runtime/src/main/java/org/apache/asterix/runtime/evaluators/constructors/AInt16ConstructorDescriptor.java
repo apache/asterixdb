@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AMutableInt16;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -73,9 +72,6 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt16> int16Serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT16);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -118,8 +114,6 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
                                 aInt16.setValue(value);
                                 int16Serde.serialize(aInt16, out);
-                            } else if (serString[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

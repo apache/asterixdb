@@ -201,7 +201,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IAType fieldType = dataType.getDatatype();
         //unwrap nullable type out of the union
         if (fieldType.getTypeTag() == ATypeTag.UNION) {
-            fieldType = ((AUnionType) dataType.getDatatype()).getNullableType();
+            fieldType = ((AUnionType) dataType.getDatatype()).getActualType();
         }
 
         // write field 3
@@ -310,11 +310,12 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             boolean fieldIsNullable = false;
             if (NonTaggedFormatUtil.isOptional(fieldType)) {
                 fieldIsNullable = true;
-                fieldType = ((AUnionType) fieldType).getNullableType();
+                fieldType = ((AUnionType) fieldType).getActualType();
             }
-            if (fieldType.getTypeTag().isDerivedType())
+            if (fieldType.getTypeTag().isDerivedType()) {
                 handleNestedDerivedType(fieldType.getTypeName(), (AbstractComplexType) fieldType, instance,
                         instance.getDataverseName(), instance.getDatatypeName());
+            }
 
             itemValue.reset();
             fieldRecordBuilder.reset(MetadataRecordTypes.FIELD_RECORDTYPE);

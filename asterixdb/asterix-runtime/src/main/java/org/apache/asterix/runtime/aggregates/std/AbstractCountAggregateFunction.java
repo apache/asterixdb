@@ -67,7 +67,7 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         // Ignore SYSTEM_NULL.
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
             processNull();
         } else if (typeTag != ATypeTag.SYSTEM_NULL) {
             cnt++;

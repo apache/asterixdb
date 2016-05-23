@@ -1363,6 +1363,7 @@ class LangExpressionToPlanTranslator
         List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
         argRefs.add(new MutableObject<ILogicalExpression>(expr));
         switch (expr.getExpressionTag()) {
+            case CONSTANT:
             case VARIABLE: {
                 return new UnnestingFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), argRefs);

@@ -243,7 +243,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             context.computeAndSetTypeEnvironmentForOperator(tmpAsgn);
         }
 
-        IFunctionInfo finfoEq = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.IS_NULL);
+        IFunctionInfo finfoEq = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.IS_MISSING);
         ILogicalExpression isNullTest = new ScalarFunctionCallExpression(finfoEq,
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(testForNull)));
         IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);

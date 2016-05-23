@@ -56,6 +56,7 @@ public class AObjectPrinter implements IPrinter {
                 AInt64Printer.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case MISSING:
             case NULL: {
                 ANullPrinter.INSTANCE.print(b, s, l, ps);
                 break;

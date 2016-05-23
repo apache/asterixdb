@@ -30,7 +30,7 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 
 /**
  * This class represents the entry point to all things adapters
@@ -61,10 +61,10 @@ public class AdapterFactoryProvider {
 
     // Lookup Adapters
     public static LookupAdapterFactory<?> getLookupAdapterFactory(Map<String, String> configuration,
-            ARecordType recordType, int[] ridFields, boolean retainInput, boolean retainNull,
-            INullWriterFactory iNullWriterFactory) throws AsterixException {
+            ARecordType recordType, int[] ridFields, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory) throws AsterixException {
         LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
-                retainNull, iNullWriterFactory);
+                retainMissing, missingWriterFactory);
         adapterFactory.configure(configuration);
         return adapterFactory;
     }

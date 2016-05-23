@@ -19,6 +19,8 @@
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 public interface IAlgebricksConstantValue {
+    public boolean isMissing();
+
     public boolean isNull();
 
     public boolean isTrue();

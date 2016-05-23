@@ -63,19 +63,19 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
         IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
 
-        ARecordType inputRecordType = TypeComputerUtils.extractRecordType(type0);
+        ARecordType inputRecordType = TypeComputeUtils.extractRecordType(type0);
         if (inputRecordType == null) {
             throw new AlgebricksException("Input record cannot be null");
         }
 
         AbstractLogicalExpression arg1 = (AbstractLogicalExpression) funcExpr.getArguments().get(1).getValue();
         IAType type1 = (IAType) env.getType(arg1);
-        AOrderedListType inputOrderedListType = TypeComputerUtils.extractOrderedListType(type1);
+        AOrderedListType inputOrderedListType = TypeComputeUtils.extractOrderedListType(type1);
         if (inputOrderedListType == null) {
             return inputRecordType;
         }
 
-        boolean nullable = TypeHelper.canBeNull(type0) || TypeHelper.canBeNull(type1);
+        boolean nullable = TypeHelper.canBeUnknown(type0) || TypeHelper.canBeUnknown(type1);
         Map<String, IAType> additionalFields = new HashMap<>();
         List<String> resultFieldNames = new ArrayList<>();
         List<IAType> resultFieldTypes = new ArrayList<>();
@@ -103,7 +103,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
             // Iterating through the orderlist input
             for (Mutable<ILogicalExpression> arg : args) {
                 AbstractFunctionCallExpression recConsExpr = (AbstractFunctionCallExpression) arg.getValue();
-                ARecordType rtype = TypeComputerUtils.extractRecordType((IAType) env.getType(recConsExpr));
+                ARecordType rtype = TypeComputeUtils.extractRecordType((IAType) env.getType(recConsExpr));
                 if (rtype != null) {
                     String[] fn = rtype.getFieldNames();
                     IAType[] ft = rtype.getFieldTypes();

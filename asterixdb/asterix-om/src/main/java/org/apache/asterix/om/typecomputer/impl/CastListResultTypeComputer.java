@@ -20,7 +20,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -41,6 +41,6 @@ public class CastListResultTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expression;
-        return TypeComputerUtilities.getRequiredType(funcExpr);
+        return TypeCastUtils.getRequiredType(funcExpr);
     }
 }

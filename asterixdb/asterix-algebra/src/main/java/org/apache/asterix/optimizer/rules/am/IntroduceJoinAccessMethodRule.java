@@ -158,7 +158,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (isLeftOuterJoin && hasGroupBy) {
             analysisCtx.setLOJGroupbyOpRef(opRef);
             ScalarFunctionCallExpression isNullFuncExpr = AccessMethodUtils
-                    .findLOJIsNullFuncInGroupBy((GroupByOperator) opRef.getValue());
+                    .findLOJIsMissingFuncInGroupBy((GroupByOperator) opRef.getValue());
             analysisCtx.setLOJIsNullFuncInGroupBy(isNullFuncExpr);
         }
 

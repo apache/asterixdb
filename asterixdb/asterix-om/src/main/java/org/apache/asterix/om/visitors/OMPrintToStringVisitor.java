@@ -36,6 +36,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.ALine;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.APoint;
@@ -150,6 +151,11 @@ public class OMPrintToStringVisitor implements IOMVisitor {
     }
 
     @Override
+    public void visitAMissing(AMissing obj) throws AsterixException {
+        buffer.append("missing");
+    }
+
+    @Override
     public void visitANull(ANull obj) throws AsterixException {
         buffer.append("null");
     }
@@ -252,8 +258,8 @@ public class OMPrintToStringVisitor implements IOMVisitor {
             }
             default: {
                 // TODO Auto-generated method stub
-                throw new NotImplementedException("Pretty-printing is not implemented for type " + obj.getTypeTag()
-                        + " .");
+                throw new NotImplementedException(
+                        "Pretty-printing is not implemented for type " + obj.getTypeTag() + " .");
             }
         }
 

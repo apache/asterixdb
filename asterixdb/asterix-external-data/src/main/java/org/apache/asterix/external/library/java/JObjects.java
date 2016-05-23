@@ -143,7 +143,7 @@ public class JObjects {
         public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
             if (writeTypeTag) {
                 try {
-                    dataOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                    dataOutput.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

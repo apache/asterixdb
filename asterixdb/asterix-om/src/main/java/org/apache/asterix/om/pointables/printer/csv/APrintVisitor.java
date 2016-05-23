@@ -19,6 +19,11 @@
 
 package org.apache.asterix.om.pointables.printer.csv;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABinaryHexPrinter;
@@ -52,11 +57,6 @@ import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
@@ -120,6 +120,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                     AInt64Printer.INSTANCE.print(b, s, l, ps);
                     break;
                 }
+                case MISSING:
                 case NULL: {
                     ANullPrinter.INSTANCE.print(b, s, l, ps);
                     break;

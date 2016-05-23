@@ -28,7 +28,6 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableInterval;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
@@ -85,9 +84,6 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -104,13 +100,6 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                         int len1 = argPtr1.getLength();
 
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             long intervalStart = 0, intervalEnd = 0;
                             if (bytes0[offset0] == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 intervalStart = ATimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);

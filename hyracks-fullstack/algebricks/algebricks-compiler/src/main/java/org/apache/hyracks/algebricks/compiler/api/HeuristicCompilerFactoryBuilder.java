@@ -25,7 +25,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
@@ -51,11 +51,11 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
         public IOptimizationContext createOptimizationContext(int varCounter,
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-                IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
+                IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
                 PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
             LogicalOperatorPrettyPrintVisitor prettyPrintVisitor = new LogicalOperatorPrettyPrintVisitor();
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
-                    mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
+                    mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     physicalOptimizationConfig, clusterLocations, prettyPrintVisitor);
         }
     }
@@ -78,7 +78,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                     int varCounter) {
                 final IOptimizationContext oc = optCtxFactory.createOptimizationContext(varCounter,
                         expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
-                        nullableTypeComputer, physicalOptimizationConfig, clusterLocations);
+                        missableTypeComputer, physicalOptimizationConfig, clusterLocations);
                 oc.setMetadataDeclarations(metadata);
                 final HeuristicOptimizer opt = new HeuristicOptimizer(plan, logicalRewrites, physicalRewrites, oc);
                 return new ICompiler() {
@@ -95,9 +95,9 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, hashFunctionFamilyProvider,
                                 comparatorFactoryProvider, typeTraitProvider, binaryBooleanInspectorFactory,
-                                binaryIntegerInspectorFactory, printerProvider, nullWriterFactory,
+                                binaryIntegerInspectorFactory, printerProvider, missingWriterFactory,
                                 normalizedKeyComputerFactoryProvider, expressionRuntimeProvider, expressionTypeComputer,
-                                nullableTypeComputer, oc, expressionEvalSizeComputer, partialAggregationTypeComputer,
+                                oc, expressionEvalSizeComputer, partialAggregationTypeComputer,
                                 predEvaluatorFactoryProvider, physicalOptimizationConfig.getFrameSize(),
                                 clusterLocations);
 

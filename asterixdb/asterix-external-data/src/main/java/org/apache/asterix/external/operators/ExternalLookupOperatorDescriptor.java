@@ -26,7 +26,7 @@ import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
 import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -52,19 +52,19 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
             boolean propagateInput, IIndexLifecycleManagerProvider lcManagerProvider,
             IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider, int datasetId,
             double bloomFilterFalsePositiveRate, ISearchOperationCallbackFactory searchOpCallbackFactory,
-            boolean retainNull, INullWriterFactory iNullWriterFactory) {
+            boolean retainMissing, IMissingWriterFactory missingWriterFactory) {
         super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
-                externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainNull, iNullWriterFactory, null,
-                searchOpCallbackFactory, null);
+                externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainMissing, missingWriterFactory,
+                null, searchOpCallbackFactory, null);
         this.adapterFactory = adapterFactory;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         // Create a file index accessor to be used for files lookup operations
         // Note that all file index accessors will use partition 0 since we only have 1 files index per NC
         final ExternalFileIndexAccessor snapshotAccessor = new ExternalFileIndexAccessor(

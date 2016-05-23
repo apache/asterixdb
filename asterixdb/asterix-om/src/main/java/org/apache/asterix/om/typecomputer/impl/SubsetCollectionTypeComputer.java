@@ -54,10 +54,10 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
             }
             case UNION: {
                 AUnionType ut = (AUnionType) t;
-                if (!ut.isNullableType()) {
+                if (!ut.isUnknownableType()) {
                     throw new AlgebricksException("Expecting collection type. Found " + t);
                 }
-                IAType t2 = ut.getUnionList().get(1);
+                IAType t2 = ut.getActualType();
                 ATypeTag tag2 = t2.getTypeTag();
                 if (tag2 == ATypeTag.UNORDEREDLIST || tag2 == ATypeTag.ORDEREDLIST) {
                     AbstractCollectionType act = (AbstractCollectionType) t2;

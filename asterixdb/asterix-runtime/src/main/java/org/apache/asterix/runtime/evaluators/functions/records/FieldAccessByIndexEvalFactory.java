@@ -23,12 +23,9 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
@@ -37,7 +34,6 @@ import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -71,14 +67,11 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
             private IPointable inputArg1 = new VoidPointable();
             private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
             private IScalarEvaluator eval1 = fieldIndexEvalFactory.createScalarEvaluator(ctx);
-            @SuppressWarnings("unchecked")
-            private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
             private int fieldIndex;
             private int fieldValueOffset;
             private int fieldValueLength;
             private IAType fieldValueType;
-            private ATypeTag fieldValueTypeTag = ATypeTag.NULL;
+            private ATypeTag fieldValueTypeTag;
 
             /*
              * inputArg0: the record
@@ -93,12 +86,6 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     eval0.evaluate(tuple, inputArg0);
                     byte[] serRecord = inputArg0.getByteArray();
                     int offset = inputArg0.getStartOffset();
-
-                    if (serRecord[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    }
 
                     if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type "
@@ -119,7 +106,7 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
 
                     if (fieldValueType.getTypeTag().equals(ATypeTag.UNION)) {
                         if (((AUnionType) fieldValueType).isNullableType()) {
-                            fieldValueTypeTag = ((AUnionType) fieldValueType).getNullableType().getTypeTag();
+                            fieldValueTypeTag = ((AUnionType) fieldValueType).getActualType().getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
                                     fieldValueTypeTag, false);
                             out.writeByte(fieldValueTypeTag.serialize());

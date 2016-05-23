@@ -24,8 +24,11 @@ import java.util.Iterator;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -48,9 +51,10 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
         /**
          * if type has been top-down propagated, use the enforced type
          */
-        ARecordType type = (ARecordType) TypeComputerUtilities.getRequiredType(f);
-        if (type != null)
+        ARecordType type = (ARecordType) TypeCastUtils.getRequiredType(f);
+        if (type != null) {
             return type;
+        }
 
         int n = f.getArguments().size() / 2;
         String[] fieldNames = new String[n];
@@ -59,6 +63,16 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
         Iterator<Mutable<ILogicalExpression>> argIter = f.getArguments().iterator();
         while (argIter.hasNext()) {
             ILogicalExpression e1 = argIter.next().getValue();
+            ILogicalExpression e2 = argIter.next().getValue();
+            IAType e2Type = (IAType) env.getType(e2);
+            if (e2Type.getTypeTag() == ATypeTag.MISSING) {
+                // Converts missing to null for a closed field.
+                e2Type = BuiltinType.ANULL;
+            } else if (e2Type.getTypeTag() == ATypeTag.UNION) {
+                AUnionType unionType = (AUnionType) e2Type;
+                e2Type = AUnionType.createNullableType(unionType.getActualType());
+            }
+            fieldTypes[i] = e2Type;
             if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 ConstantExpression nameExpr = (ConstantExpression) e1;
                 fieldNames[i] = ((AString) ((AsterixConstantValue) nameExpr.getValue()).getObject()).getStringValue();
@@ -66,8 +80,6 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
                 throw new AlgebricksException(
                         "Field name " + i + "(" + e1 + ") in call to closed-record-constructor is not a constant.");
             }
-            ILogicalExpression e2 = argIter.next().getValue();
-            fieldTypes[i] = (IAType) env.getType(e2);
             i++;
         }
         return new ARecordType(null, fieldNames, fieldTypes, false);

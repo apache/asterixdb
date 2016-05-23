@@ -28,7 +28,6 @@ import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -87,9 +86,6 @@ public class TemporalIntervalStartAccessor extends AbstractScalarFunctionDynamic
                     private final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
                     private final AMutableTime aTime = new AMutableTime(0);
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -99,11 +95,7 @@ public class TemporalIntervalStartAccessor extends AbstractScalarFunctionDynamic
 
                         resultStorage.reset();
                         try {
-                            if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                                 byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
                                         startOffset + 1);
                                 long startTime = AIntervalSerializerDeserializer.getIntervalStart(bytes,

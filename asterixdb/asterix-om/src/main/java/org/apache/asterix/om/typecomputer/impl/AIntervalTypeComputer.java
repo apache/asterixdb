@@ -18,27 +18,19 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class AIntervalTypeComputer implements IResultTypeComputer {
+public class AIntervalTypeComputer extends AbstractResultTypeComputer {
 
     public static final AIntervalTypeComputer INSTANCE = new AIntervalTypeComputer();
 
     private AIntervalTypeComputer() {
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.typecomputer.base.IResultTypeComputer#computeType(org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression, org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment, org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider)
-     */
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+    protected IAType getResultType(IAType... strippedInputTypes) {
         return BuiltinType.AINTERVAL;
     }
 

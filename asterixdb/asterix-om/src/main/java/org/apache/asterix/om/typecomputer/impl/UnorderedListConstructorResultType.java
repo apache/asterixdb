@@ -19,15 +19,13 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -46,24 +44,28 @@ public class UnorderedListConstructorResultType implements IResultTypeComputer {
         /**
          * if type has been top-down propagated, use the enforced type
          */
-        AUnorderedListType reqType = (AUnorderedListType) TypeComputerUtilities.getRequiredType(f);
-        if (reqType != null)
+        AUnorderedListType reqType = (AUnorderedListType) TypeCastUtils.getRequiredType(f);
+        if (reqType != null) {
             return reqType;
+        }
 
-        ArrayList<IAType> types = new ArrayList<IAType>();
+        IAType currentType = null;
+        boolean any = false;
         for (int k = 0; k < f.getArguments().size(); k++) {
             IAType type = (IAType) env.getType(f.getArguments().get(k).getValue());
-            if (NonTaggedFormatUtil.isOptional(type))
-                type = ((AUnionType) type).getNullableType();
-            if (types.indexOf(type) < 0) {
-                types.add(type);
+            if (type.getTypeTag() == ATypeTag.UNION) {
+                type = ((AUnionType) type).getActualType();
             }
+            if (currentType != null && !currentType.equals(type)) {
+                any = true;
+                break;
+            }
+            currentType = type;
         }
-        if (types.size() == 1) {
-            return new AUnorderedListType(types.get(0), null);
-        } else {
+        if (any || currentType == null) {
             return new AUnorderedListType(BuiltinType.ANY, null);
+        } else {
+            return new AUnorderedListType(currentType, null);
         }
-
     }
 }

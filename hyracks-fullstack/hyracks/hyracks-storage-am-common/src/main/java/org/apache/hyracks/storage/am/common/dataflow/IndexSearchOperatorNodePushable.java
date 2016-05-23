@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -63,9 +63,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected final boolean retainInput;
     protected FrameTupleReference frameTuple;
 
-    protected final boolean retainNull;
-    protected ArrayTupleBuilder nullTupleBuild;
-    protected INullWriter nullWriter;
+    protected final boolean retainMissing;
+    protected ArrayTupleBuilder nonMatchTupleBuild;
+    protected IMissingWriter nonMatchWriter;
 
     protected final int[] minFilterFieldIndexes;
     protected final int[] maxFilterFieldIndexes;
@@ -78,9 +78,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.retainInput = opDesc.getRetainInput();
-        this.retainNull = opDesc.getRetainNull();
-        if (this.retainNull) {
-            this.nullWriter = opDesc.getNullWriterFactory().createNullWriter();
+        this.retainMissing = opDesc.getRetainMissing();
+        if (this.retainMissing) {
+            this.nonMatchWriter = opDesc.getMissingWriterFactory().createMissingWriter();
         }
         this.inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         this.minFilterFieldIndexes = minFilterFieldIndexes;
@@ -111,20 +111,20 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         accessor = new FrameTupleAccessor(inputRecDesc);
-        if (retainNull) {
+        if (retainMissing) {
             int fieldCount = getFieldCount();
-            nullTupleBuild = new ArrayTupleBuilder(fieldCount);
-            DataOutput out = nullTupleBuild.getDataOutput();
+            nonMatchTupleBuild = new ArrayTupleBuilder(fieldCount);
+            DataOutput out = nonMatchTupleBuild.getDataOutput();
             for (int i = 0; i < fieldCount; i++) {
                 try {
-                    nullWriter.writeNull(out);
+                    nonMatchWriter.writeMissing(out);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                nullTupleBuild.addFieldEndOffset();
+                nonMatchTupleBuild.addFieldEndOffset();
             }
         } else {
-            nullTupleBuild = null;
+            nonMatchTupleBuild = null;
         }
 
         try {
@@ -165,9 +165,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
 
-        if (!matched && retainInput && retainNull) {
-            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex, nullTupleBuild.getFieldEndOffsets(),
-                    nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize());
+        if (!matched && retainInput && retainMissing) {
+            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex,
+                    nonMatchTupleBuild.getFieldEndOffsets(), nonMatchTupleBuild.getByteArray(), 0,
+                    nonMatchTupleBuild.getSize());
         }
     }
 

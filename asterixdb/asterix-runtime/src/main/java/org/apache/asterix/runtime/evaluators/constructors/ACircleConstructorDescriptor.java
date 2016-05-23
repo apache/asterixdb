@@ -25,7 +25,6 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.AMutableCircle;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -72,9 +71,6 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ACircle> circleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ACIRCLE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -97,8 +93,6 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         Double.parseDouble(s.substring(commaIndex + 1, spaceIndex)));
                                 aCircle.setValue(aPoint, Double.parseDouble(s.substring(spaceIndex + 1, s.length())));
                                 circleSerde.serialize(aCircle, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

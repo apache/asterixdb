@@ -36,8 +36,8 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -124,7 +124,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
 
     private final boolean isLeftOuter;
-    private final INullWriterFactory[] nullWriterFactories1;
+    private final IMissingWriterFactory[] nonMatchWriterFactories;
 
     //Flags added for test purpose
     private static boolean skipInMemoryHJ = false;
@@ -138,7 +138,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory,
-            boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) throws HyracksDataException {
+            boolean isLeftOuter, IMissingWriterFactory[] nonMatchWriterFactories) throws HyracksDataException {
 
         super(spec, 2, 1);
         this.frameLimit = frameLimit;
@@ -153,7 +153,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         recordDescriptors[0] = recordDescriptor;
         this.predEvaluatorFactory = predEvaluatorFactory;
         this.isLeftOuter = isLeftOuter;
-        this.nullWriterFactories1 = nullWriterFactories1;
+        this.nonMatchWriterFactories = nonMatchWriterFactories;
     }
 
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int frameLimit, int inputsize0,
@@ -162,9 +162,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
             ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory)
             throws HyracksDataException {
-        this(spec, frameLimit, inputsize0, factor, keys0, keys1, hashFunctionGeneratorFactories,
-                comparatorFactories, recordDescriptor, tupPaircomparatorFactory01, tupPaircomparatorFactory10,
-                predEvaluatorFactory, false, null);
+        this(spec, frameLimit, inputsize0, factor, keys0, keys1, hashFunctionGeneratorFactories, comparatorFactories,
+                recordDescriptor, tupPaircomparatorFactory01, tupPaircomparatorFactory10, predEvaluatorFactory, false,
+                null);
     }
 
     @Override
@@ -284,7 +284,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             nPartitions);
                     state.hybridHJ = new OptimizedHybridHashJoin(ctx, state.memForJoin, state.numOfPartitions,
                             PROBE_REL, BUILD_REL, probeKeys, buildKeys, comparators, probeRd, buildRd, probeHpc,
-                            buildHpc, predEvaluator, isLeftOuter, nullWriterFactories1);
+                            buildHpc, predEvaluator, isLeftOuter, nonMatchWriterFactories);
 
                     state.hybridHJ.initBuild();
                     if (LOGGER.isLoggable(Level.FINE)) {
@@ -301,7 +301,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void close() throws HyracksDataException {
                     state.hybridHJ.closeBuild();
-                    if (isFailed){
+                    if (isFailed) {
                         state.hybridHJ.clearBuildTempFiles();
                     } else {
                         ctx.setStateObject(state);
@@ -343,7 +343,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
 
             final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(buildAid, 0);
             final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
@@ -352,22 +352,22 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     .createTuplePairComparator(ctx);
             final ITuplePairComparator nljComparatorBuild2Probe = tuplePairComparatorFactoryBuild2Probe
                     .createTuplePairComparator(ctx);
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null : predEvaluatorFactory
-                    .createPredicateEvaluator());
+            final IPredicateEvaluator predEvaluator = predEvaluatorFactory == null ? null
+                    : predEvaluatorFactory.createPredicateEvaluator();
 
             for (int i = 0; i < comparatorFactories.length; i++) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
 
-            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
-            final ArrayTupleBuilder nullTupleBuild = isLeftOuter ?
-                    new ArrayTupleBuilder(buildRd.getFieldCount()) :
-                    null;
+            final IMissingWriter[] nonMatchWriter = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length]
+                    : null;
+            final ArrayTupleBuilder nullTupleBuild = isLeftOuter ? new ArrayTupleBuilder(buildRd.getFieldCount())
+                    : null;
             if (isLeftOuter) {
                 DataOutput out = nullTupleBuild.getDataOutput();
-                for (int i = 0; i < nullWriterFactories1.length; i++) {
-                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
-                    nullWriters1[i].writeNull(out);
+                for (int i = 0; i < nonMatchWriterFactories.length; i++) {
+                    nonMatchWriter[i] = nonMatchWriterFactories[i].createMissingWriter();
+                    nonMatchWriter[i].writeMissing(out);
                     nullTupleBuild.addFieldEndOffset();
                 }
             }
@@ -381,8 +381,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (BuildAndPartitionTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
-                            BUILD_AND_PARTITION_ACTIVITY_ID), partition));
+                    state = (BuildAndPartitionTaskState) ctx.getStateObject(
+                            new TaskId(new ActivityId(getOperatorId(), BUILD_AND_PARTITION_ACTIVITY_ID), partition));
 
                     writer.open();
                     state.hybridHJ.initProbe();
@@ -410,7 +410,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
 
                         rPartbuff.reset();
-                        for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid = partitionStatus.nextSetBit(pid + 1)) {
+                        for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid = partitionStatus
+                                .nextSetBit(pid + 1)) {
 
                             RunFileReader bReader = state.hybridHJ.getBuildRFReader(pid);
                             RunFileReader pReader = state.hybridHJ.getProbeRFReader(pid);
@@ -435,8 +436,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 //The buildSideReader should be always the original buildSideReader, so should the probeSideReader
                 private void joinPartitionPair(RunFileReader buildSideReader, RunFileReader probeSideReader,
-                        int buildSizeInTuple, int probeSizeInTuple, int level)
-                        throws HyracksDataException {
+                        int buildSizeInTuple, int probeSizeInTuple, int level) throws HyracksDataException {
                     ITuplePartitionComputer probeHpc = new FieldHashPartitionComputerFamily(probeKeys,
                             hashFunctionGeneratorFactories).createPartitioner(level);
                     ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerFamily(buildKeys,
@@ -447,21 +447,18 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     int beforeMax = Math.max(buildSizeInTuple, probeSizeInTuple);
 
                     if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine(
-                                "\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId() + ") (pid "
-                                        + ") - (level " + level + ")"
-                                        + " - BuildSize:\t" + buildPartSize + "\tProbeSize:\t" + probePartSize
-                                        + " - MemForJoin "
-                                        + (state.memForJoin)
-                                        + "  - LeftOuter is " + isLeftOuter);
+                        LOGGER.fine("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId()
+                                + ") (pid " + ") - (level " + level + ")" + " - BuildSize:\t" + buildPartSize
+                                + "\tProbeSize:\t" + probePartSize + " - MemForJoin " + (state.memForJoin)
+                                + "  - LeftOuter is " + isLeftOuter);
                     }
 
                     //Apply in-Mem HJ if possible
                     if (!skipInMemoryHJ && ((buildPartSize < state.memForJoin)
                             || (probePartSize < state.memForJoin && !isLeftOuter))) {
                         int tabSize = -1;
-                        if (!forceRR && (isLeftOuter || (buildPartSize
-                                < probePartSize))) { //Case 1.1 - InMemHJ (wout Role-Reversal)
+                        if (!forceRR && (isLeftOuter || (buildPartSize < probePartSize))) {
+                            //Case 1.1 - InMemHJ (wout Role-Reversal)
                             if (LOGGER.isLoggable(Level.FINE)) {
                                 LOGGER.fine("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level "
                                         + level + "]");
@@ -472,8 +469,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Build Side is smaller
-                            applyInMemHashJoin(buildKeys, probeKeys, tabSize, buildRd, probeRd, buildHpc,
-                                    probeHpc, buildSideReader, probeSideReader); // checked-confirmed
+                            applyInMemHashJoin(buildKeys, probeKeys, tabSize, buildRd, probeRd, buildHpc, probeHpc,
+                                    buildSideReader, probeSideReader); // checked-confirmed
                         } else { //Case 1.2 - InMemHJ with Role Reversal
                             if (LOGGER.isLoggable(Level.FINE)) {
                                 LOGGER.fine(
@@ -486,8 +483,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Probe Side is smaller
-                            applyInMemHashJoin(probeKeys, buildKeys, tabSize, probeRd, buildRd, probeHpc,
-                                    buildHpc, probeSideReader, buildSideReader); // checked-confirmed
+                            applyInMemHashJoin(probeKeys, buildKeys, tabSize, probeRd, buildRd, probeHpc, buildHpc,
+                                    probeSideReader, buildSideReader); // checked-confirmed
                         }
                     }
                     //Apply (Recursive) HHJ
@@ -495,8 +492,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("\t>>>Case 2. ApplyRecursiveHHJ - [Level " + level + "]");
                         }
-                        if (!forceRR && (isLeftOuter
-                                || buildPartSize < probePartSize)) { //Case 2.1 - Recursive HHJ (wout Role-Reversal)
+                        if (!forceRR && (isLeftOuter || buildPartSize < probePartSize)) {
+                            //Case 2.1 - Recursive HHJ (wout Role-Reversal)
                             if (LOGGER.isLoggable(Level.FINE)) {
                                 LOGGER.fine("\t\t>>>Case 2.1 - RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
                                         + level + "]");
@@ -519,13 +516,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                 }
 
-                private void applyHybridHashJoin(int tableSize,
-                        final String PROBE_REL, final String BUILD_REL,
-                        final int[] probeKeys, final int[] buildKeys,
-                        final RecordDescriptor probeRd, final RecordDescriptor buildRd,
-                        final ITuplePartitionComputer probeHpc, final ITuplePartitionComputer buildHpc,
-                        RunFileReader probeSideReader, RunFileReader buildSideReader,
-                        final int level, final long beforeMax)
+                private void applyHybridHashJoin(int tableSize, final String PROBE_REL, final String BUILD_REL,
+                        final int[] probeKeys, final int[] buildKeys, final RecordDescriptor probeRd,
+                        final RecordDescriptor buildRd, final ITuplePartitionComputer probeHpc,
+                        final ITuplePartitionComputer buildHpc, RunFileReader probeSideReader,
+                        RunFileReader buildSideReader, final int level, final long beforeMax)
                         throws HyracksDataException {
 
                     boolean isReversed = probeKeys == OptimizedHybridHashJoinOperatorDescriptor.this.buildKeys
@@ -534,11 +529,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     assert isLeftOuter ? !isReversed : true : "LeftOut Join can not reverse roles";
 
                     OptimizedHybridHashJoin rHHj;
-                    int n = getNumberOfPartitions(state.memForJoin, tableSize, fudgeFactor,
-                            nPartitions);
-                    rHHj = new OptimizedHybridHashJoin(ctx, state.memForJoin, n, PROBE_REL, BUILD_REL,
-                            probeKeys, buildKeys, comparators, probeRd, buildRd, probeHpc, buildHpc,
-                            predEvaluator, isLeftOuter, nullWriterFactories1); //checked-confirmed
+                    int n = getNumberOfPartitions(state.memForJoin, tableSize, fudgeFactor, nPartitions);
+                    rHHj = new OptimizedHybridHashJoin(ctx, state.memForJoin, n, PROBE_REL, BUILD_REL, probeKeys,
+                            buildKeys, comparators, probeRd, buildRd, probeHpc, buildHpc, predEvaluator, isLeftOuter,
+                            nonMatchWriterFactories); //checked-confirmed
 
                     rHHj.setIsReversed(isReversed);
                     buildSideReader.open();
@@ -564,8 +558,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     int afterMax = Math.max(maxAfterBuildSize, maxAfterProbeSize);
 
                     BitSet rPStatus = rHHj.getPartitionStatus();
-                    if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD
-                            * beforeMax))) { //Case 2.1.1 - Keep applying HHJ
+                    if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD * beforeMax))) { //Case 2.1.1 - Keep applying HHJ
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine(
                                     "\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
@@ -652,7 +645,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     ISerializableTable table = new SerializableHashTable(tabSize, ctx);
                     InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tabSize, new FrameTupleAccessor(probeRDesc),
                             hpcRepProbe, new FrameTupleAccessor(buildRDesc), hpcRepBuild,
-                            new FrameTuplePairComparator(pKeys, bKeys, comparators), isLeftOuter, nullWriters1, table,
+                            new FrameTuplePairComparator(pKeys, bKeys, comparators), isLeftOuter, nonMatchWriter, table,
                             predEvaluator, isReversed);
 
                     bReader.open();
@@ -677,18 +670,15 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 }
 
                 private void applyNestedLoopJoin(RecordDescriptor outerRd, RecordDescriptor innerRd, int memorySize,
-                        RunFileReader outerReader, RunFileReader innerReader)
-                        throws HyracksDataException {
+                        RunFileReader outerReader, RunFileReader innerReader) throws HyracksDataException {
                     // The nested loop join result is outer + inner. All the other operator is probe + build. Hence the reverse relation is different
                     boolean isReversed = outerRd == buildRd && innerRd == probeRd;
                     assert isLeftOuter ? !isReversed : true : "LeftOut Join can not reverse roles";
-                    ITuplePairComparator nljComptorOuterInner = isReversed ?
-                            nljComparatorBuild2Probe :
-                            nljComparatorProbe2Build;
-                    NestedLoopJoin nlj = new NestedLoopJoin(ctx,
-                            new FrameTupleAccessor(outerRd),
-                            new FrameTupleAccessor(innerRd), nljComptorOuterInner, memorySize,
-                            predEvaluator, isLeftOuter, nullWriters1);
+                    ITuplePairComparator nljComptorOuterInner = isReversed ? nljComparatorBuild2Probe
+                            : nljComparatorProbe2Build;
+                    NestedLoopJoin nlj = new NestedLoopJoin(ctx, new FrameTupleAccessor(outerRd),
+                            new FrameTupleAccessor(innerRd), nljComptorOuterInner, memorySize, predEvaluator,
+                            isLeftOuter, nonMatchWriter);
                     nlj.setIsReversed(isReversed);
 
                     IFrame cacheBuff = new VSizeFrame(ctx);

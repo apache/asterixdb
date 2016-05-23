@@ -30,8 +30,8 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneO
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -45,30 +45,30 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
 
-    private final boolean retainNull;
+    private final boolean retainMissing;
 
-    private final int nullPlaceholderVariableIndex;
+    private final int missingPlaceholderVariableIndex;
 
-    private final INullWriterFactory nullWriterFactory;
+    private final IMissingWriterFactory missingWriterFactory;
 
     /**
      * @param cond
      * @param projectionList
      *            if projectionList is null, then no projection is performed
-     * @param retainNull
-     * @param nullPlaceholderVariableIndex
-     * @param nullWriterFactory
+     * @param retainMissing
+     * @param missingPlaceholderVariableIndex
+     * @param missingWriterFactory
      * @throws HyracksDataException
      */
     public StreamSelectRuntimeFactory(IScalarEvaluatorFactory cond, int[] projectionList,
-            IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory, boolean retainNull,
-            int nullPlaceholderVariableIndex, INullWriterFactory nullWriterFactory) {
+            IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory, boolean retainMissing,
+            int missingPlaceholderVariableIndex, IMissingWriterFactory missingWriterFactory) {
         super(projectionList);
         this.cond = cond;
         this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
-        this.retainNull = retainNull;
-        this.nullPlaceholderVariableIndex = nullPlaceholderVariableIndex;
-        this.nullWriterFactory = nullWriterFactory;
+        this.retainMissing = retainMissing;
+        this.missingPlaceholderVariableIndex = missingPlaceholderVariableIndex;
+        this.missingWriterFactory = missingWriterFactory;
     }
 
     @Override
@@ -82,8 +82,8 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
         return new AbstractOneInputOneOutputOneFieldFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private IScalarEvaluator eval;
-            private INullWriter nullWriter = null;
-            private ArrayTupleBuilder nullTupleBuilder = null;
+            private IMissingWriter missingWriter = null;
+            private ArrayTupleBuilder missingTupleBuilder = null;
             private boolean isOpen = false;
 
             @Override
@@ -100,12 +100,12 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                 writer.open();
 
                 //prepare nullTupleBuilder
-                if (retainNull && nullWriter == null) {
-                    nullWriter = nullWriterFactory.createNullWriter();
-                    nullTupleBuilder = new ArrayTupleBuilder(1);
-                    DataOutput out = nullTupleBuilder.getDataOutput();
-                    nullWriter.writeNull(out);
-                    nullTupleBuilder.addFieldEndOffset();
+                if (retainMissing && missingWriter == null) {
+                    missingWriter = missingWriterFactory.createMissingWriter();
+                    missingTupleBuilder = new ArrayTupleBuilder(1);
+                    DataOutput out = missingTupleBuilder.getDataOutput();
+                    missingWriter.writeMissing(out);
+                    missingTupleBuilder.addFieldEndOffset();
                 }
             }
 
@@ -145,10 +145,10 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                             appendTupleToFrame(t);
                         }
                     } else {
-                        if (retainNull) {
+                        if (retainMissing) {
                             for (int i = 0; i < tRef.getFieldCount(); i++) {
-                                if (i == nullPlaceholderVariableIndex) {
-                                    appendField(nullTupleBuilder.getByteArray(), 0, nullTupleBuilder.getSize());
+                                if (i == missingPlaceholderVariableIndex) {
+                                    appendField(missingTupleBuilder.getByteArray(), 0, missingTupleBuilder.getSize());
                                 } else {
                                     appendField(tAccess, t, i);
                                 }

@@ -18,16 +18,12 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class GetOverlappingInvervalTypeComputer implements IResultTypeComputer {
+public class GetOverlappingInvervalTypeComputer extends AbstractResultTypeComputer {
 
     public static final GetOverlappingInvervalTypeComputer INSTANCE = new GetOverlappingInvervalTypeComputer();
 
@@ -35,8 +31,8 @@ public class GetOverlappingInvervalTypeComputer implements IResultTypeComputer {
 
     }
 
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+    @Override
+    protected IAType getResultType(IAType... strippedInputTypes) {
         return AUnionType.createNullableType(BuiltinType.AINTERVAL, "IntervalOrNullResult");
     }
 

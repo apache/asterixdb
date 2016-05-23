@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -72,9 +71,6 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ARectangle> rectangle2DSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -106,8 +102,6 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                                             "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
                                 }
                                 rectangle2DSerde.serialize(aRectangle, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

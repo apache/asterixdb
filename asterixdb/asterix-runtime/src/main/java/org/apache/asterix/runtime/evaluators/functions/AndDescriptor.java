@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -80,6 +81,9 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
+                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -88,25 +92,40 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             int n = args.length;
                             boolean res = true;
                             boolean metNull = false;
+                            boolean metMissing = false;
                             for (int i = 0; i < n; i++) {
                                 evals[i].evaluate(tuple, argPtr);
                                 byte[] bytes = argPtr.getByteArray();
                                 int offset = argPtr.getStartOffset();
-
+                                boolean isNull = false;
+                                boolean isMissing = false;
+                                if (bytes[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                                    isMissing = true;
+                                    metMissing = true;
+                                }
                                 if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                    isNull = true;
                                     metNull = true;
+                                }
+                                if (isMissing || isNull) {
                                     continue;
                                 }
                                 boolean argResult = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
-                                res = res && argResult;
-                            }
-                            if (metNull) {
-                                if (!res) {
-                                    ABoolean aResult = ABoolean.FALSE;
-                                    booleanSerde.serialize(aResult, out);
-                                } else {
-                                    nullSerde.serialize(ANull.NULL, out);
+                                if (argResult == false) {
+                                    // anything AND FALSE = FALSE
+                                    booleanSerde.serialize(ABoolean.FALSE, out);
+                                    result.set(resultStorage);
+                                    return;
                                 }
+                                res &= argResult;
+                            }
+                            if (metMissing) {
+                                // MISSING AND NULL = MISSING
+                                // MISSING AND TRUE = MISSING
+                                missingSerde.serialize(AMissing.MISSING, out);
+                            } else if (metNull) {
+                                // NULL AND TRUE = NULL
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
                                 booleanSerde.serialize(aResult, out);

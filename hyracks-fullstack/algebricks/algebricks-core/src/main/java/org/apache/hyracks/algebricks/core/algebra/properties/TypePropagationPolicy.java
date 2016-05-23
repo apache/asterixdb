@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 
@@ -30,7 +30,7 @@ public abstract class TypePropagationPolicy {
     public static final TypePropagationPolicy ALL = new TypePropagationPolicy() {
 
         @Override
-        public Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
+        public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
                 List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
                 ITypeEnvPointer... typeEnvs) throws AlgebricksException {
             for (ITypeEnvPointer p : typeEnvs) {
@@ -41,7 +41,7 @@ public abstract class TypePropagationPolicy {
                 }
                 Object t = env.getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
                 if (t != null) {
-                    if (ntc != null && ntc.canBeNull(t)) {
+                    if (ntc != null && ntc.canBeMissing(t)) {
                         for (List<LogicalVariable> list : correlatedNullableVariableLists) {
                             if (list.contains(var)) {
                                 for (LogicalVariable v : list) {
@@ -62,41 +62,46 @@ public abstract class TypePropagationPolicy {
     public static final TypePropagationPolicy LEFT_OUTER = new TypePropagationPolicy() {
 
         @Override
-        public Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
+        public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
                 List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
                 ITypeEnvPointer... typeEnvs) throws AlgebricksException {
             int n = typeEnvs.length;
             for (int i = 0; i < n; i++) {
                 Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList,
                         correlatedNullableVariableLists);
-                if (t != null) {
-                    if (i == 0) { // outer branch
-                        return t;
-                    } else { // inner branch
-                        boolean nonNullVarIsProduced = false;
-                        for (LogicalVariable v : nonNullVariableList) {
-                            if (v == var) {
-                                nonNullVarIsProduced = true;
-                                break;
-                            }
-                            if (typeEnvs[i].getTypeEnv().getVarType(v) != null) {
-                                nonNullVarIsProduced = true;
-                                break;
-                            }
-                        }
-                        if (nonNullVarIsProduced) {
-                            return t;
-                        } else {
-                            return ntc.makeNullableType(t);
-                        }
+                if (t == null) {
+                    continue;
+                }
+                if (i == 0) { // outer branch
+                    return t;
+                }
+
+                // inner branch
+                boolean nonMissingVarIsProduced = false;
+                for (LogicalVariable v : nonNullVariableList) {
+                    boolean toBreak = false;
+                    if (v == var) {
+                        nonMissingVarIsProduced = true;
+                        toBreak = true;
+                    } else if (typeEnvs[i].getTypeEnv().getVarType(v) != null) {
+                        nonMissingVarIsProduced = true;
+                        toBreak = true;
                     }
+                    if (toBreak) {
+                        break;
+                    }
+                }
+                if (nonMissingVarIsProduced) {
+                    return t;
+                } else {
+                    return ntc.makeMissableType(t);
                 }
             }
             return null;
         }
     };
 
-    public abstract Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
+    public abstract Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
             List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
             ITypeEnvPointer... typeEnvs) throws AlgebricksException;
 }

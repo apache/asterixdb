@@ -131,11 +131,12 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) throws AsterixException {
         boolean nullable = false;
+        IAType actualKeyType = keyType;
         if (NonTaggedFormatUtil.isOptional(keyType)) {
-            keyType = ((AUnionType) keyType).getNullableType();
+            actualKeyType = ((AUnionType) keyType).getActualType();
             nullable = true;
         }
-        return new Pair<IAType, Boolean>(keyType, nullable);
+        return new Pair<>(actualKeyType, nullable);
     }
 
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<String> fieldName,

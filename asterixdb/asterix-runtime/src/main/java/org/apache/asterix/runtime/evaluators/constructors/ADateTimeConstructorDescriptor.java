@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -71,9 +70,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -115,8 +111,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }
