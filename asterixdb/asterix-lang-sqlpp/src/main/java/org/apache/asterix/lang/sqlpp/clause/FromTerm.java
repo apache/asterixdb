@@ -82,4 +82,8 @@ public class FromTerm implements Clause {
         return posVar != null;
     }
 
+    @Override
+    public String toString() {
+        return String.valueOf(leftExpr) + " AS " + String.valueOf(leftVar);
+    }
 }

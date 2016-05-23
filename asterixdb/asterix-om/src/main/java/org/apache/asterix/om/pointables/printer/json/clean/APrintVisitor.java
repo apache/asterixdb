@@ -54,6 +54,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
         }
         try {
             printer.printList(accessor, arg.first, this);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new AsterixException(e);
         }
         return null;
@@ -92,7 +93,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
         }
         try {
             printer.printRecord(accessor, arg.first, this);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new AsterixException(e);
         }
         return null;
@@ -212,7 +213,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
             }
             return null;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }

@@ -35,11 +35,11 @@ public class FeedRuntimeId implements Serializable {
     private final String targetId;
     private final int hashCode;
 
-    public FeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition, String operandId) {
+    public FeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition, String targetId) {
         this.feedId = feedId;
         this.runtimeType = runtimeType;
         this.partition = partition;
-        this.targetId = operandId;
+        this.targetId = targetId;
         this.hashCode = toString().hashCode();
     }
 

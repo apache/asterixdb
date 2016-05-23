@@ -20,6 +20,7 @@
 package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -46,5 +47,10 @@ public class SelectRegular implements Clause {
 
     public List<Projection> getProjections() {
         return projections;
+    }
+
+    @Override
+    public String toString() {
+        return projections.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
 }

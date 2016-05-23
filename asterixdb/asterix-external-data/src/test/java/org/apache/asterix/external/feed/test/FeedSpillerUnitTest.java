@@ -29,14 +29,11 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.wicket.util.file.File;
 import org.junit.Assert;
-import org.junit.runner.RunWith;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-@RunWith(PowerMockRunner.class)
 public class FeedSpillerUnitTest extends TestCase {
     private static final int DEFAULT_FRAME_SIZE = 32768;
     private static final int NUM_FRAMES = 3096;

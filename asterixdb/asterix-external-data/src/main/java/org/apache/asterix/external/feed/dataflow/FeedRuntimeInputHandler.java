@@ -35,7 +35,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 /**
- * TODO: Add unit test cases for this class
+ * TODO: Add Failure cases unit tests for this class
  * Provides for error-handling and input-side buffering for a feed runtime.
  * .............______.............
  * ............|......|............
@@ -48,8 +48,9 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
 public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
     private static final Logger LOGGER = Logger.getLogger(FeedRuntimeInputHandler.class.getName());
-    private static final ByteBuffer POISON_PILL = ByteBuffer.allocate(0);
     private static final double MAX_SPILL_USED_BEFORE_RESUME = 0.8;
+    private static final boolean DEBUG = false;
+    private final Object mutex = new Object();
     private final FeedExceptionHandler exceptionHandler;
     private final FrameSpiller spiller;
     private final FeedPolicyAccessor fpa;
@@ -58,15 +59,16 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
     private final FrameTransporter consumer;
     private final Thread consumerThread;
     private final LinkedBlockingDeque<ByteBuffer> inbox;
-    private final ConcurrentFramePool memoryManager;
+    private final ConcurrentFramePool framePool;
     private Mode mode = Mode.PROCESS;
+    private int total = 0;
     private int numDiscarded = 0;
     private int numSpilled = 0;
     private int numProcessedInMemory = 0;
     private int numStalled = 0;
 
     public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
-            IFrameWriter writer, FeedPolicyAccessor fpa, FrameTupleAccessor fta, ConcurrentFramePool feedMemoryManager)
+            IFrameWriter writer, FeedPolicyAccessor fpa, FrameTupleAccessor fta, ConcurrentFramePool framePool)
             throws HyracksDataException {
         this.writer = writer;
         this.spiller =
@@ -76,13 +78,13 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                         fpa.getMaxSpillOnDisk());
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;
-        this.memoryManager = feedMemoryManager;
+        this.framePool = framePool;
         this.inbox = new LinkedBlockingDeque<>();
         this.consumer = new FrameTransporter();
-        this.consumerThread = new Thread();
+        this.consumerThread = new Thread(consumer);
         this.consumerThread.start();
         this.initialFrameSize = ctx.getInitialFrameSize();
-        this.frameAction = new FrameAction(inbox);
+        this.frameAction = new FrameAction();
     }
 
     @Override
@@ -101,15 +103,20 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
 
     @Override
     public void close() throws HyracksDataException {
-        inbox.add(POISON_PILL);
-        notify();
+        consumer.poison();
+        synchronized (mutex) {
+            if (DEBUG) {
+                LOGGER.info("Producer is waking up consumer");
+            }
+            mutex.notify();
+        }
         try {
             consumerThread.join();
         } catch (InterruptedException e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
         try {
-            memoryManager.release(inbox);
+            framePool.release(inbox);
         } catch (Throwable th) {
             LOGGER.log(Level.WARNING, th.getMessage(), th);
         }
@@ -124,8 +131,12 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
     @Override
     public void nextFrame(ByteBuffer frame) throws HyracksDataException {
         try {
+            total++;
             if (consumer.cause() != null) {
                 throw consumer.cause();
+            }
+            if (DEBUG) {
+                LOGGER.info("nextFrame() called. inputHandler is in mode: " + mode.toString());
             }
             switch (mode) {
                 case PROCESS:
@@ -148,25 +159,42 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
         }
     }
 
+    // For unit testing purposes
+    public int framesOnDisk() {
+        return spiller.remaining();
+    }
+
     private ByteBuffer getFreeBuffer(int frameSize) throws HyracksDataException {
         int numFrames = frameSize / initialFrameSize;
         if (numFrames == 1) {
-            return memoryManager.get();
+            return framePool.get();
         } else {
-            return memoryManager.get(frameSize);
+            return framePool.get(frameSize);
         }
     }
 
     private void discard(ByteBuffer frame) throws HyracksDataException {
+        if (DEBUG) {
+            LOGGER.info("starting discard(frame)");
+        }
         if (fpa.spillToDiskOnCongestion()) {
+            if (DEBUG) {
+                LOGGER.info("Spilling to disk is enabled. Will try that");
+            }
             if (spiller.spill(frame)) {
                 numSpilled++;
                 mode = Mode.SPILL;
                 return;
             }
         } else {
+            if (DEBUG) {
+                LOGGER.info("Spilling to disk is disabled. Will try to get a buffer");
+            }
             ByteBuffer next = getFreeBuffer(frame.capacity());
             if (next != null) {
+                if (DEBUG) {
+                    LOGGER.info("Was able to get a buffer");
+                }
                 numProcessedInMemory++;
                 next.put(frame);
                 inbox.offer(next);
@@ -174,102 +202,168 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                 return;
             }
         }
-        numDiscarded++;
+        if ((numDiscarded + 1.0) / total > fpa.getMaxFractionDiscard()) {
+            if (DEBUG) {
+                LOGGER.info("in discard(frame). Discard allowance has been consumed. --> Stalling");
+            }
+            stall(frame);
+        } else {
+            if (DEBUG) {
+                LOGGER.info("in discard(frame). So far, I have discarded " + numDiscarded);
+            }
+            numDiscarded++;
+        }
     }
 
-    private synchronized void exitProcessState(ByteBuffer frame) throws HyracksDataException {
+    private void exitProcessState(ByteBuffer frame) throws HyracksDataException {
         if (fpa.spillToDiskOnCongestion()) {
             mode = Mode.SPILL;
             spiller.open();
             spill(frame);
         } else {
+            if (DEBUG) {
+                LOGGER.info("Spilling is disabled --> discardOrStall(frame)");
+            }
             discardOrStall(frame);
         }
     }
 
     private void discardOrStall(ByteBuffer frame) throws HyracksDataException {
         if (fpa.discardOnCongestion()) {
-            numDiscarded++;
             mode = Mode.DISCARD;
             discard(frame);
         } else {
+            if (DEBUG) {
+                LOGGER.info("Discard is disabled --> stall(frame)");
+            }
             stall(frame);
         }
     }
 
     private void stall(ByteBuffer frame) throws HyracksDataException {
         try {
+            if (DEBUG) {
+                LOGGER.info("in stall(frame). So far, I have stalled " + numStalled);
+            }
             numStalled++;
             // If spilling is enabled, we wait on the spiller
             if (fpa.spillToDiskOnCongestion()) {
-                synchronized (spiller) {
-                    while (spiller.usedBudget() > MAX_SPILL_USED_BEFORE_RESUME) {
-                        spiller.wait();
-                    }
+                if (DEBUG) {
+                    LOGGER.info("in stall(frame). Spilling is enabled so we will attempt to spill");
                 }
+                waitforSpillSpace();
                 spiller.spill(frame);
-                synchronized (this) {
-                    notify();
+                numSpilled++;
+                synchronized (mutex) {
+                    if (DEBUG) {
+                        LOGGER.info("Producer is waking up consumer");
+                    }
+                    mutex.notify();
                 }
                 return;
             }
+            if (DEBUG) {
+                LOGGER.info("in stall(frame). Spilling is disabled. We will subscribe to frame pool");
+            }
             // Spilling is disabled, we subscribe to feedMemoryManager
             frameAction.setFrame(frame);
-            synchronized (frameAction) {
-                if (memoryManager.subscribe(frameAction)) {
-                    frameAction.wait();
-                }
+            framePool.subscribe(frameAction);
+            ByteBuffer temp = frameAction.retrieve();
+            inbox.put(temp);
+            numProcessedInMemory++;
+            if (DEBUG) {
+                LOGGER.info("stall(frame) has been completed. Notifying the consumer that a frame is ready");
             }
-            synchronized (this) {
-                notify();
+            synchronized (mutex) {
+                if (DEBUG) {
+                    LOGGER.info("Producer is waking up consumer");
+                }
+                mutex.notify();
             }
         } catch (InterruptedException e) {
             throw new HyracksDataException(e);
         }
     }
 
+    private void waitforSpillSpace() throws InterruptedException {
+        synchronized (spiller) {
+            while (spiller.usedBudget() > MAX_SPILL_USED_BEFORE_RESUME) {
+                if (DEBUG) {
+                    LOGGER.info("in stall(frame). Spilling has been consumed. We will wait for it to be less than "
+                            + MAX_SPILL_USED_BEFORE_RESUME + " consumed. Current consumption = "
+                            + spiller.usedBudget());
+                }
+                spiller.wait();
+            }
+        }
+    }
+
     private void process(ByteBuffer frame) throws HyracksDataException {
-        // Get a page from
-        ByteBuffer next = getFreeBuffer(frame.capacity());
+        // Get a page from frame pool
+        ByteBuffer next = (frame.capacity() <= framePool.getMaxFrameSize()) ? getFreeBuffer(frame.capacity()) : null;
         if (next != null) {
+            // Got a page from memory pool
             numProcessedInMemory++;
             next.put(frame);
-            inbox.offer(next);
-            if (inbox.size() == 1) {
-                synchronized (this) {
-                    notify();
-                }
+            try {
+                inbox.put(next);
+                notifyMemoryConsumer();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
             }
         } else {
-            // out of memory. we switch to next mode as per policy -- synchronized method
+            if (DEBUG) {
+                LOGGER.info("Couldn't allocate memory --> exitProcessState(frame)");
+            }
+            // Out of memory. we switch to next mode as per policy
             exitProcessState(frame);
+        }
+    }
+
+    private void notifyMemoryConsumer() {
+        if (inbox.size() == 1) {
+            synchronized (mutex) {
+                if (DEBUG) {
+                    LOGGER.info("Producer is waking up consumer");
+                }
+                mutex.notify();
+            }
         }
     }
 
     private void spill(ByteBuffer frame) throws HyracksDataException {
         if (spiller.switchToMemory()) {
-            synchronized (this) {
+            synchronized (mutex) {
                 // Check if there is memory
-                ByteBuffer next = getFreeBuffer(frame.capacity());
+                ByteBuffer next = null;
+                if (frame.capacity() <= framePool.getMaxFrameSize()) {
+                    next = getFreeBuffer(frame.capacity());
+                }
                 if (next != null) {
                     spiller.close();
                     numProcessedInMemory++;
                     next.put(frame);
                     inbox.offer(next);
+                    notifyMemoryConsumer();
                     mode = Mode.PROCESS;
                 } else {
-                    // spill. This will always succeed since spilled = 0 (must verify that budget can't be 0)
+                    // spill. This will always succeed since spilled = 0 (TODO must verify that budget can't be 0)
                     spiller.spill(frame);
                     numSpilled++;
-                    notify();
+                    if (DEBUG) {
+                        LOGGER.info("Producer is waking up consumer");
+                    }
+                    mutex.notify();
                 }
             }
         } else {
             // try to spill. If failed switch to either discard or stall
             if (spiller.spill(frame)) {
+                notifyDiskConsumer();
                 numSpilled++;
             } else {
                 if (fpa.discardOnCongestion()) {
+                    mode = Mode.DISCARD;
                     discard(frame);
                 } else {
                     stall(frame);
@@ -278,12 +372,15 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
         }
     }
 
-    public Mode getMode() {
-        return mode;
-    }
-
-    public synchronized void setMode(Mode mode) {
-        this.mode = mode;
+    private void notifyDiskConsumer() {
+        if (spiller.remaining() == 1) {
+            synchronized (mutex) {
+                if (DEBUG) {
+                    LOGGER.info("Producer is waking up consumer");
+                }
+                mutex.notify();
+            }
+        }
     }
 
     @Override
@@ -311,15 +408,22 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
 
     private class FrameTransporter implements Runnable {
         private volatile Throwable cause;
+        private int consumed = 0;
+        private boolean poisoned = false;
 
         public Throwable cause() {
             return cause;
+        }
+
+        public void poison() {
+            poisoned = true;
         }
 
         private Throwable consume(ByteBuffer frame) {
             while (frame != null) {
                 try {
                     writer.nextFrame(frame);
+                    consumed++;
                     frame = null;
                 } catch (HyracksDataException e) {
                     // It is fine to catch throwable here since this thread is always expected to terminate gracefully
@@ -340,7 +444,7 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
         public void run() {
             try {
                 ByteBuffer frame = inbox.poll();
-                while (frame != POISON_PILL) {
+                while (true) {
                     if (frame != null) {
                         try {
                             if (consume(frame) != null) {
@@ -348,7 +452,7 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                             }
                         } finally {
                             // Done with frame.
-                            memoryManager.release(frame);
+                            framePool.release(frame);
                         }
                     }
                     frame = inbox.poll();
@@ -366,13 +470,22 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                         writer.flush();
                         // At this point. We consumed all memory and spilled
                         // We can't assume the next will be in memory. what if there is 0 memory?
-                        synchronized (FeedRuntimeInputHandler.this) {
+                        synchronized (mutex) {
                             frame = inbox.poll();
                             if (frame == null) {
                                 // Nothing in memory
                                 if (spiller.switchToMemory()) {
+                                    if (poisoned) {
+                                        break;
+                                    }
+                                    if (DEBUG) {
+                                        LOGGER.info("Consumer is going to sleep");
+                                    }
                                     // Nothing in disk
-                                    FeedRuntimeInputHandler.this.wait();
+                                    mutex.wait();
+                                    if (DEBUG) {
+                                        LOGGER.info("Consumer is waking up");
+                                    }
                                 }
                             }
                         }
@@ -383,5 +496,18 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             }
             // cleanup will always be done through the close() call
         }
+
+        @Override
+        public String toString() {
+            return "consumed: " + consumed;
+        }
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public LinkedBlockingDeque<ByteBuffer> getInternalBuffer() {
+        return inbox;
     }
 }

@@ -48,7 +48,6 @@ import org.apache.asterix.external.parser.RecordWithMetadataParser;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -73,8 +72,8 @@ public class DataflowControllerProvider {
                                 DataflowUtils.getTupleForwarder(configuration, feedLogManager), dataParser,
                                 recordReader, ((IIndexingDatasource) recordReader).getIndexer());
                     } else if (isFeed) {
-                        FeedTupleForwarder tupleForwarder = (FeedTupleForwarder) DataflowUtils
-                                .getTupleForwarder(configuration, feedLogManager);
+                        FeedTupleForwarder tupleForwarder =
+                                (FeedTupleForwarder) DataflowUtils.getTupleForwarder(configuration, feedLogManager);
                         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(configuration);
                         boolean isRecordWithMeta = ExternalDataUtils.isRecordWithMeta(configuration);
                         if (isRecordWithMeta) {
@@ -108,7 +107,7 @@ public class DataflowControllerProvider {
                     if (isFeed) {
                         return new FeedStreamDataFlowController(ctx,
                                 (FeedTupleForwarder) DataflowUtils.getTupleForwarder(configuration, feedLogManager),
-                                feedLogManager, FeedUtils.getNumOfFields(configuration), streamParser, stream);
+                                feedLogManager, streamParser, stream);
                     } else {
                         return new StreamDataFlowController(ctx, DataflowUtils.getTupleForwarder(configuration, null),
                                 streamParser);

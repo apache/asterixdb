@@ -71,19 +71,6 @@ public class FrameTupleAppenderWrapper {
         FrameUtils.appendSkipEmptyFieldToWriter(outputWriter, frameTupleAppender, fieldSlots, bytes, offset, length);
     }
 
-    public void append(byte[] bytes, int offset, int length) throws HyracksDataException {
-        FrameUtils.appendToWriter(outputWriter, frameTupleAppender, bytes, offset, length);
-    }
-
-    public void append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset)
-            throws HyracksDataException {
-        FrameUtils.appendToWriter(outputWriter, frameTupleAppender, tupleAccessor, tStartOffset, tEndOffset);
-    }
-
-    public void append(IFrameTupleAccessor tupleAccessor, int tIndex) throws HyracksDataException {
-        FrameUtils.appendToWriter(outputWriter, frameTupleAppender, tupleAccessor, tIndex);
-    }
-
     public void appendConcat(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1, int tIndex1)
             throws HyracksDataException {
         FrameUtils.appendConcatToWriter(outputWriter, frameTupleAppender, accessor0, tIndex0, accessor1, tIndex1);

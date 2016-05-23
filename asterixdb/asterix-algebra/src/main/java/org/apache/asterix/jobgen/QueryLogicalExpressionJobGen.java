@@ -20,7 +20,6 @@ package org.apache.asterix.jobgen;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.asterix.external.library.ExternalFunctionDescriptorProvider;
 import org.apache.asterix.formats.base.IDataFormat;
@@ -147,12 +146,8 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             IDataFormat format = FormatUtils.getDefaultFormat();
             fd = format.resolveFunction(expr, env);
         } else {
-            try {
-                fd = ExternalFunctionDescriptorProvider
-                        .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
-            } catch (AsterixException ae) {
-                throw new AlgebricksException(ae);
-            }
+            fd = ExternalFunctionDescriptorProvider
+                    .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
         }
         return fd.createEvaluatorFactory(args);
     }

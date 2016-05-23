@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -30,13 +29,13 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 public class ExternalFunctionDescriptorProvider {
 
     public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
-            throws AsterixException {
+            throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
                 return new ExternalScalarFunctionDescriptor(finfo);
             case AGGREGATE:
             case UNNEST:
-                throw new AsterixException("Unsupported function kind :" + finfo.getKind());
+                throw new AlgebricksException("Unsupported function kind :" + finfo.getKind());
             default:
                 break;
         }

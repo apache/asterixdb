@@ -80,7 +80,6 @@ public class LogRecord implements ILogRecord {
     private int PKHashValue;
     private int PKValueSize;
     private ITupleReference PKValue;
-    private long prevLSN;
     private long resourceId;
     private int resourcePartition;
     private int logSize;
@@ -124,7 +123,6 @@ public class LogRecord implements ILogRecord {
     private final static int TYPE_LEN = Byte.BYTES;
     public final static int PKHASH_LEN = Integer.BYTES;
     public final static int PKSZ_LEN = Integer.BYTES;
-    private final static int PRVLSN_LEN = Long.BYTES;
     private final static int RS_PARTITION_LEN = Integer.BYTES;
     private final static int RSID_LEN = Long.BYTES;
     private final static int LOGRCD_SZ_LEN = Integer.BYTES;
@@ -136,7 +134,7 @@ public class LogRecord implements ILogRecord {
     private final static int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + JobId.BYTES;
     private final static int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN
             + PKSZ_LEN;
-    private final static int UPDATE_LSN_HEADER = PRVLSN_LEN + RSID_LEN + LOGRCD_SZ_LEN;
+    private final static int UPDATE_LSN_HEADER = RSID_LEN + LOGRCD_SZ_LEN;
     private final static int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
     private final static int REMOTE_FLUSH_LOG_EXTRA_FIELDS_LEN = Long.BYTES + Integer.BYTES + Integer.BYTES;
 
@@ -155,7 +153,6 @@ public class LogRecord implements ILogRecord {
             writePKValue(buffer);
         }
         if (logType == LogType.UPDATE) {
-            buffer.putLong(prevLSN);
             buffer.putLong(resourceId);
             buffer.putInt(logSize);
             buffer.putInt(fieldCnt);
@@ -305,7 +302,6 @@ public class LogRecord implements ILogRecord {
                 if (buffer.remaining() < UPDATE_LSN_HEADER + UPDATE_BODY_HEADER) {
                     return RecordReadStatus.TRUNCATED;
                 }
-                prevLSN = buffer.getLong();
                 resourceId = buffer.getLong();
                 logSize = buffer.getInt();
                 fieldCnt = buffer.getInt();
@@ -444,7 +440,6 @@ public class LogRecord implements ILogRecord {
             builder.append(" PKSize: ").append(PKValueSize);
         }
         if (logType == LogType.UPDATE) {
-            builder.append(" PrevLSN : ").append(prevLSN);
             builder.append(" ResourceId : ").append(resourceId);
         }
         return builder.toString();
@@ -525,16 +520,6 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public long getPrevLSN() {
-        return prevLSN;
-    }
-
-    @Override
-    public void setPrevLSN(long prevLSN) {
-        this.prevLSN = prevLSN;
-    }
-
-    @Override
     public long getResourceId() {
         return resourceId;
     }
@@ -559,10 +544,6 @@ public class LogRecord implements ILogRecord {
             serilizedSize += Integer.BYTES;
             //serialized node id String
             serilizedSize += Integer.BYTES + nodeId.length();
-        }
-        if (logSource == LogSource.REMOTE_RECOVERY) {
-            //for LSN;
-            serilizedSize += Long.BYTES;
         }
         serilizedSize -= CHKSUM_LEN;
         return serilizedSize;

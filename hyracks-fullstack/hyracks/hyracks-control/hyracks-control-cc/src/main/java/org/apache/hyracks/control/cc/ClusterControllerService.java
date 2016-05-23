@@ -249,10 +249,7 @@ public class ClusterControllerService implements IControllerService {
         workQueue.start();
         connectNCs();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
-        if (aep != null) {
-            // Sometimes, there is no application entry point. Check hyracks-client project
-            aep.startupCompleted();
-        }
+        notifyApplication();
     }
 
     private void startApplication() throws Exception {
@@ -288,9 +285,17 @@ public class ClusterControllerService implements IControllerService {
         }
     }
 
+    private void notifyApplication() throws Exception {
+        if (aep != null) {
+            // Sometimes, there is no application entry point. Check hyracks-client project
+            aep.startupCompleted();
+        }
+    }
+
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping ClusterControllerService");
+        stopApplication();
         webServer.stop();
         sweeper.cancel();
         workQueue.stop();
@@ -299,6 +304,12 @@ public class ClusterControllerService implements IControllerService {
         jobLog.close();
         clientIPC.stop();
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
+    }
+
+    private void stopApplication() throws Exception {
+        if (aep != null) {
+            aep.stop();
+        }
     }
 
     public ServerContext getServerContext() {

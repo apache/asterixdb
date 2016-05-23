@@ -66,4 +66,9 @@ public class SelectClause implements Clause {
         return distinct;
     }
 
+    @Override
+    public String toString() {
+        return "select " + (distinct ? "distinct " : "")
+                + (selectElement() ? "element " + String.valueOf(selectElement) : String.valueOf(selectRegular));
+    }
 }

@@ -30,6 +30,11 @@ public class MToNPartitioningWithMessageConnectorDescriptor extends MToNPartitio
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * This connector enable sending messages alongside data tuples. Messages are sent on flush() calls.
+     * It broadcasts messages to all consumers. If the message doesn't fit in the current frame for a specific
+     * receiver, the current frame is sent and a subsequent one with the message only is sent
+     */
     public MToNPartitioningWithMessageConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ITuplePartitionComputerFactory tpcf) {
         super(spec, tpcf);
@@ -38,7 +43,7 @@ public class MToNPartitioningWithMessageConnectorDescriptor extends MToNPartitio
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         return new PartitionWithMessageDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
                 tpcf.createPartitioner());
     }

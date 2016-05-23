@@ -25,6 +25,7 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FrameTupleAppender extends AbstractFrameAppender implements IFrameTupleAppender {
@@ -51,6 +52,30 @@ public class FrameTupleAppender extends AbstractFrameAppender implements IFrameT
             }
             System.arraycopy(bytes, offset, array, tupleDataEndOffset + fieldSlots.length * 4, length);
             tupleDataEndOffset += fieldSlots.length * 4 + length;
+            IntSerDeUtils.putInt(getBuffer().array(),
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            ++tupleCount;
+            IntSerDeUtils.putInt(getBuffer().array(), FrameHelper.getTupleCountOffset(frame.getFrameSize()),
+                    tupleCount);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean append(ITupleReference tuple) throws HyracksDataException {
+        int tupleSize = 0;
+        for (int i = 0; i < tuple.getFieldCount(); i++) {
+            tupleSize += tuple.getFieldLength(i);
+        }
+        if (canHoldNewTuple(tuple.getFieldCount(), tupleSize)) {
+            int offset = 0;
+            for (int i = 0; i < tuple.getFieldCount(); ++i) {
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, offset);
+                System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), array,
+                        tupleDataEndOffset + tuple.getFieldCount() * 4, tuple.getFieldLength(i));
+                offset += tuple.getFieldLength(i);
+            }
+            tupleDataEndOffset += tuple.getFieldCount() * 4 + tupleSize;
             IntSerDeUtils.putInt(getBuffer().array(),
                     FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
@@ -252,8 +277,8 @@ public class FrameTupleAppender extends AbstractFrameAppender implements IFrameT
             int fEndOffset = 0;
             for (int i = 0; i < fields.length; ++i) {
                 int fSrcStart = tStartOffset + fSrcSlotsLength + accessor.getFieldStartOffset(tIndex, fields[i]);
-                int fLen = accessor.getFieldEndOffset(tIndex, fields[i])
-                        - accessor.getFieldStartOffset(tIndex, fields[i]);
+                int fLen =
+                        accessor.getFieldEndOffset(tIndex, fields[i]) - accessor.getFieldStartOffset(tIndex, fields[i]);
                 System.arraycopy(accessor.getBuffer().array(), fSrcStart, array,
                         tupleDataEndOffset + fTargetSlotsLength + fStartOffset, fLen);
                 fEndOffset += fLen;

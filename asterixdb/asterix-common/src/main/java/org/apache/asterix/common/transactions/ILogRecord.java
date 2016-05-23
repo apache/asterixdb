@@ -34,7 +34,7 @@ public interface ILogRecord {
 
     public static final int JOB_TERMINATE_LOG_SIZE = 14; //JOB_COMMIT or ABORT log type
     public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 30;
-    public static final int UPDATE_LOG_BASE_SIZE = 59;
+    public static final int UPDATE_LOG_BASE_SIZE = 51;
     public static final int FLUSH_LOG_SIZE = 18;
     public static final int WAIT_LOG_SIZE = 14;
 
@@ -65,10 +65,6 @@ public interface ILogRecord {
     public int getPKHashValue();
 
     public void setPKHashValue(int PKHashValue);
-
-    public long getPrevLSN();
-
-    public void setPrevLSN(long prevLsn);
 
     public long getResourceId();
 

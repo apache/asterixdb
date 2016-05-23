@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 public class FrameSpiller {
     private static final Logger LOGGER = Logger.getLogger(FrameSpiller.class.getName());
     private static final int FRAMES_PER_FILE = 1024;
+    public static final double MAX_SPILL_USED_BEFORE_RESUME = 0.8;
 
     private final String fileNamePrefix;
     private final ArrayDeque<File> files = new ArrayDeque<>();
@@ -88,11 +89,11 @@ public class FrameSpiller {
     }
 
     public synchronized ByteBuffer next() throws HyracksDataException {
+        frame.reset();
+        if (totalReadCount == totalWriteCount) {
+            return null;
+        }
         try {
-            frame.reset();
-            if (totalReadCount == totalWriteCount) {
-                return null;
-            }
             if (currentReadFile == null) {
                 if (!files.isEmpty()) {
                     currentReadFile = files.pop();
@@ -126,6 +127,10 @@ public class FrameSpiller {
             return frame.getBuffer();
         } catch (Exception e) {
             throw new HyracksDataException(e);
+        } finally {
+            synchronized (this) {
+                notify();
+            }
         }
     }
 

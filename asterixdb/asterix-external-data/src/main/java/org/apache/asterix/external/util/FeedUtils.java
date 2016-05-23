@@ -32,13 +32,14 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
 import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FeedUtils {
     private static String prepareDataverseFeedName(String dataverseName, String feedName) {
@@ -49,8 +50,8 @@ public class FeedUtils {
             ClusterPartition partition) {
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
         String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
-        String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                partition.getPartitionId());
+        String storagePartitionPath =
+                StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition.getPartitionId());
         // Note: feed adapter instances in a single node share the feed logger
         // format: 'storage dir name'/partition_#/dataverse/feed/node
         File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator + nodeName);
@@ -88,20 +89,19 @@ public class FeedUtils {
                 feedLogFileSplit.getIODeviceId(), ctx.getIOManager()).getFile());
     }
 
-    public static void processFeedMessage(ByteBuffer input, ByteBuffer message, FrameTupleAccessor fta) {
+    public static void processFeedMessage(ByteBuffer input, VSizeFrame message, FrameTupleAccessor fta)
+            throws HyracksDataException {
         // read the message and reduce the number of tuples
         fta.reset(input);
         int tc = fta.getTupleCount() - 1;
         int offset = fta.getTupleStartOffset(tc);
         int len = fta.getTupleLength(tc);
-        message.clear();
-        message.put(input.array(), offset, len);
-        message.flip();
+        int newSize = FrameHelper.calcAlignedFrameSizeToStore(1, len, message.getMinSize());
+        message.ensureFrameSize(newSize);
+        message.getBuffer().clear();
+        message.getBuffer().put(input.array(), offset, len);
+        message.getBuffer().flip();
         IntSerDeUtils.putInt(input.array(), FrameHelper.getTupleCountOffset(input.capacity()), tc);
-    }
-
-    public static int getNumOfFields(Map<String, String> configuration) {
-        return 1;
     }
 
     public static String getFeedMetaTypeName(Map<String, String> configuration) {

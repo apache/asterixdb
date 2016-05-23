@@ -286,5 +286,10 @@
       <artifactId>asterix-external-data</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-test-support</artifactId>
+        <version>0.2.18-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

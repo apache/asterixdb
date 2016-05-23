@@ -49,4 +49,8 @@ public class FieldAccessor extends AbstractAccessor {
         return visitor.visit(this, arg);
     }
 
+    @Override
+    public String toString() {
+        return String.valueOf(expr) + "." + ident.toString();
+    }
 }

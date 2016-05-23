@@ -135,8 +135,7 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
         // Construct the select expression.
         SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-        SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
-        selectExpression.setSubquery(true);
+        SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
 
         // replace variable expressions with field access
         Map<VariableExpr, Expression> varExprMap = new HashMap<>();

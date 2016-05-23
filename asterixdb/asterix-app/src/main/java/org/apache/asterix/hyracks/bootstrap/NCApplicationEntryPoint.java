@@ -123,18 +123,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             }
 
             //do not attempt to perform remote recovery if this is a virtual NC
-            if (replicationEnabled && !virtualNC) {
+            if (autoFailover && !virtualNC) {
                 if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
-                    //Try to perform remote recovery
+                    //Start failback process
                     IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();
-                    if (autoFailover) {
-                        remoteRecoveryMgr.startFailbackProcess();
-                        systemState = SystemState.RECOVERING;
-                        pendingFailbackCompletion = true;
-                    } else {
-                        remoteRecoveryMgr.performRemoteRecovery();
-                        systemState = SystemState.HEALTHY;
-                    }
+                    remoteRecoveryMgr.startFailbackProcess();
+                    systemState = SystemState.RECOVERING;
+                    pendingFailbackCompletion = true;
                 }
             } else {
                 //recover if the system is corrupted by checking system state.

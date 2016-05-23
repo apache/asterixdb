@@ -90,15 +90,11 @@ public class LogManagerWithReplication extends LogManager {
 
     @Override
     protected synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
-        ITransactionContext txnCtx = null;
-
-        if (logRecord.getLogSource() == LogSource.LOCAL) {
-            if (logRecord.getLogType() != LogType.FLUSH) {
-                txnCtx = logRecord.getTxnCtx();
-                if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
-                    throw new ACIDException(
-                            "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
-                }
+        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH) {
+            ITransactionContext txnCtx = logRecord.getTxnCtx();
+            if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
+                throw new ACIDException(
+                        "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
             }
         }
 
@@ -112,11 +108,6 @@ public class LogManagerWithReplication extends LogManager {
                 getAndInitNewLargePage(logRecord.getLogSize());
             } else {
                 getAndInitNewPage();
-            }
-        }
-        if (logRecord.getLogSource() == LogSource.LOCAL) {
-            if (logRecord.getLogType() == LogType.UPDATE) {
-                logRecord.setPrevLSN(txnCtx.getLastLSN());
             }
         }
         appendPage.appendWithReplication(logRecord, appendLSN.get());

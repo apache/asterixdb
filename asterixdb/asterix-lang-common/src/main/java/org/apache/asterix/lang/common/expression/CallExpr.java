@@ -65,4 +65,9 @@ public class CallExpr extends AbstractExpression {
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
     }
+
+    @Override
+    public String toString() {
+        return "call " + String.valueOf(functionSignature);
+    }
 }

@@ -289,14 +289,9 @@ class ARecordCaster {
 
         // write the closed part
         for (int i = 0; i < fieldPermutation.length; i++) {
-            int pos = fieldPermutation[i];
-            IVisitablePointable field;
-            if (pos >= 0) {
-                field = fieldValues.get(pos);
-            } else {
-                field = nullReference;
-            }
-            IAType fType = cachedReqType.getFieldTypes()[i];
+            final int pos = fieldPermutation[i];
+            final IVisitablePointable field = pos >= 0 ? fieldValues.get(pos) : nullReference;
+            final IAType fType = cachedReqType.getFieldTypes()[i];
             nestedVisitorArg.second = fType;
 
             // recursively casting, the result of casting can always be thought

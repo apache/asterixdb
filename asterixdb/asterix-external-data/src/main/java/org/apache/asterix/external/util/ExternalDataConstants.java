@@ -120,7 +120,6 @@ public class ExternalDataConstants {
      * Builtin record readers
      */
     public static final String READER_HDFS = "hdfs";
-    public static final String READER_KV = "key-value";
     public static final String READER_TWITTER_PUSH = "twitter_push";
     public static final String READER_PUSH_TWITTER = "push_twitter";
     public static final String READER_TWITTER_PULL = "twitter_pull";

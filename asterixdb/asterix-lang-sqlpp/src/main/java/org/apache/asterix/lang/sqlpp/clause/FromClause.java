@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -47,5 +48,10 @@ public class FromClause implements Clause {
 
     public List<FromTerm> getFromTerms() {
         return fromTerms;
+    }
+
+    @Override
+    public String toString() {
+        return fromTerms.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
 }
