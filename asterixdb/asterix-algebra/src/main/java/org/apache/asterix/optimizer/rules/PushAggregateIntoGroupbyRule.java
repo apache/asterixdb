@@ -24,10 +24,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -80,8 +83,10 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
     private void removeRedundantListifies(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             Map<LogicalVariable, Integer> gbyAggVars, Map<LogicalVariable, GroupByOperator> gbyWithAgg,
             Map<LogicalVariable, Integer> gbyAggVarToPlanIndex) throws AlgebricksException {
-        for (LogicalVariable aggVar : gbyAggVars.keySet()) {
-            int occurs = gbyAggVars.get(aggVar);
+        List<Pair<GroupByOperator, Integer>> removeList = new ArrayList<>();
+        for (Map.Entry<LogicalVariable, Integer> aggVarEntry : gbyAggVars.entrySet()) {
+            LogicalVariable aggVar = aggVarEntry.getKey();
+            int occurs = aggVarEntry.getValue();
             if (occurs == 0) {
                 GroupByOperator gbyOp = gbyWithAgg.get(aggVar);
                 AggregateOperator aggOp = (AggregateOperator) gbyOp.getNestedPlans()
@@ -90,13 +95,16 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                 if (pos >= 0) {
                     aggOp.getVariables().remove(pos);
                     aggOp.getExpressions().remove(pos);
-                    List<LogicalVariable> producedVarsAtAgg = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> producedVarsAtAgg = new ArrayList<>();
                     VariableUtilities.getProducedVariablesInDescendantsAndSelf(aggOp, producedVarsAtAgg);
                     if (producedVarsAtAgg.isEmpty()) {
-                        gbyOp.getNestedPlans().remove(gbyAggVarToPlanIndex.get(aggVar));
+                        removeList.add(new Pair<>(gbyOp, gbyAggVarToPlanIndex.get(aggVar)));
                     }
                 }
             }
+        }
+        for (Pair<GroupByOperator, Integer> remove : removeList) {
+            remove.first.getNestedPlans().remove((int)remove.second);
         }
     }
 

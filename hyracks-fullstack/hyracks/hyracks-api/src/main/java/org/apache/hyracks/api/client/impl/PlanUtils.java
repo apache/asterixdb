@@ -29,7 +29,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class PlanUtils {
     public static void visit(JobSpecification spec, IOperatorDescriptorVisitor visitor) throws HyracksException {
-        Set<OperatorDescriptorId> seen = new HashSet<OperatorDescriptorId>();
+        Set<OperatorDescriptorId> seen = new HashSet<>();
         for (IOperatorDescriptor op : spec.getOperatorMap().values()) {
             visitOperator(visitor, seen, op);
         }
@@ -37,7 +37,7 @@ public class PlanUtils {
 
     private static void visitOperator(IOperatorDescriptorVisitor visitor, Set<OperatorDescriptorId> seen,
             IOperatorDescriptor op) throws HyracksException {
-        if (!seen.contains(op)) {
+        if (!seen.contains(op.getOperatorId())) {
             visitor.visit(op);
         }
         seen.add(op.getOperatorId());

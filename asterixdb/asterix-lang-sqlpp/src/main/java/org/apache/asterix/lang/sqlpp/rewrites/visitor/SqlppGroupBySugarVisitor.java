@@ -118,7 +118,7 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
         }
         Set<VariableExpr> definedVars = scopeChecker.getCurrentScope().getLiveVariables();
         Set<VariableExpr> vars = new HashSet<>(targetVars);
-        vars.remove(definedVars); // Exclude re-defined local variables.
+        vars.removeAll(definedVars); // Exclude re-defined local variables.
         Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
         if (!vars.containsAll(freeVars)) {
             return expr;

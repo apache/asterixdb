@@ -52,12 +52,13 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
-    private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents = new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
-    private final List<Mutable<ILogicalOperator>> roots = new ArrayList<Mutable<ILogicalOperator>>();
-    private final List<List<Mutable<ILogicalOperator>>> equivalenceClasses = new ArrayList<List<Mutable<ILogicalOperator>>>();
-    private final HashMap<Mutable<ILogicalOperator>, BitSet> opToCandidateInputs = new HashMap<Mutable<ILogicalOperator>, BitSet>();
-    private final HashMap<Mutable<ILogicalOperator>, MutableInt> clusterMap = new HashMap<Mutable<ILogicalOperator>, MutableInt>();
-    private final HashMap<Integer, BitSet> clusterWaitForMap = new HashMap<Integer, BitSet>();
+    private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents
+            = new HashMap<>();
+    private final List<Mutable<ILogicalOperator>> roots = new ArrayList<>();
+    private final List<List<Mutable<ILogicalOperator>>> equivalenceClasses = new ArrayList<>();
+    private final HashMap<Mutable<ILogicalOperator>, BitSet> opToCandidateInputs = new HashMap<>();
+    private final HashMap<Mutable<ILogicalOperator>, MutableInt> clusterMap = new HashMap<>();
+    private final HashMap<Integer, BitSet> clusterWaitForMap = new HashMap<>();
     private int lastUsedClusterId = 0;
 
     @Override
@@ -68,8 +69,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 && op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
             return false;
         }
-        if (!roots.contains(op)) {
-            roots.add(new MutableObject<ILogicalOperator>(op));
+        MutableObject<ILogicalOperator> mutableOp = new MutableObject<>(op);
+        if (!roots.contains(mutableOp)) {
+            roots.add(mutableOp);
         }
         return false;
     }
@@ -83,15 +85,15 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             return false;
         }
         boolean rewritten = false;
-        boolean changed = false;
-        if (roots.size() > 0) {
+        boolean changed;
+        if (!roots.isEmpty()) {
             do {
                 changed = false;
                 // applying the rewriting until fixpoint
                 topDownMaterialization(roots);
                 genCandidates(context);
                 removeTrivialShare();
-                if (equivalenceClasses.size() > 0) {
+                if (!equivalenceClasses.isEmpty()) {
                     changed = rewrite(context);
                 }
                 if (!rewritten) {
@@ -296,28 +298,28 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     private void topDownMaterialization(List<Mutable<ILogicalOperator>> tops) {
-        List<Mutable<ILogicalOperator>> candidates = new ArrayList<Mutable<ILogicalOperator>>();
-        List<Mutable<ILogicalOperator>> nextLevel = new ArrayList<Mutable<ILogicalOperator>>();
+        List<Mutable<ILogicalOperator>> candidates = new ArrayList<>();
+        List<Mutable<ILogicalOperator>> nextLevel = new ArrayList<>();
         for (Mutable<ILogicalOperator> op : tops) {
             for (Mutable<ILogicalOperator> opRef : op.getValue().getInputs()) {
                 List<Mutable<ILogicalOperator>> opRefList = childrenToParents.get(opRef);
                 if (opRefList == null) {
-                    opRefList = new ArrayList<Mutable<ILogicalOperator>>();
+                    opRefList = new ArrayList<>();
                     childrenToParents.put(opRef, opRefList);
                     nextLevel.add(opRef);
                 }
                 opRefList.add(op);
             }
-            if (op.getValue().getInputs().size() == 0) {
+            if (op.getValue().getInputs().isEmpty()) {
                 candidates.add(op);
             }
         }
-        if (equivalenceClasses.size() > 0) {
+        if (!equivalenceClasses.isEmpty()) {
             equivalenceClasses.get(0).addAll(candidates);
         } else {
             equivalenceClasses.add(candidates);
         }
-        if (nextLevel.size() > 0) {
+        if (!nextLevel.isEmpty()) {
             topDownMaterialization(nextLevel);
         }
     }
