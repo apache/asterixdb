@@ -234,8 +234,8 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new AlgebricksException("Global-Avg is not defined for values of type "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
+                throw new AlgebricksException("Intermediate/global-Avg is not defined for values of type "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[offset]));
             }
         }
     }

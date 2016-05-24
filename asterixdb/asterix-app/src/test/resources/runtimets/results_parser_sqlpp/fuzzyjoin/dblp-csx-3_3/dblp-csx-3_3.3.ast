@@ -149,7 +149,7 @@ FROM [  (
               )
 
             Orderby
-              FunctionCall fuzzyjoin.count@1[
+              FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
                   FieldAccessor [
@@ -245,7 +245,7 @@ Variable [ Name=$i ]
               )
 
             Orderby
-              FunctionCall fuzzyjoin.count@1[
+              FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
                   FieldAccessor [

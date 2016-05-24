@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 public class FunctionMapUtil {
 
     private final static String CORE_AGGREGATE_PREFIX = "coll_";
+    private final static String SQL_PREFIX = "sql-";
 
     // Maps from a SQL function name to an AQL function name (i.e., AsterixDB internal name).
     private static final Map<String, String> FUNCTION_NAME_MAP = new HashMap<>();
@@ -94,7 +95,8 @@ public class FunctionMapUtil {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
-        return new FunctionSignature(fs.getNamespace(), CORE_AGGREGATE_PREFIX + fs.getName(), fs.getArity());
+        return new FunctionSignature(fs.getNamespace(), CORE_AGGREGATE_PREFIX + SQL_PREFIX + fs.getName(),
+                fs.getArity());
     }
 
     /**

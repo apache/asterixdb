@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall TinySocial.count@1[
+    FunctionCall TinySocial.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

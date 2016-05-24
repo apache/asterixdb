@@ -1,0 +1,10 @@
+{ "average": 2009.0d, "count": 1, "sum": 2009, "organization": "Zuncan", "min": date("2009-12-13"), "max": date("2009-12-13") }
+{ "average": null, "count": 0, "sum": null, "organization": "Labzatron", "min": null, "max": null }
+{ "average": null, "count": 0, "sum": null, "organization": "Plexlane", "min": null, "max": null }
+{ "average": null, "count": 0, "sum": null, "organization": "jaydax", "min": null, "max": null }
+{ "average": null, "count": 0, "sum": null, "organization": "Codetechno", "min": null, "max": null }
+{ "average": null, "count": 0, "sum": null, "organization": "Hexviafind", "min": null, "max": null }
+{ "average": null, "count": 0, "sum": null, "organization": "Zamcorporation", "min": null, "max": null }
+{ "average": 2011.0d, "count": 1, "sum": 2011, "organization": "physcane", "min": date("2011-11-05"), "max": date("2011-11-05") }
+{ "average": null, "count": 0, "sum": null, "organization": "Kongreen", "min": null, "max": null }
+{ "average": 2010.0d, "count": 1, "sum": 2010, "organization": "geomedia", "min": date("2010-01-26"), "max": date("2010-01-26") }

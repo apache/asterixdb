@@ -92,7 +92,7 @@ Groupby
 
 Let Variable [ Name=$sig_sponsorship_count ]
   :=
-  FunctionCall events.count@1[
+  FunctionCall events.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
@@ -118,7 +118,7 @@ Let Variable [ Name=$by_chapter ]
       (
         LiteralExpr [STRING] [escount]
         :
-        FunctionCall events.count@1[
+        FunctionCall events.sql-count@1[
           (
             SELECT ELEMENT [
             FieldAccessor [

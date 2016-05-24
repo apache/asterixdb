@@ -21,24 +21,19 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
 /**
- *
  * An aggregate function may be executed in a "two step" mode. First the
  * "step-one" aggregates are run and then the results are passed to the
  * "step-two" aggregators. The convention is the following:
- *
  * 1. The step-one aggregate must be able to accept the same arguments as the
  * original aggregate function call.
- *
  * 2. The step-two aggregate must be a unary function that accepts as input the
  * output of the step-one aggregate.
- *
  */
 
 public class AggregateFunctionCallExpression extends AbstractFunctionCallExpression {
@@ -47,20 +42,9 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
     private IFunctionInfo stepOneAggregate;
     private IFunctionInfo stepTwoAggregate;
 
-    public AggregateFunctionCallExpression(IFunctionInfo finfo, boolean isTwoStep) {
-        super(FunctionKind.AGGREGATE, finfo);
-        this.twoStep = isTwoStep;
-    }
-
     public AggregateFunctionCallExpression(IFunctionInfo finfo, boolean isTwoStep,
             List<Mutable<ILogicalExpression>> arguments) {
         super(FunctionKind.AGGREGATE, finfo, arguments);
-        this.twoStep = isTwoStep;
-    }
-
-    public AggregateFunctionCallExpression(IFunctionInfo finfo, boolean isTwoStep,
-            Mutable<ILogicalExpression>... expressions) {
-        super(FunctionKind.AGGREGATE, finfo, expressions);
         this.twoStep = isTwoStep;
     }
 

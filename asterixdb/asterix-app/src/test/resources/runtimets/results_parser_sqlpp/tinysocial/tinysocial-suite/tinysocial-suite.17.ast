@@ -36,7 +36,7 @@ Groupby
 
 Let Variable [ Name=$c ]
   :=
-  FunctionCall TinySocial.count@1[
+  FunctionCall TinySocial.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

@@ -2349,6 +2349,11 @@
         <output-dir compare="Text">core-05</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="null">
+        <output-dir compare="Text">null</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">

@@ -50,7 +50,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cnt-orders]
     :
-    FunctionCall custorder.count@1[
+    FunctionCall custorder.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

@@ -44,7 +44,7 @@ public class SqlAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     @Override
     public void finishPartial(IPointable result) throws AlgebricksException {
-        finish(result);
+        finishPartialResults(result);
     }
 
     @Override
