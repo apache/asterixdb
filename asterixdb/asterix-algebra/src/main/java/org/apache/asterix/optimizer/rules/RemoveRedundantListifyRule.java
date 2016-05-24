@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -155,11 +156,28 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (varUsedAbove.contains(unnestedVar)) {
             return false;
         }
+        Mutable<ILogicalOperator> aggregateParentRef = opRef;
+        AbstractLogicalOperator r = op1;
+        boolean metAggregate = false;
+        while (r.getInputs().size() == 1) {
+            aggregateParentRef = r.getInputs().get(0);
+            r = (AbstractLogicalOperator) aggregateParentRef.getValue();
+            if (r.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                AssignOperator assign = (AssignOperator) r;
+                List<LogicalVariable> variables = assign.getVariables();
+                // The assign operator doesn't produce any variable that is used by the unnest.
+                if (variables.contains(unnestedVar)) {
+                    return false;
+                }
+            } else {
+                if (r.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                    metAggregate = true;
+                }
+                break;
+            }
+        }
 
-        Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
-        AbstractLogicalOperator r = (AbstractLogicalOperator) opRef2.getValue();
-
-        if (r.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+        if (!metAggregate) {
             return false;
         }
         AggregateOperator agg = (AggregateOperator) r;
@@ -185,9 +203,9 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         }
         LogicalVariable paramVar = ((VariableReferenceExpression) arg0).getVariableReference();
 
-        ArrayList<LogicalVariable> assgnVars = new ArrayList<LogicalVariable>(1);
+        List<LogicalVariable> assgnVars = new ArrayList<>(1);
         assgnVars.add(unnest1.getVariable());
-        ArrayList<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
+        List<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<>(1);
         assgnExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(paramVar)));
         AssignOperator assign = new AssignOperator(assgnVars, assgnExprs);
         assign.getInputs().add(agg.getInputs().get(0));
@@ -195,20 +213,22 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         LogicalVariable posVar = unnest1.getPositionalVariable();
 
         if (posVar == null) {
-            opRef.setValue(assign);
+            // Removes the aggregate operator.
+            aggregateParentRef.setValue(assign);
         } else {
-            ArrayList<LogicalVariable> raggVars = new ArrayList<LogicalVariable>(1);
+            List<LogicalVariable> raggVars = new ArrayList<>(1);
             raggVars.add(posVar);
-            ArrayList<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
+            List<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<>(1);
             StatefulFunctionCallExpression tidFun = new StatefulFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
             rAggExprs.add(new MutableObject<ILogicalExpression>(tidFun));
             RunningAggregateOperator rAgg = new RunningAggregateOperator(raggVars, rAggExprs);
             rAgg.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-            opRef.setValue(rAgg);
+            aggregateParentRef.setValue(rAgg);
             context.computeAndSetTypeEnvironmentForOperator(rAgg);
         }
-
+        // Removes the unnest operator.
+        opRef.setValue(unnest1.getInputs().get(0).getValue());
         return true;
     }
 
@@ -243,6 +263,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (agg.getInputs().size() == 0) {
             return false;
         }
+
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) agg.getInputs().get(0).getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             return false;
@@ -266,7 +287,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        ArrayList<LogicalVariable> assgnVars = new ArrayList<LogicalVariable>(1);
+        List<LogicalVariable> assgnVars = new ArrayList<>(1);
         assgnVars.add(aggVar);
         AssignOperator assign = new AssignOperator(assgnVars, scanFunc.getArguments());
         assign.getInputs().add(unnest.getInputs().get(0));
