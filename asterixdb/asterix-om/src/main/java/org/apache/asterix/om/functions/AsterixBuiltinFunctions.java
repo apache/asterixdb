@@ -77,7 +77,7 @@ import org.apache.asterix.om.typecomputer.impl.NumericRoundHalfToEven2TypeComput
 import org.apache.asterix.om.typecomputer.impl.NumericUnaryFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
-import org.apache.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
+import org.apache.asterix.om.typecomputer.impl.OrderedListConstructorTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAIntervalTypeComputer;
@@ -97,7 +97,7 @@ import org.apache.asterix.om.typecomputer.impl.SwitchCaseComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryMinusTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryStringInt64TypeComputer;
-import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorResultType;
+import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorTypeComputer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -792,7 +792,7 @@ public class AsterixBuiltinFunctions {
         addFunction(INT64_CONSTRUCTOR, AInt64TypeComputer.INSTANCE, true);
         addFunction(LEN, AInt64TypeComputer.INSTANCE, true);
         addFunction(LINE_CONSTRUCTOR, ALineTypeComputer.INSTANCE, true);
-        addPrivateFunction(LISTIFY, OrderedListConstructorResultType.INSTANCE, true);
+        addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null, true); // TODO
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true); // TODO
         addFunction(NULL_CONSTRUCTOR, AMissingTypeComputer.INSTANCE, true);
@@ -839,7 +839,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(STRING_EQUAL, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE, true);
 
-        addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE, true);
+        addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(POINT_CONSTRUCTOR, APointTypeComputer.INSTANCE, true);
         addFunction(POINT3D_CONSTRUCTOR, APoint3DTypeComputer.INSTANCE, true);
         addFunction(POLYGON_CONSTRUCTOR, APolygonTypeComputer.INSTANCE, true);
@@ -867,10 +867,10 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_SUM, NumericAggTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_SUM, NumericAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
@@ -889,16 +889,16 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_SUM, NumericAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_SQL_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_SQL_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
 
-        addPrivateFunction(SERIAL_AVG, ADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(SERIAL_GLOBAL_AVG, ADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SUM, NumericAggTypeComputer.INSTANCE, true);
@@ -940,7 +940,7 @@ public class AsterixBuiltinFunctions {
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE, true);
         addPrivateFunction(TYPE_OF, null, true);
-        addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE, true);
+        addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
 
         // records

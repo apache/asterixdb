@@ -22,8 +22,6 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,40 +30,45 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class UnorderedListConstructorResultType implements IResultTypeComputer {
+public abstract class ListConstructorTypeComputer implements IResultTypeComputer {
 
-    public static final UnorderedListConstructorResultType INSTANCE = new UnorderedListConstructorResultType();
+    protected ListConstructorTypeComputer() {
+    }
 
     @Override
-    public AUnorderedListType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
+    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
 
         /**
          * if type has been top-down propagated, use the enforced type
          */
-        AUnorderedListType reqType = (AUnorderedListType) TypeCastUtils.getRequiredType(f);
+        IAType reqType = TypeCastUtils.getRequiredType(f);
         if (reqType != null) {
             return reqType;
         }
+        return computeTypeFromItems(env, f);
+    }
 
+    private IAType computeTypeFromItems(IVariableTypeEnvironment env, AbstractFunctionCallExpression f)
+            throws AlgebricksException {
         IAType currentType = null;
         boolean any = false;
         for (int k = 0; k < f.getArguments().size(); k++) {
             IAType type = (IAType) env.getType(f.getArguments().get(k).getValue());
-            if (type.getTypeTag() == ATypeTag.UNION) {
-                type = ((AUnionType) type).getActualType();
-            }
-            if (currentType != null && !currentType.equals(type)) {
+            if (type.getTypeTag() == ATypeTag.UNION || (currentType != null && !currentType.equals(type))) {
                 any = true;
                 break;
             }
             currentType = type;
         }
         if (any || currentType == null) {
-            return new AUnorderedListType(BuiltinType.ANY, null);
+            return getListType(BuiltinType.ANY);
         } else {
-            return new AUnorderedListType(currentType, null);
+            return getListType(currentType);
         }
     }
+
+    protected abstract IAType getListType(IAType itemType);
+
 }

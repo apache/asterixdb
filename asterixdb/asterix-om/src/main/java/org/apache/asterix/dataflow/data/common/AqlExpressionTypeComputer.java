@@ -23,7 +23,6 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.AsterixExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -34,8 +33,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstan
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -50,30 +47,22 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
     public Object getType(ILogicalExpression expr, IMetadataProvider<?, ?> metadataProvider,
             IVariableTypeEnvironment env) throws AlgebricksException {
         switch (expr.getExpressionTag()) {
-            case CONSTANT: {
+            case CONSTANT:
                 return getTypeForConstant((ConstantExpression) expr, env);
-            }
-            case FUNCTION_CALL: {
+            case FUNCTION_CALL:
                 return getTypeForFunction((AbstractFunctionCallExpression) expr, env, metadataProvider);
-            }
-            case VARIABLE: {
+            case VARIABLE:
                 return env.getVarType(((VariableReferenceExpression) expr).getVariableReference());
-            }
-            default: {
+            default:
                 throw new IllegalStateException();
-            }
         }
     }
 
     private IAType getTypeForFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> mp) throws AlgebricksException {
         FunctionIdentifier fi = expr.getFunctionIdentifier();
-        ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
-        if (ck != null) {
-            return AUnionType.createUnknownableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
-        }
         // Note: built-in functions + udfs
-        IResultTypeComputer rtc = null;
+        IResultTypeComputer rtc;
         FunctionSignature signature = new FunctionSignature(fi.getNamespace(), fi.getName(), fi.getArity());
         if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
             rtc = AsterixBuiltinFunctions.getResultTypeComputer(fi);

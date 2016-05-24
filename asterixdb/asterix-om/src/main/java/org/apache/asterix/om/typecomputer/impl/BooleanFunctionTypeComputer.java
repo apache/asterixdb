@@ -19,6 +19,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -38,11 +39,11 @@ public class BooleanFunctionTypeComputer extends AbstractResultTypeComputer {
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         // Boolean type computer doesn't follow the null/missing-in/out semantics.
         return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(index, type),
-                types -> getResultType(types), false);
+                this::getResultType, false);
     }
 
     @Override
     protected IAType getResultType(IAType... strippedInputTypes) {
-        return BuiltinType.ABOOLEAN;
+        return AUnionType.createUnknownableType(BuiltinType.ABOOLEAN);
     }
 }

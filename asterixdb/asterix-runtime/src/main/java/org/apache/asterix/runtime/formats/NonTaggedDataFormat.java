@@ -61,7 +61,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
@@ -376,21 +375,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
-                AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
-                if (f.getArguments().size() == 0) {
-                    ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(null, null));
-                } else {
-                    IAType itemType = (IAType) context.getType(f.getArguments().get(0).getValue());
-                    if (itemType instanceof AUnionType) {
-                        if (((AUnionType) itemType).isUnknownableType()) {
-                            itemType = ((AUnionType) itemType).getActualType();
-                        } else {
-                            // Convert UNION types into ANY.
-                            itemType = BuiltinType.ANY;
-                        }
-                    }
-                    ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
-                }
+                ((ListifyAggregateDescriptor) fd).reset((AOrderedListType) context.getType(expr));
             }
         });
         functionTypeInferers.put(AsterixBuiltinFunctions.RECORD_MERGE, new FunctionTypeInferer() {
