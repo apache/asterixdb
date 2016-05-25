@@ -63,4 +63,8 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
         }
     }
 
+    @Override
+    public boolean containsType(IAType type) {
+        return isTyped() && itemType.getTypeName().equals(type.getTypeName());
+    }
 }

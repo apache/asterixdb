@@ -56,9 +56,10 @@ public class AUnionType extends AbstractComplexType {
         return isMissableType() || isNullableType();
     }
 
-    private boolean containsType(IAType t) {
+    @Override
+    public boolean containsType(IAType type) {
         for (int index = 0; index < unionList.size(); ++index) {
-            if (unionList.get(index) != null && unionList.get(index).equals(t)) {
+            if (unionList.get(index) != null && unionList.get(index).equals(type)) {
                 return true;
             }
         }
