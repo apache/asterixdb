@@ -16,24 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.util.bytes.HexPrinter;
 
-public class ADoublePrinter implements IPrinter {
+public class ABinaryHexPrinterFactory implements IPrinterFactory {
+    private static final long serialVersionUID = 1L;
 
-    public static final ADoublePrinter INSTANCE = new ADoublePrinter();
-
-    @Override
-    public void init() {
+    private ABinaryHexPrinterFactory() {
     }
 
+    public static final ABinaryHexPrinterFactory INSTANCE = new ABinaryHexPrinterFactory();
+
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        int validLength = ByteArrayPointable.getContentLength(b, s + 1);
+        int start = s + 1 + ByteArrayPointable.getNumberBytesToStoreMeta(validLength);
+        try {
+            ps.print("\"");
+            HexPrinter.printHexString(b, start, validLength, ps);
+            ps.print("\"");
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    };
+
     @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
-        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
+    public IPrinter createPrinter() {
+        return PRINTER;
     }
 }

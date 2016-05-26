@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABooleanPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ACirclePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADatePrinterFactory;
@@ -116,7 +116,7 @@ public class AqlADMPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
                 case BINARY:
-                    return ABinaryPrinterFactory.INSTANCE;
+                    return ABinaryHexPrinterFactory.INSTANCE;
                 case RECORD:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
                 case ORDEREDLIST:

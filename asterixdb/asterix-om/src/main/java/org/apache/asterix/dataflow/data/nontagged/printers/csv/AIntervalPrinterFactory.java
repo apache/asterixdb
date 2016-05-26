@@ -18,17 +18,23 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import java.io.PrintStream;
+
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AIntervalPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     public static final AIntervalPrinterFactory INSTANCE = new AIntervalPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        throw new HyracksDataException("'Interval' type unsupported for CSV output");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AIntervalPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

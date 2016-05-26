@@ -19,203 +19,37 @@
 
 package org.apache.asterix.om.pointables.printer.json.lossless;
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ABinaryHexPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ABooleanPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ACirclePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADatePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADateTimePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADayTimeDurationPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADoublePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADurationPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AFloatPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AInt16Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AInt32Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AInt64Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AInt8Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AIntervalPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ALinePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ANullPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.APoint3DPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.APointPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.APolygonPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ARectanglePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AStringPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ATimePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AUUIDPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AYearMonthDurationPrinter;
-import org.apache.asterix.om.pointables.AFlatValuePointable;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AObjectPrinterFactory;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.pointables.printer.AListPrinter;
+import org.apache.asterix.om.pointables.printer.ARecordPrinter;
+import org.apache.asterix.om.pointables.printer.AbstractPrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
  * visit a given record, list or flat value of a given type, and print it to a
  * PrintStream in JSON format.
  */
-public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
-
-    private final Map<IVisitablePointable, ARecordPrinter> raccessorToPrinter = new HashMap<IVisitablePointable, ARecordPrinter>();
-    private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<IVisitablePointable, AListPrinter>();
-
+public class APrintVisitor extends AbstractPrintVisitor {
     @Override
-    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
-        AListPrinter printer = laccessorToPrinter.get(accessor);
-        if (printer == null) {
-            printer = new AListPrinter(accessor.ordered());
-            laccessorToPrinter.put(accessor, printer);
-        }
-        try {
-            printer.printList(accessor, arg.first, this);
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
-        return null;
+    protected AListPrinter createListPrinter(AListVisitablePointable accessor) {
+        return accessor.ordered() ? new AListPrinter("{ \"orderedlist\": [ ", " ] }", ", ")
+                : new AListPrinter("{ \"unorderedlist\": [ ", " ] }", ", ");
     }
 
     @Override
-    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
-        ARecordPrinter printer = raccessorToPrinter.get(accessor);
-        if (printer == null) {
-            printer = new ARecordPrinter();
-            raccessorToPrinter.put(accessor, printer);
-        }
-        try {
-            printer.printRecord(accessor, arg.first, this);
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
-        return null;
+    protected ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor) {
+        return new ARecordPrinter("{ ", " }", ", ", ": ");
     }
 
     @Override
-    public Void visit(AFlatValuePointable accessor, Pair<PrintStream, ATypeTag> arg) {
-        try {
-            byte[] b = accessor.getByteArray();
-            int s = accessor.getStartOffset();
-            int l = accessor.getLength();
-            PrintStream ps = arg.first;
-            ATypeTag typeTag = arg.second;
-            switch (typeTag) {
-                case INT8: {
-                    AInt8Printer.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case INT16: {
-                    AInt16Printer.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case INT32: {
-                    AInt32Printer.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case INT64: {
-                    AInt64Printer.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case MISSING:
-                case NULL: {
-                    ANullPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case BOOLEAN: {
-                    ABooleanPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case FLOAT: {
-                    AFloatPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case DOUBLE: {
-                    ADoublePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case DATE: {
-                    ADatePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case TIME: {
-                    ATimePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case DATETIME: {
-                    ADateTimePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case DURATION: {
-                    ADurationPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case INTERVAL: {
-                    AIntervalPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case POINT: {
-                    APointPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case POINT3D: {
-                    APoint3DPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case LINE: {
-                    ALinePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case POLYGON: {
-                    APolygonPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case CIRCLE: {
-                    ACirclePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case RECTANGLE: {
-                    ARectanglePrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case STRING: {
-                    AStringPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case BINARY: {
-                    ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case YEARMONTHDURATION: {
-                    AYearMonthDurationPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case DAYTIMEDURATION: {
-                    ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case UUID: {
-                    AUUIDPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                case SHORTWITHOUTTYPEINFO: {
-                    ShortWithoutTypeInfoPrinter.INSTANCE.print(b, s, l, ps);
-                    break;
-                }
-                default: {
-                    throw new NotImplementedException("No printer for type " + typeTag);
-                }
-            }
-            return null;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+    protected boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
+            throws HyracksDataException {
+        return AObjectPrinterFactory.printFlatValue(typeTag, b, s, l, ps);
     }
 }

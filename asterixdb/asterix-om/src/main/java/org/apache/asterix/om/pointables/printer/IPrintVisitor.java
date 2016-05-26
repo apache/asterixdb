@@ -16,25 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.csv;
+package org.apache.asterix.om.pointables.printer;
+
+import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-public class AInt32Printer implements IPrinter {
-
-    public static final AInt32Printer INSTANCE = new AInt32Printer();
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
-        int d = AInt32SerializerDeserializer.getInt(b, s + 1);
-        ps.print(d);
-    }
+public interface IPrintVisitor extends IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
 }

@@ -31,7 +31,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-
     private AUnionType unionType;
 
     public ANullableFieldPrinterFactory(AUnionType unionType) {
@@ -61,8 +60,6 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
                     fieldPrinter.print(b, s, l, ps);
                 }
             }
-
         };
     }
-
 }

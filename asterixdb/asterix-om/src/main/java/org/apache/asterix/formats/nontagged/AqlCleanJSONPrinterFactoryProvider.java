@@ -20,7 +20,7 @@ package org.apache.asterix.formats.nontagged;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryHexPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABooleanPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ACirclePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ADatePrinterFactory;
@@ -116,7 +116,7 @@ public class AqlCleanJSONPrinterFactoryProvider implements IPrinterFactoryProvid
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
                 case BINARY:
-                    return ABinaryPrinterFactory.INSTANCE;
+                    return ABinaryHexPrinterFactory.INSTANCE;
                 case RECORD:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
                 case ORDEREDLIST:

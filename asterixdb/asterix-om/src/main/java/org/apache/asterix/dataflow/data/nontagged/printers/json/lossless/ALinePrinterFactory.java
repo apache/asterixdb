@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +29,21 @@ public class ALinePrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ALinePrinterFactory INSTANCE = new ALinePrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        ps.print("{ \"line\": ");
+        ps.print(" [ { \"point\": [");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
+        ps.print(", ");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 9));
+        ps.print("] }, { \"point\": [");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 17));
+        ps.print(", ");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 25));
+        ps.print("] } ] }");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return ALinePrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

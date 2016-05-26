@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +29,14 @@ public class ADayTimeDurationPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ADayTimeDurationPrinterFactory INSTANCE = new ADayTimeDurationPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        ps.print("day-time-duration(\"");
+        PrintTools.printDayTimeDurationString(b, s, l, ps);
+        ps.print("\")");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return ADayTimeDurationPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

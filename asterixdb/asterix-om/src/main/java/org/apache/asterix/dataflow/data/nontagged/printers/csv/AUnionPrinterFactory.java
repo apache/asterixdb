@@ -41,7 +41,6 @@ public class AUnionPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-
         return new IPrinter() {
 
             private IPrinter[] printers;
@@ -73,5 +72,4 @@ public class AUnionPrinterFactory implements IPrinterFactory {
             }
         };
     }
-
 }

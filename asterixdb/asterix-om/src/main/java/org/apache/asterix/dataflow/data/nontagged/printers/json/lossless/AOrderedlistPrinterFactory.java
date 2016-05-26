@@ -36,7 +36,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class AOrderedlistPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-    private AOrderedListType orderedlistType;
+    private final AOrderedListType orderedlistType;
 
     public AOrderedlistPrinterFactory(AOrderedListType orderedlistType) {
         this.orderedlistType = orderedlistType;
@@ -44,16 +44,14 @@ public class AOrderedlistPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-
         PointableAllocator allocator = new PointableAllocator();
-        final IAType inputType = orderedlistType == null ? DefaultOpenFieldType
-                .getDefaultOpenFieldType(ATypeTag.ORDEREDLIST) : orderedlistType;
+        final IAType inputType = orderedlistType == null
+                ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.ORDEREDLIST) : orderedlistType;
         final IVisitablePointable listAccessor = allocator.allocateListValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
-        final Pair<PrintStream, ATypeTag> arg = new Pair<PrintStream, ATypeTag>(null, null);
+        final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);
 
         return new IPrinter() {
-
             @Override
             public void init() {
                 arg.second = inputType.getTypeTag();

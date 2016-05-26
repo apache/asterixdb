@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.om.pointables.printer.json.lossless;
+package org.apache.asterix.om.pointables.printer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -31,50 +31,45 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
- * This class is to print the content of a list. It is ONLY visible to
- * APrintVisitor.
+ * This class is to print the content of a list.
  */
-class AListPrinter {
-    private static String BEGIN = "{ \"unorderedlist\": [ ";
-    private static String BEGIN_ORDERED = "{ \"orderedlist\": [ ";
-    private static String END = " ] }";
-    private static String COMMA = ", ";
+public class AListPrinter {
+    private final String startList;
+    private final String endList;
+    private final String separator;
 
-    private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);
-    private String begin = BEGIN;
+    private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<>(null, null);
 
-    public AListPrinter(boolean ordered) {
-        if (ordered) {
-            begin = BEGIN_ORDERED;
-        }
+    public AListPrinter(String startList, String endList, String separator) {
+        this.startList = startList;
+        this.endList = endList;
+        this.separator = separator;
     }
 
-    public void printList(AListVisitablePointable listAccessor, PrintStream ps, APrintVisitor visitor)
+    public void printList(AListVisitablePointable listAccessor, PrintStream ps, IPrintVisitor visitor)
             throws IOException, AsterixException {
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
 
-        // print the beginning part
-        ps.print(begin);
+        ps.print(startList);
 
         // print item 0 to n-2
-        for (int i = 0; i < items.size() - 1; i++) {
+        final int size = items.size();
+        for (int i = 0; i < size - 1; i++) {
             printItem(visitor, itemTags, items, i);
-            // print the comma
-            ps.print(COMMA);
+            ps.print(separator);
         }
 
         // print item n-1
-        if (items.size() > 0) {
-            printItem(visitor, itemTags, items, items.size() - 1);
+        if (size > 0) {
+            printItem(visitor, itemTags, items, size - 1);
         }
 
-        // print the end part
-        ps.print(END);
+        ps.print(endList);
     }
 
-    private void printItem(APrintVisitor visitor, List<IVisitablePointable> itemTags, List<IVisitablePointable> items,
+    private void printItem(IPrintVisitor visitor, List<IVisitablePointable> itemTags, List<IVisitablePointable> items,
             int i) throws AsterixException {
         IVisitablePointable itemTypeTag = itemTags.get(i);
         IVisitablePointable item = items.get(i);

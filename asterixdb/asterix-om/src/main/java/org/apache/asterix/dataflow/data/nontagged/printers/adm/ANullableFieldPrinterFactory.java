@@ -61,8 +61,6 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
                     fieldPrinter.print(b, s, l, ps);
                 }
             }
-
         };
     }
-
 }

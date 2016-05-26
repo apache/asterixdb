@@ -18,17 +18,145 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.pointables.printer.IPrintVisitor;
+import org.apache.asterix.om.pointables.printer.json.lossless.APrintVisitor;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     public static final AObjectPrinterFactory INSTANCE = new AObjectPrinterFactory();
 
-    @Override
-    public IPrinter createPrinter() {
-        return AObjectPrinter.INSTANCE;
+    public static boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
+            throws HyracksDataException {
+        switch (typeTag) {
+            case INT8:
+                AInt8PrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case INT16:
+                AInt16PrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case INT32:
+                AInt32PrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case INT64:
+                AInt64PrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case MISSING:
+            case NULL:
+                ANullPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case BOOLEAN:
+                ABooleanPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case FLOAT:
+                AFloatPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case DOUBLE:
+                ADoublePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case DATE:
+                ADatePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case TIME:
+                ATimePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case DATETIME:
+                ADateTimePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case DURATION:
+                ADurationPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case YEARMONTHDURATION:
+                AYearMonthDurationPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case DAYTIMEDURATION:
+                ADayTimeDurationPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case INTERVAL:
+                AIntervalPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case POINT:
+                APointPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case POINT3D:
+                APoint3DPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case LINE:
+                ALinePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case POLYGON:
+                APolygonPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case CIRCLE:
+                ACirclePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case RECTANGLE:
+                ARectanglePrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case STRING:
+                AStringPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case BINARY:
+                ABinaryHexPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            case UUID:
+                AUUIDPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
+            default:
+                return false;
+        }
     }
 
+    @Override
+    public IPrinter createPrinter() {
+        final ARecordVisitablePointable rPointable = new ARecordVisitablePointable(
+                DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        final AListVisitablePointable olPointable = new AListVisitablePointable(
+                DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
+        final AListVisitablePointable ulPointable = new AListVisitablePointable(
+                DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
+        final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
+
+        final IPrintVisitor visitor = new APrintVisitor();
+
+        return (byte[] b, int s, int l, PrintStream ps) -> {
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
+            if (!printFlatValue(typeTag, b, s, l, ps)) {
+                streamTag.first = ps;
+                streamTag.second = typeTag;
+                try {
+                    switch (typeTag) {
+                        case RECORD:
+                            rPointable.set(b, s, l);
+                            visitor.visit(rPointable, streamTag);
+                            break;
+                        case ORDEREDLIST:
+                            olPointable.set(b, s, l);
+                            visitor.visit(olPointable, streamTag);
+                            break;
+                        case UNORDEREDLIST:
+                            ulPointable.set(b, s, l);
+                            visitor.visit(ulPointable, streamTag);
+                            break;
+                        default:
+                            throw new HyracksDataException("No printer for type " + typeTag);
+                    }
+                } catch (AsterixException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+        };
+    }
 }

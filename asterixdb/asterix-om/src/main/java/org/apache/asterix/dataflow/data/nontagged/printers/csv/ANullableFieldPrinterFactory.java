@@ -64,5 +64,4 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
         };
     }
-
 }

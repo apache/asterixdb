@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +29,11 @@ public class ABooleanPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ABooleanPrinterFactory INSTANCE = new ABooleanPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
+            .print(ABooleanSerializerDeserializer.getBoolean(b, s + 1));
+
     @Override
     public IPrinter createPrinter() {
-        return ABooleanPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

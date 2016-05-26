@@ -22,8 +22,10 @@ import java.io.PrintStream;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IPrinter {
-    void init() throws HyracksDataException;
+    default void init() throws HyracksDataException {
+    }
 
     void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException;
 }

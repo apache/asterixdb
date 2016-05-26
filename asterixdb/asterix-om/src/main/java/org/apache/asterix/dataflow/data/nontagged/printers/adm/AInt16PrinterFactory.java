@@ -18,17 +18,32 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
+import java.io.IOException;
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AInt16PrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
+    private static final String SUFFIX_STRING = "i16";
     public static final AInt16PrinterFactory INSTANCE = new AInt16PrinterFactory();
+
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        try {
+            WriteValueTools.writeInt(AInt16SerializerDeserializer.getShort(b, s + 1), ps);
+            WriteValueTools.writeUTF8StringNoQuotes(SUFFIX_STRING, ps);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    };
 
     @Override
     public IPrinter createPrinter() {
-        return AInt16Printer.INSTANCE;
+        return PRINTER;
     }
-
 }

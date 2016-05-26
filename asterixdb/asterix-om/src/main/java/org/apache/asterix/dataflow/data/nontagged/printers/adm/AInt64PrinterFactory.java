@@ -18,17 +18,30 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
+import java.io.IOException;
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AInt64PrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     public static final AInt64PrinterFactory INSTANCE = new AInt64PrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        try {
+            WriteValueTools.writeLong(AInt64SerializerDeserializer.getLong(b, s + 1), ps);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AInt64Printer.INSTANCE;
+        return PRINTER;
     }
-
 }

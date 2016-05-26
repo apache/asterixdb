@@ -18,17 +18,29 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.IOException;
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AStringPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     public static final AStringPrinterFactory INSTANCE = new AStringPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        try {
+            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AStringPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

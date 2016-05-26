@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.om.pointables.printer.csv;
+package org.apache.asterix.om.pointables.printer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -31,21 +31,26 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
- * This class is to print the content of a record. It is ONLY visible to
- * APrintVisitor.
+ * This class is to print the content of a record.
  */
-class ARecordPrinter {
-    // QQQ Might we want to make this a configurable delimiter?
-    private static String COMMA = ",";
+public class ARecordPrinter {
+    private final String startRecord;
+    private final String endRecord;
+    private final String fieldSeparator;
+    private final String fieldNameSeparator;
 
-    private final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<PrintStream, ATypeTag>(null, ATypeTag.STRING);
-    private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);
+    private final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<>(null, ATypeTag.STRING);
+    private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<>(null, null);
 
-    public ARecordPrinter() {
-
+    public ARecordPrinter(final String startRecord, final String endRecord, final String fieldSeparator,
+            final String fieldNameSeparator) {
+        this.startRecord = startRecord;
+        this.endRecord = endRecord;
+        this.fieldSeparator = fieldSeparator;
+        this.fieldNameSeparator = fieldNameSeparator;
     }
 
-    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor)
+    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
             throws IOException, AsterixException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
@@ -54,20 +59,24 @@ class ARecordPrinter {
         nameVisitorArg.first = ps;
         itemVisitorArg.first = ps;
 
+        ps.print(startRecord);
+
         // print field 0 to n-2
-        for (int i = 0; i < fieldNames.size() - 1; i++) {
+        final int size = fieldNames.size();
+        for (int i = 0; i < size - 1; i++) {
             printField(ps, visitor, fieldNames, fieldTags, fieldValues, i);
-            // print the comma
-            ps.print(COMMA);
+            ps.print(fieldSeparator);
         }
 
         // print field n-1
-        if (fieldValues.size() > 0) {
-            printField(ps, visitor, fieldNames, fieldTags, fieldValues, fieldValues.size() - 1);
+        if (size > 0) {
+            printField(ps, visitor, fieldNames, fieldTags, fieldValues, size - 1);
         }
+
+        ps.print(endRecord);
     }
 
-    private void printField(PrintStream ps, APrintVisitor visitor, List<IVisitablePointable> fieldNames,
+    private void printField(PrintStream ps, IPrintVisitor visitor, List<IVisitablePointable> fieldNames,
             List<IVisitablePointable> fieldTags, List<IVisitablePointable> fieldValues, int i) throws AsterixException {
         IVisitablePointable itemTypeTag = fieldTags.get(i);
         IVisitablePointable item = fieldValues.get(i);
@@ -75,6 +84,11 @@ class ARecordPrinter {
                 .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
         itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
 
+        if (fieldNameSeparator != null) {
+            // print field name
+            fieldNames.get(i).accept(visitor, nameVisitorArg);
+            ps.print(fieldNameSeparator);
+        }
         // print field value
         item.accept(visitor, itemVisitorArg);
     }
