@@ -100,7 +100,9 @@ public class NCServiceIT {
     private static Process invoke(String logfile, String... args) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.redirectErrorStream(true);
-        File log = new File(LOG_DIR, logfile);
+        File logDir = new File(LOG_DIR);
+        logDir.mkdirs();
+        File log = new File(logDir, logfile);
         log.delete();
         pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         Process p = pb.start();
