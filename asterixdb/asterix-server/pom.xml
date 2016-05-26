@@ -105,6 +105,13 @@
                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </daemon>
+            <daemon>
+              <id>asterixncservice</id>
+              <mainClass>org.apache.hyracks.control.nc.service.NCService</mainClass>
+              <platforms>
+                <platform>booter-windows</platform>
+              </platforms>
+            </daemon>
           </daemons>
         </configuration>
         <executions>

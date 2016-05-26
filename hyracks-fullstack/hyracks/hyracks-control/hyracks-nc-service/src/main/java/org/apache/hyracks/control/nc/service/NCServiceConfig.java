@@ -22,8 +22,8 @@ import org.apache.hyracks.control.common.controllers.IniUtils;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.Option;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 
 /**
  * Command-line arguments for NC Service.
@@ -47,9 +47,9 @@ public class NCServiceConfig {
             usage = "Port to listen on for connections from CC (default: 9090)")
     public int port = 9090;
 
-    @Option(name = "-command", required = false,
-            usage = "NC command to run (default: 'hyracksnc' on PATH)")
-    public String command = "hyracksnc";
+    @Option(name = "-logdir", required = false,
+            usage = "Directory to log NC output ('-' for stdout of NC service; default: $app.home/logs)")
+    public String logdir = null;
 
     private Ini ini = null;
 
@@ -61,6 +61,7 @@ public class NCServiceConfig {
         ini = IniUtils.loadINIFile(configFile);
         address = IniUtils.getString(ini, "ncservice", "address", address);
         port = IniUtils.getInt(ini, "ncservice", "port", port);
+        logdir = IniUtils.getString(ini, "ncservice", "logdir", logdir);
     }
 
     /**
@@ -73,6 +74,8 @@ public class NCServiceConfig {
         if (configFile != null) {
             loadINIFile();
         }
-        // No defaults necessary beyond the static ones for this config
+        if (logdir == null) {
+            logdir = System.getProperty("app.home", System.getProperty("user.home")) + File.separator + "logs";
+        }
     }
 }
