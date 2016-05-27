@@ -35,7 +35,7 @@ import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManage
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
-import org.apache.hyracks.dataflow.std.join.MergeStatus.BranchStatus;
+import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
@@ -46,6 +46,10 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  * The right stream spills to memory and pause when memory is full.
  */
 public class MergeJoiner implements IMergeJoiner {
+
+    private static final int JOIN_PARTITIONS = 2;
+    private static final int LEFT_PARTITION = 0;
+    private static final int RIGHT_PARTITION = 1;
 
     private final ITupleAccessor accessorLeft;
     private final ITupleAccessor accessorRight;
@@ -97,7 +101,7 @@ public class MergeJoiner implements IMergeJoiner {
 
         // Run File and frame cache (left buffer)
         leftStreamIndex = TupleAccessor.UNSET;
-        runFileStream = new RunFileStream(ctx, "left", status);
+        runFileStream = new RunFileStream(ctx, "left", status.branch[LEFT_PARTITION]);
 
         // Result
         resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
@@ -143,20 +147,20 @@ public class MergeJoiner implements IMergeJoiner {
         boolean loaded = true;
         if (accessorRight != null && accessorRight.exists()) {
             // Still processing frame.
-        } else if (status.rightHasMore) {
+        } else if (status.branch[RIGHT_PARTITION].hasMore()) {
             status.continueRightLoad = true;
             locks.getRight(partition).signal();
             try {
                 while (status.continueRightLoad
-                        && status.getRightStatus().isEqualOrBefore(BranchStatus.DATA_PROCESSING)) {
+                        && status.branch[RIGHT_PARTITION].getStatus().isEqualOrBefore(Stage.DATA_PROCESSING)) {
                     locks.getLeft(partition).await();
                 }
             } catch (InterruptedException e) {
                 throw new HyracksDataException(
                         "SortMergeIntervalJoin interrupted exception while attempting to load right tuple", e);
             }
-            if (!accessorRight.exists() && status.getRightStatus() == BranchStatus.CLOSED) {
-                status.rightHasMore = false;
+            if (!accessorRight.exists() && status.branch[RIGHT_PARTITION].getStatus() == Stage.CLOSED) {
+                status.branch[RIGHT_PARTITION].noMore();
                 loaded = false;
             }
         } else {
@@ -173,7 +177,7 @@ public class MergeJoiner implements IMergeJoiner {
      */
     private boolean loadLeftTuple() throws HyracksDataException {
         boolean loaded = true;
-        if (status.isRunFileReading()) {
+        if (status.branch[LEFT_PARTITION].isRunFileReading()) {
             if (!accessorLeft.exists()) {
                 if (!runFileStream.loadNextBuffer(accessorLeft)) {
                     if (memoryHasTuples()) {
@@ -191,13 +195,13 @@ public class MergeJoiner implements IMergeJoiner {
                 }
             }
         } else {
-            if (!status.leftHasMore && status.isRunFileWriting()) {
+            if (!status.branch[LEFT_PARTITION].hasMore() && status.branch[LEFT_PARTITION].isRunFileWriting()) {
                 // Finished left stream. Start the replay.
                 runFileStream.flushAndStopRunFile(accessorLeft);
                 flushMemory();
                 leftStreamIndex = accessorLeft.getTupleId();
                 runFileStream.openRunFile(accessorLeft);
-            } else if (!status.leftHasMore || !accessorLeft.exists()) {
+            } else if (!status.branch[LEFT_PARTITION].hasMore() || !accessorLeft.exists()) {
                 loaded = false;
             }
         }
@@ -216,8 +220,8 @@ public class MergeJoiner implements IMergeJoiner {
      */
     @Override
     public void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException {
-        while (loadLeftTuple() && (status.rightHasMore || memoryHasTuples())) {
-            if (loadRightTuple() && !status.isRunFileWriting()
+        while (loadLeftTuple() && (status.branch[RIGHT_PARTITION].hasMore() || memoryHasTuples())) {
+            if (loadRightTuple() && !status.branch[LEFT_PARTITION].isRunFileWriting()
                     && mjc.checkToLoadNextRightTuple(accessorLeft, accessorRight)) {
                 // *********************
                 // Right side from stream
@@ -239,7 +243,7 @@ public class MergeJoiner implements IMergeJoiner {
                 // Left side from stream or disk
                 // *********************
                 // Write left tuple to run file
-                if (status.isRunFileWriting()) {
+                if (status.branch[LEFT_PARTITION].isRunFileWriting()) {
                     // TODO Add to the run file only it can match with future right tuples.
                     runFileStream.addToRunFile(accessorLeft);
                 }
@@ -263,7 +267,7 @@ public class MergeJoiner implements IMergeJoiner {
                 accessorLeft.next();
 
                 // Memory is empty and we can start processing the run file.
-                if (!memoryHasTuples() && status.isRunFileWriting()) {
+                if (!memoryHasTuples() && status.branch[LEFT_PARTITION].isRunFileWriting()) {
                     runFileStream.flushAndStopRunFile(accessorLeft);
                     flushMemory();
                     leftStreamIndex = accessorLeft.getTupleId();

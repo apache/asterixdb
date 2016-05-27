@@ -20,7 +20,9 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.io.Serializable;
 
-public class MergeBranchStatus implements Serializable {
+import org.apache.hyracks.dataflow.std.join.IRunFileStreamStatus;
+
+public class MergeBranchStatus implements IRunFileStreamStatus, Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum Stage {
@@ -42,26 +44,23 @@ public class MergeBranchStatus implements Serializable {
     private boolean runFileWriting = false;
     private boolean runFileReading = false;
 
-    public MergeBranchStatus() {
-    }
-
     public Stage getStatus() {
         return stage;
     }
 
-    public void openLeft() {
+    public void setStageOpen() {
         stage = Stage.OPENED;
     }
 
-    public void dataLeft() {
+    public void setStageData() {
         stage = Stage.DATA_PROCESSING;
     }
 
-    public void joinLeft() {
+    public void setStageJoin() {
         stage = Stage.JOIN_PROCESSING;
     }
 
-    public void closeLeft() {
+    public void setStageClose() {
         stage = Stage.CLOSED;
     }
 
@@ -73,18 +72,22 @@ public class MergeBranchStatus implements Serializable {
         this.hasMore = false;
     }
 
+    @Override
     public boolean isRunFileWriting() {
         return runFileWriting;
     }
 
+    @Override
     public void setRunFileWriting(boolean runFileWriting) {
         this.runFileWriting = runFileWriting;
     }
 
+    @Override
     public boolean isRunFileReading() {
         return runFileReading;
     }
 
+    @Override
     public void setRunFileReading(boolean runFileReading) {
         this.runFileReading = runFileReading;
     }

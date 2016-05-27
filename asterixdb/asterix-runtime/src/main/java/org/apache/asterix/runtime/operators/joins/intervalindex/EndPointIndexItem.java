@@ -29,6 +29,30 @@ public class EndPointIndexItem implements Serializable {
     public static final byte START_POINT = 0;
     public static final byte END_POINT = 1;
 
+    public static final Comparator<EndPointIndexItem> EndPointAscComparator = new Comparator<EndPointIndexItem>() {
+        @Override
+        public int compare(EndPointIndexItem epi1, EndPointIndexItem epi2) {
+            int c = (int) (epi1.getPoint() - epi2.getPoint());
+            if (c == 0) {
+                c = epi1.getStart() - epi2.getStart();
+            }
+            return c;
+        }
+
+    };
+
+    public static final Comparator<EndPointIndexItem> EndPointDescComparator = new Comparator<EndPointIndexItem>() {
+        @Override
+        public int compare(EndPointIndexItem epi1, EndPointIndexItem epi2) {
+            int c = (int) (epi2.getPoint() - epi1.getPoint());
+            if (c == 0) {
+                c = epi2.getStart() - epi1.getStart();
+            }
+            return c;
+        }
+
+    };
+
     private TuplePointer tp;
     private byte start;
     private long point;
@@ -63,31 +87,9 @@ public class EndPointIndexItem implements Serializable {
         return point;
     }
 
+    @Override
     public String toString() {
         return "EndPointIndexItem " + tp + " " + (start == START_POINT ? "start" : "end") + ": " + point;
     }
 
-    public static Comparator<EndPointIndexItem> EndPointAscComparator = new Comparator<EndPointIndexItem>() {
-
-        public int compare(EndPointIndexItem epi1, EndPointIndexItem epi2) {
-            int c = (int) (epi1.getPoint() - epi2.getPoint());
-            if (c == 0) {
-                c = (int) (epi1.getStart() - epi2.getStart());
-            }
-            return c;
-        }
-
-    };
-
-    public static Comparator<EndPointIndexItem> EndPointDescComparator = new Comparator<EndPointIndexItem>() {
-
-        public int compare(EndPointIndexItem epi1, EndPointIndexItem epi2) {
-            int c = (int) (epi2.getPoint() - epi1.getPoint());
-            if (c == 0) {
-                c = (int) (epi2.getStart() - epi2.getStart());
-            }
-            return c;
-        }
-
-    };
 }

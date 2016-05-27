@@ -42,14 +42,14 @@ public class ActiveSweepManager {
     private final IPartitionedDeletableTupleBufferManager bufferManager;
     private final PriorityQueue<EndPointIndexItem> indexQueue;
     private EndPointIndexItem item = null;
-    private final LinkedList<TuplePointer> active = new LinkedList<TuplePointer>();
+    private final LinkedList<TuplePointer> active = new LinkedList<>();
 
     public ActiveSweepManager(IPartitionedDeletableTupleBufferManager bufferManager, int key, int partition,
             Comparator<EndPointIndexItem> endPointComparator) {
         this.bufferManager = bufferManager;
         this.key = key;
         this.partition = partition;
-        indexQueue = new PriorityQueue<EndPointIndexItem>(16, endPointComparator);
+        indexQueue = new PriorityQueue<>(16, endPointComparator);
     }
 
     public boolean addTuple(ITupleAccessor leftInputAccessor, TuplePointer tp) throws HyracksDataException {

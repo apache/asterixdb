@@ -18,10 +18,6 @@
  */
 package org.apache.hyracks.dataflow.std.join;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobId;
@@ -37,14 +33,5 @@ public class MergeJoinTaskState extends AbstractStateObject {
     public MergeJoinTaskState(JobId jobId, TaskId taskId) {
         super(jobId, taskId);
         status = new MergeStatus();
-    }
-
-    @Override
-    public void toBytes(DataOutput out) throws IOException {
-
-    }
-
-    @Override
-    public void fromBytes(DataInput in) throws IOException {
     }
 }

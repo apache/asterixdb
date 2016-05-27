@@ -90,8 +90,6 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
         protected IntervalIndexJoiner indexJoiner;
         protected Comparator<EndPointIndexItem> endPointComparator;
         protected byte point;
-        public RecordDescriptor leftRd;
-        public RecordDescriptor rightRd;
 
         private IndexTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
@@ -102,12 +100,10 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
         private static final long serialVersionUID = 1L;
 
         private final MergeJoinLocks locks;
-        private final ActivityId joinAid;
 
         public LeftJoinerActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
             this.locks = locks;
-            this.joinAid = joinAid;
         }
 
         @Override
@@ -124,6 +120,8 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             private final IHyracksTaskContext ctx;
             private final int partition;
             private final RecordDescriptor leftRd;
+            private IndexTaskState state;
+            private boolean first = true;
 
             public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
                 this.ctx = ctx;
@@ -131,9 +129,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 this.leftRd = inRecordDesc;
             }
 
-            private IndexTaskState state;
-            private boolean first = true;
-
+            @Override
             public void open() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
@@ -153,19 +149,20 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                             locks.getLeft(partition).await();
                         }
                     } while (state.indexJoiner == null);
-                    state.status.left.setStageOpen();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageOpen();
                     locks.getRight(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("LeftJoinerOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
             }
 
+            @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
                 if (first) {
-                    state.status.left.setStageData();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageData();
                     first = false;
                 }
                 try {
@@ -176,6 +173,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 }
             }
 
+            @Override
             public void fail() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
@@ -185,10 +183,11 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 }
             }
 
+            @Override
             public void close() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
-                    state.status.left.noMore();
+                    state.status.branch[LEFT_ACTIVITY_ID].noMore();
                     if (state.failed) {
                         writer.fail();
                     } else {
@@ -196,7 +195,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                         state.indexJoiner.closeResult(writer);
                         writer.close();
                     }
-                    state.status.left.setStageClose();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageClose();
                     locks.getRight(partition).signal();
                 } finally {
                     locks.getLock(partition).unlock();
@@ -231,15 +230,14 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             private int partition;
             private IHyracksTaskContext ctx;
             private final RecordDescriptor rightRd;
+            private IndexTaskState state;
+            private boolean first = true;
 
             public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
                 this.ctx = ctx;
                 this.partition = partition;
                 this.rightRd = inRecordDesc;
             }
-
-            private IndexTaskState state;
-            private boolean first = true;
 
             @Override
             public void open() throws HyracksDataException {
@@ -255,10 +253,10 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                     state.rightRd = rightRd;
                     state.indexJoiner = new IntervalIndexJoiner(ctx, memoryForJoin, partition, state.status, locks,
                             state.endPointComparator, imjcf, leftKeys, rightKeys, state.leftRd, state.rightRd);
-                    state.status.right.setStageOpen();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageOpen();
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -268,18 +266,18 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
                 if (first) {
-                    state.status.right.setStageData();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageData();
                     first = false;
                 }
                 try {
-                    while (state.status.continueRightLoad == false && state.status.left.hasMore()) {
+                    while (!state.status.continueRightLoad && state.status.branch[LEFT_ACTIVITY_ID].hasMore()) {
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
                     }
                     state.indexJoiner.setRightFrame(buffer);
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -300,7 +298,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             public void close() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
-                    state.status.right.setStageClose();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageClose();
                     locks.getLeft(partition).signal();
                 } finally {
                     locks.getLock(partition).unlock();

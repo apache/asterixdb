@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.dataflow.std.base;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.hyracks.api.dataflow.state.IStateObject;
 import org.apache.hyracks.api.job.JobId;
 
@@ -61,5 +65,13 @@ public abstract class AbstractStateObject implements IStateObject {
 
     public void setMemoryOccupancy(long memoryOccupancy) {
         this.memoryOccupancy = memoryOccupancy;
+    }
+
+    @Override
+    public void toBytes(DataOutput out) throws IOException {
+    }
+
+    @Override
+    public void fromBytes(DataInput in) throws IOException {
     }
 }

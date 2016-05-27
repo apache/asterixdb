@@ -18,14 +18,11 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
+import org.apache.hyracks.dataflow.std.join.MergeStatus;
 
 public class IndexJoinTaskState extends AbstractStateObject {
     public MergeStatus status;
@@ -39,12 +36,4 @@ public class IndexJoinTaskState extends AbstractStateObject {
         status = new MergeStatus();
     }
 
-    @Override
-    public void toBytes(DataOutput out) throws IOException {
-
-    }
-
-    @Override
-    public void fromBytes(DataInput in) throws IOException {
-    }
 }

@@ -103,6 +103,8 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             private final IHyracksTaskContext ctx;
             private final int partition;
             private final RecordDescriptor leftRd;
+            private MergeJoinTaskState state;
+            private boolean first = true;
 
             public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
                 this.ctx = ctx;
@@ -110,9 +112,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 this.leftRd = inRecordDesc;
             }
 
-            private MergeJoinTaskState state;
-            private boolean first = true;
-
+            @Override
             public void open() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
@@ -129,19 +129,20 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                             locks.getLeft(partition).await();
                         }
                     } while (state.joiner == null);
-                    state.status.openLeft();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageOpen();
                     locks.getRight(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("LeftJoinerOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
             }
 
+            @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
                 if (first) {
-                    state.status.dataLeft();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageData();
                     first = false;
                 }
                 try {
@@ -152,6 +153,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
             }
 
+            @Override
             public void fail() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
@@ -161,10 +163,11 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
             }
 
+            @Override
             public void close() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
-                    state.status.leftHasMore = false;
+                    state.status.branch[LEFT_ACTIVITY_ID].noMore();
                     if (state.failed) {
                         writer.fail();
                     } else {
@@ -172,7 +175,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                         state.joiner.closeResult(writer);
                         writer.close();
                     }
-                    state.status.closeLeft();
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageClose();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -209,6 +212,8 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             private IHyracksTaskContext ctx;
             private final RecordDescriptor rightRd;
             private final IMergeJoinChecker mjc;
+            private MergeJoinTaskState state;
+            private boolean first = true;
 
             public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc,
                     IMergeJoinChecker mjc) {
@@ -217,9 +222,6 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 this.rightRd = inRecordDesc;
                 this.mjc = mjc;
             }
-
-            private MergeJoinTaskState state;
-            private boolean first = true;
 
             @Override
             public void open() throws HyracksDataException {
@@ -235,10 +237,10 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     state.rightRd = rightRd;
                     state.joiner = new MergeJoiner(ctx, memoryForJoin, partition, state.status, locks, mjc,
                             state.leftRd, state.rightRd);
-                    state.status.openRight();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageOpen();
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -248,18 +250,18 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
                 if (first) {
-                    state.status.dataRight();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageData();
                     first = false;
                 }
                 try {
-                    while (state.status.continueRightLoad == false && state.status.leftHasMore == true) {
+                    while (!state.status.continueRightLoad && state.status.branch[LEFT_ACTIVITY_ID].hasMore()) {
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
                     }
                     state.joiner.setRightFrame(buffer);
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException("RightDataOperator interrupted exceptrion", e);
+                    Thread.currentThread().interrupt();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -280,7 +282,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             public void close() throws HyracksDataException {
                 locks.getLock(partition).lock();
                 try {
-                    state.status.closeRight();
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageClose();
                     locks.getLeft(partition).signal();
                 } finally {
                     locks.getLock(partition).unlock();
