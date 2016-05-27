@@ -140,7 +140,10 @@ public class NCService {
                 pb.redirectErrorStream(true);
                 File log = new File(config.logdir);
                 if (! log.mkdirs()) {
-                    throw new IOException(config.logdir + ": cannot create");
+                    if (! log.isDirectory()) {
+                        throw new IOException(config.logdir + ": cannot create");
+                    }
+                    // If the directory IS there, all is well
                 }
                 File logfile = new File(config.logdir, "nc-" + ncId + ".log");
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logfile));
