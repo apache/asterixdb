@@ -24,14 +24,17 @@ public abstract class AbstractIntervalMergeJoinCheckerFactory implements IInterv
 
     private static final long serialVersionUID = 1L;
 
+    @Override
     public RangePartitioningType getLeftPartitioningType() {
         return RangePartitioningType.SPLIT;
     }
 
+    @Override
     public RangePartitioningType getRightPartitioningType() {
         return RangePartitioningType.PROJECT;
     }
 
+    @Override
     public boolean isOrderAsc() {
         return true;
     }

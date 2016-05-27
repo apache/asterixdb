@@ -57,9 +57,9 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
                 if (point < partitionStart) {
                     return 0;
                 }
-                point = Math.floorDiv((point - partitionStart), partitionDuration);
+                long pointFloor = Math.floorDiv(point - partitionStart, partitionDuration);
                 // Add one to the partition, since 0 represents any point before the start partition point.
-                return (int) Math.min(point + 1, k - 1l);
+                return (int) Math.min(pointFloor + 1, k - 1L);
             }
 
             public int getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)

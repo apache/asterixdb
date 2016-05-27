@@ -77,7 +77,7 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         return getIntervalJoin() + " " + keysLeftBranch + " " + keysRightBranch;
     }
 
-    abstract public String getIntervalJoin();
+    public abstract String getIntervalJoin();
 
     @Override
     public boolean isMicroOperator() {
@@ -86,13 +86,12 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context) {
-        IPartitioningProperty pp = null;
-        ArrayList<OrderColumn> order = new ArrayList<OrderColumn>();
+        ArrayList<OrderColumn> order = new ArrayList<>();
         for (LogicalVariable v : keysLeftBranch) {
             order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
-        pp = new OrderedPartitionedProperty(order, null, rangeMap, RangePartitioningType.PROJECT);
-        List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
+        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, rangeMap, RangePartitioningType.PROJECT);
+        List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         propsLocal.add(new LocalOrderProperty(order));
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
     }
@@ -104,17 +103,17 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
         IPartitioningProperty ppLeft = null;
-        List<ILocalStructuralProperty> ispLeft = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> ispLeft = new ArrayList<>();
         IPartitioningProperty ppRight = null;
-        List<ILocalStructuralProperty> ispRight = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> ispRight = new ArrayList<>();
 
-        ArrayList<OrderColumn> orderLeft = new ArrayList<OrderColumn>();
+        ArrayList<OrderColumn> orderLeft = new ArrayList<>();
         for (LogicalVariable v : keysLeftBranch) {
             orderLeft.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
         ispLeft.add(new LocalOrderProperty(orderLeft));
 
-        ArrayList<OrderColumn> orderRight = new ArrayList<OrderColumn>();
+        ArrayList<OrderColumn> orderRight = new ArrayList<>();
         for (LogicalVariable v : keysRightBranch) {
             orderRight.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }

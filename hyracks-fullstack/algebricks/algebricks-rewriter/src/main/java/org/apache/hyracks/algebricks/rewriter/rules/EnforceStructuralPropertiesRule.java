@@ -164,7 +164,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             reqdProperties = pr.getRequiredProperties();
         }
 
-        List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<IPartitioningProperty>();
+        List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<>();
         for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
             AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
             deliveredPartitioningPropertiesFromChildren
@@ -273,8 +273,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 changed = true;
                 addEnforcers(op, childIndex, diff, rqd, delivered, childrenDomain, nestedPlan, context);
 
-                AbstractLogicalOperator newChild = ((AbstractLogicalOperator) op.getInputs().get(childIndex)
-                        .getValue());
+                AbstractLogicalOperator newChild = (AbstractLogicalOperator) op.getInputs().get(childIndex)
+                        .getValue();
 
                 if (newChild != child) {
                     delivered = newChild.getDeliveredPhysicalProperties();

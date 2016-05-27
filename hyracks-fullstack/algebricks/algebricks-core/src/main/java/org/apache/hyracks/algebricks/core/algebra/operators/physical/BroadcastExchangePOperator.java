@@ -69,7 +69,7 @@ public class BroadcastExchangePOperator extends AbstractExchangePOperator {
     public Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
         IConnectorDescriptor conn = new MToNBroadcastConnectorDescriptor(spec);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
 }

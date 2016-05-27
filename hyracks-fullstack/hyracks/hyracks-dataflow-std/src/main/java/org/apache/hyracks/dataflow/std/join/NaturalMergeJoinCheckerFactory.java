@@ -41,10 +41,12 @@ public class NaturalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory 
         return new NaturalMergeJoinChecker(ftp);
     }
 
+    @Override
     public RangePartitioningType getLeftPartitioningType() {
         return RangePartitioningType.PROJECT;
     }
 
+    @Override
     public RangePartitioningType getRightPartitioningType() {
         return RangePartitioningType.PROJECT;
     }

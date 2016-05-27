@@ -91,7 +91,7 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
         IPartitioningProperty p = new OrderedPartitionedProperty(partitioningFields, domain, rangeMap, rangeType);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
-        List<ILocalStructuralProperty> locals = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> locals = new ArrayList<>();
         for (ILocalStructuralProperty prop : op2Locals) {
             if (prop.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                 locals.add(prop);
@@ -105,8 +105,8 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        List<ILocalStructuralProperty> orderProps = new LinkedList<ILocalStructuralProperty>();
-        List<OrderColumn> columns = new ArrayList<OrderColumn>();
+        List<ILocalStructuralProperty> orderProps = new LinkedList<>();
+        List<OrderColumn> columns = new ArrayList<>();
         for (OrderColumn oc : partitioningFields) {
             LogicalVariable var = oc.getColumn();
             columns.add(new OrderColumn(var, oc.getOrder()));
@@ -147,7 +147,7 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
                 rangeMap, rangeType);
         IConnectorDescriptor conn = new MToNRangePartitionMergingConnectorDescriptor(spec, tpcf, sortFields,
                 binaryComps, nkcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
     @Override

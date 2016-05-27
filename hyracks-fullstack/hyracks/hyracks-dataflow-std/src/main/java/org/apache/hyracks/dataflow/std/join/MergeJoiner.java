@@ -47,7 +47,6 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class MergeJoiner implements IMergeJoiner {
 
-    private static final int JOIN_PARTITIONS = 2;
     private static final int LEFT_PARTITION = 0;
     private static final int RIGHT_PARTITION = 1;
 
@@ -156,10 +155,9 @@ public class MergeJoiner implements IMergeJoiner {
                     locks.getLeft(partition).await();
                 }
             } catch (InterruptedException e) {
-                throw new HyracksDataException(
-                        "SortMergeIntervalJoin interrupted exception while attempting to load right tuple", e);
+                Thread.currentThread().interrupt();
             }
-            if (!accessorRight.exists() && status.branch[RIGHT_PARTITION].getStatus() == Stage.CLOSED) {
+            if (accessorRight != null && !accessorRight.exists() && status.branch[RIGHT_PARTITION].getStatus() == Stage.CLOSED) {
                 status.branch[RIGHT_PARTITION].noMore();
                 loaded = false;
             }

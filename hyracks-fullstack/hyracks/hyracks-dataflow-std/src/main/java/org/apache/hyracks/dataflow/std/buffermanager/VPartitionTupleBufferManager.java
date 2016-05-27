@@ -39,7 +39,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  * The cleared partition (spilled one in the caller side) can only get no more than one frame.
  */
 public class VPartitionTupleBufferManager implements IPartitionedTupleBufferManager {
-    public static IPartitionedMemoryConstrain NO_CONSTRAIN = new IPartitionedMemoryConstrain() {
+    public static final IPartitionedMemoryConstrain NO_CONSTRAIN = new IPartitionedMemoryConstrain() {
         @Override
         public int frameLimit(int partitionId) {
             return Integer.MAX_VALUE;

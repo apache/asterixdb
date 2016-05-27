@@ -117,23 +117,9 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
         private int k;
         private int memoryForJoin;
 
-        public BuildAndPartitionTaskState() {
-        }
-
         private BuildAndPartitionTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
         }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-
-        }
-
     }
 
     private class PartitionAndBuildActivityNode extends AbstractActivityNode {
@@ -157,7 +143,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
             final long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeMap, partition);
             final long partitionEnd = IntervalPartitionUtil.getEndOfPartition(rangeMap, partition);
 
-            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
+            return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
                 private boolean failure = false;
@@ -215,10 +201,11 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    failure = true;
                 }
 
             };
-            return op;
+
         }
     }
 
@@ -234,7 +221,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
                 throws HyracksDataException {
 
-            IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
+            return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private BuildAndPartitionTaskState state;
 
                 @Override
@@ -271,7 +258,6 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                     }
                 }
             };
-            return op;
         }
     }
 }

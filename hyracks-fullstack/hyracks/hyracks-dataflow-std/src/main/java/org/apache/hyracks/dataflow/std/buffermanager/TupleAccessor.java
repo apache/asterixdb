@@ -74,14 +74,17 @@ public class TupleAccessor extends FrameTupleAccessor implements ITupleAccessor 
         return getFieldStartOffset(tupleId, fieldId);
     }
 
+    @Override
     public int getTupleId() {
         return tupleId;
     }
 
+    @Override
     public void getTuplePointer(TuplePointer tp) {
         tp.reset(INITIALIZED, tupleId);
     }
 
+    @Override
     public void setTupleId(int tupleId) {
         this.tupleId = tupleId;
     }

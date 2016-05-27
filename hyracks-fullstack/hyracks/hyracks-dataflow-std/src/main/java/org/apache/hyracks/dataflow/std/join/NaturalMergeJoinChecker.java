@@ -25,40 +25,45 @@ import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class NaturalMergeJoinChecker implements IMergeJoinChecker {
     private static final long serialVersionUID = 1L;
-    FrameTuplePairComparator comparator;
+    private final FrameTuplePairComparator comparator;
 
     public NaturalMergeJoinChecker(FrameTuplePairComparator comparator) {
         this.comparator = comparator;
     }
 
+    @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
-        return (c == 0);
+        return c == 0;
     }
 
+    @Override
     public boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
-        return (c < 0);
+        return c < 0;
     }
 
+    @Override
     public boolean checkToLoadNextRightTuple(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
-        return (c <= 0);
+        return c <= 0;
     }
 
+    @Override
     public boolean checkToSaveInResult(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         int c = comparator.compare(accessorLeft, accessorLeft.getTupleId(), accessorRight, accessorRight.getTupleId());
-        return (c == 0);
+        return c == 0;
     }
 
+    @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
-        return (c == 0);
+        return c == 0;
     }
 
 }

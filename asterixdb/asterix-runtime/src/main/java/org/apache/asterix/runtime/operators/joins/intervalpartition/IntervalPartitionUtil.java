@@ -34,6 +34,9 @@ public class IntervalPartitionUtil {
     public static final double C_CPU = 0.5;
     public static final double C_IO = 10;
 
+    private IntervalPartitionUtil() {
+    }
+
     public static int determineK(int countR, int maxDurationR, int countS, int maxDurationS, int avgTuplePerFrame) {
         double deltaR = 1.0 / maxDurationR;
         double deltaS = 1.0 / maxDurationS;
@@ -66,8 +69,8 @@ public class IntervalPartitionUtil {
         return Math.min((int) ((kn * knDelta) + kn - ((knDelta * knDelta) / 2.0) - (knDelta / 2.0)), count);
     }
 
-    public static double determineTn(int kn, int Pn) {
-        return Pn / ((kn * kn + kn) / 2.0);
+    public static double determineTn(int kn, int pn) {
+        return pn / ((kn * kn + kn) / 2.0);
     }
 
     public static int getMaxPartitions(int k) {
@@ -108,7 +111,7 @@ public class IntervalPartitionUtil {
      * @return mapping
      */
     public static int intervalPartitionMap(int partitionI, int partitionJ, int k) {
-        int p = ((partitionI * (k + k - partitionI + 1)) / 2);
+        int p = (partitionI * (k + k - partitionI + 1)) / 2;
         return p + partitionJ - partitionI;
     }
 
@@ -129,10 +132,10 @@ public class IntervalPartitionUtil {
             sum = p;
         }
         int j = i + pid - sum;
-        return new Pair<Integer, Integer>(i, j);
+        return new Pair<>(i, j);
     }
 
-    public static long getStartOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {
+    public static long getStartOfPartition(IRangeMap rangeMap, int partition) {
         int fieldIndex = 0;
         long partitionStart = LongPointable.getLong(rangeMap.getMinByteArray(fieldIndex),
                 rangeMap.getMinStartOffset(fieldIndex) + 1);
@@ -146,7 +149,7 @@ public class IntervalPartitionUtil {
         return partitionStart;
     }
 
-    public static long getEndOfPartition(IRangeMap rangeMap, int partition) { //throws HyracksDataException {
+    public static long getEndOfPartition(IRangeMap rangeMap, int partition) {
         int fieldIndex = 0;
         long partitionEnd = LongPointable.getLong(rangeMap.getMaxByteArray(fieldIndex),
                 rangeMap.getMaxStartOffset(fieldIndex) + 1);
@@ -159,7 +162,7 @@ public class IntervalPartitionUtil {
 
     public static LinkedHashSet<Integer> getProbeJoinPartitions(int pid, int[] buildPSizeInTups,
             IIntervalMergeJoinChecker imjc, int k) {
-        LinkedHashSet<Integer> joinMap = new LinkedHashSet<Integer>();
+        LinkedHashSet<Integer> joinMap = new LinkedHashSet<>();
         Pair<Integer, Integer> map = getIntervalPartition(pid, k);
         int probeStart = map.first;
         int probeEnd = map.second;
@@ -181,7 +184,7 @@ public class IntervalPartitionUtil {
     public static LinkedHashMap<Integer, LinkedHashSet<Integer>> getInMemorySpillJoinMap(
             LinkedHashMap<Integer, LinkedHashSet<Integer>> probeJoinMap, BitSet buildInMemoryStatus,
             BitSet probeSpilledStatus) {
-        LinkedHashMap<Integer, LinkedHashSet<Integer>> inMemoryMap = new LinkedHashMap<Integer, LinkedHashSet<Integer>>();
+        LinkedHashMap<Integer, LinkedHashSet<Integer>> inMemoryMap = new LinkedHashMap<>();
         for (Entry<Integer, LinkedHashSet<Integer>> entry : probeJoinMap.entrySet()) {
             if (probeSpilledStatus.get(entry.getKey())) {
                 for (Integer i : entry.getValue()) {

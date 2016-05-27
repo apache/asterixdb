@@ -105,6 +105,7 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                         }
                         break;
                     }
+                    default:
                 }
             }
 
@@ -135,7 +136,7 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                 int searchIndex = 0;
                 int left = 0;
                 int right = rangeMap.getSplitCount() - 1;
-                int cmp = 0;
+                int cmp;
                 while (left <= right) {
                     searchIndex = (left + right) / 2;
                     cmp = compareSlotAndFields(accessor, tIndex, searchIndex, comparators);

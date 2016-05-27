@@ -31,6 +31,15 @@ public class TuplePointer implements IResetable<TuplePointer> {
         reset(frameId, tupleId);
     }
 
+    public int getFrameIndex() {
+        return frameIndex;
+    }
+
+    public int getTupleIndex() {
+        return tupleIndex;
+    }
+
+    @Override
     public void reset(TuplePointer other) {
         reset(other.frameIndex, other.tupleIndex);
     }
@@ -62,6 +71,7 @@ public class TuplePointer implements IResetable<TuplePointer> {
         this.tupleIndex = tupleId;
     }
 
+    @Override
     public String toString() {
         return "TuplePointer(" + frameIndex + ", " + tupleIndex + ")";
     }

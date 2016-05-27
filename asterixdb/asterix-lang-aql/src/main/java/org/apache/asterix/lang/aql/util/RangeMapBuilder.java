@@ -58,6 +58,9 @@ import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 public abstract class RangeMapBuilder {
     private static final IParserFactory parserFactory = new AQLParserFactory();
 
+    private RangeMapBuilder() {
+    }
+
     public static IRangeMap parseHint(Object hint) throws AsterixException {
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         DataOutput out = abvs.getDataOutput();;
@@ -65,7 +68,7 @@ public abstract class RangeMapBuilder {
 
         IParser parser = parserFactory.createParser((String) hint);
         List<Statement> hintStatements = parser.parse();
-        if (hintStatements.size() == 0) {
+        if (hintStatements.isEmpty()) {
             throw new AsterixException("No range hint was supplied to the RangeMapBuilder.");
         } else if (hintStatements.size() != 1) {
             throw new AsterixException("Only one range statement is allowed for the range hint.");
@@ -81,7 +84,7 @@ public abstract class RangeMapBuilder {
             throw new AsterixException("The range hint must be a list.");
         }
         List<Expression> el = ((ListConstructor) q.getBody()).getExprList();
-        int offsets[] = new int[el.size()];
+        int[] offsets = new int[el.size()];
 
         // Loop over list of literals
         for (int i = 0; i < el.size(); ++i) {
@@ -156,7 +159,7 @@ public abstract class RangeMapBuilder {
         IBinaryComparatorFactory bcf = comparatorFactory
                 .getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
         IBinaryComparator comparator = bcf.createBinaryComparator();
-        int c = 0;
+        int c;
         for (int split = 1; split < rangeMap.getSplitCount(); ++split) {
             if (fieldType != rangeMap.getTag(fieldIndex, split)) {
                 throw new AsterixException("Range field contains more than a single type of items (" + fieldType

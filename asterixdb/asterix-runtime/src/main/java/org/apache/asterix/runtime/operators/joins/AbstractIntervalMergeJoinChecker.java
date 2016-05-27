@@ -53,14 +53,17 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         this.idRight = idRight;
     }
 
+    @Override
     public boolean checkToRemoveLeftActive() {
         return true;
     }
 
+    @Override
     public boolean checkToRemoveRightActive() {
         return true;
     }
 
+    @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         try {
@@ -74,6 +77,7 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         }
     }
 
+    @Override
     public boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         try {
@@ -87,11 +91,13 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         }
     }
 
+    @Override
     public boolean checkToLoadNextRightTuple(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         return checkToSaveInMemory(accessorLeft, accessorRight);
     }
 
+    @Override
     public boolean checkToSaveInResult(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
         try {
@@ -103,6 +109,7 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         }
     }
 
+    @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
         try {
@@ -114,9 +121,11 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         }
     }
 
+    @Override
     public abstract boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight)
             throws AsterixException;
 
+    @Override
     public abstract boolean compareIntervalPartition(int s1, int e1, int s2, int e2);
 
 }

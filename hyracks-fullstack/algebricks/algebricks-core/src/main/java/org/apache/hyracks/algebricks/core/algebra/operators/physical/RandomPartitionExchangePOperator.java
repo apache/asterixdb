@@ -68,7 +68,7 @@ public class RandomPartitionExchangePOperator extends AbstractExchangePOperator 
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
         ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory();
         MToNPartitioningConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
     @Override

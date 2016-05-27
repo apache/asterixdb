@@ -28,9 +28,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MergeJoinLocks implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final List<Lock> lock = new ArrayList<Lock>();
-    private final List<Condition> left = new ArrayList<Condition>();
-    private final List<Condition> right = new ArrayList<Condition>();
+    private final List<Lock> lock = new ArrayList<>();
+    private final List<Condition> left = new ArrayList<>();
+    private final List<Condition> right = new ArrayList<>();
 
     public synchronized void setPartitions(int partitions) {
         for (int i = lock.size(); i < partitions; ++i) {

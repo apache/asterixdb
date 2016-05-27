@@ -86,19 +86,17 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     }
 
     // This method adds the option of range range
+    @Override
     public IBinaryRangeComparatorFactory getRangeBinaryComparatorFactory(Object type, boolean ascending,
             RangePartitioningType rangeType) {
         if (type == null) {
             return anyBinaryRangeComparatorFactory(ascending);
         }
         IAType aqlType = (IAType) type;
-        switch (aqlType.getTypeTag()) {
-            case INTERVAL: {
-                return addOffsetForRange(getIntervalRangeBinaryComparatorFactory(ascending), ascending);
-            }
-            default: {
-                return anyBinaryRangeComparatorFactory(ascending);
-            }
+        if (aqlType.getTypeTag() == ATypeTag.INTERVAL) {
+            return addOffsetForRange(getIntervalRangeBinaryComparatorFactory(ascending), ascending);
+        } else {
+            return anyBinaryRangeComparatorFactory(ascending);
         }
     }
 

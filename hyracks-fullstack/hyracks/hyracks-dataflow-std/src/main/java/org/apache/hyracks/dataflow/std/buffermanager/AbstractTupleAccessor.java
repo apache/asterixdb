@@ -143,6 +143,7 @@ public abstract class AbstractTupleAccessor implements ITupleAccessor {
         return tupleId;
     }
 
+    @Override
     public void setTupleId(int tupleId) {
         this.tupleId = tupleId;
     }
@@ -164,8 +165,8 @@ public abstract class AbstractTupleAccessor implements ITupleAccessor {
 
     @Override
     public boolean exists() {
-        return (INITIALIZED < tupleId && getTupleEndOffset(tupleId) > 0 && tupleId < getTupleCount()
-                && frameId < getFrameCount());
+        return INITIALIZED < tupleId && getTupleEndOffset(tupleId) > 0 && tupleId < getTupleCount()
+                && frameId < getFrameCount();
     }
 
     @Override

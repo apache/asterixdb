@@ -29,12 +29,12 @@ public class PointableBinaryRangeAscComparatorFactory implements IBinaryRangeCom
 
     protected final IPointableFactory pf;
 
-    public static PointableBinaryRangeAscComparatorFactory of(IPointableFactory pf) {
-        return new PointableBinaryRangeAscComparatorFactory(pf);
-    }
-
     public PointableBinaryRangeAscComparatorFactory(IPointableFactory pf) {
         this.pf = pf;
+    }
+
+    public static PointableBinaryRangeAscComparatorFactory of(IPointableFactory pf) {
+        return new PointableBinaryRangeAscComparatorFactory(pf);
     }
 
     @Override

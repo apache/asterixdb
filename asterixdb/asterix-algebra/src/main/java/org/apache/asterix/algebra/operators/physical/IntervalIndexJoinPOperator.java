@@ -33,24 +33,18 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
 
     private final int memSizeInFrames;
-    private final int leftCountInFrames;
-    private final int rightCountInFrames;
 
     private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoinPOperator.class.getName());
 
     public IntervalIndexJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, int leftCountInFrames, int rightCountInFrames, IIntervalMergeJoinCheckerFactory mjcf,
-            IRangeMap rangeMap) {
+            int memSizeInFrames, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
         super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, rangeMap);
         this.memSizeInFrames = memSizeInFrames;
-        this.leftCountInFrames = leftCountInFrames;
-        this.rightCountInFrames = rightCountInFrames;
 
         LOGGER.fine("IntervalIndexJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
-                + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int leftCountInFrames="
-                + leftCountInFrames + ", int rightCountInFrames=" + rightCountInFrames
+                + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames
                 + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
     }
 
@@ -62,8 +56,8 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
     @Override
     IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight, IOperatorDescriptorRegistry spec,
             RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
-        return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight,
-                recordDescriptor, mjcf);
+        return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight, recordDescriptor,
+                mjcf);
     }
 
 }

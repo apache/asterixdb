@@ -89,7 +89,7 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
                 rangeMap, rangeType);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
-        List<ILocalStructuralProperty> locals = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> locals = new ArrayList<>();
         for (ILocalStructuralProperty prop : op2Locals) {
             if (prop.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                 locals.add(prop);
@@ -136,7 +136,7 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
                 rangeMap, rangeType);
         IConnectorDescriptor conn = new MToNRangePartitioningConnectorDescriptor(spec, tpcf, sortFields, binaryComps,
                 nkcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
     @Override

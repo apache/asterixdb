@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralPro
 public class PropertiesUtil {
 
     public Set<LogicalVariable> closureUnderFDs(Collection<LogicalVariable> vars, List<FunctionalDependency> fdList) {
-        Set<LogicalVariable> k = new ListSet<LogicalVariable>(vars);
+        Set<LogicalVariable> k = new ListSet<>(vars);
         boolean change;
         do {
             change = false;
@@ -68,8 +68,8 @@ public class PropertiesUtil {
 
         ListIterator<ILocalStructuralProperty> dlvdIter = dlvd.listIterator();
 
-        Set<LogicalVariable> rqdCols = new ListSet<LogicalVariable>();
-        Set<LogicalVariable> dlvdCols = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> rqdCols = new ListSet<>();
+        Set<LogicalVariable> dlvdCols = new ListSet<>();
         for (ILocalStructuralProperty r : reqd) {
             if (r.getPropertyType() == PropertyType.LOCAL_GROUPING_PROPERTY) {
                 rqdCols.clear();
@@ -132,9 +132,9 @@ public class PropertiesUtil {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
                         if (mayExpandProperties) {
-                            return (!ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet()));
+                            return !ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet());
                         } else {
-                            return (ud.getColumnSet().equals(ur.getColumnSet()));
+                            return ud.getColumnSet().equals(ur.getColumnSet());
                         }
                     }
                     case ORDERED_PARTITIONED: {
@@ -187,7 +187,7 @@ public class PropertiesUtil {
      * @return the list of LogicalVariables
      */
     private static List<LogicalVariable> orderColumnsToVariables(List<OrderColumn> orderColumns) {
-        List<LogicalVariable> columns = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> columns = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             columns.add(oc.getColumn());
         }
@@ -230,7 +230,7 @@ public class PropertiesUtil {
                 }
             }
         }
-        ArrayList<OrderColumn> norm = new ArrayList<OrderColumn>(orderColumns.size() - deleted);
+        ArrayList<OrderColumn> norm = new ArrayList<>(orderColumns.size() - deleted);
         for (OrderColumn oc : orderColumns) {
             if (oc != null) {
                 norm.add(oc);
@@ -244,7 +244,7 @@ public class PropertiesUtil {
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
             return orderColumns;
         }
-        ArrayList<OrderColumn> norm = new ArrayList<OrderColumn>();
+        ArrayList<OrderColumn> norm = new ArrayList<>();
         for (OrderColumn v : orderColumns) {
             EquivalenceClass ec = equivalenceClasses.get(v.getColumn());
             if (ec == null) {
@@ -304,13 +304,13 @@ public class PropertiesUtil {
             ILocalStructuralProperty p = propIter.previous();
             ListIterator<ILocalStructuralProperty> secondIter = props.listIterator(pos);
             pos--;
-            Set<LogicalVariable> cols = new ListSet<LogicalVariable>();
+            Set<LogicalVariable> cols = new ListSet<>();
             while (secondIter.hasPrevious()) {
                 secondIter.previous().getColumns(cols);
             }
             secondIter = null;
             for (FunctionalDependency fdep : fds) {
-                LinkedList<LogicalVariable> columnsOfP = new LinkedList<LogicalVariable>();
+                LinkedList<LogicalVariable> columnsOfP = new LinkedList<>();
                 p.getColumns(columnsOfP);
                 if (impliedByPrefix(columnsOfP, cols, fdep)) {
                     propIter.remove();

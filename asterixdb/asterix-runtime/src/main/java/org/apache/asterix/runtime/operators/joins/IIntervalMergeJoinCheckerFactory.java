@@ -26,6 +26,7 @@ import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 public interface IIntervalMergeJoinCheckerFactory extends IMergeJoinCheckerFactory, Serializable {
 
     @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) throws HyracksDataException;
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition)
+            throws HyracksDataException;
 
 }

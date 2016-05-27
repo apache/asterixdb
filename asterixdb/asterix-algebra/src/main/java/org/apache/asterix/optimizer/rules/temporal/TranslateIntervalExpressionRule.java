@@ -63,7 +63,6 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         SelectOperator selectOp = (SelectOperator) op;
 
         Mutable<ILogicalExpression> exprRef = selectOp.getCondition();
-        boolean modified = true;
         ILogicalExpression expr = exprRef.getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
@@ -72,21 +71,28 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         if (funcExpr.getArguments().size() != 2) {
             return false;
         }
-        boolean rewrite = false;
+        if (!hasIntervalAnnotation(funcExpr)) {
+            return false;
+        }
+
+        return translateIntervalExpression(exprRef, funcExpr);
+    }
+
+    private boolean hasIntervalAnnotation(AbstractFunctionCallExpression funcExpr) {
         for (Object key : funcExpr.getAnnotations().keySet()) {
             IExpressionAnnotation annot = funcExpr.getAnnotations().get(key);
             if (annot instanceof IntervalJoinExpressionAnnotation) {
                 IntervalJoinExpressionAnnotation ijea = (IntervalJoinExpressionAnnotation) annot;
                 if (ijea.isRawJoin()) {
-                    rewrite = true;
-                    break;
+                    return true;
                 }
             }
         }
-        if (!rewrite) {
-            return false;
-        }
+        return false;
+    }
 
+    private boolean translateIntervalExpression(Mutable<ILogicalExpression> exprRef,
+            AbstractFunctionCallExpression funcExpr) {
         // All interval relations are translated unless specified in a hint.
         // TODO A new strategy may be needed instead of just a simple translation.
         ILogicalExpression interval1 = funcExpr.getArguments().get(0).getValue();
@@ -117,7 +123,7 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval2),
                     getIntervalStartExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionInfo().equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
             exprRef.setValue(getLessThanExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2)));
         } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_AFTER)) {
             exprRef.setValue(getGreaterThanExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2)));
@@ -158,10 +164,9 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
                     getIntervalEndExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else {
-            modified = false;
+            return false;
         }
-
-        return modified;
+        return true;
     }
 
     private ILogicalExpression getAndExpr(ILogicalExpression arg1, ILogicalExpression arg2) {

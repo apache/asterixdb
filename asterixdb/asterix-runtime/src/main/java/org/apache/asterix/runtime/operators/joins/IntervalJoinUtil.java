@@ -26,6 +26,9 @@ import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
 public class IntervalJoinUtil {
 
+    private IntervalJoinUtil() {
+    }
+
     public static void getIntervalPointable(ITupleAccessor accessor, int fieldId, TaggedValuePointable tvp,
             AIntervalPointable ip) {
         int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()

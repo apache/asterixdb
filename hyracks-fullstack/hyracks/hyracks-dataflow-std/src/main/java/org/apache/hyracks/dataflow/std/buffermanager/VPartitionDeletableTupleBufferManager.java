@@ -34,7 +34,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBufferManager
         implements IPartitionedDeletableTupleBufferManager {
 
-    private final int MIN_FREE_SPACE[];
+    private static int[] minFreeSpace;
     private final IAppendDeletableFrameTupleAccessor[] accessor;
     private final IFrameFreeSlotPolicy[] policy;
 
@@ -44,11 +44,11 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
         int maxFrames = framePool.getMemoryBudgetBytes() / framePool.getMinFrameSize();
         this.policy = new FrameFreeSlotLastFit[partitions];
         this.accessor = new DeletableFrameTupleAppender[partitions];
-        this.MIN_FREE_SPACE = new int[partitions];
+        this.minFreeSpace = new int[partitions];
         int i = 0;
         for (RecordDescriptor rd : recordDescriptors) {
             this.accessor[i] = new DeletableFrameTupleAppender(rd);
-            this.MIN_FREE_SPACE[i] = calculateMinFreeSpace(rd);
+            this.minFreeSpace[i] = calculateMinFreeSpace(rd);
             this.policy[i] = new FrameFreeSlotLastFit(maxFrames);
             ++i;
         }
@@ -73,7 +73,7 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
         assert accessor[partition].getContiguousFreeSpace() >= requiredFreeSpace;
         int tid = accessor[partition].append(fta, idx);
         assert tid >= 0;
-        if (accessor[partition].getContiguousFreeSpace() > MIN_FREE_SPACE[partition]) {
+        if (accessor[partition].getContiguousFreeSpace() > minFreeSpace[partition]) {
             policy[partition].pushNewFrame(frameId, accessor[partition].getContiguousFreeSpace());
         }
         tuplePointer.reset(makeGroupFrameId(partition, frameId), tid);

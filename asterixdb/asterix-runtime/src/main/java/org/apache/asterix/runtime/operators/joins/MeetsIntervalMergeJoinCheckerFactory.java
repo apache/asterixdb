@@ -28,6 +28,7 @@ public class MeetsIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJ
         return new MeetsIntervalMergeJoinChecker(keys0, keys1);
     }
 
+    @Override
     public RangePartitioningType getLeftPartitioningType() {
         return RangePartitioningType.PROJECT_END;
     }

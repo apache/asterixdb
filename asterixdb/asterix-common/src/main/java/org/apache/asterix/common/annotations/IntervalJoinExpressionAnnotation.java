@@ -120,18 +120,14 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
     }
 
     public static boolean isIntervalJoinHint(String hint) {
-        if (hint.startsWith(RAW_HINT_STRING) || hint.startsWith(PARTITION_HINT_STRING)
+        return hint.startsWith(RAW_HINT_STRING) || hint.startsWith(PARTITION_HINT_STRING)
                 || hint.startsWith(MERGE_HINT_STRING) || hint.startsWith(SPATIAL_HINT_STRING)
-                || hint.startsWith(INDEX_HINT_STRING)) {
-            return true;
-        } else {
-            return false;
-        }
+                || hint.startsWith(INDEX_HINT_STRING);
     }
 
     public static int getHintLength(String hint) {
-        if (hint.startsWith(PARTITION_HINT_STRING)) {
-            return PARTITION_HINT_STRING.length();
+        if (hint.startsWith(RAW_HINT_STRING)) {
+            return RAW_HINT_STRING.length();
         } else if (hint.startsWith(PARTITION_HINT_STRING)) {
             return PARTITION_HINT_STRING.length();
         } else if (hint.startsWith(MERGE_HINT_STRING)) {

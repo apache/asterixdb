@@ -27,9 +27,9 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class IntervalOverlapsDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {

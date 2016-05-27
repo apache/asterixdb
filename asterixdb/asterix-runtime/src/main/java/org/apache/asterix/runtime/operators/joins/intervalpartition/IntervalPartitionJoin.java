@@ -77,7 +77,7 @@ public class IntervalPartitionJoin {
     private final int memForJoin;
     private final int k;
     private final int numOfPartitions;
-    private InMemoryIntervalPartitionJoin inMemJoiner[]; //Used for joining resident partitions
+    private InMemoryIntervalPartitionJoin[] inMemJoiner; //Used for joining resident partitions
 
     private VPartitionTupleBufferManager buildBufferManager;
     private VPartitionTupleBufferManager probeBufferManager;
@@ -141,7 +141,8 @@ public class IntervalPartitionJoin {
     }
 
     public void closeBuild() throws HyracksDataException {
-        int inMemoryPartitions = 0, totalBuildPartitions = 0;
+        int inMemoryPartitions = 0;
+        int totalBuildPartitions = 0;
         flushAndClearBuildSpilledPartition();
 
         // Trying to bring back as many spilled partitions as possible, making them resident
@@ -236,6 +237,7 @@ public class IntervalPartitionJoin {
                 refName = probeRelName;
                 runFileWriters = probeRFWriters;
                 break;
+            default:
         }
         RunFileWriter writer = runFileWriters[pid];
         if (writer == null) {
@@ -415,11 +417,11 @@ public class IntervalPartitionJoin {
     }
 
     public RunFileReader getBuildRFReader(int pid) throws HyracksDataException {
-        return ((buildRFWriters[pid] == null) ? null : (buildRFWriters[pid]).createReader());
+        return (buildRFWriters[pid] == null) ? null : (buildRFWriters[pid]).createReader();
     }
 
     public RunFileReader getProbeRFReader(int pid) throws HyracksDataException {
-        return ((probeRFWriters[pid] == null) ? null : (probeRFWriters[pid]).createReader());
+        return (probeRFWriters[pid] == null) ? null : (probeRFWriters[pid]).createReader();
     }
 
     public void joinSpilledPartitions(IFrameWriter writer) throws HyracksDataException {
@@ -427,7 +429,7 @@ public class IntervalPartitionJoin {
         if (reloadBuffer == null) {
             reloadBuffer = new VSizeFrame(ctx);
         }
-        HashSet<Integer> inMemory = new HashSet<Integer>();
+        HashSet<Integer> inMemory = new HashSet<>();
         while (ipjd.buildGetSpilledCount() > 0) {
             // Load back spilled build partitions.
             // TODO only load partition required for spill join. Consider both sides.
@@ -444,7 +446,7 @@ public class IntervalPartitionJoin {
 
             // Join all build partitions with disk probe partitions.
             for (Entry<Integer, LinkedHashSet<Integer>> entry : probeInMemoryJoinMap.entrySet()) {
-                if (ipjd.probeGetCount(entry.getKey()) > 0 && probeInMemoryJoinMap.get(entry.getKey()).size() > 0) {
+                if (ipjd.probeGetCount(entry.getKey()) > 0 && probeInMemoryJoinMap.get(entry.getKey()).isEmpty()) {
                     RunFileReader pReader = getProbeRFReader(entry.getKey());
                     pReader.open();
                     while (pReader.nextFrame(reloadBuffer)) {
@@ -486,7 +488,7 @@ public class IntervalPartitionJoin {
         private BitSet probeSpilledStatus; //0=resident, 1=spilled
 
         public IntervalPartitionJoinData(int k, IIntervalMergeJoinChecker imjc, int numberOfPartitions) {
-            probeJoinMap = new LinkedHashMap<Integer, LinkedHashSet<Integer>>();
+            probeJoinMap = new LinkedHashMap<>();
 
             buildPSizeInTups = new int[numberOfPartitions];
             probePSizeInTups = new int[numberOfPartitions];
@@ -569,27 +571,27 @@ public class IntervalPartitionJoin {
         }
 
         public int buildNextInMemoryWithResults(int pid) {
-            pid = buildNextInMemory(pid);
+            int nextPid = buildNextInMemory(pid);
             do {
-                if (pid < 0 || buildGetCount(pid) > 0) {
-                    return pid;
+                if (nextPid < 0 || buildGetCount(nextPid) > 0) {
+                    return nextPid;
                 }
-                pid = buildNextInMemory(pid + 1);
-            } while (pid >= 0);
+                nextPid = buildNextInMemory(nextPid + 1);
+            } while (nextPid >= 0);
             return -1;
         }
 
         public int buildNextInMemory(int pid) {
-            pid = buildSpilledStatus.nextClearBit(pid);
-            if (pid >= numOfPartitions) {
+            int nextPid =  buildSpilledStatus.nextClearBit(pid);
+            if (nextPid >= numOfPartitions) {
                 return -1;
             }
             do {
-                if (!buildHasBeenJoined(pid)) {
-                    return pid;
+                if (!buildHasBeenJoined(nextPid)) {
+                    return nextPid;
                 }
-                pid = buildSpilledStatus.nextClearBit(pid + 1);
-            } while (pid >= 0 && pid < numOfPartitions);
+                nextPid = buildSpilledStatus.nextClearBit(nextPid + 1);
+            } while (nextPid >= 0 && nextPid < numOfPartitions);
             return -1;
         }
 

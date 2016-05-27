@@ -61,14 +61,17 @@ public class JoinUtils {
 
     private static final Logger LOGGER = Logger.getLogger(JoinUtils.class.getName());
 
+    private JoinUtils() {
+    }
+
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, IOptimizationContext context)
             throws AlgebricksException {
         ILogicalExpression conditionLE = op.getCondition().getValue();
         if (conditionLE.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return;
         }
-        List<LogicalVariable> sideLeft = new LinkedList<LogicalVariable>();
-        List<LogicalVariable> sideRight = new LinkedList<LogicalVariable>();
+        List<LogicalVariable> sideLeft = new LinkedList<>();
+        List<LogicalVariable> sideRight = new LinkedList<>();
         List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();
         List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
@@ -112,7 +115,7 @@ public class JoinUtils {
     private static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
-        IMergeJoinCheckerFactory mjcf = (IMergeJoinCheckerFactory) getIntervalMergeJoinCheckerFactory(fi, rangeMap);
+        IMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST, sideLeft,
                 sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
     }
@@ -133,8 +136,7 @@ public class JoinUtils {
             IOptimizationContext context) {
         IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new IntervalIndexJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
-                getCardinality(sideLeft, context), getCardinality(sideRight, context), mjcf, rangeMap));
+                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
     }
 
     private static int getMaxDuration(List<LogicalVariable> lv, IOptimizationContext context) {
@@ -150,46 +152,43 @@ public class JoinUtils {
     private static FunctionIdentifier isIntervalJoinCondition(ILogicalExpression e,
             Collection<LogicalVariable> inLeftAll, Collection<LogicalVariable> inRightAll,
             Collection<LogicalVariable> outLeftFields, Collection<LogicalVariable> outRightFields) {
-        FunctionIdentifier fiReturn = null;
+        FunctionIdentifier fiReturn;
         boolean switchArguments = false;
-        switch (e.getExpressionTag()) {
-            case FUNCTION_CALL: {
-                AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
-                FunctionIdentifier fi = fexp.getFunctionIdentifier();
-                if (isIntervalFunction(fi)) {
-                    fiReturn = fi;
-                } else {
-                    return null;
-                }
-                ILogicalExpression opLeft = fexp.getArguments().get(0).getValue();
-                ILogicalExpression opRight = fexp.getArguments().get(1).getValue();
-                if (opLeft.getExpressionTag() != LogicalExpressionTag.VARIABLE
-                        || opRight.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                    return null;
-                }
-                LogicalVariable var1 = ((VariableReferenceExpression) opLeft).getVariableReference();
-                if (inLeftAll.contains(var1) && !outLeftFields.contains(var1)) {
-                    outLeftFields.add(var1);
-                } else if (inRightAll.contains(var1) && !outRightFields.contains(var1)) {
-                    outRightFields.add(var1);
-                    fiReturn = reverseIntervalExpression(fi);
-                    switchArguments = true;
-                } else {
-                    return null;
-                }
-                LogicalVariable var2 = ((VariableReferenceExpression) opRight).getVariableReference();
-                if (inLeftAll.contains(var2) && !outLeftFields.contains(var2) && switchArguments) {
-                    outLeftFields.add(var2);
-                } else if (inRightAll.contains(var2) && !outRightFields.contains(var2) && !switchArguments) {
-                    outRightFields.add(var2);
-                } else {
-                    return null;
-                }
-                return fiReturn;
-            }
-            default: {
+        if (e.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
+            FunctionIdentifier fi = fexp.getFunctionIdentifier();
+            if (isIntervalFunction(fi)) {
+                fiReturn = fi;
+            } else {
                 return null;
             }
+            ILogicalExpression opLeft = fexp.getArguments().get(0).getValue();
+            ILogicalExpression opRight = fexp.getArguments().get(1).getValue();
+            if (opLeft.getExpressionTag() != LogicalExpressionTag.VARIABLE
+                    || opRight.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                return null;
+            }
+            LogicalVariable var1 = ((VariableReferenceExpression) opLeft).getVariableReference();
+            if (inLeftAll.contains(var1) && !outLeftFields.contains(var1)) {
+                outLeftFields.add(var1);
+            } else if (inRightAll.contains(var1) && !outRightFields.contains(var1)) {
+                outRightFields.add(var1);
+                fiReturn = reverseIntervalExpression(fi);
+                switchArguments = true;
+            } else {
+                return null;
+            }
+            LogicalVariable var2 = ((VariableReferenceExpression) opRight).getVariableReference();
+            if (inLeftAll.contains(var2) && !outLeftFields.contains(var2) && switchArguments) {
+                outLeftFields.add(var2);
+            } else if (inRightAll.contains(var2) && !outRightFields.contains(var2) && !switchArguments) {
+                outRightFields.add(var2);
+            } else {
+                return null;
+            }
+            return fiReturn;
+        } else {
+            return null;
         }
     }
 
