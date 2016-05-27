@@ -30,7 +30,7 @@ AsterixDB is a BDMS (Big Data Management System) with a rich feature set that se
  * Support for fuzzy and spatial queries as well as for more traditional parametric queries
  * Basic transactional (concurrency and recovery) capabilities akin to those of a NoSQL store
 
-Learn more about AsterixDB at [http://asterixdb.incubator.apache.org] (http://asterixdb.incubator.apache.org)
+Learn more about AsterixDB at [http://asterixdb.apache.org] (http://asterixdb.apache.org)
 
 
 ##Building AsterixDB
@@ -94,5 +94,5 @@ AsterixDB's official documentation resides at [https://ci.apache.org/projects/as
 
 ##Support/Contact
 
-If you have any questions, please feel free to ask on our mailing list, [users@asterixdb.incubator.apache.org](mailto:users@asterixdb.incubator.apache.org). Join the list by sending an email to [users-subscribe@asterixdb.incubator.apache.org](mailto:users-subscribe@asterixdb.incubator.apache.org). If you are interested in the internals or developement of AsterixDB, also please feel free to subscribe to our developer mailing list, [dev@asterixdb.incubator.apache.org](mailto:dev@asterixdb.incubator.apache.org), by sending an email to [dev-subscribe@asterixdb.incubator.apache.org](mailto:dev-subscribe@asterixdb.incubator.apache.org).
+If you have any questions, please feel free to ask on our mailing list, [users@asterixdb.apache.org](mailto:users@asterixdb.apache.org). Join the list by sending an email to [users-subscribe@asterixdb.apache.org](mailto:users-subscribe@asterixdb.apache.org). If you are interested in the internals or developement of AsterixDB, also please feel free to subscribe to our developer mailing list, [dev@asterixdb.apache.org](mailto:dev@asterixdb.apache.org), by sending an email to [dev-subscribe@asterixdb.apache.org](mailto:dev-subscribe@asterixdb.apache.org).
 
