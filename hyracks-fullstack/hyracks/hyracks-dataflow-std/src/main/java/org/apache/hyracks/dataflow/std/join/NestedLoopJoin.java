@@ -25,7 +25,7 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -53,14 +53,14 @@ public class NestedLoopJoin {
     private RunFileReader runFileReader;
     private final RunFileWriter runFileWriter;
     private final boolean isLeftOuter;
-    private final ArrayTupleBuilder nullTupleBuilder;
+    private final ArrayTupleBuilder missingTupleBuilder;
     private final IPredicateEvaluator predEvaluator;
     private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
     private BufferInfo tempInfo = new BufferInfo(null, -1, -1);
 
     public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorOuter, FrameTupleAccessor accessorInner,
             ITuplePairComparator comparatorsOuter2Inner, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
-            INullWriter[] nullWriters1) throws HyracksDataException {
+            IMissingWriter[] missingWriters) throws HyracksDataException {
         this.accessorInner = accessorInner;
         this.accessorOuter = accessorOuter;
         this.appender = new FrameTupleAppender();
@@ -81,14 +81,14 @@ public class NestedLoopJoin {
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
             int innerFieldCount = this.accessorInner.getFieldCount();
-            nullTupleBuilder = new ArrayTupleBuilder(innerFieldCount);
-            DataOutput out = nullTupleBuilder.getDataOutput();
+            missingTupleBuilder = new ArrayTupleBuilder(innerFieldCount);
+            DataOutput out = missingTupleBuilder.getDataOutput();
             for (int i = 0; i < innerFieldCount; i++) {
-                nullWriters1[i].writeNull(out);
-                nullTupleBuilder.addFieldEndOffset();
+                missingWriters[i].writeMissing(out);
+                missingTupleBuilder.addFieldEndOffset();
             }
         } else {
-            nullTupleBuilder = null;
+            missingTupleBuilder = null;
         }
 
         FileReference file = ctx.getJobletContext()
@@ -138,9 +138,9 @@ public class NestedLoopJoin {
             }
 
             if (!matchFound && isLeftOuter) {
-                final int[] ntFieldEndOffsets = nullTupleBuilder.getFieldEndOffsets();
-                final byte[] ntByteArray = nullTupleBuilder.getByteArray();
-                final int ntSize = nullTupleBuilder.getSize();
+                final int[] ntFieldEndOffsets = missingTupleBuilder.getFieldEndOffsets();
+                final byte[] ntByteArray = missingTupleBuilder.getByteArray();
+                final int ntSize = missingTupleBuilder.getSize();
                 FrameUtils.appendConcatToWriter(writer, appender, accessorOuter, i, ntFieldEndOffsets, ntByteArray, 0,
                         ntSize);
             }

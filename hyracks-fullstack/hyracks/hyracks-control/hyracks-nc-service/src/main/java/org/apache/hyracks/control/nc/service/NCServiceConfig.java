@@ -22,8 +22,8 @@ import org.apache.hyracks.control.common.controllers.IniUtils;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.Option;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 
 /**
  * Command-line arguments for NC Service.
@@ -35,17 +35,21 @@ public class NCServiceConfig {
      * If an option is specified both in the config file and on the command line, the config file
      * version will take precedence.
      */
-    @Option(name = "-config-file", usage = "Local NC configuration file (default: none)", required = false)
+    @Option(name = "-config-file", required = false,
+            usage = "Local NC configuration file (default: none)")
     public String configFile = null;
 
-    @Option(name = "-address", usage = "Address to listen on for connections from CC (default: localhost)", required = false)
-    public String address = InetAddress.getLoopbackAddress().getHostAddress();
+    @Option(name = "-address", required = false,
+            usage = "Address to listen on for connections from CC (default: all addresses)")
+    public String address = null;
 
-    @Option(name = "-port", usage = "Port to listen on for connections from CC (default: 9090)", required = false)
+    @Option(name = "-port", required = false,
+            usage = "Port to listen on for connections from CC (default: 9090)")
     public int port = 9090;
 
-    @Option(name = "-command", usage = "NC command to run (default: 'hyracksnc' on PATH)", required = false)
-    public String command = "hyracksnc";
+    @Option(name = "-logdir", required = false,
+            usage = "Directory to log NC output ('-' for stdout of NC service; default: $app.home/logs)")
+    public String logdir = null;
 
     private Ini ini = null;
 
@@ -57,6 +61,7 @@ public class NCServiceConfig {
         ini = IniUtils.loadINIFile(configFile);
         address = IniUtils.getString(ini, "ncservice", "address", address);
         port = IniUtils.getInt(ini, "ncservice", "port", port);
+        logdir = IniUtils.getString(ini, "ncservice", "logdir", logdir);
     }
 
     /**
@@ -69,6 +74,8 @@ public class NCServiceConfig {
         if (configFile != null) {
             loadINIFile();
         }
-        // No defaults necessary beyond the static ones for this config
+        if (logdir == null) {
+            logdir = System.getProperty("app.home", System.getProperty("user.home")) + File.separator + "logs";
+        }
     }
 }

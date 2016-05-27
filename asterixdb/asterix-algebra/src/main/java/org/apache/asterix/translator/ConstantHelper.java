@@ -29,6 +29,7 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -37,38 +38,31 @@ public final class ConstantHelper {
 
     public static IAObject objectFromLiteral(Literal valLiteral) {
         switch (valLiteral.getLiteralType()) {
-            case DOUBLE: {
+            case DOUBLE:
                 DoubleLiteral d = (DoubleLiteral) valLiteral;
                 return new ADouble(d.getValue());
-            }
-            case FALSE: {
+            case FALSE:
                 return ABoolean.FALSE;
-            }
-            case FLOAT: {
+            case FLOAT:
                 FloatLiteral fl = (FloatLiteral) valLiteral;
                 return new AFloat(fl.getValue());
-            }
-            case INTEGER: {
+            case INTEGER:
                 IntegerLiteral il = (IntegerLiteral) valLiteral;
                 return new AInt32(il.getValue());
-            }
-            case LONG: {
-                LongIntegerLiteral il = (LongIntegerLiteral) valLiteral;
-                return new AInt64(il.getValue());
-            }
-            case NULL: {
+            case LONG:
+                LongIntegerLiteral ll = (LongIntegerLiteral) valLiteral;
+                return new AInt64(ll.getValue());
+            case MISSING:
+                return AMissing.MISSING;
+            case NULL:
                 return ANull.NULL;
-            }
-            case STRING: {
+            case STRING:
                 StringLiteral sl = (StringLiteral) valLiteral;
                 return new AString(sl.getValue());
-            }
-            case TRUE: {
+            case TRUE:
                 return ABoolean.TRUE;
-            }
-            default: {
+            default:
                 throw new IllegalStateException();
-            }
         }
     }
 

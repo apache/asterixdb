@@ -18,17 +18,48 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AIntervalPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     public static final AIntervalPrinterFactory INSTANCE = new AIntervalPrinterFactory();
 
-    @Override
-    public IPrinter createPrinter() {
-        return AIntervalPrinter.INSTANCE;
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        ps.print("{ \"interval\": { \"start\": ");
+        byte typetag = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
+        int startOffset = AIntervalSerializerDeserializer.getIntervalStartOffset(b, s + 1) - 1;
+        int startSize = AIntervalSerializerDeserializer.getStartSize(b, s + 1);
+        int endOffset = AIntervalSerializerDeserializer.getIntervalEndOffset(b, s + 1) - 1;
+        int endSize = AIntervalSerializerDeserializer.getEndSize(b, s + 1);
+        IPrinter timeInstancePrinter = getIPrinter(typetag);
+        timeInstancePrinter.print(b, startOffset, startSize, ps);
+        ps.print(", \"end\": ");
+        timeInstancePrinter.print(b, endOffset, endSize, ps);
+        ps.print("}}");
+    };
+
+    private static IPrinter getIPrinter(byte typetag) throws HyracksDataException {
+        switch (EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typetag)) {
+            case DATE:
+                return ADatePrinterFactory.PRINTER;
+            case TIME:
+                return ATimePrinterFactory.PRINTER;
+            case DATETIME:
+                return ADateTimePrinterFactory.PRINTER;
+            default:
+                throw new HyracksDataException("Unsupported internal time types in interval: " + typetag);
+        }
     }
 
+    @Override
+    public IPrinter createPrinter() {
+        return PRINTER;
+    }
 }

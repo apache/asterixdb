@@ -41,7 +41,7 @@ import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public interface IDataFormat {
@@ -68,7 +68,7 @@ public interface IDataFormat {
 
     public IPrinterFactoryProvider getCleanJSONPrinterFactoryProvider();
 
-    public INullWriterFactory getNullWriterFactory();
+    public IMissingWriterFactory getMissingWriterFactory();
 
     public Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
             ARecordType recType, List<String> fldName) throws AlgebricksException;

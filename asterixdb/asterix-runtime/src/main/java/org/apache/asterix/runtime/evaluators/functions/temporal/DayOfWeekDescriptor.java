@@ -25,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeser
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -83,10 +82,6 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
 
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
@@ -96,46 +91,42 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         int offset = argPtr.getStartOffset();
 
                         try {
-                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
+                            int daysSinceAnchor;
+                            int reminder = 0;
+                            if (bytes[offset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
+                                        / GregorianCalendarSystem.CHRONON_OF_DAY);
+                                reminder = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
+                                        % GregorianCalendarSystem.CHRONON_OF_DAY);
+                            } else if (bytes[offset] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                                daysSinceAnchor = ADateSerializerDeserializer.getChronon(bytes, offset + 1);
                             } else {
-                                int daysSinceAnchor;
-                                int reminder = 0;
-                                if (bytes[offset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                                    daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(bytes,
-                                            offset + 1) / GregorianCalendarSystem.CHRONON_OF_DAY);
-                                    reminder = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
-                                            % GregorianCalendarSystem.CHRONON_OF_DAY);
-                                } else if (bytes[offset] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                                    daysSinceAnchor = ADateSerializerDeserializer.getChronon(bytes, offset + 1);
-                                } else {
-                                    throw new AlgebricksException(
-                                            FID.getName() + ": expects input type DATETIME/DATE/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
-                                }
-
-                                // adjust the day before 1970-01-01
-                                if (daysSinceAnchor < 0 && reminder != 0) {
-                                    daysSinceAnchor -= 1;
-                                }
-
-                                // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as the anchor day is Thursday
-                                int weekday = (daysSinceAnchor + ANCHOR_WEEKDAY) % 7;
-
-                                // handle the negative weekday
-                                if (weekday < 0) {
-                                    weekday += 7;
-                                }
-
-                                // convert from 0-based to 1-based (so 7 = Sunday)
-                                if (weekday == 0) {
-                                    weekday = 7;
-                                }
-
-                                aInt64.setValue(weekday);
-
-                                int64Serde.serialize(aInt64, out);
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects input type DATETIME/DATE/NULL but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
                             }
+
+                            // adjust the day before 1970-01-01
+                            if (daysSinceAnchor < 0 && reminder != 0) {
+                                daysSinceAnchor -= 1;
+                            }
+
+                            // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as
+                            // the anchor day is Thursday.
+                            int weekday = (daysSinceAnchor + ANCHOR_WEEKDAY) % 7;
+
+                            // handle the negative weekday
+                            if (weekday < 0) {
+                                weekday += 7;
+                            }
+
+                            // convert from 0-based to 1-based (so 7 = Sunday)
+                            if (weekday == 0) {
+                                weekday = 7;
+                            }
+
+                            aInt64.setValue(weekday);
+                            int64Serde.serialize(aInt64, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

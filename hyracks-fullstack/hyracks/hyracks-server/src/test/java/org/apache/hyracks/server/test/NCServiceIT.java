@@ -37,24 +37,24 @@ import java.util.logging.Logger;
 
 public class NCServiceIT {
 
+    private static final String TARGET_DIR = StringUtils
+            .join(new String[]{System.getProperty("basedir"), "target"}, File.separator);
+    private static final String LOG_DIR = StringUtils
+            .join(new String[]{TARGET_DIR, "surefire-reports"}, File.separator);
     private static final String RESOURCE_DIR = StringUtils
-            .join(new String[]{System.getProperty("user.dir"), "src", "test", "resources", "NCServiceIT"},
-                    File.separator);
+            .join(new String[]{TARGET_DIR, "test-classes", "NCServiceIT"}, File.separator);
     private static final String APP_DIR = StringUtils
-            .join(new String[]{System.getProperty("user.dir"), "target", "appassembler", "bin"},
-                    File.separator);
+            .join(new String[]{TARGET_DIR, "appassembler", "bin"}, File.separator);
     private static final Logger LOGGER = Logger.getLogger(NCServiceIT.class.getName());
     private static List<Process> procs = new ArrayList<>();
 
     @BeforeClass
     public static void setUp() throws Exception {
         // Start two NC Services - don't read their output as they don't terminate
-        procs.add(invoke(APP_DIR + File.separator + "hyracksncservice",
-                "-config-file", RESOURCE_DIR + File.separator + "nc-red.conf",
-                "-command", APP_DIR + File.separator + "hyracksnc"));
-        procs.add(invoke(APP_DIR + File.separator + "hyracksncservice",
-                "-config-file", RESOURCE_DIR + File.separator + "nc-blue.conf",
-                "-command", APP_DIR + File.separator + "hyracksnc"));
+        procs.add(invoke("nc-red.log", APP_DIR + File.separator + "hyracksncservice",
+                "-config-file", RESOURCE_DIR + File.separator + "nc-red.conf"));
+        procs.add(invoke("nc-blue.log", APP_DIR + File.separator + "hyracksncservice",
+                "-config-file", RESOURCE_DIR + File.separator + "nc-blue.conf"));
         try {
             Thread.sleep(2000);
         }
@@ -62,7 +62,7 @@ public class NCServiceIT {
         }
 
         // Start CC
-        procs.add(invoke(APP_DIR + File.separator + "hyrackscc",
+        procs.add(invoke("cc.log", APP_DIR + File.separator + "hyrackscc",
                 "-config-file", RESOURCE_DIR + File.separator + "cc.conf"));
         try {
             Thread.sleep(10000);
@@ -97,9 +97,14 @@ public class NCServiceIT {
         }
     }
 
-    private static Process invoke(String... args) throws Exception {
+    private static Process invoke(String logfile, String... args) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.redirectErrorStream(true);
+        File logDir = new File(LOG_DIR);
+        logDir.mkdirs();
+        File log = new File(logDir, logfile);
+        log.delete();
+        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         Process p = pb.start();
         return p;
     }
@@ -112,7 +117,7 @@ public class NCServiceIT {
         JSONObject result = new JSONObject(response);
         JSONArray nodes = result.getJSONArray("result");
         int numNodes = nodes.length();
-        Assert.assertEquals("Wrong number of nodes!", numNodes, 2);
+        Assert.assertEquals("Wrong number of nodes!", 2, numNodes);
         for (int i = 0; i < nodes.length(); i++) {
             JSONObject node = nodes.getJSONObject(i);
             String id = node.getString("node-id");

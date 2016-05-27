@@ -19,7 +19,6 @@
 package org.apache.asterix.external.util;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -31,7 +30,6 @@ import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
@@ -164,11 +162,11 @@ public class ExternalDataUtils {
         for (int i = 0; i < n; i++) {
             ATypeTag tag = null;
             if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
-                List<IAType> unionTypes = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList();
-                if ((unionTypes.size() != 2) && (unionTypes.get(0).getTypeTag() != ATypeTag.NULL)) {
+                AUnionType unionType = (AUnionType) recordType.getFieldTypes()[i];
+                if (!unionType.isNullableType()) {
                     throw new NotImplementedException("Non-optional UNION type is not supported.");
                 }
-                tag = unionTypes.get(1).getTypeTag();
+                tag = unionType.getActualType().getTypeTag();
             } else {
                 tag = recordType.getFieldTypes()[i].getTypeTag();
             }

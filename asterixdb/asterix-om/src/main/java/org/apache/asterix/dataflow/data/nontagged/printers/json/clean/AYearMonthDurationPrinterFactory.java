@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,12 +29,14 @@ public class AYearMonthDurationPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AYearMonthDurationPrinterFactory INSTANCE = new AYearMonthDurationPrinterFactory();
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.algebricks.data.IPrinterFactory#createPrinter()
-     */
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        ps.print("{ \"year-month-duration\": ");
+        ps.print(AInt32SerializerDeserializer.getInt(b, s + 1));
+        ps.print("}");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AYearMonthDurationPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

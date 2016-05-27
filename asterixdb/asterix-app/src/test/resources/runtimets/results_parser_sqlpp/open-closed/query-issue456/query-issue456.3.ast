@@ -3,7 +3,7 @@ Query:
 SELECT ELEMENT [
 OrderedListConstructor [
   Variable [ Name=$m ]
-  FunctionCall test.count@1[
+  FunctionCall test.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

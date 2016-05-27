@@ -18,72 +18,36 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class SubstringTypeComputer implements IResultTypeComputer {
+public class SubstringTypeComputer extends AbstractResultTypeComputer {
     public static final SubstringTypeComputer INSTANCE = new SubstringTypeComputer();
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if (fce.getArguments().size() < 3)
-            throw new AlgebricksException("Wrong Argument Number.");
-        ILogicalExpression arg0 = fce.getArguments().get(0).getValue();
-        ILogicalExpression arg1 = fce.getArguments().get(1).getValue();
-        ILogicalExpression arg2 = fce.getArguments().get(2).getValue();
-        IAType t0, t1, t2;
-        try {
-            t0 = (IAType) env.getType(arg0);
-            t1 = (IAType) env.getType(arg1);
-            t2 = (IAType) env.getType(arg2);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
+    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag tag = type.getTypeTag();
+        if (argIndex == 0 && tag != ATypeTag.STRING) {
+            throw new AlgebricksException("First argument should be string Type.");
         }
-
-        ATypeTag tag0, tag1, tag2;
-        if (NonTaggedFormatUtil.isOptional(t0))
-            tag0 = ((AUnionType) t0).getNullableType().getTypeTag();
-        else
-            tag0 = t0.getTypeTag();
-
-        if (NonTaggedFormatUtil.isOptional(t1))
-            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
-        else
-            tag1 = t1.getTypeTag();
-
-        if (NonTaggedFormatUtil.isOptional(t2))
-            tag2 = ((AUnionType) t2).getNullableType().getTypeTag();
-        else
-            tag2 = t2.getTypeTag();
-
-        if (tag0 == ATypeTag.ANY || tag1 == ATypeTag.ANY || tag2 == ATypeTag.ANY)
-            return BuiltinType.ANY;
-
-        if (tag0 != ATypeTag.NULL && tag0 != ATypeTag.STRING) {
-            throw new AlgebricksException("First argument should be String Type.");
+        if (argIndex > 0 && argIndex <= 2) {
+            switch (tag) {
+                case INT8:
+                case INT16:
+                case INT32:
+                case INT64:
+                    break;
+                default:
+                    throw new AlgebricksException("Second argument should be integer Type.");
+            }
         }
+    }
 
-        if (tag1 != ATypeTag.NULL && tag1 != ATypeTag.INT8 && tag1 != ATypeTag.INT16 && tag1 != ATypeTag.INT32
-                && tag1 != ATypeTag.INT64) {
-            throw new AlgebricksException("Second argument should be integer Type.");
-        }
-
-        if (tag2 != ATypeTag.NULL && tag2 != ATypeTag.INT8 && tag2 != ATypeTag.INT16 && tag2 != ATypeTag.INT32
-                && tag2 != ATypeTag.INT64) {
-            throw new AlgebricksException("Third argument should be integer Type.");
-        }
-
+    @Override
+    public IAType getResultType(IAType... types) {
         return BuiltinType.ASTRING;
     }
 }

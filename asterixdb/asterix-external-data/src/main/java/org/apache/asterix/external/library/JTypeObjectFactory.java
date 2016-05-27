@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.library;
 
-import java.util.List;
-
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
 import org.apache.asterix.external.library.java.JObjects.JCircle;
@@ -43,7 +41,6 @@ import org.apache.asterix.external.library.java.JObjects.JTime;
 import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
@@ -135,18 +132,16 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                 break;
             case UNION:
                 AUnionType unionType = (AUnionType) type;
-                List<IAType> unionList = unionType.getUnionList();
                 IJObject itemObject = null;
-                for (IAType elementType : unionList) {
-                    if (!elementType.getTypeTag().equals(ATypeTag.NULL)) {
-                        itemObject = create(elementType);
-                        break;
-                    }
+                if (unionType.isMissableType()) {
+                    itemObject = create(unionType);
                 }
-                return retValue = itemObject;
+                retValue = itemObject;
+                break;
             default:
                 break;
         }
         return retValue;
     }
+
 }

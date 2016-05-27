@@ -27,7 +27,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserial
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -81,9 +80,6 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
@@ -130,9 +126,6 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 aPoint[1].setValue(x + xInc, y + yInc);
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangleSerde.serialize(aRectangle, out);
-                            } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL || tag2 == ATypeTag.NULL
-                                    || tag3 == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_CELL.getName()
                                         + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("

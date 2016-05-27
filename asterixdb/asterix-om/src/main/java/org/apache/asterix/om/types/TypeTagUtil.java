@@ -42,6 +42,8 @@ public class TypeTagUtil {
                 return BuiltinType.ADOUBLE;
             case STRING:
                 return BuiltinType.ASTRING;
+            case MISSING:
+                return BuiltinType.AMISSING;
             case NULL:
                 return BuiltinType.ANULL;
             case BOOLEAN:

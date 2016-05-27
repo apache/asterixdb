@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +30,26 @@ public class APolygonPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final APolygonPrinterFactory INSTANCE = new APolygonPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        short numberOfPoints = AInt16SerializerDeserializer.getShort(b, s + 1);
+        s += 3;
+        ps.print("[ ");
+        for (int i = 0; i < numberOfPoints; i++) {
+            if (i > 0) {
+                ps.print(", ");
+            }
+            ps.print("[");
+            ps.print(ADoubleSerializerDeserializer.getDouble(b, s));
+            ps.print(", ");
+            ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 8));
+            ps.print("]");
+            s += 16;
+        }
+        ps.print(" ]");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return APolygonPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

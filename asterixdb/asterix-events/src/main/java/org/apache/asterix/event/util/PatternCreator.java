@@ -48,23 +48,22 @@ import org.apache.asterix.installer.schema.conf.Backup;
 
 public class PatternCreator {
 
-    public static PatternCreator INSTANCE = new PatternCreator();
+    public static final PatternCreator INSTANCE = new PatternCreator();
 
     private PatternCreator() {
-
     }
 
     private ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
 
     private void addInitialDelay(Pattern p, int delay, String unit) {
-        Delay d = new Delay(new Value(null, "" + delay), unit);
+        Delay d = new Delay(new Value(null, Integer.toString(delay)), unit);
         p.setDelay(d);
     }
 
     public Patterns getAsterixBinaryTransferPattern(String asterixInstanceName, Cluster cluster) throws Exception {
         String ccLocationIp = cluster.getMasterNode().getClusterIp();
         String destDir = cluster.getWorkingDir().getDir() + File.separator + "asterix";
-        List<Pattern> ps = new ArrayList<Pattern>();
+        List<Pattern> ps = new ArrayList<>();
 
         Pattern copyHyracks = createCopyHyracksPattern(asterixInstanceName, cluster, ccLocationIp, destDir);
         ps.add(copyHyracks);
@@ -79,14 +78,13 @@ public class PatternCreator {
             }
         }
         ps.addAll(createHadoopLibraryTransferPattern(cluster).getPattern());
-        Patterns patterns = new Patterns(ps);
-        return patterns;
+        return new Patterns(ps);
     }
 
     public Patterns getStartAsterixPattern(String asterixInstanceName, Cluster cluster, boolean createCommand)
             throws Exception {
         String ccLocationId = cluster.getMasterNode().getId();
-        List<Pattern> ps = new ArrayList<Pattern>();
+        List<Pattern> ps = new ArrayList<>();
 
         Pattern createCC = createCCStartPattern(ccLocationId);
         addInitialDelay(createCC, 3, "sec");
@@ -100,12 +98,11 @@ public class PatternCreator {
             ps.add(createNC);
         }
 
-        Patterns patterns = new Patterns(ps);
-        return patterns;
+        return new Patterns(ps);
     }
 
     public Patterns getStopCommandPattern(String asterixInstanceName) throws Exception {
-        List<Pattern> ps = new ArrayList<Pattern>();
+        List<Pattern> ps = new ArrayList<>();
         AsterixInstance asterixInstance = lookupService.getAsterixInstance(asterixInstanceName);
         Cluster cluster = asterixInstance.getCluster();
 
@@ -121,8 +118,7 @@ public class PatternCreator {
             nodeControllerIndex++;
         }
 
-        Patterns patterns = new Patterns(ps);
-        return patterns;
+        return new Patterns(ps);
     }
 
     public Patterns getBackUpAsterixPattern(AsterixInstance instance, Backup backupConf) throws Exception {
@@ -160,12 +156,12 @@ public class PatternCreator {
         String hdfsBackupDir = backupConf.getBackupDir();
         VerificationUtil.verifyBackupRestoreConfiguration(hdfsUrl, hadoopVersion, hdfsBackupDir);
         String workingDir = cluster.getWorkingDir().getDir();
-        String backupId = "" + instance.getBackupInfo().size();
+        String backupId = Integer.toString(instance.getBackupInfo().size());
         String store;
         String pargs;
         String iodevices;
         store = cluster.getStore();
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
@@ -183,13 +179,13 @@ public class PatternCreator {
         Cluster cluster = instance.getCluster();
         String backupDir = backupConf.getBackupDir();
         String workingDir = cluster.getWorkingDir().getDir();
-        String backupId = "" + instance.getBackupInfo().size();
+        String backupId = Integer.toString(instance.getBackupInfo().size());
         String iodevices;
         String txnLogDir;
         String store;
         String pargs;
         store = cluster.getStore();
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
@@ -213,7 +209,7 @@ public class PatternCreator {
         String workingDir = cluster.getWorkingDir().getDir();
         int backupId = backupInfo.getId();
         String pargs;
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
@@ -234,7 +230,7 @@ public class PatternCreator {
         String workingDir = cluster.getWorkingDir().getDir();
         int backupId = backupInfo.getId();
         String pargs;
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
@@ -248,7 +244,7 @@ public class PatternCreator {
     }
 
     public Patterns createHadoopLibraryTransferPattern(Cluster cluster) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         String workingDir = cluster.getWorkingDir().getDir();
         String hadoopVersion = AsterixEventService.getConfiguration().getBackup().getHdfs().getVersion();
         File hadoopDir = new File(AsterixEventService.getEventHome() + File.separator + "hadoop-" + hadoopVersion);
@@ -277,24 +273,23 @@ public class PatternCreator {
                 patternList.add(p);
             }
         }
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     public Patterns createDeleteInstancePattern(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         patternList.addAll(createRemoveAsterixStoragePattern(instance).getPattern());
-        if (instance.getBackupInfo() != null && instance.getBackupInfo().size() > 0) {
+        if (instance.getBackupInfo() != null && !instance.getBackupInfo().isEmpty()) {
             List<BackupInfo> backups = instance.getBackupInfo();
-            Set<String> removedBackupDirsHDFS = new HashSet<String>();
-            Set<String> removedBackupDirsLocal = new HashSet<String>();
+            Set<String> removedBackupDirsHDFS = new HashSet<>();
+            Set<String> removedBackupDirsLocal = new HashSet<>();
 
             String backupDir;
             for (BackupInfo binfo : backups) {
                 backupDir = binfo.getBackupConf().getBackupDir();
                 switch (binfo.getBackupType()) {
                     case HDFS:
-                        if (removedBackupDirsHDFS.contains(backups)) {
+                        if (removedBackupDirsHDFS.contains(backupDir)) {
                             continue;
                         }
                         patternList.addAll(createRemoveHDFSBackupPattern(instance, backupDir).getPattern());
@@ -302,7 +297,7 @@ public class PatternCreator {
                         break;
 
                     case LOCAL:
-                        if (removedBackupDirsLocal.contains(backups)) {
+                        if (removedBackupDirsLocal.contains(backupDir)) {
                             continue;
                         }
                         patternList.addAll(createRemoveLocalBackupPattern(instance, backupDir).getPattern());
@@ -315,15 +310,14 @@ public class PatternCreator {
         patternList.addAll(createRemoveAsterixLogDirPattern(instance).getPattern());
         patternList.addAll(createRemoveAsterixRootMetadata(instance).getPattern());
         patternList.addAll(createRemoveAsterixTxnLogs(instance).getPattern());
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveAsterixTxnLogs(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
-        Nodeid nodeid = null;
-        Event event = null;
+        Nodeid nodeid;
+        Event event;
         for (Node node : cluster.getNode()) {
             String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             nodeid = new Nodeid(new Value(null, node.getId()));
@@ -331,12 +325,11 @@ public class PatternCreator {
             patternList.add(new Pattern(null, 1, null, event));
         }
 
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveHDFSBackupPattern(AsterixInstance instance, String hdfsBackupDir) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
         String hdfsUrl = AsterixEventService.getConfiguration().getBackup().getHdfs().getUrl();
         String hadoopVersion = AsterixEventService.getConfiguration().getBackup().getHdfs().getVersion();
@@ -347,17 +340,16 @@ public class PatternCreator {
         String pargs = workingDir + " " + hadoopVersion + " " + hdfsUrl + " " + pathToDelete;
         Event event = new Event("hdfs_delete", nodeid, pargs);
         patternList.add(new Pattern(null, 1, null, event));
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveLocalBackupPattern(AsterixInstance instance, String localBackupDir) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
 
         String pathToDelete = localBackupDir + File.separator + instance.getName();
         String pargs = pathToDelete;
-        List<String> removedBackupDirs = new ArrayList<String>();
+        List<String> removedBackupDirs = new ArrayList<>();
         for (Node node : cluster.getNode()) {
             if (removedBackupDirs.contains(node.getClusterIp())) {
                 continue;
@@ -368,12 +360,11 @@ public class PatternCreator {
             removedBackupDirs.add(node.getClusterIp());
         }
 
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     public Patterns createRemoveAsterixWorkingDirPattern(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
         String workingDir = cluster.getWorkingDir().getDir();
         String pargs = workingDir;
@@ -388,13 +379,12 @@ public class PatternCreator {
                 patternList.add(new Pattern(null, 1, null, event));
             }
         }
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     public Patterns getLibraryInstallPattern(AsterixInstance instance, String dataverse, String libraryName,
             String libraryPath) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
@@ -431,7 +421,7 @@ public class PatternCreator {
 
     public Patterns getLibraryUninstallPattern(AsterixInstance instance, String dataverse, String libraryName)
             throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
         String workingDir = cluster.getWorkingDir().getDir();
         String destFile = dataverse + "." + libraryName;
@@ -472,11 +462,11 @@ public class PatternCreator {
     }
 
     private Patterns createRemoveAsterixRootMetadata(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
-        Nodeid nodeid = null;
-        String pargs = null;
-        Event event = null;
+        Nodeid nodeid;
+        String pargs;
+        Event event;
         for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             String primaryIODevice = iodevices.split(",")[0].trim();
@@ -486,12 +476,11 @@ public class PatternCreator {
             patternList.add(new Pattern(null, 1, null, event));
         }
 
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveAsterixLogDirPattern(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
         String pargs = instance.getCluster().getLogDir();
         Nodeid nodeid = new Nodeid(new Value(null, cluster.getMasterNode().getId()));
@@ -507,14 +496,13 @@ public class PatternCreator {
             patternList.add(new Pattern(null, 1, null, event));
         }
 
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveAsterixStoragePattern(AsterixInstance instance) throws Exception {
-        List<Pattern> patternList = new ArrayList<Pattern>();
+        List<Pattern> patternList = new ArrayList<>();
         Cluster cluster = instance.getCluster();
-        String pargs = null;
+        String pargs;
 
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
@@ -528,8 +516,7 @@ public class PatternCreator {
                 patternList.add(new Pattern(null, 1, null, event));
             }
         }
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Pattern createCopyHyracksPattern(String instanceName, Cluster cluster, String destinationIp,
@@ -576,7 +563,7 @@ public class PatternCreator {
     }
 
     public Patterns createPrepareNodePattern(String instanceName, Cluster cluster, Node nodeToBeAdded) {
-        List<Pattern> ps = new ArrayList<Pattern>();
+        List<Pattern> ps = new ArrayList<>();
         boolean workingDirOnNFS = cluster.getWorkingDir().isNFS();
         if (!workingDirOnNFS) {
             String ccLocationIp = cluster.getMasterNode().getClusterIp();
@@ -609,13 +596,12 @@ public class PatternCreator {
             ps.add(p);
         }
 
-        Patterns patterns = new Patterns(ps);
-        return patterns;
+        return new Patterns(ps);
     }
 
     public Patterns getGenerateLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
-        List<Pattern> patternList = new ArrayList<Pattern>();
-        Map<String, String> nodeLogs = new HashMap<String, String>();
+        List<Pattern> patternList = new ArrayList<>();
+        Map<String, String> nodeLogs = new HashMap<>();
 
         String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
         String srcHost = cluster.getMasterNode().getClientIp();
@@ -640,7 +626,6 @@ public class PatternCreator {
             p = new Pattern(null, 1, null, event);
             patternList.add(p);
         }
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 }

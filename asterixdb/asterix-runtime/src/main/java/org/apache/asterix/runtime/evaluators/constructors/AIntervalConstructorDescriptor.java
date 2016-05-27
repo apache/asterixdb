@@ -27,7 +27,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeseriali
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -75,9 +74,6 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -91,13 +87,6 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                         int offset1 = argPtr1.getStartOffset();
 
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes0[offset0] != bytes1[offset1]) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects both arguments to be of the same type. Either DATE/TIME/DATETIME, but got "

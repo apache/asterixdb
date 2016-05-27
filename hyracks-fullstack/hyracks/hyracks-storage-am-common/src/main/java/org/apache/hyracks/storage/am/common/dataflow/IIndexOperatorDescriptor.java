@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.common.dataflow;
 
 import org.apache.hyracks.api.dataflow.IActivity;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -43,9 +43,9 @@ public interface IIndexOperatorDescriptor extends IActivity {
 
     public boolean getRetainInput();
 
-    public boolean getRetainNull();
+    public boolean getRetainMissing();
 
-    public INullWriterFactory getNullWriterFactory();
+    public IMissingWriterFactory getMissingWriterFactory();
 
     public ISearchOperationCallbackFactory getSearchOpCallbackFactory();
 

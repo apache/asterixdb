@@ -102,17 +102,17 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                         upsertVar = context.newVar();
                         AbstractFunctionCallExpression orFunc = new ScalarFunctionCallExpression(
                                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OR));
-                        // is new value null? -> this means that the expected operation is delete
-                        AbstractFunctionCallExpression isNewNullFunc = new ScalarFunctionCallExpression(
-                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL));
-                        isNewNullFunc.getArguments().add(insertDeleteUpsertOperator.getPayloadExpression());
-                        AbstractFunctionCallExpression isPrevNullFunc = new ScalarFunctionCallExpression(
-                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL));
+                        // is new value missing? -> this means that the expected operation is delete
+                        AbstractFunctionCallExpression isNewMissingFunc = new ScalarFunctionCallExpression(
+                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING));
+                        isNewMissingFunc.getArguments().add(insertDeleteUpsertOperator.getPayloadExpression());
+                        AbstractFunctionCallExpression isPrevMissingFunc = new ScalarFunctionCallExpression(
+                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING));
                         // argument is the previous record
-                        isPrevNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(
+                        isPrevMissingFunc.getArguments().add(new MutableObject<ILogicalExpression>(
                                 new VariableReferenceExpression(insertDeleteUpsertOperator.getPrevRecordVar())));
-                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isPrevNullFunc));
-                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewNullFunc));
+                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isPrevMissingFunc));
+                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewMissingFunc));
 
                         // AssignOperator puts in the cast var the casted record
                         upsertFlagAssign = new AssignOperator(upsertVar, new MutableObject<ILogicalExpression>(orFunc));

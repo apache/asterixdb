@@ -40,7 +40,7 @@ public enum ATypeTag implements IEnumSerializer {
     FLOAT(11),
     DOUBLE(12),
     STRING(13),
-    NULL(14),
+    MISSING(14),
     BOOLEAN(15),
     DATETIME(16),
     DATE(17),
@@ -65,12 +65,14 @@ public enum ATypeTag implements IEnumSerializer {
     YEARMONTHDURATION(36),
     DAYTIMEDURATION(37),
     UUID(38),
-    SHORTWITHOUTTYPEINFO(40);
+    SHORTWITHOUTTYPEINFO(40),
+    NULL(41);
 
     /*
      * Serialized Tags begin
      */
     public static final byte SERIALIZED_STRING_TYPE_TAG = STRING.serialize();
+    public static final byte SERIALIZED_MISSING_TYPE_TAG = MISSING.serialize();
     public static final byte SERIALIZED_NULL_TYPE_TAG = NULL.serialize();
     public static final byte SERIALIZED_DOUBLE_TYPE_TAG = DOUBLE.serialize();
     public static final byte SERIALIZED_RECORD_TYPE_TAG = RECORD.serialize();

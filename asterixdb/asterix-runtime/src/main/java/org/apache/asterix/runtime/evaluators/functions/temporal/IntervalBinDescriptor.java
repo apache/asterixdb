@@ -28,7 +28,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerial
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -86,9 +85,6 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final AMutableInterval aInterval = new AMutableInterval(0, 0, (byte) -1);
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
@@ -98,9 +94,11 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
+                        eval1.evaluate(tuple, argPtr1);
+                        eval2.evaluate(tuple, argPtr2);
+
                         byte[] bytes0 = argPtr0.getByteArray();
                         int offset0 = argPtr0.getStartOffset();
-
                         ATypeTag type0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
 
                         long chrononToBin = 0;
@@ -115,30 +113,18 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                             case DATETIME:
                                 chrononToBin = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
                                 break;
-                            case NULL:
-                                try {
-                                    nullSerde.serialize(ANull.NULL, out);
-                                } catch (HyracksDataException e) {
-                                    throw new AlgebricksException(e);
-                                }
-                                result.set(resultStorage);
-                                return;
                             default:
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
-
                         }
 
-                        eval1.evaluate(tuple, argPtr1);
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
                         if (type0 != type1) {
-                            if (type0 != ATypeTag.NULL && type1 != ATypeTag.NULL) {
-                                throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
-                                        + " for the second argument but got " + type1);
-                            }
+                            throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
+                                    + " for the second argument but got " + type1);
                         }
 
                         long chrononToStart = 0;
@@ -153,20 +139,11 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                             case DATETIME:
                                 chrononToStart = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
-                            case NULL:
-                                try {
-                                    nullSerde.serialize(ANull.NULL, out);
-                                } catch (HyracksDataException e) {
-                                    throw new AlgebricksException(e);
-                                }
-                                result.set(resultStorage);
-                                return;
                             default:
                                 throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
                                         + " for the second argument but got " + type1);
                         }
 
-                        eval2.evaluate(tuple, argPtr2);
                         byte[] bytes2 = argPtr2.getByteArray();
                         int offset2 = argPtr2.getStartOffset();
                         ATypeTag type2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
@@ -205,16 +182,7 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
 
                                 binIndex = totalChronon / dayTime
                                         + ((totalChronon < 0 && totalChronon % dayTime != 0) ? -1 : 0);
-
                                 break;
-                            case NULL:
-                                try {
-                                    nullSerde.serialize(ANull.NULL, out);
-                                } catch (HyracksDataException e) {
-                                    throw new AlgebricksException(e);
-                                }
-                                result.set(resultStorage);
-                                return;
                             default:
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
@@ -253,18 +221,9 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart,
                                         yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
                                 break;
-                            case NULL:
-                                try {
-                                    nullSerde.serialize(ANull.NULL, out);
-                                } catch (HyracksDataException e) {
-                                    throw new AlgebricksException(e);
-                                }
-                                result.set(resultStorage);
-                                return;
                             default:
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
-
                         }
                         try {
                             aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());

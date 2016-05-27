@@ -21,7 +21,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall twitter.count@1[
+    FunctionCall twitter.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

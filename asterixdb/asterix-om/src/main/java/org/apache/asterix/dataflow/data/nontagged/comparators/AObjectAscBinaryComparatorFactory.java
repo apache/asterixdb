@@ -110,17 +110,26 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
 
-                // Normally, comparing between NULL and non-NULL values should return UNKNOWN as the result.
-                // However, at this point, we assume that NULL check between two types is already done.
+                // Normally, comparing between MISSING and non-MISSING values should return MISSING as the result.
+                // However, this comparator is used by order-by/group-by/distinct-by.
+                // Therefore, inside this method, we return an order between two values even if one value is MISSING.
+                if (b1[s1] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                    return b2[s2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG ? 0 : -1;
+                } else {
+                    if (b2[s2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                        return 1;
+                    }
+                }
+
+                // Normally, comparing between NULL and non-NULL/MISSING values should return NULL as the result.
+                // However, this comparator is used by order-by/group-by/distinct-by.
                 // Therefore, inside this method, we return an order between two values even if one value is NULL.
                 if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
-                        return 0;
-                    else
-                        return -1;
+                    return b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG ? 0 : -1;
                 } else {
-                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                    if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                         return 1;
+                    }
                 }
 
                 ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);

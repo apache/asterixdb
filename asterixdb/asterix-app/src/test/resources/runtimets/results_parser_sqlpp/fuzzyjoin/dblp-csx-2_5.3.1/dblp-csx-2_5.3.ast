@@ -136,7 +136,7 @@ Let Variable [ Name=$tokensDBLP ]
           )
 
         Orderby
-          FunctionCall fuzzyjoin.count@1[
+          FunctionCall fuzzyjoin.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [
@@ -244,7 +244,7 @@ Let Variable [ Name=$tokensCSX ]
           )
 
         Orderby
-          FunctionCall fuzzyjoin.count@1[
+          FunctionCall fuzzyjoin.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [

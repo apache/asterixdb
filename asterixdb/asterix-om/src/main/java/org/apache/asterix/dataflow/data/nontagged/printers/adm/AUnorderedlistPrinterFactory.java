@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
@@ -35,7 +36,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class AUnorderedlistPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-    private AUnorderedListType unorderedlistType;
+    private final AUnorderedListType unorderedlistType;
 
     public AUnorderedlistPrinterFactory(AUnorderedListType unorderedlistType) {
         this.unorderedlistType = unorderedlistType;
@@ -43,16 +44,14 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-
-        PointableAllocator allocator = new PointableAllocator();
+        final PointableAllocator allocator = new PointableAllocator();
         final IAType inputType = unorderedlistType == null
                 ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.UNORDEREDLIST) : unorderedlistType;
         final IVisitablePointable listAccessor = allocator.allocateListValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
-        final Pair<PrintStream, ATypeTag> arg = new Pair<PrintStream, ATypeTag>(null, null);
+        final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);
 
         return new IPrinter() {
-
             @Override
             public void init() {
                 arg.second = inputType.getTypeTag();
@@ -64,7 +63,7 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
                     listAccessor.set(b, start, l);
                     arg.first = ps;
                     listAccessor.accept(printVisitor, arg);
-                } catch (Exception e) {
+                } catch (AsterixException e) {
                     throw new HyracksDataException(e);
                 }
             }

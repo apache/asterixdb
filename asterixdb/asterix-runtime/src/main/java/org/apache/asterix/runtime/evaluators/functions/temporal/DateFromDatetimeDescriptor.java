@@ -24,7 +24,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeser
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -79,10 +78,6 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                             .getSerializerDeserializer(BuiltinType.ADATE);
                     private AMutableDate aDate = new AMutableDate(0);
 
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
@@ -91,24 +86,19 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                         int offset = argPtr.getStartOffset();
 
                         try {
-                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else {
-                                if (bytes[offset] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                                    throw new AlgebricksException(
-                                            FID.getName() + ": expects input type DATETIME/NULL but got "
-                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
-                                }
-                                long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);
-                                int dateChrononInDays = (int) (datetimeChronon
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY);
-                                if (dateChrononInDays < 0
-                                        && datetimeChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                                    dateChrononInDays -= 1;
-                                }
-                                aDate.setValue(dateChrononInDays);
-                                dateSerde.serialize(aDate, out);
+                            if (bytes[offset] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                throw new AlgebricksException(
+                                        FID.getName() + ": expects input type DATETIME/NULL but got "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
                             }
+                            long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);
+                            int dateChrononInDays = (int) (datetimeChronon / GregorianCalendarSystem.CHRONON_OF_DAY);
+                            if (dateChrononInDays < 0
+                                    && datetimeChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
+                                dateChrononInDays -= 1;
+                            }
+                            aDate.setValue(dateChrononInDays);
+                            dateSerde.serialize(aDate, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

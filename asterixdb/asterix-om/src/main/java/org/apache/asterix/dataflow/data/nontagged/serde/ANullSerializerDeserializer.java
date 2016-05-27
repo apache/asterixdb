@@ -22,10 +22,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ANullSerializerDeserializer implements ISerializerDeserializer<ANull> {
+public class ANullSerializerDeserializer implements ISerializerDeserializer<IAObject> {
 
     private static final long serialVersionUID = 1L;
 
@@ -40,7 +41,8 @@ public class ANullSerializerDeserializer implements ISerializerDeserializer<ANul
     }
 
     @Override
-    public void serialize(ANull instance, DataOutput out) throws HyracksDataException {
+    public void serialize(IAObject instance, DataOutput out) throws HyracksDataException {
+        // A null value only has a typetag in its serialized form.
     }
 
 }

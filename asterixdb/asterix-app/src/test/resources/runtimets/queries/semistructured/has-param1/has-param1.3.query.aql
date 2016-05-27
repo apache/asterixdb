@@ -20,6 +20,6 @@ use dataverse test;
 set import-private-functions 'true';
 
 for $o in dataset('Orders')
-where not(is-null($o.param1))
-order by $o.oid 
+where not(is-missing($o.param1))
+order by $o.oid
 return $o

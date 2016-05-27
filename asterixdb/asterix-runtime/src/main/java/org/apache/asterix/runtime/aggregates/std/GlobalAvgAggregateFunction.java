@@ -55,7 +55,7 @@ public class GlobalAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     @Override
     protected boolean skipStep() {
-        return (aggType == ATypeTag.NULL);
+        return aggType == ATypeTag.NULL;
     }
 
 }

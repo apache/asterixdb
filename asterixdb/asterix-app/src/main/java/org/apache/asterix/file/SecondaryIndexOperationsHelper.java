@@ -53,7 +53,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastRecordDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.IsNullDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -436,11 +436,11 @@ public abstract class SecondaryIndexOperationsHelper {
             RecordDescriptor secondaryRecDesc) throws AlgebricksException {
         IScalarEvaluatorFactory[] andArgsEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeyFields];
         NotDescriptor notDesc = new NotDescriptor();
-        IsNullDescriptor isNullDesc = new IsNullDescriptor();
+        IsUnknownDescriptor isUnknownDesc = new IsUnknownDescriptor();
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
-            IScalarEvaluatorFactory isNullEvalFactory = isNullDesc
+            IScalarEvaluatorFactory isNullEvalFactory = isUnknownDesc
                     .createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
             IScalarEvaluatorFactory notEvalFactory = notDesc
                     .createEvaluatorFactory(new IScalarEvaluatorFactory[] { isNullEvalFactory });

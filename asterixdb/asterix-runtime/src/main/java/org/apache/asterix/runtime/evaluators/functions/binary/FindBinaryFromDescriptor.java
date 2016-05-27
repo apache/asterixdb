@@ -55,11 +55,9 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
-                return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(ctx, args,
-                        getIdentifier().getName()) {
+                return new AbstractFindBinaryEvaluator(ctx, args, getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
-                        evaluateTuple(tuple, 2);
                         int getFrom = 0;
                         try {
                             getFrom = ATypeHierarchy.getIntegerValue(pointables[2].getByteArray(),

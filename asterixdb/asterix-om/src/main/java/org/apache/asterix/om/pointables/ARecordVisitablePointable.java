@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
@@ -37,7 +36,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
 import org.apache.asterix.om.util.container.IObjectFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
@@ -101,9 +99,10 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
 
-                if (NonTaggedFormatUtil.isOptional(fieldTypes[i]))
+                if (NonTaggedFormatUtil.isOptional(fieldTypes[i])) {
                     // optional field: add the embedded non-null type tag
-                    ftypeTag = ((AUnionType) fieldTypes[i]).getNullableType().getTypeTag();
+                    ftypeTag = ((AUnionType) fieldTypes[i]).getActualType().getTypeTag();
+                }
 
                 // add type tag Reference
                 int tagStart = typeBos.size();
@@ -125,8 +124,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
             // initialize a constant: null value bytes reference
             int nullFieldStart = typeBos.size();
-            INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
-            nullWriter.writeNull(typeDos);
+            typeDos.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             int nullFieldEnd = typeBos.size();
             nullReference.set(typeBos.getByteArray(), nullFieldStart, nullFieldEnd - nullFieldStart);
         } catch (IOException e) {
@@ -143,10 +141,12 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
         allocator.reset();
 
         // clean up the returned containers
-        for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--)
+        for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--) {
             fieldNames.remove(i);
-        for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--)
+        }
+        for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--) {
             fieldTypeTags.remove(i);
+        }
         fieldValues.clear();
     }
 
@@ -208,8 +208,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
                     IAType fieldType = fieldTypes[fieldNumber];
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
-                        if (((AUnionType) fieldTypes[fieldNumber]).isNullableType()) {
-                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getNullableType();
+                        if (((AUnionType) fieldTypes[fieldNumber]).isUnknownableType()) {
+                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getActualType();
                             typeTag = fieldType.getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
                                     typeTag, false);

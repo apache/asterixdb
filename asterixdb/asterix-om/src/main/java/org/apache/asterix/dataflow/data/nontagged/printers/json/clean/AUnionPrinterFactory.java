@@ -32,7 +32,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class AUnionPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-
     private AUnionType unionType;
 
     public AUnionPrinterFactory(AUnionType unionType) {
@@ -41,9 +40,7 @@ public class AUnionPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-
         return new IPrinter() {
-
             private IPrinter[] printers;
             private List<IAType> unionList;
 
@@ -73,5 +70,4 @@ public class AUnionPrinterFactory implements IPrinterFactory {
             }
         };
     }
-
 }

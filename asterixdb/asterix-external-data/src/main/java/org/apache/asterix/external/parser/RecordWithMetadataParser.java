@@ -77,7 +77,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetaDataParser
             rwm = converter.convert(record);
             if (rwm.getRecord().size() == 0) {
                 // null record
-                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
             } else {
                 recordParser.parse(rwm.getRecord(), out);
             }
@@ -90,7 +90,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetaDataParser
     public void parseMeta(DataOutput out) throws HyracksDataException {
         try {
             if (rwm.getRecord().size() == 0) {
-                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
             } else {
                 metaBuilder.reset(metaType);
                 metaBuilder.init();

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import java.io.PrintStream;
+
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +28,10 @@ public class ANullPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ANullPrinterFactory INSTANCE = new ANullPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps.print("null");
+
     @Override
     public IPrinter createPrinter() {
-        return ANullPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

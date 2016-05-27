@@ -104,14 +104,18 @@ public class TriggerNCWork extends AbstractWork {
      */
     String serializeIni(Ini ccini) throws IOException {
         Ini ini = new Ini();
+
+        // First copy the global [nc] section to a new section named for
+        // *this* NC, so that those values serve as defaults.
         String ncsection = "nc/" + ncId;
+        copyIniSection(ccini, "nc", ini, ncsection);
+        // Now copy all sections to their same name in the derived config.
         for (String section : ccini.keySet()) {
-            if (section.equals(ncsection)) {
-                copyIniSection(ccini, ncsection, ini, "localnc");
-                ini.put("localnc", "id", ncId);
-            }
             copyIniSection(ccini, section, ini, section);
         }
+        // Finally insert *this* NC's name into localnc section - this is a fixed
+        // entry point so that NCs can determine where all their config is.
+        ini.put("localnc", "id", ncId);
         StringWriter iniString = new StringWriter();
         ini.store(iniString);
         if (LOGGER.isLoggable(Level.FINE)) {

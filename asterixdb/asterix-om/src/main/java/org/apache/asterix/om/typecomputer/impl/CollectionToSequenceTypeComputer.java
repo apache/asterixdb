@@ -18,16 +18,10 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 /**
  * This function is to make a sequence of records and a singleton collection of records
@@ -35,26 +29,13 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
  *
  * @author yingyib
  */
-public class CollectionToSequenceTypeComputer implements IResultTypeComputer {
+public class CollectionToSequenceTypeComputer extends AbstractResultTypeComputer {
 
     public static final CollectionToSequenceTypeComputer INSTANCE = new CollectionToSequenceTypeComputer();
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) expression;
-        ILogicalExpression arg = func.getArguments().get(0).getValue();
-
-        IAType argType = (IAType) env.getType(arg);
-        if (TypeHelper.canBeNull(argType)) {
-            IAType nonOptionalType = TypeHelper.getNonOptionalType(argType);
-            if (nonOptionalType.getTypeTag() == ATypeTag.ORDEREDLIST
-                    || nonOptionalType.getTypeTag() == ATypeTag.UNORDEREDLIST) {
-                /** if the collection is null, that corresponds to an empty sequence */
-                argType = nonOptionalType;
-            }
-        }
-
+    protected IAType getResultType(IAType... strippedInputTypes) {
+        IAType argType = strippedInputTypes[0];
         ATypeTag argTypeTag = argType.getTypeTag();
         if (argTypeTag == ATypeTag.ORDEREDLIST || argTypeTag == ATypeTag.UNORDEREDLIST) {
             /** if the input is a singleton list, return it's item type if any */

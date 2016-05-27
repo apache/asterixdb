@@ -25,7 +25,6 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -59,9 +58,6 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
     protected ATypeTag itemTypeTag;
 
     protected ATypeTag firstTypeTag;
@@ -76,7 +72,14 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
         resultStorage.reset();
-        runArgEvals(tuple);
+
+        firstStringEval.evaluate(tuple, argPtr1);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondStringEval.evaluate(tuple, argPtr2);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+
         if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
             result.set(resultStorage);
             return;
@@ -94,15 +97,6 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
             throw new AlgebricksException(e);
         }
         result.set(resultStorage);
-    }
-
-    protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
-        firstStringEval.evaluate(tuple, argPtr1);
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
-        secondStringEval.evaluate(tuple, argPtr2);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
     }
 
     protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
@@ -136,16 +130,6 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     }
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws AlgebricksException {
-        // edit distance between null and anything else is undefined
-        if (typeTag1 == ATypeTag.NULL || typeTag2 == ATypeTag.NULL) {
-            try {
-                nullSerde.serialize(ANull.NULL, out);
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
-            return false;
-        }
-
         if (typeTag1 != typeTag2) {
             throw new AlgebricksException(
                     "Incompatible argument types given in edit distance: " + typeTag1 + " " + typeTag2);

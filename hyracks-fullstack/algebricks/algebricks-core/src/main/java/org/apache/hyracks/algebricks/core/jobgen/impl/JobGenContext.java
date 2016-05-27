@@ -29,7 +29,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
@@ -44,7 +43,7 @@ import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public class JobGenContext {
@@ -57,7 +56,7 @@ public class JobGenContext {
     private final IPrinterFactoryProvider printerFactoryProvider;
     private final ITypeTraitProvider typeTraitProvider;
     private final IMetadataProvider<?, ?> metadataProvider;
-    private final INullWriterFactory nullWriterFactory;
+    private final IMissingWriterFactory nonMatchWriterFactory;
     private final INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     private final Object appContext;
     private final IBinaryBooleanInspectorFactory booleanInspectorFactory;
@@ -79,11 +78,10 @@ public class JobGenContext {
             IBinaryComparatorFactoryProvider comparatorFactoryProvider, ITypeTraitProvider typeTraitProvider,
             IBinaryBooleanInspectorFactory booleanInspectorFactory,
             IBinaryIntegerInspectorFactory integerInspectorFactory, IPrinterFactoryProvider printerFactoryProvider,
-            INullWriterFactory nullWriterFactory,
+            IMissingWriterFactory nullWriterFactory,
             INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
             IExpressionRuntimeProvider expressionRuntimeProvider, IExpressionTypeComputer expressionTypeComputer,
-            INullableTypeComputer nullableTypeComputer, ITypingContext typingContext,
-            IExpressionEvalSizeComputer expressionEvalSizeComputer,
+            ITypingContext typingContext, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
@@ -100,7 +98,7 @@ public class JobGenContext {
         this.printerFactoryProvider = printerFactoryProvider;
         this.clusterLocations = clusterLocations;
         this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
-        this.nullWriterFactory = nullWriterFactory;
+        this.nonMatchWriterFactory = nullWriterFactory;
         this.expressionRuntimeProvider = expressionRuntimeProvider;
         this.expressionTypeComputer = expressionTypeComputer;
         this.typingContext = typingContext;
@@ -185,8 +183,8 @@ public class JobGenContext {
         return expressionTypeComputer.getType(expr, typingContext.getMetadataProvider(), env);
     }
 
-    public INullWriterFactory getNullWriterFactory() {
-        return nullWriterFactory;
+    public IMissingWriterFactory getNullWriterFactory() {
+        return nonMatchWriterFactory;
     }
 
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {

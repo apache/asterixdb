@@ -439,7 +439,7 @@ Groupby
 
 Let Variable [ Name=$numwait ]
   :=
-  FunctionCall tpch.count@1[
+  FunctionCall tpch.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

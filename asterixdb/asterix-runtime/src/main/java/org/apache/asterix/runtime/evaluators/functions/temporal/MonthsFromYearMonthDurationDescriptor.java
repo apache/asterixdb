@@ -24,7 +24,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerial
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -71,10 +70,6 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
                     private IPointable argPtr0 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
@@ -90,12 +85,6 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
                         int offset = argPtr0.getStartOffset();
 
                         try {
-                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes[offset] != ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(
                                         FID.getName() + ": expects NULL/YEAR-MONTH-DURATION, but got "

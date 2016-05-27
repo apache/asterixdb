@@ -21,7 +21,7 @@ package org.apache.asterix.common.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -52,7 +52,8 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
             IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
             ITupleFilterFactory tupleFilterFactory, boolean isPrimary, String indexName,
-            INullWriterFactory nullWriterFactory, IModificationOperationCallbackFactory modificationOpCallbackProvider,
+            IMissingWriterFactory nullWriterFactory,
+            IModificationOperationCallbackFactory modificationOpCallbackProvider,
             ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,

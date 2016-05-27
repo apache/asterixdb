@@ -41,9 +41,9 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -92,7 +92,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         int offset = inputVal.getStartOffset();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull(state, start);
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {

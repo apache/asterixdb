@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
@@ -72,9 +71,6 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -108,9 +104,6 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);
-
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

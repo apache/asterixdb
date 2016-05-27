@@ -154,7 +154,6 @@ public final class RuleCollections {
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());
-        normalization.add(new AsterixMoveFreeVariableOperatorOutOfSubplanRule());
 
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
@@ -205,6 +204,9 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new PushSubplanIntoGroupByRule());
         condPushDownAndJoinInference.add(new NestedSubplanToJoinRule());
         condPushDownAndJoinInference.add(new EliminateSubplanWithInputCardinalityOneRule());
+        // The following rule should be fired after PushAggregateIntoGroupbyRule because
+        // pulling invariants out of a subplan will make PushAggregateIntoGroupby harder.
+        condPushDownAndJoinInference.add(new AsterixMoveFreeVariableOperatorOutOfSubplanRule());
 
         return condPushDownAndJoinInference;
     }

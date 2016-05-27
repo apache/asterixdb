@@ -3,7 +3,7 @@ Query:
 SELECT [
 Variable [ Name=$h ]
 hour
-FunctionCall TinySocial.count@1[
+FunctionCall TinySocial.sql-count@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
@@ -21,7 +21,7 @@ count
   SELECT [
   Variable [ Name=$min ]
   minute
-  FunctionCall TinySocial.count@1[
+  FunctionCall TinySocial.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

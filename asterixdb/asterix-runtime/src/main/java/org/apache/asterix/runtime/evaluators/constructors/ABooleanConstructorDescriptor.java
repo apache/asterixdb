@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -73,9 +72,6 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -100,12 +96,9 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                                 } else {
                                     throw new AlgebricksException(errorMessage);
                                 }
-                            } else if (serString[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         }

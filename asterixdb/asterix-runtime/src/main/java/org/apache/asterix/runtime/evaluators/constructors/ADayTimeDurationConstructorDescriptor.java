@@ -23,7 +23,6 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -73,9 +72,6 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -96,8 +92,6 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
                                         aDayTimeDuration, ADurationParseOption.DAY_TIME);
 
                                 dayTimeDurationSerde.serialize(aDayTimeDuration, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

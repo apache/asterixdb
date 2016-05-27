@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.ALine;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.APoint;
@@ -90,6 +91,8 @@ public interface IOMVisitor {
     public void visitAUnorderedList(AUnorderedList obj) throws AsterixException;
 
     public void visitARecord(ARecord obj) throws AsterixException;
+
+    public void visitAMissing(AMissing obj) throws AsterixException;
 
     public void visitANull(ANull obj) throws AsterixException;
 

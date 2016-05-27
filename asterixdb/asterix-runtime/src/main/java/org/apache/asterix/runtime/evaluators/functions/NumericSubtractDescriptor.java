@@ -33,7 +33,6 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -142,13 +141,6 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                                         metDouble = true;
                                         operands[i] = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                                         break;
-                                    }
-                                    case NULL: {
-                                        serde = AqlSerializerDeserializerProvider.INSTANCE
-                                                .getSerializerDeserializer(BuiltinType.ANULL);
-                                        serde.serialize(ANull.NULL, out);
-                                        result.set(resultStorage);
-                                        return;
                                     }
                                     default: {
                                         throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_SUBTRACT

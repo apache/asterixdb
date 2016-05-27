@@ -19,16 +19,12 @@
 package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -42,18 +38,14 @@ public class AqlPartialAggregationTypeComputer implements IPartialAggregationTyp
         if (partialFid.equals(AsterixBuiltinFunctions.SERIAL_GLOBAL_AVG)) {
             partialFid = AsterixBuiltinFunctions.SERIAL_LOCAL_AVG;
         }
-        AggregateFunctionCallExpression partialAgg = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
-                partialFid, agg.getArguments());
-        return getTypeForFunction((AbstractFunctionCallExpression) partialAgg, env, metadataProvider);
+        AggregateFunctionCallExpression partialAgg = AsterixBuiltinFunctions.makeAggregateFunctionExpression(partialFid,
+                agg.getArguments());
+        return getTypeForFunction(partialAgg, env, metadataProvider);
     }
 
     private Object getTypeForFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        FunctionIdentifier fi = expr.getFunctionIdentifier();
-        ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
-        if (ck != null) {
-            return AUnionType.createNullableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
-        }
-        return AsterixBuiltinFunctions.getResultTypeComputer(fi).computeType(expr, env, metadataProvider);
+        return AsterixBuiltinFunctions.getResultTypeComputer(expr.getFunctionIdentifier()).computeType(expr, env,
+                metadataProvider);
     }
 }

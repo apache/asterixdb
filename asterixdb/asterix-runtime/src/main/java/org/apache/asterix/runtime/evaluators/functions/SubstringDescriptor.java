@@ -25,18 +25,15 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.DoublePointable;
-import org.apache.hyracks.data.std.primitive.FloatPointable;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.data.std.primitive.LongPointable;
-import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -67,7 +64,9 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();
-                    private final IPointable argPtr = new VoidPointable();
+                    private IPointable argString = new VoidPointable();
+                    private IPointable argStart = new VoidPointable();
+                    private IPointable argLen = new VoidPointable();
                     private final IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalLen = args[2].createScalarEvaluator(ctx);
@@ -79,81 +78,31 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
-                        evalStart.evaluate(tuple, argPtr);
-                        byte[] bytes = argPtr.getByteArray();
-                        int offset = argPtr.getStartOffset();
+                        evalString.evaluate(tuple, argString);
+                        evalStart.evaluate(tuple, argStart);
+                        evalLen.evaluate(tuple, argLen);
+
                         int start = 0;
-
-                        ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-
-                        switch (argPtrTypeTag) {
-                            case INT64:
-                                start = (int) LongPointable.getLong(bytes, offset + 1) - 1;
-                                break;
-                            case INT32:
-                                start = IntegerPointable.getInteger(bytes, offset + 1) - 1;
-                                break;
-                            case INT8:
-                                start = bytes[offset + 1] - 1;
-                                break;
-                            case INT16:
-                                start = ShortPointable.getShort(bytes, offset + 1) - 1;
-                                break;
-                            case FLOAT:
-                                start = (int) FloatPointable.getFloat(bytes, offset + 1) - 1;
-                                break;
-                            case DOUBLE:
-                                start = (int) DoublePointable.getDouble(bytes, offset + 1) - 1;
-                                break;
-                            default:
-                                throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                        + ": expects type INT8/16/32/64/FLOAT/DOUBLE for the second argument but got "
-                                        + argPtrTypeTag);
+                        byte[] bytes = argStart.getByteArray();
+                        int offset = argStart.getStartOffset();
+                        try {
+                            start = ATypeHierarchy.getIntegerValue(bytes, offset) - 1;
+                        } catch (HyracksDataException e1) {
+                            throw new AlgebricksException(e1);
                         }
 
-                        evalLen.evaluate(tuple, argPtr);
-                        bytes = argPtr.getByteArray();
-                        offset = argPtr.getStartOffset();
                         int len = 0;
-
-                        argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-
-                        switch (argPtrTypeTag) {
-                            case INT64:
-                                len = (int) LongPointable.getLong(bytes, offset + 1);
-                                break;
-                            case INT32:
-                                len = IntegerPointable.getInteger(bytes, offset + 1);
-                                break;
-                            case INT8:
-                                len = bytes[offset + 1];
-                                break;
-                            case INT16:
-                                len = ShortPointable.getShort(bytes, offset + 1);
-                                break;
-                            case FLOAT:
-                                len = (int) FloatPointable.getFloat(bytes, offset + 1);
-                                break;
-                            case DOUBLE:
-                                len = (int) DoublePointable.getDouble(bytes, offset + 1);
-                                break;
-                            default:
-                                throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                        + ": expects type INT8/16/32/64/FLOAT/DOUBLE for the third argument but got "
-                                        + argPtrTypeTag);
+                        bytes = argLen.getByteArray();
+                        offset = argLen.getStartOffset();
+                        try {
+                            len = ATypeHierarchy.getIntegerValue(bytes, offset);
+                        } catch (HyracksDataException e1) {
+                            throw new AlgebricksException(e1);
                         }
 
-                        evalString.evaluate(tuple, argPtr);
-                        bytes = argPtr.getByteArray();
-                        offset = argPtr.getStartOffset();
-                        int length = argPtr.getLength();
-                        argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-
-                        if (argPtrTypeTag != ATypeTag.STRING) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                    + ": expects type STRING for the first argument but got " + argPtrTypeTag);
-                        }
-
+                        bytes = argString.getByteArray();
+                        offset = argString.getStartOffset();
+                        int length = argString.getLength();
                         string.set(bytes, offset + 1, length - 1);
                         array.reset();
                         try {

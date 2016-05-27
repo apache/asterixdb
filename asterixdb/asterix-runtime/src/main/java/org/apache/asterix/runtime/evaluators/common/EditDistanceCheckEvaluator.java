@@ -27,6 +27,7 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -59,14 +60,29 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     }
 
     @Override
-    protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
-        super.runArgEvals(tuple);
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
+
+        firstStringEval.evaluate(tuple, argPtr1);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondStringEval.evaluate(tuple, argPtr2);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
         edThreshEval.evaluate(tuple, argPtrThreshold);
+
+        if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
+            result.set(resultStorage);
+            return;
+        }
         try {
             edThresh = ATypeHierarchy.getIntegerValue(argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
-        } catch (HyracksDataException e) {
+            editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
+            writeResult(editDistance);
+        } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+        result.set(resultStorage);
     }
 
     @Override

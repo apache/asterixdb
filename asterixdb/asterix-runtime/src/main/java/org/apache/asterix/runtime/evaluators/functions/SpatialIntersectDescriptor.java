@@ -450,7 +450,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
 
                     private boolean triangleTriangleIntersection(DoubleArray trianglesX0, DoubleArray trianglesY0,
                             int triangleId0, DoubleArray trianglesX1, DoubleArray trianglesY1, int triangleId1)
-                                    throws HyracksDataException { // separating axis theorem
+                            throws HyracksDataException { // separating axis theorem
 
                         for (int side = 0; side < 3; side++) {
                             spatialUtils.findNormals(trianglesX0, trianglesY0, triangleId0, side);
@@ -830,9 +830,6 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = pointInRectangle(bytes0, offset0, bytes1, offset1);
                                             break;
-                                        case NULL:
-                                            res = false;
-                                            break;
                                         default:
                                             throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
                                                     .getName() + ": does not support the type: " + tag1
@@ -899,9 +896,6 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         case RECTANGLE:
                                             res = lineRectangleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case NULL:
-                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
@@ -993,9 +987,6 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = rectanglePolygonIntersection(bytes1, offset1, bytes0, offset0);
                                             break;
-                                        case NULL:
-                                            res = false;
-                                            break;
                                         default:
                                             throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
                                                     .getName() + ": does not support the type: " + tag1
@@ -1018,9 +1009,6 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         case RECTANGLE:
                                             res = rectangleCircleIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case NULL:
-                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
@@ -1069,17 +1057,11 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                 }
                                             }
                                             break;
-                                        case NULL:
-                                            res = false;
-                                            break;
                                         default:
                                             throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
                                                     .getName() + ": does not support the type: " + tag1
                                                     + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
-                                    break;
-                                case NULL:
-                                    res = false;
                                     break;
                                 default:
                                     throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT

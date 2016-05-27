@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -56,9 +55,6 @@ public abstract class AbstractBinaryStringBoolEval implements IScalarEvaluator {
     @SuppressWarnings({ "rawtypes" })
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractBinaryStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
@@ -81,20 +77,11 @@ public abstract class AbstractBinaryStringBoolEval implements IScalarEvaluator {
         int len1 = ptr1.getLength();
 
         resultStorage.reset();
-        try {
-            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                nullSerde.serialize(ANull.NULL, dout);
-                result.set(resultStorage);
-                return;
-            } else if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")!");
-            }
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+        if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
+                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
+                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")!");
         }
 
         leftPtr.set(bytes0, offset0 + 1, len0 - 1);

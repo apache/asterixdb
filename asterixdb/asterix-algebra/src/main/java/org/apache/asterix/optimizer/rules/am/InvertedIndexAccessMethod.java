@@ -34,7 +34,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACollection;
 import org.apache.asterix.om.base.IAObject;
@@ -142,7 +142,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GET_ITEM) {
             return false;
         }
@@ -812,7 +812,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     private void addFunctionSpecificArgs(IOptimizableFuncExpr optFuncExpr, InvertedIndexJobGenParams jobGenParams) {
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.STRING_CONTAINS) {
             jobGenParams.setSearchModifierType(SearchModifierType.CONJUNCTIVE);
-            jobGenParams.setSimilarityThreshold(new AsterixConstantValue(ANull.NULL));
+            jobGenParams.setSimilarityThreshold(new AsterixConstantValue(AMissing.MISSING));
         }
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
             jobGenParams.setSearchModifierType(SearchModifierType.JACCARD);
@@ -836,7 +836,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private void addKeyVarsAndExprs(IOptimizableFuncExpr optFuncExpr, ArrayList<LogicalVariable> keyVarList,
             ArrayList<Mutable<ILogicalExpression>> keyExprList, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // For now we are assuming a single secondary index key.
         // Add a variable and its expr to the lists which will be passed into an assign op.
         LogicalVariable keyVar = context.newVar();

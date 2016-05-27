@@ -30,7 +30,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -59,8 +59,8 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
 
     private final PermutingFrameTupleReference key;
     private MultiComparator keySearchCmp;
-    private ArrayTupleBuilder nullTupleBuilder;
-    private final INullWriter nullWriter;
+    private ArrayTupleBuilder missingTupleBuilder;
+    private final IMissingWriter missingWriter;
     private ArrayTupleBuilder tb;
     private DataOutput dos;
     private RangePredicate searchPred;
@@ -79,8 +79,8 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
             ARecordType recordType, int filterFieldIndex) {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
-        // initialize nullWriter
-        this.nullWriter = opDesc.getNullWriterFactory().createNullWriter();
+        // initialize missingWriter
+        this.missingWriter = opDesc.getMissingWriterFactory().createMissingWriter();
         // The search key should only have the primary index and not use the permutations.
         this.key = new PermutingFrameTupleReference();
         int[] searchKeyPermutations = new int[numOfPrimaryKeys];
@@ -114,14 +114,14 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         index = indexHelper.getIndexInstance();
 
         try {
-            nullTupleBuilder = new ArrayTupleBuilder(1);
-            DataOutput out = nullTupleBuilder.getDataOutput();
+            missingTupleBuilder = new ArrayTupleBuilder(1);
+            DataOutput out = missingTupleBuilder.getDataOutput();
             try {
-                nullWriter.writeNull(out);
+                missingWriter.writeMissing(out);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
-            nullTupleBuilder.addFieldEndOffset();
+            missingTupleBuilder.addFieldEndOffset();
             searchPred = createSearchPredicate();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
@@ -180,11 +180,11 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
     }
 
     public static boolean isNull(ITupleReference t1, int field) {
-        return t1.getFieldData(field)[t1.getFieldStart(field)] == ATypeTag.SERIALIZED_NULL_TYPE_TAG;
+        return t1.getFieldData(field)[t1.getFieldStart(field)] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
     }
 
     private void addNullField() throws IOException {
-        dos.write(nullTupleBuilder.getByteArray());
+        dos.write(missingTupleBuilder.getByteArray());
         tb.addFieldEndOffset();
     }
 

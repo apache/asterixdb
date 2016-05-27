@@ -24,6 +24,6 @@ set "import-private-functions" "true";
 
 select element o
 from  Orders as o
-where test.not(test."is-null"(o.param1))
+where not("is-missing"(o.param1))
 order by o.oid
 ;

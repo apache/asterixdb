@@ -18,27 +18,30 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public final class ABoolean implements IAObject {
 
-    public static ABoolean TRUE = new ABoolean(true);
-    public static ABoolean FALSE = new ABoolean(false);
+    public static final ABoolean TRUE = new ABoolean(true);
+    public static final ABoolean FALSE = new ABoolean(false);
 
     private final Boolean bVal;
 
     private ABoolean(boolean b) {
-        bVal = new Boolean(b);
+        bVal = Boolean.valueOf(b);
     }
 
     public Boolean getBoolean() {
         return bVal;
+    }
+
+    public ABoolean valueOf(boolean b) {
+        return b ? TRUE : FALSE;
     }
 
     @Override
@@ -51,12 +54,9 @@ public final class ABoolean implements IAObject {
         return "ABoolean: {" + bVal + "}";
     }
 
+    @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ABoolean)) {
-            return false;
-        } else {
-            return bVal.equals(((ABoolean) obj).getBoolean());
-        }
+        return obj == this;
     }
 
     @Override
@@ -81,10 +81,6 @@ public final class ABoolean implements IAObject {
 
     @Override
     public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-
-        json.put("ABoolean", bVal);
-
-        return json;
+        return new JSONObject().put("ABoolean", bVal);
     }
 }

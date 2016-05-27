@@ -27,7 +27,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeseriali
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -82,9 +81,6 @@ public class DatetimeFromUnixTimeInSecsDescriptor extends AbstractScalarFunction
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private AMutableDateTime aDatetime = new AMutableDateTime(0);
 
@@ -100,33 +96,25 @@ public class DatetimeFromUnixTimeInSecsDescriptor extends AbstractScalarFunction
 
                             ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
 
-                            if (argPtrTypeTag == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else {
-                                switch (argPtrTypeTag) {
-                                    case INT8:
-                                        aDatetime.setValue(
-                                                (AInt8SerializerDeserializer.getByte(bytes, offset + 1) * 1000l));
-                                        break;
-                                    case INT16:
-                                        aDatetime.setValue(
-                                                (AInt16SerializerDeserializer.getShort(bytes, offset + 1) * 1000l));
-                                        break;
-                                    case INT32:
-                                        aDatetime.setValue(
-                                                (AInt32SerializerDeserializer.getInt(bytes, offset + 1) * 1000l));
-                                        break;
-                                    case INT64:
-                                        aDatetime.setValue(
-                                                (AInt64SerializerDeserializer.getLong(bytes, offset + 1) * 1000l));
-                                        break;
-                                    default:
-                                        throw new AlgebricksException(
-                                                FID.getName() + ": expects type INT8/INT16/INT32/INT64/NULL but got "
-                                                        + argPtrTypeTag);
-                                }
-                                datetimeSerde.serialize(aDatetime, out);
+                            switch (argPtrTypeTag) {
+                                case INT8:
+                                    aDatetime.setValue(AInt8SerializerDeserializer.getByte(bytes, offset + 1) * 1000l);
+                                    break;
+                                case INT16:
+                                    aDatetime
+                                            .setValue(AInt16SerializerDeserializer.getShort(bytes, offset + 1) * 1000l);
+                                    break;
+                                case INT32:
+                                    aDatetime.setValue(AInt32SerializerDeserializer.getInt(bytes, offset + 1) * 1000l);
+                                    break;
+                                case INT64:
+                                    aDatetime.setValue(AInt64SerializerDeserializer.getLong(bytes, offset + 1) * 1000l);
+                                    break;
+                                default:
+                                    throw new AlgebricksException(FID.getName()
+                                            + ": expects type INT8/INT16/INT32/INT64/NULL but got " + argPtrTypeTag);
                             }
+                            datetimeSerde.serialize(aDatetime, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

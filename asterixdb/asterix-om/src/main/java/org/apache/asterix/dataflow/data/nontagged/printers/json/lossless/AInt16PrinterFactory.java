@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +29,14 @@ public class AInt16PrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AInt16PrinterFactory INSTANCE = new AInt16PrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        ps.print("{ \"int16\": ");
+        ps.print(AInt16SerializerDeserializer.getShort(b, s + 1));
+        ps.print(" }");
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AInt16Printer.INSTANCE;
+        return PRINTER;
     }
-
 }

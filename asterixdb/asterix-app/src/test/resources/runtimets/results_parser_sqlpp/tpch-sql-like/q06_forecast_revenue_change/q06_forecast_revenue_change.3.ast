@@ -1,7 +1,7 @@
 DataverseUse tpch
 Query:
 SELECT [
-FunctionCall tpch.sum@1[
+FunctionCall tpch.sql-sum@1[
   (
     SELECT ELEMENT [
     OperatorExpr [

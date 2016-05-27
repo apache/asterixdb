@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -70,9 +69,6 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -91,8 +87,6 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 aPoint.setValue(Double.parseDouble(s.substring(0, s.indexOf(','))),
                                         Double.parseDouble(s.substring(s.indexOf(',') + 1, s.length())));
                                 pointSerde.serialize(aPoint, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

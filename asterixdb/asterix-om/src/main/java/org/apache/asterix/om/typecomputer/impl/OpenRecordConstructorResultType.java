@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
@@ -51,7 +51,7 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         /**
          * if type has been top-down propagated, use the enforced type
          */
-        ARecordType type = (ARecordType) TypeComputerUtilities.getRequiredType(f);
+        ARecordType type = (ARecordType) TypeCastUtils.getRequiredType(f);
         if (type != null)
             return type;
 

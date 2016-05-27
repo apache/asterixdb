@@ -83,10 +83,8 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         int patternOffset = array1.getStartOffset();
                         int patternLen = array1.getLength();
 
-                        if ((src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                && src[srcOffset] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)
-                                || (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                        && pattern[patternOffset] != ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+                        if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
+                                || pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING_BEFORE.getName()
                                     + ": expects input type (STRING/NULL, STRING/NULL) but got ("
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[srcOffset]) + ", "
@@ -94,12 +92,6 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         }
 
                         try {
-                            if (src[srcOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || pattern[patternOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-                                result.set(resultStorage);
-                                return;
-                            }
                             stringPtr.set(src, srcOffset + 1, srcLen - 1);
                             patternPtr.set(pattern, patternOffset + 1, patternLen - 1);
                             array.reset();

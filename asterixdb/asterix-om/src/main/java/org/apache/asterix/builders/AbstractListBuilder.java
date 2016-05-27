@@ -71,23 +71,35 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
         }
         headerSize = 2;
         metadataInfoSize = 8;
-        // 8 = 4 (# of items) + 4 (the size of the list)
+        if (itemTypeTag == ATypeTag.MISSING) {
+            itemTypeTag = ATypeTag.NULL;
+        }
     }
 
     @Override
     public void addItem(IValueReference item) throws HyracksDataException {
         try {
-            if (!fixedSize && (item.getByteArray()[item.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                    || itemTypeTag == ATypeTag.ANY)) {
+            byte[] data = item.getByteArray();
+            int start = item.getStartOffset();
+            int len = item.getLength();
+
+            byte serializedTypeTag = data[start];
+            if (serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                // NULL in a list is MISSING.
+                serializedTypeTag = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
+            }
+
+            if (!fixedSize && (serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG || itemTypeTag == ATypeTag.ANY)) {
                 this.offsets.add(outputStorage.getLength());
             }
-            if (itemTypeTag == ATypeTag.ANY || (itemTypeTag == ATypeTag.NULL
-                    && item.getByteArray()[item.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+            if (itemTypeTag == ATypeTag.ANY
+                    || (itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
                 this.numberOfItems++;
-                this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
-            } else if (item.getByteArray()[item.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                this.outputStream.write(serializedTypeTag);
+                this.outputStream.write(data, start + 1, len - 1);
+            } else if (serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                 this.numberOfItems++;
-                this.outputStream.write(item.getByteArray(), item.getStartOffset() + 1, item.getLength() - 1);
+                this.outputStream.write(data, start + 1, len - 1);
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);

@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.common.dataflow;
 
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -43,7 +43,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final boolean retainInput;
     protected final boolean retainNull;
-    protected final INullWriterFactory nullWriterFactory;
+    protected final IMissingWriterFactory nullWriterFactory;
     protected final ISearchOperationCallbackFactory searchOpCallbackFactory;
     protected final IModificationOperationCallbackFactory modificationOpCallbackFactory;
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
@@ -52,7 +52,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, boolean retainNull, INullWriterFactory nullWriterFactory,
+            boolean retainInput, boolean retainNull, IMissingWriterFactory nullWriterFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
@@ -104,12 +104,12 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
-    public boolean getRetainNull() {
+    public boolean getRetainMissing() {
         return retainNull;
     }
 
     @Override
-    public INullWriterFactory getNullWriterFactory() {
+    public IMissingWriterFactory getMissingWriterFactory() {
         return nullWriterFactory;
     }
 

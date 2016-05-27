@@ -23,7 +23,6 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -70,9 +69,6 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADURATION);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -90,8 +86,6 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                                 ADurationParserFactory.parseDuration(serString, utf8Ptr.getCharStartOffset(),
                                         stringLength, aDuration, ADurationParseOption.All);
                                 durationSerde.serialize(aDuration, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

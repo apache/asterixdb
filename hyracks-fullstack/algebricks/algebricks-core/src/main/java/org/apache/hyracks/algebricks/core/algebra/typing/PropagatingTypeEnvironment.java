@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 
@@ -32,7 +32,7 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     private final TypePropagationPolicy policy;
 
-    private final INullableTypeComputer nullableTypeComputer;
+    private final IMissableTypeComputer nullableTypeComputer;
 
     private final ITypeEnvPointer[] envPointers;
 
@@ -41,7 +41,7 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
     private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<List<LogicalVariable>>();
 
     public PropagatingTypeEnvironment(IExpressionTypeComputer expressionTypeComputer,
-            INullableTypeComputer nullableTypeComputer, IMetadataProvider<?, ?> metadataProvider,
+            IMissableTypeComputer nullableTypeComputer, IMetadataProvider<?, ?> metadataProvider,
             TypePropagationPolicy policy, ITypeEnvPointer[] envPointers) {
         super(expressionTypeComputer, metadataProvider);
         this.nullableTypeComputer = nullableTypeComputer;

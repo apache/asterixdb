@@ -98,7 +98,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     public Void visit(LiteralExpr l, Integer step) {
         Literal lc = l.getValue();
         if (lc.getLiteralType().equals(Literal.Type.TRUE) || lc.getLiteralType().equals(Literal.Type.FALSE)
-                || lc.getLiteralType().equals(Literal.Type.NULL)) {
+                || lc.getLiteralType().equals(Literal.Type.NULL) || lc.getLiteralType().equals(Literal.Type.MISSING)) {
             out.println(skip(step) + "LiteralExpr [" + l.getValue().getLiteralType() + "]");
         } else {
             out.println(skip(step) + "LiteralExpr [" + l.getValue().getLiteralType() + "] ["

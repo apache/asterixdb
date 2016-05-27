@@ -108,7 +108,7 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
                 i++;
             }
         }
-        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(),
+        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
                 ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
     }
 

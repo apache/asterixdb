@@ -210,7 +210,7 @@ public class OperatorPropertiesUtil {
         }
     }
 
-    public static boolean isNullTest(AbstractLogicalOperator op) {
+    public static boolean isMissingTest(AbstractLogicalOperator op) {
         if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
@@ -231,7 +231,7 @@ public class OperatorPropertiesUtil {
             return false;
         }
         AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
+        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
             return false;
         }
         return true;

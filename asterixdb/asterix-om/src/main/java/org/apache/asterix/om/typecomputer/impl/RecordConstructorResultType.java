@@ -24,7 +24,7 @@ import java.util.Iterator;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -51,7 +51,7 @@ public class RecordConstructorResultType implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        IAType reqType = TypeComputerUtilities.getRequiredType(f);
+        IAType reqType = TypeCastUtils.getRequiredType(f);
         if (reqType != null)
             return reqType;
         int n = f.getArguments().size() / 2;

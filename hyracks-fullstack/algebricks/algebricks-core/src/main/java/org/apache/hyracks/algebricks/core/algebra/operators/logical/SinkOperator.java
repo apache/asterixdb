@@ -75,7 +75,7 @@ public class SinkOperator extends AbstractLogicalOperator {
             envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
         }
         PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+                ctx.getMissableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
         return env;
 
     }

@@ -26,6 +26,7 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -61,11 +62,41 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
     }
 
     @Override
-    protected void runArgEvals(IFrameTupleReference tuple) throws AlgebricksException {
-        super.runArgEvals(tuple);
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        resultStorage.reset();
+
+        firstOrdListEval.evaluate(tuple, argPtr1);
+        secondOrdListEval.evaluate(tuple, argPtr2);
         jaccThreshEval.evaluate(tuple, jaccThreshPointable);
-        jaccThresh = (float) AFloatSerializerDeserializer.getFloat(jaccThreshPointable.getByteArray(),
+
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+
+        firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
+        secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
+
+        jaccThresh = AFloatSerializerDeserializer.getFloat(jaccThreshPointable.getByteArray(),
                 jaccThreshPointable.getStartOffset() + TYPE_INDICATOR_SIZE);
+
+        if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
+            result.set(resultStorage);
+            return;
+        }
+        if (prepareLists(argPtr1, argPtr2, firstTypeTag)) {
+            jaccSim = computeResult();
+        } else {
+            jaccSim = 0.0f;
+        }
+        try {
+            writeResult(jaccSim);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+        result.set(resultStorage);
     }
 
     @Override

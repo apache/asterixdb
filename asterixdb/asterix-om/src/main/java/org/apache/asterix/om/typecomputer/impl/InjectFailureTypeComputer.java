@@ -47,7 +47,7 @@ public class InjectFailureTypeComputer implements IResultTypeComputer {
         IAType t1 = (IAType) env.getType(fce.getArguments().get(0).getValue());
         ATypeTag tag1 = t1.getTypeTag();
         if (NonTaggedFormatUtil.isOptional(t1))
-            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
+            tag1 = ((AUnionType) t1).getActualType().getTypeTag();
 
         if (tag1 != ATypeTag.BOOLEAN)
             throw new AlgebricksException(errMsg2);

@@ -131,22 +131,25 @@ public class RecordBuilder implements IARecordBuilder {
         headerSize = 5;
         // this is the record tag (1) + record size (4)
 
-        if (isOpen)
+        if (isOpen) {
             // to tell whether the record has an open part or not.
             headerSize += 1;
+        }
 
         if (numberOfSchemaFields > 0) {
             // there is a schema associated with the record.
 
             headerSize += 4;
             // 4 = four bytes to store the number of closed fields.
-            if (closedPartOffsets == null || closedPartOffsets.length < numberOfSchemaFields)
+            if (closedPartOffsets == null || closedPartOffsets.length < numberOfSchemaFields) {
                 closedPartOffsets = new int[numberOfSchemaFields];
+            }
 
             if (isNullable) {
                 nullBitMapSize = (int) Math.ceil(numberOfSchemaFields / 8.0);
-                if (nullBitMap == null || nullBitMap.length < nullBitMapSize)
+                if (nullBitMap == null || nullBitMap.length < nullBitMapSize) {
                     this.nullBitMap = new byte[nullBitMapSize];
+                }
                 Arrays.fill(nullBitMap, 0, nullBitMapSize, (byte) 0);
                 headerSize += nullBitMap.length;
             }
@@ -183,11 +186,10 @@ public class RecordBuilder implements IARecordBuilder {
                     openFieldNameLengths.length + DEFAULT_NUM_OPEN_FIELDS);
         }
         int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1,
-                    name.getLength() - 1);
+                name.getLength() - 1);
         if (recType != null) {
             int cFieldPos;
-                cFieldPos = recTypeInfo.getFieldIndex(name.getByteArray(), name.getStartOffset() + 1,
-                        name.getLength() - 1);
+            cFieldPos = recTypeInfo.getFieldIndex(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
             if (cFieldPos >= 0) {
                 throw new HyracksDataException("Open field \"" + recType.getFieldNames()[cFieldPos]
                         + "\" has the same field name as closed field at index " + cFieldPos);
@@ -210,8 +212,9 @@ public class RecordBuilder implements IARecordBuilder {
             h += 4;
             // 4 = four bytes to store the offset to the open part.
             openPartOffsetArraySize = numberOfOpenFields * 8;
-            if (openPartOffsetArray == null || openPartOffsetArray.length < openPartOffsetArraySize)
+            if (openPartOffsetArray == null || openPartOffsetArray.length < openPartOffsetArraySize) {
                 openPartOffsetArray = new byte[openPartOffsetArraySize];
+            }
 
             Arrays.sort(this.openPartOffsets, 0, numberOfOpenFields);
             if (numberOfOpenFields > 1) {
@@ -256,17 +259,20 @@ public class RecordBuilder implements IARecordBuilder {
                 if (this.numberOfOpenFields > 0) {
                     out.writeBoolean(true);
                     out.writeInt(openPartOffset);
-                } else
+                } else {
                     out.writeBoolean(false);
+                }
             }
 
             // write the closed part
             if (numberOfSchemaFields > 0) {
                 out.writeInt(numberOfClosedFields);
-                if (isNullable)
+                if (isNullable) {
                     out.write(nullBitMap, 0, nullBitMapSize);
-                for (int i = 0; i < numberOfSchemaFields; i++)
+                }
+                for (int i = 0; i < numberOfSchemaFields; i++) {
                     out.writeInt(closedPartOffsets[i] + headerSize + (numberOfSchemaFields * 4));
+                }
                 out.write(closedPartOutputStream.toByteArray());
             }
 
@@ -284,8 +290,9 @@ public class RecordBuilder implements IARecordBuilder {
     @Override
     public int getFieldId(String fieldName) {
         for (int i = 0; i < recType.getFieldNames().length; i++) {
-            if (recType.getFieldNames()[i].equals(fieldName))
+            if (recType.getFieldNames()[i].equals(fieldName)) {
                 return i;
+            }
         }
         return -1;
     }

@@ -286,6 +286,33 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
+    public final static BuiltinType AMISSING = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "Missing";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.MISSING;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "missing";
+        }
+
+        @Override
+        public JSONObject toJSON() throws JSONException {
+            JSONObject type = new JSONObject();
+            type.put("type", "AMISSING");
+            return type;
+        }
+    };
+
     public final static BuiltinType ANULL = new LowerCaseConstructorType() {
 
         private static final long serialVersionUID = 1L;

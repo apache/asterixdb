@@ -22,6 +22,7 @@ package org.apache.asterix.metadata;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
@@ -77,6 +78,9 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
@@ -716,7 +720,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmDatatypeIsUnused(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException {
+            throws MetadataException, RemoteException {
         confirmDatatypeIsUnusedByDatatypes(jobId, dataverseName, datatypeName);
         confirmDatatypeIsUnusedByDatasets(jobId, dataverseName, datatypeName);
     }
@@ -734,33 +738,48 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmDatatypeIsUnusedByDatatypes(JobId jobId, String dataverseName, String datatypeName)
-            throws MetadataException {
+            throws MetadataException, RemoteException {
         //If any datatype uses this type, throw an error
         //TODO: Currently this loads all types into memory. This will need to be fixed for large numbers of types
+        Datatype dataTypeToBeDropped = getDatatype(jobId, dataverseName, datatypeName);
+        assert dataTypeToBeDropped != null;
+        IAType typeToBeDropped = dataTypeToBeDropped.getDatatype();
         List<Datatype> datatypes = getAllDatatypes(jobId);
-        for (Datatype type : datatypes) {
-            if (!type.getDataverseName().equals(dataverseName)) {
+        for (Datatype dataType : datatypes) {
+            //skip types in different dataverses as well as the type to be dropped itself
+            if (!dataType.getDataverseName().equals(dataverseName)
+                    || dataType.getDatatype().getTypeName().equals(datatypeName)) {
                 continue;
             }
-            ARecordType recType = (ARecordType) type.getDatatype();
-            for (IAType subType : recType.getFieldTypes()) {
-                if (subType.getTypeName().equals(datatypeName)) {
-                    throw new MetadataException("Cannot drop type " + dataverseName + "." + datatypeName
-                            + " being used by type " + dataverseName + "." + recType.getTypeName());
-                }
+
+            AbstractComplexType recType = (AbstractComplexType) dataType.getDatatype();
+            if (recType.containsType(typeToBeDropped)) {
+                throw new MetadataException("Cannot drop type " + dataverseName + "." + datatypeName
+                        + " being used by type " + dataverseName + "." + recType.getTypeName());
             }
         }
     }
 
     private List<String> getNestedComplexDatatypeNamesForThisDatatype(JobId jobId, String dataverseName,
-            String datatypeName) throws Exception {
+            String datatypeName) throws MetadataException, RemoteException {
         //Return all field types that aren't builtin types
         Datatype parentType = getDatatype(jobId, dataverseName, datatypeName);
-        ARecordType recType = (ARecordType) parentType.getDatatype();
-        List<String> nestedTypes = new ArrayList<String>();
-        for (IAType subType : recType.getFieldTypes()) {
-            if (!(subType instanceof BuiltinType)) {
-                nestedTypes.add(subType.getTypeName());
+
+        List<IAType> subTypes = null;
+        if (parentType.getDatatype().getTypeTag() == ATypeTag.RECORD) {
+            ARecordType recType = (ARecordType) parentType.getDatatype();
+            subTypes = Arrays.asList(recType.getFieldTypes());
+        } else if (parentType.getDatatype().getTypeTag() == ATypeTag.UNION) {
+            AUnionType recType = (AUnionType) parentType.getDatatype();
+            subTypes = recType.getUnionList();
+        }
+
+        List<String> nestedTypes = new ArrayList<>();
+        if (subTypes != null) {
+            for (IAType subType : subTypes) {
+                if (!(subType instanceof BuiltinType)) {
+                    nestedTypes.add(subType.getTypeName());
+                }
             }
         }
         return nestedTypes;
@@ -977,8 +996,10 @@ public class MetadataNode implements IMetadataNode {
             try {
                 while (rangeCursor.hasNext()) {
                     rangeCursor.next();
-                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
-                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(),
+                            new ISerializerDeserializer[] {
+                                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                            BuiltinType.ASTRING),
                             AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
                             AqlSerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.ASTRING) }));
@@ -995,7 +1016,7 @@ public class MetadataNode implements IMetadataNode {
 
     private <ResultType> void searchIndex(JobId jobId, IMetadataIndex index, ITupleReference searchKey,
             IValueExtractor<ResultType> valueExtractor, List<ResultType> results)
-            throws MetadataException, IndexException, IOException {
+                    throws MetadataException, IndexException, IOException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         String resourceName = index.getFile().toString();
         IIndex indexInstance = datasetLifecycleManager.getIndex(resourceName);

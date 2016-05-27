@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
@@ -35,7 +36,6 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -79,6 +79,9 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
             @SuppressWarnings("unchecked")
             private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
+            @SuppressWarnings("unchecked")
+            private final ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(BuiltinType.AMISSING);
 
             {
                 generateFieldsPointables();
@@ -115,11 +118,6 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     int start = offset;
                     int len = inputArg0.getLength();
 
-                    if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    }
                     if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type "
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
@@ -133,7 +131,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     IAType subType = recordType;
                     recTypeInfos[0].reset(recordType);
 
-                    ATypeTag subTypeTag = ATypeTag.NULL;
+                    ATypeTag subTypeTag = ATypeTag.MISSING;
                     boolean openField = false;
                     int pathIndex = 0;
 
@@ -141,7 +139,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     for (; pathIndex < fieldPointables.length; pathIndex++) {
                         if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                             //enforced SubType
-                            subType = ((AUnionType) subType).getNullableType();
+                            subType = ((AUnionType) subType).getActualType();
                             if (subType.getTypeTag().serialize() != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                                 throw new AlgebricksException(
                                         "Field accessor is not defined for values of type " + subTypeTag);
@@ -161,7 +159,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                                 subFieldIndex, nullBitmapSize, ((ARecordType) subType).isOpen());
                         if (subFieldOffset == 0) {
                             // the field is null, we checked the null bit map
-                            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                            // any path after null will return null.
+                            nullSerde.serialize(ANull.NULL, out);
                             result.set(resultStorage);
                             return;
                         }
@@ -171,14 +170,9 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             recTypeInfos[pathIndex + 1].reset((ARecordType) subType);
                         }
                         if (subType.getTypeTag().equals(ATypeTag.UNION)) {
-                            if (((AUnionType) subType).isNullableType()) {
-                                subTypeTag = ((AUnionType) subType).getNullableType().getTypeTag();
-                                subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
-                                        subTypeTag, false);
-                            } else {
-                                // union .. the general case
-                                throw new NotImplementedException();
-                            }
+                            subTypeTag = ((AUnionType) subType).getActualType().getTypeTag();
+                            subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
+                                    subTypeTag, false);
                         } else {
                             subTypeTag = subType.getTypeTag();
                             subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
@@ -192,17 +186,12 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             subRecordTmpStream.write(serRecord, subFieldOffset, subFieldLength);
                             serRecord = subRecordTmpStream.getByteArray();
                             start = 0;
-
-                            // type check
-                            if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-                            if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new AlgebricksException("Field accessor is not defined for values of type "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
-                            }
+                        }
+                        // type check
+                        if (pathIndex < fieldPointables.length - 1
+                                && serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                            throw new AlgebricksException("Field accessor is not defined for values of type "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
                         }
                     }
 
@@ -212,7 +201,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, start, len,
                                 fieldPointables[pathIndex].getByteArray(), fieldPointables[pathIndex].getStartOffset());
                         if (subFieldOffset < 0) {
-                            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                            out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                             result.set(resultStorage);
                             return;
                         }
@@ -221,21 +210,22 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, subTypeTag,
                                 true) + 1;
 
-                        if (pathIndex < fieldPointables.length - 1) {
-                            //setup next iteration
-                            start = subFieldOffset;
-                            len = subFieldLength;
+                        if (pathIndex >= fieldPointables.length - 1) {
+                            continue;
+                        }
+                        //setup next iteration
+                        start = subFieldOffset;
+                        len = subFieldLength;
 
-                            // type check
-                            if (serRecord[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-                            if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new AlgebricksException("Field accessor is not defined for values of type "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
-                            }
+                        // type check
+                        if (serRecord[start] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                            missingSerde.serialize(AMissing.MISSING, out);
+                            result.set(resultStorage);
+                            return;
+                        }
+                        if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                            throw new AlgebricksException("Field accessor is not defined for values of type "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
                         }
                     }
                     // emit the final result.

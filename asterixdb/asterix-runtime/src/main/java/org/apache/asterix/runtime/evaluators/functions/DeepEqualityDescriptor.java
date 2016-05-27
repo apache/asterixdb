@@ -76,9 +76,9 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                 final DataOutput out = resultStorage.getDataOutput();
                 final IScalarEvaluator evalLeft = evalFactoryLeft.createScalarEvaluator(ctx);
                 final IScalarEvaluator evalRight = evalFactoryRight.createScalarEvaluator(ctx);
-                final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
 
                 return new IScalarEvaluator() {
+                    private final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
                     private final PointableAllocator allocator = new PointableAllocator();
                     private final IVisitablePointable pointableLeft = allocator.allocateFieldValue(inputTypeLeft);
                     private final IVisitablePointable pointableRight = allocator.allocateFieldValue(inputTypeRight);

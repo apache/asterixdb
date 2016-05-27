@@ -73,7 +73,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     private int posCrt;
                     private ATypeTag itemTag;
                     private boolean selfDescList = false;
-                    private boolean metNull = false;
+                    private boolean metUnknown = false;
 
                     @Override
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
@@ -89,11 +89,12 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                             evalList.evaluate(tuple, inputVal);
                             byte[] serList = inputVal.getByteArray();
                             int offset = inputVal.getStartOffset();
-                            metNull = false;
+                            metUnknown = false;
 
                             byte typeTag = serList[offset];
-                            if (typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                metNull = true;
+                            if (typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
+                                    || typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                metUnknown = true;
                                 return;
                             }
 
@@ -121,7 +122,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                     @Override
                     public boolean step(IPointable result) throws AlgebricksException {
-                        if (!metNull && posCrt < posStart + numItems && posCrt < numItemsMax) {
+                        if (!metUnknown && posCrt < posStart + numItems && posCrt < numItemsMax) {
                             resultStorage.reset();
                             byte[] serList = inputVal.getByteArray();
                             int offset = inputVal.getStartOffset();

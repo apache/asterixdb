@@ -83,6 +83,7 @@ import org.apache.asterix.lang.common.literal.DoubleLiteral;
 import org.apache.asterix.lang.common.literal.FalseLiteral;
 import org.apache.asterix.lang.common.literal.FloatLiteral;
 import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
@@ -1896,6 +1897,10 @@ Expression Literal() throws ParseException:
     {
       lit.setValue(new DoubleLiteral(new Double(token.image)));
     }
+  | <MISSING>
+    {
+      lit.setValue(MissingLiteral.INSTANCE);
+    }
   | <NULL>
     {
       lit.setValue(NullLiteral.INSTANCE);
@@ -2854,7 +2859,8 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <NULL : "null">
+  <MISSING : "missing">
+  |  <NULL : "null">
   | <TRUE : "true">
   | <FALSE : "false">
 }

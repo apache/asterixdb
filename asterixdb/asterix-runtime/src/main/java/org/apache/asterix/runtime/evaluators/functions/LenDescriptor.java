@@ -26,7 +26,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializer
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -40,7 +39,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -77,9 +75,6 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -87,16 +82,6 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         evalList.evaluate(tuple, inputVal);
                         byte[] serList = inputVal.getByteArray();
                         int offset = inputVal.getStartOffset();
-
-                        if (serList[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            try {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } catch (HyracksDataException e) {
-                                throw new AlgebricksException(e);
-                            }
-                            result.set(resultStorage);
-                            return;
-                        }
 
                         if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                 && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {

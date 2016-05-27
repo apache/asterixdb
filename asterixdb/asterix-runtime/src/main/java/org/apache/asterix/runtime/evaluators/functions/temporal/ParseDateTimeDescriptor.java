@@ -23,7 +23,6 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
@@ -78,9 +77,6 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
 
@@ -101,13 +97,6 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                         int len1 = argPtr1.getLength();
 
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
                                     || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(getIdentifier().getName()

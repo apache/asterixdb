@@ -64,14 +64,14 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
 
     @Override
     public void step(IFrameTupleReference tuple) throws AlgebricksException {
+        if (skipStep()) {
+            return;
+        }
         eval.evaluate(tuple, inputVal);
-
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
-            return;
-        } else if (aggType == ATypeTag.NULL) {
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             if (typeTag == ATypeTag.SYSTEM_NULL) {

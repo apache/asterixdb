@@ -168,7 +168,7 @@ public class ARecordType extends AbstractComplexType {
             }
             if (subRecordType.getTypeTag().equals(ATypeTag.UNION)) {
                 //enforced SubType
-                subRecordType = ((AUnionType) subRecordType).getNullableType();
+                subRecordType = ((AUnionType) subRecordType).getActualType();
                 if (subRecordType.getTypeTag() != ATypeTag.RECORD) {
                     throw new AsterixException(
                             "Field accessor is not defined for values of type " + subRecordType.getTypeTag());
@@ -309,5 +309,15 @@ public class ARecordType extends AbstractComplexType {
             typeList.add(getSubFieldType(field));
         }
         return typeList;
+    }
+
+    @Override
+    public boolean containsType(IAType type) {
+        for (IAType aType : fieldTypes) {
+            if (aType.getTypeName().equals(type.getTypeName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

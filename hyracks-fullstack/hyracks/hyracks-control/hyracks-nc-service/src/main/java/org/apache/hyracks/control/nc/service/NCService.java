@@ -50,6 +50,16 @@ public class NCService {
     private static Ini ini = new Ini();
 
     /**
+     * ID of *this* NC
+     */
+    private static String ncId = "";
+
+    /**
+     * The Ini section representing *this* NC
+     */
+    private static String nodeSection = null;
+
+    /**
      * The NCServiceConfig
      */
     private static NCServiceConfig config;
@@ -73,12 +83,22 @@ public class NCService {
 
     private static List<String> buildCommand() throws IOException {
         List<String> cList = new ArrayList<String>();
+
+        // Find the command to run. For now, we allow overriding the name, but
+        // still assume it's located in the bin/ directory of the deployment.
+        // Even this is likely more configurability than we need.
+        String command = getStringINIOpt(ini, nodeSection, "command", "hyracksnc");
+        // app.home is specified by the Maven appassembler plugin. If it isn't set,
+        // fall back to user's home dir. Again this is likely more flexibility
+        // than we need.
+        String apphome = System.getProperty("app.home", System.getProperty("user.home"));
+        String path = apphome + File.separator + "bin" + File.separator;
         if (SystemUtils.IS_OS_WINDOWS) {
-            cList.add(config.command + ".bat");
+            cList.add(path + command + ".bat");
+        } else {
+            cList.add(path + command);
         }
-        else {
-            cList.add(config.command);
-        }
+
         cList.add("-config-file");
         // Store the Ini file from the CC locally so NCConfig can read it.
         // QQQ should arrange to delete this when done
@@ -92,7 +112,7 @@ public class NCService {
         if (env.containsKey("JAVA_OPTS")) {
             return;
         }
-        String jvmargs = getStringINIOpt(ini, "localnc", "jvm.args", "-Xmx1536m");
+        String jvmargs = getStringINIOpt(ini, nodeSection, "jvm.args", "-Xmx1536m");
         env.put("JAVA_OPTS", jvmargs);
     }
 
@@ -113,6 +133,23 @@ public class NCService {
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Launching NCDriver process");
+            }
+
+            // Logfile
+            if (! "-".equals(config.logdir)) {
+                pb.redirectErrorStream(true);
+                File log = new File(config.logdir);
+                if (! log.mkdirs()) {
+                    if (! log.isDirectory()) {
+                        throw new IOException(config.logdir + ": cannot create");
+                    }
+                    // If the directory IS there, all is well
+                }
+                File logfile = new File(config.logdir, "nc-" + ncId + ".log");
+                pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logfile));
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Logging to " + logfile.getCanonicalPath());
+                }
             }
             proc = pb.start();
 
@@ -155,6 +192,8 @@ public class NCService {
             }
             String iniString = ois.readUTF();
             ini = new Ini(new StringReader(iniString));
+            ncId = getStringINIOpt(ini, "localnc", "id", "");
+            nodeSection = "nc/" + ncId;
             return launchNCProcess();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error decoding connection from server", e);

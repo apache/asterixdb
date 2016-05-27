@@ -19,6 +19,7 @@
 package org.apache.asterix.om.constants;
 
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -34,6 +35,11 @@ public class AsterixConstantValue implements IAlgebricksConstantValue {
     @Override
     public boolean isFalse() {
         return object == ABoolean.FALSE;
+    }
+
+    @Override
+    public boolean isMissing() {
+        return object == AMissing.MISSING;
     }
 
     @Override

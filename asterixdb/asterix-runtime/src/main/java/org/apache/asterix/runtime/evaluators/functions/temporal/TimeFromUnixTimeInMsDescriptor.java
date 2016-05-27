@@ -22,12 +22,10 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -77,9 +75,6 @@ public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private AMutableTime aTime = new AMutableTime(0);
 
@@ -88,13 +83,9 @@ public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynami
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
                         try {
-                            if (argPtr.getByteArray()[argPtr.getStartOffset()] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else {
-                                aTime.setValue(
-                                        ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset()));
-                                timeSerde.serialize(aTime, out);
-                            }
+                            aTime.setValue(
+                                    ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset()));
+                            timeSerde.serialize(aTime, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

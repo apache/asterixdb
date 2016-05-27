@@ -254,17 +254,18 @@ public class JObjectUtil {
                 dis.readInt(); // list size
                 int numberOfitems;
                 numberOfitems = dis.readInt();
-                if (numberOfitems > 0) {
-                    if (!fixedSize) {
-                        for (int i = 0; i < numberOfitems; i++)
-                            dis.readInt();
-                    }
+                if (numberOfitems <= 0) {
+                    break;
+                }
+                if (!fixedSize) {
                     for (int i = 0; i < numberOfitems; i++) {
-                        IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
-                        ((JUnorderedList) jObject).add(v);
+                        dis.readInt();
                     }
                 }
-
+                for (int i = 0; i < numberOfitems; i++) {
+                    IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
+                    ((JUnorderedList) jObject).add(v);
+                }
                 break;
             }
             case ORDEREDLIST: {
@@ -289,17 +290,18 @@ public class JObjectUtil {
                 dis.readInt(); // list size
                 int numberOfitems;
                 numberOfitems = dis.readInt();
-                if (numberOfitems > 0) {
-                    if (!fixedSize) {
-                        for (int i = 0; i < numberOfitems; i++)
-                            dis.readInt();
-                    }
+                if (numberOfitems <= 0) {
+                    break;
+                }
+                if (!fixedSize) {
                     for (int i = 0; i < numberOfitems; i++) {
-                        IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
-                        ((JOrderedList) jObject).add(v);
+                        dis.readInt();
                     }
                 }
-
+                for (int i = 0; i < numberOfitems; i++) {
+                    IJObject v = getJType(elementType.getTypeTag(), elementType, dis, objectPool);
+                    ((JOrderedList) jObject).add(v);
+                }
                 break;
             }
             case RECORD:
@@ -348,7 +350,7 @@ public class JObjectUtil {
                         IAType fieldType = fieldTypes[fieldNumber];
                         if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
                             if (((AUnionType) fieldTypes[fieldNumber]).isNullableType()) {
-                                fieldType = ((AUnionType) fieldTypes[fieldNumber]).getNullableType();
+                                fieldType = ((AUnionType) fieldTypes[fieldNumber]).getActualType();
                                 fieldValueTypeTag = fieldType.getTypeTag();
                             }
                         } else {

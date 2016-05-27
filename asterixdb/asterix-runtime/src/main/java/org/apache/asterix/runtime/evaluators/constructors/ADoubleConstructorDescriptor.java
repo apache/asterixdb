@@ -25,7 +25,6 @@ import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -77,9 +76,6 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -107,8 +103,6 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                     aDouble.setValue(Double.parseDouble(utf8Ptr.toString()));
                                 }
                                 doubleSerde.serialize(aDouble, out);
-                            } else if (serString[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

@@ -18,16 +18,12 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class OrderedListOfAInt64TypeComputer implements IResultTypeComputer {
+public class OrderedListOfAInt64TypeComputer extends AbstractResultTypeComputer {
 
     public static final OrderedListOfAInt64TypeComputer INSTANCE = new OrderedListOfAInt64TypeComputer();
 
@@ -35,8 +31,7 @@ public class OrderedListOfAInt64TypeComputer implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+    protected IAType getResultType(IAType... strippedInputTypes) {
         return new AOrderedListType(BuiltinType.AINT64, null);
     }
 }

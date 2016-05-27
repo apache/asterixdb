@@ -26,13 +26,10 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.SpatialUtils;
@@ -42,7 +39,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -73,10 +69,6 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IPointable argPtr = new VoidPointable();
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -125,9 +117,6 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     area = (x2 - x1) * (y2 - y1);
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
-                                    break;
-                                case NULL:
-                                    nullSerde.serialize(ANull.NULL, out);
                                     break;
                                 default:
                                     throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()

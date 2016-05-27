@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableUUID;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -75,9 +74,6 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AUUID);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -96,8 +92,6 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                                 int offset = utf8Ptr.getCharStartOffset();
                                 uuid.parseUUIDHexBytes(serString, offset);
                                 uuidSerde.serialize(uuid, out);
-                            } else if (serString[start] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException(errorMessage);
                             }

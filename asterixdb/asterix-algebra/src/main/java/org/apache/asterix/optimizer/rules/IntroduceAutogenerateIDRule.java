@@ -130,7 +130,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(new MutableObject<ILogicalExpression>(mergedRec));
         AbstractFunctionCallExpression notNullFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL), args);
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CHECK_UNKNOWN), args);
         return notNullFn;
     }
 

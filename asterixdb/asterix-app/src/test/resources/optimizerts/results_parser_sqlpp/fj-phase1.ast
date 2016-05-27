@@ -80,7 +80,7 @@ Let Variable [ Name=$tokens ]
 
         Let Variable [ Name=$count ]
           :=
-          FunctionCall rares03.count@1[
+          FunctionCall rares03.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [

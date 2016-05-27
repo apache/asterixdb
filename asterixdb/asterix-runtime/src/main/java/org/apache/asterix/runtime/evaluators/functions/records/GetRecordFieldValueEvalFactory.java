@@ -23,11 +23,8 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
@@ -35,7 +32,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -67,10 +63,6 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
             private final IPointable inputArg1 = new VoidPointable();
             private final IScalarEvaluator recordEval = recordEvalFactory.createScalarEvaluator(ctx);
             private final IScalarEvaluator fieldNameEval = fldNameEvalFactory.createScalarEvaluator(ctx);
-
-            @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
             private final RuntimeRecordTypeInfo recTypeInfo = new RuntimeRecordTypeInfo();
 
             {
@@ -85,21 +77,12 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
                     int serFldNameLen = inputArg1.getLength();
-                    if (serFldName[serFldNameOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    }
 
                     recordEval.evaluate(tuple, inputArg0);
                     byte[] serRecord = inputArg0.getByteArray();
                     int serRecordOffset = inputArg0.getStartOffset();
                     int serRecordLen = inputArg0.getLength();
-                    if (serRecord[serRecordOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    }
+
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type "
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[serRecordOffset]));
@@ -134,7 +117,7 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
                             serRecordLen, serFldName, serFldNameOffset);
                     if (subFieldOffset < 0) {
-                        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                        out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                         result.set(resultStorage);
                         return;
                     }

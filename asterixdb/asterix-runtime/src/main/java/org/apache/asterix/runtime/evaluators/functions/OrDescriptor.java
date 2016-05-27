@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -80,6 +81,9 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
+                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -88,29 +92,37 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             int n = args.length;
                             boolean res = false;
                             boolean metNull = false;
+                            boolean metMissing = false;
                             for (int i = 0; i < n; i++) {
                                 evals[i].evaluate(tuple, argPtr);
                                 byte[] data = argPtr.getByteArray();
                                 int offset = argPtr.getStartOffset();
+                                if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                                    metMissing = true;
+                                    continue;
+                                }
                                 if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
                                     metNull = true;
                                     continue;
                                 }
                                 boolean argResult = ABooleanSerializerDeserializer.getBoolean(data, offset + 1);
                                 if (argResult == true) {
-                                    res = true;
-                                    break;
+                                    // anything OR TRUE = TRUE
+                                    booleanSerde.serialize(ABoolean.TRUE, output);
+                                    result.set(resultStorage);
+                                    return;
                                 }
+                                res |= argResult;
                             }
                             if (metNull) {
-                                if (!res) {
-                                    ABoolean aResult = ABoolean.FALSE;
-                                    booleanSerde.serialize(aResult, output);
-                                } else {
-                                    nullSerde.serialize(ANull.NULL, output);
-                                }
+                                // NULL OR FALSE = NULL
+                                // NULL OR MISSING = NULL
+                                nullSerde.serialize(ANull.NULL, output);
+                            } else if (metMissing) {
+                                // MISSING OR FALSE = MISSING
+                                missingSerde.serialize(AMissing.MISSING, output);
                             } else {
-                                ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
+                                ABoolean aResult = res ? ABoolean.TRUE : ABoolean.FALSE;
                                 booleanSerde.serialize(aResult, output);
                             }
                             result.set(resultStorage);

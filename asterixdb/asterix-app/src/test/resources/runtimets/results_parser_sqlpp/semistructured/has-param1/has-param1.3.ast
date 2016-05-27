@@ -11,7 +11,7 @@ FROM [  FunctionCall Metadata.dataset@1[
 ]
 Where
   FunctionCall test.not@1[
-    FunctionCall test.is-null@1[
+    FunctionCall test.is-missing@1[
       FieldAccessor [
         Variable [ Name=$o ]
         Field=param1

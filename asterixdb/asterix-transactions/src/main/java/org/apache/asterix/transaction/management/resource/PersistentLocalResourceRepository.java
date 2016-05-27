@@ -86,9 +86,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 throw new HyracksDataException(mountPointDir.getAbsolutePath() + " doesn't exist.");
             }
             if (!mountPoint.endsWith(System.getProperty("file.separator"))) {
-                mountPoints[i] = new String(mountPoint + System.getProperty("file.separator"));
+                mountPoints[i] = mountPoint + System.getProperty("file.separator");
             } else {
-                mountPoints[i] = new String(mountPoint);
+                mountPoints[i] = mountPoint;
             }
         }
         resourceCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHED_RESOURCES).build();
@@ -136,10 +136,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
             String storageRootDirPath;
             if (storageRootDirName.startsWith(System.getProperty("file.separator"))) {
-                storageRootDirPath = new String(
-                        mountPoints[i] + storageRootDirName.substring(System.getProperty("file.separator").length()));
+                storageRootDirPath = mountPoints[i] +
+                        storageRootDirName.substring(System.getProperty("file.separator").length());
             } else {
-                storageRootDirPath = new String(mountPoints[i] + storageRootDirName);
+                storageRootDirPath = mountPoints[i] + storageRootDirName;
             }
 
             LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
@@ -301,7 +301,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             if (!baseDir.endsWith(System.getProperty("file.separator"))) {
                 baseDir += System.getProperty("file.separator");
             }
-            return new String(baseDir + METADATA_FILE_NAME);
+            return baseDir + METADATA_FILE_NAME;
         }
     }
 

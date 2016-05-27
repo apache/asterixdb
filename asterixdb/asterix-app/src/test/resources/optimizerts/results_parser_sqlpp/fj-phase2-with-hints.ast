@@ -80,7 +80,7 @@ Let Variable [ Name=$tokensDBLP ]
           )
 
         Orderby
-          FunctionCall fuzzyjoin_078.count@1[
+          FunctionCall fuzzyjoin_078.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [

@@ -19,7 +19,9 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinter;
+import java.io.PrintStream;
+
+import org.apache.asterix.om.base.AUUID;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -29,9 +31,15 @@ public class AUUIDPrinterFactory implements IPrinterFactory {
 
     public static final AUUIDPrinterFactory INSTANCE = new AUUIDPrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        StringBuilder buf = new StringBuilder(AUUID.UUID_CHARS + 2);
+        buf.append('"');
+        AUUID.appendLiteralOnly(b, s + 1, buf).append('"');
+        ps.print(buf.toString());
+    };
+
     @Override
     public IPrinter createPrinter() {
-        return AUUIDPrinter.INSTANCE;
+        return PRINTER;
     }
-
 }

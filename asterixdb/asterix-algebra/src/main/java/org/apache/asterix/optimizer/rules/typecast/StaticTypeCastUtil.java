@@ -31,7 +31,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -187,14 +187,15 @@ public class StaticTypeCastUtil {
      */
     private static boolean rewriteRecordFuncExpr(AbstractFunctionCallExpression funcExpr,
             ARecordType requiredRecordType, ARecordType inputRecordType, IVariableTypeEnvironment env)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // if already rewritten, the required type is not null
-        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
+        if (TypeCastUtils.getRequiredType(funcExpr) != null) {
             return false;
+        }
         boolean casted = staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
         if (casted) {
             //enforce the required type if it is statically casted
-            TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
+            TypeCastUtils.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
         }
         return casted;
     }
@@ -213,11 +214,12 @@ public class StaticTypeCastUtil {
      */
     private static boolean rewriteListFuncExpr(AbstractFunctionCallExpression funcExpr,
             AbstractCollectionType requiredListType, AbstractCollectionType inputListType, IVariableTypeEnvironment env)
-                    throws AlgebricksException {
-        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
+            throws AlgebricksException {
+        if (TypeCastUtils.getRequiredType(funcExpr) != null) {
             return false;
+        }
 
-        TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
+        TypeCastUtils.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
 
         IAType itemType = requiredListType.getItemType();
@@ -305,9 +307,9 @@ public class StaticTypeCastUtil {
 
                     // match the optional field
                     if (NonTaggedFormatUtil.isOptional(reqFieldType)) {
-                        IAType itemType = ((AUnionType) reqFieldType).getNullableType();
+                        IAType itemType = ((AUnionType) reqFieldType).getActualType();
                         reqFieldType = itemType;
-                        if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
+                        if (fieldType.equals(BuiltinType.AMISSING) || fieldType.equals(itemType)) {
                             fieldPermutation[j] = i;
                             openFields[i] = false;
                             matched = true;
@@ -324,14 +326,14 @@ public class StaticTypeCastUtil {
                     // match the optional type input for a non-optional field
                     // delay that to runtime by calling the not-null function
                     if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                        IAType itemType = ((AUnionType) fieldType).getNullableType();
+                        IAType itemType = ((AUnionType) fieldType).getActualType();
                         if (reqFieldType.equals(itemType)) {
                             fieldPermutation[j] = i;
                             openFields[i] = false;
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
-                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
+                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CHECK_UNKNOWN));
                             notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
                             //wrap the not null function to the original function
                             func.getArguments().get(2 * i + 1).setValue(notNullFunc);
@@ -365,8 +367,9 @@ public class StaticTypeCastUtil {
             for (int j = 0; j < inputFieldNames.length; j++) {
                 String fieldName = inputFieldNames[j];
                 IAType fieldType = inputFieldTypes[j];
-                if (!fieldName.equals(reqFieldName))
+                if (!fieldName.equals(reqFieldName)) {
                     continue;
+                }
                 // should check open field here
                 // because number of entries in fieldPermuations is the
                 // number of required schema fields
@@ -378,16 +381,18 @@ public class StaticTypeCastUtil {
                 }
 
                 // match the optional field
-                if (NonTaggedFormatUtil.isOptional(reqFieldType)) {
-                    IAType itemType = ((AUnionType) reqFieldType).getNullableType();
-                    if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
-                        matched = true;
-                        break;
-                    }
+                if (!NonTaggedFormatUtil.isOptional(reqFieldType)) {
+                    continue;
+                }
+                IAType itemType = ((AUnionType) reqFieldType).getActualType();
+                if (fieldType.equals(BuiltinType.AMISSING) || fieldType.equals(itemType)) {
+                    matched = true;
+                    break;
                 }
             }
-            if (matched)
+            if (matched) {
                 continue;
+            }
 
             if (NonTaggedFormatUtil.isOptional(reqFieldType)) {
                 // add a null field
@@ -470,19 +475,18 @@ public class StaticTypeCastUtil {
                 injectCastFunction(FunctionUtil.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
                 castInjected = true;
             }
-            if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                //recursively rewrite function arguments
-                if (TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
-                        && reqFieldType != null) {
-                    if (castInjected) {
-                        //rewrite the arg expression inside the dynamic cast
-                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                        rewriteFuncExpr(argFunc, inputFieldType, inputFieldType, env);
-                    } else {
-                        //rewrite arg
-                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                        rewriteFuncExpr(argFunc, reqFieldType, inputFieldType, env);
-                    }
+            //recursively rewrite function arguments
+            if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                    && TypeCastUtils.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
+                    && reqFieldType != null) {
+                if (castInjected) {
+                    //rewrite the arg expression inside the dynamic cast
+                    ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                    rewriteFuncExpr(argFunc, inputFieldType, inputFieldType, env);
+                } else {
+                    //rewrite arg
+                    ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                    rewriteFuncExpr(argFunc, reqFieldType, inputFieldType, env);
                 }
             }
         }
@@ -508,7 +512,7 @@ public class StaticTypeCastUtil {
         ScalarFunctionCallExpression cast = new ScalarFunctionCallExpression(funcInfo);
         cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
         exprRef.setValue(cast);
-        TypeComputerUtilities.setRequiredAndInputTypes(cast, reqType, inputType);
+        TypeCastUtils.setRequiredAndInputTypes(cast, reqType, inputType);
     }
 
     /**

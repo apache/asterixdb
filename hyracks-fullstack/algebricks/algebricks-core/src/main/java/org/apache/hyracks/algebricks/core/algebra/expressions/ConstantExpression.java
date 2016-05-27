@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -39,6 +38,11 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         @Override
         public boolean isTrue() {
             return true;
+        }
+
+        @Override
+        public boolean isMissing() {
+            return false;
         }
 
         @Override
@@ -64,6 +68,11 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         }
 
         @Override
+        public boolean isMissing() {
+            return false;
+        }
+
+        @Override
         public boolean isNull() {
             return false;
         }
@@ -78,7 +87,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
             return "FALSE";
         }
     });
-    public final static ConstantExpression NULL = new ConstantExpression(new IAlgebricksConstantValue() {
+    public final static ConstantExpression MISSING = new ConstantExpression(new IAlgebricksConstantValue() {
 
         @Override
         public boolean isTrue() {
@@ -86,8 +95,13 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         }
 
         @Override
-        public boolean isNull() {
+        public boolean isMissing() {
             return true;
+        }
+
+        @Override
+        public boolean isNull() {
+            return false;
         }
 
         @Override
@@ -97,7 +111,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
         @Override
         public String toString() {
-            return "NULL";
+            return "MISSING";
         }
     });
 

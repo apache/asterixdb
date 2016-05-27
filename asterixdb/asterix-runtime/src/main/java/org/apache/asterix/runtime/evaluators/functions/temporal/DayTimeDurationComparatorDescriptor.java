@@ -23,10 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -50,25 +47,9 @@ public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionD
     public final static FunctionIdentifier LESS_THAN_FID = AsterixBuiltinFunctions.DAY_TIME_DURATION_LESS_THAN;
     private final boolean isGreaterThan;
 
-    private DayTimeDurationComparatorDescriptor(boolean isGreaterThan) {
+    protected DayTimeDurationComparatorDescriptor(boolean isGreaterThan) {
         this.isGreaterThan = isGreaterThan;
     }
-
-    public final static IFunctionDescriptorFactory GREATER_THAN_FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new DayTimeDurationComparatorDescriptor(true);
-        }
-    };
-
-    public final static IFunctionDescriptorFactory LESS_THAN_FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new DayTimeDurationComparatorDescriptor(false);
-        }
-    };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
@@ -88,10 +69,6 @@ public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionD
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> boolSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -108,13 +85,6 @@ public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionD
                         int offset1 = argPtr1.getStartOffset();
 
                         try {
-                            if (bytes0[offset0] == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || bytes1[offset1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
-
                             if (bytes0[offset0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG
                                     || bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(getIdentifier().getName()

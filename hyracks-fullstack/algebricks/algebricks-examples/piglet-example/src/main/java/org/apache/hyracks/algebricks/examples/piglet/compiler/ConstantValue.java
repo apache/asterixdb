@@ -45,6 +45,11 @@ public final class ConstantValue implements IAlgebricksConstantValue {
     }
 
     @Override
+    public boolean isMissing() {
+        return false;
+    }
+
+    @Override
     public boolean isNull() {
         return false;
     }

@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -42,11 +42,11 @@ public class ExternalBTreeSearchOperatorDescriptor extends BTreeSearchOperatorDe
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
-            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
-            INullWriterFactory iNullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields, lowKeyInclusive,
-                highKeyInclusive, dataflowHelperFactory, retainInput, retainNull, iNullWriterFactory,
+                highKeyInclusive, dataflowHelperFactory, retainInput, retainMissing, missingWriterFactory,
                 searchOpCallbackProvider, null, null);
     }
 

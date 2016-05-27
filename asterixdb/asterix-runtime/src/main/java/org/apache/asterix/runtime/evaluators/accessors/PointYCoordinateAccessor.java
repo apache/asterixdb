@@ -27,7 +27,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserial
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -73,10 +72,6 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IPointable argPtr = new VoidPointable();
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     private final AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -96,8 +91,6 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
                                         startOffset + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                 aDouble.setValue(y);
                                 doubleSerde.serialize(aDouble, out);
-                            } else if (bytes[startOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-y does not support the type: " + bytes[startOffset]
                                         + " It is only implemented for POINT.");

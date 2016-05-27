@@ -27,7 +27,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeseriali
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -75,10 +74,6 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
                     private IPointable argPtr0 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADURATION);
@@ -94,29 +89,24 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
 
                         try {
                             ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-                            if (argPtrTypeTag == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else {
-                                switch (argPtrTypeTag) {
-                                    case INT8:
-                                        aDuration.setValue(0, AInt8SerializerDeserializer.getByte(bytes, offset + 1));
-                                        break;
-                                    case INT16:
-                                        aDuration.setValue(0, AInt16SerializerDeserializer.getShort(bytes, offset + 1));
-                                        break;
-                                    case INT32:
-                                        aDuration.setValue(0, AInt32SerializerDeserializer.getInt(bytes, offset + 1));
-                                        break;
-                                    case INT64:
-                                        aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
-                                        break;
-                                    default:
-                                        throw new AlgebricksException(
-                                                FID.getName() + ": expects type INT8/INT16/INT32/INT64/NULL but got "
-                                                        + argPtrTypeTag);
-                                }
-                                durationSerde.serialize(aDuration, out);
+                            switch (argPtrTypeTag) {
+                                case INT8:
+                                    aDuration.setValue(0, AInt8SerializerDeserializer.getByte(bytes, offset + 1));
+                                    break;
+                                case INT16:
+                                    aDuration.setValue(0, AInt16SerializerDeserializer.getShort(bytes, offset + 1));
+                                    break;
+                                case INT32:
+                                    aDuration.setValue(0, AInt32SerializerDeserializer.getInt(bytes, offset + 1));
+                                    break;
+                                case INT64:
+                                    aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
+                                    break;
+                                default:
+                                    throw new AlgebricksException(FID.getName()
+                                            + ": expects type INT8/INT16/INT32/INT64/NULL but got " + argPtrTypeTag);
                             }
+                            durationSerde.serialize(aDuration, out);
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }

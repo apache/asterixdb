@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -160,24 +160,24 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         IAType inputRecordType = (IAType) env.getVarType(recordVar);
 
         /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
-        boolean checkNull = false;
+        boolean checkUnknown = false;
         while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
             /** while-loop for the case there is a nested multi-level union */
-            inputRecordType = ((AUnionType) inputRecordType).getNullableType();
-            checkNull = true;
+            inputRecordType = ((AUnionType) inputRecordType).getActualType();
+            checkUnknown = true;
         }
 
         /** see whether the input record type needs to be casted */
         boolean cast = !compatible(requiredRecordType, inputRecordType);
 
-        if (checkNull) {
+        if (checkUnknown) {
             recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context,
-                    AsterixBuiltinFunctions.NOT_NULL);
+                    AsterixBuiltinFunctions.CHECK_UNKNOWN);
         }
         if (cast) {
             addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.CAST_RECORD);
         }
-        return cast || checkNull;
+        return cast || checkUnknown;
     }
 
     /**
@@ -217,7 +217,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     cast.getArguments()
                             .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
                     /** enforce the required record type */
-                    TypeComputerUtilities.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
+                    TypeCastUtils.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
                     LogicalVariable newAssignVar = context.newVar();
                     AssignOperator newAssignOperator = new AssignOperator(newAssignVar,
                             new MutableObject<ILogicalExpression>(cast));
@@ -274,7 +274,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             }
             IAType reqTypeInside = reqTypes[i];
             if (NonTaggedFormatUtil.isOptional(reqTypes[i])) {
-                reqTypeInside = ((AUnionType) reqTypes[i]).getNullableType();
+                reqTypeInside = ((AUnionType) reqTypes[i]).getActualType();
             }
             IAType inputTypeInside = inputTypes[i];
             if (NonTaggedFormatUtil.isOptional(inputTypes[i])) {
@@ -282,9 +282,9 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     /** if the required type is not optional, the two types are incompatible */
                     return false;
                 }
-                inputTypeInside = ((AUnionType) inputTypes[i]).getNullableType();
+                inputTypeInside = ((AUnionType) inputTypes[i]).getActualType();
             }
-            if (inputTypeInside.getTypeTag() != ATypeTag.NULL && !reqTypeInside.equals(inputTypeInside)) {
+            if (inputTypeInside.getTypeTag() != ATypeTag.MISSING && !reqTypeInside.equals(inputTypeInside)) {
                 return false;
             }
         }

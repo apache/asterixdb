@@ -60,6 +60,7 @@ public class AsterixBuiltinTypeMap {
         _builtinTypeMap.put("polygon", BuiltinType.APOLYGON);
         _builtinTypeMap.put("circle", BuiltinType.ACIRCLE);
         _builtinTypeMap.put("rectangle", BuiltinType.ARECTANGLE);
+        _builtinTypeMap.put("missing", BuiltinType.AMISSING);
         _builtinTypeMap.put("null", BuiltinType.ANULL);
         _builtinTypeMap.put("uuid", BuiltinType.AUUID);
         _builtinTypeMap.put("shortwithouttypeinfo", BuiltinType.SHORTWITHOUTTYPEINFO);
@@ -80,8 +81,9 @@ public class AsterixBuiltinTypeMap {
                 throw new MetadataException(e);
             }
         }
-        if (isNullable)
+        if (isNullable) {
             type = AUnionType.createNullableType(type);
+        }
         return type;
     }
 }

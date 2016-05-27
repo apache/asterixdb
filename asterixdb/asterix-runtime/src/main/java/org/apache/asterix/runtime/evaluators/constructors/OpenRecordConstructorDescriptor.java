@@ -97,14 +97,20 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                             recBuilder.init();
                             for (int i = 0; i < evalFields.length; i++) {
                                 evalFields[i].evaluate(tuple, fieldValuePointable);
-                                if (openFields[i]) {
+                                byte[] data = fieldValuePointable.getByteArray();
+                                int offset = fieldValuePointable.getStartOffset();
+                                boolean openField = openFields[i];
+                                if (openField && data[offset] != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                                    // MISSING for an open field means the field does not exist.
                                     evalNames[i].evaluate(tuple, fieldNamePointable);
                                     recBuilder.addField(fieldNamePointable, fieldValuePointable);
-                                } else {
-                                    if (fieldValuePointable.getByteArray()[fieldValuePointable
-                                            .getStartOffset()] != ATypeTag.NULL.serialize()) {
-                                        recBuilder.addField(closedFieldId, fieldValuePointable);
-                                    }
+                                }
+                                if (!openField && data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                                    // Turns MISSING into NULL for a closed field.
+                                    data[offset] = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
+                                }
+                                if (!openField) {
+                                    recBuilder.addField(closedFieldId, fieldValuePointable);
                                     closedFieldId++;
                                 }
                             }

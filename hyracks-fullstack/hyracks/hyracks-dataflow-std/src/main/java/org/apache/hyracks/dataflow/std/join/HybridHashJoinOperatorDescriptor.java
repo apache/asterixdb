@@ -33,8 +33,8 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriter;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -47,7 +47,6 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.common.data.partition.RepartitionComputerFactory;
@@ -60,6 +59,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePu
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
+import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
@@ -76,7 +76,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
-    private final INullWriterFactory[] nullWriterFactories1;
+    private final IMissingWriterFactory[] nonMatchWriterFactories1;
 
     /**
      * @param spec
@@ -97,7 +97,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             int recordsPerFrame, double factor, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor, IPredicateEvaluatorFactory predEvalFactory, boolean isLeftOuter,
-            INullWriterFactory[] nullWriterFactories1) throws HyracksDataException {
+            IMissingWriterFactory[] nullWriterFactories1) throws HyracksDataException {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.inputsize0 = inputsize0;
@@ -109,7 +109,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         this.comparatorFactories = comparatorFactories;
         this.predEvaluatorFactory = predEvalFactory;
         this.isLeftOuter = isLeftOuter;
-        this.nullWriterFactories1 = nullWriterFactories1;
+        this.nonMatchWriterFactories1 = nullWriterFactories1;
         recordDescriptors[0] = recordDescriptor;
     }
 
@@ -169,17 +169,18 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(joinAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
+            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length]
+                    : null;
             if (isLeftOuter) {
-                for (int i = 0; i < nullWriterFactories1.length; i++) {
-                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
+                for (int i = 0; i < nonMatchWriterFactories1.length; i++) {
+                    nullWriters1[i] = nonMatchWriterFactories1[i].createMissingWriter();
                 }
             }
             final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
@@ -198,8 +199,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void close() throws HyracksDataException {
-                    if (state.memoryForHashtable != 0)
+                    if (state.memoryForHashtable != 0) {
                         build(inBuffer.getBuffer());
+                    }
 
                     for (int i = 0; i < state.nPartitions; i++) {
                         ByteBuffer buf = bufferForPartitions[i].getBuffer();
@@ -359,17 +361,18 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(buildAid, 0);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
+            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length]
+                    : null;
             if (isLeftOuter) {
-                for (int i = 0; i < nullWriterFactories1.length; i++) {
-                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
+                for (int i = 0; i < nonMatchWriterFactories1.length; i++) {
+                    nullWriters1[i] = nonMatchWriterFactories1[i].createMissingWriter();
                 }
             }
             final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
@@ -436,8 +439,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                         if (!ftap.append(accessorProbe, i)) {
                                             state.joiner.join(inBuffer.getBuffer(), writer);
                                             ftap.reset(inBuffer, true);
-                                        } else
+                                        } else {
                                             break;
+                                        }
                                     }
 
                                 } else {

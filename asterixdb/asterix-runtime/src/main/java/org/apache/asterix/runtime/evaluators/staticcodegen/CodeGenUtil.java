@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.evaluators.staticcodegen;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,11 +38,16 @@ public class CodeGenUtil {
 
     public final static String DEFAULT_SUFFIX_FOR_GENERATED_CLASS = "Gen";
     private final static String OBJECT_CLASS_NAME = "java/lang/Object";
+    private final static String DESCRIPTOR_SUPER_CLASS_NAME = "org/apache/asterix/runtime/"
+            + "evaluators/base/AbstractScalarFunctionDynamicDescriptor";
     private final static String EVALUATOR_FACTORY = "EvaluatorFactory";
     private final static String EVALUATOR = "Evaluator";
     private final static String INNER = "Inner";
     private final static String DESCRIPTOR = "Descriptor";
+    private final static String ACCESSOR = "Accessor";
     private final static String DOLLAR = "$";
+    private final static String PKG_SUFFIX = "/generated";
+    private final static String ASTERIXDB_PREFIX = "org/apache/asterix";
 
     /**
      * The callback interface for a caller to determine what it needs to do for
@@ -74,15 +81,26 @@ public class CodeGenUtil {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static void generateScalarFunctionDescriptorBinary(String packagePrefix,
+    public static List<Pair<String, String>> generateScalarFunctionDescriptorBinary(String packagePrefix,
             String originalFuncDescriptorClassName, String suffixForGeneratedClass, ClassLoader classLoader,
             ClassByteCodeAction action) throws IOException, ClassNotFoundException {
         originalFuncDescriptorClassName = toInternalClassName(originalFuncDescriptorClassName);
-        String targetFuncDescriptorClassName = toInternalClassName(
-                originalFuncDescriptorClassName + suffixForGeneratedClass);
+        if (originalFuncDescriptorClassName.equals(DESCRIPTOR_SUPER_CLASS_NAME)) {
+            return Collections.emptyList();
+        }
+
+        String targetFuncDescriptorClassName = getGeneratedFunctionDescriptorInternalClassName(
+                originalFuncDescriptorClassName, suffixForGeneratedClass);
 
         // Adds the mapping of the old/new names of the function descriptor.
         List<Pair<String, String>> nameMappings = new ArrayList<>();
+
+        // Generates code for super classes except java.lang.Object.
+        Class<?> evaluatorClass = CodeGenUtil.class.getClassLoader()
+                .loadClass(toJdkStandardName(originalFuncDescriptorClassName));
+        nameMappings.addAll(generateScalarFunctionDescriptorBinary(packagePrefix,
+                evaluatorClass.getSuperclass().getName(), suffixForGeneratedClass, classLoader, action));
+
         nameMappings.add(Pair.of(originalFuncDescriptorClassName, targetFuncDescriptorClassName));
         nameMappings.add(Pair.of(toJdkStandardName(originalFuncDescriptorClassName),
                 toJdkStandardName(targetFuncDescriptorClassName)));
@@ -102,7 +120,7 @@ public class CodeGenUtil {
         int evalFactoryCounter = 0;
         for (String evaluateFactoryClassName : evaluatorFactoryClassNames) {
             generateEvaluatorFactoryClassBinary(packagePrefix, evaluateFactoryClassName, suffixForGeneratedClass,
-                    ++evalFactoryCounter, nameMappings, classLoader, action);
+                    evalFactoryCounter++, nameMappings, classLoader, action);
         }
 
         // Transforms the function descriptor class and outputs the generated class binary.
@@ -110,6 +128,21 @@ public class CodeGenUtil {
         RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
         reader.accept(renamingVisitor, 0);
         action.runAction(targetFuncDescriptorClassName, writer.toByteArray());
+        return nameMappings;
+    }
+
+    public static String getGeneratedFunctionDescriptorClassName(String originalFuncDescriptorClassName,
+            String suffixForGeneratedClass) {
+        return toJdkStandardName(getGeneratedFunctionDescriptorInternalClassName(originalFuncDescriptorClassName,
+                suffixForGeneratedClass));
+    }
+
+    private static String getGeneratedFunctionDescriptorInternalClassName(String originalFuncDescriptorClassName,
+            String suffixForGeneratedClass) {
+        String originalFuncDescriptorClassInternalName = toInternalClassName(originalFuncDescriptorClassName);
+        String targetFuncDescriptorClassName = getGeneratedClassName(originalFuncDescriptorClassInternalName,
+                suffixForGeneratedClass, 0);
+        return targetFuncDescriptorClassName;
     }
 
     /**
@@ -184,7 +217,7 @@ public class CodeGenUtil {
         // Generates code for all evaluators.
         int evalCounter = 0;
         for (String evaluateClassName : evaluatorClassNames) {
-            generateEvaluatorClassBinary(evaluateClassName, suffixForGeneratedClass, ++evalCounter, nameMappings,
+            generateEvaluatorClassBinary(evaluateClassName, suffixForGeneratedClass, evalCounter++, nameMappings,
                     classLoader, action);
         }
 
@@ -235,13 +268,31 @@ public class CodeGenUtil {
         nameMappings.add(
                 Pair.of(toJdkStandardName(originalEvaluatorClassName), toJdkStandardName(targetEvaluatorClassName)));
 
+        ClassReader firstPassReader = new ClassReader(getResourceStream(originalEvaluatorClassName, classLoader));
+        // Generates inner classes other than the evaluator.
+        Set<String> excludedNames = new HashSet<>();
+        for (Pair<String, String> entry : nameMappings) {
+            excludedNames.add(entry.getKey());
+        }
+        generateNonEvalInnerClasses(firstPassReader, excludedNames, nameMappings, suffixForGeneratedClass, classLoader,
+                action);
+
+        // Injects missing-handling byte code.
+        ClassWriter firstPassWriter = new ClassWriter(firstPassReader, 0);
+        EvaluatorMissingCheckVisitor missingHandlingVisitor = new EvaluatorMissingCheckVisitor(firstPassWriter);
+        firstPassReader.accept(missingHandlingVisitor, 0);
+
+        ClassReader secondPassReader = new ClassReader(firstPassWriter.toByteArray());
         // Injects null-handling byte code and output the class binary.
-        ClassReader reader = new ClassReader(getResourceStream(originalEvaluatorClassName, classLoader));
-        ClassWriter writer = new ClassWriter(reader, 0);
-        RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
-        EvaluatorVisitor evaluateVisitor = new EvaluatorVisitor(renamingVisitor);
-        reader.accept(evaluateVisitor, 0);
-        action.runAction(targetEvaluatorClassName, writer.toByteArray());
+        // Since we're going to add jump instructions, we have to let the ClassWriter to
+        // automatically generate frames for JVM to verify the class.
+        ClassWriter secondPassWriter = new ClassWriter(secondPassReader,
+                ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+        RenameClassVisitor renamingVisitor = new RenameClassVisitor(secondPassWriter, nameMappings);
+        EvaluatorNullCheckVisitor nullHandlingVisitor = new EvaluatorNullCheckVisitor(renamingVisitor,
+                missingHandlingVisitor.getLastAddedLabel());
+        secondPassReader.accept(nullHandlingVisitor, 0);
+        action.runAction(targetEvaluatorClassName, secondPassWriter.toByteArray());
     }
 
     /**
@@ -275,7 +326,7 @@ public class CodeGenUtil {
         String suffix = INNER + suffixForGeneratedClass;
         for (String innerClassName : innerClassNames) {
             // adds name mapping.
-            String targetInnerClassName = getGeneratedClassName(innerClassName, suffix, ++counter);
+            String targetInnerClassName = getGeneratedClassName(innerClassName, suffix, counter++);
             nameMappings.add(Pair.of(innerClassName, targetInnerClassName));
             nameMappings.add(Pair.of(toJdkStandardName(innerClassName), toJdkStandardName(targetInnerClassName)));
 
@@ -325,15 +376,25 @@ public class CodeGenUtil {
         StringBuilder sb = new StringBuilder();
         int end = originalClassName.indexOf(DESCRIPTOR);
         if (end < 0) {
+            end = originalClassName.indexOf(ACCESSOR);
+        }
+        if (end < 0) {
             end = originalClassName.indexOf(DOLLAR);
         }
         if (end < 0) {
-            end = originalClassName.length() - 1;
+            end = originalClassName.length();
         }
 
-        sb.append(originalClassName.substring(0, end));
+        String name = originalClassName.substring(0, end);
+        String lastName = name.substring(ASTERIXDB_PREFIX.length());
+
+        sb.append(ASTERIXDB_PREFIX);
+        sb.append(PKG_SUFFIX);
+        sb.append(lastName);
         sb.append(suffix);
-        sb.append(counter);
+        if (counter > 0) {
+            sb.append(counter);
+        }
         return sb.toString();
     }
 

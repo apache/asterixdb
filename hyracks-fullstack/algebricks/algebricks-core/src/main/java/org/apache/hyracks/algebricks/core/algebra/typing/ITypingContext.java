@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.typing;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -32,7 +32,7 @@ public interface ITypingContext {
 
     public IExpressionTypeComputer getExpressionTypeComputer();
 
-    public INullableTypeComputer getNullableTypeComputer();
+    public IMissableTypeComputer getMissableTypeComputer();
 
     public IMetadataProvider<?, ?> getMetadataProvider();
 

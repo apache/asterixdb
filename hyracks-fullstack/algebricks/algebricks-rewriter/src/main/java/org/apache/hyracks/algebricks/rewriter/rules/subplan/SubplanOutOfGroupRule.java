@@ -82,7 +82,7 @@ public class SubplanOutOfGroupRule implements IAlgebraicRewriteRule {
             if (op1.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 SubplanOperator subplan = (SubplanOperator) op1;
                 AbstractLogicalOperator op2 = (AbstractLogicalOperator) subplan.getInputs().get(0).getValue();
-                if (OperatorPropertiesUtil.isNullTest(op2)) {
+                if (OperatorPropertiesUtil.isMissingTest(op2)) {
                     if (subplan.getNestedPlans().size() == 1) {
                         ILogicalPlan p1 = subplan.getNestedPlans().get(0);
                         if (p1.getRoots().size() == 1) {

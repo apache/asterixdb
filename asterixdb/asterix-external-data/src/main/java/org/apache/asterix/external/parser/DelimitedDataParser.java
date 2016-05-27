@@ -167,7 +167,9 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
         if (in != null && hasHeader) {
             cursor.nextRecord();
-            while (cursor.nextField());
+            while (cursor.nextField()) {
+                ;
+            }
         }
     }
 

@@ -1,0 +1,105 @@
+DataverseUse TinySocial
+Query:
+SELECT [
+FunctionCall TinySocial.sql-avg@1[
+  (
+    SELECT ELEMENT [
+    FunctionCall TinySocial.get-year@1[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=employment
+        ]
+        Field=end-date
+      ]
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+average
+FunctionCall TinySocial.sql-count@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=employment
+      ]
+      Field=end-date
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+  )
+]
+count
+FunctionCall TinySocial.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FunctionCall TinySocial.get-year@1[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#4 ]
+          Field=employment
+        ]
+        Field=end-date
+      ]
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#4 ]
+    ]
+  )
+]
+sum
+FunctionCall TinySocial.sql-min@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#5 ]
+        Field=employment
+      ]
+      Field=end-date
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#5 ]
+    ]
+  )
+]
+min
+FunctionCall TinySocial.sql-max@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#6 ]
+        Field=employment
+      ]
+      Field=end-date
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#6 ]
+    ]
+  )
+]
+max
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS Variable [ Name=$fbu ]
+,
+  FieldAccessor [
+    Variable [ Name=$fbu ]
+    Field=employment
+  ]
+  AS Variable [ Name=$employment ]
+]
+Group All

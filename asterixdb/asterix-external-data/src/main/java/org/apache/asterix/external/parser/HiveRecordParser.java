@@ -218,7 +218,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
             if (NonTaggedFormatUtil.isOptional(type)) {
                 throw new NotImplementedException("Non-optional UNION type is not supported.");
             }
-            tag = ((AUnionType) type).getNullableType().getTypeTag();
+            tag = ((AUnionType) type).getActualType().getTypeTag();
         }
         if (tag == null) {
             throw new NotImplementedException("Failed to get the type information for field " + i + ".");

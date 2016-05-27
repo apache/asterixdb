@@ -23,18 +23,14 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -64,12 +60,9 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
             private IPointable inputArg1 = new VoidPointable();
             private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
             private IScalarEvaluator eval1 = fldNameEvalFactory.createScalarEvaluator(ctx);
-            @SuppressWarnings("unchecked")
-            private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
             private int fieldValueOffset;
             private int fieldValueLength;
-            private ATypeTag fieldValueTypeTag = ATypeTag.NULL;
+            private ATypeTag fieldValueTypeTag;
 
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -80,12 +73,6 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     byte[] serRecord = inputArg0.getByteArray();
                     int serRecordOffset = inputArg0.getStartOffset();
                     int serRecordLen = inputArg0.getLength();
-
-                    if (serRecord[serRecordOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
-                        return;
-                    }
 
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new AlgebricksException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME.getName()
@@ -98,7 +85,7 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
                             serRecordLen, serFldName, serFldNameOffset);
                     if (fieldValueOffset < 0) {
-                        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                        out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                         result.set(resultStorage);
                         return;
                     }

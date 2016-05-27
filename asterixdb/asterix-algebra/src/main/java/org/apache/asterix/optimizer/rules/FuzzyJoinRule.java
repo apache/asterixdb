@@ -31,8 +31,8 @@ import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.asterix.translator.AqlPlusExpressionToPlanTranslator;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -197,8 +197,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         IAType leftType = (IAType) context.getOutputTypeEnvironment(leftInputOp).getVarType(leftInputVar);
         IAType rightType = (IAType) context.getOutputTypeEnvironment(rightInputOp).getVarType(rightInputVar);
         // left-hand side and right-hand side of "~=" has the same type
-        IAType left2 = TypeHelper.getNonOptionalType(leftType);
-        IAType right2 = TypeHelper.getNonOptionalType(rightType);
+        IAType left2 = TypeComputeUtils.getActualType(leftType);
+        IAType right2 = TypeComputeUtils.getActualType(rightType);
         if (!left2.deepEqual(right2)) {
             return false;
         }

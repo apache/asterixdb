@@ -53,7 +53,9 @@ public class RenameClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-        // Skips inner class descriptions.
+        if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) != 0) {
+            super.visitInnerClass(name, outerName, innerName, access);
+        }
     }
 
     @Override

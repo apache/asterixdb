@@ -16,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+package org.apache.asterix.om.base;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-// We should avoid representing nulls explicitly. This class is for cases when it is
-// harder not to.
 public class ANull implements IAObject {
 
     private ANull() {
@@ -63,9 +61,8 @@ public class ANull implements IAObject {
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
-
         json.put("ANull", "null");
-
         return json;
     }
+
 }

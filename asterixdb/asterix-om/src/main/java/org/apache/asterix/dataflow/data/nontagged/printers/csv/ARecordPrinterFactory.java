@@ -44,16 +44,14 @@ public class ARecordPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-
-        PointableAllocator allocator = new PointableAllocator();
+        final PointableAllocator allocator = new PointableAllocator();
         final IAType inputType = recType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.RECORD)
                 : recType;
         final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
-        final Pair<PrintStream, ATypeTag> arg = new Pair<PrintStream, ATypeTag>(null, null);
+        final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);
 
         return new IPrinter() {
-
             @Override
             public void init() {
                 arg.second = inputType.getTypeTag();

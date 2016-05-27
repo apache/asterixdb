@@ -27,7 +27,7 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
@@ -53,7 +53,7 @@ import org.apache.hyracks.dataflow.std.join.HybridHashJoinOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.MaterializingOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
-import org.apache.hyracks.tests.util.NoopNullWriterFactory;
+import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
 import org.apache.hyracks.tests.util.ResultSerializerFactoryProvider;
 
 public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
@@ -365,9 +365,9 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
-        INullWriterFactory[] nullWriterFactories = new INullWriterFactory[ordersDesc.getFieldCount()];
-        for (int j = 0; j < nullWriterFactories.length; j++) {
-            nullWriterFactories[j] = NoopNullWriterFactory.INSTANCE;
+        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[ordersDesc.getFieldCount()];
+        for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+            nonMatchWriterFactories[j] = NoopMissingWriterFactory.INSTANCE;
         }
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(
@@ -376,7 +376,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 1 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                null, custOrderJoinDesc, true, nullWriterFactories, 128);
+                null, custOrderJoinDesc, true, nonMatchWriterFactories, 128);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         ResultSetId rsId = new ResultSetId(1);
@@ -449,9 +449,9 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
-        INullWriterFactory[] nullWriterFactories = new INullWriterFactory[ordersDesc.getFieldCount()];
-        for (int j = 0; j < nullWriterFactories.length; j++) {
-            nullWriterFactories[j] = NoopNullWriterFactory.INSTANCE;
+        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[ordersDesc.getFieldCount()];
+        for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+            nonMatchWriterFactories[j] = NoopMissingWriterFactory.INSTANCE;
         }
 
         GraceHashJoinOperatorDescriptor join = new GraceHashJoinOperatorDescriptor(
@@ -464,7 +464,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 1 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                custOrderJoinDesc, true, nullWriterFactories, null);
+                custOrderJoinDesc, true, nonMatchWriterFactories, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         ResultSetId rsId = new ResultSetId(1);
@@ -537,9 +537,9 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
-        INullWriterFactory[] nullWriterFactories = new INullWriterFactory[ordersDesc.getFieldCount()];
-        for (int j = 0; j < nullWriterFactories.length; j++) {
-            nullWriterFactories[j] = NoopNullWriterFactory.INSTANCE;
+        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[ordersDesc.getFieldCount()];
+        for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+            nonMatchWriterFactories[j] = NoopMissingWriterFactory.INSTANCE;
         }
 
         HybridHashJoinOperatorDescriptor join = new HybridHashJoinOperatorDescriptor(
@@ -552,7 +552,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 1 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                custOrderJoinDesc, null, true, nullWriterFactories);
+                custOrderJoinDesc, null, true, nonMatchWriterFactories);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         ResultSetId rsId = new ResultSetId(1);

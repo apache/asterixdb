@@ -50,6 +50,9 @@ public class AlgebricksBuiltinFunctions {
     // numerics
     public final static FunctionIdentifier NUMERIC_ADD = new FunctionIdentifier(ALGEBRICKS_NS, "numeric-add", 2);
 
+    // missings
+    public final static FunctionIdentifier IS_MISSING = new FunctionIdentifier(ALGEBRICKS_NS, "is-missing", 1);
+
     // nulls
     public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1);
 

@@ -33,7 +33,6 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -84,8 +83,8 @@ public class NumericModuloDescriptor extends AbstractScalarFunctionDynamicDescri
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    // one temp. buffer re-used by both children
-                    private IPointable argPtr = new VoidPointable();
+                    private IPointable leftPtr = new VoidPointable();
+                    private IPointable rightPtr = new VoidPointable();
                     private IScalarEvaluator evalLeft = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator evalRight = args[1].createScalarEvaluator(ctx);
                     private double[] operands = new double[args.length];
@@ -107,12 +106,10 @@ public class NumericModuloDescriptor extends AbstractScalarFunctionDynamicDescri
 
                         try {
                             resultStorage.reset();
+                            evalLeft.evaluate(tuple, leftPtr);
+                            evalRight.evaluate(tuple, rightPtr);
                             for (int i = 0; i < args.length; i++) {
-                                if (i == 0) {
-                                    evalLeft.evaluate(tuple, argPtr);
-                                } else {
-                                    evalRight.evaluate(tuple, argPtr);
-                                }
+                                IPointable argPtr = i == 0 ? leftPtr : rightPtr;
                                 byte[] data = argPtr.getByteArray();
                                 int offset = argPtr.getStartOffset();
                                 typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
@@ -146,13 +143,6 @@ public class NumericModuloDescriptor extends AbstractScalarFunctionDynamicDescri
                                         metDouble = true;
                                         operands[i] = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                                         break;
-                                    }
-                                    case NULL: {
-                                        serde = AqlSerializerDeserializerProvider.INSTANCE
-                                                .getSerializerDeserializer(BuiltinType.ANULL);
-                                        serde.serialize(ANull.NULL, out);
-                                        result.set(resultStorage);
-                                        return;
                                     }
                                     default: {
                                         throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_MOD.getName()

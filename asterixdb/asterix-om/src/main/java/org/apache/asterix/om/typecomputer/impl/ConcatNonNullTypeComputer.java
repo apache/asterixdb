@@ -19,14 +19,9 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 /**
  * The type computer for concat-not-null.
@@ -34,29 +29,21 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
  *
  * @author yingyib
  */
-public class ConcatNonNullTypeComputer implements IResultTypeComputer {
+public class ConcatNonNullTypeComputer extends AbstractResultTypeComputer {
 
     public static final ConcatNonNullTypeComputer INSTANCE = new ConcatNonNullTypeComputer();
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        if (f.getArguments().size() < 1) {
-            return BuiltinType.ANULL;
+    protected IAType getResultType(IAType... strippedInputTypes) {
+        boolean any = false;
+        IAType currentType = null;
+        for (IAType type : strippedInputTypes) {
+            if (currentType != null && !type.equals(currentType)) {
+                any = true;
+                break;
+            }
+            currentType = type;
         }
-
-        TypeCompatibilityChecker tcc = new TypeCompatibilityChecker();
-        for (int i = 0; i < f.getArguments().size(); i++) {
-            ILogicalExpression arg = f.getArguments().get(i).getValue();
-            IAType type = (IAType) env.getType(arg);
-            tcc.addPossibleType(type);
-        }
-
-        IAType result = tcc.getCompatibleType();
-        if (result == null) {
-            throw new AlgebricksException("The two branches of the if-else clause should return the same type.");
-        }
-        return result;
+        return any ? BuiltinType.ANY : currentType;
     }
 }

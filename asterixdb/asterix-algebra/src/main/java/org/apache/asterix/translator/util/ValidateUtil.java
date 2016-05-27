@@ -160,14 +160,14 @@ public class ValidateUtil {
             List<String> fieldName = keyFieldNames.get(pos);
             if (fieldType == null) {
                 fieldType = keyFieldTypes.get(pos);
-                if (keyFieldTypes.get(pos) == BuiltinType.ANULL) {
+                if (keyFieldTypes.get(pos) == BuiltinType.AMISSING) {
                     throw new AsterixException("A field with this name  \"" + fieldName + "\" could not be found.");
                 }
             } else if (openFieldCompositeIdx) {
                 throw new AsterixException("A closed field \"" + fieldName
                         + "\" could be only in a prefix part of the composite index, containing opened field.");
             }
-            if (keyFieldTypes.get(pos) != BuiltinType.ANULL
+            if (keyFieldTypes.get(pos) != BuiltinType.AMISSING
                     && fieldType.getTypeTag() != keyFieldTypes.get(pos).getTypeTag()) {
                 throw new AsterixException(
                         "A field \"" + fieldName + "\" is already defined with the type \"" + fieldType + "\"");

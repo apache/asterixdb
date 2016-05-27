@@ -96,10 +96,7 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                         byte type1 = argPtr1.getTag();
 
                         try {
-                            if (type0 == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                    || type1 == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                            } else if (type0 == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG && type0 == type1) {
+                            if (type0 == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG && type0 == type1) {
                                 argPtr0.getValue(interval0);
                                 argPtr1.getValue(interval1);
                                 byte intervalType0 = interval0.getType();

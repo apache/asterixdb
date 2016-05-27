@@ -43,7 +43,6 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.AMutableTime;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -136,21 +135,15 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     @SuppressWarnings("unchecked")
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-
                         try {
                             resultStorage.reset();
                             resultType = 0;
                             int currentType = 0;
-                            for (int i = 0; i < args.length; i++) {
-                                IPointable argPtr;
-                                if (i == 0) {
-                                    evalLeft.evaluate(tuple, argPtr0);
-                                    argPtr = argPtr0;
-                                } else {
-                                    evalRight.evaluate(tuple, argPtr1);
-                                    argPtr = argPtr1;
-                                }
+                            evalLeft.evaluate(tuple, argPtr0);
+                            evalRight.evaluate(tuple, argPtr1);
 
+                            for (int i = 0; i < args.length; i++) {
+                                IPointable argPtr = i == 0 ? argPtr0 : argPtr1;
                                 byte[] bytes = argPtr.getByteArray();
                                 int offset = argPtr.getStartOffset();
 
@@ -197,16 +190,9 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     case DURATION:
                                     case YEARMONTHDURATION:
                                     case DAYTIMEDURATION:
-                                        evaluateTemporalArthmeticOperation(typeTag, tuple);
+                                        evaluateTemporalArthmeticOperation(typeTag);
                                         result.set(resultStorage);
                                         return;
-                                    case NULL: {
-                                        serde = AqlSerializerDeserializerProvider.INSTANCE
-                                                .getSerializerDeserializer(BuiltinType.ANULL);
-                                        serde.serialize(ANull.NULL, out);
-                                        result.set(resultStorage);
-                                        return;
-                                    }
                                     default: {
                                         throw new NotImplementedException(getIdentifier().getName()
                                                 + (i == 0 ? ": Left" : ": Right")
@@ -296,21 +282,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     }
 
                     @SuppressWarnings("unchecked")
-                    private void evaluateTemporalArthmeticOperation(ATypeTag leftType, IFrameTupleReference tuple)
+                    private void evaluateTemporalArthmeticOperation(ATypeTag leftType)
                             throws HyracksDataException, AlgebricksException {
-                        evalRight.evaluate(tuple, argPtr1);
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag rightType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         byte[] bytes0 = argPtr0.getByteArray();
                         int offset0 = argPtr0.getStartOffset();
-
-                        if (leftType == ATypeTag.NULL || rightType == ATypeTag.NULL) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
-                                    .getSerializerDeserializer(BuiltinType.ANULL);
-                            serde.serialize(ANull.NULL, out);
-                            return;
-                        }
 
                         if (rightType == leftType) {
 

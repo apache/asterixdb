@@ -82,10 +82,13 @@ public class ClosedRecordConstructorEvalFactory implements IScalarEvaluatorFacto
                 recBuilder.init();
                 for (int i = 0; i < evalFields.length; i++) {
                     evalFields[i].evaluate(tuple, fieldValuePointable);
-                    if (fieldValuePointable.getByteArray()[fieldValuePointable
-                            .getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                        recBuilder.addField(i, fieldValuePointable);
+                    byte[] data = fieldValuePointable.getByteArray();
+                    int offset = fieldValuePointable.getStartOffset();
+                    if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                        // Turns MISSING into NULL for a closed field.
+                        data[offset] = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
                     }
+                    recBuilder.addField(i, fieldValuePointable);
                 }
                 recBuilder.write(out, true);
                 result.set(resultStorage);

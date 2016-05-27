@@ -23,11 +23,9 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -71,10 +69,6 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                     private IPointable argPtr0 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
-                    // possible output types
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADURATION);
@@ -90,11 +84,6 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                         int offset = argPtr0.getStartOffset();
 
                         try {
-                            if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                return;
-                            }
                             aDuration.setValue(ATypeHierarchy.getIntegerValue(bytes, offset), 0);
                             durationSerde.serialize(aDuration, out);
                         } catch (HyracksDataException hex) {

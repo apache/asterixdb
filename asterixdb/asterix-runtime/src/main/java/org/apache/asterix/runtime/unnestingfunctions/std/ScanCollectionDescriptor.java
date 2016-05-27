@@ -80,7 +80,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 private final IPointable inputVal = new VoidPointable();
                 private final IScalarEvaluator argEval = listEvalFactory.createScalarEvaluator(ctx);
                 private int itemIndex;
-                private boolean metNull = false;
+                private boolean metUnknown = false;
 
                 @Override
                 public void init(IFrameTupleReference tuple) throws AlgebricksException {
@@ -88,8 +88,8 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                         argEval.evaluate(tuple, inputVal);
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                                 .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
-                        if (typeTag == ATypeTag.NULL) {
-                            metNull = true;
+                        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
+                            metUnknown = true;
                             return;
                         }
                         listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
@@ -102,7 +102,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 @Override
                 public boolean step(IPointable result) throws AlgebricksException {
                     try {
-                        if (!metNull) {
+                        if (!metUnknown) {
                             if (itemIndex < listAccessor.size()) {
                                 resultStorage.reset();
                                 listAccessor.writeItem(itemIndex, resultStorage.getDataOutput());

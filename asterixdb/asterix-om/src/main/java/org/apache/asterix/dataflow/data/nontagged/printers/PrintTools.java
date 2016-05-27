@@ -108,6 +108,39 @@ public class PrintTools {
         }
     }
 
+    public static void printYearMonthDurationString(byte[] b, int s, int l, PrintStream ps)
+            throws HyracksDataException {
+        final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
+        boolean positive = true;
+        int months = AInt32SerializerDeserializer.getInt(b, s + 1);
+
+        // set the negative flag. "||" is necessary in case that months field is not there (so it is 0)
+        if (months < 0) {
+            months *= -1;
+            positive = false;
+        }
+
+        int month = gCalInstance.getDurationMonth(months);
+        int year = gCalInstance.getDurationYear(months);
+
+        if (!positive) {
+            ps.print("-");
+        }
+        try {
+            ps.print("P");
+            if (year != 0) {
+                WriteValueTools.writeInt(year, ps);
+                ps.print("Y");
+            }
+            if (month != 0) {
+                WriteValueTools.writeInt(month, ps);
+                ps.print("M");
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
     public static void printDurationString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         boolean positive = true;
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);

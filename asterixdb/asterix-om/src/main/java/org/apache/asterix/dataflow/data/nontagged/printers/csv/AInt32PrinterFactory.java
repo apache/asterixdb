@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -26,9 +29,11 @@ public class AInt32PrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AInt32PrinterFactory INSTANCE = new AInt32PrinterFactory();
 
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
+            .print(AInt32SerializerDeserializer.getInt(b, s + 1));
+
     @Override
     public IPrinter createPrinter() {
-        return AInt32Printer.INSTANCE;
+        return PRINTER;
     }
-
 }

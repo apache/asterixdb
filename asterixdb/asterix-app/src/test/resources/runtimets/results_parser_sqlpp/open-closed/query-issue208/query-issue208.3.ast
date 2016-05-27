@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall OpenSocialNetworkData.count@1[
+    FunctionCall OpenSocialNetworkData.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

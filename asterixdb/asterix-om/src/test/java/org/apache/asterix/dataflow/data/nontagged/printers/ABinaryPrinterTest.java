@@ -27,7 +27,7 @@ import java.util.Arrays;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class ABinaryPrinterTest {
         PrintStream ps = new PrintStream(baos);
 
         byte[] bytes = generateABinaryBytesByStringContent(input);
-        ABinaryHexPrinter.INSTANCE.print(bytes, 0, bytes.length, ps);
+        ABinaryHexPrinterFactory.PRINTER.print(bytes, 0, bytes.length, ps);
 
         String pureHex = baos.toString();
         assertTrue(pureHex.startsWith("hex("));

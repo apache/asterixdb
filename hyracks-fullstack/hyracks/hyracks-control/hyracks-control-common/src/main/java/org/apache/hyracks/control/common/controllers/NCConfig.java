@@ -124,33 +124,36 @@ public class NCConfig implements Serializable {
         // that logic really should be handled by the ini file sent from the CC
         ccHost = IniUtils.getString(ini, "cc", "cluster.address", ccHost);
         ccPort = IniUtils.getInt(ini, "cc", "cluster.port", ccPort);
+
+        // Get ID of *this* NC
         nodeId = IniUtils.getString(ini, "localnc", "id", nodeId);
+        String nodeSection = "nc/" + nodeId;
 
         // Network ports
+        ipAddress = IniUtils.getString(ini, nodeSection, "address", ipAddress);
 
-        ipAddress = IniUtils.getString(ini, "localnc", "address", ipAddress);
+        clusterNetIPAddress = IniUtils.getString(ini, nodeSection, "cluster.address", clusterNetIPAddress);
+        clusterNetPort = IniUtils.getInt(ini, nodeSection, "cluster.port", clusterNetPort);
+        dataIPAddress = IniUtils.getString(ini, nodeSection, "data.address", dataIPAddress);
+        dataPort = IniUtils.getInt(ini, nodeSection, "data.port", dataPort);
+        resultIPAddress = IniUtils.getString(ini, nodeSection, "result.address", resultIPAddress);
+        resultPort = IniUtils.getInt(ini, nodeSection, "result.port", resultPort);
 
-        clusterNetIPAddress = IniUtils.getString(ini, "localnc", "cluster.address", clusterNetIPAddress);
-        clusterNetPort = IniUtils.getInt(ini, "localnc", "cluster.port", clusterNetPort);
-        dataIPAddress = IniUtils.getString(ini, "localnc", "data.address", dataIPAddress);
-        dataPort = IniUtils.getInt(ini, "localnc", "data.port", dataPort);
-        resultIPAddress = IniUtils.getString(ini, "localnc", "result.address", resultIPAddress);
-        resultPort = IniUtils.getInt(ini, "localnc", "result.port", resultPort);
+        clusterNetPublicIPAddress = IniUtils.getString(
+                ini, nodeSection, "public.cluster.address", clusterNetPublicIPAddress);
+        clusterNetPublicPort = IniUtils.getInt(ini, nodeSection, "public.cluster.port", clusterNetPublicPort);
+        dataPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.data.address", dataPublicIPAddress);
+        dataPublicPort = IniUtils.getInt(ini, nodeSection, "public.data.port", dataPublicPort);
+        resultPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.result.address", resultPublicIPAddress);
+        resultPublicPort = IniUtils.getInt(ini, nodeSection, "public.result.port", resultPublicPort);
 
-        clusterNetPublicIPAddress = IniUtils.getString(ini, "localnc", "public.cluster.address", clusterNetPublicIPAddress);
-        clusterNetPublicPort = IniUtils.getInt(ini, "localnc", "public.cluster.port", clusterNetPublicPort);
-        dataPublicIPAddress = IniUtils.getString(ini, "localnc", "public.data.address", dataPublicIPAddress);
-        dataPublicPort = IniUtils.getInt(ini, "localnc", "public.data.port", dataPublicPort);
-        resultPublicIPAddress = IniUtils.getString(ini, "localnc", "public.result.address", resultPublicIPAddress);
-        resultPublicPort = IniUtils.getInt(ini, "localnc", "public.result.port", resultPublicPort);
-
-        retries = IniUtils.getInt(ini, "localnc", "retries", retries);
+        retries = IniUtils.getInt(ini, nodeSection, "retries", retries);
 
         // Directories
-        ioDevices = IniUtils.getString(ini, "localnc", "iodevices", ioDevices);
+        ioDevices = IniUtils.getString(ini, nodeSection, "iodevices", ioDevices);
 
         // Hyracks client entrypoint
-        appNCMainClass = IniUtils.getString(ini, "localnc", "app.class", appNCMainClass);
+        appNCMainClass = IniUtils.getString(ini, nodeSection, "app.class", appNCMainClass);
     }
 
     /*

@@ -41,7 +41,7 @@ public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
 
     @Override
     protected boolean skipStep() {
-        return (aggType == ATypeTag.NULL);
+        return aggType == ATypeTag.NULL;
     }
 
     @Override

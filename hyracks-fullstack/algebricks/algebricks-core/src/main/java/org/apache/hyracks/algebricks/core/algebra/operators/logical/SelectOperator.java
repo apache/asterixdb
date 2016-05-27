@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -45,7 +44,8 @@ public class SelectOperator extends AbstractLogicalOperator {
     private final boolean retainNull;
     private final LogicalVariable nullPlaceholderVar;
 
-    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainNull, LogicalVariable nullPlaceholderVar) {
+    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainNull,
+            LogicalVariable nullPlaceholderVar) {
         this.condition = condition;
         this.retainNull = retainNull;
         this.nullPlaceholderVar = nullPlaceholderVar;
@@ -98,20 +98,22 @@ public class SelectOperator extends AbstractLogicalOperator {
         ITypeEnvPointer[] envPointers = new ITypeEnvPointer[1];
         envPointers[0] = new OpRefTypeEnvPointer(inputs.get(0), ctx);
         PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
-        if (condition.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
-            if (f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
-                ILogicalExpression a1 = f1.getArguments().get(0).getValue();
-                if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-                    if (f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
-                        ILogicalExpression a2 = f2.getArguments().get(0).getValue();
-                        if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                            LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();
-                            env.getNonNullVariables().add(var);
-                        }
-                    }
+                ctx.getMissableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+        if (condition.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return env;
+        }
+        AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
+        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
+            return env;
+        }
+        ILogicalExpression a1 = f1.getArguments().get(0).getValue();
+        if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
+            if (f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
+                ILogicalExpression a2 = f2.getArguments().get(0).getValue();
+                if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                    LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();
+                    env.getNonNullVariables().add(var);
                 }
             }
         }

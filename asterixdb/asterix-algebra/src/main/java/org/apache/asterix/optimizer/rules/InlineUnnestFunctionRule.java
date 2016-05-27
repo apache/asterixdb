@@ -22,10 +22,9 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -49,7 +48,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -57,20 +57,23 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (context.checkIfInDontApplySet(this, op1))
+        if (context.checkIfInDontApplySet(this, op1)) {
             return false;
+        }
         context.addToDontApplySet(this, op1);
-        if (op1.getOperatorTag() != LogicalOperatorTag.UNNEST)
+        if (op1.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             return false;
+        }
         UnnestOperator unnestOperator = (UnnestOperator) op1;
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOperator.getExpressionRef()
                 .getValue();
         //we only inline for the scan-collection function
-        if (expr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION)
+        if (expr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
             return false;
+        }
 
         // inline all variables from an unnesting function call
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        AbstractFunctionCallExpression funcExpr = expr;
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
         for (int i = 0; i < args.size(); i++) {
             ILogicalExpression argExpr = args.get(i).getValue();
@@ -95,8 +98,8 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOp.getExpressionRef().getValue();
         List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList = new ArrayList<Pair<AbstractFunctionCallExpression, Integer>>();
         getParentFunctionExpression(usedVar, expr, parentAndIndexList);
-        ILogicalExpression usedVarOrginExpr = findUsedVarOrigin(usedVar, unnestOp, (AbstractLogicalOperator) unnestOp
-                .getInputs().get(0).getValue());
+        ILogicalExpression usedVarOrginExpr = findUsedVarOrigin(usedVar, unnestOp,
+                (AbstractLogicalOperator) unnestOp.getInputs().get(0).getValue());
         if (usedVarOrginExpr != null) {
             for (Pair<AbstractFunctionCallExpression, Integer> parentAndIndex : parentAndIndexList) {
                 //we only rewrite the top scan-collection function
@@ -116,8 +119,9 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
             ILogicalExpression argExpr = args.get(i).getValue();
             if (argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varExpr = (VariableReferenceExpression) argExpr;
-                if (varExpr.getVariableReference().equals(usedVar))
+                if (varExpr.getVariableReference().equals(usedVar)) {
                     parentAndIndexList.add(new Pair<AbstractFunctionCallExpression, Integer>(funcExpr, i));
+                }
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 getParentFunctionExpression(usedVar, argExpr, parentAndIndexList);

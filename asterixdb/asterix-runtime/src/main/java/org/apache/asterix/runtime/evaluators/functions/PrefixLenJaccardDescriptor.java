@@ -70,7 +70,8 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();
-                    private final IPointable inputVal = new VoidPointable();
+                    private final IPointable lenPtr = new VoidPointable();
+                    private final IPointable thresholdPtr = new VoidPointable();
                     private final IScalarEvaluator evalLen = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalThreshold = args[1].createScalarEvaluator(ctx);
 
@@ -86,19 +87,20 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                         resultStorage.reset();
+                        evalLen.evaluate(tuple, lenPtr);
+                        evalThreshold.evaluate(tuple, thresholdPtr);
+
                         // length
-                        evalLen.evaluate(tuple, inputVal);
                         int length = 0;
                         try {
-                            length = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), inputVal.getStartOffset());
+                            length = ATypeHierarchy.getIntegerValue(lenPtr.getByteArray(), lenPtr.getStartOffset());
                         } catch (HyracksDataException e1) {
                             throw new AlgebricksException(e1);
                         }
 
                         // similarity threshold
-                        evalThreshold.evaluate(tuple, inputVal);
-                        byte[] data = inputVal.getByteArray();
-                        int offset = inputVal.getStartOffset();
+                        byte[] data = thresholdPtr.getByteArray();
+                        int offset = thresholdPtr.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
                                     + ": expects type FLOAT the first argument but got "

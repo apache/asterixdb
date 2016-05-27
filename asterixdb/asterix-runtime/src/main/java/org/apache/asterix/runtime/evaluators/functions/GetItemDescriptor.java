@@ -85,7 +85,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                 private IPointable inputArgIdx = new VoidPointable();
                 private IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                 private IScalarEvaluator evalIdx = indexEvalFactory.createScalarEvaluator(ctx);
-                private byte[] nullBytes = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
+                private byte[] missingBytes = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
                 private int itemIndex;
                 private int itemOffset;
                 private int itemLength;
@@ -102,11 +102,6 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         byte[] indexBytes = inputArgIdx.getByteArray();
                         int indexOffset = inputArgIdx.getStartOffset();
 
-                        if (serOrderedList[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            result.set(nullBytes, 0, 1);
-                            return;
-                        }
-
                         if (serOrderedList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                             itemIndex = ATypeHierarchy.getIntegerValue(indexBytes, indexOffset);
                         } else {
@@ -118,13 +113,11 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                     + ").");
                         }
 
-                        if (itemIndex >= AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList, offset)) {
-                            result.set(nullBytes, 0, 1);
+                        if (itemIndex < 0 || itemIndex >= AOrderedListSerializerDeserializer
+                                .getNumberOfItems(serOrderedList, offset)) {
+                            // Out-of-bound index access should return MISSING.
+                            result.set(missingBytes, 0, 1);
                             return;
-                        }
-                        if (itemIndex < 0) {
-                            throw new AlgebricksException(
-                                    AsterixBuiltinFunctions.GET_ITEM.getName() + ": item index cannot be negative!");
                         }
 
                         itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);

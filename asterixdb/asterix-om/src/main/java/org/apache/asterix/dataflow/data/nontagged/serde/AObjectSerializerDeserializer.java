@@ -36,7 +36,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.ALine;
-import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.APoint3D;
@@ -66,6 +66,8 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
     public IAObject deserialize(DataInput in) throws HyracksDataException {
         ATypeTag typeTag = SerializerDeserializerUtil.deserializeTag(in);
         switch (typeTag) {
+            case MISSING:
+                return AMissingSerializerDeserializer.INSTANCE.deserialize(in);
             case NULL:
                 return ANullSerializerDeserializer.INSTANCE.deserialize(in);
             case BOOLEAN:
@@ -133,8 +135,11 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             throw new HyracksDataException(e);
         }
         switch (tag) {
+            case MISSING:
+                AMissingSerializerDeserializer.INSTANCE.serialize((AMissing) instance, out);
+                break;
             case NULL:
-                ANullSerializerDeserializer.INSTANCE.serialize((ANull) instance, out);
+                ANullSerializerDeserializer.INSTANCE.serialize(instance, out);
                 break;
             case BOOLEAN:
                 ABooleanSerializerDeserializer.INSTANCE.serialize((ABoolean) instance, out);

@@ -436,7 +436,7 @@ public class FramewriterTest {
                 AbstractTreeIndexOperatorDescriptor opDesc = Mockito.mock(AbstractTreeIndexOperatorDescriptor.class);
                 Mockito.when(opDesc.getIndexDataflowHelperFactory()).thenReturn(indexDataflowHelperFactories[i]);
                 Mockito.when(opDesc.getRetainInput()).thenReturn(false);
-                Mockito.when(opDesc.getRetainNull()).thenReturn(false);
+                Mockito.when(opDesc.getRetainMissing()).thenReturn(false);
                 Mockito.when(opDesc.getSearchOpCallbackFactory()).thenReturn(searchOpCallbackFactories[j]);
                 opDescs[k] = opDesc;
                 k++;

@@ -136,12 +136,13 @@ public class AsterixPropertiesAccessor {
         this.cfg = cfg;
         instanceName = cfg.getString("asterix", "instance", "DEFAULT_INSTANCE");
         String mdNode = null;
+        nodePartitionsMap = new HashMap<>();
+        int uniquePartitionId = 0;
         for (String section : cfg.getSections()) {
             if (!section.startsWith("nc/")) {
                 continue;
             }
             String ncId = section.substring(3);
-            nodeNames.add(ncId);
 
             if (mdNode == null) {
                 // Default is first node == metadata node
@@ -156,15 +157,23 @@ public class AsterixPropertiesAccessor {
             // be a default.ini? They can't be inserted by TriggerNCWork except
             // possibly for hyracks-specified values. Certainly wherever they are,
             // they should be platform-dependent.
-            stores.put(ncId, cfg.getString(section, "iodevices", "/var/lib/asterixdb/data").split(","));
             coredumpConfig.put(ncId, cfg.getString(section, "coredumpdir", "/var/lib/asterixdb/coredump"));
             transactionLogDirs.put(ncId, cfg.getString(section, "txnlogdir", "/var/lib/asterixdb/txn-log"));
+            String[] storeDirs = cfg.getString(section, "storagedir", "storage").trim().split(",");
+            ClusterPartition[] nodePartitions = new ClusterPartition[storeDirs.length];
+            for (int i = 0; i < nodePartitions.length; i++) {
+                ClusterPartition partition = new ClusterPartition(uniquePartitionId++, ncId, i);
+                clusterPartitions.put(partition.getPartitionId(), partition);
+                nodePartitions[i] = partition;
+            }
+            stores.put(ncId, storeDirs);
+            nodePartitionsMap.put(ncId, nodePartitions);
+            nodeNames.add(ncId);
         }
 
         metadataNodeName = mdNode;
         asterixConfigurationParams = null;
         asterixBuildProperties = null;
-        nodePartitionsMap = null;
     }
 
     public String getMetadataNodeName() {

@@ -23,12 +23,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 
 public interface IOptimizationContextFactory {
     public IOptimizationContext createOptimizationContext(int varCounter,
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-            IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
+            IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
             PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations);
 }

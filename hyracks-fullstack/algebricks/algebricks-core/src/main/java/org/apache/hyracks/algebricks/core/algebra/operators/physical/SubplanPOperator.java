@@ -40,7 +40,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.operators.meta.SubplanRuntimeFactory;
-import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class SubplanPOperator extends AbstractPhysicalOperator {
@@ -94,7 +94,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         AlgebricksPipeline np = subplans[0];
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
-        INullWriterFactory[] nullWriterFactories = new INullWriterFactory[np.getOutputWidth()];
+        IMissingWriterFactory[] nullWriterFactories = new IMissingWriterFactory[np.getOutputWidth()];
         for (int i = 0; i < nullWriterFactories.length; i++) {
             nullWriterFactories[i] = context.getNullWriterFactory();
         }
