@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
@@ -42,8 +41,7 @@ import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VPartitionDeletableTupleBufferManager;
-import org.apache.hyracks.dataflow.std.join.IMergeJoiner;
-import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
+import org.apache.hyracks.dataflow.std.join.AbstractMergeJoiner;
 import org.apache.hyracks.dataflow.std.join.MergeJoinLocks;
 import org.apache.hyracks.dataflow.std.join.MergeStatus;
 import org.apache.hyracks.dataflow.std.join.RunFileStream;
@@ -56,29 +54,9 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  * The left stream will spill to disk when memory is full.
  * The both right and left use memory to maintain active intervals for the join.
  */
-public class IntervalIndexJoiner implements IMergeJoiner {
-
-    public enum TupleStatus {
-        UNKNOWN,
-        LOADED,
-        EMPTY;
-
-        public boolean isLoaded() {
-            return this.equals(LOADED);
-        }
-
-        public boolean isEmpty() {
-            return this.equals(EMPTY);
-        }
-    }
+public class IntervalIndexJoiner extends AbstractMergeJoiner {
 
     private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoiner.class.getName());
-
-    private static final int JOIN_PARTITIONS = 2;
-    private static final int LEFT_PARTITION = 0;
-    private static final int RIGHT_PARTITION = 1;
-
-    private FrameTupleAppender resultAppender;
 
     private IPartitionedDeletableTupleBufferManager bufferManager;
 
@@ -93,20 +71,11 @@ public class IntervalIndexJoiner implements IMergeJoiner {
 
     protected byte point;
 
-    private final ITupleAccessor leftInputAccessor;
-    private final ITupleAccessor rightInputAccessor;
-
-    private MergeJoinLocks locks;
     private MergeStatus status;
-
-    private ByteBuffer leftBuffer;
-    private ByteBuffer rightBuffer;
 
     private int[] streamIndex;
 
     private RunFileStream[] runFileStream;
-
-    private final int partition;
 
     private int leftKey;
     private int rightKey;
@@ -117,6 +86,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
             MergeJoinLocks locks, Comparator<EndPointIndexItem> endPointComparator,
             IIntervalMergeJoinCheckerFactory imjcf, int[] leftKeys, int[] rightKeys, RecordDescriptor leftRd,
             RecordDescriptor rightRd) throws HyracksDataException {
+        super(ctx, partition, status, locks, leftRd, rightRd);
         this.point = imjcf.isOrderAsc() ? EndPointIndexItem.START_POINT : EndPointIndexItem.END_POINT;
 
         this.imjc = imjcf.createMergeJoinChecker(leftKeys, rightKeys, partition);
@@ -124,15 +94,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         this.leftKey = leftKeys[0];
         this.rightKey = rightKeys[0];
 
-        this.partition = partition;
         this.status = status;
-        this.locks = locks;
-
-        leftInputAccessor = new TupleAccessor(leftRd);
-        leftBuffer = ctx.allocateFrame();
-
-        rightInputAccessor = new TupleAccessor(rightRd);
-        rightBuffer = ctx.allocateFrame();
 
         RecordDescriptor[] recordDescriptors = new RecordDescriptor[JOIN_PARTITIONS];
         recordDescriptors[LEFT_PARTITION] = leftRd;
@@ -170,7 +132,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
                     + " frames of memory.");
         }
 
-        printer = AObjectPrinter.INSTANCE;
+        printer = AObjectPrinterFactory.INSTANCE.createPrinter();
     }
 
     private void addToResult(IFrameTupleAccessor accessor1, int index1, IFrameTupleAccessor accessor2, int index2,
@@ -227,35 +189,18 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         return TupleStatus.LOADED;
     }
 
-    private TupleStatus pauseAndLoadRightTuple() {
-        status.continueRightLoad = true;
-        locks.getRight(partition).signal();
-        try {
-            while (status.continueRightLoad
-                    && status.branch[RIGHT_PARTITION].getStatus().isEqualOrBefore(Stage.DATA_PROCESSING)) {
-                locks.getLeft(partition).await();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (!rightInputAccessor.exists() && status.branch[RIGHT_PARTITION].getStatus() == Stage.CLOSED) {
-            status.branch[RIGHT_PARTITION].noMore();
-            return TupleStatus.EMPTY;
-        }
-        return TupleStatus.LOADED;
-    }
-
     /**
      * Ensures a frame exists for the right branch, either from memory or the run file.
      *
      * @throws HyracksDataException
      */
     private TupleStatus loadLeftTuple() throws HyracksDataException {
-        TupleStatus loaded = TupleStatus.LOADED;
+        TupleStatus loaded;
         if (status.branch[LEFT_PARTITION].isRunFileReading()) {
             loaded = loadLeftSpilledTuple();
             if (loaded.isEmpty()) {
                 continueStream(LEFT_PARTITION, leftInputAccessor);
+                loaded = loadLeftTuple();
             }
         } else {
             if (leftInputAccessor != null && leftInputAccessor.exists()) {
@@ -486,7 +431,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         }
     }
 
-    public void freezeAndSpill() throws HyracksDataException {
+    private void freezeAndSpill() throws HyracksDataException {
         if (bufferManager.getNumTuples(LEFT_PARTITION) > bufferManager.getNumTuples(RIGHT_PARTITION)) {
             runFileStream[RIGHT_PARTITION].startRunFile();
             if (LOGGER.isLoggable(Level.FINE)) {
@@ -504,7 +449,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         }
     }
 
-    public void continueStream(int diskPartition, ITupleAccessor accessor) throws HyracksDataException {
+    private void continueStream(int diskPartition, ITupleAccessor accessor) throws HyracksDataException {
         runFileStream[diskPartition].closeRunFile();
         accessor.reset(leftBuffer);
         accessor.setTupleId(streamIndex[diskPartition]);
@@ -513,7 +458,7 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         }
     }
 
-    public void unfreezeAndContinue(int frozenPartition, ITupleAccessor accessor, int flushPartition)
+    private void unfreezeAndContinue(int frozenPartition, ITupleAccessor accessor, int flushPartition)
             throws HyracksDataException {
         runFileStream[frozenPartition].flushAndStopRunFile(accessor);
         flushMemory(flushPartition);
@@ -525,27 +470,6 @@ public class IntervalIndexJoiner implements IMergeJoiner {
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Unfreezing (" + frozenPartition + ").");
         }
-    }
-
-    public void setLeftFrame(ByteBuffer buffer) {
-        leftBuffer.clear();
-        if (leftBuffer.capacity() < buffer.capacity()) {
-            leftBuffer.limit(buffer.capacity());
-        }
-        leftBuffer.put(buffer.array(), 0, buffer.capacity());
-        leftInputAccessor.reset(leftBuffer);
-        leftInputAccessor.next();
-    }
-
-    public void setRightFrame(ByteBuffer buffer) {
-        rightBuffer.clear();
-        if (rightBuffer.capacity() < buffer.capacity()) {
-            rightBuffer.limit(buffer.capacity());
-        }
-        rightBuffer.put(buffer.array(), 0, buffer.capacity());
-        rightInputAccessor.reset(rightBuffer);
-        rightInputAccessor.next();
-        status.continueRightLoad = false;
     }
 
     private void printTuple(String message, ITupleAccessor accessor) throws HyracksDataException {
