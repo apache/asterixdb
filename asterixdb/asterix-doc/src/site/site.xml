@@ -74,6 +74,7 @@
     </links>
 
     <menu name="Installation">
+      <item name="Starting a small cluster using the NCService" href="ncservice.html"/>
       <item name="Installing and Managing AsterixDB using Managix" href="install.html"/>
       <item name="Deploying AsterixDB using YARN" href="yarn.html"/>
     </menu>
