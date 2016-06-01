@@ -63,8 +63,8 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
         Set<String> nodes = replicationProperties.getNodeReplicationClients(localNodeId);
 
-        Map<String, Set<String>> recoveryCandidates = new HashMap<String, Set<String>>();
-        Map<String, Integer> candidatesScore = new HashMap<String, Integer>();
+        Map<String, Set<String>> recoveryCandidates = new HashMap<>();
+        Map<String, Integer> candidatesScore = new HashMap<>();
 
         //2. identify which nodes has backup per lost node data
         for (String node : nodes) {
@@ -80,7 +80,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
             }
 
             //no active replicas to recover from
-            if (locations.size() == 0) {
+            if (locations.isEmpty()) {
                 throw new IllegalStateException("Could not find any ACTIVE replica to recover " + node + " data.");
             }
 
@@ -94,7 +94,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
             recoveryCandidates.put(node, locations);
         }
 
-        Map<String, Set<String>> recoveryList = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> recoveryList = new HashMap<>();
 
         //3. find best candidate to recover from per lost replica data
         for (Entry<String, Set<String>> entry : recoveryCandidates.entrySet()) {
@@ -113,7 +113,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
             if (recoveryList.containsKey(winner)) {
                 recoveryList.get(winner).add(entry.getKey());
             } else {
-                Set<String> nodesToRecover = new HashSet<String>();
+                Set<String> nodesToRecover = new HashSet<>();
                 nodesToRecover.add(entry.getKey());
                 recoveryList.put(winner, nodesToRecover);
             }
@@ -196,15 +196,16 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 }
                 break;
             } catch (IOException e) {
-                e.printStackTrace();
-                LOGGER.log(Level.WARNING, "Failed during remote recovery. Attempting again...");
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Failed during remote recovery. Attempting again...", e);
+                }
                 maxRecoveryAttempts--;
             }
         }
     }
 
     @Override
-    public void completeFailbackProcess() throws IOException {
+    public void completeFailbackProcess() throws IOException, InterruptedException {
         ILogManager logManager = runtimeContext.getTransactionSubsystem().getLogManager();
         ReplicaResourcesManager replicaResourcesManager = (ReplicaResourcesManager) runtimeContext
                 .getReplicaResourcesManager();
@@ -237,7 +238,9 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
              * in case of failure during failback completion process we need to construct a new plan
              * and get all the files from the start since the remote replicas will change in the new plan.
              */
-            e.printStackTrace();
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.log(Level.WARNING, "Failed during completing failback. Restarting failback process...", e);
+            }
             startFailbackProcess();
         }
 

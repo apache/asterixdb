@@ -19,6 +19,7 @@
 package org.apache.asterix.common.replication;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -31,8 +32,9 @@ public interface IReplicationManager extends IIOReplicationManager {
      *
      * @param logRecord
      *            The log record to be replicated,
+     * @throws InterruptedException
      */
-    public void replicateLog(ILogRecord logRecord);
+    public void replicateLog(ILogRecord logRecord) throws InterruptedException;
 
     /**
      * Checks whether a log record has been replicated
@@ -79,8 +81,10 @@ public interface IReplicationManager extends IIOReplicationManager {
 
     /**
      * Starts processing of ASYNC replication jobs as well as Txn logs.
+     *
+     * @throws InterruptedException
      */
-    public void startReplicationThreads();
+    public void startReplicationThreads() throws InterruptedException;
 
     /**
      * Checks and sets each remote replica state.
@@ -114,4 +118,13 @@ public interface IReplicationManager extends IIOReplicationManager {
      * @throws IOException
      */
     public void requestFlushLaggingReplicaIndexes(long nonSharpCheckpointTargetLSN) throws IOException;
+
+    /**
+     * Transfers the contents of the {@code buffer} to active remote replicas.
+     * The transfer starts from the {@code buffer} current position to its limit.
+     * After the transfer, the {@code buffer} position will be its limit.
+     *
+     * @param buffer
+     */
+    public void replicateTxnLogBatch(ByteBuffer buffer);
 }

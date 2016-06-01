@@ -26,18 +26,30 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
 public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixReplicationProperties.class.getName());
 
-    private static int REPLICATION_DATAPORT_DEFAULT = 2000;
-    private static int REPLICATION_FACTOR_DEFAULT = 1;
-    private static int REPLICATION_TIME_OUT_DEFAULT = 15;
+    private static final int REPLICATION_DATAPORT_DEFAULT = 2000;
+    private static final int REPLICATION_FACTOR_DEFAULT = 1;
+    private static final int REPLICATION_TIME_OUT_DEFAULT = 15;
     private static final int MAX_REMOTE_RECOVERY_ATTEMPTS = 5;
     private static final String NODE_IP_ADDRESS_DEFAULT = "127.0.0.1";
     private final String NODE_NAME_PREFIX;
     private final Cluster cluster;
+
+    private static final String REPLICATION_LOG_BATCH_SIZE_KEY = "replication.log.batchsize";
+    private static final int REPLICATION_LOG_BATCH_SIZE_DEFAULT = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
+
+    private static final String REPLICATION_LOG_BUFFER_NUM_PAGES_KEY = "replication.log.buffer.numpages";
+    private static final int REPLICATION_LOG_BUFFER_NUM_PAGES_DEFAULT = 8;
+
+    private static final String REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY = "replication.log.buffer.pagesize";
+    private static final int REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT = StorageUtil.getSizeInBytes(128,
+            StorageUnit.KILOBYTE);
 
     public AsterixReplicationProperties(AsterixPropertiesAccessor accessor, Cluster cluster) {
         super(accessor);
@@ -90,7 +102,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     }
 
     public Set<Replica> getRemoteReplicas(String nodeId) {
-        Set<Replica> remoteReplicas = new HashSet<Replica>();;
+        Set<Replica> remoteReplicas = new HashSet<>();;
 
         int numberOfRemoteReplicas = getReplicationFactor() - 1;
         //Using chained-declustering
@@ -161,7 +173,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     }
 
     public Set<String> getRemoteReplicasIds(String nodeId) {
-        Set<String> remoteReplicasIds = new HashSet<String>();
+        Set<String> remoteReplicasIds = new HashSet<>();
         Set<Replica> remoteReplicas = getRemoteReplicas(nodeId);
 
         for (Replica replica : remoteReplicas) {
@@ -176,7 +188,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     }
 
     public Set<String> getNodeReplicasIds(String nodeId) {
-        Set<String> replicaIds = new HashSet<String>();
+        Set<String> replicaIds = new HashSet<>();
         replicaIds.add(nodeId);
         replicaIds.addAll(getRemoteReplicasIds(nodeId));
         return replicaIds;
@@ -244,5 +256,20 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     public int getMaxRemoteRecoveryAttempts() {
         return MAX_REMOTE_RECOVERY_ATTEMPTS;
+    }
+
+    public int getLogBufferPageSize() {
+        return accessor.getProperty(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY, REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getLogBufferNumOfPages() {
+        return accessor.getProperty(REPLICATION_LOG_BUFFER_NUM_PAGES_KEY, REPLICATION_LOG_BUFFER_NUM_PAGES_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getLogBatchSize() {
+        return accessor.getProperty(REPLICATION_LOG_BATCH_SIZE_KEY, REPLICATION_LOG_BATCH_SIZE_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 }

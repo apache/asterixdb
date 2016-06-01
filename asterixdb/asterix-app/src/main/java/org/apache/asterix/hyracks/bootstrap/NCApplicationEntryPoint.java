@@ -150,7 +150,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
     }
 
-    private void startReplicationService() {
+    private void startReplicationService() throws InterruptedException {
         //Open replication channel
         runtimeContext.getReplicationChannel().start();
 

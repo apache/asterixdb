@@ -110,9 +110,7 @@ public interface ILogRecord {
 
     public String getNodeId();
 
-    public int writeRemoteRecoveryLog(ByteBuffer buffer);
-
-    public RecordReadStatus readRemoteLog(ByteBuffer buffer, boolean remoteRecoveryLog);
+    public void readRemoteLog(ByteBuffer buffer);
 
     public void setReplicationThread(IReplicationThread replicationThread);
 
@@ -120,11 +118,7 @@ public interface ILogRecord {
 
     public byte getLogSource();
 
-    public int getSerializedLogSize();
-
-    public void writeLogRecord(ByteBuffer buffer, long appendLSN);
-
-    public ByteBuffer getSerializedLog();
+    public int getRemoteLogSize();
 
     public void setNodeId(String nodeId);
 
@@ -138,4 +132,6 @@ public interface ILogRecord {
      * @return a flag indicating whether the log record should be sent to remote replicas
      */
     public boolean isReplicated();
+
+    public void writeRemoteLogRecord(ByteBuffer buffer);
 }

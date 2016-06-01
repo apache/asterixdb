@@ -37,10 +37,6 @@ public class LogManagerWithReplication extends LogManager {
 
     @Override
     public void log(ILogRecord logRecord) throws ACIDException {
-        if (logRecord.getLogSize() > logPageSize) {
-            throw new IllegalStateException();
-        }
-
         //only locally generated logs should be replicated
         logRecord.setReplicated(logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.WAIT);
 
@@ -58,7 +54,11 @@ public class LogManagerWithReplication extends LogManager {
         syncAppendToLogTail(logRecord);
 
         if (logRecord.isReplicated()) {
-            replicationManager.replicateLog(logRecord);
+            try {
+                replicationManager.replicateLog(logRecord);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
 
         if (logRecord.getLogSource() == LogSource.LOCAL) {
@@ -69,7 +69,7 @@ public class LogManagerWithReplication extends LogManager {
                         try {
                             logRecord.wait();
                         } catch (InterruptedException e) {
-                            //ignore
+                            Thread.currentThread().interrupt();
                         }
                     }
 
@@ -79,7 +79,7 @@ public class LogManagerWithReplication extends LogManager {
                             try {
                                 logRecord.wait();
                             } catch (InterruptedException e) {
-                                //ignore
+                                Thread.currentThread().interrupt();
                             }
                         }
                     }

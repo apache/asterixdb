@@ -18,53 +18,42 @@
  */
 package org.apache.asterix.replication.logging;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
-import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.management.ReplicationManager;
 
 public class ReplicationLogBuffer {
     private final int logBufferSize;
     private final AtomicBoolean full;
     private int appendOffset;
-    private int flushOffset;
+    private int replicationOffset;
     private final ByteBuffer appendBuffer;
-    private final ByteBuffer flushBuffer;
+    private final ByteBuffer replicationBuffer;
     private boolean stop;
-    private Map<String, SocketChannel> replicaSockets;
     private ReplicationManager replicationManager;
+    private final int batchSize;
 
-    public ReplicationLogBuffer(ReplicationManager replicationManager, int logBufferSize) {
+    public ReplicationLogBuffer(ReplicationManager replicationManager, int logBufferSize, int batchSize) {
         this.replicationManager = replicationManager;
         this.logBufferSize = logBufferSize;
+        this.batchSize = batchSize;
         appendBuffer = ByteBuffer.allocate(logBufferSize);
-        flushBuffer = appendBuffer.duplicate();
+        replicationBuffer = appendBuffer.duplicate();
         full = new AtomicBoolean(false);
         appendOffset = 0;
-        flushOffset = 0;
+        replicationOffset = 0;
     }
 
     public void append(ILogRecord logRecord) {
-        appendBuffer.putInt(ReplicationProtocol.ReplicationRequestType.REPLICATE_LOG.ordinal());
-        appendBuffer.putInt(logRecord.getSerializedLogSize());
-        appendBuffer.put(logRecord.getSerializedLog());
+        appendBuffer.putInt(logRecord.getRemoteLogSize());
+        logRecord.writeRemoteLogRecord(appendBuffer);
 
         synchronized (this) {
             appendOffset += getLogReplicationSize(logRecord);
             this.notify();
         }
-    }
-
-    public void setReplicationSockets(Map<String, SocketChannel> replicaSockets) {
-        this.replicaSockets = replicaSockets;
     }
 
     public synchronized void isFull(boolean full) {
@@ -77,18 +66,18 @@ public class ReplicationLogBuffer {
     }
 
     private static int getLogReplicationSize(ILogRecord logRecord) {
-        //request type + request length + serialized log length
-        return Integer.BYTES + Integer.BYTES + logRecord.getSerializedLogSize();
+        //log length (4 bytes) + remote log size
+        return Integer.BYTES + logRecord.getRemoteLogSize();
     }
 
     public void reset() {
         appendBuffer.position(0);
         appendBuffer.limit(logBufferSize);
-        flushBuffer.position(0);
-        flushBuffer.limit(logBufferSize);
+        replicationBuffer.position(0);
+        replicationBuffer.limit(logBufferSize);
         full.set(false);
         appendOffset = 0;
-        flushOffset = 0;
+        replicationOffset = 0;
         stop = false;
     }
 
@@ -96,57 +85,66 @@ public class ReplicationLogBuffer {
         int endOffset;
         while (!full.get()) {
             synchronized (this) {
-                if (appendOffset - flushOffset == 0 && !full.get()) {
+                if (appendOffset - replicationOffset == 0 && !full.get()) {
                     try {
                         if (stop) {
                             break;
                         }
                         this.wait();
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         continue;
                     }
                 }
                 endOffset = appendOffset;
             }
-            internalFlush(flushOffset, endOffset);
+            internalFlush(replicationOffset, endOffset);
         }
-
-        internalFlush(flushOffset, appendOffset);
+        internalFlush(replicationOffset, appendOffset);
     }
 
     private void internalFlush(int beginOffset, int endOffset) {
         if (endOffset > beginOffset) {
-            int begingPos = flushBuffer.position();
-            flushBuffer.limit(endOffset);
-            sendRequest(replicaSockets, flushBuffer);
-            flushBuffer.position(begingPos + (endOffset - beginOffset));
-            flushOffset = endOffset;
+            int begingPos = replicationBuffer.position();
+            replicationBuffer.limit(endOffset);
+            transferBuffer(replicationBuffer);
+            replicationBuffer.position(begingPos + (endOffset - beginOffset));
+            replicationOffset = endOffset;
         }
     }
 
-    private void sendRequest(Map<String, SocketChannel> replicaSockets, ByteBuffer requestBuffer) {
-        Iterator<Map.Entry<String, SocketChannel>> iterator = replicaSockets.entrySet().iterator();
-        int begin = requestBuffer.position();
-        while (iterator.hasNext()) {
-            Entry<String, SocketChannel> replicaSocket = iterator.next();
-            SocketChannel clientSocket = replicaSocket.getValue();
-            try {
-                NetworkingUtil.transferBufferToChannel(clientSocket, requestBuffer);
-            } catch (IOException e) {
-                if (clientSocket.isOpen()) {
-                    try {
-                        clientSocket.close();
-                    } catch (IOException e2) {
-                        e2.printStackTrace();
-                    }
-                }
-                replicationManager.reportFailedReplica(replicaSocket.getKey());
-                iterator.remove();
-            } finally {
-                requestBuffer.position(begin);
-            }
+    private void transferBuffer(ByteBuffer buffer) {
+        if (buffer.remaining() <= batchSize) {
+            //the current batch can be sent as it is
+            replicationManager.replicateTxnLogBatch(buffer);
+            return;
         }
+        /**
+         * break the batch into smaller batches
+         */
+        int totalTransferLimit = buffer.limit();
+        while (buffer.hasRemaining()) {
+            if (buffer.remaining() > batchSize) {
 
+                //mark the beginning of this batch
+                buffer.mark();
+                int currentBatchSize = 0;
+                while (currentBatchSize < batchSize) {
+                    int logSize = replicationBuffer.getInt();
+                    //add the size of the log record itself + 4 bytes for its size
+                    currentBatchSize += logSize + Integer.BYTES;
+                    //go to the beginning of the next log
+                    buffer.position(buffer.position() + logSize);
+                }
+                //set the limit to the end of this batch
+                buffer.limit(buffer.position());
+                //return to the beginning of the batch position
+                buffer.reset();
+            }
+            replicationManager.replicateTxnLogBatch(buffer);
+            //return the original limit to check the new remaining size
+            buffer.limit(totalTransferLimit);
+        }
     }
 
     public boolean isStop() {
