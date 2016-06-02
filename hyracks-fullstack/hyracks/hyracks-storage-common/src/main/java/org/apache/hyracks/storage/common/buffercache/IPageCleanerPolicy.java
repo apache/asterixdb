@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 /**
  * Allows customization of the page cleaning strategy by the cleaner thread.
  *
@@ -31,25 +29,22 @@ public interface IPageCleanerPolicy {
      *
      * @param monitor
      *            - The monitor on which a mutex is held while in this call
-     * @throws HyracksDataException
      */
-    public void notifyCleanCycleStart(Object monitor) throws HyracksDataException;
+    void notifyCleanCycleStart(Object monitor) throws InterruptedException;
 
     /**
      * Callback from the cleaner just after the finish of a cleaning cycle.
      *
      * @param monitor
      *            - The monitor on which a mutex is held while in this call.
-     * @throws HyracksDataException
      */
-    public void notifyCleanCycleFinish(Object monitor) throws HyracksDataException;
+    void notifyCleanCycleFinish(Object monitor) throws InterruptedException;
 
     /**
      * Callback to indicate that no victim was found.
      *
      * @param monitor
      *            - The monitor on which a mutex is held while in this call.
-     * @throws HyracksDataException
      */
-    public void notifyVictimNotFound(Object monitor) throws HyracksDataException;
+    void notifyVictimNotFound(Object monitor) throws InterruptedException;
 }

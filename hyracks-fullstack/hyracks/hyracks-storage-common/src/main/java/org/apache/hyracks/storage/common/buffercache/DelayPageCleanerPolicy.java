@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 public class DelayPageCleanerPolicy implements IPageCleanerPolicy {
     private long delay;
 
@@ -28,21 +26,16 @@ public class DelayPageCleanerPolicy implements IPageCleanerPolicy {
     }
 
     @Override
-    public void notifyCleanCycleStart(Object monitor) throws HyracksDataException {
-
+    public void notifyCleanCycleStart(Object monitor) throws InterruptedException {
     }
 
     @Override
-    public void notifyCleanCycleFinish(Object monitor) throws HyracksDataException {
-        try {
-            monitor.wait(delay);
-        } catch (InterruptedException e) {
-            throw new HyracksDataException(e);
-        }
+    public void notifyCleanCycleFinish(Object monitor) throws InterruptedException {
+        monitor.wait(delay);
     }
 
     @Override
-    public void notifyVictimNotFound(Object monitor) throws HyracksDataException {
+    public void notifyVictimNotFound(Object monitor) {
         monitor.notifyAll();
     }
 }

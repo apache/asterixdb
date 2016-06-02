@@ -125,6 +125,7 @@ public class AsyncFIFOPageQueueManager implements Runnable {
                 }
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             // TODO what do we do here?
             e.printStackTrace();
         }
@@ -140,6 +141,7 @@ public class AsyncFIFOPageQueueManager implements Runnable {
             try {
                 entry = queue.take();
             } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
                 break;
             }
             if (entry.getQueueInfo() != null && entry.getQueueInfo().hasWaiters()){
