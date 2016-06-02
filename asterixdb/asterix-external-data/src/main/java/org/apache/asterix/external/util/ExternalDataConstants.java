@@ -221,10 +221,8 @@ public class ExternalDataConstants {
     public static final String KEY_STREAM_SOURCE = "stream-source";
     public static final String EXTERNAL = "external";
     public static final String KEY_READER_FACTORY = "reader-factory";
-    public static final String READER_KV_TEST = "kv_test";
     public static final String READER_RSS = "rss";
     public static final String FORMAT_CSV = "csv";
-    public static final String TEST_RECORD_WITH_PK = "test-record-with-pk";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
 }

@@ -47,7 +47,7 @@ create dataset KVStore(DocumentType) with meta(KVMetaType)primary key meta()."ke
 create feed KVChangeStream using adapter(
     ("type-name"="DocumentType"),
     ("meta-type-name"="KVMetaType"),
-    ("reader"="kv_test"),
+    ("reader"="org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory"),
     ("parser"="record-with-metadata"),
     ("format"="dcp"),
     ("record-format"="json"),

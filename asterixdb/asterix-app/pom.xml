@@ -229,6 +229,13 @@
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-transactions</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
