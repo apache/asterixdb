@@ -62,8 +62,7 @@ public class Replica {
     public InetSocketAddress getAddress(AsterixReplicationProperties asterixReplicationProperties) {
         String replicaIPAddress = node.getClusterIp();
         int replicationPort = asterixReplicationProperties.getDataReplicationPort(node.getId());
-        InetSocketAddress replicaAddress = InetSocketAddress.createUnresolved(replicaIPAddress, replicationPort);
-        return replicaAddress;
+        return InetSocketAddress.createUnresolved(replicaIPAddress, replicationPort);
     }
 
     public static Replica create(DataInput input) throws IOException {

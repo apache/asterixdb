@@ -98,10 +98,4 @@
     <description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
     </description>
   </property>
-  <property>
-    <name>log.level</name>
-    <value>WARNING</value>
-    <description>The minimum log level to be displayed. (Default = INFO)
-    </description>
-  </property>
 </asterixConfiguration>

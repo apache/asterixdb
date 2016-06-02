@@ -37,7 +37,7 @@ create feed ChangeFeed using test_change_feed(
     ("format"="test-csv"),
     ("delimiter"=","),
     ("key-indexes"="0"),
-    ("reader"="test-record-with-pk"),
-    ("parser"="test-record-with-pk"),
+    ("reader"="org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory"),
+    ("parser"="org.apache.asterix.external.parser.factory.TestRecordWithPKParserFactory"),
     ("change-feed"="true")
 );

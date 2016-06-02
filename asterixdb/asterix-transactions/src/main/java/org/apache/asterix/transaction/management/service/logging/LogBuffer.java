@@ -76,9 +76,9 @@ public class LogBuffer implements ILogBuffer {
         appendOffset = 0;
         flushOffset = 0;
         isLastPage = false;
-        syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
-        flushQ = new LinkedBlockingQueue<ILogRecord>();
-        remoteJobsQ = new LinkedBlockingQueue<ILogRecord>();
+        syncCommitQ = new LinkedBlockingQueue<>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
+        flushQ = new LinkedBlockingQueue<>();
+        remoteJobsQ = new LinkedBlockingQueue<>();
         reusableDsId = new DatasetId(-1);
         reusableJobId = new JobId(-1);
     }
@@ -113,7 +113,7 @@ public class LogBuffer implements ILogBuffer {
 
     @Override
     public void appendWithReplication(ILogRecord logRecord, long appendLSN) {
-        logRecord.writeLogRecord(appendBuffer, appendLSN);
+        logRecord.writeLogRecord(appendBuffer);
 
         if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH
                 && logRecord.getLogType() != LogType.WAIT) {
@@ -135,10 +135,9 @@ public class LogBuffer implements ILogBuffer {
                     logRecord.isFlushed(false);
                     flushQ.offer(logRecord);
                 }
-            } else if (logRecord.getLogSource() == LogSource.REMOTE) {
-                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
-                    remoteJobsQ.offer(logRecord);
-                }
+            } else if (logRecord.getLogSource() == LogSource.REMOTE
+                    && (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)) {
+                remoteJobsQ.offer(logRecord);
             }
             this.notify();
         }
@@ -347,11 +346,7 @@ public class LogBuffer implements ILogBuffer {
         IReplicationThread replicationThread = logRecord.getReplicationThread();
 
         if (replicationThread != null) {
-            try {
-                replicationThread.notifyLogReplicationRequester(logRecord);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            replicationThread.notifyLogReplicationRequester(logRecord);
         }
     }
 

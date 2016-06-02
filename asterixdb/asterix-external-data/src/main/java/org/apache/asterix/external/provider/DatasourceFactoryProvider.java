@@ -26,8 +26,6 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
-import org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory;
-import org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory;
 import org.apache.asterix.external.input.record.reader.rss.RSSRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
@@ -39,6 +37,9 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
 public class DatasourceFactoryProvider {
+
+    private DatasourceFactoryProvider() {
+    }
 
     public static IExternalDataSourceFactory getExternalDataSourceFactory(Map<String, String> configuration)
             throws AsterixException {
@@ -90,8 +91,6 @@ public class DatasourceFactoryProvider {
             return ExternalDataUtils.createExternalRecordReaderFactory(configuration);
         }
         switch (reader) {
-            case ExternalDataConstants.READER_KV_TEST:
-                return new KVTestReaderFactory();
             case ExternalDataConstants.READER_HDFS:
                 return new HDFSDataSourceFactory();
             case ExternalDataConstants.ALIAS_LOCALFS_ADAPTER:
@@ -101,8 +100,6 @@ public class DatasourceFactoryProvider {
             case ExternalDataConstants.READER_PUSH_TWITTER:
             case ExternalDataConstants.READER_PULL_TWITTER:
                 return new TwitterRecordReaderFactory();
-            case ExternalDataConstants.TEST_RECORD_WITH_PK:
-                return new RecordWithPKTestReaderFactory();
             case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
                 return new StreamRecordReaderFactory(new TwitterFirehoseStreamFactory());
             case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
@@ -115,8 +112,9 @@ public class DatasourceFactoryProvider {
             default:
                 try {
                     return (IRecordReaderFactory<?>) Class.forName(reader).newInstance();
-                } catch (Exception e) {
-                    throw new AsterixException("unknown record reader factory: " + reader, e);
+                } catch (IllegalAccessException | ClassNotFoundException | InstantiationException
+                        | ClassCastException e) {
+                    throw new AsterixException("Unknown record reader factory: " + reader, e);
                 }
         }
     }

@@ -21,6 +21,7 @@ package org.apache.asterix.replication.management;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
@@ -30,6 +31,10 @@ import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
 
 public class NetworkingUtil {
+
+    private NetworkingUtil() {
+        throw new AssertionError("This util class should not be initialized.");
+    }
 
     public static void readBytes(SocketChannel socketChannel, ByteBuffer byteBuffer, int length) throws IOException {
         byteBuffer.clear();
@@ -88,7 +93,8 @@ public class NetworkingUtil {
         return hostName;
     }
 
-    public static void transferBufferToChannel(SocketChannel socketChannel, ByteBuffer requestBuffer) throws IOException {
+    public static void transferBufferToChannel(SocketChannel socketChannel, ByteBuffer requestBuffer)
+            throws IOException {
         while (requestBuffer.hasRemaining()) {
             socketChannel.write(requestBuffer);
         }
@@ -106,5 +112,11 @@ public class NetworkingUtil {
         long pos = 0;
         long fileSize = fileChannel.size();
         fileChannel.transferFrom(socketChannel, pos, fileSize);
+    }
+
+    public static InetSocketAddress getSocketAddress(SocketChannel socketChannel) {
+        String hostAddress = socketChannel.socket().getInetAddress().getHostAddress();
+        int port = socketChannel.socket().getPort();
+        return InetSocketAddress.createUnresolved(hostAddress, port);
     }
 }

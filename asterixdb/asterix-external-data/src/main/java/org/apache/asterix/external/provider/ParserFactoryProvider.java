@@ -29,14 +29,17 @@ import org.apache.asterix.external.parser.factory.DelimitedDataParserFactory;
 import org.apache.asterix.external.parser.factory.HiveDataParserFactory;
 import org.apache.asterix.external.parser.factory.RSSParserFactory;
 import org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory;
-import org.apache.asterix.external.parser.factory.TestRecordWithPKParserFactory;
 import org.apache.asterix.external.parser.factory.TweetParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
 public class ParserFactoryProvider {
+
+    private ParserFactoryProvider() {
+    }
+
     public static IDataParserFactory getDataParserFactory(Map<String, String> configuration) throws AsterixException {
-        IDataParserFactory parserFactory = null;
+        IDataParserFactory parserFactory;
         String parserFactoryName = configuration.get(ExternalDataConstants.KEY_DATA_PARSER);
         if ((parserFactoryName != null) && ExternalDataUtils.isExternal(parserFactoryName)) {
             return ExternalDataUtils.createExternalParserFactory(ExternalDataUtils.getDataverse(configuration),
@@ -67,10 +70,13 @@ public class ParserFactoryProvider {
                 return new RSSParserFactory();
             case ExternalDataConstants.FORMAT_RECORD_WITH_METADATA:
                 return new RecordWithMetadataParserFactory();
-            case ExternalDataConstants.TEST_RECORD_WITH_PK:
-                return new TestRecordWithPKParserFactory();
             default:
-                throw new AsterixException("Unknown format: " + parser);
+                try {
+                    return (IDataParserFactory) Class.forName(parser).newInstance();
+                } catch (IllegalAccessException | ClassNotFoundException | InstantiationException
+                        | ClassCastException e) {
+                    throw new AsterixException("Unknown format: " + parser, e);
+                }
         }
     }
 }

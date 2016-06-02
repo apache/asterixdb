@@ -229,6 +229,13 @@
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-transactions</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
@@ -267,12 +274,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>1.10.19</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.e-movimento.tinytools</groupId>
-      <artifactId>privilegedaccessor</artifactId>
-      <version>1.2.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>

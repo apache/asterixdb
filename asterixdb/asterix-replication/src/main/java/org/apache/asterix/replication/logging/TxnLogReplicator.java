@@ -21,24 +21,22 @@ package org.apache.asterix.replication.logging;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.asterix.common.transactions.LogRecord;
 
 /**
  * This class is responsible for sending transactions logs to remote replicas.
  */
-public class ReplicationLogFlusher implements Callable<Boolean> {
-    private final static Logger LOGGER = Logger.getLogger(ReplicationLogFlusher.class.getName());
-    private final static ReplicationLogBuffer POISON_PILL = new ReplicationLogBuffer(null,
-            LogRecord.JOB_TERMINATE_LOG_SIZE);
+public class TxnLogReplicator implements Callable<Boolean> {
+    private static final Logger LOGGER = Logger.getLogger(TxnLogReplicator.class.getName());
+    private static final ReplicationLogBuffer POISON_PILL = new ReplicationLogBuffer(null, 0, 0);
     private final LinkedBlockingQueue<ReplicationLogBuffer> emptyQ;
     private final LinkedBlockingQueue<ReplicationLogBuffer> flushQ;
     private ReplicationLogBuffer flushPage;
     private final AtomicBoolean isStarted;
     private final AtomicBoolean terminateFlag;
 
-    public ReplicationLogFlusher(LinkedBlockingQueue<ReplicationLogBuffer> emptyQ,
+    public TxnLogReplicator(LinkedBlockingQueue<ReplicationLogBuffer> emptyQ,
             LinkedBlockingQueue<ReplicationLogBuffer> flushQ) {
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
@@ -54,7 +52,7 @@ public class ReplicationLogFlusher implements Callable<Boolean> {
                 try {
                     isStarted.wait();
                 } catch (InterruptedException e) {
-                    //ignore
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -74,34 +72,37 @@ public class ReplicationLogFlusher implements Callable<Boolean> {
 
     @Override
     public Boolean call() {
-        Thread.currentThread().setName("Replication Log Flusher");
+        Thread.currentThread().setName("TxnLog Replicator");
         synchronized (isStarted) {
             isStarted.set(true);
             isStarted.notify();
         }
-        try {
-            while (true) {
+
+        while (true) {
+            try {
+                if (terminateFlag.get()) {
+                    return true;
+                }
+
                 flushPage = null;
-                try {
-                    flushPage = flushQ.take();
-                    if (flushPage == POISON_PILL || terminateFlag.get()) {
-                        return true;
-                    }
-                } catch (InterruptedException e) {
-                    if (flushPage == null) {
-                        continue;
-                    }
+                flushPage = flushQ.take();
+                if (flushPage == POISON_PILL) {
+                    continue;
                 }
                 flushPage.flush();
                 // TODO: pool large pages
                 if (flushPage.getLogBufferSize() == flushPage.getReplicationManager().getLogPageSize()) {
                     emptyQ.offer(flushPage);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, "TxnLogReplicator is terminating abnormally. Logs Replication Stopped.",
+                            e);
+                }
+                throw e;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.severe("ReplicationLogFlusher is terminating abnormally. Logs Replication Stopped.");
-            throw e;
         }
     }
 }
