@@ -23,11 +23,9 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
-import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -80,8 +78,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
     private int leftKey;
     private int rightKey;
 
-    private IPrinter printer;
-
     public IntervalIndexJoiner(IHyracksTaskContext ctx, int memorySize, int partition, MergeStatus status,
             MergeJoinLocks locks, Comparator<EndPointIndexItem> endPointComparator,
             IIntervalMergeJoinCheckerFactory imjcf, int[] leftKeys, int[] rightKeys, RecordDescriptor leftRd,
@@ -132,7 +128,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                     + " frames of memory.");
         }
 
-        printer = AObjectPrinterFactory.INSTANCE.createPrinter();
     }
 
     private void addToResult(IFrameTupleAccessor accessor1, int index1, IFrameTupleAccessor accessor2, int index2,
@@ -176,7 +171,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 loaded = TupleStatus.EMPTY;;
             }
         }
-        printTuple("Right Pointer", rightInputAccessor);
         return loaded;
     }
 
@@ -214,7 +208,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             }
 
         }
-        printTuple("Left Pointer", leftInputAccessor);
         return loaded;
     }
 
@@ -270,12 +263,12 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         TupleStatus ts = loadLeftTuple();
         while (ts.isLoaded() && activeManager[RIGHT_PARTITION].hasRecords()) {
             long sweep = activeManager[RIGHT_PARTITION].getTopPoint();
-            printTuple("Left Spill", leftInputAccessor);
+            //            printTuple("Left Spill", leftInputAccessor);
             if (IntervalJoinUtil.getIntervalStart(leftInputAccessor, leftKey) < sweep) {
                 // Add individual tuples.
                 for (TuplePointer rightTp : activeManager[RIGHT_PARTITION].getActiveList()) {
                     rightMemoryAccessor.reset(rightTp);
-                    printTuple("Right Memory", rightMemoryAccessor, rightTp.tupleIndex);
+                    //                    printTuple("Right Memory", rightMemoryAccessor, rightTp.tupleIndex);
                     if (imjc.checkToSaveInResult(leftInputAccessor, leftInputAccessor.getTupleId(), rightMemoryAccessor,
                             rightTp.tupleIndex)) {
                         addToResult(leftInputAccessor, leftInputAccessor.getTupleId(), rightMemoryAccessor,
@@ -312,12 +305,12 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         TupleStatus ts = loadRightTuple();
         while (ts.isLoaded() && activeManager[LEFT_PARTITION].hasRecords()) {
             long sweep = activeManager[LEFT_PARTITION].getTopPoint();
-            printTuple("Right Spill", rightInputAccessor);
+            //            printTuple("Right Spill", rightInputAccessor);
             if (IntervalJoinUtil.getIntervalStart(rightInputAccessor, rightKey) < sweep) {
                 // Add individual tuples.
                 for (TuplePointer leftTp : activeManager[LEFT_PARTITION].getActiveList()) {
                     leftMemoryAccessor.reset(leftTp);
-                    printTuple("Left Memory", leftMemoryAccessor, leftTp.tupleIndex);
+                    //                    printTuple("Left Memory", leftMemoryAccessor, leftTp.tupleIndex);
                     if (imjc.checkToSaveInResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
                             rightInputAccessor.getTupleId())) {
                         addToResult(leftMemoryAccessor, leftTp.tupleIndex, rightInputAccessor,
@@ -330,7 +323,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 ++count;
             } else {
                 // Remove from active.
-                printTuple("Right Forced Memory Delete", rightInputAccessor);
+                //                printTuple("Right Forced Memory Delete", rightInputAccessor);
                 activeManager[LEFT_PARTITION].removeTop();
             }
         }
@@ -354,7 +347,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 // Add to active, end point index and buffer.
                 TuplePointer tp = new TuplePointer();
                 if (activeManager[LEFT_PARTITION].addTuple(leftInputAccessor, tp)) {
-                    printTuple("Left To Memory", leftInputAccessor);
+                    //                    printTuple("Left To Memory", leftInputAccessor);
                     buffer.add(tp);
                 } else {
                     // Spill case
@@ -396,7 +389,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 // Add to active, end point index and buffer.
                 TuplePointer tp = new TuplePointer();
                 if (activeManager[RIGHT_PARTITION].addTuple(rightInputAccessor, tp)) {
-                    printTuple("Right To Memory", rightInputAccessor);
+                    //                    printTuple("Right To Memory", rightInputAccessor);
                     buffer.add(tp);
                 } else {
                     // Spill case
@@ -470,30 +463,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Unfreezing (" + frozenPartition + ").");
         }
-    }
-
-    private void printTuple(String message, ITupleAccessor accessor) throws HyracksDataException {
-        if (accessor.exists()) {
-            printTuple(message, accessor, accessor.getTupleId());
-        } else {
-            System.err.print(String.format("%1$-" + 15 + "s", message) + " --");
-            System.err.print("no tuple");
-            System.err.println();
-        }
-    }
-
-    private void printTuple(String message, IFrameTupleAccessor accessor, int tupleId) throws HyracksDataException {
-        System.err.print(String.format("%1$-" + 15 + "s", message) + " --");
-        int fields = accessor.getFieldCount();
-        for (int i = 0; i < fields; ++i) {
-            System.err.print(" " + i + ": ");
-            int fieldStartOffset = accessor.getFieldStartOffset(tupleId, i);
-            int fieldSlotsLength = accessor.getFieldSlotsLength();
-            int tupleStartOffset = accessor.getTupleStartOffset(tupleId);
-            printer.print(accessor.getBuffer().array(), fieldStartOffset + fieldSlotsLength + tupleStartOffset,
-                    accessor.getFieldLength(tupleId, i), System.err);
-        }
-        System.err.println();
     }
 
 }

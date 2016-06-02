@@ -20,7 +20,6 @@
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
 import java.nio.ByteBuffer;
-import java.util.Comparator;
 import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFactory;
@@ -34,7 +33,6 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
@@ -81,21 +79,6 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
         builder.addTargetEdge(0, leftAN, 0);
     }
 
-    public static class IndexTaskState extends IndexJoinTaskState {
-        protected int actvityId;
-        protected int key;
-        protected int size;
-        protected int partition;
-        protected int memoryForJoin;
-        protected IntervalIndexJoiner indexJoiner;
-        protected Comparator<EndPointIndexItem> endPointComparator;
-        protected byte point;
-
-        private IndexTaskState(JobId jobId, TaskId taskId) {
-            super(jobId, taskId);
-        }
-    }
-
     private class LeftJoinerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
@@ -120,7 +103,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             private final IHyracksTaskContext ctx;
             private final int partition;
             private final RecordDescriptor leftRd;
-            private IndexTaskState state;
+            private IndexJoinTaskState state;
             private boolean first = true;
 
             public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
@@ -134,7 +117,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 locks.getLock(partition).lock();
                 try {
                     writer.open();
-                    state = new IndexTaskState(ctx.getJobletContext().getJobId(),
+                    state = new IndexJoinTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));;
                     state.leftRd = leftRd;
                     state.point = imjcf.isOrderAsc() ? EndPointIndexItem.START_POINT : EndPointIndexItem.END_POINT;
@@ -230,7 +213,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
             private int partition;
             private IHyracksTaskContext ctx;
             private final RecordDescriptor rightRd;
-            private IndexTaskState state;
+            private IndexJoinTaskState state;
             private boolean first = true;
 
             public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
@@ -245,7 +228,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 try {
                     do {
                         // Wait for the state to be set in the context form Left.
-                        state = (IndexTaskState) ctx.getStateObject(new TaskId(joinAid, partition));
+                        state = (IndexJoinTaskState) ctx.getStateObject(new TaskId(joinAid, partition));
                         if (state == null) {
                             locks.getRight(partition).await();
                         }

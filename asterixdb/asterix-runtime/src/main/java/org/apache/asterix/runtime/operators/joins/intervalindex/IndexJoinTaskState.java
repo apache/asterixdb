@@ -18,22 +18,19 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalindex;
 
-import org.apache.hyracks.api.dataflow.TaskId;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
-import org.apache.hyracks.dataflow.std.join.MergeStatus;
+import java.util.Comparator;
 
-public class IndexJoinTaskState extends AbstractStateObject {
-    public MergeStatus status;
-    public IntervalIndexJoiner joiner;
-    public boolean failed;
-    public RecordDescriptor leftRd;
-    public RecordDescriptor rightRd;
+import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.dataflow.std.join.MergeJoinTaskState;
+
+public class IndexJoinTaskState extends MergeJoinTaskState {
+    protected IntervalIndexJoiner indexJoiner;
+    protected Comparator<EndPointIndexItem> endPointComparator;
+    protected byte point;
 
     public IndexJoinTaskState(JobId jobId, TaskId taskId) {
         super(jobId, taskId);
-        status = new MergeStatus();
     }
 
 }

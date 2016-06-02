@@ -176,6 +176,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                         writer.close();
                     }
                     state.status.branch[LEFT_ACTIVITY_ID].setStageClose();
+                    locks.getRight(partition).signal();
                 } finally {
                     locks.getLock(partition).unlock();
                 }
