@@ -3919,6 +3919,11 @@
         <output-dir compare="Text">nestrecord</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="nestrecords">
+      <compilation-unit name="query-ASTERIXDB-1025">
+        <output-dir compare="Text">query-ASTERIXDB-1025</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="numeric">
     <test-case FilePath="numeric">
