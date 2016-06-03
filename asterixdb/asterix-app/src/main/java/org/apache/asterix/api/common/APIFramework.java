@@ -97,55 +97,42 @@ public class APIFramework {
     }
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
-        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
+        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<>();
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
         SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.buildInitialTranslationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.buildTypeInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.buildAutogenerateIDRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
-                RuleCollections.buildNormalizationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
-                RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
-                RuleCollections.buildLoadFieldsRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
         // fj
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
-                RuleCollections.buildFuzzyJoinRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildFuzzyJoinRuleCollection()));
         //
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
-                RuleCollections.buildNormalizationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
-                RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
-                RuleCollections.buildLoadFieldsRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.buildDataExchangeRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
-                RuleCollections.buildConsolidationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
-                RuleCollections.buildAccessMethodRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
-                RuleCollections.buildPlanCleanupRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
 
         //put TXnRuleCollection!
         return defaultLogicalRewrites;
     }
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultPhysicalRewrites() {
-        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultPhysicalRewrites = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
+        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultPhysicalRewrites = new ArrayList<>();
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         SequentialOnceRuleController seqOnceTopLevel = new SequentialOnceRuleController(false);
-        defaultPhysicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection()));
-        defaultPhysicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceTopLevel,
-                RuleCollections.buildPhysicalRewritesTopLevelRuleCollection()));
-        defaultPhysicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                RuleCollections.prepareForJobGenRuleCollection()));
+        defaultPhysicalRewrites
+                .add(new Pair<>(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection()));
+        defaultPhysicalRewrites
+                .add(new Pair<>(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection()));
+        defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection()));
         return defaultPhysicalRewrites;
     }
 
@@ -166,57 +153,52 @@ public class APIFramework {
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     physicalOptimizationConfig, clusterLocations);
         }
+    }
 
+    private void printPlanPrefix(SessionConfig conf, String planName) {
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
+            conf.out().println("<h4>" + planName + ":</h4>");
+            conf.out().println("<pre>");
+        } else {
+            conf.out().println("----------" + planName + ":");
+        }
+    }
+
+    private void printPlanPostfix(SessionConfig conf) {
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
+            conf.out().println("</pre>");
+        }
     }
 
     public Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
             Query q, SessionConfig conf) throws AsterixException {
-
+        if (q == null) {
+            return null;
+        }
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
             conf.out().println();
-
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("<h4>Expression tree:</h4>");
-                conf.out().println("<pre>");
-            } else {
-                conf.out().println("----------Expression tree:");
-            }
-
-            if (q != null) {
-                q.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
-            }
-
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("</pre>");
-            }
+            printPlanPrefix(conf, "Expression tree");
+            q.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
+            printPlanPostfix(conf);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
         rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()));
-        return new Pair<Query, Integer>(q, q.getVarCounter());
+        return new Pair<>(q, q.getVarCounter());
     }
 
     public JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
             SessionConfig conf, ICompiledDmlStatement statement)
-                    throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
+            throws AlgebricksException, JSONException, RemoteException, ACIDException {
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
             conf.out().println();
 
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("<h4>Rewritten expression tree:</h4>");
-                conf.out().println("<pre>");
-            } else {
-                conf.out().println("----------Rewritten expression:");
-            }
-
+            printPlanPrefix(conf, "Rewritten expression tree");
             if (rwQ != null) {
                 rwQ.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
             }
-
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("</pre>");
-            }
+            printPlanPostfix(conf);
         }
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
@@ -236,22 +218,13 @@ public class APIFramework {
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             conf.out().println();
 
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("<h4>Logical plan:</h4>");
-                conf.out().println("<pre>");
-            } else {
-                conf.out().println("----------Logical plan:");
-            }
-
-            if (rwQ != null || statement.getKind() == Kind.LOAD) {
+            printPlanPrefix(conf, "Logical plan");
+            if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                 conf.out().print(buffer);
             }
-
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("</pre>");
-            }
+            printPlanPostfix(conf);
         }
 
         //print the plot for the logical plan
@@ -299,22 +272,13 @@ public class APIFramework {
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
                     conf.out().print(buffer);
                 } else {
-                    if (conf.is(SessionConfig.FORMAT_HTML)) {
-                        conf.out().println("<h4>Optimized logical plan:</h4>");
-                        conf.out().println("<pre>");
-                    } else {
-                        conf.out().println("----------Optimized logical plan:");
-                    }
-
-                    if (rwQ != null || statement.getKind() == Kind.LOAD) {
+                    printPlanPrefix(conf, "Optimized logical plan");
+                    if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
                         StringBuilder buffer = new StringBuilder();
                         PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                         conf.out().print(buffer);
                     }
-
-                    if (conf.is(SessionConfig.FORMAT_HTML)) {
-                        conf.out().println("</pre>");
-                    }
+                    printPlanPostfix(conf);
                 }
             }
         }
@@ -359,30 +323,21 @@ public class APIFramework {
         JobSpecification spec = compiler.createJob(AsterixAppContextInfo.getInstance(), jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("<h4>Hyracks job:</h4>");
-                conf.out().println("<pre>");
-            } else {
-                conf.out().println("----------Hyracks job:");
-            }
-
+            printPlanPrefix(conf, "Hyracks job");
             if (rwQ != null) {
                 conf.out().println(spec.toJSON().toString(1));
                 conf.out().println(spec.getUserConstraints());
             }
-
-            if (conf.is(SessionConfig.FORMAT_HTML)) {
-                conf.out().println("</pre>");
-            }
+            printPlanPostfix(conf);
         }
         return spec;
     }
 
     public void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)
             throws Exception {
-        for (int i = 0; i < specs.length; i++) {
-            specs[i].setMaxReattempts(0);
-            JobId jobId = hcc.startJob(specs[i]);
+        for (JobSpecification spec : specs) {
+            spec.setMaxReattempts(0);
+            JobId jobId = hcc.startJob(spec);
             long startTime = System.currentTimeMillis();
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
@@ -393,12 +348,12 @@ public class APIFramework {
     }
 
     public void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out) throws Exception {
-        for (int i = 0; i < jobs.length; i++) {
-            jobs[i].getJobSpec().setMaxReattempts(0);
+        for (Job job : jobs) {
+            job.getJobSpec().setMaxReattempts(0);
             long startTime = System.currentTimeMillis();
             try {
-                JobId jobId = hcc.startJob(jobs[i].getJobSpec());
-                if (jobs[i].getSubmissionMode() == SubmissionMode.ASYNCHRONOUS) {
+                JobId jobId = hcc.startJob(job.getJobSpec());
+                if (job.getSubmissionMode() == SubmissionMode.ASYNCHRONOUS) {
                     continue;
                 }
                 hcc.waitForCompletion(jobId);
@@ -411,5 +366,4 @@ public class APIFramework {
             out.println("<pre>Duration: " + duration + " sec</pre>");
         }
     }
-
 }
