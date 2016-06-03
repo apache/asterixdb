@@ -43,31 +43,19 @@ public class OverlappingIntervalMergeJoinChecker extends AbstractIntervalMergeJo
             // Both tuples will match in a different partition.
             return false;
         }
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
-            return compareInterval(ipLeft, ipRight);
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        return super.checkToSaveInResult(accessorLeft, accessorRight);
     }
 
     @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
+            IFrameTupleAccessor accessorRight, int rightTupleIndex, boolean reversed) throws HyracksDataException {
         long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
         long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
         if (start0 < partitionStart && start1 < partitionStart) {
             // Both tuples will match in a different partition.
             return false;
         }
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
-            return compareInterval(ipLeft, ipRight);
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        return super.checkToSaveInResult(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex, reversed);
     }
 
     @Override

@@ -62,7 +62,7 @@ public class InMemoryIntervalPartitionJoin {
                 fbm.getFrame(frameIndex, bufferInfo);
                 accessorBuild.reset(bufferInfo.getBuffer());
                 for (int buildTupleIndex = 0; buildTupleIndex < accessorBuild.getTupleCount(); ++buildTupleIndex) {
-                    if (imjc.checkToSaveInResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex)) {
+                    if (imjc.checkToSaveInResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex, false)) {
                         appendToResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex, writer);
                     }
                 }

@@ -61,8 +61,13 @@ public class NaturalMergeJoinChecker implements IMergeJoinChecker {
 
     @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        int c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
+            IFrameTupleAccessor accessorRight, int rightTupleIndex, boolean reversed) throws HyracksDataException {
+        int c;
+        if (reversed) {
+            c = comparator.compare(accessorRight, rightTupleIndex, accessorLeft, leftTupleIndex);
+        } else {
+            c = comparator.compare(accessorLeft, leftTupleIndex, accessorRight, rightTupleIndex);
+        }
         return c == 0;
     }
 

@@ -67,5 +67,5 @@ public interface IMergeJoinChecker extends Serializable {
     boolean checkToSaveInResult(ITupleAccessor accessorLeft, ITupleAccessor accessorRight) throws HyracksDataException;
 
     boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
-            int rightTupleIndex) throws HyracksDataException;
+            int rightTupleIndex, boolean reversed) throws HyracksDataException;
 }
