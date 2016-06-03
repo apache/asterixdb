@@ -78,8 +78,6 @@ public interface ILogRecord {
 
     public void setNewOp(byte newOp);
 
-    public int getNewValueSize();
-
     public void setNewValueSize(int newValueSize);
 
     public ITupleReference getNewValue();
@@ -134,4 +132,10 @@ public interface ILogRecord {
     public boolean isReplicated();
 
     public void writeRemoteLogRecord(ByteBuffer buffer);
+
+    public ITupleReference getOldValue();
+
+    public void setOldValue(ITupleReference oldValue);
+
+    public void setOldValueSize(int oldValueSize);
 }

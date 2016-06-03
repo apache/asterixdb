@@ -132,7 +132,7 @@ public class AsterixPropertiesAccessor {
     /**
      * Constructor which wraps an IApplicationConfig.
      */
-    public AsterixPropertiesAccessor (IApplicationConfig cfg) {
+    public AsterixPropertiesAccessor(IApplicationConfig cfg) {
         this.cfg = cfg;
         instanceName = cfg.getString("asterix", "instance", "DEFAULT_INSTANCE");
         String mdNode = null;
@@ -234,7 +234,8 @@ public class AsterixPropertiesAccessor {
             return interpreter.interpret(value);
         } catch (IllegalArgumentException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                StringBuilder msg = new StringBuilder("Invalid property value '" + value + "' for property '" + property + "'.\n");
+                StringBuilder msg =
+                        new StringBuilder("Invalid property value '" + value + "' for property '" + property + "'.\n");
                 if (p != null) {
                     msg.append("See the description: \n" + p.getDescription() + "\n");
                 }

@@ -40,11 +40,14 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
 
     private static final long serialVersionUID = 1L;
     private final IndexOperation indexOp;
+    private final boolean logBeforeImage;
 
     public SecondaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType) {
+            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType,
+            boolean logBeforeImage) {
         super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -63,7 +66,7 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
             IModificationOperationCallback modCallback = new SecondaryIndexModificationOperationCallback(datasetId,
                     primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId,
-                    resourcePartition, resourceType, indexOp);
+                    resourcePartition, resourceType, indexOp, logBeforeImage);
             txnCtx.registerIndexAndCallback(resourceId, index, (AbstractOperationCallback) modCallback, false);
             return modCallback;
         } catch (ACIDException e) {

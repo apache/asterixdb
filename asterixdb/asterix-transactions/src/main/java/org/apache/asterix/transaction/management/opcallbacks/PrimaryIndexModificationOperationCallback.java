@@ -40,13 +40,16 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
         implements IModificationOperationCallback {
 
     private final AsterixLSMInsertDeleteOperatorNodePushable operatorNodePushable;
+    private final boolean logBeforeImage;
 
     public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, int resourcePartition,
-            byte resourceType, IndexOperation indexOp, IOperatorNodePushable operatorNodePushable) {
+            byte resourceType, IndexOperation indexOp, IOperatorNodePushable operatorNodePushable,
+            boolean logBeforeImage) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
         this.operatorNodePushable = (AsterixLSMInsertDeleteOperatorNodePushable) operatorNodePushable;
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -99,7 +102,11 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            log(pkHash, after);
+            if (logBeforeImage) {
+                log(pkHash, after, before);
+            } else {
+                log(pkHash, after, null);
+            }
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

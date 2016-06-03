@@ -37,13 +37,15 @@ public class SecondaryIndexModificationOperationCallback extends AbstractIndexMo
         implements IModificationOperationCallback {
 
     protected final IndexOperation oldOp;
+    private final boolean logBeforeImage;
 
     public SecondaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
-            int resourcePartition, byte resourceType, IndexOperation indexOp) {
+            int resourcePartition, byte resourceType, IndexOperation indexOp, boolean logBeforeImage) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
         oldOp = (indexOp == IndexOperation.DELETE) ? IndexOperation.INSERT : IndexOperation.DELETE;
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -55,7 +57,7 @@ public class SecondaryIndexModificationOperationCallback extends AbstractIndexMo
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            this.log(pkHash, after);
+            this.log(pkHash, after, logBeforeImage ? before : null);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

@@ -12,6 +12,7 @@ ittest
 asterix_logs
 build
 bin
+asterixdb/asterix-opt/
 asterixdb/asterix-app/src/test/resources/externallib/
 asterixdb/asterix-app/rttest/
 asterixdb/asterix-app/mdtest/

@@ -679,47 +679,50 @@ public class InputHandlerTest extends TestCase {
      */
     @org.junit.Test
     public void testMemoryVarSizeFrameWithSpillNoDiscard() {
-        try {
-            Random random = new Random();
-            IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
-            // Spill budget = Memory budget, No discard
-            FeedPolicyAccessor fpa =
-                    createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES, DISCARD_ALLOWANCE);
-            // Non-Active Writer
-            TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
-            writer.freeze();
-            // FramePool
-            ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, FEED_MEM_BUDGET, DEFAULT_FRAME_SIZE);
-            FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
-            handler.open();
-            ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
-            int multiplier = 1;
-            // add NUM_FRAMES times
-            while ((multiplier <= framePool.remaining())) {
-                handler.nextFrame(buffer);
-                multiplier = random.nextInt(10) + 1;
-                buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE * multiplier);
+        for (int k = 0; k < 1000; k++) {
+            try {
+                Random random = new Random();
+                IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
+                // Spill budget = Memory budget, No discard
+                FeedPolicyAccessor fpa =
+                        createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES, DISCARD_ALLOWANCE);
+                // Non-Active Writer
+                TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
+                writer.freeze();
+                // FramePool
+                ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, FEED_MEM_BUDGET, DEFAULT_FRAME_SIZE);
+                FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
+                handler.open();
+                ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
+                int multiplier = 1;
+                // add NUM_FRAMES times
+                while ((multiplier <= framePool.remaining())) {
+                    handler.nextFrame(buffer);
+                    multiplier = random.nextInt(10) + 1;
+                    buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE * multiplier);
+                }
+                // Next call should Not block. we will do it in a different thread
+                Future<?> result = EXECUTOR.submit(new Pusher(buffer, handler));
+                result.get();
+                // Check that no records were discarded
+                assertEquals(handler.getNumDiscarded(), 0);
+                // Check that one frame is spilled
+                assertEquals(handler.getNumSpilled(), 1);
+                int numOfBuffersInMemory = handler.getInternalBuffer().size();
+                // consume memory frames
+                while (numOfBuffersInMemory > 0) {
+                    writer.kick();
+                    numOfBuffersInMemory--;
+                }
+                // There should be 1 frame on disk
+                Assert.assertEquals(1, handler.framesOnDisk());
+                writer.unfreeze();
+                handler.close();
+                Assert.assertEquals(0, handler.framesOnDisk());
+            } catch (Throwable th) {
+                th.printStackTrace();
+                Assert.fail();
             }
-            // Next call should Not block. we will do it in a different thread
-            Future<?> result = EXECUTOR.submit(new Pusher(buffer, handler));
-            result.get();
-            // Check that no records were discarded
-            assertEquals(handler.getNumDiscarded(), 0);
-            // Check that one frame is spilled
-            assertEquals(handler.getNumSpilled(), 1);
-            // consume memory frames
-            while (!handler.getInternalBuffer().isEmpty()) {
-                writer.kick();
-            }
-            // There should be 1 frame on disk
-            Assert.assertEquals(1, handler.framesOnDisk());
-            writer.unfreeze();
-            result.get();
-            handler.close();
-            Assert.assertEquals(0, handler.framesOnDisk());
-        } catch (Throwable th) {
-            th.printStackTrace();
-            Assert.fail();
         }
         Assert.assertNull(cause);
     }
