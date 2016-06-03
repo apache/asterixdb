@@ -824,8 +824,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             RTreeSearchOperatorDescriptor rtreeSearchOp;
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                IBinaryComparatorFactory[] deletedKeyBTreeCompFactories = getMergedComparatorFactories(
-                        comparatorFactories, primaryComparatorFactories);
+                IBinaryComparatorFactory[] deletedKeyBTreeCompFactories =
+                        getMergedComparatorFactories(comparatorFactories, primaryComparatorFactories);
                 IIndexDataflowHelperFactory idff = new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(
                         valueProviderFactories, RTreePolicyType.RTREE, deletedKeyBTreeCompFactories,
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
@@ -1135,7 +1135,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     ? new TempDatasetPrimaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE)
                     : new PrimaryIndexModificationOperationCallbackFactory(jobId, datasetId, primaryKeyFields,
-                            txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
+                            txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE, dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
@@ -1614,8 +1614,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     ? new TempDatasetSecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
-                            modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
-                            ResourceType.LSM_BTREE);
+                            modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE,
+                            dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
@@ -1819,7 +1819,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             ResourceType.LSM_INVERTED_INDEX)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
-                            ResourceType.LSM_INVERTED_INDEX);
+                            ResourceType.LSM_INVERTED_INDEX, dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
@@ -1889,8 +1889,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IAType, Boolean> keyPairType =
                     Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
             IAType spatialType = keyPairType.first;
-            boolean isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT
-                    || spatialType.getTypeTag() == ATypeTag.POINT3D;
+            boolean isPointMBR =
+                    spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
             int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
             int numSecondaryKeys = dimension * 2;
             int numPrimaryKeys = primaryKeys.size();
@@ -1969,14 +1969,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     ? new TempDatasetSecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
-                            modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
-                            ResourceType.LSM_RTREE);
+                            modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE,
+                            dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
 
-            IBinaryComparatorFactory[] deletedKeyBTreeCompFactories = getMergedComparatorFactories(comparatorFactories,
-                    primaryComparatorFactories);
+            IBinaryComparatorFactory[] deletedKeyBTreeCompFactories =
+                    getMergedComparatorFactories(comparatorFactories, primaryComparatorFactories);
             IIndexDataflowHelperFactory idff = new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(
                     valueProviderFactories, RTreePolicyType.RTREE, deletedKeyBTreeCompFactories,
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
@@ -2300,7 +2300,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     ? new TempDatasetPrimaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             primaryKeyFields, txnSubsystemProvider, IndexOperation.UPSERT, ResourceType.LSM_BTREE)
                     : new UpsertOperationCallbackFactory(jobId, datasetId, primaryKeyFields, txnSubsystemProvider,
-                            IndexOperation.UPSERT, ResourceType.LSM_BTREE);
+                            IndexOperation.UPSERT, ResourceType.LSM_BTREE, dataset.hasMetaPart());
 
             LockThenSearchOperationCallbackFactory searchCallbackFactory = new LockThenSearchOperationCallbackFactory(
                     jobId, datasetId, primaryKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
@@ -2601,7 +2601,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             ResourceType.LSM_INVERTED_INDEX)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, IndexOperation.UPSERT,
-                            ResourceType.LSM_INVERTED_INDEX);
+                            ResourceType.LSM_INVERTED_INDEX, dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
@@ -2666,8 +2666,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
             IAType spatialType = keyPairType.first;
 
-            boolean isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT
-                    || spatialType.getTypeTag() == ATypeTag.POINT3D;
+            boolean isPointMBR =
+                    spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
             int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
             int numSecondaryKeys = dimension * 2;
             int numPrimaryKeys = primaryKeys.size();
@@ -2770,12 +2770,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             ResourceType.LSM_RTREE)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, IndexOperation.UPSERT,
-                            ResourceType.LSM_RTREE);
+                            ResourceType.LSM_RTREE, dataset.hasMetaPart());
 
-            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils
-                    .getMergePolicyFactory(dataset, mdTxnCtx);
-            IBinaryComparatorFactory[] deletedKeyBTreeCompFactories = getMergedComparatorFactories(comparatorFactories,
-                    primaryComparatorFactories);
+            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                    DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);
+            IBinaryComparatorFactory[] deletedKeyBTreeCompFactories =
+                    getMergedComparatorFactories(comparatorFactories, primaryComparatorFactories);
             IIndexDataflowHelperFactory idff = new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(
                     valueProviderFactories, RTreePolicyType.RTREE, deletedKeyBTreeCompFactories,
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
@@ -2922,7 +2922,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             ResourceType.LSM_BTREE)
                     : new SecondaryIndexModificationOperationCallbackFactory(jobId, datasetId,
                             modificationCallbackPrimaryKeyFields, txnSubsystemProvider, IndexOperation.UPSERT,
-                            ResourceType.LSM_BTREE);
+                            ResourceType.LSM_BTREE, dataset.hasMetaPart());
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                     DatasetUtils.getMergePolicyFactory(dataset, mdTxnCtx);

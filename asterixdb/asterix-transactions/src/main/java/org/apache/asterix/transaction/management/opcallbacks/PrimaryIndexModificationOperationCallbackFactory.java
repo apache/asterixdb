@@ -43,11 +43,14 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
 
     private static final long serialVersionUID = 1L;
     private final IndexOperation indexOp;
+    private final boolean logBeforeImage;
 
     public PrimaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType) {
+            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType,
+            boolean logBeforeImage) {
         super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -56,8 +59,8 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
             throws HyracksDataException {
 
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getDatasetLifecycleManager();
+        IIndexLifecycleManager indexLifeCycleManager =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourcePath);
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resourceId + ") is not registered.");
@@ -67,7 +70,7 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
             IModificationOperationCallback modCallback = new PrimaryIndexModificationOperationCallback(datasetId,
                     primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId,
-                    resourcePartition, resourceType, indexOp, operatorNodePushable);
+                    resourcePartition, resourceType, indexOp, operatorNodePushable, logBeforeImage);
             txnCtx.registerIndexAndCallback(resourceId, index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {

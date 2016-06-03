@@ -48,7 +48,7 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
     /**
      * The following three variables are used to keep track of the information regarding flushing partial frame such as
      * 1. whether there was a partial frame flush for the current frame,
-     * ==> captured in flushedPartialTuples variabl
+     * ==> captured in flushedPartialTuples variable
      * 2. the last flushed tuple index in the frame if there was a partial frame flush,
      * ==> captured in lastFlushedTupleIdx variable
      * 3. the current tuple index the frame, where this operator is working on the current tuple.
@@ -89,8 +89,8 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
                 frameTuple = new FrameTupleReference();
             }
-            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                    .getApplicationContext().getApplicationObject();
+            IAsterixAppRuntimeContext runtimeCtx =
+                    (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
             AsterixLSMIndexUtil.checkAndSetFirstLSN(lsmIndex, runtimeCtx.getTransactionSubsystem().getLogManager());
         } catch (Throwable th) {
             throw new HyracksDataException(th);

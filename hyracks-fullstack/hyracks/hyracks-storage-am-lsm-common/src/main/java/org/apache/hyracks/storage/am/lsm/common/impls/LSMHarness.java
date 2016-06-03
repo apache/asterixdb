@@ -511,8 +511,8 @@ public class LSMHarness implements ILSMHarness {
 
     protected void triggerReplication(List<ILSMComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
             throws HyracksDataException {
-        ILSMIndexAccessorInternal accessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessorInternal accessor =
+                lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         accessor.scheduleReplication(lsmComponents, bulkload, opType);
     }
 

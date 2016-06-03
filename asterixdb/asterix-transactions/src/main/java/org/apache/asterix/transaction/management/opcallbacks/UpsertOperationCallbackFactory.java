@@ -39,11 +39,14 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
 
     private static final long serialVersionUID = 1L;
     private final IndexOperation indexOp;
+    private final boolean logBeforeImage;
 
     public UpsertOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType) {
+            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType,
+            boolean logBeforeImage) {
         super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -52,8 +55,8 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
             throws HyracksDataException {
 
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getDatasetLifecycleManager();
+        IIndexLifecycleManager indexLifeCycleManager =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceName);
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resourceId + ") is not registered.");
@@ -61,9 +64,9 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
 
         try {
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-            IModificationOperationCallback modCallback = new UpsertOperationCallback(datasetId, primaryKeyFields,
-                    txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, resourcePartition, resourceType,
-                    indexOp);
+            IModificationOperationCallback modCallback =
+                    new UpsertOperationCallback(datasetId, primaryKeyFields, txnCtx, txnSubsystem.getLockManager(),
+                            txnSubsystem, resourceId, resourcePartition, resourceType, indexOp, logBeforeImage);
             txnCtx.registerIndexAndCallback(resourceId, index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {

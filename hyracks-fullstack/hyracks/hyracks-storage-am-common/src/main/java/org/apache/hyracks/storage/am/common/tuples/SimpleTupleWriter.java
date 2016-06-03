@@ -22,10 +22,17 @@ package org.apache.hyracks.storage.am.common.tuples;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 
+/*
+ * This class should be replaced by a Util class
+ */
 public class SimpleTupleWriter implements ITreeIndexTupleWriter {
+
+    public static final SimpleTupleWriter INSTANCE = new SimpleTupleWriter();
+
+    private SimpleTupleWriter() {
+    }
 
     // Write short in little endian to target byte array at given offset.
     private static void writeShortL(short s, byte[] buf, int targetOff) {
@@ -52,7 +59,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
+    public SimpleTupleReference createTupleReference() {
         return new SimpleTupleReference();
     }
 
@@ -103,7 +110,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        return (int) Math.ceil((double) tuple.getFieldCount() / 8.0);
+        return (int) Math.ceil(tuple.getFieldCount() / 8.0);
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple) {
@@ -111,7 +118,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(ITupleReference tuple, int startField, int numFields) {
-        return (int) Math.ceil((double) numFields / 8.0);
+        return (int) Math.ceil(numFields / 8.0);
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {

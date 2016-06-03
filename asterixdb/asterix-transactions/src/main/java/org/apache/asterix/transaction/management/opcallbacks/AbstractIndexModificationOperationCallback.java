@@ -40,7 +40,6 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
     protected final byte resourceType;
     protected final IndexOperation indexOp;
     protected final ITransactionSubsystem txnSubsystem;
-    protected final SimpleTupleWriter tupleWriter;
     protected final ILogRecord logRecord;
 
     protected AbstractIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
@@ -51,7 +50,6 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         this.resourceType = resourceType;
         this.indexOp = indexOp;
         this.txnSubsystem = txnSubsystem;
-        tupleWriter = new SimpleTupleWriter();
         logRecord = new LogRecord();
         logRecord.setTxnCtx(txnCtx);
         logRecord.setLogType(LogType.UPDATE);
@@ -62,16 +60,22 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setNewOp((byte) (indexOp.ordinal()));
     }
 
-    protected void log(int PKHash, ITupleReference newValue) throws ACIDException {
+    protected void log(int PKHash, ITupleReference newValue, ITupleReference oldValue) throws ACIDException {
         logRecord.setPKHashValue(PKHash);
         logRecord.setPKFields(primaryKeyFields);
         logRecord.setPKValue(newValue);
         logRecord.computeAndSetPKValueSize();
         if (newValue != null) {
-            logRecord.setNewValueSize(tupleWriter.bytesRequired(newValue));
+            logRecord.setNewValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(newValue));
             logRecord.setNewValue(newValue);
         } else {
             logRecord.setNewValueSize(0);
+        }
+        if (oldValue != null) {
+            logRecord.setOldValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(oldValue));
+            logRecord.setOldValue(oldValue);
+        } else {
+            logRecord.setOldValueSize(0);
         }
         logRecord.computeAndSetLogSize();
         txnSubsystem.getLogManager().log(logRecord);

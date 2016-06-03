@@ -29,12 +29,14 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 public class UpsertOperationCallback extends AbstractIndexModificationOperationCallback
         implements IModificationOperationCallback {
+    private final boolean logBeforeImage;
 
     public UpsertOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, int resourcePartition,
-            byte resourceType, IndexOperation indexOp) {
+            byte resourceType, IndexOperation indexOp, boolean logBeforeImage) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
+        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class UpsertOperationCallback extends AbstractIndexModificationOperationC
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            log(pkHash, after);
+            log(pkHash, after, logBeforeImage ? before : null);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
