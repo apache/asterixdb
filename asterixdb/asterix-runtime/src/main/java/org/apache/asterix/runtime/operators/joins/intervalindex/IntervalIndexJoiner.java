@@ -274,7 +274,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
 
     private TupleStatus processLeftTupleSpill(IFrameWriter writer) throws HyracksDataException {
         // Process left tuples one by one, check them with active memory from the right branch.
-        System.err.println("---------------Start left spill");
         int count = 0;
         TupleStatus ts = loadLeftTuple();
         while (ts.isLoaded() && activeManager[RIGHT_PARTITION].hasRecords()) {
@@ -303,13 +302,11 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             unfreezeAndContinue(LEFT_PARTITION, leftInputAccessor, RIGHT_PARTITION);
             ts = loadLeftTuple();
         }
-        System.err.println("------------------End left spill");
         return ts;
     }
 
     private TupleStatus processRightTupleSpill(IFrameWriter writer) throws HyracksDataException {
         // Process left tuples one by one, check them with active memory from the right branch.
-        System.err.println("---------------Start right spill");
         int count = 0;
         TupleStatus ts = loadRightTuple();
         while (ts.isLoaded() && activeManager[LEFT_PARTITION].hasRecords()) {
@@ -338,7 +335,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             unfreezeAndContinue(RIGHT_PARTITION, rightInputAccessor, LEFT_PARTITION);
             ts = loadRightTuple();
         }
-        System.err.println("------------------End right spill");
         return ts;
     }
 
