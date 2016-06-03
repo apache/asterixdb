@@ -3624,6 +3624,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
+      <compilation-unit name="spatial-intersect">
+        <output-dir compare="Text">spatial-intersect</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="substr">
         <output-dir compare="Text">substr</output-dir>
       </compilation-unit>
