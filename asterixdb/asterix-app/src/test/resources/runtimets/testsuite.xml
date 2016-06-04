@@ -795,6 +795,11 @@
         <output-dir compare="Text">sum_numeric_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="query-ASTERIXDB-1230">
+        <output-dir compare="Text">query-ASTERIXDB-1230</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate-sql">
     <test-case FilePath="aggregate-sql">
@@ -3022,6 +3027,16 @@
     <test-case FilePath="list">
       <compilation-unit name="query-ASTERIXDB-673">
         <output-dir compare="Text">query-ASTERIXDB-673</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1131">
+        <output-dir compare="Text">query-ASTERIXDB-1131</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1131-2">
+        <output-dir compare="Text">query-ASTERIXDB-1131-2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
